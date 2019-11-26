@@ -1,0 +1,29 @@
+{
+  "clientName":"",
+  "clientId":"",
+  "redirectUris": [],
+  "logoUri":"",
+  "policyUri":"",
+  "contacts":[],
+  "scope": [
+    "openid",
+    "profile",
+    "email",
+    "eduperson_entitlement",
+    "eduperson_scoped_affiliation",
+    "eduperson_unique_id"
+  ],
+  "grantTypes": [
+    "authorization_code"
+  ],
+  "allowIntrospection":false,
+  "clientDescription":"",
+  "generateClientSecret":true,
+  "clientSecret":"",
+  "accessTokenValiditySeconds":"3600",
+  "refreshTokenValiditySeconds":"28800",
+  "reuse_refresh_tokens":true,
+  "device_code_validity_seconds":"28800",
+  "clear_access_tokens_on_refresh":true,
+  "code_challenge_method":""
+}

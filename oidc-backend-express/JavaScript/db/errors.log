@@ -1,0 +1,128 @@
+
+
+
+14:46:01 error: there is no parameter $1
+         task(add-client): SELECT * FROM client_details WHERE client_id = $1
+
+14:46:03 error: there is no parameter $1
+         task(add-client): SELECT * FROM client_details WHERE client_id = $1
+
+14:55:45 error: column "created_at" is of type timestamp without time zone but expression is of type bigint
+         task(add-client): INSERT INTO client_details (client_description,reuse_refresh_tokens,allow_introspection,client_id,client_secret,access_token_validity_seconds,refresh_token_validity_seconds,client_name,logo_uri,policy_uri,created_at,clear_access_tokens_on_refresh,code_challenge_method,device_code_validity_seconds,modified_at,pending_approval,approved,requester,reviewer) VALUES ('',true,false,'','','3600','28800','','','',1574340945201,true,'','28800',1574340945201,true,false,1,2) RETURNING *
+
+17:15:14 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value") values('a1','b1'),('a2','b2')
+
+17:16:24 error: invalid input syntax for integer: "a1"
+         task(add-client): insert into "client_grant_type"("owner_id","value") values('a1','b1'),('a2','b2')
+
+17:18:30 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value") values('1','b1'),('1','b2')
+
+17:24:29 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value") values(23,'authorization_code'),(23,'refresh_token'),(23,'client_credentials'),(23,'password'),(23,'redelegation'),(23,'token_exchange')
+
+17:43:09 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value") values(24,'authorization_code'),(24,'refresh_token'),(24,'client_credentials'),(24,'password'),(24,'redelegation'),(24,'token_exchange')
+
+17:44:22 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value") values(25,'openid'),(25,'profile'),(25,'email'),(25,'eduperson_entitlement'),(25,'eduperson_scoped_affiliation'),(25,'eduperson_unique_id')
+
+18:00:59 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value") values(26,'authorization_code'),(26,'refresh_token'),(26,'client_credentials'),(26,'password'),(26,'redelegation'),(26,'token_exchange')
+
+18:00:59 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value") values(26,'openid'),(26,'profile'),(26,'email'),(26,'eduperson_entitlement'),(26,'eduperson_scoped_affiliation'),(26,'eduperson_unique_id')
+
+18:00:59 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_redirect_uri"("owner_id","value") values(26,'asdfsd@asdfsdqw12'),(26,'fsadfasc@12e1')
+
+18:00:59 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_contact"("owner_id","value") values(26,'fasdfsd'),(26,'ascsd'),(26,'sdcsdc')
+
+21:40:42 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value") values(27,'authorization_code')
+
+21:40:42 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value") values(27,'openid'),(27,'profile'),(27,'email'),(27,'eduperson_entitlement'),(27,'eduperson_scoped_affiliation'),(27,'eduperson_unique_id')
+
+21:50:47 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value") values(28,'authorization_code')
+
+21:50:47 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value") values(28,'openid'),(28,'profile'),(28,'email'),(28,'eduperson_entitlement'),(28,'eduperson_scoped_affiliation'),(28,'eduperson_unique_id')
+
+21:50:47 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_redirect_uri"("owner_id","value") values(28,'sdfsadf')
+
+21:50:48 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_contact"("owner_id","value") values(28,'asdfsdf')
+
+21:58:31 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value") values(29,'authorization_code'),(29,'refresh_token'),(29,'client_credentials')
+
+21:58:31 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value") values(29,'refeds_edu')
+
+21:58:31 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_redirect_uri"("owner_id","value") values(29,'asdfsc')
+
+22:06:41 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value") values(30,'authorization_code'),(30,'device')
+
+22:06:41 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value") values(30,'openid'),(30,'Makis')
+
+22:06:41 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_redirect_uri"("owner_id","value") values(30,'Makis')
+
+22:06:41 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_contact"("owner_id","value") values(30,'Makis')
+
+22:18:03 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value") values(31,'authorization_code')
+
+22:18:03 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value") values(31,'openid'),(31,'profile'),(31,'email'),(31,'eduperson_entitlement'),(31,'eduperson_scoped_affiliation'),(31,'eduperson_unique_id')
+
+22:28:45 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value") values(32,'authorization_code')
+
+22:28:45 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value") values(32,'openid'),(32,'profile'),(32,'email'),(32,'eduperson_entitlement'),(32,'eduperson_scoped_affiliation'),(32,'eduperson_unique_id')
+
+10:07:30 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value") values(33,'authorization_code'),(33,'client_credentials'),(33,'password')
+
+10:07:30 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value") values(33,'openid'),(33,'profile'),(33,'email'),(33,'eduperson_entitlement'),(33,'eduperson_scoped_affiliation'),(33,'eduperson_unique_id')
+
+10:07:30 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_redirect_uri"("owner_id","value") values(33,'asdasd')
+
+10:07:30 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_contact"("owner_id","value") values(33,'asdasd'),(33,'sdasd')
+
+15:46:36 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value") values(34,'authorization_code'),(34,'redelegation'),(34,'device')
+
+15:46:36 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value") values(34,'openid'),(34,'profile'),(34,'email'),(34,'eduperson_entitlement'),(34,'eduperson_scoped_affiliation'),(34,'eduperson_unique_id'),(34,'offline_access')
+
+15:46:36 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_redirect_uri"("owner_id","value") values(34,'https://myurl.com')
+
+15:46:36 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_contact"("owner_id","value") values(34,'koza-sparroew@hotmaifsd.com')
+
+16:44:51 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value") values(35,'authorization_code')
+
+16:44:51 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value") values(35,'openid'),(35,'profile'),(35,'email'),(35,'eduperson_entitlement'),(35,'eduperson_scoped_affiliation'),(35,'eduperson_unique_id')
+
+16:44:51 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_redirect_uri"("owner_id","value") values(35,'https://www.regexpal.com/')
+
+16:44:51 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_contact"("owner_id","value") values(35,'koza-sparrow@hotmail.com')
