@@ -28,8 +28,9 @@ You will also see any lint errors in the console.
 
   Runs the server listening at [http://localhost:5000](http://localhost:3000) for http requests.
 
-3. For the backend server connection with the database a PostgresSQL database must be created
- The connection details are declared in oidc-project/oidc-backend/db-config.json
+3. For the backend server connection with the database a PostgresSQL database must be created using the oidc_db.sql file located in the root folder
+
+The connection details are declared in oidc-project/oidc-backend/db-config.json and might need to be modified.
 
  ```
  {
