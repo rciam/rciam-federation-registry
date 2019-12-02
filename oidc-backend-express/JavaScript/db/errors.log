@@ -285,3 +285,12 @@
 
 12:25:47 error: syntax error at or near ")"
          task(find-clients): SELECT * FROM client_scope WHERE owner_id IN ()
+
+16:35:05 error: there is no parameter $1
+         task(add-client): SELECT * FROM client_details WHERE client_id = $1
+
+16:37:05 error: there is no parameter $1
+         task(add-client): SELECT * FROM client_details WHERE client_id = $1
+
+16:38:15 error: there is no parameter $1
+         task(add-client): SELECT * FROM client_details WHERE client_id = $1

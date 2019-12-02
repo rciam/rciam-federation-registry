@@ -17,8 +17,8 @@ class ClientDetailsRepository {
 
 
     // Tries to find a user from name;
-    async findByClientId(client_id) {
-        return this.db.oneOrNone('SELECT * FROM client_details WHERE client_id = $1', client_id);
+    async findByClientId(clientId) {
+        return this.db.oneOrNone('SELECT * FROM client_details WHERE client_id = $1', clientId);
     }
     async findByRequesterId(id) {
         return this.db.any('SELECT * FROM client_details WHERE requester = $1', id);

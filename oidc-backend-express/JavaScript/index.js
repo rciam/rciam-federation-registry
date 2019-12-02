@@ -17,7 +17,7 @@ app.post('/client',clientValidationRules(),validate,(req,res)=>{
       res.setHeader('Content-Type', 'application/json');
       console.log(req.body);
 
-      await t.client_details.findByClientId(req.body.clientId).then(async result=> {
+      await t.client_details.findByClientId(req.body.client_id).then(async result=> {
         if(result){
           console.log(result)
           res.end(JSON.stringify({a:'1'}));
