@@ -1,12 +1,13 @@
 import React from 'react';
 
 import './App.css';
-import FormTabs from './FormTabs.js'
+import HomePage from './HomePage.js';
 
 function App() {
   return (
     <div className="App">
-      <FormTabs/>
+      <HomePage/>
+
 
     </div>
   );

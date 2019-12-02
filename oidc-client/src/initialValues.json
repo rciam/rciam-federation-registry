@@ -1,10 +1,10 @@
 {
-  "clientName":"",
-  "clientId":"",
-  "redirectUris": [],
-  "logoUri":"",
-  "policyUri":"",
-  "contacts":[],
+  "client_name":"myname",
+  "client_id":"myid",
+  "redirect_uris": ["https://google.gr"],
+  "logo_uri":"https://aai-dev.egi.eu/oidc/resources/images/grnet_logo_en.svg",
+  "policy_uri":"https://google.gr",
+  "contacts":["mymail@mail.com"],
   "scope": [
     "openid",
     "profile",
@@ -13,17 +13,17 @@
     "eduperson_scoped_affiliation",
     "eduperson_unique_id"
   ],
-  "grantTypes": [
+  "grant_types": [
     "authorization_code"
   ],
-  "allowIntrospection":false,
-  "clientDescription":"",
-  "generateClientSecret":true,
-  "clientSecret":"",
-  "accessTokenValiditySeconds":"3600",
-  "refreshTokenValiditySeconds":"28800",
+  "allow_introspection":false,
+  "client_description":"This should be a lengthy description so it looks cool on the petition page.The table it is displayd thinks so!",
+  "generate_client_secret":true,
+  "client_secret":"yesTsikret",
+  "access_token_validity_seconds":"3600",
+  "refresh_token_validity_seconds":"28800",
   "reuse_refresh_tokens":true,
   "device_code_validity_seconds":"28800",
   "clear_access_tokens_on_refresh":true,
-  "code_challenge_method":""
+  "code_challenge_method":"plain"
 }

@@ -126,3 +126,162 @@
 
 16:44:51 error: Querying against a released or lost connection.
          task(add-client): insert into "client_contact"("owner_id","value") values(35,'koza-sparrow@hotmail.com')
+
+15:34:31 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value") values(36,'authorization_code')
+
+15:34:31 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value") values(36,'openid'),(36,'profile'),(36,'email'),(36,'eduperson_entitlement'),(36,'eduperson_scoped_affiliation'),(36,'eduperson_unique_id')
+
+15:34:31 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_redirect_uri"("owner_id","value") values(36,'https://www.google.com/')
+
+15:34:31 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_contact"("owner_id","value") values(36,'mail@msk.com')
+
+14:13:31 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value") values(37,'profile'),(37,'eduperson_entitlement')
+
+14:13:31 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_redirect_uri"("owner_id","value") values(37,'https://www.google.com')
+
+14:13:31 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_contact"("owner_id","value") values(37,'mymail@hotmail.com')
+
+14:29:06 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value") values(38,'authorization_code'),(38,'implicit'),(38,'token_exchange')
+
+14:29:06 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value") values(38,'eduperson_entitlement'),(38,'eduperson_scoped_affiliation'),(38,'eduperson_unique_id'),(38,'custom_scope_fancy')
+
+14:29:06 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_redirect_uri"("owner_id","value") values(38,'https://www.google.com')
+
+14:29:06 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_contact"("owner_id","value") values(38,'anothermail@hotmail.com')
+
+14:43:46 error: Multiple rows were not expected.
+         task(find-clients): SELECT * FROM client_details WHERE requester = '1'
+
+14:45:46 error: Multiple rows were not expected.
+         task(find-clients): SELECT * FROM client_details WHERE requester = '1'
+
+15:03:50 error: invalid input syntax for integer: "{"id":37,"client_description":"This is the Description","reuse_refresh_tokens":true,"allow_introspection":true,"client_id":"Client-1","client_secret":"","access_token_validity_seconds":"3600","refresh_token_validity_seconds":"28800","client_name":"Andreas","logo_uri":"https://aai-dev.egi.eu/oidc/resources/images/grnet_logo_en.svg","policy_uri":"https://www.google.com","created_at":"2019-11-28T12:13:31.516Z","clear_access_tokens_on_refresh":true,"code_challenge_method":"S256","device_code_validity_seconds":"28800","modified_at":"2019-11-28T12:13:31.516Z","pending_approval":true,"approved":false,"requester":"1","reviewer":"2"}"
+         task(find-clients): SELECT * FROM client_grant_type WHERE owner_id = '{"id":37,"client_description":"This is the Description","reuse_refresh_tokens":true,"allow_introspection":true,"client_id":"Client-1","client_secret":"","access_token_validity_seconds":"3600","refresh_token_validity_seconds":"28800","client_name":"Andreas","logo_uri":"https://aai-dev.egi.eu/oidc/resources/images/grnet_logo_en.svg","policy_uri":"https://www.google.com","created_at":"2019-11-28T12:13:31.516Z","clear_access_tokens_on_refresh":true,"code_challenge_method":"S256","device_code_validity_seconds":"28800","modified_at":"2019-11-28T12:13:31.516Z","pending_approval":true,"approved":false,"requester":"1","reviewer":"2"}'
+
+15:03:50 error: Querying against a released or lost connection.
+         task(find-clients): SELECT * FROM client_grant_type WHERE owner_id = '{"id":37,"client_description":"This is the Description","reuse_refresh_tokens":true,"allow_introspection":true,"client_id":"Client-1","client_secret":"","access_token_validity_seconds":"3600","refresh_token_validity_seconds":"28800","client_name":"Andreas","logo_uri":"https://aai-dev.egi.eu/oidc/resources/images/grnet_logo_en.svg","policy_uri":"https://www.google.com","created_at":"2019-11-28T12:13:31.516Z","clear_access_tokens_on_refresh":true,"code_challenge_method":"S256","device_code_validity_seconds":"28800","modified_at":"2019-11-28T12:13:31.516Z","pending_approval":true,"approved":false,"requester":"1","reviewer":"2"}'
+
+15:04:43 error: there is no parameter $1
+         task(find-clients): SELECT * FROM client_grant_type WHERE owner_id = $1
+
+15:04:43 error: Querying against a released or lost connection.
+         task(find-clients): SELECT * FROM client_grant_type WHERE owner_id = $1
+
+15:05:40 error: Querying against a released or lost connection.
+         task(find-clients): SELECT * FROM client_grant_type WHERE owner_id = 38
+
+15:09:41 error: Querying against a released or lost connection.
+         task(find-clients): SELECT * FROM client_grant_type WHERE owner_id = 38
+
+15:43:48 error: Querying against a released or lost connection.
+         task(find-clients): SELECT * FROM client_grant_type WHERE owner_id = 38
+
+15:45:24 error: Querying against a released or lost connection.
+         task(find-clients): SELECT * FROM client_grant_type WHERE owner_id = 38
+
+15:52:27 error: Querying against a released or lost connection.
+         task(find-clients): SELECT * FROM client_grant_type WHERE owner_id = 37
+
+15:55:45 error: Querying against a released or lost connection.
+         task(find-clients): SELECT * FROM client_grant_type WHERE owner_id = 37
+
+15:56:52 error: Querying against a released or lost connection.
+         task(find-clients): SELECT * FROM client_grant_type WHERE owner_id = 38
+
+15:58:46 error: Querying against a released or lost connection.
+         task(find-clients): SELECT * FROM client_grant_type WHERE owner_id = 38
+
+15:59:36 error: Querying against a released or lost connection.
+         task(find-clients): SELECT * FROM client_grant_type WHERE owner_id = 38
+
+16:42:55 error: relation "scope" does not exist
+         task(find-clients): SELECT * FROM scope WHERE owner_id IN (37,38)
+
+18:16:54 error: Querying against a released or lost connection.
+         task(find-clients): SELECT * FROM client_grant_type WHERE owner_id=38
+
+18:21:47 error: Querying against a released or lost connection.
+         task(find-clients): SELECT * FROM client_grant_type WHERE owner_id=38
+
+18:26:43 error: Querying against a released or lost connection.
+         task(find-clients): SELECT * FROM client_scope WHERE owner_id IN (37)
+
+18:27:23 error: Querying against a released or lost connection.
+         task(find-clients): SELECT * FROM client_grant_type WHERE owner_id=38
+
+18:27:51 error: Querying against a released or lost connection.
+         task(find-clients): SELECT * FROM client_grant_type WHERE owner_id=38
+
+18:28:25 error: Querying against a released or lost connection.
+         task(find-clients): SELECT * FROM client_grant_type WHERE owner_id=38
+
+18:29:23 error: Querying against a released or lost connection.
+         task(find-clients): SELECT * FROM client_grant_type WHERE owner_id=38
+
+18:30:26 error: Querying against a released or lost connection.
+         task(find-clients): SELECT * FROM client_grant_type WHERE owner_id=38
+
+20:42:45 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value") values(39,'authorization_code')
+
+20:42:45 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value") values(39,'openid'),(39,'profile'),(39,'email'),(39,'eduperson_entitlement'),(39,'eduperson_scoped_affiliation'),(39,'eduperson_unique_id')
+
+21:42:05 error: syntax error at or near ")"
+         task(find-clients): SELECT * FROM client_grant_type WHERE owner_id IN ()
+
+21:43:31 error: syntax error at or near ")"
+         task(find-clients): SELECT * FROM client_grant_type WHERE owner_id IN ()
+
+21:44:14 error: syntax error at or near ")"
+         task(find-clients): SELECT * FROM client_grant_type WHERE owner_id IN ()
+
+21:45:02 error: syntax error at or near ")"
+         task(find-clients): SELECT * FROM client_grant_type WHERE owner_id IN ()
+
+21:48:17 error: syntax error at or near ")"
+         task(find-clients): SELECT * FROM client_grant_type WHERE owner_id IN ()
+
+21:48:26 error: syntax error at or near ")"
+         task(find-clients): SELECT * FROM client_grant_type WHERE owner_id IN ()
+
+22:02:55 error: syntax error at or near ")"
+         task(find-clients): SELECT * FROM client_scope WHERE owner_id IN ()
+
+11:16:47 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value") values(40,'authorization_code'),(40,'password'),(40,'refresh_token'),(40,'redelegation')
+
+11:16:47 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value") values(40,'openid'),(40,'profile'),(40,'email'),(40,'eduperson_entitlement'),(40,'eduperson_scoped_affiliation'),(40,'eduperson_unique_id')
+
+11:16:47 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_redirect_uri"("owner_id","value") values(40,'https://www.messenger.com')
+
+11:16:48 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_contact"("owner_id","value") values(40,'koza-spasd@hotami.dc')
+
+11:25:38 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value") values(41,'authorization_code'),(41,'device')
+
+11:25:38 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value") values(41,'openid'),(41,'profile'),(41,'email'),(41,'eduperson_entitlement'),(41,'eduperson_scoped_affiliation'),(41,'eduperson_unique_id')
+
+11:25:38 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_redirect_uri"("owner_id","value") values(41,'https://jira.argo.grnet.g')
+
+11:25:38 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_contact"("owner_id","value") values(41,'yomynameismud@gmail.gr')
+
+12:25:47 error: syntax error at or near ")"
+         task(find-clients): SELECT * FROM client_scope WHERE owner_id IN ()

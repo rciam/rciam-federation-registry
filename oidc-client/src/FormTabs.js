@@ -1,35 +1,36 @@
 import React from 'react';
 import Tabs from 'react-bootstrap/Tabs';
 import Tab from 'react-bootstrap/Tab';
-import initialValues from './initialValues'
+import initialValues from './initialValues';
+import {Debug} from './Debug.js';
 import Form from 'react-bootstrap/Form';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import {Formik} from 'formik';
-import {Debug} from './Debug.js';
+import * as config from './config.json';
 import InputRow from './InputRow.js';
 import Button from 'react-bootstrap/Button'
 import * as yup from 'yup';
 import {SimpleInput,DeviceCode,Select,ListInput,LogoInput,TextAria,ListInputArray,CheckboxList,SimpleCheckbox,ClientSecret,TimeInput,RefreshToken} from './Inputs.js'// eslint-disable-next-line
 const {reg} = require('./regex.js');
 const schema = yup.object({
-  clientName:yup.string().min(4,'The Client Name must be at least 4 characters long').max(15,'The Client Name exceeds the character limit (15)').required('This is a required field!'),
-  clientId:yup.string().min(4,'The Client ID must be at least 4 characters long').max(15,'The Client ID exceeds the character limit (15)').required('This is a required field!'),
-  redirectUris:yup.array().of(yup.string().matches(reg.regUrl,'This must be a secure Url starting with https://')).required('This is a required field!'),
-  logoUri:yup.string().required('This is a required field!').test('testImage','Enter a valid image Url',function(value){return imageError}),
-  policyUri:yup.string().required('This is a required field!').matches(reg.regSimpleUrl,'Enter a valid Url'),
-  clientDescription:yup.string().required('This is a required field!'),
+  client_ame:yup.string().min(4,'The Client Name must be at least 4 characters long').max(15,'The Client Name exceeds the character limit (15)').required('This is a required field!'),
+  client_id:yup.string().min(4,'The Client ID must be at least 4 characters long').max(15,'The Client ID exceeds the character limit (15)').required('This is a required field!'),
+  redirect_uris:yup.array().of(yup.string().matches(reg.regUrl,'This must be a secure Url starting with https://')).required('This is a required field!'),
+  logo_uri:yup.string().required('This is a required field!').test('testImage','Enter a valid image Url',function(value){return imageError}),
+  policy_uri:yup.string().required('This is a required field!').matches(reg.regSimpleUrl,'Enter a valid Url'),
+  client_description:yup.string().required('This is a required field!'),
   contacts:yup.array().of(yup.string().email('Enter a valid email address').required('Contact email cannot be empty')).required('This is a required field!'),
   scope:yup.array().of(yup.string().min(1,'Scope cannot be empty').max(50,'Scope exceeds character limit (50)').matches(reg.regScope,'Scope must consist of small letters and underscores')).required('This is a required field!'),
-  grantTypes:yup.array().of(yup.string().test('testGrantTypes','error-granttypes',function(value){return ['implicit','authorization_code','refresh_token','client_credentials','password','redelegation','token_exchange','device'].includes(value)})).required('At least one option must be selected'),
-  accessTokenValiditySeconds:yup.number().min(0).max(1000000,'Exceeds the maximum value').required('This is a required field!'),
-  refreshTokenValiditySeconds:yup.number().min(0).max(34128000,'Exceeds the maximum value').required('This is a required field!'),
+  grant_types:yup.array().of(yup.string().test('testGrantTypes','error-granttypes',function(value){return ['implicit','authorization_code','refresh_token','client_credentials','password','redelegation','token_exchange','device'].includes(value)})).required('At least one option must be selected'),
+  access_token_validity_seconds:yup.number().min(0).max(1000000,'Exceeds the maximum value').required('This is a required field!'),
+  refresh_token_validity_seconds:yup.number().min(0).max(34128000,'Exceeds the maximum value').required('This is a required field!'),
   device_code_validity_seconds:yup.number().min(0).max(34128000,'Exceeds the maximum value').required('This is a required field!'),
   code_challenge_method:yup.string().matches(reg.regCodeChalMeth),
-  allowIntrospection:yup.boolean().required(),
-  generateClientSecret:yup.boolean().required(),
+  allow_introspection:yup.boolean().required(),
+  generate_client_secret:yup.boolean().required(),
   reuse_refresh_tokens:yup.boolean().required(),
   clear_access_tokens_on_refresh:yup.boolean().required(),
-  clientSecret:yup.string().when('generateClientSecret',{
+  client_secret:yup.string().when('generate_client_secret',{
     is:false,
     then: yup.string().required('Client Secret cannot be empty').min(4,'Client Secret must e at least 4 characters long').max(15,'Client Secret must not exceed the character limit (15)')
   }).nullable(),
@@ -39,15 +40,29 @@ var imageError = false;
 export default class FormTabs extends React.Component {
   constructor(props) {
   super(props);
-  this.state = {hasSubmited:false};
+  console.log(initialValues)
+  if(this.props.editConnection){
+    this.state = {
+      hasSubmited:false,
+      initialValues:this.props.editConnection,
+      hasLoaded:true
+    }}
+  else{
+    this.state = {
+      hasSubmited:false,
+      initialValues:initialValues,
+      hasLoaded:true
+    };
   }
+  }
+
 
   setImageError(value){
     imageError=value;
   }
   postApi(data){
 
-    fetch('http://localhost:5000/client', {
+    fetch(config.host+'client', {
       method: 'POST', // *GET, POST, PUT, DELETE, etc.
       credentials: 'same-origin', // include, *same-origin, omit
       headers: {
@@ -58,12 +73,16 @@ export default class FormTabs extends React.Component {
   }
 
   render() {
-
+    console.log(this.state);
     return(
+
       <Formik
-      initialValues={initialValues}
+      initialValues={this.state.initialValues}
         validationSchema={schema}
+        enableReinitialize={true}
         onSubmit={(values,{setSubmitting}) => {
+
+
           this.postApi(values);
           this.setState({hasSubmited:true});
         }}
@@ -77,6 +96,7 @@ export default class FormTabs extends React.Component {
         touched,
         isValid,
         validateField,
+        submitCount,
         errors,
         isSubmitting})=>(
         <div className="tab-panel">
@@ -91,8 +111,8 @@ export default class FormTabs extends React.Component {
                       name='clientName'
                       placeholder='Type something'
                       onChange={handleChange}
-                      value={values.clientName}
-                      isInvalid={this.state.hasSubmitted?!!errors.clientName:(!!errors.clientName&&touched.clientName)}
+                      value={values.client_name}
+                      isInvalid={this.state.hasSubmitted?!!errors.client_name:(!!errors.client_name&&touched.client_name)}
                       onBlur={handleBlur}
                      />
                    </InputRow>
@@ -101,19 +121,19 @@ export default class FormTabs extends React.Component {
                        name='clientId'
                        placeholder='Type something'
                        onChange={handleChange}
-                       value={values.clientId}
-                       isInvalid={this.state.hasSubmitted?!!errors.clientId:(!!errors.clientId&&touched.clientId)}
+                       value={values.client_id}
+                       isInvalid={this.state.hasSubmitted?!!errors.client_id:(!!errors.client_id&&touched.client_id)}
                        onBlur={handleBlur}
                       />
                     </InputRow>
-                    <InputRow title='Redirect URI(s)' error={typeof(errors.redirectUris)=='string'?errors.redirectUris:null}  touched={touched.redirectUris} description='URIs that the client can be redirected to after the authorization page'>
+                    <InputRow title='Redirect URI(s)' error={typeof(errors.redirect_uris)=='string'?errors.redirect_uris:null}  touched={touched.redirect_uris} description='URIs that the client can be redirected to after the authorization page'>
                       <ListInput
-                        values={values.redirectUris}
+                        values={values.redirect_uris}
                         placeholder='https://'
-                        empty={(typeof(errors.redirectUris)=='string')?true:false}
-                        name='redirectUris'
-                        error={errors.redirectUris}
-                        touched={touched.redirectUris}
+                        empty={(typeof(errors.redirect_uris)=='string')?true:false}
+                        name='redirect_uris'
+                        error={errors.redirect_uris}
+                        touched={touched.redirect_uris}
                         hasSubmited={this.state.hasSubmitted}
                         onBlur={handleBlur}
                         setFieldTouched={setFieldTouched}
@@ -122,35 +142,35 @@ export default class FormTabs extends React.Component {
                     <InputRow title='Logo'>
                       <LogoInput
                         setImageError={this.setImageError}
-                        value={values.logoUri}
-                        name='logoUri'
+                        value={values.logo_uri}
+                        name='logo_uri'
                         description='URL that points to a logo image, will be displayed on approval page'
                         onChange={handleChange}
-                        error={errors.logoUri}
-                        touched={touched.logoUri}
+                        error={errors.logo_uri}
+                        touched={touched.logo_uri}
                         onBlur={handleBlur}
                         validateField={validateField}
-                        isInvalid={this.state.hasSubmitted?!!errors.logoUri:(!!errors.logoUri&&touched.logoUri)}
+                        isInvalid={this.state.hasSubmitted?!!errors.logo_uri:(!!errors.logo_uri&&touched.logo_uri)}
                       />
 
                     </InputRow>
-                    <InputRow title='Description' description='Human-readable text description' error={errors.clientDescription} touched={touched.clientDescription}>
+                    <InputRow title='Description' description='Human-readable text description' error={errors.client_description} touched={touched.client_description}>
                       <TextAria
-                        value={values.clientDescription}
+                        value={values.client_description}
                         onChange={handleChange}
                         onBlur={handleBlur}
-                        name='clientDescription'
+                        name='client_description'
                         placeholder="Type a description"
-                        isInvalid={this.state.hasSubmitted?!!errors.clientDescription:(!!errors.clientDescription&&touched.clientDescription)}
+                        isInvalid={this.state.hasSubmitted?!!errors.client_description:(!!errors.client_description&&touched.client_description)}
                       />
                     </InputRow>
-                    <InputRow title='Policy Statement' description='URL for the Policy Statement of this client, will be displayed to the user' error={errors.policyUri} touched={touched.policyUri}>
+                    <InputRow title='Policy Statement' description='URL for the Policy Statement of this client, will be displayed to the user' error={errors.policy_uri} touched={touched.policy_uri}>
                       <SimpleInput
-                        name='policyUri'
+                        name='policy_uri'
                         placeholder='https://'
                         onChange={handleChange}
-                        value={values.policyUri}
-                        isInvalid={this.state.hasSubmitted?!!errors.policyUri:(!!errors.policyUri&&touched.policyUri)}
+                        value={values.policy_uri}
+                        isInvalid={this.state.hasSubmitted?!!errors.policy_uri:(!!errors.policy_uri&&touched.policy_uri)}
                         onBlur={handleBlur}
                       />
                     </InputRow>
@@ -179,16 +199,16 @@ export default class FormTabs extends React.Component {
                         onBlur={handleBlur}
                       />
                     </InputRow>
-                    <InputRow title='Grant Types' error={errors.grantTypes} touched={true}>
+                    <InputRow title='Grant Types' error={errors.grant_types} touched={true}>
                       <CheckboxList
-                        name='grantTypes'
-                        values={values.grantTypes}
+                        name='grant_types'
+                        values={values.grant_types}
                         listItems={['implicit','authorization_code','refresh_token','client_credentials','password','redelegation','token_exchange','device']}
                       />
                     </InputRow>
                     <InputRow title='Introspection'>
                       <SimpleCheckbox
-                        name='allowIntrospection'
+                        name='allow_introspection'
                         label="Allow calls to the Introspection Endpoint?"
                         onChange={handleChange}
                       />
@@ -197,28 +217,28 @@ export default class FormTabs extends React.Component {
                       <ClientSecret
                         onChange={handleChange}
                         feedback='not good'
-                        clientSecret={values.clientSecret}
-                        error={errors.clientSecret}
-                        touched={touched.clientSecret}
-                        isInvalid={this.state.hasSubmitted?!!errors.clientSecret:(!!errors.clientSecret&&touched.clientSecret)}
+                        clientSecret={values.client_secret}
+                        error={errors.client_secret}
+                        touched={touched.client_secret}
+                        isInvalid={this.state.hasSubmitted?!!errors.client_secret:(!!errors.client_secret&&touched.client_secret)}
                         onBlur={handleBlur}
-                        generateClientSecret={values.generateClientSecret}
+                        generateClientSecret={values.generate_client_secret}
                       />
                     </InputRow>
-                    <InputRow title='Access Token Timeout' extraClass='time-input' error={errors.accessTokenValiditySeconds} touched={touched.accessTokenValiditySeconds} description='Enter this time in seconds, minutes, or hours (Max value is 1000000 seconds (11.5 days)).'>
+                    <InputRow title='Access Token Timeout' extraClass='time-input' error={errors.access_token_validity_seconds} touched={touched.access_token_validity_seconds} description='Enter this time in seconds, minutes, or hours (Max value is 1000000 seconds (11.5 days)).'>
                       <TimeInput
-                        name='accessTokenValiditySeconds'
-                        value={values.accessTokenValiditySeconds}
-                        isInvalid={this.state.hasSubmitted?!!errors.accessTokenValiditySeconds:(!!errors.accessTokenValiditySeconds&&touched.accessTokenValiditySeconds)}
+                        name='access_token_validity_seconds'
+                        value={values.access_token_validity_seconds}
+                        isInvalid={this.state.hasSubmitted?!!errors.access_token_validity_seconds:(!!errors.access_token_validity_seconds&&touched.access_token_validity_seconds)}
                         onBlur={handleBlur}
                         onChange={handleChange}
                       />
                     </InputRow>
-                    <InputRow title='Refresh Tokens' extraClass='time-input' error={errors.refreshTokenValiditySeconds} touched={touched.refreshTokenValiditySeconds}>
+                    <InputRow title='Refresh Tokens' extraClass='time-input' error={errors.refresh_token_validity_seconds} touched={touched.refresh_token_validity_seconds}>
                       <RefreshToken
                         values={values}
                         onBlur={handleBlur}
-                        isInvalid={this.state.hasSubmitted?!!errors.refreshTokenValiditySeconds:(!!errors.refreshTokenValiditySeconds&&touched.refreshTokenValiditySeconds)}
+                        isInvalid={this.state.hasSubmitted?!!errors.refresh_token_validity_seconds:(!!errors.refresh_token_validity_seconds&&touched.refresh_token_validity_seconds)}
                         onChange={handleChange}
                       />
                     </InputRow>
@@ -241,7 +261,9 @@ export default class FormTabs extends React.Component {
                         onChange={handleChange}
                       />
                     </InputRow>
+
                     <InputRow extraClass='time-input'>
+
                       <Button className='post-button' type="button" variant="danger" onClick={()=> {this.postApi(values)}}>Post Call without Validation</Button>
                       <Button className='submit-button' type="submit" variant="primary" >Submit</Button>
                     </InputRow>

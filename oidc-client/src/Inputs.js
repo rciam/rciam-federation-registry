@@ -117,8 +117,8 @@ export function RefreshToken(props){
               onChange={props.onChange} />
             </div>
             <TimeInput
-              name='refreshTokenValiditySeconds'
-              value={props.values.refreshTokenValiditySeconds}
+              name='refresh_token_validity_seconds'
+              value={props.values.refresh_token_validity_seconds}
               isInvalid={props.isInvalid}
               onBlur={props.onBlur}
               onChange={props.onChange}
@@ -136,13 +136,13 @@ export function DeviceCode(props){
   return(
     <React.Fragment>
       <div className="checkbox-item">
-        <Checkbox name="grantTypes" value='device'/>
+        <Checkbox name="grant_types" value='device'/>
         Refresh tokens are issued for this client
       </div>
       <Form.Text className="text-muted text-left label-checkbox" id="uri-small-desc">
         This will add the offline_access scope to the client's scopes.
       </Form.Text>
-      {props.values.grantTypes.includes('device')?(
+      {props.values.grant_types.includes('device')?(
         <React.Fragment>
           <TimeInput
             name='device_code_validity_seconds'
@@ -166,20 +166,20 @@ export function ClientSecret(props){
   return(
     <React.Fragment>
       <Form.Check
-        name="generateClientSecret"
+        name="generate_client_secret"
         label="Generate a new client secret?"
         onChange={props.onChange}
-        checked={props.generateClientSecret}
+        checked={props.generate_client_secret}
         className="checkbox col-form-label"
        />
        <Form.Text className="text-muted text-left label-checkbox" id="uri-small-desc">
          New secret will be generated when you click 'Save'
        </Form.Text>
-       {props.generateClientSecret?
+       {props.generate_client_secret?
          (
          <Form.Control
            type="text"
-           name="clientSecret"
+           name="client_secret"
            className='col-form-label-sm'
            value="Generate on Save"
            disabled={true}
@@ -193,13 +193,13 @@ export function ClientSecret(props){
             />
             {!editSecret?<Form.Control
               type="text"
-              name="clientSecret"
+              name="client_secret"
               className='col-form-label-sm'
               onChange={props.onChange}
               isInvalid={props.isInvalid}
               onBlur={props.onBlur}
               placeholder='Type a secret'
-              value={props.clientSecret}
+              value={props.client_secret}
             />:<Form.Control
               type="text"
               name="clientSecretHelp"
@@ -308,7 +308,7 @@ export  function LogoInput(props){
   const imageLoad = (ev)=>{
       if((!ev.target.src.includes('/logo_placeholder.gif'))){
         props.setImageError(true);
-        props.validateField('logoUri');
+        props.validateField('logo_uri');
       }
   }
 

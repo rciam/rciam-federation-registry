@@ -17,24 +17,27 @@ class ClientDetailsRepository {
 
 
     // Tries to find a user from name;
-    async findByClientId(clientId) {
-        return this.db.oneOrNone('SELECT * FROM client_details WHERE client_id = $1', clientId);
+    async findByClientId(client_id) {
+        return this.db.oneOrNone('SELECT * FROM client_details WHERE client_id = $1', client_id);
+    }
+    async findByRequesterId(id) {
+        return this.db.any('SELECT * FROM client_details WHERE requester = $1', id);
     }
     async add(data){
       let date = Date.now();
       console.log('this is from the client details');
       console.log(data);
       return this.db.one(sql.add,{
-        client_description: data.clientDescription,
+        client_description: data.client_description,
         reuse_refresh_tokens: data.reuse_refresh_tokens,
-        allow_introspection: data.allowIntrospection,
-        client_id: data.clientId,
-        client_secret: data.clientSecret,
-        access_token_validity_seconds: data.accessTokenValiditySeconds,
-        refresh_token_validity_seconds: data.refreshTokenValiditySeconds,
-        client_name: data.clientName,
-        logo_uri: data.logoUri,
-        policy_uri: data.policyUri,
+        allow_introspection: data.allow_introspection,
+        client_id: data.client_id,
+        client_secret: data.client_secret,
+        access_token_validity_seconds: data.access_token_validity_seconds,
+        refresh_token_validity_seconds: data.refresh_token_validity_seconds,
+        client_name: data.client_name,
+        logo_uri: data.logo_uri,
+        policy_uri: data.policy_uri,
         created_at: date,
         clear_access_tokens_on_refresh: data.clear_access_tokens_on_refresh,
         code_challenge_method: data.code_challenge_method,

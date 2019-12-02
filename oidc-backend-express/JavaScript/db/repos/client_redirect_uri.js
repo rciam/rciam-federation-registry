@@ -14,6 +14,10 @@ class ClientRedirectUriRepository {
     }
 
 
+    async findByConnectionId(id){
+
+      return this.db.any('SELECT * FROM client_redirect_uri WHERE owner_id IN ($1:csv)',[id]);
+    }
     // Tries to find a user from name;
 
     async add(data,id){

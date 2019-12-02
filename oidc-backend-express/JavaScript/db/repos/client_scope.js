@@ -13,7 +13,10 @@ class ClientScopeRepository {
         // set-up all ColumnSet objects, if needed:
          cs = new pgp.helpers.ColumnSet(['owner_id','value'],{table:'client_scope'});
     }
+    async findByConnectionId(id){
 
+      return this.db.any('SELECT * FROM client_scope WHERE owner_id IN ($1:csv)',[id]);
+    }
 
     // Tries to find a user from name;
 

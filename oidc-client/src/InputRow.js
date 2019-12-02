@@ -10,7 +10,7 @@ export default function InputRow(props){
       <Form.Label column="true" sm="2" className='col-form-label text-right list-input-label'>
         {props.title}
       </Form.Label>
-      <Col sm="4" className={props.extraClass?props.extraClass:''}>
+      <Col sm="8" className={props.extraClass?props.extraClass:''}>
        {props.children}
       {props.description?
         <Form.Text className="text-muted text-left">

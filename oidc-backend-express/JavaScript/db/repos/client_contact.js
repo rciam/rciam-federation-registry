@@ -13,7 +13,10 @@ class ClientContactRepository {
          cs = new pgp.helpers.ColumnSet(['owner_id','value'],{table:'client_contact'});
     }
 
+    async findByConnectionId(id){
 
+      return this.db.any('SELECT * FROM client_contact WHERE owner_id IN ($1:csv)',[id]);
+    }
     // Tries to find a user from name;
 
     async add(data,id){

@@ -5,11 +5,19 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+}
+html {
+  scroll-behavior: smooth;
+
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
+}
+.main-container {
+  margin: 0 1rem;
 }
 #uri-small-desc{
   margin-top: -0.75rem;
@@ -86,6 +94,7 @@ code {
   text-align: left;
 }
 .time-input .col-sm-4 {
+
   display:inline-block;
   padding-left:0;
 }
@@ -119,4 +128,175 @@ code {
 }
 form {
   margin-top:1.5rem;
+}
+.dropdown-toggle svg {
+  margin-left:0.5rem;
+}
+.main-title {
+  color:rgb(91, 91, 91);
+  font-family:"Open Sans";
+  font-weight: 300;
+  font-size: 1.5rem;
+  margin-top:1rem;
+  margin-bottom:2rem;
+}
+.nav-side {
+  width:15rem;
+  height:10rem;
+  background-color:rgb(245, 245, 245);
+  font-family:'Lato';
+  font-weight:300;
+  border:1px solid rgb(227, 227, 227);
+  margin-right:2rem;
+  text-align: left;
+}
+.nav-side a:hover, .nav-side a:active {
+    background: #f2f2f2;
+    text-decoration: none;
+    height:auto;
+}
+.nav-side a , .nav-side div {
+  margin-left: 1rem;
+}
+.logo {
+  margin-top:-2.5rem;
+}
+.logo a img {
+  height: 4rem;
+}
+.nav-title {
+  color:#4b4b4b;
+  font-size: 1rem;
+  font-weight: 300;
+  font-family: "Lato";
+  line-height: 3rem;
+}
+.home-container {
+  background-color:rgb(245, 245, 245);
+  font-weight: 300;
+  font-family: "Lato";
+  text-align: left;
+}
+.flex-container {
+  display:flex;
+  flex-direction: row;
+}
+.content-container {
+  width:100%;
+}
+.options-bar, .links {
+  text-align: left;
+  font-family:'Lato';
+  font-weight:300;
+}
+.options-bar button:first-child {
+  margin-right:0.5rem;
+}
+.options-bar button svg {
+  margin-right:0.5rem;
+}
+.home-container h1{
+  color: #4DB3CF;
+  font-size: 1.7rem;
+  padding-top:1.5rem;
+  margin:0 0 1rem 1em;
+}
+.home-container p {
+  font-size:0.8rem;
+  margin-left:1.5rem;
+  margin-right: 1.5rem;
+  padding-bottom: 1.5rem;
+}
+.links {
+  font-size:1rem;
+  line-height: 1rem;
+  padding:0.6rem;
+  background-color:rgb(245, 245, 245);
+}
+.link-seperator {
+  margin-left: 0.3rem;
+  margin-right:0.3rem;
+}
+.options-bar {
+  margin:1rem 0!important;
+  padding:0.5rem 0;
+  border:1px solid rgb(227, 227, 227);
+}
+.options-bar .col, .options-search {
+  padding:0 0.5rem!important;
+}
+.petitions-table {
+  text-align: left;
+  font-family:'Lato';
+  font-weight:300;
+}
+.petitions-table img {
+
+  width:100%;
+}
+.table-image-container {
+  height:5rem;
+  width:5rem;
+
+}
+ thead td {
+  border:none!important;
+}
+tbody tr td {
+  border-right: none!important;
+  border-left: none!important;
+}
+tbody tr td:last-child {
+  border-left: none;
+}
+.petition-details {
+
+}
+.petition-details div {
+  margin-left: 1rem;
+}
+.petition-details h3{
+  font-size:1rem;
+  color:rgb(43, 63, 68);
+}
+.petition-details p {
+  font-size:0.8rem;
+  color:rgb(153, 153, 153);
+}
+.petition-actions button {
+  margin-bottom:0.5rem;
+}
+.petition-actions button svg {
+  margin-right:0.5rem;
+}
+.footer {
+  width:90%;
+  margin:auto;
+  margin-top:1rem;
+  font-family:'Lato';
+  font-weight:300;
+}
+.logo-grnet {
+  width:8rem;
+  margin-right:0.5rem;
+}
+.logo-eu {
+  width: 3rem;
+}
+.footer-links {
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  text-align: right;
+
+}
+.footer-links a {
+
+  margin-left:0.5rem;
+  font-size:0.8rem;
+
+}
+.footer-description  {
+  margin-top:0.7rem;
+  font-size:0.9rem;
 }
