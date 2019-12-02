@@ -384,6 +384,8 @@ export function ListInput(props){
                       <React.Fragment>
                         <Form.Control
                           {...field}
+                          onBlur={props.handleBlur}
+                          onChange={props.onChange}
                           isInvalid={Array.isArray(props.error)?!!props.error[index]:false}
                           column="true"
                           sm="4"

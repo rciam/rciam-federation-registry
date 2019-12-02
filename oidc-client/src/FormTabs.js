@@ -116,9 +116,9 @@ export default class FormTabs extends React.Component {
                       onBlur={handleBlur}
                      />
                    </InputRow>
-                   <InputRow title='Client ID' description='Unique identifier. If you leave this blank it will be automatically generated.' error={errors.clientId} touched={touched.clientId}>
+                   <InputRow title='Client ID' description='Unique identifier. If you leave this blank it will be automatically generated.' error={errors.client_id} touched={touched.client_id}>
                      <SimpleInput
-                       name='clientId'
+                       name='client_id'
                        placeholder='Type something'
                        onChange={handleChange}
                        value={values.client_id}
@@ -136,6 +136,7 @@ export default class FormTabs extends React.Component {
                         touched={touched.redirect_uris}
                         hasSubmited={this.state.hasSubmitted}
                         onBlur={handleBlur}
+                        onChange={handleChange}
                         setFieldTouched={setFieldTouched}
                       />
                     </InputRow>
@@ -182,6 +183,7 @@ export default class FormTabs extends React.Component {
                         empty={typeof(errors.contacts)=='string'?true:false}
                         error={errors.contacts}
                         touched={touched.contacts}
+                        onChange={handleChange}
                         onBlur={handleBlur}
                         setFieldTouched={setFieldTouched}
                       />
