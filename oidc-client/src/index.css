@@ -136,7 +136,7 @@ form {
   color:rgb(91, 91, 91);
   font-family:"Open Sans";
   font-weight: 300;
-  font-size: 1.5rem;
+  font-size: 1.9rem;
   margin-top:1rem;
   margin-bottom:2rem;
 }
@@ -162,7 +162,7 @@ form {
   margin-top:-2.5rem;
 }
 .logo a img {
-  height: 4rem;
+  height: 5.4rem;
 }
 .nav-title {
   color:#4b4b4b;
@@ -202,7 +202,7 @@ form {
   margin:0 0 1rem 1em;
 }
 .home-container p {
-  font-size:0.8rem;
+  font-size:1rem;
   margin-left:1.5rem;
   margin-right: 1.5rem;
   padding-bottom: 1.5rem;
@@ -293,7 +293,7 @@ tbody tr td:last-child {
 .footer-links a {
 
   margin-left:0.5rem;
-  font-size:0.8rem;
+  font-size:1rem;
 
 }
 .footer-description  {

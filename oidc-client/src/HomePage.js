@@ -28,7 +28,7 @@ export default class HomePage extends React.Component {
   }
 
   getCall(){
-    fetch(config.localhost+'client/1').then(response=>response.json()).then(response=> {
+    fetch(config.host+'client/1').then(response=>response.json()).then(response=> {
       if(response.success){
         this.setState({connections:response.connections});
       }
@@ -140,11 +140,20 @@ export default class HomePage extends React.Component {
                     <span className="link-seperator">/</span>
                     <Link to="/petitions">Manage Clients</Link>
                     <span className="link-seperator">/</span>
-                    Edit Petition
+                    Create Petition
                   </div>
                   <FormTabs/>
                 </Route>
-                <Route path="/form/:id" children={<Child connections={this.state.connections}/>}/>
+                <Route path="/form/:id">
+                  <div className="links">
+                    <Link to="/home">Home</Link>
+                    <span className="link-seperator">/</span>
+                    <Link to="/petitions">Manage Clients</Link>
+                    <span className="link-seperator">/</span>
+                    Edit Petition
+                  </div>
+                  <Child connections={this.state.connections}/>
+                </Route>
 
               </div>
               </React.Fragment>

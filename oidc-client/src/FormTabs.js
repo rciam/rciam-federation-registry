@@ -62,7 +62,7 @@ export default class FormTabs extends React.Component {
   }
   postApi(data){
 
-    fetch(config.localhost+'client', {
+    fetch(config.host+'client', {
       method: 'POST', // *GET, POST, PUT, DELETE, etc.
       credentials: 'same-origin', // include, *same-origin, omit
       headers: {
