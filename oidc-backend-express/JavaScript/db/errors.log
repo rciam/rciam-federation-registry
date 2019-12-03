@@ -294,3 +294,27 @@
 
 16:38:15 error: there is no parameter $1
          task(add-client): SELECT * FROM client_details WHERE client_id = $1
+
+14:18:54 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value") values(42,'authorization_code'),(42,'redelegation')
+
+14:18:55 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value") values(42,'openid'),(42,'profile'),(42,'email'),(42,'eduperson_entitlement'),(42,'eduperson_scoped_affiliation'),(42,'eduperson_unique_id')
+
+14:18:55 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_redirect_uri"("owner_id","value") values(42,'https://google.com')
+
+14:18:55 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_contact"("owner_id","value") values(42,'mail@mail.com')
+
+14:26:28 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value") values(43,'authorization_code')
+
+14:26:28 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value") values(43,'openid'),(43,'profile'),(43,'email'),(43,'eduperson_entitlement'),(43,'eduperson_scoped_affiliation'),(43,'eduperson_unique_id')
+
+14:26:28 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_redirect_uri"("owner_id","value") values(43,'https://google.gr')
+
+14:26:28 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_contact"("owner_id","value") values(43,'mail@mail.com')

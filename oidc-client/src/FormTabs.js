@@ -13,7 +13,7 @@ import * as yup from 'yup';
 import {SimpleInput,DeviceCode,Select,ListInput,LogoInput,TextAria,ListInputArray,CheckboxList,SimpleCheckbox,ClientSecret,TimeInput,RefreshToken} from './Inputs.js'// eslint-disable-next-line
 const {reg} = require('./regex.js');
 const schema = yup.object({
-  client_ame:yup.string().min(4,'The Client Name must be at least 4 characters long').max(15,'The Client Name exceeds the character limit (15)').required('This is a required field!'),
+  client_name:yup.string().min(4,'The Client Name must be at least 4 characters long').max(15,'The Client Name exceeds the character limit (15)').required('This is a required field!'),
   client_id:yup.string().min(4,'The Client ID must be at least 4 characters long').max(15,'The Client ID exceeds the character limit (15)').required('This is a required field!'),
   redirect_uris:yup.array().of(yup.string().matches(reg.regUrl,'This must be a secure Url starting with https://')).required('This is a required field!'),
   logo_uri:yup.string().required('This is a required field!').test('testImage','Enter a valid image Url',function(value){return imageError}),
@@ -42,6 +42,7 @@ export default class FormTabs extends React.Component {
   super(props);
   console.log(initialValues)
   if(this.props.editConnection){
+    
     this.state = {
       hasSubmited:false,
       initialValues:this.props.editConnection,
@@ -62,7 +63,7 @@ export default class FormTabs extends React.Component {
   }
   postApi(data){
 
-    fetch(config.host+'client', {
+    fetch(config.localhost+'client', {
       method: 'POST', // *GET, POST, PUT, DELETE, etc.
       credentials: 'same-origin', // include, *same-origin, omit
       headers: {
@@ -79,9 +80,8 @@ export default class FormTabs extends React.Component {
       <Formik
       initialValues={this.state.initialValues}
         validationSchema={schema}
-        enableReinitialize={true}
         onSubmit={(values,{setSubmitting}) => {
-
+          console.log("test");
 
           this.postApi(values);
           this.setState({hasSubmited:true});
@@ -106,9 +106,9 @@ export default class FormTabs extends React.Component {
               <Tabs defaultActiveKey="main" id="uncontrolled-tab-example">
                 <Tab eventKey="main" title="Main">
                 <Form noValidate onSubmit={handleSubmit}>
-                  <InputRow title='Client name' description='Human-readable application name' error={errors.clientName} touched={touched.clientName}>
+                  <InputRow title='Client name' description='Human-readable application name' error={errors.client_name} touched={touched.client_name}>
                     <SimpleInput
-                      name='clientName'
+                      name='client_name'
                       placeholder='Type something'
                       onChange={handleChange}
                       value={values.client_name}
@@ -224,7 +224,7 @@ export default class FormTabs extends React.Component {
                         touched={touched.client_secret}
                         isInvalid={this.state.hasSubmitted?!!errors.client_secret:(!!errors.client_secret&&touched.client_secret)}
                         onBlur={handleBlur}
-                        generateClientSecret={values.generate_client_secret}
+                        generate_client_secret={values.generate_client_secret}
                       />
                     </InputRow>
                     <InputRow title='Access Token Timeout' extraClass='time-input' error={errors.access_token_validity_seconds} touched={touched.access_token_validity_seconds} description='Enter this time in seconds, minutes, or hours (Max value is 1000000 seconds (11.5 days)).'>

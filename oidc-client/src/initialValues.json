@@ -1,10 +1,10 @@
 {
-  "client_name":"myname",
-  "client_id":"myid",
-  "redirect_uris": ["https://google.gr"],
-  "logo_uri":"https://aai-dev.egi.eu/oidc/resources/images/grnet_logo_en.svg",
-  "policy_uri":"https://google.gr",
-  "contacts":["mymail@mail.com"],
+  "client_name":"",
+  "client_id":"",
+  "redirect_uris": [],
+  "logo_uri":"",
+  "policy_uri":"",
+  "contacts":[],
   "scope": [
     "openid",
     "profile",
@@ -17,9 +17,9 @@
     "authorization_code"
   ],
   "allow_introspection":false,
-  "client_description":"This should be a lengthy description so it looks cool on the petition page.The table it is displayd thinks so!",
+  "client_description":"",
   "generate_client_secret":true,
-  "client_secret":"yesTsikret",
+  "client_secret":"",
   "access_token_validity_seconds":"3600",
   "refresh_token_validity_seconds":"28800",
   "reuse_refresh_tokens":true,

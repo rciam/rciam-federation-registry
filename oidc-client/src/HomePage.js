@@ -28,7 +28,7 @@ export default class HomePage extends React.Component {
   }
 
   getCall(){
-    fetch(config.host+'client/1').then(response=>response.json()).then(response=> {
+    fetch(config.localhost+'client/1').then(response=>response.json()).then(response=> {
       if(response.success){
         this.setState({connections:response.connections});
       }
@@ -190,6 +190,7 @@ function Child(props) {
   // We can use the `useParams` hook here to access
   // the dynamic pieces of the URL.
   let { id } = useParams();
+
 
   return <FormTabs editConnection={props.connections[id]}/>
 }
