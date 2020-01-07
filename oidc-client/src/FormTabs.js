@@ -1,7 +1,7 @@
-import React from 'react';
+import React,{useState} from 'react';
 import Tabs from 'react-bootstrap/Tabs';
 import Tab from 'react-bootstrap/Tab';
-import initialValues from './initialValues';
+
 import {Debug} from './Debug.js';
 import Form from 'react-bootstrap/Form';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -10,6 +10,7 @@ import * as config from './config.json';
 import InputRow from './InputRow.js';
 import Button from 'react-bootstrap/Button'
 import * as yup from 'yup';
+import { useReactOidc } from '@axa-fr/react-oidc-context';
 import {SimpleInput,DeviceCode,Select,ListInput,LogoInput,TextAria,ListInputArray,CheckboxList,SimpleCheckbox,ClientSecret,TimeInput,RefreshToken} from './Inputs.js'// eslint-disable-next-line
 const {reg} = require('./regex.js');
 const schema = yup.object({
@@ -37,54 +38,42 @@ const schema = yup.object({
 
 });
 var imageError = false;
-export default class FormTabs extends React.Component {
-  constructor(props) {
-  super(props);
-  console.log(initialValues)
-  if(this.props.editConnection){
-    
-    this.state = {
-      hasSubmited:false,
-      initialValues:this.props.editConnection,
-      hasLoaded:true
-    }}
-  else{
-    this.state = {
-      hasSubmited:false,
-      initialValues:initialValues,
-      hasLoaded:true
-    };
-  }
-  }
+const FormTabs = (props)=> {
 
+  const [hasSubmitted,setHasSubmitted] = useState(false)
+  const { oidcUser } = useReactOidc();
 
-  setImageError(value){
+  const setImageError=(value)=>{
     imageError=value;
   }
-  postApi(data){
 
+  const postApi=(data)=>{
     fetch(config.localhost+'client', {
       method: 'POST', // *GET, POST, PUT, DELETE, etc.
       credentials: 'same-origin', // include, *same-origin, omit
       headers: {
+      'Authorization': 'Bearer ' + oidcUser.access_token,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(data) // body data type must match "Content-Type" header
-  }).then(response=>response.json()).then(response=>console.log(response))
-  }
+  }).then(response=>response.json()).then(response=> {
+    console.log(response);
+  })
+}
 
-  render() {
-    console.log(this.state);
+
+
+
     return(
 
       <Formik
-      initialValues={this.state.initialValues}
+      initialValues={props.initialValues}
         validationSchema={schema}
         onSubmit={(values,{setSubmitting}) => {
           console.log("test");
+          setHasSubmitted(true);
+          postApi(values);
 
-          this.postApi(values);
-          this.setState({hasSubmited:true});
         }}
       >
       {({
@@ -112,7 +101,7 @@ export default class FormTabs extends React.Component {
                       placeholder='Type something'
                       onChange={handleChange}
                       value={values.client_name}
-                      isInvalid={this.state.hasSubmitted?!!errors.client_name:(!!errors.client_name&&touched.client_name)}
+                      isInvalid={hasSubmitted?!!errors.client_name:(!!errors.client_name&&touched.client_name)}
                       onBlur={handleBlur}
                      />
                    </InputRow>
@@ -122,7 +111,7 @@ export default class FormTabs extends React.Component {
                        placeholder='Type something'
                        onChange={handleChange}
                        value={values.client_id}
-                       isInvalid={this.state.hasSubmitted?!!errors.client_id:(!!errors.client_id&&touched.client_id)}
+                       isInvalid={hasSubmitted?!!errors.client_id:(!!errors.client_id&&touched.client_id)}
                        onBlur={handleBlur}
                       />
                     </InputRow>
@@ -134,7 +123,7 @@ export default class FormTabs extends React.Component {
                         name='redirect_uris'
                         error={errors.redirect_uris}
                         touched={touched.redirect_uris}
-                        hasSubmited={this.state.hasSubmitted}
+
                         onBlur={handleBlur}
                         onChange={handleChange}
                         setFieldTouched={setFieldTouched}
@@ -142,7 +131,7 @@ export default class FormTabs extends React.Component {
                     </InputRow>
                     <InputRow title='Logo'>
                       <LogoInput
-                        setImageError={this.setImageError}
+                        setImageError={setImageError}
                         value={values.logo_uri}
                         name='logo_uri'
                         description='URL that points to a logo image, will be displayed on approval page'
@@ -151,7 +140,7 @@ export default class FormTabs extends React.Component {
                         touched={touched.logo_uri}
                         onBlur={handleBlur}
                         validateField={validateField}
-                        isInvalid={this.state.hasSubmitted?!!errors.logo_uri:(!!errors.logo_uri&&touched.logo_uri)}
+                        isInvalid={hasSubmitted?!!errors.logo_uri:(!!errors.logo_uri&&touched.logo_uri)}
                       />
 
                     </InputRow>
@@ -162,7 +151,7 @@ export default class FormTabs extends React.Component {
                         onBlur={handleBlur}
                         name='client_description'
                         placeholder="Type a description"
-                        isInvalid={this.state.hasSubmitted?!!errors.client_description:(!!errors.client_description&&touched.client_description)}
+                        isInvalid={hasSubmitted?!!errors.client_description:(!!errors.client_description&&touched.client_description)}
                       />
                     </InputRow>
                     <InputRow title='Policy Statement' description='URL for the Policy Statement of this client, will be displayed to the user' error={errors.policy_uri} touched={touched.policy_uri}>
@@ -171,7 +160,7 @@ export default class FormTabs extends React.Component {
                         placeholder='https://'
                         onChange={handleChange}
                         value={values.policy_uri}
-                        isInvalid={this.state.hasSubmitted?!!errors.policy_uri:(!!errors.policy_uri&&touched.policy_uri)}
+                        isInvalid={hasSubmitted?!!errors.policy_uri:(!!errors.policy_uri&&touched.policy_uri)}
                         onBlur={handleBlur}
                       />
                     </InputRow>
@@ -196,7 +185,7 @@ export default class FormTabs extends React.Component {
                         defaultValues= {['openid','email','profile','offline_access','eduperson_entitlement','eduperson_scoped_affiliation','eduperson_unique_id','refeds_edu']}
                         error={errors.scope}
                         touched={touched.scope}
-                        hasSubmited={this.state.hasSubmited}
+
 
                         onBlur={handleBlur}
                       />
@@ -222,7 +211,7 @@ export default class FormTabs extends React.Component {
                         clientSecret={values.client_secret}
                         error={errors.client_secret}
                         touched={touched.client_secret}
-                        isInvalid={this.state.hasSubmitted?!!errors.client_secret:(!!errors.client_secret&&touched.client_secret)}
+                        isInvalid={hasSubmitted?!!errors.client_secret:(!!errors.client_secret&&touched.client_secret)}
                         onBlur={handleBlur}
                         generate_client_secret={values.generate_client_secret}
                       />
@@ -231,7 +220,7 @@ export default class FormTabs extends React.Component {
                       <TimeInput
                         name='access_token_validity_seconds'
                         value={values.access_token_validity_seconds}
-                        isInvalid={this.state.hasSubmitted?!!errors.access_token_validity_seconds:(!!errors.access_token_validity_seconds&&touched.access_token_validity_seconds)}
+                        isInvalid={hasSubmitted?!!errors.access_token_validity_seconds:(!!errors.access_token_validity_seconds&&touched.access_token_validity_seconds)}
                         onBlur={handleBlur}
                         onChange={handleChange}
                       />
@@ -240,7 +229,7 @@ export default class FormTabs extends React.Component {
                       <RefreshToken
                         values={values}
                         onBlur={handleBlur}
-                        isInvalid={this.state.hasSubmitted?!!errors.refresh_token_validity_seconds:(!!errors.refresh_token_validity_seconds&&touched.refresh_token_validity_seconds)}
+                        isInvalid={hasSubmitted?!!errors.refresh_token_validity_seconds:(!!errors.refresh_token_validity_seconds&&touched.refresh_token_validity_seconds)}
                         onChange={handleChange}
                       />
                     </InputRow>
@@ -248,7 +237,7 @@ export default class FormTabs extends React.Component {
                       <DeviceCode
                         onBlur={handleBlur}
                         values={values}
-                        isInvalid={this.state.hasSubmitted?!!errors.device_code_validity_seconds:(!!errors.device_code_validity_seconds&&touched.device_code_validity_seconds)}
+                        isInvalid={hasSubmitted?!!errors.device_code_validity_seconds:(!!errors.device_code_validity_seconds&&touched.device_code_validity_seconds)}
                         onChange={handleChange}
                       />
                     </InputRow>
@@ -259,15 +248,16 @@ export default class FormTabs extends React.Component {
                         options={['','plain','S256']}
                         name="code_challenge_method"
                         values={values}
-                        isInvalid={this.state.hasSubmitted?!!errors.code_challenge_method:(!!errors.code_challenge_method&&touched.code_challenge_method)}
+                        isInvalid={hasSubmitted?!!errors.code_challenge_method:(!!errors.code_challenge_method&&touched.code_challenge_method)}
                         onChange={handleChange}
                       />
                     </InputRow>
 
                     <InputRow extraClass='time-input'>
 
-                      <Button className='post-button' type="button" variant="danger" onClick={()=> {this.postApi(values)}}>Post Call without Validation</Button>
+                      <Button className='post-button' type="button" variant="danger" onClick={()=> {postApi(values)}}>Post Call without Validation</Button>
                       <Button className='submit-button' type="submit" variant="primary" >Submit</Button>
+
                     </InputRow>
                   </Form>
                 </Tab>
@@ -295,4 +285,4 @@ export default class FormTabs extends React.Component {
 
    );
    }
-}
+export default FormTabs;

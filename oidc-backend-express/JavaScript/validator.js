@@ -19,7 +19,7 @@ const clientValidationRules = () => {
     body('generate_client_secret').custom((value)=> typeof(value)==='boolean'),
     body('reuse_refresh_tokens').custom((value)=> typeof(value)==='boolean'),
     body('clear_access_tokens_on_refresh').custom((value)=> typeof(value)==='boolean'),
-    body('client_secret').if((value,req)=> req.body.generate_client_secret=false).isString().isLength({min:4,max:15}),
+    body('client_secret').if((value,req)=> req.body.data.generate_client_secret=false).isString().isLength({min:4,max:15}),
 
   ]
 }

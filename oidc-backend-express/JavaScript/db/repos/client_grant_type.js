@@ -1,4 +1,4 @@
-const sql = require('../sql').client_grant_type;
+
 
 let cs= {};
 /*
@@ -17,6 +17,10 @@ class ClientGrantTypeRepository {
     async findByConnectionId(id){
 
       return this.db.any('SELECT * FROM client_grant_type WHERE owner_id IN ($1:csv)',[id]);
+    }
+
+    async delete(id) {
+        return this.db.result('DELETE FROM client_grant_type WHERE owner_id = $1', +id, r => r.rowCount);
     }
 
     // Tries to find a user from name;

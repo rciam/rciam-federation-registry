@@ -1,15 +1,27 @@
 import React from 'react';
-
+import { useAlert } from 'react-alert';
 import './App.css';
-import HomePage from './HomePage.js';
+import {MainPage} from './MainPage.js';
+import oidcConfiguration from './configuration';
+import { AuthenticationProvider, oidcLog } from '@axa-fr/react-oidc-context';
+import Home from './Home.js';
 
 function App() {
+  const alert = useAlert()
   return (
-    <div className="App">
-      <HomePage/>
+    <AuthenticationProvider
+      configuration={oidcConfiguration}
+      loggerLevel={oidcLog.ERRORS}
+      isEnabled={true}
+      notAuthenticated={Home}
+      authenticating={Home}
 
+    >
+      <div className="App">
+        <MainPage alert={alert}/>
 
-    </div>
+      </div>
+    </AuthenticationProvider>
   );
 }
 

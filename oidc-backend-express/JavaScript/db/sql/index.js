@@ -18,12 +18,14 @@ const path = require('path');
 
 module.exports = {
     client_details:{
-      add:sql('client_details/add.sql')
+      add:sql('client_details/add.sql'),
+      findOne:sql('client_details/findOne.sql')
     },
-    client_grant_type:{
-      add:sql('client_grant_type/add.sql')
-    },
-    
+    user_info:{
+      add:sql('user_info/add.sql')
+    }
+
+
 };
 
 ///////////////////////////////////////////////

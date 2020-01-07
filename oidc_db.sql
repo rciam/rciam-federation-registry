@@ -1,3 +1,20 @@
+create table user_info (
+  id SERIAL PRIMARY KEY,
+  sub VARCHAR(256),
+  preferred_username VARCHAR(256),
+  name VARCHAR(256),
+  given_name VARCHAR(256),
+  family_name VARCHAR(256),
+  email VARCHAR(256)
+);
+
+create table user_edu_person_entitlement (
+  user_id bigint,
+  edu_person_entitlement VARCHAR(256),
+  PRIMARY KEY (user_id,edu_person_entitlement),
+  FOREIGN KEY (user_id) REFERENCES user_info(id)
+);
+
 create table client_details (
   id SERIAL PRIMARY KEY,
   client_description VARCHAR(1024),
@@ -47,5 +64,5 @@ create table client_scope (
   PRIMARY KEY (owner_id,value),
   FOREIGN KEY (owner_id) REFERENCES client_details(id)
 );
-
-
+ALTER TABLE client_details ALTER COLUMN requester TYPE VARCHAR(256);
+UPDATE client_details SET requester='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu' WHERE requester='1';

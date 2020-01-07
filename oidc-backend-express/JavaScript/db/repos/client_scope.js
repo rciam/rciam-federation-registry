@@ -17,6 +17,9 @@ class ClientScopeRepository {
 
       return this.db.any('SELECT * FROM client_scope WHERE owner_id IN ($1:csv)',[id]);
     }
+    async delete(id) {
+        return this.db.result('DELETE FROM client_scope WHERE id = $1', +id, r => r.rowCount);
+    }
 
     // Tries to find a user from name;
 

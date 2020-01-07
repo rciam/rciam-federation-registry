@@ -179,7 +179,7 @@ form {
 }
 .flex-container {
   display:flex;
-  flex-direction: row;
+
 }
 .content-container {
   width:100%;
@@ -299,4 +299,19 @@ tbody tr td:last-child {
 .footer-description  {
   margin-top:0.7rem;
   font-size:0.9rem;
+}
+.log-button {
+  color: rgb(89, 154, 219)!important;
+  border-color: rgb(89, 154, 219)!important;
+  padding: .2rem .75rem!important;
+}
+.log-button:hover {
+  color:white!important;
+}
+.dropdown-menu {
+  min-width: 0px!important;
+  padding:0px!important;
+}
+.dropdown-menu a {
+  padding:0px!important;
 }

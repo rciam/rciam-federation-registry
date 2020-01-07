@@ -318,3 +318,141 @@
 
 14:26:28 error: Querying against a released or lost connection.
          task(add-client): insert into "client_contact"("owner_id","value") values(43,'mail@mail.com')
+
+12:47:49 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value") values(44,'authorization_code'),(44,'refresh_token'),(44,'redelegation'),(44,'token_exchange')
+
+12:47:49 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value") values(44,'openid'),(44,'profile'),(44,'email'),(44,'eduperson_entitlement'),(44,'eduperson_scoped_affiliation'),(44,'eduperson_unique_id')
+
+12:47:49 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_redirect_uri"("owner_id","value") values(44,'https://www.google.com/')
+
+12:47:49 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_contact"("owner_id","value") values(44,'mymail@mail.com')
+
+12:58:40 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value") values(45,'authorization_code')
+
+12:58:40 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value") values(45,'openid'),(45,'profile'),(45,'email'),(45,'eduperson_entitlement'),(45,'eduperson_scoped_affiliation'),(45,'eduperson_unique_id')
+
+12:58:40 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_redirect_uri"("owner_id","value") values(45,'https://www.google.com/')
+
+12:58:40 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_contact"("owner_id","value") values(45,'random@mail.com')
+
+14:05:16 error: column "id" does not exist
+         task(delete-client): DELETE FROM client_grant_type WHERE id = 45
+
+14:07:04 error: column "id" does not exist
+         task(delete-client): DELETE FROM client_grant_type WHERE id = 45
+
+17:42:01 error: operator does not exist: character varying = integer
+         task(find-clients): SELECT id,client_description,logo_uri,client_name FROM client_details WHERE client_id = 1
+
+17:42:07 error: operator does not exist: character varying = integer
+         task(find-clients): SELECT id,client_description,logo_uri,client_name FROM client_details WHERE client_id = 1
+
+17:42:08 error: operator does not exist: character varying = integer
+         task(find-clients): SELECT id,client_description,logo_uri,client_name FROM client_details WHERE client_id = 1
+
+17:42:08 error: operator does not exist: character varying = integer
+         task(find-clients): SELECT id,client_description,logo_uri,client_name FROM client_details WHERE client_id = 1
+
+17:42:08 error: operator does not exist: character varying = integer
+         task(find-clients): SELECT id,client_description,logo_uri,client_name FROM client_details WHERE client_id = 1
+
+17:42:09 error: operator does not exist: character varying = integer
+         task(find-clients): SELECT id,client_description,logo_uri,client_name FROM client_details WHERE client_id = 1
+
+17:42:30 error: operator does not exist: character varying = integer
+         task(find-clients): SELECT id,client_description,logo_uri,client_name FROM client_details WHERE client_id = 1
+
+17:42:31 error: operator does not exist: character varying = integer
+         task(find-clients): SELECT id,client_description,logo_uri,client_name FROM client_details WHERE client_id = 1
+
+17:42:31 error: operator does not exist: character varying = integer
+         task(find-clients): SELECT id,client_description,logo_uri,client_name FROM client_details WHERE client_id = 1
+
+17:42:31 error: operator does not exist: character varying = integer
+         task(find-clients): SELECT id,client_description,logo_uri,client_name FROM client_details WHERE client_id = 1
+
+17:42:31 error: operator does not exist: character varying = integer
+         task(find-clients): SELECT id,client_description,logo_uri,client_name FROM client_details WHERE client_id = 1
+
+17:42:32 error: operator does not exist: character varying = integer
+         task(find-clients): SELECT id,client_description,logo_uri,client_name FROM client_details WHERE client_id = 1
+
+17:42:34 error: operator does not exist: character varying = integer
+         task(find-clients): SELECT id,client_description,logo_uri,client_name FROM client_details WHERE client_id = 1
+
+17:42:35 error: operator does not exist: character varying = integer
+         task(find-clients): SELECT id,client_description,logo_uri,client_name FROM client_details WHERE client_id = 1
+
+17:42:35 error: operator does not exist: character varying = integer
+         task(find-clients): SELECT id,client_description,logo_uri,client_name FROM client_details WHERE client_id = 1
+
+17:42:35 error: operator does not exist: character varying = integer
+         task(find-clients): SELECT id,client_description,logo_uri,client_name FROM client_details WHERE client_id = 1
+
+17:42:35 error: operator does not exist: character varying = integer
+         task(find-clients): SELECT id,client_description,logo_uri,client_name FROM client_details WHERE client_id = 1
+
+17:42:35 error: operator does not exist: character varying = integer
+         task(find-clients): SELECT id,client_description,logo_uri,client_name FROM client_details WHERE client_id = 1
+
+17:44:37 error: operator does not exist: character varying = integer
+         task(find-clients): SELECT id,client_description,logo_uri,client_name FROM client_details WHERE client_id = 1
+
+17:46:58 error: Multiple rows were not expected.
+         task(find-clients): SELECT id,client_description,logo_uri,client_name FROM client_details WHERE requester = 1
+
+13:51:23 error: relation "edu_person_entitlement" does not exist
+         task(user-check): insert into "edu_person_entitlement"("user_id","edu_person_entitlement") values(6,'https://aai.egi.eu/LoA#Low')
+
+14:14:35 error: operator does not exist: character varying = integer
+         task(find-clients): SELECT id,client_description,logo_uri,client_name FROM client_details WHERE requester = 1
+
+15:04:18 error: there is no parameter $1
+         task(add-client): SELECT * FROM client_details WHERE client_id = $1
+
+15:11:31 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value") values(46,'authorization_code')
+
+15:11:31 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value") values(46,'openid'),(46,'profile'),(46,'email'),(46,'eduperson_entitlement'),(46,'eduperson_scoped_affiliation'),(46,'eduperson_unique_id')
+
+15:11:31 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_redirect_uri"("owner_id","value") values(46,'https://en.wikipedia.org/wiki/Test_(assessment)')
+
+15:11:31 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_contact"("owner_id","value") values(46,'fake@mail.com')
+
+13:43:15 error: column "genetate_client_secret" does not exist
+         task(find-clients): SELECT client_description,reuse_refresh_tokens,allow_introspection,client_id,client_secret,access_token_validity_seconds,refresh_token_validity_seconds,client_name,logo_uri,policy_uri,clear_access_tokens_on_refresh,code_challenge_method,device_code_validity_seconds,genetate_client_secret FROM client_details WHERE id='37' AND requester='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu'
+
+13:44:36 error: column "genetate_client_secret" does not exist
+         task(find-clients): SELECT client_description,reuse_refresh_tokens,allow_introspection,client_id,client_secret,access_token_validity_seconds,refresh_token_validity_seconds,client_name,logo_uri,policy_uri,clear_access_tokens_on_refresh,code_challenge_method,device_code_validity_seconds,genetate_client_secret FROM client_details WHERE id='37' AND requester='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu'
+
+13:45:40 error: column "generate_client_secret" does not exist
+         task(find-clients): SELECT client_description,reuse_refresh_tokens,allow_introspection,client_id,client_secret,access_token_validity_seconds,refresh_token_validity_seconds,client_name,logo_uri,policy_uri,clear_access_tokens_on_refresh,code_challenge_method,device_code_validity_seconds,generate_client_secret FROM client_details WHERE id='37' AND requester='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu'
+
+17:47:43 error: there is no parameter $1
+         task(find-clients): SELECT id,client_description,logo_uri,client_name FROM client_details WHERE requester = $1
+
+18:30:10 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value") values(47,'authorization_code')
+
+18:30:10 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value") values(47,'openid'),(47,'profile'),(47,'email'),(47,'eduperson_entitlement'),(47,'eduperson_scoped_affiliation'),(47,'eduperson_unique_id')
+
+18:30:10 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_redirect_uri"("owner_id","value") values(47,'https://www.google.com/')
+
+18:30:10 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_contact"("owner_id","value") values(47,'mail@mail.gr')
+
+12:37:59 error: syntax error at or near ")"
+         task(find-clients): SELECT * FROM client_contact WHERE owner_id IN ()
