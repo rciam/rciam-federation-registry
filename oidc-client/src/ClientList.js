@@ -3,51 +3,29 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {faSync,faPlus,faTimes,faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 import InputGroup from 'react-bootstrap/InputGroup';
 import FormControl from 'react-bootstrap/FormControl';
-import Button from 'react-bootstrap/Button'
+import Button from 'react-bootstrap/Button';
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import Table from 'react-bootstrap/Table';
 import * as config from './config.json';
 import Image from 'react-bootstrap/Image';
 import {Link} from "react-router-dom";
-import { useReactOidc } from '@axa-fr/react-oidc-context';
+
 
  const ClientList= ()=> {
 
    const [clients,setClients] = useState();
-   const [userAuth,setUserAuth] = useState(false)
-   const { oidcUser } = useReactOidc();
 
    useEffect(()=>{
      getClients();
-     setUser();
      // eslint-disable-next-line react-hooks/exhaustive-deps
    },[]);
 
-  const setUser =()=>{
-    if (!userAuth){
-      fetch(config.localhost+'user', {
-        method: 'POST', // *GET, POST, PUT, DELETE, etc.
-        credentials: 'same-origin', // include, *same-origin, omit
-        headers: {
-        'Authorization': 'Bearer ' + oidcUser.access_token,
-        'Content-Type': 'application/json'
-      }
-      }).then(response=>response.json()).then(response=> {
-        console.log(response);
-        if(response.success){
-          setUserAuth(true);
-        }
-      });
-    }
-  }
-
   const getClients = ()=> {
-    fetch(config.localhost+'clients/user', {
+    fetch(config.host+'clients/user', {
       method: 'POST', // *GET, POST, PUT, DELETE, etc.
-      credentials: 'same-origin', // include, *same-origin, omit
+      credentials: 'include', // include, *same-origin, omit
       headers: {
-        'Authorization': 'Bearer ' + oidcUser.access_token,
         'Content-Type': 'application/json'
       }
     }).then(response=>response.json()).then(response=> {
@@ -57,7 +35,6 @@ import { useReactOidc } from '@axa-fr/react-oidc-context';
       }
     });
   }
-
 
     return(
       <React.Fragment>
@@ -97,15 +74,11 @@ import { useReactOidc } from '@axa-fr/react-oidc-context';
                 <TableItem item={item} key={index}/>
               )
             }):<tr></tr>}
-
             </tbody>
           </Table>
-
         </div>
       </React.Fragment>
     )
-
-
 }
 
 function TableItem(props) {

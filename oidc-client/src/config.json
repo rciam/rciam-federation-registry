@@ -1,4 +1,4 @@
 {
-  "host": "http://snf-871007.vm.okeanos.grnet.gr:5000/",
-  "localhost": "http://localhost:5000/"
+  "host": "http://localhost:5000/",
+  "localhost": "http://snf-871007.vm.okeanos.grnet.gr:5000/"
 }

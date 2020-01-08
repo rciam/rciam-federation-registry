@@ -1,43 +1,38 @@
 import React from 'react';
-import {BrowserRouter as Router,Link} from "react-router-dom";
-import Nav from 'react-bootstrap/Nav';
-import {Header,Footer} from './HeaderFooter.js'
+import {BrowserRouter as Router} from "react-router-dom";
+import useGlobalState from './useGlobalState.js';
+import {Header,Footer} from './HeaderFooter.js';
 import Routes from './Router';
+import {SideNav} from './Components/SideNav.js';
+import Button from 'react-bootstrap/Button';
+
+
+ const MainPage= ()=> {
 
 
 
-export const MainPage = () => {
+      const globalState = useGlobalState();
+      const logged = globalState.global_state.log_state;
+      const Ask = () => {
+        console.log(logged);
+      }
+      return(
+        <React.Fragment>
+        <div className="main-container">
 
-    return(
-      <React.Fragment>
-      <div className="main-container">
+          <Header/>
+          <Router>
+            <div className="flex-container">
+              {logged&&<SideNav/>}
 
-        <Header/>
-        <Router>
-          <div className="flex-container">
-            <Nav defaultActiveKey="/home" className="flex-column nav-side">
-              <div className="nav-title">PERSONAL</div>
-              <Link to="/petitions">Manage Petitions</Link>
-            </Nav>
-            <Routes/>
-          </div>
-        </Router>
-        <Footer/>
-      </div>
-      </React.Fragment>
-    );
+              <Routes/>
+            </div>
+          </Router>
+          <Footer/>
+        </div>
+        <Button onClick={Ask}>Ask</Button>
+        </React.Fragment>
+      );
 
 }
-
-// eslint-disable-next-line
-{/*
-
-function Child(props) {
-  // We can use the `useParams` hook here to access
-  // the dynamic pieces of the URL.
-  let { id } = useParams();
-
-
-  return <FormTabs editConnection={props.connections[id]}/>
-}
-*/}
+export default MainPage;

@@ -1,22 +1,52 @@
 import React from 'react';
-import { Switch, Route } from 'react-router-dom';
-import { withOidcSecure } from '@axa-fr/react-oidc-context';
+import { Switch, Route,Redirect } from 'react-router-dom';
 import Home from '../Home';
 import ClientList from '../ClientList.js';
-import {EditClient,NewClient} from '../ClientForms.js'
-
+import {EditClient,NewClient} from '../ClientForms.js';
+import useGlobalState from '../useGlobalState.js';
 
 const Routes = () => (
   <div className="content-container">
     <Switch>
       <Route exact path="/" component={Home}/>
-      <Route path="/home" component={Home}/>
-      <Route path="/petitions" component={withOidcSecure(ClientList)}/>
-      <Route path="/form/new" component={withOidcSecure(NewClient)}/>
-      <Route path="/form/edit/:id" component={withOidcSecure(EditClient)}/>
+      <Route path="/home">
+        <Home/>
+      </Route>
+      <PrivateRoute path="/petitions">
+        <ClientList/>
+      </PrivateRoute>
+      <PrivateRoute path="/form/new">
+        <NewClient/>
+      </PrivateRoute>
+      <PrivateRoute path="/form/edit/:id" >
+          <EditClient/>
+      </PrivateRoute>
     </Switch>
-  </div>
-
+      </div>
 );
+
+
+function PrivateRoute({ children, ...rest }) {
+  const globalState = useGlobalState();
+  const log_state = globalState.global_state.log_state;
+
+  return (
+    <Route
+      {...rest}
+      render={({ location }) =>
+        log_state ? (
+          children
+        ) : (
+          <Redirect
+            to={{
+              pathname: "/",
+              state: { from: location }
+            }}
+          />
+        )
+      }
+    />
+  );
+}
 
 export default Routes;
