@@ -4,7 +4,6 @@ import useGlobalState from './useGlobalState.js';
 import {Header,Footer} from './HeaderFooter.js';
 import Routes from './Router';
 import {SideNav} from './Components/SideNav.js';
-import Button from 'react-bootstrap/Button';
 
 
  const MainPage= ()=> {
@@ -13,9 +12,7 @@ import Button from 'react-bootstrap/Button';
 
       const globalState = useGlobalState();
       const logged = globalState.global_state.log_state;
-      const Ask = () => {
-        console.log(logged);
-      }
+
       return(
         <React.Fragment>
         <div className="main-container">
@@ -30,7 +27,7 @@ import Button from 'react-bootstrap/Button';
           </Router>
           <Footer/>
         </div>
-        <Button onClick={Ask}>Ask</Button>
+
         </React.Fragment>
       );
 
