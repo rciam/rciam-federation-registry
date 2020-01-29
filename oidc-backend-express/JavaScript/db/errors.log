@@ -456,3 +456,324 @@
 
 12:37:59 error: syntax error at or near ")"
          task(find-clients): SELECT * FROM client_contact WHERE owner_id IN ()
+
+15:25:52 error: Querying against a released or lost connection.
+         task(user-check): insert into "edu_person_entitlement"("user_id","edu_person_entitlement") values(7,array['https://aai.egi.eu/LoA#Low'])
+
+13:03:57 error: relation "edu_person_entitlement" does not exist
+         task(user-check): insert into "edu_person_entitlement"("user_id","edu_person_entitlement") values(1,array['https://aai.egi.eu/LoA#Low'])
+
+13:07:47 error: Property 'modified_at' doesn't exist.
+         task(add-client): INSERT INTO client_details (client_description,reuse_refresh_tokens,allow_introspection,client_id,client_secret,access_token_validity_seconds,refresh_token_validity_seconds,client_name,logo_uri,policy_uri,clear_access_tokens_on_refresh,code_challenge_method,device_code_validity_seconds,created_at,updated_at,requester) VALUES (${client_description},${reuse_refresh_tokens},${allow_introspection},${client_id},${client_secret},${access_token_validity_seconds},${refresh_token_validity_seconds},${client_name},${logo_uri},${policy_uri},${clear_access_tokens_on_refresh},${code_challenge_method},${device_code_validity_seconds},to_timestamp(${created_at}/1000.0),to_timestamp(${modified_at}/1000.0),${requester}) RETURNING *
+         params: {"client_description":"Unimaginative desc v1.0","reuse_refresh_tokens":true,"allow_introspection":true,"client_id":"client5","client_secret":"","access_token_validity_seconds":"3600","refresh_token_validity_seconds":"28800","client_name":"Client 5","logo_uri":"https://en.facebookbrand.com/wp-content/uploads/2019/04/f_logo_RGB-Hex-Blue_512.png","policy_uri":"https://policystatement.com","clear_access_tokens_on_refresh":true,"code_challenge_method":"S256","device_code_validity_seconds":"28800","created_at":1579172867868,"updated_at":1579172867868,"requester":"4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu"}
+
+13:33:23 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value","created_at") values(8,'authorization_code',1579174403412),(8,'implicit',1579174403412),(8,'refresh_token',1579174403412)
+
+13:38:07 error: column "created_at" is of type timestamp without time zone but expression is of type bigint
+         task(add-client): insert into "client_grant_type"("owner_id","value","created_at") values(9,'authorization_code',1579174687265),(9,'token_exchange',1579174687265)
+
+13:38:07 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value","created_at") values(9,'openid',1579174687267),(9,'profile',1579174687267),(9,'email',1579174687267),(9,'eduperson_entitlement',1579174687267),(9,'eduperson_scoped_affiliation',1579174687267),(9,'eduperson_unique_id',1579174687267)
+
+13:38:07 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_redirect_uri"("owner_id","value","created_at") values(9,'https://myredirectthingy.cam',1579174687268)
+
+13:38:07 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_contact"("owner_id","value","created_at") values(9,'yourkid@heisspoiled.com',1579174687268)
+
+16:25:33 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value","created_at","is_deleted") values(10,'authorization_code',1579184733362,false),(10,'device',1579184733362,false)
+
+16:25:33 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value","created_at","is_deleted") values(10,'openid',1579184733363,false),(10,'profile',1579184733363,false),(10,'email',1579184733363,false),(10,'eduperson_entitlement',1579184733363,false),(10,'eduperson_scoped_affiliation',1579184733363,false),(10,'eduperson_unique_id',1579184733363,false),(10,'offline_access',1579184733363,false)
+
+16:25:33 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_redirect_uri"("owner_id","value","created_at","is_deleted") values(10,'https://redirecturi.com',1579184733363,false)
+
+16:25:33 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_contact"("owner_id","value","created_at","is_deleted") values(10,'yourbestfriend@heybro.lol',1579184733364,false)
+
+16:33:47 error: column "created_at" is of type timestamp without time zone but expression is of type bigint
+         task(add-client): insert into "client_grant_type"("owner_id","value","created_at","is_deleted") values(11,'authorization_code',1579185227813,false),(11,'implicit',1579185227813,false),(11,'refresh_token',1579185227813,false)
+
+16:33:47 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value","created_at","is_deleted") values(11,'microscope',1579185227814,false)
+
+16:33:47 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_redirect_uri"("owner_id","value","created_at","is_deleted") values(11,'https://redirecturi1.com',1579185227814,false),(11,'https://redirecturi2.com',1579185227814,false)
+
+16:33:47 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_contact"("owner_id","value","created_at","is_deleted") values(11,'myfail@gmail.com',1579185227815,false),(11,'mygrail@gmail.com',1579185227815,false),(11,'mymail@gmail.com',1579185227815,false),(11,'mysnail@gmail.com',1579185227815,false)
+
+16:35:39 error: column "created_at" is of type timestamp without time zone but expression is of type bigint
+         task(add-client): insert into "client_grant_type"("owner_id","value","created_at","is_deleted") values(12,'authorization_code',1579185339628,false),(12,'implicit',1579185339628,false),(12,'refresh_token',1579185339628,false)
+
+16:35:39 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value","created_at","is_deleted") values(12,'microscope',1579185339629,false)
+
+16:35:39 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_redirect_uri"("owner_id","value","created_at","is_deleted") values(12,'https://redirecturi1.com',1579185339630,false),(12,'https://redirecturi2.com',1579185339630,false)
+
+16:35:39 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_contact"("owner_id","value","created_at","is_deleted") values(12,'myfail@gmail.com',1579185339630,false),(12,'mygrail@gmail.com',1579185339630,false),(12,'mymail@gmail.com',1579185339630,false),(12,'mysnail@gmail.com',1579185339630,false)
+
+16:39:38 error: column "created_at" is of type timestamp without time zone but expression is of type bigint
+         task(add-client): insert into "client_grant_type"("owner_id","value","created_at","is_deleted") values(13,'authorization_code',1579185578213,false),(13,'implicit',1579185578213,false),(13,'refresh_token',1579185578213,false)
+
+16:39:38 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value","created_at","is_deleted") values(13,'electroscope','2020-01-16T16:39:38.217+02:00',false)
+
+16:39:38 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_redirect_uri"("owner_id","value","created_at","is_deleted") values(13,'https://redirecturi1.com',1579185578218,false),(13,'https://redirecturi2.com',1579185578218,false)
+
+16:39:38 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_contact"("owner_id","value","created_at","is_deleted") values(13,'myfail@gmail.com',1579185578218,false),(13,'mygrail@gmail.com',1579185578218,false),(13,'mymail@gmail.com',1579185578218,false),(13,'mysnail@gmail.com',1579185578218,false)
+
+16:41:39 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value","created_at","is_deleted") values(14,'authorization_code','2020-01-16T16:41:39.484+02:00',false),(14,'implicit','2020-01-16T16:41:39.484+02:00',false),(14,'refresh_token','2020-01-16T16:41:39.484+02:00',false)
+
+16:41:39 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value","created_at","is_deleted") values(14,'microscope','2020-01-16T16:41:39.486+02:00',false)
+
+16:41:39 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_redirect_uri"("owner_id","value","created_at","is_deleted") values(14,'https://redirecturi1.com','2020-01-16T16:41:39.487+02:00',false),(14,'https://redirecturi2.com','2020-01-16T16:41:39.487+02:00',false)
+
+16:41:39 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_contact"("owner_id","value","created_at","is_deleted") values(14,'myfail@gmail.com','2020-01-16T16:41:39.487+02:00',false),(14,'mygrail@gmail.com','2020-01-16T16:41:39.487+02:00',false),(14,'mymail@gmail.com','2020-01-16T16:41:39.487+02:00',false),(14,'mysnail@gmail.com','2020-01-16T16:41:39.487+02:00',false)
+
+16:56:33 error: Querying against a released or lost connection.
+         task(delete-clients): SELECT value FROM client_grant_type WHERE owner_id = 1
+
+12:25:41 error: column "updated_at" is of type timestamp without time zone but expression is of type bigint
+         task(delete-clients): UPDATE client_details SET is_deleted=true, updated_at=1579256741134 WHERE id = 14 and requester='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu'
+
+12:26:50 error: column "updated_at" is of type timestamp without time zone but expression is of type bigint
+         task(delete-clients): UPDATE client_details SET is_deleted=true, updated_at=1579256810797 WHERE id = 14 and requester='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu'
+
+12:31:50 error: column "updated_at" is of type timestamp without time zone but expression is of type bigint
+         task(delete-clients): UPDATE client_details SET is_deleted=true, updated_at=1579257110787 WHERE id = 14 and requester='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu'
+
+12:47:28 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value","created_at","is_deleted") values(5,'implicit','2020-01-17T12:47:28.236+02:00',false),(5,'authorization_code','2020-01-17T12:47:28.236+02:00',false),(5,'refresh_token','2020-01-17T12:47:28.236+02:00',false)
+
+12:47:28 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value","created_at","is_deleted") values(5,'stethoscope','2020-01-17T12:47:28.237+02:00',false)
+
+12:47:28 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_redirect_uri"("owner_id","value","created_at","is_deleted") values(5,'https://redirecturi1.com','2020-01-17T12:47:28.237+02:00',false),(5,'https://redirecturi2.com','2020-01-17T12:47:28.237+02:00',false)
+
+12:47:28 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_contact"("owner_id","value","created_at","is_deleted") values(5,'mymail@gmail.com','2020-01-17T12:47:28.238+02:00',false),(5,'mysnail@gmail.com','2020-01-17T12:47:28.238+02:00',false),(5,'mygrail@gmail.com','2020-01-17T12:47:28.238+02:00',false),(5,'myfail@gmail.com','2020-01-17T12:47:28.238+02:00',false)
+
+16:48:00 error: Querying against a released or lost connection.
+         task(user-check): insert into "edu_person_entitlement"("user_id","edu_person_entitlement") values(1,array['https://aai.egi.eu/LoA#Low'])
+
+16:07:06 error: Querying against a released or lost connection.
+         task(update-client): insert into "client_scope"("owner_id","value","created_at","is_deleted") values('1','eduperson_unique_id','2020-01-25T16:07:06.505+02:00',false),('1','eduperson_scoped_affiliation','2020-01-25T16:07:06.505+02:00',false)
+
+16:07:06 error: Querying against a released or lost connection.
+         task(update-client): insert into "client_redirect_uri"("owner_id","value","created_at","is_deleted") values('1','https://cv.com','2020-01-25T16:07:06.506+02:00',false)
+
+16:07:54 error: Querying against a released or lost connection.
+         task(update-client): insert into "client_grant_type"("owner_id","value","created_at","is_deleted") values('1','client_credentials','2020-01-25T16:07:54.600+02:00',false),('1','password','2020-01-25T16:07:54.600+02:00',false),('1','redelegation','2020-01-25T16:07:54.600+02:00',false),('1','token_exchange','2020-01-25T16:07:54.600+02:00',false),('1','device','2020-01-25T16:07:54.600+02:00',false)
+
+18:12:12 error: syntax error at or near "'client_redirect_uri'"
+         task(update-client): UPDATE 'client_redirect_uri' SET is_deleted=true WHERE owner_id = 1 AND value IN ()
+
+18:24:06 error: Property 'created_at' doesn't exist.
+         task(update-client): INSERT INTO client_details (client_description,reuse_refresh_tokens,allow_introspection,client_id,client_secret,access_token_validity_seconds,refresh_token_validity_seconds,client_name,logo_uri,policy_uri,clear_access_tokens_on_refresh,code_challenge_method,device_code_validity_seconds,created_at,updated_at,requester,revision,model_id) VALUES (${client_description},${reuse_refresh_tokens},${allow_introspection},${client_id},${client_secret},${access_token_validity_seconds},${refresh_token_validity_seconds},${client_name},${logo_uri},${policy_uri},${clear_access_tokens_on_refresh},${code_challenge_method},${device_code_validity_seconds},to_timestamp(${created_at}/1000.0),to_timestamp(${updated_at}/1000.0),${requester},${revision},${model_id}) RETURNING *
+         params: {"client_description":"This is not a small description with its size chosen deliberately to suit a secret purpose not revealed in this description","reuse_refresh_tokens":true,"allow_introspection":true,"client_id":"client1","client_secret":"secret","access_token_validity_seconds":"10000","refresh_token_validity_seconds":"1000","client_name":"DIffe","logo_uri":"https://cdn.vox-cdn.com/thumbor/0n6dqQfk9MuOBSiM39Pog2Bw39Y=/1400x1400/filters:format(jpeg)/cdn.vox-cdn.com/uploads/chorus_asset/file/19341372/microsoftedgenewlogo.jpg","policy_uri":"https://policy_uri.com","clear_access_tokens_on_refresh":true,"code_challenge_method":"plain","device_code_validity_seconds":"10000","revision":1,"updated_at":1579969446102}
+
+18:25:59 error: Property 'id' doesn't exist.
+         task(update-client): UPDATE client_details SET client_description=${client_description},reuse_refresh_tokens=${reuse_refresh_tokens},allow_introspection=${allow_introspection},client_id=${client_id},client_secret=${client_secret},access_token_validity_seconds=${access_token_validity_seconds},refresh_token_validity_seconds=${refresh_token_validity_seconds},client_name=${client_name},logo_uri=${logo_uri},policy_uri=${policy_uri},clear_access_tokens_on_refresh=${clear_access_tokens_on_refresh},code_challenge_method=${code_challenge_method},device_code_validity_seconds=${device_code_validity_seconds},updated_at=${updated_at},revision=${revision} WHERE id=${id}
+         params: {"client_description":"This is not a small description with its size chosen deliberately to suit a secret purpose not revealed in this description","reuse_refresh_tokens":true,"allow_introspection":true,"client_id":"client1","client_secret":"secret","access_token_validity_seconds":"10000","refresh_token_validity_seconds":"1000","client_name":"Different","logo_uri":"https://cdn.vox-cdn.com/thumbor/0n6dqQfk9MuOBSiM39Pog2Bw39Y=/1400x1400/filters:format(jpeg)/cdn.vox-cdn.com/uploads/chorus_asset/file/19341372/microsoftedgenewlogo.jpg","policy_uri":"https://policy_uri.com","clear_access_tokens_on_refresh":true,"code_challenge_method":"plain","device_code_validity_seconds":"10000","revision":1,"updated_at":1579969559352}
+
+18:27:16 error: column "updated_at" is of type timestamp without time zone but expression is of type bigint
+         task(update-client): UPDATE client_details SET client_description='This is not a small description with its size chosen deliberately to suit a secret purpose not revealed in this description',reuse_refresh_tokens=true,allow_introspection=true,client_id='client1',client_secret='secret',access_token_validity_seconds='10000',refresh_token_validity_seconds='1000',client_name='Diasdfas',logo_uri='https://cdn.vox-cdn.com/thumbor/0n6dqQfk9MuOBSiM39Pog2Bw39Y=/1400x1400/filters:format(jpeg)/cdn.vox-cdn.com/uploads/chorus_asset/file/19341372/microsoftedgenewlogo.jpg',policy_uri='https://policy_uri.com',clear_access_tokens_on_refresh=true,code_challenge_method='plain',device_code_validity_seconds='10000',updated_at=1579969636702,revision=1 WHERE id=1
+
+18:28:26 error: No data returned from the query.
+         task(update-client): UPDATE client_details SET client_description='This is not a small description with its size chosen deliberately to suit a secret purpose not revealed in this description',reuse_refresh_tokens=true,allow_introspection=true,client_id='client1',client_secret='secret',access_token_validity_seconds='10000',refresh_token_validity_seconds='1000',client_name='ASDasdads',logo_uri='https://cdn.vox-cdn.com/thumbor/0n6dqQfk9MuOBSiM39Pog2Bw39Y=/1400x1400/filters:format(jpeg)/cdn.vox-cdn.com/uploads/chorus_asset/file/19341372/microsoftedgenewlogo.jpg',policy_uri='https://policy_uri.com',clear_access_tokens_on_refresh=true,code_challenge_method='plain',device_code_validity_seconds='10000',updated_at='2020-01-25T18:28:26.579+02:00',revision=1 WHERE id=1
+
+18:30:33 error: No data returned from the query.
+         task(update-client): UPDATE client_details SET client_description='This is not a small description with its size chosen deliberately to suit a secret purpose not revealed in this description',reuse_refresh_tokens=true,allow_introspection=true,client_id='asdasd',client_secret='secret',access_token_validity_seconds='10000',refresh_token_validity_seconds='1000',client_name='ASDasdads',logo_uri='https://cdn.vox-cdn.com/thumbor/0n6dqQfk9MuOBSiM39Pog2Bw39Y=/1400x1400/filters:format(jpeg)/cdn.vox-cdn.com/uploads/chorus_asset/file/19341372/microsoftedgenewlogo.jpg',policy_uri='https://policy_uri.com',clear_access_tokens_on_refresh=true,code_challenge_method='plain',device_code_validity_seconds='10000',updated_at='2020-01-25T18:30:33.468+02:00',revision=2 WHERE id=1
+
+18:30:33 error: syntax error at or near "'client_grant_type'"
+         task(update-client): UPDATE 'client_grant_type' SET is_deleted=true WHERE owner_id = 1 AND value IN ()
+
+18:33:27 error: No data returned from the query.
+         task(update-client): UPDATE client_details SET client_description='This is not a small description with its size chosen deliberately to suit a secret purpose not revealed in this description',reuse_refresh_tokens=true,allow_introspection=true,client_id='asdassssssss',client_secret='secret',access_token_validity_seconds='10000',refresh_token_validity_seconds='1000',client_name='ASDasdads',logo_uri='https://cdn.vox-cdn.com/thumbor/0n6dqQfk9MuOBSiM39Pog2Bw39Y=/1400x1400/filters:format(jpeg)/cdn.vox-cdn.com/uploads/chorus_asset/file/19341372/microsoftedgenewlogo.jpg',policy_uri='https://policy_uri.com',clear_access_tokens_on_refresh=true,code_challenge_method='plain',device_code_validity_seconds='10000',updated_at='2020-01-25T18:33:27.644+02:00',revision=3 WHERE id=1
+
+18:33:27 error: syntax error at or near "'client_grant_type'"
+         task(update-client): UPDATE 'client_grant_type' SET is_deleted=true WHERE owner_id = 1 AND value IN ()
+
+18:37:36 error: syntax error at or near "'client_grant_type'"
+         task(update-client): UPDATE 'client_grant_type' SET is_deleted=true WHERE owner_id = 1 AND value IN ()
+
+18:40:08 error: syntax error at or near "'client_grant_type'"
+         task(update-client): UPDATE 'client_grant_type' SET is_deleted=true WHERE owner_id = 1 AND value IN ()
+
+19:04:29 error: syntax error at or near "$"
+         task(update-client): UPDATE ${name} SET is_deleted=true WHERE owner_id = 2 AND value IN ()
+
+19:06:24 error: syntax error at or near "$"
+         task(update-client): UPDATE ${name~} SET is_deleted=true WHERE owner_id = 1 AND value IN ()
+
+19:30:48 error: syntax error at or near ")"
+         task(update-client): UPDATE "client_grant_type" SET is_deleted=true WHERE owner_id = 3 AND value IN ()
+
+19:35:34 error: syntax error at or near ")"
+         task(update-client): UPDATE "client_grant_type" SET is_deleted=true WHERE owner_id = 3 AND value IN ()
+
+19:40:25 error: syntax error at or near ")"
+         task(update-client): UPDATE "client_grant_type" SET is_deleted=true WHERE owner_id = 3 AND value IN ()
+
+19:56:29 error: relation "grant_type" does not exist
+         task(find-clients): SELECT owner_id,value FROM "grant_type" WHERE owner_id IN ('2') AND is_deleted=false
+
+19:57:37 error: operator does not exist: bigint = client_grant_type
+         task(update-client): UPDATE "client_grant_type" SET is_deleted=true WHERE owner_id = "client_grant_type" AND value IN (1)
+
+19:57:56 error: operator does not exist: bigint = client_grant_type
+         task(update-client): UPDATE "client_grant_type" SET is_deleted=true WHERE owner_id = "client_grant_type" AND value IN (1)
+
+16:39:20 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value","created_at","is_deleted") values(10,'authorization_code','2020-01-26T16:39:20.795+02:00',false),(10,'refresh_token','2020-01-26T16:39:20.795+02:00',false),(10,'client_credentials','2020-01-26T16:39:20.795+02:00',false)
+
+16:39:20 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value","created_at","is_deleted") values(10,'openid','2020-01-26T16:39:20.796+02:00',false),(10,'profile','2020-01-26T16:39:20.796+02:00',false),(10,'email','2020-01-26T16:39:20.796+02:00',false),(10,'eduperson_entitlement','2020-01-26T16:39:20.796+02:00',false),(10,'eduperson_scoped_affiliation','2020-01-26T16:39:20.796+02:00',false),(10,'eduperson_unique_id','2020-01-26T16:39:20.796+02:00',false)
+
+16:39:21 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_redirect_uri"("owner_id","value","created_at","is_deleted") values(10,'https://redireect.com','2020-01-26T16:39:20.796+02:00',false)
+
+16:39:21 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_contact"("owner_id","value","created_at","is_deleted") values(10,'mail@mail.com','2020-01-26T16:39:20.796+02:00',false)
+
+16:40:05 error: syntax error at or near "'client_contact'"
+         task(delete-clients): UPDATE 'client_contact' SET is_deleted=true WHERE owner_id = 1
+
+16:40:06 error: syntax error at or near "'client_contact'"
+         task(delete-clients): UPDATE 'client_contact' SET is_deleted=true WHERE owner_id = 2
+
+16:40:07 error: syntax error at or near "'client_contact'"
+         task(delete-clients): UPDATE 'client_contact' SET is_deleted=true WHERE owner_id = 3
+
+16:40:08 error: syntax error at or near "'client_contact'"
+         task(delete-clients): UPDATE 'client_contact' SET is_deleted=true WHERE owner_id = 3
+
+16:40:09 error: syntax error at or near "'client_contact'"
+         task(delete-clients): UPDATE 'client_contact' SET is_deleted=true WHERE owner_id = 3
+
+16:40:09 error: syntax error at or near "'client_contact'"
+         task(delete-clients): UPDATE 'client_contact' SET is_deleted=true WHERE owner_id = 3
+
+16:40:09 error: syntax error at or near "'client_contact'"
+         task(delete-clients): UPDATE 'client_contact' SET is_deleted=true WHERE owner_id = 3
+
+16:01:18 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value","created_at","is_deleted") values(30,'authorization_code','2020-01-28T16:01:18.366+02:00',false),(30,'refresh_token','2020-01-28T16:01:18.366+02:00',false),(30,'client_credentials','2020-01-28T16:01:18.366+02:00',false)
+
+16:01:18 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value","created_at","is_deleted") values(30,'eduperson_entitlement','2020-01-28T16:01:18.367+02:00',false),(30,'eduperson_scoped_affiliation','2020-01-28T16:01:18.367+02:00',false),(30,'eduperson_unique_id','2020-01-28T16:01:18.367+02:00',false)
+
+16:01:18 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_redirect_uri"("owner_id","value","created_at","is_deleted") values(30,'https://gr.com','2020-01-28T16:01:18.368+02:00',false)
+
+16:01:18 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_contact"("owner_id","value","created_at","is_deleted") values(30,'mail@mail.com','2020-01-28T16:01:18.369+02:00',false)
+
+16:04:00 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value","created_at","is_deleted") values(31,'authorization_code','2020-01-28T16:04:00.016+02:00',false),(31,'password','2020-01-28T16:04:00.016+02:00',false)
+
+16:04:00 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value","created_at","is_deleted") values(31,'openid','2020-01-28T16:04:00.018+02:00',false),(31,'profile','2020-01-28T16:04:00.018+02:00',false),(31,'email','2020-01-28T16:04:00.018+02:00',false),(31,'eduperson_entitlement','2020-01-28T16:04:00.018+02:00',false),(31,'eduperson_scoped_affiliation','2020-01-28T16:04:00.018+02:00',false),(31,'eduperson_unique_id','2020-01-28T16:04:00.018+02:00',false)
+
+16:04:00 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_redirect_uri"("owner_id","value","created_at","is_deleted") values(31,'https://fols.com','2020-01-28T16:04:00.018+02:00',false)
+
+16:04:00 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_contact"("owner_id","value","created_at","is_deleted") values(31,'mail@mia.com','2020-01-28T16:04:00.019+02:00',false)
+
+16:24:37 error: Querying against a released or lost connection.
+         task(update-client): insert into "client_redirect_uri"("owner_id","value","created_at","is_deleted") values('10','https://sdfsdf.com','2020-01-28T16:24:37.928+02:00',false)
+
+16:26:26 error: Querying against a released or lost connection.
+         task(update-client): insert into "client_redirect_uri"("owner_id","value","created_at","is_deleted") values('30','https://cd.com','2020-01-28T16:26:26.517+02:00',false)
+
+16:29:30 error: Querying against a released or lost connection.
+         task(update-client): insert into "client_redirect_uri"("owner_id","value","created_at","is_deleted") values('30','https://cdc.com','2020-01-28T16:29:30.249+02:00',false)
+
+16:31:23 error: Querying against a released or lost connection.
+         task(update-client): insert into "client_redirect_uri"("owner_id","value","created_at","is_deleted") values('31','https://mose.com','2020-01-28T16:31:23.473+02:00',false)
+
+20:03:55 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value","created_at","is_deleted") values(40,'authorization_code','2020-01-28T20:03:55.119+02:00',false)
+
+20:03:55 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value","created_at","is_deleted") values(40,'openid','2020-01-28T20:03:55.119+02:00',false),(40,'profile','2020-01-28T20:03:55.119+02:00',false),(40,'email','2020-01-28T20:03:55.119+02:00',false),(40,'eduperson_entitlement','2020-01-28T20:03:55.119+02:00',false),(40,'eduperson_scoped_affiliation','2020-01-28T20:03:55.119+02:00',false),(40,'eduperson_unique_id','2020-01-28T20:03:55.119+02:00',false)
+
+20:03:55 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_redirect_uri"("owner_id","value","created_at","is_deleted") values(40,'https://sdasdf.com','2020-01-28T20:03:55.120+02:00',false)
+
+20:03:55 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_contact"("owner_id","value","created_at","is_deleted") values(40,'koza@fgdk.ck','2020-01-28T20:03:55.120+02:00',false)
+
+20:13:14 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value","created_at","is_deleted") values(41,'authorization_code','2020-01-28T20:13:14.176+02:00',false)
+
+20:13:14 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value","created_at","is_deleted") values(41,'openid','2020-01-28T20:13:14.176+02:00',false),(41,'profile','2020-01-28T20:13:14.176+02:00',false),(41,'email','2020-01-28T20:13:14.176+02:00',false),(41,'eduperson_entitlement','2020-01-28T20:13:14.176+02:00',false),(41,'eduperson_scoped_affiliation','2020-01-28T20:13:14.176+02:00',false),(41,'eduperson_unique_id','2020-01-28T20:13:14.176+02:00',false)
+
+20:13:14 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_redirect_uri"("owner_id","value","created_at","is_deleted") values(41,'https://sdfdsf.cdsc','2020-01-28T20:13:14.177+02:00',false)
+
+20:13:14 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_contact"("owner_id","value","created_at","is_deleted") values(41,'masdc@dfas.com','2020-01-28T20:13:14.177+02:00',false)
+
+20:43:39 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value","created_at","is_deleted") values(42,'authorization_code','2020-01-28T20:43:39.245+02:00',false)
+
+20:43:39 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value","created_at","is_deleted") values(42,'openid','2020-01-28T20:43:39.246+02:00',false),(42,'profile','2020-01-28T20:43:39.246+02:00',false),(42,'email','2020-01-28T20:43:39.246+02:00',false),(42,'eduperson_entitlement','2020-01-28T20:43:39.246+02:00',false),(42,'eduperson_scoped_affiliation','2020-01-28T20:43:39.246+02:00',false),(42,'eduperson_unique_id','2020-01-28T20:43:39.246+02:00',false)
+
+20:43:39 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_redirect_uri"("owner_id","value","created_at","is_deleted") values(42,'https://sdfs.cpm','2020-01-28T20:43:39.248+02:00',false)
+
+20:43:39 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_contact"("owner_id","value","created_at","is_deleted") values(42,'dfgdfg@sd.cpc','2020-01-28T20:43:39.249+02:00',false)
+
+20:44:37 error: syntax error at or near "'client_contact'"
+         task(delete-clients): UPDATE 'client_contact' SET is_deleted=true WHERE owner_id = 10
+
+20:44:38 error: syntax error at or near "'client_contact'"
+         task(delete-clients): UPDATE 'client_contact' SET is_deleted=true WHERE owner_id = 30
+
+20:44:39 error: syntax error at or near "'client_contact'"
+         task(delete-clients): UPDATE 'client_contact' SET is_deleted=true WHERE owner_id = 40
+
+20:44:39 error: syntax error at or near "'client_contact'"
+         task(delete-clients): UPDATE 'client_contact' SET is_deleted=true WHERE owner_id = 41
+
+20:44:40 error: syntax error at or near "'client_contact'"
+         task(delete-clients): UPDATE 'client_contact' SET is_deleted=true WHERE owner_id = 42
+
+20:44:41 error: syntax error at or near "'client_contact'"
+         task(delete-clients): UPDATE 'client_contact' SET is_deleted=true WHERE owner_id = 31
+
+20:44:43 error: syntax error at or near "'client_contact'"
+         task(delete-clients): UPDATE 'client_contact' SET is_deleted=true WHERE owner_id = 31
+
+20:44:44 error: syntax error at or near "'client_contact'"
+         task(delete-clients): UPDATE 'client_contact' SET is_deleted=true WHERE owner_id = 31
+
+20:44:45 error: syntax error at or near "'client_contact'"
+         task(delete-clients): UPDATE 'client_contact' SET is_deleted=true WHERE owner_id = 31
+
+20:44:45 error: syntax error at or near "'client_contact'"
+         task(delete-clients): UPDATE 'client_contact' SET is_deleted=true WHERE owner_id = 31
+
+20:44:45 error: syntax error at or near "'client_contact'"
+         task(delete-clients): UPDATE 'client_contact' SET is_deleted=true WHERE owner_id = 31
+
+10:40:06 error: Querying against a released or lost connection.
+         task(user-check): insert into "edu_person_entitlement"("user_id","edu_person_entitlement") values(1,array['https://aai.egi.eu/LoA#Low'])

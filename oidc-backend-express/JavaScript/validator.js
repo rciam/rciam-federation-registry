@@ -9,7 +9,7 @@ const clientValidationRules = () => {
     body('policy_uri').isString().exists().custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Invalid logo Uri value!'),
     body('client_description').isString().isLength({min:1}).exists(),
     body('contacts').isArray({min:1}).custom((value,success=true)=> {value.map((item,index)=>{if(!item.match(reg.regEmail)){success=false}}); return success }).withMessage('Invalid Scope value!'),
-    body('scope').isArray({min:1}).custom((value,success=true)=> {value.map((item,index)=>{if(!item.match(reg.regScope)){success=false}}); return success }).withMessage('Invalid Scope value!'),
+    body('scope').isArray({min:1}).custom((value,success=true)=> {value.map((item,index)=>{if(!item.match(reg.regScope)){success=false}}); return success }).withMessage('Invalid Contacts value!'),
     body('grant_types').isArray({min:1}).custom((value,success=true)=> {value.map((item,index)=>{if(!['implicit','authorization_code','refresh_token','client_credentials','password','redelegation','token_exchange','device'].includes(item)){success=false}}); return success }).withMessage('Invalid Scope value!'),
     body('access_token_validity_seconds').exists().custom((value)=> {if(parseInt(value)&&parseInt(value)<34128000&&parseInt(value)>0){return true}else{return false}}),
     body('refresh_token_validity_seconds').exists().custom((value)=> {if(parseInt(value)&&parseInt(value)<34128000&&parseInt(value)>0){return true}else{return false}}),

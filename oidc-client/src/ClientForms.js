@@ -10,10 +10,10 @@ const EditClient = (props) => {
 
   let { id } = useParams();
   useEffect(()=>{
-    console.log(initialValues);
     getInitialValues();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
+
   const getInitialValues = () => {
     fetch(config.host+'getclient/'+id, {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
@@ -24,22 +24,22 @@ const EditClient = (props) => {
     }).then(response=>response.json()).then(response=> {
       if(response.success){
           setInitData(response.connection);
-          console.log('we have data')
       }
       else{
         setInitData(initialValues)
       }
     });
   }
+
   return (
     <React.Fragment>
-      {initData?<FormTabs initialValues={initData} title={"Edit Client"}/>:<ClientList/>}
+      {initData?<FormTabs initialValues={initData} editId={id} title={"Edit Client"}/>:<ClientList/>}
     </React.Fragment>
   )
 }
 
 const NewClient = ()=>{
-  return <FormTabs initialValues={initialValues} title={"New Client"}/>
+  return <FormTabs initialValues={initialValues} editId={null} title={"New Client"}/>
 }
 
 export {

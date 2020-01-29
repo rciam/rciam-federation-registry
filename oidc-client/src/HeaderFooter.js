@@ -1,39 +1,51 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {faUser } from '@fortawesome/free-solid-svg-icons';
+import {faUser, faSignOutAlt} from '@fortawesome/free-solid-svg-icons';
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import Image from 'react-bootstrap/Image';
-import NavDropdown from 'react-bootstrap/NavDropdown';
 import Navbar from 'react-bootstrap/Navbar';
 import Button from 'react-bootstrap/Button';
 import useGlobalState from './useGlobalState.js';
+import * as config from './config.json';
+import DropdownButton from 'react-bootstrap/DropdownButton';
+import Dropdown from 'react-bootstrap/Dropdown';
 
+export const Header= (props)=> {
 
-export const Header= ()=> {
 
   const globalState = useGlobalState();
   const logged = globalState.global_state.log_state;
-
+  
 
     return(
       <React.Fragment>
         <Navbar>
           <Navbar.Collapse className="justify-content-end">
             {logged?
-            (<NavDropdown drop='left' title={
-                <React.Fragment>
-                  Login
-                  <FontAwesomeIcon icon={faUser}/>
-                </React.Fragment>
-                }
-                id="collasible-nav-dropdown">
-              <NavDropdown.Item href="http://localhost:5000/logout">
+            (<DropdownButton
+              variant="link"
+              alignRight
+              className='drop-menu'
+              title={<React.Fragment>
+                {props.user?props.user.name:'login'}
+                <FontAwesomeIcon icon={faUser}/>
+              </React.Fragment>}
+              id="dropdown-menu-align-right"
+            >
 
-                <Button className="log-button"  variant="outline-primary">Logout</Button></NavDropdown.Item>
-            </NavDropdown>):(
+              {props.user?(
+                <Dropdown.Item>
+                  {props.user.sub}
+                </Dropdown.Item>
+              ):null}
+
+              <Dropdown.Item href={config.host+"logout"}>
+                LOGOUT<FontAwesomeIcon icon={faSignOutAlt}/>
+              </Dropdown.Item>
+            </DropdownButton>):(
             <React.Fragment>
-              <a href="http://localhost:5000/login"><Button className="log-button" variant="outline-primary">Login</Button></a>
+              <a href={config.host+"login"}><Button className="log-button" variant="outline-primary">Login</Button></a>
 
             </React.Fragment>
             )

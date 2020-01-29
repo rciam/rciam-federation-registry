@@ -12,74 +12,83 @@ import Image from 'react-bootstrap/Image';
 import {Link} from "react-router-dom";
 
 
- const ClientList= ()=> {
+const ClientList= ()=> {
 
-   const [clients,setClients] = useState();
+  const [clients,setClients] = useState();
 
-   useEffect(()=>{
-     getClients();
-     // eslint-disable-next-line react-hooks/exhaustive-deps
-   },[]);
+  useEffect(()=>{
+    getClients();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[]);
 
   const getClients = ()=> {
     fetch(config.host+'clients/user', {
-      method: 'POST', // *GET, POST, PUT, DELETE, etc.
+      method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-        'Content-Type': 'application/json'
-      }
-    }).then(response=>response.json()).then(response=> {
-      console.log(response);
+      'Content-Type': 'application/json'
+    }}).then(response=>response.json()).then(response=> {
       if(response.success){
         setClients(response.connections);
       }
     });
   }
+  const deleteClient = (id)=>{
+    fetch(config.host+'client/delete/'+id, {
+      method: 'PUT', // *GET, POST, PUT, DELETE, etc.
+      credentials: 'include', // include, *same-origin, omit
+      headers: {
+      'Content-Type': 'application/json'
+    }}).then(response=>response.json()).then(response=> {
+      getClients();
+    });
+  }
 
-    return(
-      <React.Fragment>
-        <div className="links">
-          <Link to="/home">Home</Link>
-          <span className="link-seperator">/</span>
-          Manage Clients
-        </div>
-        <div >
-          <Row className="options-bar">
-            <Col>
-              <Button variant="light" onClick={getClients} ><FontAwesomeIcon icon={faSync} />Refresh</Button>
-              <Link to="/form/new"><Button><FontAwesomeIcon icon={faPlus}/>New Client</Button></Link>
-            </Col>
-            <Col className="options-search" md={3}>
-              <InputGroup className="md-12">
-                <FormControl
-                  placeholder="Search"
-                />
-                <InputGroup.Append>
-                  <InputGroup.Text><FontAwesomeIcon icon={faTimes}/></InputGroup.Text>
-                </InputGroup.Append>
-              </InputGroup>
-            </Col>
-          </Row>
-          <Table striped bordered hover className="petitions-table">
-            <thead>
-              <tr>
-                <td>Service</td>
-                <td></td>
-                <td><FontAwesomeIcon icon={faEdit}/></td>
-              </tr>
-            </thead>
-            <tbody>
+
+  return(
+    <React.Fragment>
+      <div className="links">
+        <Link to="/home">Home</Link>
+        <span className="link-seperator">/</span>
+        Manage Clients
+      </div>
+      <div>
+        <Row className="options-bar">
+          <Col>
+            <Button variant="light" onClick={getClients} ><FontAwesomeIcon icon={faSync} />Refresh</Button>
+            <Link to="/form/new"><Button><FontAwesomeIcon icon={faPlus}/>New Client</Button></Link>
+          </Col>
+          <Col className="options-search" md={3}>
+            <InputGroup className="md-12">
+              <FormControl
+              placeholder="Search"
+              />
+              <InputGroup.Append>
+                <InputGroup.Text><FontAwesomeIcon icon={faTimes}/></InputGroup.Text>
+              </InputGroup.Append>
+            </InputGroup>
+          </Col>
+        </Row>
+        <Table striped bordered hover className="petitions-table">
+          <thead>
+            <tr>
+              <td>Service</td>
+              <td></td>
+              <td></td>
+            </tr>
+          </thead>
+          <tbody>
             {clients?clients.map((item,index)=>{
-              return(
-                <TableItem item={item} key={index}/>
-              )
+            return(
+            <TableItem item={item} key={index} deleteClient={deleteClient}/>
+            )
             }):<tr></tr>}
-            </tbody>
-          </Table>
-        </div>
-      </React.Fragment>
+          </tbody>
+        </Table>
+      </div>
+    </React.Fragment>
     )
-}
+  }
 
 function TableItem(props) {
   return (
@@ -98,7 +107,7 @@ function TableItem(props) {
       <td>
         <div className="petition-actions">
         <Link to={"/form/edit/"+props.item.id}><Button variant="light"><FontAwesomeIcon icon={faEdit}/>Edit</Button></Link>
-        <Button variant="danger"><FontAwesomeIcon icon={faTrash} />Delete</Button>
+        <Button variant="danger" onClick={()=>props.deleteClient(props.item.id)}><FontAwesomeIcon icon={faTrash} />Delete</Button>
         </div>
       </td>
     </tr>

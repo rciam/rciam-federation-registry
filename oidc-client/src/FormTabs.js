@@ -1,8 +1,10 @@
 import React,{useState} from 'react';
+import { diff } from 'deep-diff';
 import {Link} from "react-router-dom";
 import Tabs from 'react-bootstrap/Tabs';
 import Tab from 'react-bootstrap/Tab';
 import {Debug} from './Components/Debug.js';
+import {SimpleModal,ResponseModal} from './Components/Modals.js';
 import Form from 'react-bootstrap/Form';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import {Formik} from 'formik';
@@ -15,7 +17,7 @@ const {reg} = require('./regex.js');
 
 const schema = yup.object({
   client_name:yup.string().min(4,'The Client Name must be at least 4 characters long').max(15,'The Client Name exceeds the character limit (15)').required('This is a required field!'),
-  client_id:yup.string().min(4,'The Client ID must be at least 4 characters long').max(15,'The Client ID exceeds the character limit (15)').required('This is a required field!'),
+  client_id:yup.string().min(4,'The Client ID must be at least 4 characters long').max(15,'The Client ID exceeds the character limit (15)'),
   redirect_uris:yup.array().of(yup.string().matches(reg.regUrl,'This must be a secure Url starting with https://')).required('This is a required field!'),
   logo_uri:yup.string().required('This is a required field!').test('testImage','Enter a valid image Url',function(value){return imageError}),
   policy_uri:yup.string().required('This is a required field!').matches(reg.regSimpleUrl,'Enter a valid Url'),
@@ -41,23 +43,57 @@ var imageError = false;
 
 
 const FormTabs = (props)=> {
-  const [hasSubmitted,setHasSubmitted] = useState(false)
+
+
+  const [hasSubmitted,setHasSubmitted] = useState(false);
+  const [response,setResponse] = useState(false);
+  const [errorResponse,setErrorResponse] = useState(null);
+  const [weHaveResponse,setWeHaveResponse] = useState(false);
+  const [clientId,setClientId] = useState(null);
+
   const setImageError=(value)=>{
     imageError=value;
   }
 
+
   const postApi=(data)=>{
-    fetch(config.host+'client', {
-      method: 'POST', // *GET, POST, PUT, DELETE, etc.
-      credentials: 'same-origin', // include, *same-origin, omit
-      headers: {
-      'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(data) // body data type must match "Content-Type" header
-    }).then(response=>response.json()).then(response=> {
-      console.log(response);
-    })
+    data = gennerateValues(data);
+    if(!props.editId){
+      fetch(config.host+'client/create', {
+        method: 'POST', // *GET, POST, PUT, DELETE, etc.
+        credentials: 'include', // include, *same-origin, omit
+        headers: {
+        'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data) // body data type must match "Content-Type" header
+      }).then(response=>response.json()).then(response=> {
+
+        setClientId(data.client_id);
+        setWeHaveResponse(true);
+        setErrorResponse(response.error);
+        setResponse(response.success);
+      })
+    }
+    else {
+      const editData = prepareEditData(data,props.initialValues);
+      if(Object.keys(editData.details).length !== 0||Object.keys(editData.dlt).length !== 0||Object.keys(editData.add).length !== 0){
+        fetch(config.host+'client/edit/'+props.editId, {
+          method: 'POST', // *GET, POST, PUT, DELETE, etc.
+          credentials: 'include', // include, *same-origin, omit
+          headers: {
+          'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(editData) // body data type must match "Content-Type" header
+        }).then(response=>response.json()).then(response=> {
+          setClientId(data.client_id);
+          setWeHaveResponse(true);
+          setErrorResponse(response.error);
+          setResponse(response.success);
+        })
+      }
+    }
   }
+
 
 
 
@@ -75,7 +111,6 @@ const FormTabs = (props)=> {
     initialValues={props.initialValues}
       validationSchema={schema}
       onSubmit={(values,{setSubmitting}) => {
-        console.log("test");
         setHasSubmitted(true);
         postApi(values);
 
@@ -86,10 +121,12 @@ const FormTabs = (props)=> {
       handleChange,
       handleBlur,
       values,
+      setFieldValue,
       setFieldTouched,
       touched,
       isValid,
       validateField,
+      setValues,
       submitCount,
       errors,
       isSubmitting})=>(
@@ -108,7 +145,9 @@ const FormTabs = (props)=> {
                     value={values.client_name}
                     isInvalid={hasSubmitted?!!errors.client_name:(!!errors.client_name&&touched.client_name)}
                     onBlur={handleBlur}
+
                    />
+
                  </InputRow>
                  <InputRow title='Client ID' description='Unique identifier. If you leave this blank it will be automatically generated.' error={errors.client_id} touched={touched.client_id}>
                    <SimpleInput
@@ -259,6 +298,9 @@ const FormTabs = (props)=> {
 
                   <InputRow extraClass='time-input'>
 
+
+                    <ResponseModal response={response} weHaveResponse={weHaveResponse} errorResponse={errorResponse} editId={props.editId} clientId={clientId}/>
+                    <SimpleModal isSubmitting={isSubmitting} isValid={isValid}/>
                     <Button className='post-button' type="button" variant="danger" onClick={()=> {postApi(values)}}>Post Call without Validation</Button>
                     <Button className='submit-button' type="submit" variant="primary" >Submit</Button>
 
@@ -285,4 +327,59 @@ const FormTabs = (props)=> {
   </React.Fragment>
   );
 }
+
+function gennerateValues(data){
+
+  if(!data.client_id){
+    data.client_id=Math.random().toString(36).replace('0.', '');
+  }
+  if(data.generate_client_secret){
+    data.client_secret= Math.random().toString(36).replace('0.', '');
+    data.generate_client_secret = false;
+  }
+
+
+  return data
+}
+
+function prepareEditData(data,initialValues){
+  var new_values = Object.assign({},data);
+  var old_values = Object.assign({},initialValues);
+  var edits = {
+    add:{},
+    dlt:{},
+    details:{}
+  };
+  edits.add.client_grant_type = new_values.grant_types.filter(x=>!old_values.grant_types.includes(x));
+  edits.dlt.client_grant_type = old_values.grant_types.filter(x=>!new_values.grant_types.includes(x));
+  edits.add.client_contact = new_values.contacts.filter(x=>!old_values.contacts.includes(x));
+  edits.dlt.client_contact = old_values.contacts.filter(x=>!new_values.contacts.includes(x));
+  edits.add.client_scope = new_values.scope.filter(x=>!old_values.scope.includes(x));
+  edits.dlt.client_scope = old_values.scope.filter(x=>!new_values.scope.includes(x));
+  edits.add.client_redirect_uri = new_values.redirect_uris.filter(x=>!old_values.redirect_uris.includes(x));
+  edits.dlt.client_redirect_uri = old_values.redirect_uris.filter(x=>!new_values.redirect_uris.includes(x));
+
+  for(var i in edits){
+    for(var key in edits[i]){
+      if(edits[i][key].length===0){
+        delete edits[i][key]
+      }
+    }
+  }
+
+  delete new_values.grant_types;
+  delete new_values.contacts;
+  delete new_values.redirect_uris;
+  delete new_values.scope;
+  delete old_values.grant_types;
+  delete old_values.contacts;
+  delete old_values.redirect_uris;
+  delete old_values.scope;
+
+  if(diff(old_values,new_values)){
+    edits.details = new_values;
+  }
+  return edits
+}
+
 export default FormTabs;

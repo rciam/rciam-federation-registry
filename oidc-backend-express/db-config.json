@@ -1,7 +1,7 @@
 {
   "host": "localhost",
   "port": 5432,
-  "database": "oidc",
+  "database": "oidc_db",
   "user": "postgres",
   "password":"postgres"
 }

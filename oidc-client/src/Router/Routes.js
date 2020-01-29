@@ -4,8 +4,8 @@ import Home from '../Home';
 import ClientList from '../ClientList.js';
 import {EditClient,NewClient} from '../ClientForms.js';
 import useGlobalState from '../useGlobalState.js';
-
-const Routes = () => (
+import UserInfo from '../Components/UserInfo.js';
+const Routes = (props) => (
   <div className="content-container">
     <Switch>
       <Route exact path="/" component={Home}/>
@@ -15,11 +15,14 @@ const Routes = () => (
       <PrivateRoute path="/petitions">
         <ClientList/>
       </PrivateRoute>
+      <PrivateRoute path="/userinfo">
+        <UserInfo user={props.user} />
+      </PrivateRoute>
       <PrivateRoute path="/form/new">
         <NewClient/>
       </PrivateRoute>
       <PrivateRoute path="/form/edit/:id" >
-          <EditClient/>
+        <EditClient/>
       </PrivateRoute>
     </Switch>
       </div>

@@ -19,7 +19,9 @@ const path = require('path');
 module.exports = {
     client_details:{
       add:sql('client_details/add.sql'),
-      findOne:sql('client_details/findOne.sql')
+      findOne:sql('client_details/findOne.sql'),
+      update:sql('client_details/update.sql'),
+      findForEdit:sql('client_details/findForEdit.sql')
     },
     user_info:{
       add:sql('user_info/add.sql')

@@ -191,23 +191,25 @@ export function ClientSecret(props){
              onChange={()=>{toggleEditSecret(!editSecret)}}
              className="checkbox col-form-label"
             />
-            {!editSecret?<Form.Control
+            <Form.Control
               type="text"
               name="client_secret"
-              className='col-form-label-sm'
+              className={editSecret?'d-none col-form-label-sm':'col-form-label-sm'} 
               onChange={props.onChange}
               isInvalid={props.isInvalid}
               onBlur={props.onBlur}
               placeholder='Type a secret'
               value={props.client_secret}
-            />:<Form.Control
+
+            />
+            {editSecret?<Form.Control
               type="text"
               name="clientSecretHelp"
               className='col-form-label-sm'
               value="*************"
               isInvalid={props.isInvalid}
               disabled={true}
-            />
+            />:null
            }
            {props.error && props.touched ? (
                  <div className="error-message">{props.error}</div>

@@ -40,7 +40,7 @@ router.get('/auth',checkAuthentication,(req,res)=>{
 // Get User User Info
 router.get('/user',checkAuthentication, (req,res)=>{
   res.json({
-    name:req.user.name
+    user:req.user,
   });
 });
 // Callback Route
@@ -50,7 +50,7 @@ router.get('/callback', passport.authenticate('oidc', {
   failureRedirect: process.env.OIDC_REACT
 }));
 // Find all clients/petitions from curtain user to create preview list
-router.post('/clients/user',checkAuthentication,(req,res)=>{
+router.get('/clients/user',checkAuthentication,(req,res)=>{
       return db.task('find-clients', async t => {
         res.setHeader('Content-Type', 'application/json');
         let connections = await t.client_details.findByuserIdentifier(req.user.sub);
@@ -66,7 +66,7 @@ router.post('/clients/user',checkAuthentication,(req,res)=>{
       });
 });
 // Add a new client/petition
-router.post('/client',clientValidationRules(),validate,checkAuthentication,(req,res)=>{
+router.post('/client/create',clientValidationRules(),validate,checkAuthentication,(req,res)=>{
   res.setHeader('Content-Type', 'application/json');
       return db.task('add-client', async t => {
           await t.client_details.findByClientId(req.body.client_id).then(async result=> {
@@ -74,15 +74,17 @@ router.post('/client',clientValidationRules(),validate,checkAuthentication,(req,
               res.end(JSON.stringify({response:'client_id_exists'}));
             }
             else{
-                await t.client_details.add(req.body,userinfo).then(async result=>{
-                  await t.client_grant_type.add(req.body.grant_types,result.id).then(console.log());
-                  await t.client_scope.add(req.body.scope,result.id);
-                  await t.client_redirect_uri.add(req.body.redirect_uris,result.id);
-                  await t.client_contact.add(req.body.contacts,result.id);
-                  res.end(JSON.stringify({response:'success'}));
+                await t.client_details.add(req.body,req.user.sub,null,0).then(async result=>{
+                  await t.client_general.add('client_grant_type',req.body.grant_types,result.id);
+                  await t.client_general.add('client_scope',req.body.scope,result.id);
+                  await t.client_general.add('client_redirect_uri',req.body.redirect_uris,result.id);
+                  await t.client_general.add('client_contact',req.body.contacts,result.id);
+                  res.end(JSON.stringify({success:true}));
                 }).catch(err=>{
-                  console.log(err)
-                  res.end(JSON.stringify({response:'error'}));
+                  res.end(JSON.stringify({
+                    success:false,
+                    error:err,
+                  }));
                 })
             }});
       });
@@ -92,10 +94,10 @@ router.get('/getclient/:id',checkAuthentication,(req,res)=>{
       return db.task('find-clients',async t=>{
         await t.client_details.findConnectionByIdAndSub(req.user.sub,req.params.id).then(async connection=>{
           if(connection){
-            const grant_types = await t.client_grant_type.findByConnectionId(req.params.id);
-            const scopes = await t.client_scope.findByConnectionId(req.params.id);
-            const redirect_uris = await t.client_redirect_uri.findByConnectionId(req.params.id);
-            const contacts = await t.client_contact.findByConnectionId(req.params.id);
+            const grant_types = await t.client_general.findByConnectionId('client_grant_type',req.params.id);
+            const scopes = await t.client_general.findByConnectionId('client_scope',req.params.id);
+            const redirect_uris = await t.client_general.findByConnectionId('client_redirect_uri',req.params.id);
+            const contacts = await t.client_general.findByConnectionId('client_contact',req.params.id);
             connection = merge_data(connection,grant_types,'grant_types');
             connection = merge_data(connection,scopes,'scope');
             connection = merge_data(connection,redirect_uris,'redirect_uris');
@@ -113,6 +115,68 @@ router.get('/getclient/:id',checkAuthentication,(req,res)=>{
         });
       });
 });
+
+router.put('/client/delete/:id',checkAuthentication,(req,res)=>{
+  return db.task('delete-clients',async t =>{
+    try{
+      await t.client_details.delete(req.user.sub,req.params.id).then(async details =>{
+        const grant_types = await t.client_general.delete('client_contact',req.params.id);
+        const scopes = await t.client_general.delete('client_scope',req.params.id);
+        const redirect_uris = await t.client_general.delete('client_redirect_uri',req.params.id);
+        const contacts = await t.client_general.delete('client_grant_type',req.params.id);
+        return res.json({
+          success:true
+        })
+
+      })
+    }
+    catch(error){
+      return res.json({
+        success:false,
+        error:error
+      })
+    }
+  })
+})
+
+router.post('/client/edit/:id',checkAuthentication,(req,res)=>{
+  return db.task('update-client',async t =>{
+    await t.client_details.findConnectionForEdit(req.user.sub,req.params.id).then(async client=>{
+      if(client){
+        try {
+
+          if(Object.keys(req.body.details).length !== 0){
+
+            const w = await t.client_details.update(req.body.details,client.revision,client.id);
+            const s = await t.client_details.add(client,client.revision,client.id);
+          }
+          for (var key in req.body.add){
+            const m = await t.client_general.add(key,req.body.add[key],req.params.id);
+          }
+          for (var key in req.body.dlt){
+            const n = await t.client_general.delete_one_or_many(key,req.body.dlt[key],req.params.id);
+          }
+          return res.json({
+            success:true,
+          });
+        }
+        catch(error){
+          return res.json({
+            success:false,
+            error:error
+          });
+        }
+      }
+      else{
+        return res.json({
+          success:false,
+          error:'Client was not found'
+        });
+      }
+    })
+  })
+})
+
 
 
 
