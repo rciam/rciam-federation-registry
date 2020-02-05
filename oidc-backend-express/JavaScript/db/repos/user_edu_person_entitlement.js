@@ -11,7 +11,7 @@ class UserEduPersonEntitlementRepository {
         this.pgp = pgp;
 
         // set-up all ColumnSet objects, if needed:
-         cs = new pgp.helpers.ColumnSet(['user_id','edu_person_entitlement'],{table:'edu_person_entitlement'});
+         cs = new pgp.helpers.ColumnSet(['user_id','edu_person_entitlement'],{table:'user_edu_person_entitlement'});
     }
     async findByConnectionId(id){
 
@@ -25,12 +25,14 @@ class UserEduPersonEntitlementRepository {
 
     async add(data,id){
       let values = []
-    
+
       // if not Empty array
-      if(typeof(data)=='Array' && data.length>0){
+      if(data.length>0){
         data.forEach((item)=>{
+        console.log('multiple_values');
           values.push({user_id:id,edu_person_entitlement:item})
         });
+        console.log(values);
         const query = this.pgp.helpers.insert(values, cs);
         this.db.none(query)
         .then(data => {
@@ -39,21 +41,11 @@ class UserEduPersonEntitlementRepository {
         .catch(error => {
             return 'error'
         });
+      }else{
+        console.log('Something wicked his way comes')
+        return 'error'
       }
-      else if(data){
-        values.push({user_id:id,edu_person_entitlement:data});
-        const query = this.pgp.helpers.insert(values, cs);
-        this.db.none(query)
-        .then(data => {
-            return 'success'
-        })
-        .catch(error => {
-            return 'error'
-        });
-      }
-      else{
-        return null
-      }
+
 
     }
 

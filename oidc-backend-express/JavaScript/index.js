@@ -23,7 +23,7 @@ var corsOptions = {
 }
 // Issuer and Passport Strategy initialization
 Issuer.discover(process.env.ISSUER_BASE_URI).then((issuer)=>{
-  console.log(issuer.metadata);
+  //console.log(issuer.metadata);
   const client = new issuer.Client({
     client_id: process.env.CLIENT_ID,
     client_secret: process.env.CLIENT_SECRET,
@@ -32,14 +32,14 @@ Issuer.discover(process.env.ISSUER_BASE_URI).then((issuer)=>{
   const params = {
     client_id: process.env.CLIENT_ID,
     redirect_uri: process.env.REDIRECT_URI,
-    scope: 'openid profile email',
+    scope: 'openid profile email eduperson_entitlement',
   }
   const passReqToCallback = false;
   passport.use('oidc',new Strategy({client,params,passReqToCallback},(tokenset,userinfo,done)=>{
-    console.log('tokenset', tokenset);
-    console.log('access_token', tokenset.access_token);
-    console.log('id_token', tokenset.id_token);
-    console.log('claims', tokenset.claims);
+  //  console.log('tokenset', tokenset);
+    //console.log('access_token', tokenset.access_token);
+    //console.log('id_token', tokenset.id_token);
+    //console.log('claims', tokenset.claims);
     console.log('userinfo', userinfo);
     routes.saveUser(userinfo);
     return done(null, userinfo)

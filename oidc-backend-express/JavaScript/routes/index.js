@@ -13,13 +13,35 @@ function checkAuthentication(req,res,next){
       res.json({auth:false});
   }
 }
+function checkAdmin(req,res,next){
+  if(isAdmin(req)){
+    next();
+  }else{
+    res.json({
+      success:false,
+      error:"User not authorized"
+    })
+  }
+}
+function isAdmin(req){
+  if(req.user.eduperson_entitlement){
+    if(req.user.eduperson_entitlement.includes('urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu')){
+      return true
+    }
+  }
+  return false
+}
 // Save new User to db
 const saveUser=(userinfo)=>{
+
   return db.task('user-check',async t=>{
     let user = await t.user_info.findBySub(userinfo.sub);
     if(!user) {
       await t.user_info.add(userinfo).then(async result=>{
-        await t.user_edu_person_entitlement.add(userinfo.eduperson_assurance,result.id);
+
+        if(userinfo.eduperson_entitlement){
+          await t.user_edu_person_entitlement.add(userinfo.eduperson_entitlement,result.id);
+        }
       });
     }
   });
@@ -38,10 +60,12 @@ router.get('/auth',checkAuthentication,(req,res)=>{
   res.json({auth:true});
 });
 // Get User User Info
-router.get('/user',checkAuthentication, (req,res)=>{
-  res.json({
-    user:req.user,
-  });
+router.get('/user',checkAuthentication,(req,res)=>{
+  let user = req.user;
+  user.admin = isAdmin(req)
+  res.end(JSON.stringify({
+    user
+  }));
 });
 // Callback Route
 router.get('/callback', passport.authenticate('oidc', {
@@ -50,37 +74,59 @@ router.get('/callback', passport.authenticate('oidc', {
   failureRedirect: process.env.OIDC_REACT
 }));
 // Find all clients/petitions from curtain user to create preview list
+// Super user implementation
+// If super user find all clients
 router.get('/clients/user',checkAuthentication,(req,res)=>{
       return db.task('find-clients', async t => {
         res.setHeader('Content-Type', 'application/json');
-        let connections = await t.client_details.findByuserIdentifier(req.user.sub);
+        let connections;
+        if (isAdmin(req)){
+           connections = await t.client_details.findAll();
+        }
+        else {
+           connections = await t.client_details.findByuserIdentifier(req.user.sub);
+        }
         if(connections.length<1){
           return res.end(JSON.stringify({
-            success:false
+            success:false,
+            admin:req.admin
           }));
         }
         return res.end(JSON.stringify({
           success:true,
+          admin:req.admin,
           connections
         }));
       });
 });
+
 // Add a new client/petition
 router.post('/client/create',clientValidationRules(),validate,checkAuthentication,(req,res)=>{
+
+
   res.setHeader('Content-Type', 'application/json');
       return db.task('add-client', async t => {
+      
           await t.client_details.findByClientId(req.body.client_id).then(async result=> {
             if(result){
               res.end(JSON.stringify({response:'client_id_exists'}));
             }
             else{
+                console.log('we made it 1');
                 await t.client_details.add(req.body,req.user.sub,null,0).then(async result=>{
+
+
                   await t.client_general.add('client_grant_type',req.body.grant_types,result.id);
                   await t.client_general.add('client_scope',req.body.scope,result.id);
                   await t.client_general.add('client_redirect_uri',req.body.redirect_uris,result.id);
-                  await t.client_general.add('client_contact',req.body.contacts,result.id);
+                  await t.client_contact.add('client_contact',req.body.contacts,result.id);
                   res.end(JSON.stringify({success:true}));
+
+
                 }).catch(err=>{
+                  console.log(err);
+                  console.log('point-error');
+
                   res.end(JSON.stringify({
                     success:false,
                     error:err,
@@ -88,24 +134,34 @@ router.post('/client/create',clientValidationRules(),validate,checkAuthenticatio
                 })
             }});
       });
+
 });
 // It returns one connection with only the necessary data for the form
 router.get('/getclient/:id',checkAuthentication,(req,res)=>{
       return db.task('find-clients',async t=>{
-        await t.client_details.findConnectionByIdAndSub(req.user.sub,req.params.id).then(async connection=>{
+        await t.client_details.findConnectionById(req.params.id).then(async connection=>{
           if(connection){
-            const grant_types = await t.client_general.findByConnectionId('client_grant_type',req.params.id);
-            const scopes = await t.client_general.findByConnectionId('client_scope',req.params.id);
-            const redirect_uris = await t.client_general.findByConnectionId('client_redirect_uri',req.params.id);
-            const contacts = await t.client_general.findByConnectionId('client_contact',req.params.id);
-            connection = merge_data(connection,grant_types,'grant_types');
-            connection = merge_data(connection,scopes,'scope');
-            connection = merge_data(connection,redirect_uris,'redirect_uris');
-            connection = merge_data(connection,contacts,'contacts');
-            return res.json({
-              success:true,
-              connection
-            });
+            if(connection.requester==req.user.sub||isAdmin(req)){
+              const grant_types = await t.client_general.findByConnectionId('client_grant_type',req.params.id);
+              const scopes = await t.client_general.findByConnectionId('client_scope',req.params.id);
+              const redirect_uris = await t.client_general.findByConnectionId('client_redirect_uri',req.params.id);
+              const contacts = await t.client_contact.findByConnectionId('client_contact',req.params.id);
+              console.log(contacts);
+              connection = merge_data(connection,grant_types,'grant_types');
+              connection = merge_data(connection,scopes,'scope');
+              connection = merge_data(connection,redirect_uris,'redirect_uris');
+              connection = merge_data(connection,contacts,'contacts');
+              console.log(connection);
+              return res.json({
+                success:true,
+                connection
+              });
+            }
+            else{
+              return res.json({
+                success:false
+              });
+            }
           }
           else{
             return res.json({
@@ -115,6 +171,74 @@ router.get('/getclient/:id',checkAuthentication,(req,res)=>{
         });
       });
 });
+
+// checking if clientId is available
+router.get('/client/availability/:client_id',checkAuthentication,(req,res)=>{
+
+  return db.task('check-client-exists', async t => {
+    try{
+
+      await t.client_details.findByClientId(req.params.client_id).then(async result=> {
+        if(result){
+
+          res.json({
+            success:true,
+            available:false
+          })
+        }
+        else {
+
+          res.json({
+            success:true,
+            available:true
+          })
+        }
+      })
+    }
+    catch(error){
+      console.log(error);
+      res.json({
+        success:false,
+        error:'Error while querying the database'
+      })
+    }
+  })
+})
+
+
+// Approval of pettion
+router.put('/client/approve/:id',checkAuthentication,checkAdmin,(req,res)=>{
+  console.log(req.params.id);
+  return db.task('approve-client',async t =>{
+    await t.client_details.findConnectionForEdit(req.params.id).then(async client=>{
+      if(client){
+        try {
+
+            const w = await t.client_details.approve(req.params.id,req.user.sub);
+            const s = await t.client_details.add(client,client.requester,client.revision,client.id);
+
+          console.log('success');
+          return res.json({
+            success:true,
+          });
+        }
+        catch(error){
+
+          return res.json({
+            success:false,
+            error:'Error while querying the database'
+          });
+        }
+      }
+      else{
+        return res.json({
+          success:false,
+          error:'Client was not found'
+        });
+      }
+    })
+  })
+})
 
 router.put('/client/delete/:id',checkAuthentication,(req,res)=>{
   return db.task('delete-clients',async t =>{
@@ -126,6 +250,7 @@ router.put('/client/delete/:id',checkAuthentication,(req,res)=>{
         const contacts = await t.client_general.delete('client_grant_type',req.params.id);
         return res.json({
           success:true
+
         })
 
       })
@@ -133,7 +258,7 @@ router.put('/client/delete/:id',checkAuthentication,(req,res)=>{
     catch(error){
       return res.json({
         success:false,
-        error:error
+        error:"Error while querying the database"
       })
     }
   })
@@ -141,14 +266,14 @@ router.put('/client/delete/:id',checkAuthentication,(req,res)=>{
 
 router.post('/client/edit/:id',checkAuthentication,(req,res)=>{
   return db.task('update-client',async t =>{
-    await t.client_details.findConnectionForEdit(req.user.sub,req.params.id).then(async client=>{
-      if(client){
+    await t.client_details.findConnectionForEdit(req.params.id).then(async client=>{
+      if(client&&client.sub==req.user.sub){
         try {
 
           if(Object.keys(req.body.details).length !== 0){
 
-            const w = await t.client_details.update(req.body.details,client.revision,client.id);
-            const s = await t.client_details.add(client,client.revision,client.id);
+            const w = await t.client_details.update(req.body.details,client.revision,client.id,req.user.sub);
+            const s = await t.client_details.add(client,req.user.sub,client.revision,client.id);
           }
           for (var key in req.body.add){
             const m = await t.client_general.add(key,req.body.add[key],req.params.id);
@@ -156,14 +281,17 @@ router.post('/client/edit/:id',checkAuthentication,(req,res)=>{
           for (var key in req.body.dlt){
             const n = await t.client_general.delete_one_or_many(key,req.body.dlt[key],req.params.id);
           }
+          console.log('success');
           return res.json({
             success:true,
+
           });
         }
         catch(error){
+
           return res.json({
             success:false,
-            error:error
+            error:'Error while querying the database'
           });
         }
       }

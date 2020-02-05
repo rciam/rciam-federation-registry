@@ -141,8 +141,9 @@ form {
   margin-bottom:2rem;
 }
 .nav-side {
-  width:15rem;
-  height:10rem;
+  padding-right:1rem;
+  width:15rem!important;
+  height:12rem;
   background-color:rgb(245, 245, 245);
   font-family:'Lato';
   font-weight:300;
@@ -270,7 +271,17 @@ tbody tr td:last-child {
 .petition-details div {
   margin-left: 1rem;
 }
+
+.status-badge {
+  float:right;
+  margin-top:0.3rem;
+  margin-right: 0.3rem;
+}
+.petition-title{
+  display:inline-block!important;
+}
 .petition-details h3{
+
   font-size:1rem;
   color:rgb(43, 63, 68);
 }
@@ -278,8 +289,10 @@ tbody tr td:last-child {
   font-size:0.8rem;
   color:rgb(153, 153, 153);
 }
+
 .petition-actions button {
   margin-bottom:0.5rem;
+  font-size: 0.8rem!important;
 }
 .petition-actions button svg {
   margin-right:0.5rem;
@@ -345,7 +358,7 @@ tbody tr td:last-child {
   margin-top: 0.5rem;
 
 }
-// User Info
+/* User Info */
 
 .user-text-info {
   display:none;
@@ -373,4 +386,41 @@ tbody tr td:last-child {
 }
 .text-info {
   font: 300 15px / 23px 'Lato';
+}
+
+/* Form Tabs Review */
+
+.submit-buttons button:first-child {
+  margin-right:2rem;
+}
+.submit-buttons button svg {
+  margin-right:0.5rem;
+}
+
+/* Loader */
+.loader {
+  position:relative;
+  float:right;
+  margin-top:-1.8rem;
+  margin-right:-2rem;
+  border: 0.3rem solid #f3f3f3; /* Light grey */
+  border-top: 0.3rem solid #3498db; /* Blue */
+  border-radius: 50%;
+  width: 1.5rem;
+  height: 1.5rem;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Inputs Hide */
+.input-hide {
+
+
+
+  background: none!important;
+
 }

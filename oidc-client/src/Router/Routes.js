@@ -10,10 +10,10 @@ const Routes = (props) => (
     <Switch>
       <Route exact path="/" component={Home}/>
       <Route path="/home">
-        <Home/>
+        <Home />
       </Route>
       <PrivateRoute path="/petitions">
-        <ClientList/>
+        <ClientList user={props.user}/>
       </PrivateRoute>
       <PrivateRoute path="/userinfo">
         <UserInfo user={props.user} />
@@ -23,6 +23,9 @@ const Routes = (props) => (
       </PrivateRoute>
       <PrivateRoute path="/form/edit/:id" >
         <EditClient/>
+      </PrivateRoute>
+      <PrivateRoute path="/form/review/:id">
+        <EditClient review={true}/>
       </PrivateRoute>
     </Switch>
       </div>

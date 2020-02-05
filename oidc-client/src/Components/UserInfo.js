@@ -9,7 +9,7 @@ const UserInfo = (props)=>{
         <span className="link-seperator">/</span>
          View User Profile
       </div>
-      
+
       <dl className="dl-horizontal">
         <dt>
           <span className="text-info">Claim name:</span>
@@ -53,12 +53,42 @@ const UserInfo = (props)=>{
         <dd>
           <span className="dl-text-info">{props.user?props.user.acr:null}</span>
         </dd>
+
         <dt>
           <span className="dl-text-info">edu_person_unique_id</span>
         </dt>
         <dd>
           <span className="dl-text-info">{props.user?props.user.sub:null}</span>
         </dd>
+        {props.user?
+          <React.Fragment>
+        {props.user.eduperson_entitlement?props.user.eduperson_entitlement.map((item,index)=>{
+          return(
+            <React.Fragment key={index} >
+              <dt>
+                <span className="dl-text-info">eduperson_entitlement.{index}</span>
+              </dt>
+              <dd>
+                <span className="dl-text-info">{item}</span>
+              </dd>
+            </React.Fragment>
+          )
+        }):null}
+        {props.user.edu_person_entitlements?props.user.edu_person_entitlements.map((item,index)=>{
+          return(
+            <React.Fragment key={index}>
+              <dt>
+                <span className="dl-text-info">edu_person_entitlements.{index}</span>
+              </dt>
+              <dd>
+                <span className="dl-text-info">{item}</span>
+              </dd>
+            </React.Fragment>
+          )
+        }):null}
+          </React.Fragment>
+        :
+        null}
         <dt>
           <span className="dl-text-info">eduperson_assurance.0</span>
         </dt>

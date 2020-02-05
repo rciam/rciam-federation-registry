@@ -2,7 +2,7 @@ const promise = require('bluebird'); // best promise library today
 const pgPromise = require('pg-promise'); // pg-promise core library
 const dbConfig = require('../../db-config.json'); // db connection details
 const {Diagnostics} = require('./diagnostics'); // optional diagnostics
-const {ClientDetails,ClientGeneral,UserInfo,UserEduPersonEntitlement} = require('./repos');
+const {ClientDetails,ClientGeneral,UserInfo,UserEduPersonEntitlement,ClientContact} = require('./repos');
 
 // pg-promise initialization options:
 const initOptions = {
@@ -18,6 +18,7 @@ const initOptions = {
         obj.user_info = new UserInfo(obj,pgp);
         obj.user_edu_person_entitlement = new UserEduPersonEntitlement(obj,pgp);
         obj.client_general = new ClientGeneral(obj,pgp);
+        obj.client_contact = new ClientContact(obj,pgp);
         // Do not use 'require()' here, because this event occurs for every task and transaction being executed,
         // which should be as fast as possible.
 

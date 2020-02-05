@@ -41,7 +41,6 @@ import * as config from './config.json';
           <Router >
             <div className="flex-container">
               {logged&&<SideNav/>}
-
               <Routes user={user} />
             </div>
           </Router>

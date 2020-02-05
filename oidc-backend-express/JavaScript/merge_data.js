@@ -6,7 +6,12 @@ const merge_data = (connections,data,property) => {
   current_id = data[0].owner_id;
   data.map((item,index)=>{
     if(current_id===item.owner_id){
+      if(property=='contacts'){
+        values.push({email:item.value,type:item.type});
+      }
+      else{
       values.push(item.value);
+      }
     }
     else {
       if (multiple_connections){

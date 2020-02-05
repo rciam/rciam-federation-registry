@@ -5,15 +5,21 @@ import Form from 'react-bootstrap/Form';
 import InputGroup from 'react-bootstrap/InputGroup';
 import Button from 'react-bootstrap/Button';
 import Image from 'react-bootstrap/Image';
-import Table from 'react-bootstrap/Table'
+import Table from 'react-bootstrap/Table';
+
+
+
 
 export function SimpleInput(props){
   return (
-        <Form.Control
-          {...props}
-          type="text"
-          className='col-form-label-sm'
-        />
+        <React.Fragment>
+          <Form.Control
+            {...props}
+            type="text"
+            className='col-form-label-sm'
+          />
+          {props.isloading?<div className="loader"></div>:null}
+        </React.Fragment>
   )
 }
 
@@ -32,6 +38,7 @@ export function SimpleCheckbox(props){
   return(
         <Form.Check
           {...props}
+          disabled={props.disabled}
           className="checkbox col-form-label"
          />
   )
@@ -74,6 +81,7 @@ export function Select(props){
     className="select-input"
     name={props.name}
     component="select"
+    disabled={props.disabled}
     placeholder="Select...">
       {props.options.map((item,index)=>(
         <option key={index} value={props.options[index]}>{props.optionsTitle[index]}</option>
@@ -86,7 +94,7 @@ export function CheckboxList(props){
   return (
         props.listItems.map((item,index)=>(
           <div className="checkboxList" key={index}>
-            <Checkbox name={props.name} value={item}/>
+            <Checkbox name={props.name} disabled={props.disabled} value={item}/>
             {item.replace("_"," ")}
           </div>
         ))
@@ -97,7 +105,7 @@ export function RefreshToken(props){
     return(
       <React.Fragment>
         <div className="checkbox-item">
-          <Checkbox name="scope" value='offline_access'/>
+          <Checkbox name="scope" disabled={props.disabled} value='offline_access'/>
           Refresh tokens are issued for this client
         </div>
         <Form.Text className="text-muted text-left label-checkbox" id="uri-small-desc">
@@ -106,7 +114,7 @@ export function RefreshToken(props){
         {props.values.scope.includes('offline_access')?(
           <React.Fragment>
             <div className="checkbox-item">
-              <SimpleCheckbox name="reuse_refresh_tokens" label='Refresh tokens for this client are re-used'checked={props.values.reuse_refresh_tokens} onChange={props.onChange} />
+              <SimpleCheckbox name="reuse_refresh_tokens" label='Refresh tokens for this client are re-used'checked={props.values.reuse_refresh_tokens} disabled={props.disabled} onChange={props.onChange} />
 
             </div>
             <div className="checkbox-item">
@@ -114,7 +122,11 @@ export function RefreshToken(props){
               name="clear_access_tokens_on_refresh"
               label='Active access tokens are automatically revoked when the refresh token is used'
               checked={props.values.clear_access_tokens_on_refresh}
-              onChange={props.onChange} />
+              onChange={props.onChange}
+              disabled={props.disabled}
+
+               />
+
             </div>
             <TimeInput
               name='refresh_token_validity_seconds'
@@ -122,6 +134,7 @@ export function RefreshToken(props){
               isInvalid={props.isInvalid}
               onBlur={props.onBlur}
               onChange={props.onChange}
+              disabled={props.disabled}
             />
             <Form.Text className="text-muted text-left label-checkbox" id="uri-small-desc">
               Enter this time in seconds, minutes, or hours (Max value is 34128000 seconds (13 months)).
@@ -136,7 +149,7 @@ export function DeviceCode(props){
   return(
     <React.Fragment>
       <div className="checkbox-item">
-        <Checkbox name="grant_types" value='device'/>
+        <Checkbox name="grant_types" disabled={props.disabled} value='device'/>
         Refresh tokens are issued for this client
       </div>
       <Form.Text className="text-muted text-left label-checkbox" id="uri-small-desc">
@@ -150,6 +163,7 @@ export function DeviceCode(props){
             isInvalid={props.isInvalid}
             onBlur={props.onBlur}
             onChange={props.onChange}
+            disabled={props.disabled}
           />
           <Form.Text className="text-muted text-left label-checkbox" id="uri-small-desc">
             Enter this time in seconds, minutes, or hours (Max value is 34128000 seconds (13 months)).
@@ -171,6 +185,7 @@ export function ClientSecret(props){
         onChange={props.onChange}
         checked={props.generate_client_secret}
         className="checkbox col-form-label"
+        disabled={props.disabled}
        />
        <Form.Text className="text-muted text-left label-checkbox" id="uri-small-desc">
          New secret will be generated when you click 'Save'
@@ -190,11 +205,12 @@ export function ClientSecret(props){
              checked={!editSecret}
              onChange={()=>{toggleEditSecret(!editSecret)}}
              className="checkbox col-form-label"
+             disabled={props.disabled}
             />
             <Form.Control
               type="text"
               name="client_secret"
-              className={editSecret?'d-none col-form-label-sm':'col-form-label-sm'} 
+              className={editSecret?'d-none col-form-label-sm':'col-form-label-sm'}
               onChange={props.onChange}
               isInvalid={props.isInvalid}
               onBlur={props.onBlur}
@@ -235,6 +251,7 @@ export function ListInputArray(props){
                       onChange={(event)=>{
                         setNewVal(event.target.value);
                       }}
+                      disabled={props.disabled}
                      />
                 </InputGroup>
               </th>
@@ -249,6 +266,7 @@ export function ListInputArray(props){
                         setNewVal('');
                       }}
                       className="addButton"
+                      disabled={props.disabled}
                     >
                       +
                     </Button>
@@ -262,7 +280,7 @@ export function ListInputArray(props){
             <tr key={index}>
               <td className='td-item'>{item}</td>
               <td>
-                <Checkbox name={props.name} value={item}/>
+                <Checkbox disabled={props.disabled} name={props.name} value={item}/>
               </td>
             </tr>
           ))}
@@ -282,6 +300,7 @@ export function ListInputArray(props){
                           variant="danger"
                           onClick={()=>{arrayHelpers.remove(index)}}
                           className="removeButton"
+                          disabled={props.disabled}
                         >
                           -
                         </Button>
@@ -309,6 +328,7 @@ export  function LogoInput(props){
   }
   const imageLoad = (ev)=>{
       if((!ev.target.src.includes('/logo_placeholder.gif'))){
+        console.log(ev)
         props.setImageError(true);
         props.validateField('logo_uri');
       }
@@ -325,6 +345,7 @@ export  function LogoInput(props){
         onBlur={props.onBlur}
         onChange={(e)=>{props.onChange(e)}}
         isInvalid={props.isInvalid}
+        disabled={props.disabled}
       />
       <Form.Text className="text-muted text-left">
         {props.description}
@@ -365,9 +386,11 @@ export function ListInput(props){
                   type="text"
                   className='col-form-label.sm'
                   placeholder={props.placeholder}
+                  disabled={props.disabled}
                 />
                 <InputGroup.Prepend>
                   <Button
+                    disabled={props.disabled}
                     variant="outline-primary"
                     onClick={()=>{
                       push(newVal);
@@ -394,9 +417,10 @@ export function ListInput(props){
                           type="text"
                           className='col-form-label.sm'
                           placeholder="https//"
+                          disabled={props.disabled}
                         />
                         <InputGroup.Prepend>
-                          <Button variant="outline-danger" onClick={()=>remove(index)}>Remove</Button>
+                          <Button disabled={props.disabled} variant="outline-danger" onClick={()=>remove(index)}>Remove</Button>
                         </InputGroup.Prepend>
                       </React.Fragment>
                     )}
@@ -404,6 +428,101 @@ export function ListInput(props){
                   <br/>
                 </InputGroup>
                 <div className="error-message-list-item">{Array.isArray(props.error)?props.error[index]:''}</div>
+                </React.Fragment>
+              ))}
+            </React.Fragment>
+          )}
+        </FieldArray>
+  )
+}
+
+export function Contacts(props){
+
+  const [newVal,setNewVal] = useState('');
+  const [newVal2,setNewVal2] = useState('admin');
+  return (
+        <FieldArray name={props.name}>
+          {({push,remove,insert})=>(
+            <React.Fragment>
+              <InputGroup className={props.empty&&props.touched?'invalid-input mb-3':'mb-3'}>
+                <Form.Control
+                  value={newVal}
+                  onChange={(e)=>{setNewVal(e.target.value)}}
+                  column="true"
+                  sm="4"
+                  onBlur={()=>{!props.touched?props.setFieldTouched(props.name,true):console.log('sdf')}}
+                  type="text"
+                  className='col-form-label.sm'
+                  placeholder={props.placeholder}
+                  disabled={props.disabled}
+                />
+                <InputGroup.Prepend>
+                      <Form.Control as="select" value={newVal2} className="input-hide" onChange={(e)=>{
+                        setNewVal2(e.target.value)
+                      }}>
+                        <option value="admin">Admin</option>
+                        <option value="technical">Technical</option>
+                      </Form.Control>
+                  <Button
+                    disabled={props.disabled}
+                    variant="outline-primary"
+                    onClick={()=>{
+                      push({email:newVal,type:newVal2});
+                      setNewVal('');
+                      setNewVal2('admin');
+                    }}
+                  >
+                    ADD
+                  </Button>
+                </InputGroup.Prepend>
+              </InputGroup>
+              {props.values && props.values.length > 0 && props.values.map((item,index)=>(
+                <React.Fragment key={index}>
+                <InputGroup className="mb-3" >
+                  <Field name={`${props.name}.${index}.email`}>
+                    {({field,form})=>(
+                      <React.Fragment>
+                        <Form.Control
+                          {...field}
+
+                          onBlur={props.handleBlur}
+                          onChange={props.onChange}
+                          isInvalid={Array.isArray(props.error)?!!props.error[index]:false}
+                          column="true"
+                          sm="4"
+                          type="text"
+                          className='col-form-label.sm'
+                          placeholder="https//"
+                          disabled={props.disabled}
+                        />
+                        <InputGroup.Prepend>
+                        <Field name={`${props.name}.${index}.type`}>
+                          {({field,form})=>(
+                            <React.Fragment>
+                        <Form.Control
+                          {...field}
+                          as="select"
+
+                          className="input-hide"
+                          onBlur={props.handleBlur}
+                          onChange={props.onChange}
+                        >
+                          <option value="admin">Admin</option>
+                          <option value="technical">Technical</option>
+                        </Form.Control>
+                          </React.Fragment>
+                        )}
+                      </Field>
+                    </InputGroup.Prepend>
+                        <InputGroup.Prepend>
+                          <Button disabled={props.disabled} variant="outline-danger" onClick={()=>{remove(index)}}>Remove</Button>
+                        </InputGroup.Prepend>
+                      </React.Fragment>
+                    )}
+                  </Field>
+                  <br/>
+                </InputGroup>
+                <div className="error-message-list-item">{Array.isArray(props.error)&&props.error[index]?props.error[index].email:''}</div>
                 </React.Fragment>
               ))}
             </React.Fragment>

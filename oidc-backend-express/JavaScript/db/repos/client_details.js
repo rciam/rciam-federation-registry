@@ -16,37 +16,37 @@ class ClientDetailsRepository {
     }
 
 
-
-    async findConnectionByIdAndSub(sub,id){
+    async approve(id,approved_by){
+      let date = new Date(Date.now());
+      return this.db.none('UPDATE client_details SET approved=true, updated_at=$3, reviewer=$2 WHERE id = $1', [+id,approved_by,date]);
+    }
+    async findConnectionById(id){
       return this.db.oneOrNone(sql.findOne,{
-        requester:sub,
         id:id
       })
     }
-    async findConnectionForEdit(sub,id){
+    async findConnectionForEdit(id){
       return this.db.oneOrNone(sql.findForEdit,{
-        requester:sub,
         id:id
       })
     }
 
-
+    async findAll(){
+      return this.db.any('SELECT id,client_description,logo_uri,client_name,approved,requester FROM client_details WHERE is_deleted=false AND model_id IS NULL');
+    }
     async findByuserIdentifier(id){
-      return this.db.any('SELECT id,client_description,logo_uri,client_name FROM client_details WHERE requester = $1 AND is_deleted=false AND model_id IS NULL', id);
+      return this.db.any('SELECT id,client_description,logo_uri,client_name,approved,requester FROM client_details WHERE requester = $1 AND is_deleted=false AND model_id IS NULL', id);
     }
     // Tries to find a user from name;
     async findByClientId(clientId) {
         return this.db.oneOrNone('SELECT * FROM client_details WHERE client_id = $1 AND is_deleted=false AND model_id IS NULL', clientId);
     }
-    async findByRequesterId(id) {
 
-        return this.db.any('SELECT * FROM client_details WHERE requester = $1 AND is_deleted=false AND model_id IS NULL', id);
-    }
     async delete(sub,id) {
         let date = new Date(Date.now());
         return this.db.none('UPDATE client_details SET is_deleted=true, updated_at=$3 WHERE id = $1 and requester=$2', [+id,sub,date]);
     }
-    async update(body,revision,id){
+    async update(body,revision,id,sub){
         let date = new Date(Date.now());
         revision++;
         return this.db.none(sql.update,{
@@ -63,13 +63,16 @@ class ClientDetailsRepository {
           clear_access_tokens_on_refresh: body.clear_access_tokens_on_refresh,
           code_challenge_method: body.code_challenge_method,
           device_code_validity_seconds: body.device_code_validity_seconds,
+          integration_environment:body.integration_environment,
+          approved:false,
+          requester:sub,
           revision:revision,
           updated_at: date,
           id:id
         })
     }
     async add(body,sub,model_id,revision){
-      let date = new Date(Date.now());
+      let date = Date.now();
       return this.db.one(sql.add,{
         client_description: body.client_description,
         reuse_refresh_tokens: body.reuse_refresh_tokens,
@@ -84,6 +87,7 @@ class ClientDetailsRepository {
         clear_access_tokens_on_refresh: body.clear_access_tokens_on_refresh,
         code_challenge_method: body.code_challenge_method,
         device_code_validity_seconds: body.device_code_validity_seconds,
+        integration_environment: body.integration_environment,
         created_at: date,
         updated_at: date,
         requester: sub,
@@ -109,7 +113,7 @@ function createColumnsets(pgp) {
         cs.insert = new pgp.helpers.ColumnSet(['client_description','reuse_refresh_tokens','allow_introspection',
           'client_id','client_secret','access_token_validity_seconds','refresh_token_validity_seconds','client_name',
           'logo_uri','policy_uri','clear_access_tokens_on_refresh','code_challenge_method',
-          'device_code_validity_seconds','created_at','updated_at','requester'],
+          'device_code_validity_seconds','integration_environment','created_at','updated_at','requester'],
           {table});
         cs.update = cs.insert.extend(['?id','approved','reviewer','is_deleted','model_id','revision']);
     }

@@ -3,13 +3,16 @@ import initialValues from './initialValues';
 import * as config from './config.json';
 import {useParams} from "react-router-dom";
 import FormTabs from "./FormTabs.js";
-import ClientList from "./ClientList.js";
+import Home from './Home';
 
 const EditClient = (props) => {
   const [initData,setInitData] = useState();
-
+  const [review,setReview] = useState(false);
   let { id } = useParams();
   useEffect(()=>{
+    if(props.review){
+      setReview(true);
+    }
     getInitialValues();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
@@ -33,7 +36,7 @@ const EditClient = (props) => {
 
   return (
     <React.Fragment>
-      {initData?<FormTabs initialValues={initData} editId={id} title={"Edit Client"}/>:<ClientList/>}
+      {initData?<FormTabs initialValues={initData} editId={id} review={review} title={"Edit Client"}/>:<Home/>}
     </React.Fragment>
   )
 }

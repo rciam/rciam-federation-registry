@@ -10,11 +10,13 @@ import Table from 'react-bootstrap/Table';
 import * as config from './config.json';
 import Image from 'react-bootstrap/Image';
 import {Link} from "react-router-dom";
+import Badge from 'react-bootstrap/Badge';
 
 
-const ClientList= ()=> {
+const ClientList= (props)=> {
 
   const [clients,setClients] = useState();
+
 
   useEffect(()=>{
     getClients();
@@ -80,7 +82,7 @@ const ClientList= ()=> {
           <tbody>
             {clients?clients.map((item,index)=>{
             return(
-            <TableItem item={item} key={index} deleteClient={deleteClient}/>
+            <TableItem item={item} user={props.user} key={index} deleteClient={deleteClient}/>
             )
             }):<tr></tr>}
           </tbody>
@@ -100,14 +102,23 @@ function TableItem(props) {
       </td>
       <td>
         <div className="flex-column">
-          <h3>{props.item.client_name}</h3>
+          <h3 className="petition-title">{props.item.client_name}</h3>
+          <Badge className="status-badge" variant={props.item.approved?'success':'danger'}>{props.item.approved?'Approved':'Pending'}</Badge>
           <p>{props.item.client_description}</p>
         </div>
       </td>
       <td>
         <div className="petition-actions">
-        <Link to={"/form/edit/"+props.item.id}><Button variant="light"><FontAwesomeIcon icon={faEdit}/>Edit</Button></Link>
-        <Button variant="danger" onClick={()=>props.deleteClient(props.item.id)}><FontAwesomeIcon icon={faTrash} />Delete</Button>
+        {props.item.requester===props.user.sub?
+          <React.Fragment>
+          <Link to={"/form/edit/"+props.item.id}><Button variant="light"><FontAwesomeIcon icon={faEdit}/>Edit</Button></Link>
+          <Button variant="danger" onClick={()=>props.deleteClient(props.item.id)}><FontAwesomeIcon icon={faTrash} />Delete</Button>
+          </React.Fragment>
+        :null
+        }
+        {props.user.admin?<Link to={"/form/review/"+props.item.id}><Button variant="info"><FontAwesomeIcon icon={faEdit}/>Review</Button></Link>:null}
+
+
         </div>
       </td>
     </tr>

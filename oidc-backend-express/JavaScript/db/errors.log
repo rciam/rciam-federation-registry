@@ -777,3 +777,126 @@
 
 10:40:06 error: Querying against a released or lost connection.
          task(user-check): insert into "edu_person_entitlement"("user_id","edu_person_entitlement") values(1,array['https://aai.egi.eu/LoA#Low'])
+
+16:38:37 error: Querying against a released or lost connection.
+         task(user-check): insert into "edu_person_entitlement"("user_id","edu_person_entitlement") values(1,array['https://aai.egi.eu/LoA#Low'])
+
+16:38:49 error: invalid input syntax for type numeric: "2020-01-29T16:38:49.942+02:00"
+         task(update-client): INSERT INTO client_details (client_description,reuse_refresh_tokens,allow_introspection,client_id,client_secret,access_token_validity_seconds,refresh_token_validity_seconds,client_name,logo_uri,policy_uri,clear_access_tokens_on_refresh,code_challenge_method,device_code_validity_seconds,created_at,updated_at,requester,revision,model_id) VALUES ('This is not a small description with its size chosen deliberately to suit a secret purpose not revealed in this description',true,true,'client4','secret','10000','1000','Client 4','https://brandmark.io/logo-rank/random/pepsi.png','https://policy_uri.com',true,'plain','10000',to_timestamp('2020-01-29T16:38:49.942+02:00'/1000.0),to_timestamp('2020-01-29T16:38:49.942+02:00'/1000.0),'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',4,0) RETURNING *
+
+16:41:21 error: invalid input syntax for type numeric: "2020-01-29T16:41:21.702+02:00"
+         task(update-client): INSERT INTO client_details (client_description,reuse_refresh_tokens,allow_introspection,client_id,client_secret,access_token_validity_seconds,refresh_token_validity_seconds,client_name,logo_uri,policy_uri,clear_access_tokens_on_refresh,code_challenge_method,device_code_validity_seconds,created_at,updated_at,requester,revision,model_id) VALUES ('This is not a small description with its size chosen deliberately to suit a secret purpose not revealed in this description',true,true,'client1','secret','10000','1000','Client 1','https://cdn.vox-cdn.com/thumbor/0n6dqQfk9MuOBSiM39Pog2Bw39Y=/1400x1400/filters:format(jpeg)/cdn.vox-cdn.com/uploads/chorus_asset/file/19341372/microsoftedgenewlogo.jpg','https://policy_uri.com',true,'plain','10000',to_timestamp('2020-01-29T16:41:21.702+02:00'/1000.0),to_timestamp('2020-01-29T16:41:21.702+02:00'/1000.0),'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',1,0) RETURNING *
+
+16:44:31 error: invalid input syntax for type numeric: "2020-01-29T16:44:31.651+02:00"
+         task(update-client): INSERT INTO client_details (client_description,reuse_refresh_tokens,allow_introspection,client_id,client_secret,access_token_validity_seconds,refresh_token_validity_seconds,client_name,logo_uri,policy_uri,clear_access_tokens_on_refresh,code_challenge_method,device_code_validity_seconds,created_at,updated_at,requester,revision,model_id) VALUES ('This is not a small description with its size chosen deliberately to suit a secret purpose not revealed in this description',true,true,'client2','secret','10000','1000','Client 2','https://i.pinimg.com/originals/33/b8/69/33b869f90619e81763dbf1fccc896d8d.jpg','https://policy_uri.com',true,'plain','10000',to_timestamp('2020-01-29T16:44:31.651+02:00'/1000.0),to_timestamp('2020-01-29T16:44:31.651+02:00'/1000.0),'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',2,0) RETURNING *
+
+16:45:12 error: invalid input syntax for type numeric: "2020-01-29T16:45:12.142+02:00"
+         task(update-client): INSERT INTO client_details (client_description,reuse_refresh_tokens,allow_introspection,client_id,client_secret,access_token_validity_seconds,refresh_token_validity_seconds,client_name,logo_uri,policy_uri,clear_access_tokens_on_refresh,code_challenge_method,device_code_validity_seconds,created_at,updated_at,requester,revision,model_id) VALUES ('This is not a small description with its size chosen deliberately to suit a secret purpose not revealed in this description',true,true,'client1321','secret','10000','1000','Client 2','https://i.pinimg.com/originals/33/b8/69/33b869f90619e81763dbf1fccc896d8d.jpg','https://policy_uri.com',true,'plain','10000',to_timestamp('2020-01-29T16:45:12.142+02:00'/1000.0),to_timestamp('2020-01-29T16:45:12.142+02:00'/1000.0),'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',2,1) RETURNING *
+
+16:51:02 error: invalid input syntax for type numeric: "2020-01-29T16:51:02.597+02:00"
+         task(update-client): INSERT INTO client_details (client_description,reuse_refresh_tokens,allow_introspection,client_id,client_secret,access_token_validity_seconds,refresh_token_validity_seconds,client_name,logo_uri,policy_uri,clear_access_tokens_on_refresh,code_challenge_method,device_code_validity_seconds,created_at,updated_at,requester,revision,model_id) VALUES ('This is not a small description with its size chosen deliberately to suit a secret purpose not revealed in this description',true,true,'client3','secret','10000','1000','Client 3','http://logok.org/wp-content/uploads/2014/05/Total-logo-earth.png','https://policy_uri.com',true,'plain','10000',to_timestamp('2020-01-29T16:51:02.597+02:00'/1000.0),to_timestamp('2020-01-29T16:51:02.597+02:00'/1000.0),'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',3,0) RETURNING *
+
+16:54:51 error: invalid input syntax for type numeric: "2020-01-29T16:54:51.037+02:00"
+         task(update-client): INSERT INTO client_details (client_description,reuse_refresh_tokens,allow_introspection,client_id,client_secret,access_token_validity_seconds,refresh_token_validity_seconds,client_name,logo_uri,policy_uri,clear_access_tokens_on_refresh,code_challenge_method,device_code_validity_seconds,created_at,updated_at,requester,revision,model_id) VALUES ('This is not a small description with its size chosen deliberately to suit a secret purpose not revealed in this description',true,true,'client23','secret','10000','1000','Client 4','https://brandmark.io/logo-rank/random/pepsi.png','https://policy_uri.com',true,'plain','10000',to_timestamp('2020-01-29T16:54:51.037+02:00'/1000.0),to_timestamp('2020-01-29T16:54:51.037+02:00'/1000.0),'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',4,1) RETURNING *
+
+16:55:41 error: invalid input syntax for type numeric: "2020-01-29T16:55:41.561+02:00"
+         task(update-client): INSERT INTO client_details (client_description,reuse_refresh_tokens,allow_introspection,client_id,client_secret,access_token_validity_seconds,refresh_token_validity_seconds,client_name,logo_uri,policy_uri,clear_access_tokens_on_refresh,code_challenge_method,device_code_validity_seconds,created_at,updated_at,requester,revision,model_id) VALUES ('This is not a small description with its size chosen deliberately to suit a secret purpose not revealed in this description',true,true,'client34','secret','10000','1000','Client 3','http://logok.org/wp-content/uploads/2014/05/Total-logo-earth.png','https://policy_uri.com',true,'plain','10000',to_timestamp('2020-01-29T16:55:41.561+02:00'/1000.0),to_timestamp('2020-01-29T16:55:41.561+02:00'/1000.0),'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',3,1) RETURNING *
+
+16:58:29 error: invalid input syntax for type numeric: "2020-01-29T16:58:29.732+02:00"
+         task(update-client): INSERT INTO client_details (client_description,reuse_refresh_tokens,allow_introspection,client_id,client_secret,access_token_validity_seconds,refresh_token_validity_seconds,client_name,logo_uri,policy_uri,clear_access_tokens_on_refresh,code_challenge_method,device_code_validity_seconds,created_at,updated_at,requester,revision,model_id) VALUES ('This is not a small description with its size chosen deliberately to suit a secret purpose not revealed in this description',true,true,'client233','secret','10000','1000','Client 1','https://cdn.vox-cdn.com/thumbor/0n6dqQfk9MuOBSiM39Pog2Bw39Y=/1400x1400/filters:format(jpeg)/cdn.vox-cdn.com/uploads/chorus_asset/file/19341372/microsoftedgenewlogo.jpg','https://policy_uri.com',true,'plain','10000',to_timestamp('2020-01-29T16:58:29.732+02:00'/1000.0),to_timestamp('2020-01-29T16:58:29.732+02:00'/1000.0),'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',1,1) RETURNING *
+
+17:00:17 error: invalid input syntax for type numeric: "2020-01-29T17:00:17.591+02:00"
+         task(update-client): INSERT INTO client_details (client_description,reuse_refresh_tokens,allow_introspection,client_id,client_secret,access_token_validity_seconds,refresh_token_validity_seconds,client_name,logo_uri,policy_uri,clear_access_tokens_on_refresh,code_challenge_method,device_code_validity_seconds,created_at,updated_at,requester,revision,model_id) VALUES ('This is not a small description with its size chosen deliberately to suit a secret purpose not revealed in this description',true,true,'clie1321','secret','10000','1000','Client 2','https://i.pinimg.com/originals/33/b8/69/33b869f90619e81763dbf1fccc896d8d.jpg','https://policy_uri.com',true,'plain','10000',to_timestamp('2020-01-29T17:00:17.591+02:00'/1000.0),to_timestamp('2020-01-29T17:00:17.591+02:00'/1000.0),'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',2,2) RETURNING *
+
+17:01:16 error: invalid input syntax for type numeric: "2020-01-29T17:01:16.681+02:00"
+         task(update-client): INSERT INTO client_details (client_description,reuse_refresh_tokens,allow_introspection,client_id,client_secret,access_token_validity_seconds,refresh_token_validity_seconds,client_name,logo_uri,policy_uri,clear_access_tokens_on_refresh,code_challenge_method,device_code_validity_seconds,created_at,updated_at,requester,revision,model_id) VALUES ('This is not a small description with its size chosen deliberately to suit a secret purpose not revealed in this description',true,true,'client238','secret','10000','1000','Client 4','https://brandmark.io/logo-rank/random/pepsi.png','https://policy_uri.com',true,'plain','10000',to_timestamp('2020-01-29T17:01:16.681+02:00'/1000.0),to_timestamp('2020-01-29T17:01:16.681+02:00'/1000.0),'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',4,2) RETURNING *
+
+17:32:01 error: relation "edu_person_entitlement" does not exist
+         task(user-check): insert into "edu_person_entitlement"("user_id","edu_person_entitlement") values(1,array['https://aai.egi.eu/LoA#Low'])
+
+10:49:49 error: relation "edu_person_entitlement" does not exist
+         task(user-check): insert into "edu_person_entitlement"("user_id","edu_person_entitlement") values(2,array['https://aai.egi.eu/LoA#Substantial'])
+
+12:53:43 error: Querying against a released or lost connection.
+         task(user-check): insert into "edu_person_entitlement"("user_id","edu_person_entitlement") values(1,array['urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu','urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=vm_operator#aai.egi.eu'])
+
+12:59:08 error: Querying against a released or lost connection.
+         task(user-check): insert into "user_edu_person_entitlement"("user_id","edu_person_entitlement") values(1,array['urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu','urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=vm_operator#aai.egi.eu'])
+
+13:06:47 error: Querying against a released or lost connection.
+         task(user-check): insert into "user_edu_person_entitlement"("user_id","edu_person_entitlement") values(2,'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu'),(2,'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=vm_operator#aai.egi.eu')
+
+14:45:26 error: Querying against a released or lost connection.
+         task(user-check): insert into "user_edu_person_entitlement"("user_id","edu_person_entitlement") values(5,'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu'),(5,'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=vm_operator#aai.egi.eu')
+
+16:27:29 error: Querying against a released or lost connection.
+         task(user-check): insert into "user_edu_person_entitlement"("user_id","edu_person_entitlement") values(1,'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu'),(1,'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=vm_operator#aai.egi.eu')
+
+16:48:31 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value","created_at","is_deleted") values(7,'authorization_code','2020-01-30T16:48:31.218+02:00',false)
+
+16:48:31 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value","created_at","is_deleted") values(7,'openid','2020-01-30T16:48:31.225+02:00',false),(7,'profile','2020-01-30T16:48:31.225+02:00',false),(7,'email','2020-01-30T16:48:31.225+02:00',false),(7,'eduperson_entitlement','2020-01-30T16:48:31.225+02:00',false),(7,'eduperson_scoped_affiliation','2020-01-30T16:48:31.225+02:00',false),(7,'eduperson_unique_id','2020-01-30T16:48:31.225+02:00',false)
+
+16:48:31 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_redirect_uri"("owner_id","value","created_at","is_deleted") values(7,'https://flaviocopes.com/how-to-uppercase-first-letter-javascript/banner.png','2020-01-30T16:48:31.227+02:00',false)
+
+16:48:31 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_contact"("owner_id","value","created_at","is_deleted") values(7,'fdf@df.sdf','2020-01-30T16:48:31.228+02:00',false)
+
+11:15:17 error: syntax error at or near "'client_contact'"
+         task(delete-clients): UPDATE 'client_contact' SET is_deleted=true,deleted_at='2020-01-31T11:15:17.607+02:00' WHERE owner_id = 2
+
+12:30:01 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value","created_at","is_deleted") values(8,'authorization_code','2020-01-31T12:30:01.774+02:00',false),(8,'device','2020-01-31T12:30:01.774+02:00',false)
+
+12:30:01 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value","created_at","is_deleted") values(8,'openid','2020-01-31T12:30:01.782+02:00',false),(8,'profile','2020-01-31T12:30:01.782+02:00',false),(8,'email','2020-01-31T12:30:01.782+02:00',false),(8,'eduperson_entitlement','2020-01-31T12:30:01.782+02:00',false),(8,'eduperson_scoped_affiliation','2020-01-31T12:30:01.782+02:00',false),(8,'eduperson_unique_id','2020-01-31T12:30:01.782+02:00',false),(8,'offline_access','2020-01-31T12:30:01.782+02:00',false)
+
+12:30:01 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_redirect_uri"("owner_id","value","created_at","is_deleted") values(8,'https://fdf.com','2020-01-31T12:30:01.784+02:00',false)
+
+12:30:01 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_contact"("owner_id","value","created_at","is_deleted") values(8,'as@mail.coc','2020-01-31T12:30:01.785+02:00',false)
+
+17:53:53 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value","created_at","is_deleted") values(12,'authorization_code','2020-02-03T17:53:53.052+02:00',false)
+
+17:53:53 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value","created_at","is_deleted") values(12,'openid','2020-02-03T17:53:53.056+02:00',false),(12,'profile','2020-02-03T17:53:53.056+02:00',false),(12,'email','2020-02-03T17:53:53.056+02:00',false),(12,'eduperson_entitlement','2020-02-03T17:53:53.056+02:00',false),(12,'eduperson_scoped_affiliation','2020-02-03T17:53:53.056+02:00',false),(12,'eduperson_unique_id','2020-02-03T17:53:53.056+02:00',false)
+
+17:53:53 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_redirect_uri"("owner_id","value","created_at","is_deleted") values(12,'https://f4.bcbits.com/img/a1678417040_10.jpg','2020-02-03T17:53:53.058+02:00',false)
+
+17:53:53 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_contact"("owner_id","value","created_at","is_deleted") values(12,'mail@mail.com','2020-02-03T17:53:53.059+02:00',false)
+
+18:14:05 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value","created_at","is_deleted") values(13,'authorization_code','2020-02-03T18:14:05.273+02:00',false)
+
+18:14:05 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value","created_at","is_deleted") values(13,'openid','2020-02-03T18:14:05.274+02:00',false),(13,'profile','2020-02-03T18:14:05.274+02:00',false),(13,'email','2020-02-03T18:14:05.274+02:00',false),(13,'eduperson_entitlement','2020-02-03T18:14:05.274+02:00',false),(13,'eduperson_scoped_affiliation','2020-02-03T18:14:05.274+02:00',false),(13,'eduperson_unique_id','2020-02-03T18:14:05.274+02:00',false)
+
+18:14:05 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_redirect_uri"("owner_id","value","created_at","is_deleted") values(13,'https://f4.bcbits.com/img/a1678417040_10.jpg','2020-02-03T18:14:05.275+02:00',false)
+
+18:14:05 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_contact"("owner_id","value","created_at","is_deleted") values(13,'mai@mail.com','2020-02-03T18:14:05.275+02:00',false)
+
+18:14:12 error: syntax error at or near "'client_contact'"
+         task(delete-clients): UPDATE 'client_contact' SET is_deleted=true,deleted_at='2020-02-03T18:14:12.229+02:00' WHERE owner_id = 12
+
+11:21:57 error: Querying against a released or lost connection.
+         task(user-check): insert into "user_edu_person_entitlement"("user_id","edu_person_entitlement") values(1,'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu'),(1,'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=vm_operator#aai.egi.eu')
+
+11:27:35 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value","created_at","is_deleted") values(5,'authorization_code','2020-02-05T11:27:35.826+02:00',false),(5,'refresh_token','2020-02-05T11:27:35.826+02:00',false),(5,'password','2020-02-05T11:27:35.826+02:00',false)
+
+11:27:35 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value","created_at","is_deleted") values(5,'openid','2020-02-05T11:27:35.829+02:00',false),(5,'profile','2020-02-05T11:27:35.829+02:00',false),(5,'email','2020-02-05T11:27:35.829+02:00',false),(5,'eduperson_entitlement','2020-02-05T11:27:35.829+02:00',false),(5,'eduperson_scoped_affiliation','2020-02-05T11:27:35.829+02:00',false),(5,'eduperson_unique_id','2020-02-05T11:27:35.829+02:00',false)
+
+11:27:35 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_redirect_uri"("owner_id","value","created_at","is_deleted") values(5,'https://www.freelogodesign.org/Content/img/logo-samples/flooop.png','2020-02-05T11:27:35.831+02:00',false)
+
+11:27:35 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_contact"("owner_id","value","type","created_at","is_deleted") values(5,'mai@mai.com','technical','2020-02-05T11:27:35.831+02:00',false)

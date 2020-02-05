@@ -49,16 +49,14 @@ export function ResponseModal(props){
 
   const handleClose = () => history.push('/petitions');
   return (
-    <Modal show={props.weHaveResponse} onHide={handleClose}>
+    <Modal show={props.message?true:false} onHide={handleClose}>
         <Modal.Header closeButton>
           <Modal.Title>
               Petition with id: {props.clientId}
           </Modal.Title>
         </Modal.Header>
         <Modal.Body >
-          {props.response?'Was ':'Wasnt '}
-          {props.editId?'edited with success':'created with success'}
-          {props.errorResponse?<div> Due to the following error: {props.errorResponse}</div>:null}
+          {props.message}
         </Modal.Body>
         <Modal.Footer>
 

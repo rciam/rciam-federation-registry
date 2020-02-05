@@ -23,6 +23,7 @@
   "access_token_validity_seconds":"3600",
   "refresh_token_validity_seconds":"28800",
   "reuse_refresh_tokens":true,
+  "integration_environment":"demo",
   "device_code_validity_seconds":"28800",
   "clear_access_tokens_on_refresh":true,
   "code_challenge_method":"plain"
