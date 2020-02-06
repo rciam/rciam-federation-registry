@@ -1,6 +1,6 @@
 import React from 'react';
 import {Link} from "react-router-dom";
-
+import {LoadingBar} from "./LoadingBar"
 const UserInfo = (props)=>{
   return(
     <React.Fragment>
@@ -9,7 +9,7 @@ const UserInfo = (props)=>{
         <span className="link-seperator">/</span>
          View User Profile
       </div>
-
+      <LoadingBar loading={props.user?false:true}>
       <dl className="dl-horizontal">
         <dt>
           <span className="text-info">Claim name:</span>
@@ -102,6 +102,7 @@ const UserInfo = (props)=>{
           <span className="dl-text-info">{props.user?props.user.sub:null}</span>
         </dd>
       </dl>
+      </LoadingBar>
     </React.Fragment>
   )
 }

@@ -6,8 +6,7 @@ import InputGroup from 'react-bootstrap/InputGroup';
 import Button from 'react-bootstrap/Button';
 import Image from 'react-bootstrap/Image';
 import Table from 'react-bootstrap/Table';
-
-
+import * as formConfig from '../form-config.json';
 
 
 export function SimpleInput(props){
@@ -238,6 +237,7 @@ export function ClientSecret(props){
 
 export function ListInputArray(props){
   const [newVal,setNewVal] = useState('');
+  const [invalid,setInvalid] = useState(false);
   return (
         <Table striped bordered hover size="sm" className='input-list-table'>
           <thead>
@@ -249,8 +249,10 @@ export function ListInputArray(props){
                       type="text"
                       value={newVal}
                       onChange={(event)=>{
+                        setInvalid(false);
                         setNewVal(event.target.value);
                       }}
+                      isInvalid={invalid}
                       disabled={props.disabled}
                      />
                 </InputGroup>
@@ -262,8 +264,13 @@ export function ListInputArray(props){
                     <Button
                       variant="dark"
                       onClick={()=>{
-                        arrayHelpers.push(newVal);
-                        setNewVal('');
+                        if(!props.values.includes(newVal)){
+                          arrayHelpers.push(newVal);
+                          setNewVal('');
+                        }
+                        else {
+                          setInvalid(true);
+                        }
                       }}
                       className="addButton"
                       disabled={props.disabled}
@@ -330,7 +337,7 @@ export  function LogoInput(props){
       if((!ev.target.src.includes('/logo_placeholder.gif'))){
         console.log(ev)
         props.setImageError(true);
-        props.validateField('logo_uri');
+
       }
   }
 
@@ -437,7 +444,10 @@ export function ListInput(props){
 }
 
 export function Contacts(props){
-
+    const capitalize = (s) => {
+    if (typeof s !== 'string') return ''
+    return s.charAt(0).toUpperCase() + s.slice(1)
+  }
   const [newVal,setNewVal] = useState('');
   const [newVal2,setNewVal2] = useState('admin');
   return (
@@ -457,11 +467,15 @@ export function Contacts(props){
                   disabled={props.disabled}
                 />
                 <InputGroup.Prepend>
-                      <Form.Control as="select" value={newVal2} className="input-hide" onChange={(e)=>{
+                      <Form.Control as="select" value={newVal2} disabled={props.disabled} className="input-hide" onChange={(e)=>{
                         setNewVal2(e.target.value)
                       }}>
-                        <option value="admin">Admin</option>
-                        <option value="technical">Technical</option>
+                        <React.Fragment>
+                          {formConfig.contact_types.map((item,index) => {
+                              return <option key={index} value={item}>{capitalize(item)}</option>
+                            })
+                          }
+                        </React.Fragment>
                       </Form.Control>
                   <Button
                     disabled={props.disabled}
@@ -502,13 +516,15 @@ export function Contacts(props){
                         <Form.Control
                           {...field}
                           as="select"
-
+                          disabled={props.disabled}
                           className="input-hide"
                           onBlur={props.handleBlur}
                           onChange={props.onChange}
                         >
-                          <option value="admin">Admin</option>
-                          <option value="technical">Technical</option>
+                          {formConfig.contact_types.map((item,index) => {
+                              return <option key={index} value={item}>{capitalize(item)}</option>
+                            })
+                          }
                         </Form.Control>
                           </React.Fragment>
                         )}

@@ -424,3 +424,23 @@ tbody tr td:last-child {
   background: none!important;
 
 }
+
+/*  */
+.progress-bar-container {
+  width:90%;
+  height:4vw;
+  margin:auto;
+}
+.loading-container h1 {
+  font-family:'Lato';
+  font-weight:300;
+  font-size: 1.5vw;
+  text-align: left;
+  margin-top:1vw;
+  margin-left: 5%;
+}
+.loading-container {
+  margin-top:1vw;
+  border:1px solid rgb(227, 227, 227);
+  background-color: #F5F5F5;
+}

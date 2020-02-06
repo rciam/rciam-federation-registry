@@ -900,3 +900,126 @@
 
 11:27:35 error: Querying against a released or lost connection.
          task(add-client): insert into "client_contact"("owner_id","value","type","created_at","is_deleted") values(5,'mai@mai.com','technical','2020-02-05T11:27:35.831+02:00',false)
+
+14:18:52 error: invalid input syntax for integer: "client_contact"
+         task(find-clients): SELECT owner_id,value,type FROM client_contact WHERE owner_id IN ('client_contact') AND is_deleted=false
+
+14:19:14 error: invalid input syntax for integer: "client_contact"
+         task(find-clients): SELECT owner_id,value,type FROM client_contact WHERE owner_id IN ('client_contact') AND is_deleted=false
+
+14:19:23 error: invalid input syntax for integer: "client_contact"
+         task(find-clients): SELECT owner_id,value,type FROM client_contact WHERE owner_id IN ('client_contact') AND is_deleted=false
+
+14:21:08 error: invalid input syntax for integer: "NaN"
+         task(find-clients): SELECT owner_id,value,type FROM client_contact WHERE owner_id='NaN' AND is_deleted=false
+
+14:32:34 error: Querying against a released or lost connection.
+         task(update-client): insert into "client_grant_type"("owner_id","value","created_at","is_deleted") values('5','client_credentials','2020-02-05T14:32:34.572+02:00',false),('5','redelegation','2020-02-05T14:32:34.572+02:00',false),('5','device','2020-02-05T14:32:34.572+02:00',false)
+
+14:44:54 error: Querying against a released or lost connection.
+         task(update-client): insert into "client_contact"("owner_id","value","type","created_at","is_deleted") values('5','sda@asd.com','admin','2020-02-05T14:44:54.474+02:00',false)
+
+14:45:06 error: Querying against a released or lost connection.
+         task(update-client): insert into "client_contact"("owner_id","value","type","created_at","is_deleted") values('5','mai@mai.co','technical','2020-02-05T14:45:06.648+02:00',false),('5','sda@asd.co','admin','2020-02-05T14:45:06.648+02:00',false)
+
+15:42:42 error: Querying against a released or lost connection.
+         task(update-client): insert into "client_contact"("owner_id","value","type","created_at","is_deleted") values('5','mai@i.com','technical','2020-02-05T15:42:42.234+02:00',false),('5','s@asd.cdfom','admin','2020-02-05T15:42:42.234+02:00',false),('5','sa@asd.co','admin','2020-02-05T15:42:42.234+02:00',false),('5','mai@mi.c','technical','2020-02-05T15:42:42.234+02:00',false),('5','mai@mdfai.c','technical','2020-02-05T15:42:42.234+02:00',false),('5','sda@dfddas.c','admin','2020-02-05T15:42:42.234+02:00',false)
+
+15:55:21 error: Querying against a released or lost connection.
+         task(update-client): update "client_contact" as t set "is_deleted"=v."is_deleted","deleted_at"=v."deleted_at" from (values('5','mai@mai.com','technical',true,'2020-02-05T15:55:21.817+02:00'),('5','sda@asd.com','admin',true,'2020-02-05T15:55:21.817+02:00')) as v("owner_id","value","type","is_deleted","deleted_at") WHERE v.owner_id = t.owner_id AND v.value=t.value AND v.type = t.type
+
+15:55:42 error: operator does not exist: text = bigint
+         task(update-client): update "client_contact" as t set "is_deleted"=v."is_deleted","deleted_at"=v."deleted_at" from (values('5','sda@asd.com','admin',true,'2020-02-05T15:55:42.428+02:00'),('5','mai@mai.co','technical',true,'2020-02-05T15:55:42.428+02:00'),('5','sda@asd.co','admin',true,'2020-02-05T15:55:42.428+02:00'),('5','mai@mai.c','technical',true,'2020-02-05T15:55:42.428+02:00'),('5','sda@asd.c','admin',true,'2020-02-05T15:55:42.428+02:00'),('5','mai@mai.c','technical',true,'2020-02-05T15:55:42.428+02:00'),('5','sda@as.c','admin',true,'2020-02-05T15:55:42.428+02:00'),('5','mai@i.com','technical',true,'2020-02-05T15:55:42.428+02:00'),('5','s@asd.cdfom','admin',true,'2020-02-05T15:55:42.428+02:00'),('5','sa@asd.co','admin',true,'2020-02-05T15:55:42.428+02:00'),('5','mai@mi.c','technical',true,'2020-02-05T15:55:42.428+02:00'),('5','mai@mdfai.c','technical',true,'2020-02-05T15:55:42.428+02:00'),('5','sda@dfddas.c','admin',true,'2020-02-05T15:55:42.428+02:00')) as v("owner_id","value","type","is_deleted","deleted_at") WHERE v.owner_id = t.owner_id AND v.value=t.value AND v.type = t.type
+
+16:29:03 error: column "deleted_at" is of type timestamp without time zone but expression is of type text
+         task(update-client): update "client_contact" as t set "is_deleted"=v."is_deleted","deleted_at"=v."deleted_at" from (values(5,'mai@mai.co','technical',true,'2020-02-05T16:29:03.815+02:00'),(5,'sda@asd.co','admin',true,'2020-02-05T16:29:03.815+02:00')) as v("owner_id","value","type","is_deleted","deleted_at") WHERE v.owner_id = t.owner_id AND v.value=t.value AND v.type = t.type
+
+16:30:25 error: column "deleted_at" is of type timestamp without time zone but expression is of type text
+         task(update-client): update "client_contact" as t set "is_deleted"=v."is_deleted","deleted_at"=v."deleted_at" from (values(5,'mai@mai.co','technical',true,'2020-02-05T16:30:25.429+02:00'),(5,'sda@asd.co','admin',true,'2020-02-05T16:30:25.429+02:00')) as v("owner_id","value","type","is_deleted","deleted_at") WHERE v.owner_id = t.owner_id AND v.value=t.value AND v.type = t.type
+
+16:53:25 error: Querying against a released or lost connection.
+         task(update-client): insert into "client_contact"("owner_id","value","type","created_at","is_deleted") values('5','asd@asd.cd','admin','2020-02-05T16:53:25.440+02:00',false)
+
+16:53:25 error: Querying against a released or lost connection.
+         task(update-client): update "client_contact" as t set "is_deleted"=v."is_deleted" from (values(5,'mai@mai.co','technical',true),(5,'sda@asd.co','admin',true),(5,'mai@mai.c','technical',true),(5,'sda@asd.c','admin',true),(5,'mai@mai.c','technical',true),(5,'sda@as.c','admin',true),(5,'mai@i.com','technical',true),(5,'s@asd.cdfom','admin',true),(5,'sa@asd.co','admin',true),(5,'mai@mi.c','technical',true),(5,'mai@mdfai.c','technical',true),(5,'sda@dfddas.c','admin',true)) as v("owner_id","value","type","is_deleted") WHERE v.owner_id = t.owner_id AND v.value=t.value AND v.type = t.type
+
+17:30:56 error: Querying against a released or lost connection.
+         task(update-client): UPDATE client_contact SET deleted_at='2020-02-05T17:30:56.407+02:00' WHERE owner_id = 5 AND is_deleted=true AND deleted_at IS NULL 
+
+10:40:05 error: Querying against a released or lost connection.
+         task(update-client): UPDATE client_contact SET deleted_at='2020-02-06T10:40:05.214+02:00' WHERE owner_id = 5 AND is_deleted=true AND deleted_at IS NULL 
+
+10:43:07 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value","created_at","is_deleted") values(9,'refresh_token','2020-02-06T10:43:07.079+02:00',false),(9,'client_credentials','2020-02-06T10:43:07.079+02:00',false),(9,'redelegation','2020-02-06T10:43:07.079+02:00',false),(9,'password','2020-02-06T10:43:07.079+02:00',false)
+
+10:43:07 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value","created_at","is_deleted") values(9,'profile','2020-02-06T10:43:07.080+02:00',false),(9,'eduperson_entitlement','2020-02-06T10:43:07.080+02:00',false),(9,'refeds_edu','2020-02-06T10:43:07.080+02:00',false),(9,'eduperson_unique_id','2020-02-06T10:43:07.080+02:00',false)
+
+10:43:07 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_redirect_uri"("owner_id","value","created_at","is_deleted") values(9,'https://www.freelogodesign.org/Content/img/logo-samples/flooop.png','2020-02-06T10:43:07.080+02:00',false),(9,'https://www.asdfasdf.asdf','2020-02-06T10:43:07.080+02:00',false)
+
+10:49:37 error: syntax error at or near "'client_contact'"
+         task(delete-clients): UPDATE 'client_contact' SET is_deleted=true,deleted_at='2020-02-06T10:49:37.858+02:00' WHERE owner_id = 9
+
+10:50:22 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value","created_at","is_deleted") values(10,'authorization_code','2020-02-06T10:50:22.326+02:00',false)
+
+10:50:22 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value","created_at","is_deleted") values(10,'openid','2020-02-06T10:50:22.327+02:00',false),(10,'profile','2020-02-06T10:50:22.327+02:00',false),(10,'eduperson_entitlement','2020-02-06T10:50:22.327+02:00',false),(10,'eduperson_scoped_affiliation','2020-02-06T10:50:22.327+02:00',false),(10,'eduperson_unique_id','2020-02-06T10:50:22.327+02:00',false)
+
+10:50:22 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_redirect_uri"("owner_id","value","created_at","is_deleted") values(10,'https://www.freelogodesign.org/Content/img/logo-samples/flooop.png','2020-02-06T10:50:22.327+02:00',false),(10,'https://www.freelogodesign.org/Conte','2020-02-06T10:50:22.327+02:00',false)
+
+10:54:19 error: syntax error at or near "'client_contact'"
+         task(delete-clients): UPDATE 'client_contact' SET is_deleted=true,deleted_at='2020-02-06T10:54:19.211+02:00' WHERE owner_id = 10
+
+10:54:21 error: syntax error at or near "'client_contact'"
+         task(delete-clients): UPDATE 'client_contact' SET is_deleted=true,deleted_at='2020-02-06T10:54:21.010+02:00' WHERE owner_id = 5
+
+10:55:11 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value","created_at","is_deleted") values(11,'authorization_code','2020-02-06T10:55:11.557+02:00',false)
+
+10:55:11 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value","created_at","is_deleted") values(11,'profile','2020-02-06T10:55:11.557+02:00',false),(11,'eduperson_entitlement','2020-02-06T10:55:11.557+02:00',false),(11,'eduperson_scoped_affiliation','2020-02-06T10:55:11.557+02:00',false),(11,'eduperson_unique_id','2020-02-06T10:55:11.557+02:00',false)
+
+10:55:11 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_redirect_uri"("owner_id","value","created_at","is_deleted") values(11,'https://www.freelogodesign.org/Content/img/logo-samples/flooop.png','2020-02-06T10:55:11.558+02:00',false),(11,'https://www.freelogodesign.org/Content/img/logo-sample','2020-02-06T10:55:11.558+02:00',false)
+
+10:55:11 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_contact"("owner_id","value","type","created_at","is_deleted") values(11,'mail@asdc.com','technical','2020-02-06T10:55:11.558+02:00',false)
+
+11:25:39 error: Querying against a released or lost connection.
+         task(update-client): insert into "client_contact"("owner_id","value","type","created_at","is_deleted") values('11','asdf@asdf.com','admin','2020-02-06T11:25:39.700+02:00',false)
+
+11:31:48 error: Querying against a released or lost connection.
+         task(update-client): insert into "client_contact"("owner_id","value","type","created_at","is_deleted") values('11','mail@asdc.co','technical','2020-02-06T11:31:48.778+02:00',false),('11','asdf@asdf.co','admin','2020-02-06T11:31:48.778+02:00',false),('11','andreas@mail.com','admin','2020-02-06T11:31:48.778+02:00',false)
+
+11:31:48 error: Querying against a released or lost connection.
+         task(update-client): update "client_contact" as t set "is_deleted"=v."is_deleted" from (values(11,'mail@asdc.com','technical',true),(11,'asdf@asdf.com','admin',true)) as v("owner_id","value","type","is_deleted") WHERE v.owner_id = t.owner_id AND v.value=t.value AND v.type = t.type
+
+11:35:40 error: Querying against a released or lost connection.
+         task(update-client): insert into "client_contact"("owner_id","value","type","created_at","is_deleted") values('11','mil@asdc.co','technical','2020-02-06T11:35:40.748+02:00',false),('11','df@asdf.co','admin','2020-02-06T11:35:40.748+02:00',false)
+
+11:35:40 error: Querying against a released or lost connection.
+         task(update-client): update "client_contact" as t set "is_deleted"=v."is_deleted" from (values(11,'mail@asdc.co','technical',true),(11,'asdf@asdf.co','admin',true)) as v("owner_id","value","type","is_deleted") WHERE v.owner_id = t.owner_id AND v.value=t.value AND v.type = t.type
+
+12:10:28 error: Querying against a released or lost connection.
+         task(update-client): insert into "client_contact"("owner_id","value","type","created_at","is_deleted") values('11','andreas@il.com','admin','2020-02-06T12:10:28.331+02:00',false),('11','mil@as.co','technical','2020-02-06T12:10:28.331+02:00',false),('11','sfgsdf@sdas.coma','admin','2020-02-06T12:10:28.331+02:00',false)
+
+12:10:28 error: Querying against a released or lost connection.
+         task(update-client): update "client_contact" as t set "is_deleted"=v."is_deleted" from (values(11,'andreas@mail.com','admin',true),(11,'mil@asdc.co','technical',true)) as v("owner_id","value","type","is_deleted") WHERE v.owner_id = t.owner_id AND v.value=t.value AND v.type = t.type
+
+12:58:28 error: syntax error at or near "'client_contact'"
+         task(delete-clients): UPDATE 'client_contact' SET is_deleted=true,deleted_at='2020-02-06T12:58:28.779+02:00' WHERE owner_id = 11
+
+13:02:25 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_grant_type"("owner_id","value","created_at","is_deleted") values(13,'authorization_code','2020-02-06T13:02:25.573+02:00',false),(13,'password','2020-02-06T13:02:25.573+02:00',false),(13,'redelegation','2020-02-06T13:02:25.573+02:00',false),(13,'token_exchange','2020-02-06T13:02:25.573+02:00',false)
+
+13:02:25 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_scope"("owner_id","value","created_at","is_deleted") values(13,'profile','2020-02-06T13:02:25.574+02:00',false),(13,'eduperson_entitlement','2020-02-06T13:02:25.574+02:00',false),(13,'eduperson_scoped_affiliation','2020-02-06T13:02:25.574+02:00',false),(13,'eduperson_unique_id','2020-02-06T13:02:25.574+02:00',false)
+
+13:02:25 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_redirect_uri"("owner_id","value","created_at","is_deleted") values(13,'https://img.discogs.com/3gojbC1jaGMT6LoRCH7vUR1ZJY8=/fit-in/600x600/filters:strip_icc():format(jpeg):mode_rgb():quality(90)/discogs-images/R-1559497-1297473560.jpeg.jpg','2020-02-06T13:02:25.574+02:00',false)
+
+13:02:25 error: Querying against a released or lost connection.
+         task(add-client): insert into "client_contact"("owner_id","value","type","created_at","is_deleted") values(13,'mail@maisld.sc','admin','2020-02-06T13:02:25.574+02:00',false),(13,'nausdf@asdfsf.asdf','admin','2020-02-06T13:02:25.574+02:00',false),(13,'trergr@asdf.com','admin','2020-02-06T13:02:25.574+02:00',false)

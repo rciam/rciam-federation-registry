@@ -1,3 +1,5 @@
 {
-  "integration_environment": ["demo","production","development"]
+  "integration_environment": ["demo","production","development"],
+  "grant_types":["implicit","authorization_code","refresh_token","client_credentials","password","redelegation","token_exchange","device"],
+  "contact_type":["admin","technical"]
 }

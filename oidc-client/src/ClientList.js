@@ -11,14 +11,17 @@ import * as config from './config.json';
 import Image from 'react-bootstrap/Image';
 import {Link} from "react-router-dom";
 import Badge from 'react-bootstrap/Badge';
+import Modal from 'react-bootstrap/Modal';
 
+import {LoadingBar} from './Components/LoadingBar';
 
 const ClientList= (props)=> {
-
+  const [loadingList,setLoadingList] = useState();
   const [clients,setClients] = useState();
-
+  const [confirmationId,setConfirmationId] = useState();
 
   useEffect(()=>{
+    setLoadingList(true);
     getClients();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
@@ -31,6 +34,7 @@ const ClientList= (props)=> {
       'Content-Type': 'application/json'
     }}).then(response=>response.json()).then(response=> {
       if(response.success){
+        setLoadingList(false);
         setClients(response.connections);
       }
     });
@@ -49,44 +53,50 @@ const ClientList= (props)=> {
 
   return(
     <React.Fragment>
+
+      <Confirmation confirmationId={confirmationId} setConfirmationId={setConfirmationId} deleteClient={deleteClient}/>
       <div className="links">
         <Link to="/home">Home</Link>
         <span className="link-seperator">/</span>
         Manage Clients
       </div>
       <div>
-        <Row className="options-bar">
-          <Col>
-            <Button variant="light" onClick={getClients} ><FontAwesomeIcon icon={faSync} />Refresh</Button>
-            <Link to="/form/new"><Button><FontAwesomeIcon icon={faPlus}/>New Client</Button></Link>
-          </Col>
-          <Col className="options-search" md={3}>
-            <InputGroup className="md-12">
-              <FormControl
-              placeholder="Search"
-              />
-              <InputGroup.Append>
-                <InputGroup.Text><FontAwesomeIcon icon={faTimes}/></InputGroup.Text>
-              </InputGroup.Append>
-            </InputGroup>
-          </Col>
-        </Row>
-        <Table striped bordered hover className="petitions-table">
-          <thead>
-            <tr>
-              <td>Service</td>
-              <td></td>
-              <td></td>
-            </tr>
-          </thead>
-          <tbody>
-            {clients?clients.map((item,index)=>{
-            return(
-            <TableItem item={item} user={props.user} key={index} deleteClient={deleteClient}/>
-            )
-            }):<tr></tr>}
-          </tbody>
-        </Table>
+        <LoadingBar loading={loadingList}>
+          <Row className="options-bar">
+            <Col>
+              <Button variant="light" onClick={getClients} ><FontAwesomeIcon icon={faSync} />Refresh</Button>
+              <Link to="/form/new"><Button><FontAwesomeIcon icon={faPlus}/>New Client</Button></Link>
+            </Col>
+            <Col className="options-search" md={3}>
+              <InputGroup className="md-12">
+                <FormControl
+                placeholder="Search"
+                />
+                <InputGroup.Append>
+                  <InputGroup.Text><FontAwesomeIcon icon={faTimes}/></InputGroup.Text>
+                </InputGroup.Append>
+              </InputGroup>
+            </Col>
+          </Row>
+          <Table striped bordered hover className="petitions-table">
+            <thead>
+              <tr>
+                <td>Service</td>
+                <td>Details</td>
+                <td>Controls</td>
+              </tr>
+            </thead>
+            <tbody>
+
+                  {clients?clients.map((item,index)=>{
+                  return(
+                  <TableItem item={item} user={props.user} key={index} setConfirmationId={setConfirmationId}/>
+                  )
+                  }):<tr></tr>}
+
+            </tbody>
+          </Table>
+        </LoadingBar>
       </div>
     </React.Fragment>
     )
@@ -112,7 +122,7 @@ function TableItem(props) {
         {props.item.requester===props.user.sub?
           <React.Fragment>
           <Link to={"/form/edit/"+props.item.id}><Button variant="light"><FontAwesomeIcon icon={faEdit}/>Edit</Button></Link>
-          <Button variant="danger" onClick={()=>props.deleteClient(props.item.id)}><FontAwesomeIcon icon={faTrash} />Delete</Button>
+          <Button variant="danger" onClick={()=>props.setConfirmationId(props.item.id)}><FontAwesomeIcon icon={faTrash} />Delete</Button>
           </React.Fragment>
         :null
         }
@@ -124,5 +134,30 @@ function TableItem(props) {
     </tr>
   )
 }
+
+
+function Confirmation(props){
+
+  const handleClose = () => props.setConfirmationId();
+  return (
+    <Modal show={props.confirmationId?true:false} onHide={handleClose}>
+        <Modal.Header closeButton>
+          <Modal.Title>
+              Are you sure sure you would like to delete this client?
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Footer>
+          <Button variant="danger" onClick={handleClose}>
+            Cancel
+          </Button>
+          <Button variant="primary" onClick={()=>{props.deleteClient(props.confirmationId); handleClose();}}>
+            OK
+          </Button>
+
+        </Modal.Footer>
+    </Modal>
+  )
+}
+
 
 export default ClientList;

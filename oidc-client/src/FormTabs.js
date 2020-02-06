@@ -2,7 +2,6 @@ import React,{useState} from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {faCheckSquare} from '@fortawesome/free-solid-svg-icons';
 import { diff } from 'deep-diff';
-import {Link} from "react-router-dom";
 import Tabs from 'react-bootstrap/Tabs';
 import Tab from 'react-bootstrap/Tab';
 import {Debug} from './Components/Debug.js';
@@ -21,11 +20,19 @@ const uuidv1 = require('uuid/v1');
 
 
 const FormTabs = (props)=> {
+  yup.addMethod(yup.array, 'unique', function(message, mapper = a => a) {
+      return this.test('unique', message, function(list) {
+          return list.length  === new Set(list.map(mapper)).size;
+      });
+  });
 
   const schema = yup.object({
     client_name:yup.string().min(4,'The Client Name must be at least 4 characters long').max(36,'The Client Name exceeds the character limit (15)').required('This is a required field!'),
-    client_id:yup.string().min(4,'The Client ID must be at least 4 characters long').max(15,'The Client ID exceeds the character limit (15)').test('testAvailable','Client Id is not available',function(value){
+    client_id:yup.string().min(4,'The Client ID must be at least 4 characters long').max(36,'The Client ID exceeds the character limit (35)').test('testAvailable','Client Id is not available',function(value){
         return new Promise((resolve,reject)=>{
+          if(props.initialValues.client_id===value){
+            resolve(true)
+          }
           setCheckingAvailability(true);
           fetch(config.host+'client/availability/'+ value, {
             method:'GET',
@@ -38,17 +45,21 @@ const FormTabs = (props)=> {
                 resolve(res.available)}})
               ).catch(()=>{resolve(true)})
         })
-
     }),
-    redirect_uris:yup.array().of(yup.string().matches(reg.regUrl,'This must be a secure Url starting with https://')).required('This is a required field!'),
+    redirect_uris:yup.array().of(yup.string().matches(reg.regUrl,'This must be a secure Url starting with https://')).unique('Redirect Uris must be unique!').required('This is a required field!'),
     logo_uri:yup.string().required('This is a required field!').test('testImage','Enter a valid image Url',function(value){ return imageError}),
     policy_uri:yup.string().required('This is a required field!').matches(reg.regSimpleUrl,'Enter a valid Url'),
     client_description:yup.string().required('This is a required field!'),
     contacts:yup.array().of(yup.object().shape({
-      email:yup.string().email('Enter a valid email address').required('Contact email cannot be empty'),
-      type:yup.string().required('This is a required field!')
-    })).required('This is a required field!'),
-    scope:yup.array().of(yup.string().min(1,'Scope cannot be empty').max(50,'Scope exceeds character limit (50)').matches(reg.regScope,'Scope must consist of small letters and underscores')).required('This is a required field!'),
+        email:yup.string().email('Enter a valid email address').required('Contact email cannot be empty'),
+        type:yup.string().required('This is a required field!')
+      })).test('testContacts','Contacts must be unique',function(value){
+          const array = [];
+          value.map(s=>array.push(s.email+s.type));
+          const unique = array.filter((v, i, a) => a.indexOf(v) === i);
+          if(unique.length===array.length){return true}else{return false}
+          }).required('This is a required field!'),
+    scope:yup.array().of(yup.string().min(1,'Scope cannot be empty').max(50,'Scope exceeds character limit (50)').matches(reg.regScope,'Scope must consist of small letters and underscores')).unique('Scope must be unique').required('This is a required field!'),
     grant_types:yup.array().of(yup.string().test('testGrantTypes','error-granttypes',function(value){return formConfig.grant_types.includes(value)})).required('At least one option must be selected'),
     access_token_validity_seconds:yup.number().min(0).max(1000000,'Exceeds the maximum value').required('This is a required field!'),
     refresh_token_validity_seconds:yup.number().min(0).max(34128000,'Exceeds the maximum value').required('This is a required field!'),
@@ -69,7 +80,6 @@ const FormTabs = (props)=> {
   const [message,setMessage] = useState();
   const [clientId,setClientId] = useState(null);
   const [checkingAvailability,setCheckingAvailability] = useState(false);
-
   const [imageError,setImageError] = useState(false);
 
 
@@ -90,9 +100,6 @@ const FormTabs = (props)=> {
       }
     })
   }
-
-
-
   const postApi=(data)=>{
     data = gennerateValues(data);
     if(!props.editId){
@@ -135,7 +142,6 @@ const FormTabs = (props)=> {
       }
     }
   }
-
   function capitalWords(array) {
      let return_array = array.map((item,index)=>{
         var splitStr = item.toLowerCase().split(' ');
@@ -150,18 +156,9 @@ const FormTabs = (props)=> {
   }
 
 
-
-
-
   return(
     <React.Fragment>
-    <div className="links">
-      <Link to="/home">Home</Link>
-      <span className="link-seperator">/</span>
-      <Link to="/petitions">Manage Clients</Link>
-      <span className="link-seperator">/</span>
-      {props.title}
-    </div>
+
     <Formik
     initialValues={props.initialValues}
       validationSchema={schema}
@@ -281,7 +278,7 @@ const FormTabs = (props)=> {
                       disabled={props.review}
                     />
                   </InputRow>
-                  
+
                   <InputRow title='Contacts' error={typeof(errors.contacts)=='string'?errors.contacts:null} touched={touched.contacts} description='List of contacts for administrators of this client.'>
                     <Contacts
                       values={values.contacts}
@@ -409,8 +406,6 @@ const FormTabs = (props)=> {
                         <Button className='submit-button' type="submit" variant="primary" >Submit</Button>
                       </React.Fragment>
                     }
-
-
                   </InputRow>
                 </Form>
               </Tab>
@@ -497,5 +492,6 @@ function prepareEditData(data,initialValues){
   }
   return edits
 }
+
 
 export default FormTabs;

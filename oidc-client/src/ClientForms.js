@@ -3,7 +3,8 @@ import initialValues from './initialValues';
 import * as config from './config.json';
 import {useParams} from "react-router-dom";
 import FormTabs from "./FormTabs.js";
-import Home from './Home';
+import {LoadingBar} from './Components/LoadingBar';
+import {Link} from "react-router-dom";
 
 const EditClient = (props) => {
   const [initData,setInitData] = useState();
@@ -36,13 +37,31 @@ const EditClient = (props) => {
 
   return (
     <React.Fragment>
-      {initData?<FormTabs initialValues={initData} editId={id} review={review} title={"Edit Client"}/>:<Home/>}
+      <div className="links">
+        <Link to="/home">Home</Link>
+        <span className="link-seperator">/</span>
+        <Link to="/petitions">Manage Clients</Link>
+        <span className="link-seperator">/</span>
+        Edit Client
+      </div>
+      {initData?<FormTabs initialValues={initData} editId={id} review={review} />:<LoadingBar loading={true}/>}
     </React.Fragment>
   )
 }
 
 const NewClient = ()=>{
-  return <FormTabs initialValues={initialValues} editId={null} title={"New Client"}/>
+  return (
+    <React.Fragment>
+      <div className="links">
+        <Link to="/home">Home</Link>
+        <span className="link-seperator">/</span>
+        <Link to="/petitions">Manage Clients</Link>
+        <span className="link-seperator">/</span>
+        Edit Client
+      </div>
+      <FormTabs initialValues={initialValues} editId={null} />
+    </React.Fragment>
+  )
 }
 
 export {
