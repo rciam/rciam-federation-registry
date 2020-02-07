@@ -192,14 +192,14 @@ router.get('/client/availability/:client_id',checkAuthentication,(req,res)=>{
 
 // Approval of pettion
 router.put('/client/approve/:id',checkAuthentication,checkAdmin,(req,res)=>{
-  console.log(req.params.id);
+  
   return db.task('approve-client',async t =>{
     await t.client_details.findConnectionForEdit(req.params.id).then(async client=>{
       if(client){
         try {
             const w = await t.client_details.approve(req.params.id,req.user.sub);
             const s = await t.client_details.add(client,client.requester,client.revision,client.id);
-          console.log('success');
+
           return res.json({
             success:true,
           });
@@ -248,6 +248,7 @@ router.post('/client/edit/:id',editClientValidationRules(),validate,checkAuthent
 
   return db.task('update-client',async t =>{
     await t.client_details.findConnectionForEdit(req.params.id).then(async client=>{
+      console.log(req.body);
       if(client&&client.requester==req.user.sub){
         try {
           if(Object.keys(req.body.details).length !== 0){
@@ -255,16 +256,23 @@ router.post('/client/edit/:id',editClientValidationRules(),validate,checkAuthent
             const s = await t.client_details.add(client,req.user.sub,client.revision,client.id);
           }
           for (var key in req.body.add){
-            if(key==='client_contact') {const e = await t.client_contact.add(req.body.add[key],req.params.id);}
+            console.log(key);
+
+            if(key==='client_contact') { const e = await t.client_contact.add(req.body.add[key],req.params.id);}
             else {const m = await t.client_general.add(key,req.body.add[key],req.params.id);}
+
           }
           for (var key in req.body.dlt){
+            console.log(key);
             if(key==='client_contact'){const e = await t.client_contact.delete_one_or_many(req.body.dlt[key],req.params.id);}
             else {const n = await t.client_general.delete_one_or_many(key,req.body.dlt[key],req.params.id);}
+
           }
           return res.json({success:true});
         }
         catch(error){
+          console.log('error');
+          console.log(error);
           return res.json({
             success:false,
             error:'Error while querying the database'

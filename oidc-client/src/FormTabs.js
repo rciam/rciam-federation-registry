@@ -30,7 +30,7 @@ const FormTabs = (props)=> {
     client_name:yup.string().min(4,'The Client Name must be at least 4 characters long').max(36,'The Client Name exceeds the character limit (15)').required('This is a required field!'),
     client_id:yup.string().min(4,'The Client ID must be at least 4 characters long').max(36,'The Client ID exceeds the character limit (35)').test('testAvailable','Client Id is not available',function(value){
         return new Promise((resolve,reject)=>{
-          if(props.initialValues.client_id===value){
+          if(props.initialValues.client_id===value||checkedId===value){
             resolve(true)
           }
           setCheckingAvailability(true);
@@ -41,6 +41,7 @@ const FormTabs = (props)=> {
               'Content-Type':'application/json'
             }}).then(res => res.json()).then(
               (res=>{if(res.success){
+                setcheckedId(value);
                 setCheckingAvailability(false);
                 resolve(res.available)}})
               ).catch(()=>{resolve(true)})
@@ -76,12 +77,13 @@ const FormTabs = (props)=> {
     }).nullable(),
 
   });
+
   const [hasSubmitted,setHasSubmitted] = useState(false);
   const [message,setMessage] = useState();
   const [clientId,setClientId] = useState(null);
   const [checkingAvailability,setCheckingAvailability] = useState(false);
-  const [imageError,setImageError] = useState(false);
-
+  const [imageError,setImageError] = useState(false); //
+  const [checkedId,setcheckedId] = useState(); // Variable containing the last client Id checked for availability
 
   const approveApi=(id)=>{
     fetch(config.host+'client/approve/'+ id, {
@@ -91,7 +93,7 @@ const FormTabs = (props)=> {
         'Content-Type':'application/json'
       }
     }).then(response=>response.json()).then(response=>{
-      setClientId(id);
+      setClientId(props.initialValues.client_id);
       if(response.success){
         setMessage('Was approved with success.');
       }
@@ -136,6 +138,7 @@ const FormTabs = (props)=> {
             setMessage('Was edited with success.');
           }
           else{
+            console.log(response);
             setMessage('Was not edited due to the following error: ' + response.error);
           }
         })
@@ -293,21 +296,6 @@ const FormTabs = (props)=> {
                       disabled={props.review}
                     />
                   </InputRow>
-                  {/* <InputRow title='Contacts' error={typeof(errors.contacts)=='string'?errors.contacts:null} touched={touched.contacts} description='List of contacts for administrators of this client.'>
-                    <ListInput
-                      values={values.contacts}
-                      placeholder='New contact'
-                      name='contacts'
-                      empty={typeof(errors.contacts)=='string'?true:false}
-                      error={errors.contacts}
-                      touched={touched.contacts}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      setFieldTouched={setFieldTouched}
-                      disabled={props.review}
-                    />
-                  </InputRow> */}
-
                   <InputRow title='Scope' description='OAuth scopes this client is allowed to request'>
                     <ListInputArray
                       name='scope'

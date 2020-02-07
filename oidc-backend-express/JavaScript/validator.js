@@ -36,7 +36,7 @@ const editClientValidationRules = () => {
     body('add').custom((value)=> {
       if(value.client_contact){
         value.client_contact.map((item,index)=>{
-          if(!item.email.match(reg.regEmail)||!formConfig.contact_type.includes(item.type)){
+          if(!item.email.match(reg.regEmail)||!formConfig.contact_types.includes(item.type)){
             console.log('add-client_contact');
             return false
           }
@@ -66,14 +66,17 @@ const editClientValidationRules = () => {
           }
         })
       }
+
       return true
     }).withMessage('Invalid Add Values!'),
-    body('dlt').custom((value,success=true)=> {
+    body('dlt').custom((value)=> {
       if(value.client_contact){
         value.client_contact.map((item,index)=>{
-          if(!item.email.match(reg.regEmail)||!formConfig.contact_type.includes(item.type)){
+          if(!item.email.match(reg.regEmail)||!formConfig.contact_types.includes(item.type)){
             console.log('dlt-client_contact');
-            success = false
+
+
+            return false
           }
         })
       }
@@ -81,7 +84,7 @@ const editClientValidationRules = () => {
         value.client_grant_type.map((item,index)=>{
           if(!formConfig.grant_types.includes(item)){
             console.log('dlt-client_grant');
-            success = false
+            return false
           }
         })
       }
@@ -89,7 +92,7 @@ const editClientValidationRules = () => {
         value.client_redirect_uri.map((item,index)=>{
           if(!item.match(reg.regUrl)){
             console.log('dlt-client_redirect');
-            success = false
+            return false
           }
         })
       }
@@ -97,11 +100,12 @@ const editClientValidationRules = () => {
         value.client_scope.map((item,index)=>{
           if(!item.match(reg.regScope)){
             console.log('dlt-client_scope');
-            success = false
+            return false
           }
         })
       }
-      return success
+      return true
+
     }).withMessage('Invalid Add Values!'),
     body('details.logo_uri').optional().isString().custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Invalid logo Uri value!'),
     body('details.policy_uri').optional().isString().custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Invalid logo Uri value!'),

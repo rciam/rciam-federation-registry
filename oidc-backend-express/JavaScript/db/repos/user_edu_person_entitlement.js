@@ -29,10 +29,10 @@ class UserEduPersonEntitlementRepository {
       // if not Empty array
       if(data.length>0){
         data.forEach((item)=>{
-        console.log('multiple_values');
+
           values.push({user_id:id,edu_person_entitlement:item})
         });
-        console.log(values);
+
         const query = this.pgp.helpers.insert(values, cs);
         this.db.none(query)
         .then(data => {
@@ -42,7 +42,7 @@ class UserEduPersonEntitlementRepository {
             return 'error'
         });
       }else{
-        console.log('Something wicked his way comes')
+
         return 'error'
       }
 

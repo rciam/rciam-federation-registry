@@ -21,27 +21,15 @@ class ClientGeneralRepository {
   async delete_one_or_many(data,owner_id){
     let date = new Date(Date.now());
     let values=[];
-    console.log('From Edit');
-    console.log(data);
-    console.log(data.length);
-    console.log(typeof(data));
+
     if (data.length>0){
       data.forEach((item)=>{
         values.push({owner_id:parseInt(owner_id),value:item.email,type:item.type,is_deleted:true})
       })
       const query = this.pgp.helpers.update(values, ['?owner_id', '?value', '?type','is_deleted'], 'client_contact') + ' WHERE v.owner_id = t.owner_id AND v.value=t.value AND v.type = t.type';
-      this.db.none(query)
-      .then(data => {
-          console.log(data);
-          this.db.none('UPDATE client_contact SET deleted_at=$2 WHERE owner_id = $1 AND is_deleted=true AND deleted_at IS NULL ',[+owner_id,date]).then(
-            data => {
-              return 'success'
-            }
-          )
-      })
-      .catch(error => {
-          return 'error'
-      });
+      await this.db.none(query).then((value) => {return this.db.none('UPDATE client_contact SET deleted_at=$2 WHERE owner_id = $1 AND is_deleted=true AND deleted_at IS NULL ',[+owner_id,date]);})
+
+
     }
     else {
       return null
@@ -55,10 +43,7 @@ class ClientGeneralRepository {
     let date = new Date(Date.now());
     // if not Empty array
     if(data.length>0){
-      console.log('From Edit');
-      console.log(data);
-      console.log(data.length);
-      console.log(typeof(data));
+
       data.forEach((item)=>{
         values.push({owner_id:id,value:item.email,type:item.type,created_at:date,is_deleted:false,deleted_at:null})
       });

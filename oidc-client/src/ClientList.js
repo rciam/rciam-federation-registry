@@ -12,20 +12,31 @@ import Image from 'react-bootstrap/Image';
 import {Link} from "react-router-dom";
 import Badge from 'react-bootstrap/Badge';
 import Modal from 'react-bootstrap/Modal';
-
+import Pagination from 'react-bootstrap/Pagination';
 import {LoadingBar} from './Components/LoadingBar';
+
 
 const ClientList= (props)=> {
   const [loadingList,setLoadingList] = useState();
-  const [clients,setClients] = useState();
+  const [clients,setClients] = useState([]);
   const [confirmationId,setConfirmationId] = useState();
-
+  const [activePage,setActivePage] = useState(1);
+  const [showPending,setShowPending] = useState(false);
   useEffect(()=>{
     setLoadingList(true);
     getClients();
+    console.log('only once');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
 
+  let items = [];
+  for (let number = 1; number <= Math.ceil(clients.length/10) ; number++) {
+    items.push(
+      <Pagination.Item key={number} onClick={()=>{setActivePage(number)}} active={number === activePage}>
+        {number}
+      </Pagination.Item>,
+    );
+  }
   const getClients = ()=> {
     fetch(config.host+'clients/user', {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
@@ -35,7 +46,11 @@ const ClientList= (props)=> {
     }}).then(response=>response.json()).then(response=> {
       if(response.success){
         setLoadingList(false);
+        response.connections.forEach((item,index)=>{
+          response.connections[index].display = true;
+        })
         setClients(response.connections);
+
       }
     });
   }
@@ -50,6 +65,7 @@ const ClientList= (props)=> {
     });
   }
 
+  let renderedConnections = 0;
 
   return(
     <React.Fragment>
@@ -66,6 +82,15 @@ const ClientList= (props)=> {
             <Col>
               <Button variant="light" onClick={getClients} ><FontAwesomeIcon icon={faSync} />Refresh</Button>
               <Link to="/form/new"><Button><FontAwesomeIcon icon={faPlus}/>New Client</Button></Link>
+            </Col>
+            <Col md={3}>
+              <Button variant="light"
+                onClick={()=>{
+                  setShowPending(!showPending);
+                  let array = clients;
+                  array.forEach((item,index)=>{if(item.approved){array[index].display=showPending; console.log(showPending)}}); setClients(array);}}>
+                {showPending?'Show All':'Show Pending'}
+              </Button>
             </Col>
             <Col className="options-search" md={3}>
               <InputGroup className="md-12">
@@ -87,15 +112,23 @@ const ClientList= (props)=> {
               </tr>
             </thead>
             <tbody>
+              <React.Fragment>
 
                   {clients?clients.map((item,index)=>{
-                  return(
-                  <TableItem item={item} user={props.user} key={index} setConfirmationId={setConfirmationId}/>
-                  )
+                    if(item.display){
+                      renderedConnections++
+                      if(Math.floor(renderedConnections/10)+1===activePage){
+                        return(
+                          <TableItem item={item} user={props.user} key={index} setConfirmationId={setConfirmationId}/>
+                        )
+                      }
+                    }
+                    return null
                   }):<tr></tr>}
-
+              </React.Fragment>
             </tbody>
           </Table>
+          <Pagination>{items}</Pagination>
         </LoadingBar>
       </div>
     </React.Fragment>
