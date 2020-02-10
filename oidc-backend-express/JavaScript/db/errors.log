@@ -17,3 +17,9 @@
 
 13:48:14 error: syntax error at or near "'client_contact'"
          task(delete-clients): UPDATE 'client_contact' SET is_deleted=true,deleted_at='2020-02-10T13:48:14.313+02:00' WHERE owner_id = 4
+
+14:58:59 error: Querying against a released or lost connection.
+         task(user-check): insert into "user_edu_person_entitlement"("user_id","edu_person_entitlement") values(1,'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu'),(1,'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=vm_operator#aai.egi.eu')
+
+18:51:18 error: relation "client_details" does not exist
+         task(find-clients): SELECT id,client_description,logo_uri,client_name,approved,requester FROM client_details WHERE requester = '4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu' AND is_deleted=false AND model_id IS NULL

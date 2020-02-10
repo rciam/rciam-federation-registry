@@ -52,15 +52,15 @@ const Routes = (props) => (
       </div>
 );
 
-function AdminRoute({ children, ...rest },props) {
+function AdminRoute(props) {
 
-
+  console.log(props);
   return (
     <Route
-      {...rest}
+      path={props.path}
       render={({ location }) =>
         props.user.admin ? (
-          children
+          props.children
         ) : (
           <Redirect
             to={{

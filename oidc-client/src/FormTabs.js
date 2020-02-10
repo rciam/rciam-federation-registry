@@ -30,7 +30,7 @@ const FormTabs = (props)=> {
     client_name:yup.string().min(4,'The Client Name must be at least 4 characters long').max(36,'The Client Name exceeds the character limit (15)').required('This is a required field!'),
     client_id:yup.string().min(4,'The Client ID must be at least 4 characters long').max(36,'The Client ID exceeds the character limit (35)').test('testAvailable','Client Id is not available',function(value){
         return new Promise((resolve,reject)=>{
-          if(props.initialValues.client_id===value||checkedId===value){
+          if(props.initialValues.client_id===value||checkedId===value||!value){
             resolve(true)
           }
           setCheckingAvailability(true);
@@ -214,7 +214,7 @@ const FormTabs = (props)=> {
                      isInvalid={hasSubmitted?!!errors.client_id:(!!errors.client_id&&touched.client_id)}
                      onBlur={handleBlur}
                      disabled={props.review}
-                     isloading={checkingAvailability?1:0}
+                     isloading={values.client_id&&values.client_id!==checkedId&&checkingAvailability?1:0}
                     />
                   </InputRow>
                   <InputRow title='Redirect URI(s)' error={typeof(errors.redirect_uris)=='string'?errors.redirect_uris:null}  touched={touched.redirect_uris} description='URIs that the client can be redirected to after the authorization page'>
