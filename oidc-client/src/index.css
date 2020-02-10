@@ -16,9 +16,110 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
+
+
+/* Main Page */
 .main-container {
   margin: 0 1rem;
 }
+
+.flex-container {
+  display:flex;
+
+}
+
+/* Home Page */
+
+.home-container {
+  background-color:rgb(245, 245, 245);
+  font-weight: 300;
+  font-family: "Lato";
+  text-align: left;
+}
+.home-container h1{
+  color: #4DB3CF;
+  font-size: 1.7rem;
+  padding-top:1.5rem;
+  margin:0 0 1rem 1em;
+}
+
+.home-container p {
+  font-size:1rem;
+  margin-left:1.5rem;
+  margin-right: 1.5rem;
+  padding-bottom: 1.5rem;
+}
+
+/* Header Footer */
+
+.drop-menu a {
+  font:300 13px / 23px 'Lato' !important;
+  padding:0.2rem 1rem!important;
+}
+.drop-menu a svg {
+  margin-left: 0.2rem;
+}
+.log-button {
+  color: rgb(89, 154, 219)!important;
+  border-color: rgb(89, 154, 219)!important;
+  padding: .2rem .75rem!important;
+}
+.drop-container-header .dropdown-menu {
+  padding:0 1rem!important;
+  font-size: 4rem!important;
+}
+.drop-container-header .dropdown-menu a {
+  padding:0.3rem 0rem!important;
+  font-size:1rem!important;
+}
+.log-button:hover {
+  color:white!important;
+}
+.logo {
+  margin-top:-2.5rem;
+}
+.logo a img {
+  height: 5.4rem;
+}
+.main-title {
+  color:rgb(91, 91, 91);
+  font-family:"Open Sans";
+  font-weight: 300;
+  font-size: 1.9rem;
+  margin-top:1rem;
+  margin-bottom:2rem;
+}
+.footer {
+  width:90%;
+  margin:auto;
+  margin-top:1rem;
+  font-family:'Lato';
+  font-weight:300;
+}
+.logo-grnet {
+  width:8rem;
+  margin-right:0.5rem;
+}
+.logo-eu {
+  width: 3rem;
+}
+.footer-links {
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  text-align: right;
+}
+.footer-links a {
+  margin-left:0.5rem;
+  font-size:1rem;
+}
+.footer-description  {
+  margin-top:0.7rem;
+  font-size:0.9rem;
+}
+
+
+
 #uri-small-desc{
   margin-top: -0.75rem;
 }
@@ -132,14 +233,7 @@ form {
 .dropdown-toggle svg {
   margin-left:0.5rem;
 }
-.main-title {
-  color:rgb(91, 91, 91);
-  font-family:"Open Sans";
-  font-weight: 300;
-  font-size: 1.9rem;
-  margin-top:1rem;
-  margin-bottom:2rem;
-}
+
 .nav-side {
   padding-right:1rem;
   width:15rem!important;
@@ -159,12 +253,7 @@ form {
 .nav-side a , .nav-side div {
   margin-left: 1rem;
 }
-.logo {
-  margin-top:-2.5rem;
-}
-.logo a img {
-  height: 5.4rem;
-}
+
 .nav-title {
   color:#4b4b4b;
   font-size: 1rem;
@@ -173,16 +262,8 @@ form {
   line-height: 3rem;
   margin-bottom: -0.5rem;
 }
-.home-container {
-  background-color:rgb(245, 245, 245);
-  font-weight: 300;
-  font-family: "Lato";
-  text-align: left;
-}
-.flex-container {
-  display:flex;
 
-}
+
 .content-container {
   width:100%;
 }
@@ -197,18 +278,7 @@ form {
 .options-bar button svg {
   margin-right:0.5rem;
 }
-.home-container h1{
-  color: #4DB3CF;
-  font-size: 1.7rem;
-  padding-top:1.5rem;
-  margin:0 0 1rem 1em;
-}
-.home-container p {
-  font-size:1rem;
-  margin-left:1.5rem;
-  margin-right: 1.5rem;
-  padding-bottom: 1.5rem;
-}
+
 .links {
   font-size:1rem;
   line-height: 1rem;
@@ -265,9 +335,7 @@ tbody tr td {
 tbody tr td:last-child {
   border-left: none;
 }
-.petition-details {
 
-}
 .petition-details div {
   margin-left: 1rem;
 }
@@ -297,63 +365,14 @@ tbody tr td:last-child {
 .petition-actions button svg {
   margin-right:0.5rem;
 }
-.footer {
-  width:90%;
-  margin:auto;
-  margin-top:1rem;
-  font-family:'Lato';
-  font-weight:300;
-}
-.logo-grnet {
-  width:8rem;
-  margin-right:0.5rem;
-}
-.logo-eu {
-  width: 3rem;
-}
-.footer-links {
-  display:flex;
-  align-items:center;
-  justify-content:flex-end;
-  text-align: right;
 
-}
-.footer-links a {
 
-  margin-left:0.5rem;
-  font-size:1rem;
 
-}
-.footer-description  {
-  margin-top:0.7rem;
-  font-size:0.9rem;
-}
-.log-button {
-  color: rgb(89, 154, 219)!important;
-  border-color: rgb(89, 154, 219)!important;
-  padding: .2rem .75rem!important;
-}
-.log-button:hover {
-  color:white!important;
-}
-.dropdown-menu {
-  min-width: 0px!important;
-  padding:0px!important;
-}
-.dropdown-menu a {
-  padding:0px!important;
-}
 
 #hide_input {
   display:none;
 }
-.drop-menu a {
-  font:300 13px / 23px 'Lato' !important;
-  padding:0.2rem 1rem!important;
-}
-.drop-menu a svg {
-  margin-left: 0.2rem;
-}
+
 .nav-side a{
   margin-top: 0.5rem;
 
@@ -443,4 +462,8 @@ tbody tr td:last-child {
   margin-top:1vw;
   border:1px solid rgb(227, 227, 227);
   background-color: #F5F5F5;
+}
+
+.pending-button {
+  float:right;
 }

@@ -95,6 +95,8 @@ INSERT INTO client_details (client_description,reuse_refresh_tokens,allow_intros
 VALUES ('This is not a small description with its size chosen deliberately to suit a secret purpose not revealed in this description',true,true,'client3','secret',10000,1000,'Client 3','http://logok.org/wp-content/uploads/2014/05/Total-logo-earth.png','https://policy_uri.com',true,'plain',10000,'demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','2004-10-19 10:23:54','2004-10-19 10:23:54');
 INSERT INTO client_details (client_description,reuse_refresh_tokens,allow_introspection,client_id,client_secret,access_token_validity_seconds,refresh_token_validity_seconds,client_name,logo_uri,policy_uri,clear_access_tokens_on_refresh,code_challenge_method,device_code_validity_seconds,integration_environment,requester,created_at,updated_at)
 VALUES ('This is not a small description with its size chosen deliberately to suit a secret purpose not revealed in this description',true,true,'client4','secret',10000,1000,'Client 4','https://brandmark.io/logo-rank/random/pepsi.png','https://policy_uri.com',true,'plain',10000,'development','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','2004-10-19 10:23:54','2004-10-19 10:23:54');
+INSERT INTO client_details (client_description,reuse_refresh_tokens,allow_introspection,client_id,client_secret,access_token_validity_seconds,refresh_token_validity_seconds,client_name,logo_uri,policy_uri,clear_access_tokens_on_refresh,code_challenge_method,device_code_validity_seconds,integration_environment,requester,created_at,updated_at)
+VALUES ('This is not a small description with its size chosen deliberately to suit a secret purpose not revealed in this description',true,true,'client5','secret',10000,1000,'Client 5','https://brandmark.io/logo-rank/random/pepsi.png','https://policy_uri.com',true,'plain',10000,'development','7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu','2004-10-19 10:23:54','2004-10-19 10:23:54');
 
 INSERT INTO client_contact(owner_id,value,type,created_at)
 VALUES ('1','mymail@gmail.com','admin','2004-10-19 10:23:54');
@@ -128,6 +130,14 @@ INSERT INTO client_contact(owner_id,value,type,created_at)
 VALUES ('4','mygrail@gmail.com','admin','2004-10-19 10:23:54');
 INSERT INTO client_contact(owner_id,value,type,created_at)
 VALUES ('4','myfail@gmail.com','admin','2004-10-19 10:23:54');
+INSERT INTO client_contact(owner_id,value,type,created_at)
+VALUES ('5','mymail@gmail.com','admin','2004-10-19 10:23:54');
+INSERT INTO client_contact(owner_id,value,type,created_at)
+VALUES ('5','mysnail@gmail.com','admin','2004-10-19 10:23:54');
+INSERT INTO client_contact(owner_id,value,type,created_at)
+VALUES ('5','mygrail@gmail.com','admin','2004-10-19 10:23:54');
+INSERT INTO client_contact(owner_id,value,type,created_at)
+VALUES ('5','myfail@gmail.com','admin','2004-10-19 10:23:54');
 
 
 INSERT INTO client_grant_type(owner_id,value,created_at)
@@ -154,6 +164,13 @@ INSERT INTO client_grant_type(owner_id,value,created_at)
 VALUES ('4','authorization_code','2004-10-19 10:23:54');
 INSERT INTO client_grant_type(owner_id,value,created_at)
 VALUES ('4','refresh_token','2004-10-19 10:23:54');
+INSERT INTO client_grant_type(owner_id,value,created_at)
+VALUES ('5','implicit','2004-10-19 10:23:54');
+INSERT INTO client_grant_type(owner_id,value,created_at)
+VALUES ('5','authorization_code','2004-10-19 10:23:54');
+INSERT INTO client_grant_type(owner_id,value,created_at)
+VALUES ('5','refresh_token','2004-10-19 10:23:54');
+
 
 
 INSERT INTO client_redirect_uri(owner_id,value,created_at)
@@ -171,6 +188,9 @@ VALUES ('3','https://redirecturi2.com','2004-10-19 10:23:54');
 INSERT INTO client_redirect_uri(owner_id,value,created_at)
 VALUES ('4','https://redirecturi.com','2004-10-19 10:23:54');
 
+INSERT INTO client_redirect_uri(owner_id,value,created_at)
+VALUES ('5','https://redirecturi.com','2004-10-19 10:23:54');
+
 INSERT INTO client_scope(owner_id,value,created_at)
 VALUES ('1','electroscope','2004-10-19 10:23:54');
 INSERT INTO client_scope(owner_id,value,created_at)
@@ -179,3 +199,5 @@ INSERT INTO client_scope(owner_id,value,created_at)
 VALUES ('3','stethoscope','2004-10-19 10:23:54');
 INSERT INTO client_scope(owner_id,value,created_at)
 VALUES ('4','kaleidoscope','2004-10-19 10:23:54');
+INSERT INTO client_scope(owner_id,value,created_at)
+VALUES ('5','telescope','2004-10-19 10:23:54');

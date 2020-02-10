@@ -1,6 +1,6 @@
 const { body, validationResult } = require('express-validator');
 const {reg} = require('./regex.js');
-var formConfig = require('./form-config');
+var formConfig = require('./config');
 const clientValidationRules = () => {
   return [
     body('client_name').isString().isLength({min:4, max:15}).exists(),
@@ -9,7 +9,7 @@ const clientValidationRules = () => {
     body('logo_uri').isString().exists().custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Invalid logo Uri value!'),
     body('policy_uri').isString().exists().custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Invalid logo Uri value!'),
     body('client_description').isString().isLength({min:1}).exists(),
-    body('contacts').isArray({min:1}).custom((value,success=true)=> {value.map((item,index)=>{if(!item.email.match(reg.regEmail)||!formConfig.contact_type.includes(item.type)){success=false}}); return success }).withMessage('Invalid Contacts value!'),
+    body('contacts').isArray({min:1}).custom((value,success=true)=> {value.map((item,index)=>{if(!item.email.match(reg.regEmail)||!formConfig.contact_types.includes(item.type)){success=false}}); return success }).withMessage('Invalid Contacts value!'),
     body('scope').isArray({min:1}).custom((value,success=true)=> {value.map((item,index)=>{if(!item.match(reg.regScope)){success=false}}); return success }).withMessage('Invalid Contacts value!'),
     body('grant_types').isArray({min:1}).custom((value,success=true)=> {value.map((item,index)=>{if(!['implicit','authorization_code','refresh_token','client_credentials','password','redelegation','token_exchange','device'].includes(item)){success=false}}); return success }).withMessage('Invalid Scope value!'),
     body('access_token_validity_seconds').exists().custom((value)=> {if(parseInt(value)&&parseInt(value)<34128000&&parseInt(value)>0){return true}else{return false}}),
@@ -66,7 +66,6 @@ const editClientValidationRules = () => {
           }
         })
       }
-
       return true
     }).withMessage('Invalid Add Values!'),
     body('dlt').custom((value)=> {
@@ -105,7 +104,6 @@ const editClientValidationRules = () => {
         })
       }
       return true
-
     }).withMessage('Invalid Add Values!'),
     body('details.logo_uri').optional().isString().custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Invalid logo Uri value!'),
     body('details.policy_uri').optional().isString().custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Invalid logo Uri value!'),
@@ -126,8 +124,9 @@ const editClientValidationRules = () => {
 
 const validate = (req, res, next) => {
 
-
+  console.log(req.body);
   const errors = validationResult(req)
+  console.log(errors);
   if (errors.isEmpty()) {
     return next()
   }

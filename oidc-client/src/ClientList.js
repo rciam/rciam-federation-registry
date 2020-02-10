@@ -22,6 +22,7 @@ const ClientList= (props)=> {
   const [confirmationId,setConfirmationId] = useState();
   const [activePage,setActivePage] = useState(1);
   const [showPending,setShowPending] = useState(false);
+  let renderedConnections = 0;
   useEffect(()=>{
     setLoadingList(true);
     getClients();
@@ -30,12 +31,14 @@ const ClientList= (props)=> {
   },[]);
 
   let items = [];
-  for (let number = 1; number <= Math.ceil(clients.length/10) ; number++) {
-    items.push(
-      <Pagination.Item key={number} onClick={()=>{setActivePage(number)}} active={number === activePage}>
-        {number}
-      </Pagination.Item>,
-    );
+  if(clients){
+    for (let number = 1; number <= Math.ceil(clients.length/10) ; number++) {
+      items.push(
+        <Pagination.Item key={number} onClick={()=>{setActivePage(number)}} active={number === activePage}>
+          {number}
+        </Pagination.Item>,
+      );
+    }
   }
   const getClients = ()=> {
     fetch(config.host+'clients/user', {
@@ -46,9 +49,11 @@ const ClientList= (props)=> {
     }}).then(response=>response.json()).then(response=> {
       if(response.success){
         setLoadingList(false);
-        response.connections.forEach((item,index)=>{
-          response.connections[index].display = true;
-        })
+        if(response.connections){
+          response.connections.forEach((item,index)=>{
+            response.connections[index].display = true;
+          })
+        }
         setClients(response.connections);
 
       }
@@ -65,7 +70,7 @@ const ClientList= (props)=> {
     });
   }
 
-  let renderedConnections = 0;
+
 
   return(
     <React.Fragment>
@@ -84,7 +89,8 @@ const ClientList= (props)=> {
               <Link to="/form/new"><Button><FontAwesomeIcon icon={faPlus}/>New Client</Button></Link>
             </Col>
             <Col md={3}>
-              <Button variant="light"
+              <Button variant="info"
+                className="pending-button"
                 onClick={()=>{
                   setShowPending(!showPending);
                   let array = clients;

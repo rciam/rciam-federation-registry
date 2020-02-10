@@ -1,5 +1,5 @@
 import React from 'react';
-import { Switch, Route,Redirect } from 'react-router-dom';
+import { Switch, Route,Redirect,Link } from 'react-router-dom';
 import Home from '../Home';
 import ClientList from '../ClientList.js';
 import {EditClient,NewClient} from '../ClientForms.js';
@@ -16,21 +16,63 @@ const Routes = (props) => (
         <ClientList user={props.user}/>
       </PrivateRoute>
       <PrivateRoute path="/userinfo">
+        <div className="links">
+          <Link to="/home">Home</Link>
+          <span className="link-seperator">/</span>
+           View User Profile
+        </div>
         <UserInfo user={props.user} />
       </PrivateRoute>
       <PrivateRoute path="/form/new">
+        <div className="links">
+          <Link to="/home">Home</Link>
+          <span className="link-seperator">/</span>
+          <Link to="/petitions">Manage Clients</Link>
+          <span className="link-seperator">/</span>
+          New Client
+        </div>
         <NewClient/>
       </PrivateRoute>
       <PrivateRoute path="/form/edit/:id" >
         <EditClient/>
       </PrivateRoute>
       <PrivateRoute path="/form/review/:id">
-        <EditClient review={true}/>
+        <AdminRoute path="/form/review/:id" user={props.user}>
+          <div className="links">
+            <Link to="/home">Home</Link>
+            <span className="link-seperator">/</span>
+            <Link to="/petitions">Manage Clients</Link>
+            <span className="link-seperator">/</span>
+            Edit Client
+          </div>
+          <EditClient review={true}/>
+        </AdminRoute>
       </PrivateRoute>
     </Switch>
       </div>
 );
 
+function AdminRoute({ children, ...rest },props) {
+
+
+  return (
+    <Route
+      {...rest}
+      render={({ location }) =>
+        props.user.admin ? (
+          children
+        ) : (
+          <Redirect
+            to={{
+              pathname: "/",
+              state: { from: location }
+            }}
+          />
+        )
+      }
+    />
+  );
+}
 
 function PrivateRoute({ children, ...rest }) {
   const globalState = useGlobalState();

@@ -13,10 +13,8 @@ import Dropdown from 'react-bootstrap/Dropdown';
 
 export const Header= (props)=> {
 
-
   const globalState = useGlobalState();
   const logged = globalState.global_state.log_state;
-  
 
     return(
       <React.Fragment>
@@ -26,27 +24,24 @@ export const Header= (props)=> {
             (<DropdownButton
               variant="link"
               alignRight
-              className='drop-menu'
+              className='drop-menu drop-container-header'
               title={<React.Fragment>
                 {props.user?props.user.name:'login'}
                 <FontAwesomeIcon icon={faUser}/>
               </React.Fragment>}
               id="dropdown-menu-align-right"
             >
-
               {props.user?(
                 <Dropdown.Item>
                   {props.user.sub}
                 </Dropdown.Item>
               ):null}
-
               <Dropdown.Item href={config.host+"logout"}>
                 LOGOUT<FontAwesomeIcon icon={faSignOutAlt}/>
               </Dropdown.Item>
             </DropdownButton>):(
             <React.Fragment>
               <a href={config.host+"login"}><Button className="log-button" variant="outline-primary">Login</Button></a>
-
             </React.Fragment>
             )
           }

@@ -4,15 +4,21 @@ const {merge_data} = require('../merge_data.js');
 const {db} = require('../db');
 var router = require('express').Router();
 var passport = require('passport');
+var config = require('../config');
 
-// Check validation status of requests
+
+
+// ----------------------------------------------------------
+// ******************** HELPER FUNCTIONS ********************
+// ----------------------------------------------------------
+
+// Validation Middleware
 function checkAuthentication(req,res,next){
-  if(req.isAuthenticated()){
-      next();
-  } else{
-      res.json({auth:false});
-  }
+  if(req.isAuthenticated()){next();}
+  else{res.json({auth:false});}
 }
+
+// Admin Validation Middleware
 function checkAdmin(req,res,next){
   if(isAdmin(req)){
     next();
@@ -23,27 +29,38 @@ function checkAdmin(req,res,next){
     })
   }
 }
+
+// Checks Entitlements and returns Super Admin status
 function isAdmin(req){
+  let admin=false;
   if(req.user.eduperson_entitlement){
-    if(req.user.eduperson_entitlement.includes('urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu')){
-      return true
-    }
+    config.super_admin_entitlements.forEach((item)=>{
+
+      if(req.user.eduperson_entitlement.includes(item)){
+
+        admin = true;
+      }
+    })
   }
-  return false
+
+  return admin;
 }
+
+
 // Save new User to db
 const saveUser=(userinfo)=>{
 
   return db.task('user-check',async t=>{
-    let user = await t.user_info.findBySub(userinfo.sub);
-    if(!user) {
-      await t.user_info.add(userinfo).then(async result=>{
+    await t.user_info.findBySub(userinfo.sub).then(async user=>{
+      if(!user) {
+        await t.user_info.add(userinfo).then(async result=>{
+          if(userinfo.eduperson_entitlement){
+            await t.user_edu_person_entitlement.add(userinfo.eduperson_entitlement,result.id);
+          }
+        });
+      }
+    })
 
-        if(userinfo.eduperson_entitlement){
-          await t.user_edu_person_entitlement.add(userinfo.eduperson_entitlement,result.id);
-        }
-      });
-    }
   });
 }
 // Login Route
@@ -62,7 +79,7 @@ router.get('/auth',checkAuthentication,(req,res)=>{
 // Get User User Info
 router.get('/user',checkAuthentication,(req,res)=>{
   let user = req.user;
-  user.admin = isAdmin(req)
+  user.admin = isAdmin(req);
   res.end(JSON.stringify({
     user
   }));
@@ -77,19 +94,24 @@ router.get('/callback', passport.authenticate('oidc', {
 // Super user implementation
 // If super user find all clients
 router.get('/clients/user',checkAuthentication,(req,res)=>{
+
       return db.task('find-clients', async t => {
         res.setHeader('Content-Type', 'application/json');
         let connections;
+
         if (isAdmin(req)){
+          console.log('second');
            connections = await t.client_details.findAll();
         }
         else {
            connections = await t.client_details.findByuserIdentifier(req.user.sub);
         }
+
         if(connections.length<1){
           return res.end(JSON.stringify({
-            success:false,
-            admin:req.admin
+            success:true,
+            connections:null
+
           }));
         }
         return res.end(JSON.stringify({
@@ -102,18 +124,32 @@ router.get('/clients/user',checkAuthentication,(req,res)=>{
 
 // Add a new client/petition
 router.post('/client/create',clientValidationRules(),validate,checkAuthentication,(req,res)=>{
+  console.log("step1");
+
   res.setHeader('Content-Type', 'application/json');
       return db.task('add-client', async t => {
           await t.client_details.findByClientId(req.body.client_id).then(async result=> {
             if(result){
+              console.log("step2");
+              console.log(result);
               res.end(JSON.stringify({response:'client_id_exists'}));
             }
             else{
+              console.log("step3");
                 await t.client_details.add(req.body,req.user.sub,null,0).then(async result=>{
-                  await t.client_general.add('client_grant_type',req.body.grant_types,result.id);
-                  await t.client_general.add('client_scope',req.body.scope,result.id);
-                  await t.client_general.add('client_redirect_uri',req.body.redirect_uris,result.id);
-                  await t.client_contact.add(req.body.contacts,result.id);
+                  console.log("step4");
+                  console.log(result);
+                  await t.client_general.add('client_grant_type',req.body.grant_types,result.id).then(async res=>{
+                    await t.client_general.add('client_scope',req.body.scope,result.id).then(async res=>{
+                      await t.client_general.add('client_redirect_uri',req.body.redirect_uris,result.id).then(async res=>{
+                          await t.client_contact.add(req.body.contacts,result.id)
+                      })
+                    })
+                  })
+
+
+
+                  console.log("step5");
                   res.end(JSON.stringify({success:true}));
                 }).catch(err=>{
                   console.log(err);
@@ -192,7 +228,7 @@ router.get('/client/availability/:client_id',checkAuthentication,(req,res)=>{
 
 // Approval of pettion
 router.put('/client/approve/:id',checkAuthentication,checkAdmin,(req,res)=>{
-  
+
   return db.task('approve-client',async t =>{
     await t.client_details.findConnectionForEdit(req.params.id).then(async client=>{
       if(client){

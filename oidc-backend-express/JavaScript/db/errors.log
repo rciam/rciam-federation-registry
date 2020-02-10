@@ -1,4 +1,19 @@
 
 
-17:56:26 error: Querying against a released or lost connection.
-         task(user-check): insert into "user_edu_person_entitlement"("user_id","edu_person_entitlement") values(2,'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu'),(2,'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=vm_operator#aai.egi.eu')
+13:37:44 error: Querying against a released or lost connection.
+         task(user-check): insert into "user_edu_person_entitlement"("user_id","edu_person_entitlement") values(1,'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu'),(1,'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=vm_operator#aai.egi.eu')
+
+13:48:05 error: syntax error at or near "'client_contact'"
+         task(delete-clients): UPDATE 'client_contact' SET is_deleted=true,deleted_at='2020-02-10T13:48:05.446+02:00' WHERE owner_id = 1
+
+13:48:07 error: syntax error at or near "'client_contact'"
+         task(delete-clients): UPDATE 'client_contact' SET is_deleted=true,deleted_at='2020-02-10T13:48:07.579+02:00' WHERE owner_id = 2
+
+13:48:09 error: syntax error at or near "'client_contact'"
+         task(delete-clients): UPDATE 'client_contact' SET is_deleted=true,deleted_at='2020-02-10T13:48:09.434+02:00' WHERE owner_id = 3
+
+13:48:11 error: syntax error at or near "'client_contact'"
+         task(delete-clients): UPDATE 'client_contact' SET is_deleted=true,deleted_at='2020-02-10T13:48:11.762+02:00' WHERE owner_id = 4
+
+13:48:14 error: syntax error at or near "'client_contact'"
+         task(delete-clients): UPDATE 'client_contact' SET is_deleted=true,deleted_at='2020-02-10T13:48:14.313+02:00' WHERE owner_id = 4

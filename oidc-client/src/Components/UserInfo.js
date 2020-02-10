@@ -1,14 +1,9 @@
 import React from 'react';
-import {Link} from "react-router-dom";
 import {LoadingBar} from "./LoadingBar"
 const UserInfo = (props)=>{
   return(
     <React.Fragment>
-      <div className="links">
-        <Link to="/home">Home</Link>
-        <span className="link-seperator">/</span>
-         View User Profile
-      </div>
+
       <LoadingBar loading={props.user?false:true}>
       <dl className="dl-horizontal">
         <dt>
@@ -21,47 +16,47 @@ const UserInfo = (props)=>{
           <span className="dl-text-info">sub</span>
         </dt>
         <dd>
-          <span className="dl-text-info">{props.user?props.user.sub:null}</span>
+          <span className="dl-text-info">{props.user.sub}</span>
         </dd>
         <dt>
           <span className="dl-text-info">name</span>
         </dt>
         <dd>
-          <span className="dl-text-info">{props.user?props.user.name:null}</span>
+          <span className="dl-text-info">{props.user.name}</span>
         </dd>
         <dt>
           <span className="dl-text-info">given_name</span>
         </dt>
         <dd>
-          <span className="dl-text-info">{props.user?props.user.given_name:null}</span>
+          <span className="dl-text-info">{props.user.given_name}</span>
         </dd>
         <dt>
           <span className="dl-text-info">family_name</span>
         </dt>
         <dd>
-          <span className="dl-text-info">{props.user?props.user.family_name:null}</span>
+          <span className="dl-text-info">{props.user.family_name}</span>
         </dd>
         <dt>
           <span className="dl-text-info">email</span>
         </dt>
         <dd>
-          <span className="dl-text-info">{props.user?props.user.email:null}</span>
+          <span className="dl-text-info">{props.user.email}</span>
         </dd>
         <dt>
           <span className="dl-text-info">acr</span>
         </dt>
         <dd>
-          <span className="dl-text-info">{props.user?props.user.acr:null}</span>
+          <span className="dl-text-info">{props.user.acr}</span>
         </dd>
 
         <dt>
           <span className="dl-text-info">edu_person_unique_id</span>
         </dt>
         <dd>
-          <span className="dl-text-info">{props.user?props.user.sub:null}</span>
+          <span className="dl-text-info">{props.user.sub}</span>
         </dd>
-        {props.user?
-          <React.Fragment>
+
+
         {props.user.eduperson_entitlement?props.user.eduperson_entitlement.map((item,index)=>{
           return(
             <React.Fragment key={index} >
@@ -86,20 +81,19 @@ const UserInfo = (props)=>{
             </React.Fragment>
           )
         }):null}
-          </React.Fragment>
-        :
-        null}
+
+
         <dt>
           <span className="dl-text-info">eduperson_assurance.0</span>
         </dt>
         <dd>
-          <span className="dl-text-info">{props.user?props.user.acr:null}</span>
+          <span className="dl-text-info">{props.user.acr}</span>
         </dd>
         <dt>
           <span className="dl-text-info">eduperson_unique_id</span>
         </dt>
         <dd>
-          <span className="dl-text-info">{props.user?props.user.sub:null}</span>
+          <span className="dl-text-info">{props.user.sub}</span>
         </dd>
       </dl>
       </LoadingBar>
