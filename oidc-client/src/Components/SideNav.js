@@ -6,7 +6,7 @@ export const SideNav = () => {
   return (
     <Nav defaultActiveKey="/home" className="flex-column nav-side">
       <div className="nav-title">PERSONAL</div>
-      <Link to="/petitions">Manage Petitions</Link>
+      <Link to="/petitions">Manage Services</Link>
       <Link to="/userinfo">View Profile Information</Link>
     </Nav>
   )

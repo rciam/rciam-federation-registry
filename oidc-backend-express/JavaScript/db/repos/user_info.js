@@ -13,7 +13,7 @@ class UserInfoRepository {
       return this.db.oneOrNone('SELECT * FROM user_info WHERE sub = $1', sub);
   }
   async add(data){
-    console.log(data);
+
     return this.db.one(sql.add,{
       sub: data.sub,
       preferred_username: data.preferred_username,
@@ -21,7 +21,10 @@ class UserInfoRepository {
       given_name: data.given_name,
       family_name: data.family_name,
       email: data.email,
-      })
+    }).then(res=>{
+    
+      return res
+    })
   }
 }
 

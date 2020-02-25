@@ -1,3 +1,23 @@
+const merge_services_and_petitions = (services,petitions) => {
+
+
+  petitions.map((item,index)=>{
+    if(item.type==="create"){
+      item.petition_id=item.id;
+      delete item.service_id;
+      delete item.id
+      services.push(item);
+    }
+    else if(item.type==="edit"||item.type==="delete"){
+      let key = services.findIndex(element=>element.id==item.service_id);
+      services[key].type = item.type;
+      services[key].petition_id = item.id;
+    }
+  })
+
+
+  return services
+}
 
 const merge_data = (connections,data,property) => {
   let multiple_connections = Array.isArray(connections);
@@ -45,5 +65,6 @@ const merge_data = (connections,data,property) => {
 
 
 module.exports = {
-  merge_data
+  merge_data,
+  merge_services_and_petitions
 }

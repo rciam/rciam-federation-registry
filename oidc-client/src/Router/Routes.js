@@ -2,7 +2,7 @@ import React from 'react';
 import { Switch, Route,Redirect,Link } from 'react-router-dom';
 import Home from '../Home';
 import ClientList from '../ClientList.js';
-import {EditClient,NewClient} from '../ClientForms.js';
+import {EditClient,NewClient,ViewClient} from '../FormHandler.js';
 import useGlobalState from '../useGlobalState.js';
 import UserInfo from '../Components/UserInfo.js';
 const Routes = (props) => (
@@ -13,6 +13,11 @@ const Routes = (props) => (
         <Home />
       </Route>
       <PrivateRoute path="/petitions">
+      <div className="links">
+        <Link to="/home">Home</Link>
+        <span className="link-seperator">/</span>
+        Manage Services
+      </div>
         <ClientList user={props.user}/>
       </PrivateRoute>
       <PrivateRoute path="/userinfo">
@@ -27,40 +32,59 @@ const Routes = (props) => (
         <div className="links">
           <Link to="/home">Home</Link>
           <span className="link-seperator">/</span>
-          <Link to="/petitions">Manage Clients</Link>
+          <Link to="/petitions">Manage Services</Link>
           <span className="link-seperator">/</span>
-          New Client
+          New Service
         </div>
-        <NewClient/>
+        <NewClient user={props.user}/>
       </PrivateRoute>
-      <PrivateRoute path="/form/edit/:id" >
-        <EditClient/>
-      </PrivateRoute>
-      <PrivateRoute path="/form/review/:id">
-        <AdminRoute path="/form/review/:id" user={props.user}>
+      <RouteWithState path="/form/edit">
+        <div className="links">
+          <Link to="/home">Home</Link>
+          <span className="link-seperator">/</span>
+          <Link to="/petitions">Manage Services</Link>
+          <span className="link-seperator">/</span>
+          Edit Service
+        </div>
+        <EditClient user={props.user}/>
+      </RouteWithState>
+      <RouteWithState path="/form/review">
+        <AdminRoute path="/form/review" user={props.user}>
           <div className="links">
             <Link to="/home">Home</Link>
             <span className="link-seperator">/</span>
-            <Link to="/petitions">Manage Clients</Link>
+            <Link to="/petitions">Manage Services</Link>
             <span className="link-seperator">/</span>
-            Edit Client
+            Review
           </div>
           <EditClient review={true}/>
         </AdminRoute>
-      </PrivateRoute>
+      </RouteWithState>
+      <RouteWithState path="/form/view">
+          <div className="links">
+            <Link to="/home">Home</Link>
+            <span className="link-seperator">/</span>
+            <Link to="/petitions">Manage Services</Link>
+            <span className="link-seperator">/</span>
+            View Service
+          </div>
+          <ViewClient/>
+      </RouteWithState>
     </Switch>
       </div>
 );
 
 function AdminRoute(props) {
-
   console.log(props);
+  const childrenWithProps = React.Children.map(props.children, child =>
+      React.cloneElement(child, { petition_id:props.petition_id,service_id:props.service_id,type:props.type})
+    );
   return (
     <Route
       path={props.path}
       render={({ location }) =>
         props.user.admin ? (
-          props.children
+          childrenWithProps
         ) : (
           <Redirect
             to={{
@@ -74,16 +98,43 @@ function AdminRoute(props) {
   );
 }
 
-function PrivateRoute({ children, ...rest }) {
+
+function RouteWithState(props) {
+  const globalState = useGlobalState();
+  const log_state = globalState.global_state.log_state;
+  const childrenWithProps = React.Children.map(props.children, child =>
+      React.cloneElement(child, { petition_id:props.location.state.petition_id,service_id:props.location.state.service_id,type:props.location.state.type})
+    );
+  return (
+    <Route
+      path={props.path}
+      render={({ location }) =>
+        log_state ? (
+          childrenWithProps
+        ) : (
+          <Redirect
+            to={{
+              pathname: "/",
+              state: { from: location }
+            }}
+          />
+        )
+      }
+    />
+  );
+}
+
+function PrivateRoute(props) {
+
   const globalState = useGlobalState();
   const log_state = globalState.global_state.log_state;
 
   return (
     <Route
-      {...rest}
+      path={props.path}
       render={({ location }) =>
         log_state ? (
-          children
+          props.children
         ) : (
           <Redirect
             to={{

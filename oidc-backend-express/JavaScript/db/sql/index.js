@@ -17,14 +17,19 @@ const path = require('path');
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 module.exports = {
-    client_details:{
-      add:sql('client_details/add.sql'),
-      findOne:sql('client_details/findOne.sql'),
-      update:sql('client_details/update.sql'),
-      findForEdit:sql('client_details/findForEdit.sql')
+    client_services:{
+      add:sql('client_services/add.sql'),
+      findOne:sql('client_services/findOne.sql'),
+      update:sql('client_services/update.sql'),
+      findForEdit:sql('client_services/findForEdit.sql')
     },
     user_info:{
       add:sql('user_info/add.sql')
+    },
+    client_petitions:{
+      add:sql('client_petitions/add.sql'),
+      update:sql('client_petitions/update.sql'),
+      findOne:sql('client_petitions/findOne.sql'),
     }
 
 

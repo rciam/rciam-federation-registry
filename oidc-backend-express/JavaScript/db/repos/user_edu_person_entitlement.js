@@ -27,24 +27,26 @@ class UserEduPersonEntitlementRepository {
       let values = []
 
       // if not Empty array
-      if(data.length>0){
-        data.forEach((item)=>{
-          values.push({user_id:id,edu_person_entitlement:item})
-        });
+      if(data){
+        if(data.length>0){
+          data.forEach((item)=>{
+            values.push({user_id:id,edu_person_entitlement:item})
+          });
 
-        const query = this.pgp.helpers.insert(values, cs);
-        this.db.none(query)
-        .then(data => {
-            console.log(data);
-            return 'success'
-        })
-        .catch(error => {
-            return 'error'
-        });
-      }else{
+          const query = this.pgp.helpers.insert(values, cs);
+          this.db.none(query)
+          .then(data => {
+              return 'success'
+          })
+          .catch(error => {
+              return 'error'
+          });
+        }else{
 
-        return 'error'
+          return 'error'
+        }
       }
+
 
 
     }

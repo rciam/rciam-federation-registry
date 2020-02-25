@@ -20,7 +20,8 @@ code {
 
 /* Main Page */
 .main-container {
-  margin: 0 1rem;
+  margin: 0 1em;
+
 }
 
 .flex-container {
@@ -118,7 +119,14 @@ code {
   font-size:0.9rem;
 }
 
+/* Form Handler */
+.form-alert {
+  margin-top: 1rem;
+}
 
+.edit-tabs {
+  margin-top: 1rem;
+}
 
 #uri-small-desc{
   margin-top: -0.75rem;
@@ -236,9 +244,10 @@ form {
 
 .nav-side {
   padding-right:1rem;
-  width:15rem!important;
+  width:20vw!important;
   height:12rem;
   background-color:rgb(245, 245, 245);
+
   font-family:'Lato';
   font-weight:300;
   border:1px solid rgb(227, 227, 227);
@@ -266,6 +275,7 @@ form {
 
 .content-container {
   width:100%;
+  overflow: hidden;
 }
 .options-bar, .links {
   text-align: left;
@@ -340,11 +350,7 @@ tbody tr td:last-child {
   margin-left: 1rem;
 }
 
-.status-badge {
-  float:right;
-  margin-top:0.3rem;
-  margin-right: 0.3rem;
-}
+
 .petition-title{
   display:inline-block!important;
 }
@@ -466,4 +472,51 @@ tbody tr td:last-child {
 
 .pending-button {
   float:right;
+}
+
+/* Pettition Form */
+.form-controls-container {
+  background-color: #FAFAFA;
+  border:1px solid rgb(227, 227, 227);
+  padding:0.5rem;
+  margin-bottom: 1rem;
+  margin-top:-0.5rem;
+  text-align: left;
+}
+.form-controls-container button{
+  font-size: 1rem!important;
+  margin-right: 0.5rem;
+
+}
+.form-controls-container button svg {
+  margin-right:0.5rem!important;
+}
+
+/* Client List */
+
+.filter-container {
+  margin-right:1rem;
+  display:inline-block;
+  background-color:rgb(245, 245, 245);
+  border:1px solid rgb(227, 227, 227);
+  vertical-align: top;
+  margin-top:0.2rem;
+  padding:0.2rem 0.5rem;
+}
+.filter-container input {
+  vertical-align: top;
+  margin-top: 0.3rem;
+  margin-left:0.4rem;
+}
+
+.badge-container {
+  vertical-align: top;
+  display:inline-block;
+  margin-left:0.5rem;
+}
+
+.status-badge {
+
+  margin-top:0rem;
+  margin-right: 0.3rem;
 }

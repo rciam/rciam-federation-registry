@@ -53,7 +53,7 @@ export function ResponseModal(props){
     <Modal show={props.message?true:false} onHide={handleClose}>
         <Modal.Header closeButton>
           <Modal.Title>
-              Petition with id: {props.clientId}
+              {props.modalTitle}
           </Modal.Title>
         </Modal.Header>
         <Modal.Body >

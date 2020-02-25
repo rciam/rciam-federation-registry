@@ -335,7 +335,7 @@ export  function LogoInput(props){
   }
   const imageLoad = (ev)=>{
       if((!ev.target.src.includes('/logo_placeholder.gif'))){
-        console.log(ev)
+
         props.setImageError(true);
 
       }

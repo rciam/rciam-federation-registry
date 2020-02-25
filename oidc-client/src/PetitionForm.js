@@ -1,9 +1,7 @@
-import React,{useState} from 'react';
+import React,{useState,useEffect} from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {faCheckSquare} from '@fortawesome/free-solid-svg-icons';
+import {faCheckCircle,faBan} from '@fortawesome/free-solid-svg-icons';
 import { diff } from 'deep-diff';
-import Tabs from 'react-bootstrap/Tabs';
-import Tab from 'react-bootstrap/Tab';
 import {Debug} from './Components/Debug.js';
 import {SimpleModal,ResponseModal} from './Components/Modals.js';
 import Form from 'react-bootstrap/Form';
@@ -19,7 +17,18 @@ const {reg} = require('./regex.js');
 const uuidv1 = require('uuid/v1');
 
 
-const FormTabs = (props)=> {
+const PetitionForm = (props)=> {
+
+
+  useEffect(()=>{
+    if(props.disabled||props.review){
+      setDisabled(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[]);
+
+
+  // Returns true
   yup.addMethod(yup.array, 'unique', function(message, mapper = a => a) {
       return this.test('unique', message, function(list) {
           return list.length  === new Set(list.map(mapper)).size;
@@ -28,11 +37,10 @@ const FormTabs = (props)=> {
 
   const schema = yup.object({
     client_name:yup.string().min(4,'The Client Name must be at least 4 characters long').max(36,'The Client Name exceeds the character limit (15)').required('This is a required field!'),
+    // Everytime client_id changes we make a fetch request to see if it is available.
     client_id:yup.string().min(4,'The Client ID must be at least 4 characters long').max(36,'The Client ID exceeds the character limit (35)').test('testAvailable','Client Id is not available',function(value){
         return new Promise((resolve,reject)=>{
-          if(props.initialValues.client_id===value||checkedId===value||!value){
-            resolve(true)
-          }
+          if(props.initialValues.client_id===value||!value){resolve(true)}
           setCheckingAvailability(true);
           fetch(config.host+'client/availability/'+ value, {
             method:'GET',
@@ -65,7 +73,7 @@ const FormTabs = (props)=> {
     access_token_validity_seconds:yup.number().min(0).max(1000000,'Exceeds the maximum value').required('This is a required field!'),
     refresh_token_validity_seconds:yup.number().min(0).max(34128000,'Exceeds the maximum value').required('This is a required field!'),
     device_code_validity_seconds:yup.number().min(0).max(34128000,'Exceeds the maximum value').required('This is a required field!'),
-    code_challenge_method:yup.string().matches(reg.regCodeChalMeth),
+    code_challenge_method:yup.string().matches(reg.regCodeChalMeth).required('This is a required field!'),
     allow_introspection:yup.boolean().required(),
     generate_client_secret:yup.boolean().required(),
     reuse_refresh_tokens:yup.boolean().required(),
@@ -75,76 +83,171 @@ const FormTabs = (props)=> {
       is:false,
       then: yup.string().required('Client Secret cannot be empty').min(4,'Client Secret must e at least 4 characters long').max(16,'Client Secret must not exceed the character limit (16)')
     }).nullable(),
-
   });
 
+  const [disabled,setDisabled] = useState(false);
   const [hasSubmitted,setHasSubmitted] = useState(false);
   const [message,setMessage] = useState();
-  const [clientId,setClientId] = useState(null);
+  const [modalTitle,setModalTitle] = useState(null);
   const [checkingAvailability,setCheckingAvailability] = useState(false);
   const [imageError,setImageError] = useState(false); //
-  const [checkedId,setcheckedId] = useState(); // Variable containing the last client Id checked for availability
+  const [checkedId,setcheckedId] = useState(); // Variable containing the last client Id checked for availability to limit check requests
 
-  const approveApi=(id)=>{
-    fetch(config.host+'client/approve/'+ id, {
-      method:'PUT',
-      credentials:'include',
-      headers:{
-        'Content-Type':'application/json'
-      }
-    }).then(response=>response.json()).then(response=>{
-      setClientId(props.initialValues.client_id);
-      if(response.success){
-        setMessage('Was approved with success.');
+
+
+
+  const createNewPetition = (petition) => {
+
+    if(props.service_id){
+      petition.type='edit';
+      petition.service_id=props.service_id
+    }
+    else{
+      petition.type='create';
+      petition.service_id=null;
+    }
+    fetch(config.host+'petition/create', {
+      method: 'POST', // *GET, POST, PUT, DELETE, etc.
+      credentials: 'include', // include, *same-origin, omit
+      headers: {
+      'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(petition) // body data type must match "Content-Type" header
+    }).then(response=>response.json()).then(response=> {
+
+      if(props.user.admin){
+
+        reviewPetition(true,response.id);
       }
       else{
-        setMessage('Could not be approved due to the following error: ' + response.error);
+        setModalTitle('Your creation request with id: ' + petition.client_id);
+        if(response.success){
+          setMessage('Was submited with success and is currently pending approval from an administrator.');
+        }
+        else{
+          setMessage('Was not submited due to the following error: ' + response.error);
+        }
       }
-    })
+
+    });
   }
-  const postApi=(data)=>{
-    data = gennerateValues(data);
-    if(!props.editId){
-      fetch(config.host+'client/create', {
+
+
+
+  const editPetition = (petition) => {
+
+    const editData = prepareEditData(petition,props.initialValues);
+
+    if(Object.keys(editData.petition_details).length !== 0||Object.keys(editData.dlt).length !== 0||Object.keys(editData.add).length !== 0){
+
+      fetch(config.host+'petition/edit/'+props.petition_id, {
         method: 'POST', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
         'Content-Type': 'application/json'
         },
-        body: JSON.stringify(data) // body data type must match "Content-Type" header
+        body: JSON.stringify(editData) // body data type must match "Content-Type" header
       }).then(response=>response.json()).then(response=> {
-        setClientId(data.client_id);
-        if(response.success){
-          setMessage('Was created with success.');
-        }
-        else{
-          setMessage('Was not created due to the following error: ' + response.error);
+        if(response){
+          console.log('hey');
+          console.log(response);
+          if(props.user.admin){
+
+              reviewPetition(true,response.id);
+          }
+          else{
+            setModalTitle('Your edit request for service with id: ' + petition.client_id);
+            if(response.success){
+              setMessage('Was submited with success and is currently pending approval from an administrator.');
+            }
+            else{
+              setMessage('Was not submited due to the following error: ' + response.error);
+            }
+          }
         }
       })
     }
-    else {
-      const editData = prepareEditData(data,props.initialValues);
-      if(Object.keys(editData.details).length !== 0||Object.keys(editData.dlt).length !== 0||Object.keys(editData.add).length !== 0){
-        fetch(config.host+'client/edit/'+props.editId, {
-          method: 'POST', // *GET, POST, PUT, DELETE, etc.
-          credentials: 'include', // include, *same-origin, omit
-          headers: {
-          'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(editData) // body data type must match "Content-Type" header
-        }).then(response=>response.json()).then(response=> {
-          setClientId(data.client_id);
-          if(response.success){
-            setMessage('Was edited with success.');
-          }
-          else{
-            console.log(response);
-            setMessage('Was not edited due to the following error: ' + response.error);
-          }
-        })
-      }
+    else{
+      setModalTitle('Request could not be submitted.');
+      setMessage('Because no changes were made.');
     }
   }
+
+  const deletePetition = ()=>{
+    fetch(config.host+'petition/delete/'+props.petition_id, {
+      method: 'PUT', // *GET, POST, PUT, DELETE, etc.
+      credentials: 'include', // include, *same-origin, omit
+      headers: {
+      'Content-Type': 'application/json'
+    }}).then(response=>response.json()).then(response=> {
+
+      if(props.type==='delete'){
+          setModalTitle('The delete request');
+      }
+      else{
+        setModalTitle('The edit request');
+      }
+      if(response.success){
+        setMessage('Was canceled');
+      }
+      else{
+        setMessage("Couldn't get canceled due to the following error: " + response.error)
+      }
+
+    });
+  }
+
+  const reviewPetition = (accept,id)=>{
+    console.log(id);
+    if(accept){
+      fetch(config.host+'petition/approve/'+id, {
+        method: 'PUT', // *GET, POST, PUT, DELETE, etc.
+        credentials: 'include', // include, *same-origin, omit
+        headers: {
+        'Content-Type': 'application/json'
+      }}).then(response=>response.json()).then(response=> {
+        console.log(response);
+        if(response.success){
+          setMessage('Petition approval was successfull');
+        }
+        else{
+          setMessage('Petition wasnt able to be approved');
+        }
+      });
+    }
+    else {
+      fetch(config.host+'petition/deny/'+id, {
+        method: 'PUT', // *GET, POST, PUT, DELETE, etc.
+        credentials: 'include', // include, *same-origin, omit
+        headers: {
+        'Content-Type': 'application/json'
+      }}).then(response=>response.json()).then(response=> {
+        if(response.success){
+          setMessage('Petition approval was successfull');
+        }
+        else{
+          setMessage('Petition wasnt able to be approved');
+        }
+      });
+    }
+  }
+
+
+
+  const postApi=(data)=>{
+    data = gennerateValues(data);
+    if(!props.type){
+      createNewPetition(data);
+    }
+    else {
+      editPetition(data);
+    }
+  }
+
+
+
+
+
   function capitalWords(array) {
      let return_array = array.map((item,index)=>{
         var splitStr = item.toLowerCase().split(' ');
@@ -187,9 +290,25 @@ const FormTabs = (props)=> {
       isSubmitting})=>(
       <div className="tab-panel">
           <div id="form-container">
-            <Tabs defaultActiveKey="main" id="uncontrolled-tab-example">
-              <Tab eventKey="main" title="Main">
+
               <Form noValidate onSubmit={handleSubmit}>
+                {props.disabled?null:
+                  <div className="form-controls-container">
+                    {props.review?
+                      <React.Fragment>
+                        <Button variant="success" onClick={()=>reviewPetition(true,props.petition_id)}><FontAwesomeIcon icon={faCheckCircle}/>Approve</Button>
+                        <Button variant="danger" onClick={()=>reviewPetition(false,props.petition_id)}><FontAwesomeIcon icon={faBan}/>Reject</Button>
+                      </React.Fragment>
+                      :
+                      <React.Fragment>
+                        <Button className='submit-button' type="submit" variant="primary" ><FontAwesomeIcon icon={faCheckCircle}/>Submit</Button>
+                        {props.type==='delete'||props.type==='edit'?<Button variant="danger" onClick={()=>deletePetition()}><FontAwesomeIcon icon={faBan}/>Cancel Request</Button>:null}
+                      </React.Fragment>
+                    }
+                  </div>
+                }
+
+
                 <InputRow title='Client name' description='Human-readable application name' error={errors.client_name} touched={touched.client_name}>
                   <SimpleInput
                     name='client_name'
@@ -198,7 +317,7 @@ const FormTabs = (props)=> {
                     value={values.client_name}
                     isInvalid={hasSubmitted?!!errors.client_name:(!!errors.client_name&&touched.client_name)}
                     onBlur={handleBlur}
-                    disabled={props.review}
+                    disabled={disabled}
                    />
                  </InputRow>
 
@@ -213,7 +332,7 @@ const FormTabs = (props)=> {
                      value={values.client_id}
                      isInvalid={hasSubmitted?!!errors.client_id:(!!errors.client_id&&touched.client_id)}
                      onBlur={handleBlur}
-                     disabled={props.review}
+                     disabled={disabled}
                      isloading={values.client_id&&values.client_id!==checkedId&&checkingAvailability?1:0}
                     />
                   </InputRow>
@@ -228,7 +347,7 @@ const FormTabs = (props)=> {
                       onBlur={handleBlur}
                       onChange={handleChange}
                       setFieldTouched={setFieldTouched}
-                      disabled={props.review}
+                      disabled={disabled}
 
                     />
                   </InputRow>
@@ -241,7 +360,7 @@ const FormTabs = (props)=> {
                       values={values}
                       isInvalid={hasSubmitted?!!errors.integration_environment:(!!errors.integration_environment&&touched.integration_environment)}
                       onChange={handleChange}
-                      disabled={props.review}
+                      disabled={disabled}
                     />
                   </InputRow>
                   <InputRow title='Logo'>
@@ -256,7 +375,7 @@ const FormTabs = (props)=> {
                       onBlur={handleBlur}
                       validateField={validateField}
                       isInvalid={hasSubmitted?!!errors.logo_uri:(!!errors.logo_uri&&touched.logo_uri)}
-                      disabled={props.review}
+                      disabled={disabled}
                     />
                   </InputRow>
                   <InputRow title='Description' description='Human-readable text description' error={errors.client_description} touched={touched.client_description}>
@@ -267,7 +386,7 @@ const FormTabs = (props)=> {
                       name='client_description'
                       placeholder="Type a description"
                       isInvalid={hasSubmitted?!!errors.client_description:(!!errors.client_description&&touched.client_description)}
-                      disabled={props.review}
+                      disabled={disabled}
                     />
                   </InputRow>
                   <InputRow title='Policy Statement' description='URL for the Policy Statement of this client, will be displayed to the user' error={errors.policy_uri} touched={touched.policy_uri}>
@@ -278,7 +397,7 @@ const FormTabs = (props)=> {
                       value={values.policy_uri}
                       isInvalid={hasSubmitted?!!errors.policy_uri:(!!errors.policy_uri&&touched.policy_uri)}
                       onBlur={handleBlur}
-                      disabled={props.review}
+                      disabled={disabled}
                     />
                   </InputRow>
 
@@ -293,7 +412,7 @@ const FormTabs = (props)=> {
                       onChange={handleChange}
                       onBlur={handleBlur}
                       setFieldTouched={setFieldTouched}
-                      disabled={props.review}
+                      disabled={disabled}
                     />
                   </InputRow>
                   <InputRow title='Scope' description='OAuth scopes this client is allowed to request'>
@@ -304,7 +423,7 @@ const FormTabs = (props)=> {
                       defaultValues= {formConfig.scope}
                       error={errors.scope}
                       touched={touched.scope}
-                      disabled={props.review}
+                      disabled={disabled}
                       onBlur={handleBlur}
                     />
                   </InputRow>
@@ -313,7 +432,7 @@ const FormTabs = (props)=> {
                       name='grant_types'
                       values={values.grant_types}
                       listItems={formConfig.grant_types}
-                      disabled={props.review}
+                      disabled={disabled}
                     />
                   </InputRow>
                   <InputRow title='Introspection'>
@@ -321,7 +440,7 @@ const FormTabs = (props)=> {
                       name='allow_introspection'
                       label="Allow calls to the Introspection Endpoint?"
                       onChange={handleChange}
-                      disabled={props.review}
+                      disabled={disabled}
                     />
                   </InputRow>
                   <InputRow title='Client Secret'>
@@ -334,7 +453,7 @@ const FormTabs = (props)=> {
                       isInvalid={hasSubmitted?!!errors.client_secret:(!!errors.client_secret&&touched.client_secret)}
                       onBlur={handleBlur}
                       generate_client_secret={values.generate_client_secret}
-                      disabled={props.review}
+                      disabled={disabled}
                     />
                   </InputRow>
                   <InputRow title='Access Token Timeout' extraClass='time-input' error={errors.access_token_validity_seconds} touched={touched.access_token_validity_seconds} description='Enter this time in seconds, minutes, or hours (Max value is 1000000 seconds (11.5 days)).'>
@@ -344,7 +463,7 @@ const FormTabs = (props)=> {
                       isInvalid={hasSubmitted?!!errors.access_token_validity_seconds:(!!errors.access_token_validity_seconds&&touched.access_token_validity_seconds)}
                       onBlur={handleBlur}
                       onChange={handleChange}
-                      disabled={props.review}
+                      disabled={disabled}
                     />
                   </InputRow>
                   <InputRow title='Refresh Tokens' extraClass='time-input' error={errors.refresh_token_validity_seconds} touched={touched.refresh_token_validity_seconds}>
@@ -353,7 +472,7 @@ const FormTabs = (props)=> {
                       onBlur={handleBlur}
                       isInvalid={hasSubmitted?!!errors.refresh_token_validity_seconds:(!!errors.refresh_token_validity_seconds&&touched.refresh_token_validity_seconds)}
                       onChange={handleChange}
-                      disabled={props.review}
+                      disabled={disabled}
                     />
                   </InputRow>
                   <InputRow title='Device Code' extraClass='time-input' error={errors.device_code_validity_seconds} touched={touched.device_code_validity_seconds}>
@@ -362,7 +481,7 @@ const FormTabs = (props)=> {
                       values={values}
                       isInvalid={hasSubmitted?!!errors.device_code_validity_seconds:(!!errors.device_code_validity_seconds&&touched.device_code_validity_seconds)}
                       onChange={handleChange}
-                      disabled={props.review}
+                      disabled={disabled}
                     />
                   </InputRow>
                   <InputRow title='Proof Key for Code Exchange (PKCE) Code Challenge Method' extraClass='select-col' error={errors.code_challenge_method} touched={touched.code_challenge_method}>
@@ -374,40 +493,29 @@ const FormTabs = (props)=> {
                       values={values}
                       isInvalid={hasSubmitted?!!errors.code_challenge_method:(!!errors.code_challenge_method&&touched.code_challenge_method)}
                       onChange={handleChange}
-                      disabled={props.review}
+                      disabled={disabled}
                     />
                   </InputRow>
+                  {props.disabled?null:
+                    <div className="form-controls-container">
+                      {props.review?
+                        <React.Fragment>
+                          <Button variant="success" ><FontAwesomeIcon icon={faCheckCircle}/>Approve</Button>
+                          <Button variant="danger" ><FontAwesomeIcon icon={faBan}/>Reject</Button>
+                        </React.Fragment>
+                        :
+                        <React.Fragment>
+                          <Button className='submit-button' type="submit" variant="primary" ><FontAwesomeIcon icon={faCheckCircle}/>Submit</Button>
+                          {props.type==='delete'||props.type==='edit'?<Button variant="danger" onClick={()=>deletePetition()}><FontAwesomeIcon icon={faBan}/>Cancel Request</Button>:null}
+                        </React.Fragment>
+                      }
+                    </div>
+                  }
+                  <ResponseModal message={message} modalTitle={modalTitle}/>
+                  <SimpleModal isSubmitting={isSubmitting} isValid={isValid}/>
 
-                  <InputRow extraClass='time-input submit-buttons'>
-
-
-                    <ResponseModal message={message} clientId={clientId}/>
-                    <SimpleModal isSubmitting={isSubmitting} isValid={isValid}/>
-                    {props.review?
-                      <React.Fragment>
-                      {/*<Button className='approve-button' type="button" variant="danger"><FontAwesomeIcon icon={faBan}/>Deny Petition</Button>*/}
-                      <Button  type="button" variant="success" onClick={()=>{approveApi(props.editId)}} ><FontAwesomeIcon icon={faCheckSquare}/>Approve Petition</Button>
-                      </React.Fragment>
-                    :
-                      <React.Fragment>
-                        <Button className='post-button' type="button" variant="danger" onClick={()=> {postApi(values)}}>Post Call without Validation</Button>
-                        <Button className='submit-button' type="submit" variant="primary" >Submit</Button>
-                      </React.Fragment>
-                    }
-                  </InputRow>
                 </Form>
-              </Tab>
-              <Tab eventKey="access" title="Access" disabled>
 
-              </Tab>
-              <Tab eventKey="credentials" title="Credentials" disabled >
-
-              </Tab>
-              <Tab eventKey="tokens" title="Tokens" disabled>
-
-              </Tab>
-              <Tab eventKey="crypto" title="Crypto" disabled></Tab>
-            </Tabs>
           </div>
 
         <Debug/>
@@ -427,8 +535,6 @@ function gennerateValues(data){
     data.client_secret= hex(16);
     data.generate_client_secret = false;
   }
-
-
   return data
 }
 
@@ -444,20 +550,42 @@ function hex(n){
 function prepareEditData(data,initialValues){
   var new_values = Object.assign({},data);
   var old_values = Object.assign({},initialValues);
+  let new_cont = [];
+  let old_cont = [];
+  let items;
   var edits = {
     add:{},
     dlt:{},
-    details:{}
+    petition_details:{}
   };
+
+  new_values.contacts.forEach(item=>{
+    new_cont.push(item.email+' '+item.type);
+  });
+  old_values.contacts.forEach(item=>{
+    old_cont.push(item.email+' '+item.type);
+  });
+  edits.add.client_contact = new_cont.filter(x=>!old_cont.includes(x));
+  edits.dlt.client_contact = old_cont.filter(x=>!new_cont.includes(x));
+  if(edits.add.client_contact.length>0){
+      edits.add.client_contact.forEach((item,index)=>{
+        items = item.split(' ');
+        edits.add.client_contact[index] = {email:items[0],type:items[1]};
+      })
+  }
+  if(edits.dlt.client_contact.length>0){
+      edits.dlt.client_contact.forEach((item,index)=>{
+        items = item.split(' ');
+        edits.dlt.client_contact[index] = {email:items[0],type:items[1]};
+    })
+  }
+
   edits.add.client_grant_type = new_values.grant_types.filter(x=>!old_values.grant_types.includes(x));
   edits.dlt.client_grant_type = old_values.grant_types.filter(x=>!new_values.grant_types.includes(x));
-  edits.add.client_contact = new_values.contacts.filter(x=>!old_values.contacts.includes(x));
-  edits.dlt.client_contact = old_values.contacts.filter(x=>!new_values.contacts.includes(x));
   edits.add.client_scope = new_values.scope.filter(x=>!old_values.scope.includes(x));
   edits.dlt.client_scope = old_values.scope.filter(x=>!new_values.scope.includes(x));
   edits.add.client_redirect_uri = new_values.redirect_uris.filter(x=>!old_values.redirect_uris.includes(x));
   edits.dlt.client_redirect_uri = old_values.redirect_uris.filter(x=>!new_values.redirect_uris.includes(x));
-
   for(var i in edits){
     for(var key in edits[i]){
       if(edits[i][key].length===0){
@@ -476,10 +604,10 @@ function prepareEditData(data,initialValues){
   delete old_values.scope;
 
   if(diff(old_values,new_values)){
-    edits.details = new_values;
+    edits.petition_details = new_values;
   }
   return edits
 }
 
 
-export default FormTabs;
+export default PetitionForm

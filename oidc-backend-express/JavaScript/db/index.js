@@ -2,7 +2,7 @@ const promise = require('bluebird'); // best promise library today
 const pgPromise = require('pg-promise'); // pg-promise core library
 const dbConfig = require('../../db-config.json'); // db connection details
 const {Diagnostics} = require('./diagnostics'); // optional diagnostics
-const {ClientDetails,ClientGeneral,UserInfo,UserEduPersonEntitlement,ClientContact} = require('./repos');
+const {ClientServices,ClientGeneral,UserInfo,UserEduPersonEntitlement,ClientContact,ClientPetitions} = require('./repos');
 
 // pg-promise initialization options:
 const initOptions = {
@@ -14,7 +14,8 @@ const initOptions = {
     // API: http://vitaly-t.github.io/pg-promise/global.html#event:extend
     extend(obj, dc) {
         // Database Context (dc) is mainly useful when extending multiple databases with different access API-s.
-        obj.client_details = new ClientDetails(obj,pgp);
+        obj.client_services = new ClientServices(obj,pgp);
+        obj.client_petitions = new ClientPetitions(obj,pgp);
         obj.user_info = new UserInfo(obj,pgp);
         obj.user_edu_person_entitlement = new UserEduPersonEntitlement(obj,pgp);
         obj.client_general = new ClientGeneral(obj,pgp);
