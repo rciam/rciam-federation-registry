@@ -119,7 +119,23 @@ code {
   font-size:0.9rem;
 }
 
+
 /* Form Handler */
+.text-comment{
+   white-space: pre-line;
+}
+.jumbotron-comment {
+  padding:1rem!important;
+  text-align: left;
+  max-height:7123rem;
+}
+.jumbotron-comment h5 {
+  font-size:1.3rem;
+}
+.jumbotron-comment p {
+  margin-bottom: 0;
+  font-size:1rem;
+}
 .form-alert {
   margin-top: 1rem;
 }
@@ -474,9 +490,10 @@ tbody tr td:last-child {
   float:right;
 }
 
+
 /* Pettition Form */
 .form-controls-container {
-  background-color: #FAFAFA;
+  background-color: #F5F5F5;
   border:1px solid rgb(227, 227, 227);
   padding:0.5rem;
   margin-bottom: 1rem;
@@ -485,15 +502,105 @@ tbody tr td:last-child {
 }
 .form-controls-container button{
   font-size: 1rem!important;
-  margin-right: 0.5rem;
+
+}
+
+.comment-input {
+
+  margin:0 0.5rem;
+}
+textarea {
+  resize: none!important;
+}
+.review-controls {
+
+}
+.review-controls .form-group > .row{
+  margin-bottom: 0.5rem!important;
+}
+.review-option-desc {
+  color:#6b747e;
+}
+.review-radio-col{
+  padding-right: 0.2rem!important;
+}
+.expand-container {
+  margin-top:0.5rem;
+}
+.review-button-row{
+
+  margin-left: 0.3rem!important;
+}
+.review-button svg{
+  margin-left: 0.5rem;
+  vertical-align: top;
+  margin-top: 0.1rem;
+}
+.review-button:focus{
+  box-shadow: none!important;
+}
+.review-button-expand:focus {
+  box-shadow: none!important;
+}
+
+.review-button-expand {
+  padding-left:0.2rem;
+  padding-right:0.2rem;
+
 
 }
 .form-controls-container button svg {
-  margin-right:0.5rem!important;
+  margin-right: 0.5rem;
+}
+.review-button-expand svg {
+  vertical-align: top;
+  margin-top:0.1rem;
+}
+.review-error {
+  color:red;
+  margin-left:0.4rem;
+  margin-top:0.4rem;
+}
+
+.submit-button {
+  margin-right:0.5rem;
 }
 
 /* Client List */
+.loader-container {
+  position:fixed;
+  left:50%;
+  margin-left: -13.5rem;
+  top:50%;
+  margin-top:-2.5rem;
+  width:27rem;
+  height:5rem;
+  background: rgb(235, 235, 235);
+  border:1px solid rgb(215, 215, 215);
+  z-index: 200;
+  text-align: left;
 
+}
+.loader-container h3 {
+  margin-left:3.5rem;
+  font-size: 1.6rem;
+  font-weight: 300;
+  font-family: "Lato";
+  width:auto;
+  margin-top: 1.44rem;
+  margin-bottom:  1.4rem;
+  display: inline-block;
+}
+.loader-container div {
+  vertical-align: top;
+  margin-left:2rem;
+  margin-top: 1.4rem;
+  display: inline-block;
+}
+
+#hide-tooltip {
+  display: none;
+}
 .filter-container {
   margin-right:1rem;
   display:inline-block;
@@ -513,10 +620,31 @@ tbody tr td:last-child {
   vertical-align: top;
   display:inline-block;
   margin-left:0.5rem;
+
 }
 
 .status-badge {
 
   margin-top:0rem;
   margin-right: 0.3rem;
+}
+.notification svg {
+  position: absolute;
+
+}
+.fa-exclamation {
+  margin-left: 0.5rem;
+  font-size: 0.6rem;
+  margin-top: 0.3rem;
+  color: white;
+  z-index: 10;
+}
+.fa-circle {
+  font-size: 1.2rem;
+  color:red;
+}
+.notification {
+  position: absolute;
+  margin-left:3.4rem;
+  margin-top:-0.5rem;
 }

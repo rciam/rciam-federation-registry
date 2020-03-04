@@ -1,4 +1,0 @@
-
-
-15:42:15 error: Querying against a released or lost connection.
-         task(update-petition): insert into "client_petition_scope"("owner_id","value") values('13','eduperson_entitlement'),('13','eduperson_scoped_affiliation')

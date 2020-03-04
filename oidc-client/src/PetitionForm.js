@@ -1,6 +1,11 @@
 import React,{useState,useEffect} from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {faCheckCircle,faBan} from '@fortawesome/free-solid-svg-icons';
+import {faCheckCircle,faBan,faSortDown} from '@fortawesome/free-solid-svg-icons';
+import ButtonGroup from 'react-bootstrap/ButtonGroup';
+import Row from 'react-bootstrap/Row';
+import {ProcessingRequest} from './Components/LoadingBar';
+import Col from 'react-bootstrap/Col';
+import Collapse from 'react-bootstrap/Collapse';
 import { diff } from 'deep-diff';
 import {Debug} from './Components/Debug.js';
 import {SimpleModal,ResponseModal} from './Components/Modals.js';
@@ -19,8 +24,8 @@ const uuidv1 = require('uuid/v1');
 
 const PetitionForm = (props)=> {
 
-
   useEffect(()=>{
+    console.log(props);
     if(props.disabled||props.review){
       setDisabled(true);
     }
@@ -84,7 +89,7 @@ const PetitionForm = (props)=> {
       then: yup.string().required('Client Secret cannot be empty').min(4,'Client Secret must e at least 4 characters long').max(16,'Client Secret must not exceed the character limit (16)')
     }).nullable(),
   });
-
+  const [adminComment,setAdminComment] = useState();
   const [disabled,setDisabled] = useState(false);
   const [hasSubmitted,setHasSubmitted] = useState(false);
   const [message,setMessage] = useState();
@@ -92,44 +97,60 @@ const PetitionForm = (props)=> {
   const [checkingAvailability,setCheckingAvailability] = useState(false);
   const [imageError,setImageError] = useState(false); //
   const [checkedId,setcheckedId] = useState(); // Variable containing the last client Id checked for availability to limit check requests
-
-
+  const [asyncResponse,setAsyncResponse] = useState(false);
 
 
   const createNewPetition = (petition) => {
-
+    let type;
     if(props.service_id){
       petition.type='edit';
-      petition.service_id=props.service_id
+      type='reconfiguration';
+      petition.service_id=props.service_id;
     }
     else{
       petition.type='create';
+      type='registration'
       petition.service_id=null;
     }
-    fetch(config.host+'petition/create', {
-      method: 'POST', // *GET, POST, PUT, DELETE, etc.
-      credentials: 'include', // include, *same-origin, omit
-      headers: {
-      'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(petition) // body data type must match "Content-Type" header
-    }).then(response=>response.json()).then(response=> {
-
-      if(props.user.admin){
-
-        reviewPetition(true,response.id);
-      }
-      else{
-        setModalTitle('Your creation request with id: ' + petition.client_id);
+    if (diff(petition,props.initialValues)){
+      setAsyncResponse(true);
+      fetch(config.host+'petition/create', {
+        method: 'POST', // *GET, POST, PUT, DELETE, etc.
+        credentials: 'include', // include, *same-origin, omit
+        headers: {
+        'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(petition) // body data type must match "Content-Type" header
+      }).then(response=>response.json()).then(response=> {
+        console.log(response);
         if(response.success){
-          setMessage('Was submited with success and is currently pending approval from an administrator.');
+          setAsyncResponse(false);
+          if(props.user.admin){
+
+            reviewPetition('approve',response.id);
+          }
+          else{
+            setModalTitle('Your ' + type + ' request with id: ' + petition.client_id);
+            if(response.success){
+              setMessage('Was submited with success and is currently pending approval from an administrator.');
+            }
+            else{
+              setMessage('Was not submited due to the following error: ' + response.error);
+            }
+          }
         }
         else{
+          setModalTitle('Your ' + type + ' request with id: ' + petition.client_id);
           setMessage('Was not submited due to the following error: ' + response.error);
         }
-      }
 
-    });
+      });
+    }
+    else{
+      setAsyncResponse(false);
+      setModalTitle('Request could not be submitted.');
+      setMessage('Because no changes were made.');
+    }
   }
 
 
@@ -139,7 +160,7 @@ const PetitionForm = (props)=> {
     const editData = prepareEditData(petition,props.initialValues);
 
     if(Object.keys(editData.petition_details).length !== 0||Object.keys(editData.dlt).length !== 0||Object.keys(editData.add).length !== 0){
-
+      setAsyncResponse(true);
       fetch(config.host+'petition/edit/'+props.petition_id, {
         method: 'POST', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
@@ -148,15 +169,13 @@ const PetitionForm = (props)=> {
         },
         body: JSON.stringify(editData) // body data type must match "Content-Type" header
       }).then(response=>response.json()).then(response=> {
-        if(response){
-          console.log('hey');
-          console.log(response);
+        if(response.success){
+          setAsyncResponse(false);
           if(props.user.admin){
-
-              reviewPetition(true,response.id);
+              reviewPetition('approve',response.id);
           }
           else{
-            setModalTitle('Your edit request for service with id: ' + petition.client_id);
+            setModalTitle('Your reconfiguration request for service with id: ' + petition.client_id);
             if(response.success){
               setMessage('Was submited with success and is currently pending approval from an administrator.');
             }
@@ -164,6 +183,11 @@ const PetitionForm = (props)=> {
               setMessage('Was not submited due to the following error: ' + response.error);
             }
           }
+        }
+        else{
+          setAsyncResponse(false);
+          setModalTitle('Your reconfiguration request for service with id: ' + petition.client_id);
+          setMessage('Was not submited due to the following error: ' + response.error);
         }
       })
     }
@@ -174,6 +198,7 @@ const PetitionForm = (props)=> {
   }
 
   const deletePetition = ()=>{
+    setAsyncResponse(true);
     fetch(config.host+'petition/delete/'+props.petition_id, {
       method: 'PUT', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
@@ -182,54 +207,97 @@ const PetitionForm = (props)=> {
     }}).then(response=>response.json()).then(response=> {
 
       if(props.type==='delete'){
-          setModalTitle('The delete request');
+          setModalTitle('Your deregistration request:');
       }
       else{
-        setModalTitle('The edit request');
+        setModalTitle('Your regonfiguration request:');
       }
       if(response.success){
-        setMessage('Was canceled');
+        setAsyncResponse(false);
+        setMessage('Was canceled succesfully');
       }
       else{
-        setMessage("Couldn't get canceled due to the following error: " + response.error)
+        setAsyncResponse(false);
+        setMessage("Wasn't canceled due to the following error: " + response.error)
       }
 
     });
   }
 
-  const reviewPetition = (accept,id)=>{
-    console.log(id);
-    if(accept){
-      fetch(config.host+'petition/approve/'+id, {
-        method: 'PUT', // *GET, POST, PUT, DELETE, etc.
-        credentials: 'include', // include, *same-origin, omit
-        headers: {
-        'Content-Type': 'application/json'
-      }}).then(response=>response.json()).then(response=> {
-        console.log(response);
-        if(response.success){
-          setMessage('Petition approval was successfull');
-        }
-        else{
-          setMessage('Petition wasnt able to be approved');
-        }
-      });
-    }
-    else {
-      fetch(config.host+'petition/deny/'+id, {
-        method: 'PUT', // *GET, POST, PUT, DELETE, etc.
-        credentials: 'include', // include, *same-origin, omit
-        headers: {
-        'Content-Type': 'application/json'
-      }}).then(response=>response.json()).then(response=> {
-        if(response.success){
-          setMessage('Petition approval was successfull');
-        }
-        else{
-          setMessage('Petition wasnt able to be approved');
-        }
-      });
-    }
+  const reviewPetition = (type,id)=>{
+      if(props.type==='create'){
+        setModalTitle('Service registration request:');
+      }
+      else if (props.type==='delete'){
+        setModalTitle('Service deregistration request:');
+      }
+      else if (props.type==='edit'){
+          setModalTitle('Sevice reconfiguration request:');
+      }
+
+      if(type==='approve'){
+        setAsyncResponse(true);
+        fetch(config.host+'petition/approve/'+id, {
+          method: 'PUT', // *GET, POST, PUT, DELETE, etc.
+          credentials: 'include', // include, *same-origin, omit
+          headers: {
+          'Content-Type': 'application/json'
+          },
+          body:JSON.stringify({comment:adminComment})
+      }).then(response=>response.json()).then(response=> {
+          setModalTitle('Reconfiguration request:');
+          if(response.success){
+              setAsyncResponse(false);
+              setMessage('Was approved, and changes have been commited.');
+
+          }
+          else{
+            setAsyncResponse(false);
+            setMessage("Could not be approved due to following error " +response.error );
+          }
+        });
+      }
+      else if (type==='reject') {
+        setAsyncResponse(true);
+        fetch(config.host+'petition/reject/'+id, {
+          method: 'PUT', // *GET, POST, PUT, DELETE, etc.
+          credentials: 'include', // include, *same-origin, omit
+          headers: {
+          'Content-Type': 'application/json'
+          },
+          body:JSON.stringify({comment:adminComment})
+      }).then(response=>response.json()).then(response=> {
+
+          if(response.success){
+            setAsyncResponse(false);
+            setMessage('Was rejected succesfully.');
+          }
+          else{
+            setAsyncResponse(false);
+            setMessage("Could not be rejected due to following error " +response.error );
+          }
+        });
+      }
+      else {
+        setAsyncResponse(true);
+        fetch(config.host+'petition/approve/changes/'+id, {
+          method: 'PUT', // *GET, POST, PUT, DELETE, etc.
+          credentials: 'include', // include, *same-origin, omit
+          headers: {
+          'Content-Type': 'application/json'
+          },
+          body:JSON.stringify({comment:adminComment})
+      }).then(response=>response.json()).then(response=> {
+          if(response.success){
+            setAsyncResponse(false);
+            setMessage('Was approved with changes.');
+          }
+          else{
+            setAsyncResponse(false);
+            setMessage("Could not be approved due to following error " +response.error );
+          }
+        });
+      }
   }
 
 
@@ -290,19 +358,18 @@ const PetitionForm = (props)=> {
       isSubmitting})=>(
       <div className="tab-panel">
           <div id="form-container">
-
+              <ProcessingRequest active={asyncResponse}/>
               <Form noValidate onSubmit={handleSubmit}>
+
+
                 {props.disabled?null:
-                  <div className="form-controls-container">
+                  <div className="form-controls-container container">
                     {props.review?
-                      <React.Fragment>
-                        <Button variant="success" onClick={()=>reviewPetition(true,props.petition_id)}><FontAwesomeIcon icon={faCheckCircle}/>Approve</Button>
-                        <Button variant="danger" onClick={()=>reviewPetition(false,props.petition_id)}><FontAwesomeIcon icon={faBan}/>Reject</Button>
-                      </React.Fragment>
+                      <ReviewComponent petition_id={props.petition_id} setAdminComment={setAdminComment} adminComment={adminComment} reviewPetition={reviewPetition}/>
                       :
                       <React.Fragment>
                         <Button className='submit-button' type="submit" variant="primary" ><FontAwesomeIcon icon={faCheckCircle}/>Submit</Button>
-                        {props.type==='delete'||props.type==='edit'?<Button variant="danger" onClick={()=>deletePetition()}><FontAwesomeIcon icon={faBan}/>Cancel Request</Button>:null}
+                        {props.petition_id?<Button variant="danger" onClick={()=>deletePetition()}><FontAwesomeIcon icon={faBan}/>Cancel Request</Button>:null}
                       </React.Fragment>
                     }
                   </div>
@@ -499,10 +566,7 @@ const PetitionForm = (props)=> {
                   {props.disabled?null:
                     <div className="form-controls-container">
                       {props.review?
-                        <React.Fragment>
-                          <Button variant="success" ><FontAwesomeIcon icon={faCheckCircle}/>Approve</Button>
-                          <Button variant="danger" ><FontAwesomeIcon icon={faBan}/>Reject</Button>
-                        </React.Fragment>
+                          <ReviewComponent petition_id={props.petition_id} setAdminComment={setAdminComment} adminComment={adminComment} reviewPetition={reviewPetition}/>
                         :
                         <React.Fragment>
                           <Button className='submit-button' type="submit" variant="primary" ><FontAwesomeIcon icon={faCheckCircle}/>Submit</Button>
@@ -523,6 +587,143 @@ const PetitionForm = (props)=> {
       )}
     </Formik>
   </React.Fragment>
+  );
+}
+
+const ReviewComponent = (props)=>{
+
+  const [typeOfReview,setTypeOfReview] = useState();
+  const [expandReview,setExpandReview] = useState(false);
+  const [error,setError] = useState(false);
+
+  const handleReview = () =>{
+      if(expandReview){
+        if(typeOfReview){
+          if(typeOfReview==='request-changes'&&!props.adminComment){
+            setError('Cannot request changes without leaving a comment for the requester.');
+          }
+          props.reviewPetition(typeOfReview,props.petition_id);
+        }
+        else {
+
+          setError('You have to first select one of the options from bellow.')
+        }
+
+      }else{
+        setError(false);
+        setExpandReview(true);
+      }
+  }
+  return (
+    <React.Fragment>
+        <Row className="review-button-row">
+          <ButtonGroup>
+            <Button className="review-button" variant="success" onClick={()=> handleReview()}>{expandReview?'Submit Review':
+              <React.Fragment>
+                Review
+                <FontAwesomeIcon icon={faSortDown}/>
+              </React.Fragment>
+              }</Button>
+              {expandReview?
+                <Button variant="success" className="review-button-expand" onClick={()=>setExpandReview(!expandReview)}>
+                  <FontAwesomeIcon icon={faSortDown}/>
+                </Button>:null}
+
+          </ButtonGroup>
+          {error&&expandReview?
+            <div className="review-error">
+              {error}
+            </div>
+            :null}
+        </Row>
+        <Collapse in={expandReview}>
+        <div className="expand-container">
+        <div className="review-controls flex-column">
+        <Form.Group>
+          <Row>
+            <Col md="auto" className="review-radio-col">
+              <Form.Check
+                type="radio"
+                name="formHorizontalRadios"
+                id="formHorizontalRadios1"
+                onChange={(e)=>{if(e.target.checked){setTypeOfReview(e.target.value)}}}
+                value="approve"
+              />
+            </Col>
+            <Col>
+              <Row>
+                <strong>
+                  Approve
+                </strong>
+              </Row>
+              <Row className="review-option-desc">
+                Submit feedback and approve service changes.
+              </Row>
+            </Col>
+          </Row>
+          <Row>
+            <Col md="auto" className="review-radio-col">
+              <Form.Check
+                type="radio"
+                name="formHorizontalRadios"
+                id="formHorizontalRadios2"
+                onChange={(e)=>{if(e.target.checked){setTypeOfReview(e.target.value)}}}
+                value="reject"
+              />
+            </Col>
+            <Col>
+              <Row>
+                <strong>
+                  Reject
+                </strong>
+              </Row>
+              <Row className="review-option-desc">
+                Submit feedback and reject service changes.
+              </Row>
+            </Col>
+          </Row>
+          <Row>
+            <Col md="auto" className="review-radio-col">
+              <Form.Check
+                type="radio"
+                name="formHorizontalRadios"
+                id="formHorizontalRadios3"
+                onChange={(e)=>{if(e.target.checked){setTypeOfReview(e.target.value)}}}
+                value="request-changes"
+              />
+            </Col>
+            <Col>
+              <Row>
+                <strong>
+                  Request Changes
+                </strong>
+              </Row>
+              <Row className="review-option-desc">
+                Submit feedback that must be addressed before changes can be made.
+              </Row>
+            </Col>
+          </Row>
+        </Form.Group>
+      </div>
+
+      <Row>
+
+        <Form.Control
+          autoFocus
+          maxLength='1024'
+          as="textarea"
+          rows='7'
+          className="comment-input"
+          placeholder="Leave a comment for the requester..."
+          onChange={e => props.setAdminComment(e.target.value)}
+          value={props.adminComment}
+        />
+
+      </Row>
+    </div>
+
+  </Collapse>
+    </React.Fragment>
   );
 }
 

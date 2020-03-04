@@ -12,6 +12,8 @@ const merge_services_and_petitions = (services,petitions) => {
       let key = services.findIndex(element=>element.id==item.service_id);
       services[key].type = item.type;
       services[key].petition_id = item.id;
+      services[key].comment = item.comment;
+      services[key].status = item.status;
     }
   })
 

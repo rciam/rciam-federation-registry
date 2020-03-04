@@ -12,76 +12,6 @@ const petitionTables = ['client_petition_scope','client_petition_grant_type','cl
 const serviceTables = ['client_service_scope','client_service_grant_type','client_service_redirect_uri'];
 const tables = ['client_scope','client_grant_type','client_redirect_uri','client_contact'];
 
-// ----------------------------------------------------------
-// ******************** HELPER FUNCTIONS ********************
-// ----------------------------------------------------------
-
-// Authentication Middleware
-function checkAuthentication(req,res,next){
-  if(req.isAuthenticated()){next();}
-  else{res.json({auth:false});}
-}
-
-// Admin Authenctication Middleware
-function checkAdmin(req,res,next){
-  if(isAdmin(req)){
-    next();
-  }else{
-    res.json({
-      success:false,
-      error:"User not authorized"
-    })
-  }
-}
-
-// Checks Entitlements of user and returns Super Admin status
-function isAdmin(req){
-  let admin=false;
-  if(req.user.eduperson_entitlement){
-    config.super_admin_entitlements.forEach((item)=>{
-      if(req.user.eduperson_entitlement.includes(item)){
-        admin = true;
-      }
-    })
-  }
-  return admin;
-}
-
-// Save new User to db. Gets called on Authentication
-const saveUser=(userinfo)=>{
-  return db.tx('user-check',async t=>{
-    return t.user_info.findBySub(userinfo.sub).then(async user=>{
-      if(!user) {
-        return t.user_info.add(userinfo).then(async result=>{
-          if(result){
-              return t.user_edu_person_entitlement.add(userinfo.eduperson_entitlement,result.id);
-          }
-        });
-      }
-    })
-
-  });
-}
-
-// Checking Availability of Client Id
-const isAvailable=(t,id)=>{
-  return t.client_services.clientIdIsAvailable(id).then(available=> {
-      if (available){
-        return t.client_petitions.clientIdIsAvailable(id);
-      }
-      else{return available}
-  })
-}
-
-// Checking if user can create a petition for service with id = service_id
-const asyncValidation = (t,client_id,service_id,sub,type) => {
-  if(type==='create'){
-    return isAvailable(t,client_id);
-  }
-  else{
-    return t.client_services.belongsToRequester(service_id,sub);
-  }
-}
 
 
 // ----------------------------------------------------------
@@ -155,7 +85,7 @@ router.get('/services/user',checkAuthentication,(req,res)=>{
 
 
 // Add a new client/petition
-router.post('/petition/create',clientValidationRules(),validate,checkAuthentication,(req,res)=>{
+router.post('/petition/create',clientValidationRules(),validate,checkAuthentication,checkClientId,(req,res)=>{
   res.setHeader('Content-Type', 'application/json');
 
   return db.tx('add-client', async t => {
@@ -170,6 +100,7 @@ router.post('/petition/create',clientValidationRules(),validate,checkAuthenticat
                 t.client_general.add('client_petition_redirect_uri',req.body.redirect_uris,result.id),
                 t.client_contact.add('client_petition_contact',req.body.contacts,result.id)
               ]);
+
               res.end(JSON.stringify({
                 success:true,
                 id:result.id
@@ -304,12 +235,13 @@ router.get('/getpetition/:id',checkAuthentication,(req,res)=>{
 });
 
 // Edit Petition
-router.post('/petition/edit/:id',editClientValidationRules(),validate,checkAuthentication,(req,res)=>{
+router.post('/petition/edit/:id',editClientValidationRules(),validate,checkAuthentication,checkClientId,(req,res)=>{
+  console.log('i get called');
   return db.task('update-petition',async t =>{
     await t.client_petitions.petitionType(req.params.id,req.user.sub).then(async type=>{
-
       if(type){
         try {
+          const l = await t.client_petitions.setPending(req.params.id);
           if(Object.keys(req.body.petition_details).length !== 0){
             const w = await t.client_petitions.update(req.body.petition_details,req.params.id,type);
           }
@@ -349,9 +281,6 @@ router.post('/petition/edit/:id',editClientValidationRules(),validate,checkAuthe
 
 // Create petition for service deletion
 router.put('/service/delete/:id',checkAuthentication,(req,res)=>{
-
-
-
   return db.task('create-delete-petition',async t =>{
     try{
       await t.client_services.belongsToRequester(req.params.id,req.user.sub).then(async belongs =>{
@@ -417,7 +346,6 @@ router.put('/petition/delete/:id',checkAuthentication,(req,res)=>{
 // Approve petition
 router.put('/petition/approve/:id',checkAuthentication,checkAdmin,(req,res)=>{
   return db.tx('approve-petition',async t =>{
-
     try{
       await t.client_petitions.getPetition(req.params.id).then(async petition =>{
         if(petition){
@@ -428,11 +356,10 @@ router.put('/petition/approve/:id',checkAuthentication,checkAdmin,(req,res)=>{
               t.client_general.delete('client_service_grant_type',petition.service_id),
               t.client_contact.delete('client_service_contact',petition.service_id),
               t.client_services.delete(petition.service_id),
-              t.client_petitions.approve(petition.id,req.user.sub)
+              t.client_petitions.review(petition.id,req.user.sub,'approve')
             ]);
           }
           else if(petition.type==='edit'){
-            console.log
             // Edit Service
             const service = await t.client_services.update(petition,petition.service_id,petition.requester);
             for(const item of tables){
@@ -476,10 +403,8 @@ router.put('/petition/approve/:id',checkAuthentication,checkAdmin,(req,res)=>{
                  t[repo].add(addToString(item,'service'),add,petition.service_id),
                  t[repo].delete_one_or_many(addToString(item,'service'),dlt,petition.service_id)
                ]);
-
-
              }
-             await t.client_petitions.approve(req.params.id,req.user.sub);
+             await t.client_petitions.review(req.params.id,req.user.sub,'approved');
 
            }
            else if(petition.type==='create'){
@@ -510,7 +435,7 @@ router.put('/petition/approve/:id',checkAuthentication,checkAdmin,(req,res)=>{
                  }
 
                }
-               await t.client_petitions.approve(req.params.id,req.user.sub);
+               await t.client_petitions.review(req.params.id,req.user.sub,'approved');
 
              }).catch(err=>{
                console.log(err);
@@ -543,13 +468,14 @@ router.put('/petition/approve/:id',checkAuthentication,checkAdmin,(req,res)=>{
   })
 })
 
-
-router.put('/petition/deny/:id',checkAuthentication,checkAdmin,(req,res)=>{
-  return db.task('deny-petition',async t =>{
+//
+router.put('/petition/reject/:id',checkAuthentication,checkAdmin,(req,res)=>{
+  return db.task('reject-petition',async t =>{
     try{
-      await t.client_petitions.deny(req.params.id,req.user.sub);
+      await t.client_petitions.review(req.params.id,req.user.sub,'reject');
         return res.json({
-          success:true
+          success:true,
+          message:'Request has been succesfully rejected'
         })
 
     }
@@ -562,6 +488,194 @@ router.put('/petition/deny/:id',checkAuthentication,checkAdmin,(req,res)=>{
     }
   })
 })
+
+// Leave Comment/Accept With Changes
+router.put('/petition/approve/changes/:id',checkAuthentication,checkAdmin,(req,res)=>{
+  return db.tx('approve-with-changes-petition',async t =>{
+
+    try{
+      await t.client_petitions.getPetition(req.params.id).then(async petition =>{
+        if(petition){
+          petition.comment = req.body.comment;
+          petition.status = 'approved_with_changes';
+          await t.client_petitions.add(petition,petition.requester).then(async result=>{
+            if(result){
+              for(const item of tables){
+                let repo = 'client_general';
+                if(item==='client_contact'){
+                  repo = 'client_contact';
+                }
+                await t[repo].findDataById(addToString(item,'petition'),petition.id).then(async details=>{
+
+                  if(details){
+                    let data = [];
+                    if(repo==='client_contact'){
+                      details.forEach(item=>{
+                        data.push({email:item.value,type:item.type});
+                      })
+                    }
+                    else{
+                      details.forEach(item=>{
+                        data.push(item.value);
+                      })
+                    }
+                    await t[repo].add(addToString(item,'petition'),data,result.id);
+                  }
+                })
+              }
+
+            }
+            await t.client_petitions.review(req.params.id,req.user.sub,'approved_with_changes');
+            res.end(JSON.stringify({
+              success:true,
+              message:'Request has been succesfully reviewed'
+            }))
+
+          }).catch(err=>{
+            console.log(err);
+            console.log('point-error');
+            res.end(JSON.stringify({
+              success:false,
+              error:err,
+            }));
+          })
+       }
+     }
+     )}
+     catch(error){
+       console.log(error);
+       return res.json({
+         success:false,
+         error:"Error while querying the database"
+       })
+     }
+  })
+})
+// ----------------------------------------------------------
+// ******************** HELPER FUNCTIONS ********************
+// ----------------------------------------------------------
+
+// Authentication Middleware
+function checkAuthentication(req,res,next){
+  if(req.isAuthenticated()){next();}
+  else{res.json({auth:false});}
+}
+
+// Admin Authenctication Middleware
+function checkAdmin(req,res,next){
+
+  if(isAdmin(req)){
+    next();
+  }else{
+    res.json({
+      success:false,
+      error:"User not authorized"
+    })
+  }
+}
+
+// Checks Entitlements of user and returns Super Admin status
+function isAdmin(req){
+  let admin=false;
+  if(req.user.eduperson_entitlement){
+    config.super_admin_entitlements.forEach((item)=>{
+      if(req.user.eduperson_entitlement.includes(item)){
+        admin = true;
+      }
+    })
+  }
+
+  return admin;
+}
+
+// Save new User to db. Gets called on Authentication
+const saveUser=(userinfo)=>{
+  return db.tx('user-check',async t=>{
+    return t.user_info.findBySub(userinfo.sub).then(async user=>{
+      if(!user) {
+        return t.user_info.add(userinfo).then(async result=>{
+          if(result){
+              return t.user_edu_person_entitlement.add(userinfo.eduperson_entitlement,result.id);
+          }
+        });
+      }
+    })
+
+  });
+}
+
+// Checking Availability of Client Id
+const isAvailable=(t,id)=>{
+  return t.client_services.clientIdIsAvailable(id).then(available=> {
+      if (available){
+        return t.client_petitions.clientIdIsAvailable(id);
+      }
+      else{return available}
+  })
+}
+
+// Checking if user can create a petition for service with id = service_id
+const asyncValidation = (t,client_id,service_id,sub,type) => {
+  if(type==='create'){
+    return isAvailable(t,client_id);
+  }
+  else{
+    return t.client_services.belongsToRequester(service_id,sub);
+  }
+}
+
+
+
+/// Here is where i am
+function checkClientId(req,res,next){
+  db.tx('clientId-check',async t=>{
+
+      let client_id;
+      if(req.body.client_id){
+        client_id = req.body.client_id;
+      }
+      else{
+        client_id = req.body.petition_details.client_id;
+      }
+      const valid1 = await t.client_petitions.checkClientId(client_id).then(async id =>{
+        if(id){
+          id =  id.id.toString();
+          if(req.params.id===id){
+            return true
+          }else{
+
+            return false
+          }
+        }
+        else{
+          return true
+        }
+      });
+      const valid2 = await t.client_services.checkClientId(client_id).then(async id =>{
+        if(id){
+          if(req.body.service_id){ // if type of request === create
+            if(req.body.service_id===id.id){return true}else{return false}
+          }
+          else{ // if type of request === edit
+            const service_id = await t.client_petitions.getServiceId(req.params.id);
+            if(service_id.service_id===id){return true}
+            return false
+          }
+        }
+        else{return true}
+      });
+      console.log(valid2);
+      if(valid1&&valid2){
+        next();
+      }
+      else{
+        res.json({
+          success:false,
+          error:"Client id already used"
+        })
+      }
+    });
+}
 
 
 

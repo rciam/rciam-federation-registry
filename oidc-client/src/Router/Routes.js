@@ -75,9 +75,9 @@ const Routes = (props) => (
 );
 
 function AdminRoute(props) {
-  console.log(props);
+
   const childrenWithProps = React.Children.map(props.children, child =>
-      React.cloneElement(child, { petition_id:props.petition_id,service_id:props.service_id,type:props.type})
+      React.cloneElement(child, { petition_id:props.petition_id,service_id:props.service_id,type:props.type,comment:props.comment})
     );
   return (
     <Route
@@ -103,7 +103,7 @@ function RouteWithState(props) {
   const globalState = useGlobalState();
   const log_state = globalState.global_state.log_state;
   const childrenWithProps = React.Children.map(props.children, child =>
-      React.cloneElement(child, { petition_id:props.location.state.petition_id,service_id:props.location.state.service_id,type:props.location.state.type})
+      React.cloneElement(child, { petition_id:props.location.state.petition_id,service_id:props.location.state.service_id,type:props.location.state.type,comment:props.location.state.comment})
     );
   return (
     <Route

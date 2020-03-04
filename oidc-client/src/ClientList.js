@@ -1,6 +1,8 @@
 import React,{useState,useEffect} from 'react';
+import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
+import Tooltip from 'react-bootstrap/Tooltip';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {faSync,faPlus,faTimes,faEdit, faTrash} from '@fortawesome/free-solid-svg-icons';
+import {faSync,faPlus,faTimes,faEdit, faTrash, faExclamation,faCircle} from '@fortawesome/free-solid-svg-icons';
 import InputGroup from 'react-bootstrap/InputGroup';
 import FormControl from 'react-bootstrap/FormControl';
 import Button from 'react-bootstrap/Button';
@@ -13,7 +15,8 @@ import {Link} from "react-router-dom";
 import Badge from 'react-bootstrap/Badge';
 import Modal from 'react-bootstrap/Modal';
 import Pagination from 'react-bootstrap/Pagination';
-import {LoadingBar} from './Components/LoadingBar';
+import {LoadingBar,ProcessingRequest} from './Components/LoadingBar';
+import {ResponseModal} from './Components/Modals.js';
 
 
 const ClientList= (props)=> {
@@ -24,6 +27,9 @@ const ClientList= (props)=> {
   const [confirmationAction,setConfirmationAction] = useState();
   const [cancelDelete,setCancelDelete] = useState(false);
   const [displayedServices,setDisplayedServices] = useState(0);
+  const [asyncResponse,setAsyncResponse] = useState(false);
+  const [message,setMessage] = useState();
+  const [responseTitle,setresponseTitle] = useState(null);
 
 
   let renderedConnections = 0;
@@ -32,9 +38,6 @@ const ClientList= (props)=> {
     getClients();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
-  useEffect(()=>{
-    console.log('render');
-  })
 
   let items = [];
   let itemsPerPage = 10;
@@ -107,7 +110,7 @@ const ClientList= (props)=> {
   }
 
   const deleteService = (id)=>{
-
+    setAsyncResponse(true);
     fetch(config.host+'service/delete/'+id, {
       method: 'PUT', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
@@ -115,33 +118,44 @@ const ClientList= (props)=> {
       'Content-Type': 'application/json'
     }}).then(response=>response.json()).then(response=> {
       getClients();
+
       if(response){
+        setAsyncResponse(false);
         if(props.user.admin){
             confirmPetition(response.id);
         }
 
       }
+
     });
   }
   const deletePetition = (id)=>{
-
+    setAsyncResponse(true);
     fetch(config.host+'petition/delete/'+id, {
       method: 'PUT', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
       'Content-Type': 'application/json'
     }}).then(response=>response.json()).then(response=> {
-      getClients();
+      if(response){
+          setAsyncResponse(false);
+          getClients();
+      }
+
     });
   }
   const confirmPetition = (id) => {
+    setAsyncResponse(true);
     fetch(config.host+'petition/approve/'+id, {
       method: 'PUT', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
       'Content-Type': 'application/json'
     }}).then(response=>response.json()).then(response=> {
-      getClients();
+      if(response){
+        setAsyncResponse(false);
+        getClients();
+      }
     });
   }
 
@@ -149,6 +163,7 @@ const ClientList= (props)=> {
 
   return(
     <React.Fragment>
+      
       <Confirmation confirmationId={confirmationId} cancelDelete={cancelDelete} setConfirmationId={setConfirmationId} confirmationAction={confirmationAction==='petition'?deletePetition:deleteService}/>
       <div>
         <LoadingBar loading={loadingList}>
@@ -206,12 +221,15 @@ const ClientList= (props)=> {
           </Table>
           <Pagination>{items}</Pagination>
         </LoadingBar>
+        <ProcessingRequest active={asyncResponse}/>
       </div>
+
     </React.Fragment>
     )
   }
 
 function TableItem(props) {
+
   return (
     <tr>
       <td className="petition-details">
@@ -223,7 +241,10 @@ function TableItem(props) {
         <div className="flex-column">
           <h3 className="petition-title">{props.item.client_name}</h3>
           <div className="badge-container">
+
+
             {props.item.hasOwnProperty('deployed')?<Badge className="status-badge" variant={props.item.deployed?'info':'danger'}>{props.item.deployed?'Deployed':'Deployment in Progress'}</Badge>:null}
+
             {props.item.hasOwnProperty('type')?<Badge className="status-badge" variant="warning">
 
               {props.item.type==='edit'?'Reconfiguration Pending':props.item.type==='create'?'Registration Pending':'Deregistration Pending'}
@@ -236,15 +257,33 @@ function TableItem(props) {
         <div className="petition-actions">
         {props.item.requester===props.user.sub?
           <React.Fragment>
+          {props.item.status==='approved_with_changes'?
+          <div className="notification">
+            <FontAwesomeIcon icon={faExclamation} className="fa-exclamation"/>
+            <FontAwesomeIcon icon={faCircle} className="fa-circle"/>
+          </div>:null}
+
+          <OverlayTrigger
+            placement='top'
+            overlay={
+              <Tooltip id={`tooltip-top`}>
+                {props.item.status==='approved_with_changes'?'An admin has requested changes':'Click to Edit'}
+              </Tooltip>
+            }
+          >
+
+
           <Link to={{
             pathname:"/form/edit",
             state:{
               service_id:props.item.id,
               petition_id:props.item.petition_id,
-              type:props.item.type
+              type:props.item.type,
+              comment:props.item.comment
             }
           }}><Button variant="light"><FontAwesomeIcon icon={faEdit}/>Edit</Button></Link>
 
+          </OverlayTrigger>
           <Button variant="danger" onClick={()=>{
             if(props.item.type==='create'||props.item.type==='delete'){
               props.setConfirmationId(props.item.petition_id);
@@ -261,12 +300,13 @@ function TableItem(props) {
           </React.Fragment>
         :null
         }
-        {props.user.admin&&props.item.petition_id?<Link to={{
+        {props.user.admin&&props.item.petition_id&&props.item.status!=='approved_with_changes'?<Link to={{
           pathname:"/form/review",
           state:{
             service_id:props.item.id,
             petition_id:props.item.petition_id,
-            type:props.item.type
+            type:props.item.type,
+            comment:props.item.comment
           }
         }}><Button variant="success"><FontAwesomeIcon icon={faEdit}/>Review</Button></Link>:null}
         <Link to={{
@@ -292,7 +332,7 @@ function Confirmation(props){
     <Modal show={props.confirmationId?true:false} onHide={handleClose}>
         <Modal.Header closeButton>
           <Modal.Title>
-              Are you sure sure you would like to {props.cancelDelete?'cancel deletion request for this client?':'delete this service?'}
+              Are you sure sure you would like to {props.cancelDelete?'cancel deregistration request for this client?':'deregistrate this service?'}
           </Modal.Title>
         </Modal.Header>
         <Modal.Footer>
@@ -306,6 +346,8 @@ function Confirmation(props){
     </Modal>
   )
 }
+
+
 
 
 function Filter (props) {

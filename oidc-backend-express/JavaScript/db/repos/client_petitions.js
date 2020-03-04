@@ -15,15 +15,12 @@ class ClientPetitionsRepository {
         createColumnsets(pgp);
     }
 
-    // Aprrove Pettion
-    async approve(id,approved_by){
-      let date = new Date(Date.now());
-      return this.db.none("UPDATE client_petitions SET status='approved', reviewed_at=$1, reviewer=$2 WHERE id = $3", [date,approved_by,+id]);
-    }
+
 
     // Save new Petition
     async add(body,sub){
       let date = Date.now();
+
       return this.db.one(sql.add,{
         client_description: body.client_description,
         reuse_refresh_tokens: body.reuse_refresh_tokens,
@@ -41,16 +38,18 @@ class ClientPetitionsRepository {
         integration_environment: body.integration_environment,
         requester: sub,
         type:body.type,
-        service_id:body.service_id
+        status:body.status,
+        service_id:body.service_id,
+        comment:body.comment
       })
     }
 
 
     async findAllForList(){
-      return this.db.any('SELECT id,client_description,logo_uri,client_name,requester,type,service_id FROM client_petitions WHERE reviewed_at IS NULL');
+      return this.db.any('SELECT id,client_description,logo_uri,client_name,requester,type,service_id,comment,status FROM client_petitions WHERE reviewed_at IS NULL');
     }
     async findBySubForList(sub){
-      return this.db.any('SELECT id,client_description,logo_uri,client_name,requester,type,service_id FROM client_petitions WHERE requester = $1 AND reviewed_at IS NULL', sub);
+      return this.db.any('SELECT id,client_description,logo_uri,client_name,requester,type,service_id,comment,status FROM client_petitions WHERE requester = $1 AND reviewed_at IS NULL', sub);
     }
 
     async findPetitionDataById(id){
@@ -87,7 +86,9 @@ class ClientPetitionsRepository {
           device_code_validity_seconds: body.device_code_validity_seconds,
           integration_environment:body.integration_environment,
           id:id,
-          type:type
+          type:type,
+          comment:null,
+
 
         })
     }
@@ -122,12 +123,21 @@ class ClientPetitionsRepository {
        return this.db.none('DELETE FROM client_petitions WHERE id=$1 AND reviewed_at IS NULL',+petition_id)
      }
 
-     async deny(id,approved_by){
-       let date = new Date(Date.now());
-       return this.db.none("UPDATE client_petitions SET status='denied', reviewed_at=$1, reviewer=$2 WHERE id = $3", [date,approved_by,+id]);
+
+     async review(id,approved_by,status){
+        let date = new Date(Date.now());
+        return this.db.none("UPDATE client_petitions SET status=$1, reviewed_at=$2, reviewer=$3 WHERE id=$4",[status,date,approved_by,+id]);
+     }
+     async setPending(id){
+       return this.db.none("UPDATE client_petitions SET status='pending', comment=null WHERE id=$1",+id);
+     }
+     async checkClientId(client_id){
+       return this.db.oneOrNone("SELECT id FROM client_petitions WHERE client_id=$1 AND reviewed_at IS NULL",client_id);
      }
 
-
+async getServiceId(id){
+  return this.db.oneOrNone("SELECT service_id FROM client_petitions WHERE id=$1 AND reviewed_at IS NULL",+id);
+}
 
 
 
