@@ -132,7 +132,7 @@ const PetitionForm = (props)=> {
           else{
             setModalTitle('Your ' + type + ' request with id: ' + petition.client_id);
             if(response.success){
-              setMessage('Was submited with success and is currently pending approval from an administrator.');
+              setMessage('Was submited succesfully and is currently pending approval from an administrator.');
             }
             else{
               setMessage('Was not submited due to the following error: ' + response.error);
@@ -152,8 +152,6 @@ const PetitionForm = (props)=> {
       setMessage('Because no changes were made.');
     }
   }
-
-
 
   const editPetition = (petition) => {
 
@@ -177,7 +175,7 @@ const PetitionForm = (props)=> {
           else{
             setModalTitle('Your reconfiguration request for service with id: ' + petition.client_id);
             if(response.success){
-              setMessage('Was submited with success and is currently pending approval from an administrator.');
+              setMessage('Was submited succesfully and is currently pending approval from an administrator.');
             }
             else{
               setMessage('Was not submited due to the following error: ' + response.error);
@@ -300,8 +298,6 @@ const PetitionForm = (props)=> {
       }
   }
 
-
-
   const postApi=(data)=>{
     data = gennerateValues(data);
     if(!props.type){
@@ -316,18 +312,7 @@ const PetitionForm = (props)=> {
 
 
 
-  function capitalWords(array) {
-     let return_array = array.map((item,index)=>{
-        var splitStr = item.toLowerCase().split(' ');
-        for (var i = 0; i < splitStr.length; i++) {
-            // You do not need to check if i is larger than splitStr length, as your for does that for you
-            // Assign it back to the array
-            splitStr[i] = splitStr[i].charAt(0).toUpperCase() + splitStr[i].substring(1);
-        }
-        return splitStr.join(' ');
-      })
-     return return_array
-  }
+
 
 
   return(
@@ -650,7 +635,10 @@ const ReviewComponent = (props)=>{
                 value="approve"
               />
             </Col>
-            <Col>
+            <Col onClick={()=>{
+              let radiobtn = document.getElementById("formHorizontalRadios1");
+              radiobtn.checked = true;
+            }}>
               <Row>
                 <strong>
                   Approve
@@ -671,7 +659,10 @@ const ReviewComponent = (props)=>{
                 value="reject"
               />
             </Col>
-            <Col>
+            <Col onClick={()=>{
+              let radiobtn = document.getElementById("formHorizontalRadios2");
+              radiobtn.checked = true;
+            }}>
               <Row>
                 <strong>
                   Reject
@@ -692,7 +683,10 @@ const ReviewComponent = (props)=>{
                 value="request-changes"
               />
             </Col>
-            <Col>
+            <Col onClick={()=>{
+              let radiobtn = document.getElementById("formHorizontalRadios3");
+              radiobtn.checked = true;
+            }}>
               <Row>
                 <strong>
                   Request Changes
@@ -808,6 +802,19 @@ function prepareEditData(data,initialValues){
     edits.petition_details = new_values;
   }
   return edits
+}
+
+function capitalWords(array) {
+   let return_array = array.map((item,index)=>{
+      var splitStr = item.toLowerCase().split(' ');
+      for (var i = 0; i < splitStr.length; i++) {
+          // You do not need to check if i is larger than splitStr length, as your for does that for you
+          // Assign it back to the array
+          splitStr[i] = splitStr[i].charAt(0).toUpperCase() + splitStr[i].substring(1);
+      }
+      return splitStr.join(' ');
+    })
+   return return_array
 }
 
 

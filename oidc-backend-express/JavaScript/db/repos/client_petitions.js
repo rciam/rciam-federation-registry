@@ -124,9 +124,9 @@ class ClientPetitionsRepository {
      }
 
 
-     async review(id,approved_by,status){
+     async review(id,approved_by,status,comment){
         let date = new Date(Date.now());
-        return this.db.none("UPDATE client_petitions SET status=$1, reviewed_at=$2, reviewer=$3 WHERE id=$4",[status,date,approved_by,+id]);
+        return this.db.none("UPDATE client_petitions SET status=$1, reviewed_at=$2, reviewer=$3, comment=$5 WHERE id=$4",[status,date,approved_by,+id,comment]);
      }
      async setPending(id){
        return this.db.none("UPDATE client_petitions SET status='pending', comment=null WHERE id=$1",+id);

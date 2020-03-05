@@ -16,7 +16,7 @@ import Badge from 'react-bootstrap/Badge';
 import Modal from 'react-bootstrap/Modal';
 import Pagination from 'react-bootstrap/Pagination';
 import {LoadingBar,ProcessingRequest} from './Components/LoadingBar';
-import {ResponseModal} from './Components/Modals.js';
+import {ListResponseModal} from './Components/Modals.js';
 
 
 const ClientList= (props)=> {
@@ -29,7 +29,7 @@ const ClientList= (props)=> {
   const [displayedServices,setDisplayedServices] = useState(0);
   const [asyncResponse,setAsyncResponse] = useState(false);
   const [message,setMessage] = useState();
-  const [responseTitle,setresponseTitle] = useState(null);
+  const [responseTitle,setResponseTitle] = useState(null);
 
 
   let renderedConnections = 0;
@@ -118,15 +118,21 @@ const ClientList= (props)=> {
       'Content-Type': 'application/json'
     }}).then(response=>response.json()).then(response=> {
       getClients();
-
-      if(response){
+      setResponseTitle('Your deregistration request');
+      if(response.success){
         setAsyncResponse(false);
         if(props.user.admin){
             confirmPetition(response.id);
         }
+        else{
+
+          setMessage('Was submited succesfully and is currently pending approval from an administrator.');
+        }
 
       }
-
+      else{
+        setMessage('Was not submited due to the following error: ' + response.error);
+      }
     });
   }
   const deletePetition = (id)=>{
@@ -137,9 +143,16 @@ const ClientList= (props)=> {
       headers: {
       'Content-Type': 'application/json'
     }}).then(response=>response.json()).then(response=> {
+      setResponseTitle('Your deregistration request was');
       if(response){
           setAsyncResponse(false);
           getClients();
+          if(response.success){
+            setMessage('Was canceled succesfully.');
+          }
+          else{
+            setMessage('Could not get canceled due to the following error: '+response.error);
+          }
       }
 
     });
@@ -151,8 +164,16 @@ const ClientList= (props)=> {
       credentials: 'include', // include, *same-origin, omit
       headers: {
       'Content-Type': 'application/json'
-    }}).then(response=>response.json()).then(response=> {
+    },
+      body:JSON.stringify({comment:null})
+    }).then(response=>response.json()).then(response=> {
       if(response){
+        if(response.success){
+          setMessage('Was submited succesfully.');
+        }
+        else{
+          setMessage('Was not submited due to the following error: '+response.error);
+        }
         setAsyncResponse(false);
         getClients();
       }
@@ -163,7 +184,7 @@ const ClientList= (props)=> {
 
   return(
     <React.Fragment>
-      
+      <ListResponseModal message={message} modalTitle={responseTitle} setMessage={setMessage}/>
       <Confirmation confirmationId={confirmationId} cancelDelete={cancelDelete} setConfirmationId={setConfirmationId} confirmationAction={confirmationAction==='petition'?deletePetition:deleteService}/>
       <div>
         <LoadingBar loading={loadingList}>

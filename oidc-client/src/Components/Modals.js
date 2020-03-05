@@ -69,3 +69,29 @@ export function ResponseModal(props){
     </Modal>
   )
 }
+export function ListResponseModal(props){
+
+
+
+
+  const handleClose = () => props.setMessage();
+  return (
+    <Modal show={props.message?true:false} onHide={handleClose}>
+        <Modal.Header closeButton>
+          <Modal.Title>
+              {props.modalTitle}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body >
+          {props.message}
+        </Modal.Body>
+        <Modal.Footer>
+
+          <Button variant="secondary" onClick={handleClose}>
+            Continue
+          </Button>
+
+        </Modal.Footer>
+    </Modal>
+  )
+}

@@ -356,7 +356,7 @@ router.put('/petition/approve/:id',checkAuthentication,checkAdmin,(req,res)=>{
               t.client_general.delete('client_service_grant_type',petition.service_id),
               t.client_contact.delete('client_service_contact',petition.service_id),
               t.client_services.delete(petition.service_id),
-              t.client_petitions.review(petition.id,req.user.sub,'approve')
+              t.client_petitions.review(petition.id,req.user.sub,'approve',req.body.comment)
             ]);
           }
           else if(petition.type==='edit'){
@@ -404,7 +404,7 @@ router.put('/petition/approve/:id',checkAuthentication,checkAdmin,(req,res)=>{
                  t[repo].delete_one_or_many(addToString(item,'service'),dlt,petition.service_id)
                ]);
              }
-             await t.client_petitions.review(req.params.id,req.user.sub,'approved');
+             await t.client_petitions.review(req.params.id,req.user.sub,'approved',req.body.comment);
 
            }
            else if(petition.type==='create'){
@@ -435,7 +435,7 @@ router.put('/petition/approve/:id',checkAuthentication,checkAdmin,(req,res)=>{
                  }
 
                }
-               await t.client_petitions.review(req.params.id,req.user.sub,'approved');
+               await t.client_petitions.review(req.params.id,req.user.sub,'approved',req.body.comment);
 
              }).catch(err=>{
                console.log(err);
@@ -472,7 +472,7 @@ router.put('/petition/approve/:id',checkAuthentication,checkAdmin,(req,res)=>{
 router.put('/petition/reject/:id',checkAuthentication,checkAdmin,(req,res)=>{
   return db.task('reject-petition',async t =>{
     try{
-      await t.client_petitions.review(req.params.id,req.user.sub,'reject');
+      await t.client_petitions.review(req.params.id,req.user.sub,'reject',req.body.comment);
         return res.json({
           success:true,
           message:'Request has been succesfully rejected'
@@ -525,7 +525,7 @@ router.put('/petition/approve/changes/:id',checkAuthentication,checkAdmin,(req,r
               }
 
             }
-            await t.client_petitions.review(req.params.id,req.user.sub,'approved_with_changes');
+            await t.client_petitions.review(req.params.id,req.user.sub,'approved_with_changes',req.body.comment);
             res.end(JSON.stringify({
               success:true,
               message:'Request has been succesfully reviewed'
@@ -664,7 +664,7 @@ function checkClientId(req,res,next){
         }
         else{return true}
       });
-      console.log(valid2);
+
       if(valid1&&valid2){
         next();
       }
