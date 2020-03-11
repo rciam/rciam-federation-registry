@@ -288,7 +288,7 @@ function TableItem(props) {
             placement='top'
             overlay={
               <Tooltip id={`tooltip-top`}>
-                {props.item.status==='approved_with_changes'?'An admin has requested changes':'Click to Edit'}
+                {props.item.status==='approved_with_changes'?'An admin has requested changes':'Click to Reconfigure'}
               </Tooltip>
             }
           >
@@ -302,7 +302,7 @@ function TableItem(props) {
               type:props.item.type,
               comment:props.item.comment
             }
-          }}><Button variant="light"><FontAwesomeIcon icon={faEdit}/>Edit</Button></Link>
+          }}><Button variant="light"><FontAwesomeIcon icon={faEdit}/>Reconfigure</Button></Link>
 
           </OverlayTrigger>
           <Button variant="danger" onClick={()=>{
@@ -317,7 +317,7 @@ function TableItem(props) {
               props.setConfirmationId(props.item.id);
               props.setConfirmationAction('service');
             }
-          }}><FontAwesomeIcon icon={faTrash} />{props.item.type==='delete'?'Cancel':'Delete'}</Button>
+          }}><FontAwesomeIcon icon={faTrash} />{props.item.type==='delete'||props.item.type==='create'?'Cancel':'Deregister'}</Button>
           </React.Fragment>
         :null
         }
@@ -353,7 +353,7 @@ function Confirmation(props){
     <Modal show={props.confirmationId?true:false} onHide={handleClose}>
         <Modal.Header closeButton>
           <Modal.Title>
-              Are you sure sure you would like to {props.cancelDelete?'cancel deregistration request for this client?':'deregistrate this service?'}
+              Are you sure sure you would like to {props.cancelDelete?'cancel deregistration request for this client?':'deregister this service?'}
           </Modal.Title>
         </Modal.Header>
         <Modal.Footer>

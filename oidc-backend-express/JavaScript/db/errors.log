@@ -1,4 +1,0 @@
-
-
-17:10:31 error: invalid input syntax for integer: "dasdasdas"
-         tx(approve-petition): UPDATE client_petitions SET status='approved', reviewed_at='2020-03-05T17:10:31.832+02:00', reviewer='7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu', comment=17 WHERE id='dasdasdas'

@@ -236,7 +236,7 @@ router.get('/getpetition/:id',checkAuthentication,(req,res)=>{
 
 // Edit Petition
 router.post('/petition/edit/:id',editClientValidationRules(),validate,checkAuthentication,checkClientId,(req,res)=>{
-  console.log('i get called');
+
   return db.task('update-petition',async t =>{
     await t.client_petitions.petitionType(req.params.id,req.user.sub).then(async type=>{
       if(type){
@@ -629,7 +629,6 @@ const asyncValidation = (t,client_id,service_id,sub,type) => {
 /// Here is where i am
 function checkClientId(req,res,next){
   db.tx('clientId-check',async t=>{
-
       let client_id;
       if(req.body.client_id){
         client_id = req.body.client_id;
@@ -658,6 +657,7 @@ function checkClientId(req,res,next){
           }
           else{ // if type of request === edit
             const service_id = await t.client_petitions.getServiceId(req.params.id);
+            id =  id.id.toString();
             if(service_id.service_id===id){return true}
             return false
           }

@@ -11,18 +11,65 @@ import Alert from 'react-bootstrap/Alert';
 //import Form from 'react-bootstrap/Form';
 import Jumbotron from 'react-bootstrap/Jumbotron';
 import Container from 'react-bootstrap/Container';
+import { diff } from 'deep-diff';
 
 
 
 const EditClient = (props) => {
     const [petition,setPetition] = useState();
     const [service,setService] = useState();
+    const [editPetition,setEditPetition] = useState();
+    const [changes,setChanges] = useState();
 
     useEffect(()=>{
+
 
       getData();
       // eslint-disable-next-line react-hooks/exhaustive-deps
     },[]);
+
+    useEffect(()=>{
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+      if(petition&&service&&props.review&&!editPetition){
+        const changes = diff(service,petition);
+        let helper = {
+          grant_types: {
+            D:[],
+            N:[],
+          },
+          scope: {
+            D:[],
+            N:[]
+          },
+          contacts: {
+            D:[],
+            N:[]
+          },
+          redirect_uris: {
+            D:[],
+            N:[]
+          }
+        };
+        let attributes = ['grant_types','scope','contacts','redirect_uris'];
+        console.log(changes);
+        for(let i=0;i<changes.length;i++){
+          if(! ['grant_types','scope','contacts','redirect_uris'].includes(changes[i].path[0])){
+              helper[changes[i].path[0]]=changes[i].kind;
+            }
+        }
+        helper = calculateMultivalueDiff(service,petition,helper);
+        attributes.forEach(item=>{
+          petition[item].push(...helper[item].D);
+        });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+        setEditPetition(petition);
+        setChanges(helper);
+
+
+
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    },[petition, service, props.review, editPetition]);
 
     const getData = () => {
       if(props.service_id){
@@ -35,7 +82,7 @@ const EditClient = (props) => {
         }).then(response=>response.json()).then(response=> {
 
           if(response.service){
-
+            console.log('we have service');
             setService(response.service);
           }
         });
@@ -50,7 +97,7 @@ const EditClient = (props) => {
         }).then(response=>response.json()).then(response=> {
 
           if(response.petition){
-
+            console.log('we have petition');
             setPetition(response.petition);
           }
         });
@@ -62,18 +109,13 @@ const EditClient = (props) => {
     {props.review?
       <React.Fragment>
       {props.type==='edit'?
+        <React.Fragment>
+          <Alert variant='warning' className='form-alert'>
+            This is a reconfiguration request, changes are highlighted bellow.
+          </Alert>
+          {editPetition&&changes?<PetitionForm initialValues={editPetition} changes={changes} {...props}/>:<LoadingBar loading={true}/>}
+        </React.Fragment>
 
-          <Tabs className="edit-tabs" defaultActiveKey="petition" id="uncontrolled-tab-example">
-            <Tab eventKey="petition" title='Edit Petition Request'>
-                <Alert variant='warning' className='form-alert'>
-                  This is a reconfiguration request, you can also view the deployed version in the View Deployed Service tab.
-                </Alert>
-              {petition?<PetitionForm initialValues={petition} {...props}/>:<LoadingBar loading={true}/>}
-            </Tab>
-            <Tab eventKey="service" title="View Deployed Service">
-              {service?<PetitionForm initialValues={service} disabled={true}  />:<LoadingBar loading={true}/>}
-            </Tab>
-          </Tabs>
       :props.type==='create'?
         <React.Fragment>
           <Alert variant='warning' className='form-alert'>
@@ -229,6 +271,41 @@ const NewClient = (props)=>{
       <PetitionForm user={props.user} initialValues={initialValues}/>
     </React.Fragment>
   )
+}
+
+function calculateMultivalueDiff(old_values,new_values,edits){
+  let new_cont = [];
+  let old_cont = [];
+  let items;
+
+
+  new_values.contacts.forEach(item=>{
+    new_cont.push(item.email+' '+item.type);
+  });
+  old_values.contacts.forEach(item=>{
+    old_cont.push(item.email+' '+item.type);
+  });
+  edits.contacts.N = new_cont.filter(x=>!old_cont.includes(x));
+  edits.contacts.D = old_cont.filter(x=>!new_cont.includes(x));
+  if(edits.contacts.D.length>0){
+      edits.contacts.D.forEach((item,index)=>{
+        items = item.split(' ');
+        edits.contacts.D[index] = {email:items[0],type:items[1]};
+      })
+  }
+  if(edits.contacts.N.length>0){
+      edits.contacts.N.forEach((item,index)=>{
+        items = item.split(' ');
+        edits.contacts.N[index] = {email:items[0],type:items[1]};
+    })
+  }
+  edits.grant_types.N = new_values.grant_types.filter(x=>!old_values.grant_types.includes(x));
+  edits.grant_types.D = old_values.grant_types.filter(x=>!new_values.grant_types.includes(x));
+  edits.scope.N = new_values.scope.filter(x=>!old_values.scope.includes(x));
+  edits.scope.D = old_values.scope.filter(x=>!new_values.scope.includes(x));
+  edits.redirect_uris.N = new_values.redirect_uris.filter(x=>!old_values.redirect_uris.includes(x));
+  edits.redirect_uris.D = old_values.redirect_uris.filter(x=>!new_values.redirect_uris.includes(x));
+  return edits
 }
 
 export {

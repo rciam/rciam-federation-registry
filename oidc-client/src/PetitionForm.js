@@ -25,7 +25,7 @@ const uuidv1 = require('uuid/v1');
 const PetitionForm = (props)=> {
 
   useEffect(()=>{
-    console.log(props);
+    console.log(props.changes);
     if(props.disabled||props.review){
       setDisabled(true);
     }
@@ -122,7 +122,7 @@ const PetitionForm = (props)=> {
         },
         body: JSON.stringify(petition) // body data type must match "Content-Type" header
       }).then(response=>response.json()).then(response=> {
-        console.log(response);
+
         if(response.success){
           setAsyncResponse(false);
           if(props.user.admin){
@@ -370,6 +370,7 @@ const PetitionForm = (props)=> {
                     isInvalid={hasSubmitted?!!errors.client_name:(!!errors.client_name&&touched.client_name)}
                     onBlur={handleBlur}
                     disabled={disabled}
+                    changed={props.changes?props.changes.client_name:null}
                    />
                  </InputRow>
 
@@ -400,7 +401,7 @@ const PetitionForm = (props)=> {
                       onChange={handleChange}
                       setFieldTouched={setFieldTouched}
                       disabled={disabled}
-
+                      changed={props.changes?props.changes.redirect_uris:null}
                     />
                   </InputRow>
                   <InputRow title='Integration Environment' extraClass='select-col' error={errors.integration_environment} touched={touched.integration_environment}>
@@ -413,6 +414,7 @@ const PetitionForm = (props)=> {
                       isInvalid={hasSubmitted?!!errors.integration_environment:(!!errors.integration_environment&&touched.integration_environment)}
                       onChange={handleChange}
                       disabled={disabled}
+                      changed={props.changes?props.changes.integration_environment:null}
                     />
                   </InputRow>
                   <InputRow title='Logo'>
@@ -428,6 +430,7 @@ const PetitionForm = (props)=> {
                       validateField={validateField}
                       isInvalid={hasSubmitted?!!errors.logo_uri:(!!errors.logo_uri&&touched.logo_uri)}
                       disabled={disabled}
+                      changed={props.changes?props.changes.logo_uri:null}
                     />
                   </InputRow>
                   <InputRow title='Description' description='Human-readable text description' error={errors.client_description} touched={touched.client_description}>
@@ -439,6 +442,7 @@ const PetitionForm = (props)=> {
                       placeholder="Type a description"
                       isInvalid={hasSubmitted?!!errors.client_description:(!!errors.client_description&&touched.client_description)}
                       disabled={disabled}
+                      changed={props.changes?props.changes.client_description:null}
                     />
                   </InputRow>
                   <InputRow title='Policy Statement' description='URL for the Policy Statement of this client, will be displayed to the user' error={errors.policy_uri} touched={touched.policy_uri}>
@@ -450,6 +454,7 @@ const PetitionForm = (props)=> {
                       isInvalid={hasSubmitted?!!errors.policy_uri:(!!errors.policy_uri&&touched.policy_uri)}
                       onBlur={handleBlur}
                       disabled={disabled}
+                      changed={props.changes?props.changes.policy_uri:null}
                     />
                   </InputRow>
 
@@ -465,6 +470,7 @@ const PetitionForm = (props)=> {
                       onBlur={handleBlur}
                       setFieldTouched={setFieldTouched}
                       disabled={disabled}
+                      changed={props.changes?props.changes.contacts:null}
                     />
                   </InputRow>
                   <InputRow title='Scope' description='OAuth scopes this client is allowed to request'>
@@ -477,6 +483,7 @@ const PetitionForm = (props)=> {
                       touched={touched.scope}
                       disabled={disabled}
                       onBlur={handleBlur}
+                      changed={props.changes?props.changes.scope:null}
                     />
                   </InputRow>
                   <InputRow title='Grant Types' error={errors.grant_types} touched={true}>
@@ -485,6 +492,8 @@ const PetitionForm = (props)=> {
                       values={values.grant_types}
                       listItems={formConfig.grant_types}
                       disabled={disabled}
+                      changed={props.changes?props.changes.grant_types:null}
+
                     />
                   </InputRow>
                   <InputRow title='Introspection'>
@@ -493,6 +502,8 @@ const PetitionForm = (props)=> {
                       label="Allow calls to the Introspection Endpoint?"
                       onChange={handleChange}
                       disabled={disabled}
+                      value={values.allow_introspection}
+                      changed={props.changes?props.changes.allow_introspection:null}
                     />
                   </InputRow>
                   <InputRow title='Client Secret'>
@@ -506,6 +517,7 @@ const PetitionForm = (props)=> {
                       onBlur={handleBlur}
                       generate_client_secret={values.generate_client_secret}
                       disabled={disabled}
+                      changed={props.changes?props.changes.client_secret:null}
                     />
                   </InputRow>
                   <InputRow title='Access Token Timeout' extraClass='time-input' error={errors.access_token_validity_seconds} touched={touched.access_token_validity_seconds} description='Enter this time in seconds, minutes, or hours (Max value is 1000000 seconds (11.5 days)).'>
@@ -516,6 +528,7 @@ const PetitionForm = (props)=> {
                       onBlur={handleBlur}
                       onChange={handleChange}
                       disabled={disabled}
+                      changed={props.changes?props.changes.access_token_validity_seconds:null}
                     />
                   </InputRow>
                   <InputRow title='Refresh Tokens' extraClass='time-input' error={errors.refresh_token_validity_seconds} touched={touched.refresh_token_validity_seconds}>
@@ -525,6 +538,7 @@ const PetitionForm = (props)=> {
                       isInvalid={hasSubmitted?!!errors.refresh_token_validity_seconds:(!!errors.refresh_token_validity_seconds&&touched.refresh_token_validity_seconds)}
                       onChange={handleChange}
                       disabled={disabled}
+                      changed={props.changes}
                     />
                   </InputRow>
                   <InputRow title='Device Code' extraClass='time-input' error={errors.device_code_validity_seconds} touched={touched.device_code_validity_seconds}>
@@ -534,6 +548,7 @@ const PetitionForm = (props)=> {
                       isInvalid={hasSubmitted?!!errors.device_code_validity_seconds:(!!errors.device_code_validity_seconds&&touched.device_code_validity_seconds)}
                       onChange={handleChange}
                       disabled={disabled}
+                      changed={props.changes}
                     />
                   </InputRow>
                   <InputRow title='Proof Key for Code Exchange (PKCE) Code Challenge Method' extraClass='select-col' error={errors.code_challenge_method} touched={touched.code_challenge_method}>
@@ -546,6 +561,7 @@ const PetitionForm = (props)=> {
                       isInvalid={hasSubmitted?!!errors.code_challenge_method:(!!errors.code_challenge_method&&touched.code_challenge_method)}
                       onChange={handleChange}
                       disabled={disabled}
+                      changed={props.changes?props.changes.code_challenge_method:null}
                     />
                   </InputRow>
                   {props.disabled?null:
@@ -741,6 +757,8 @@ function hex(n){
  }
  return result;
 }
+
+
 
 function prepareEditData(data,initialValues){
   var new_values = Object.assign({},data);
