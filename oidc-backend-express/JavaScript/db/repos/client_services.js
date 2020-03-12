@@ -91,15 +91,6 @@ class ClientServicesRepository {
       return this.db.oneOrNone("SELECT id FROM client_services WHERE client_id=$1",client_id);
     }
 
-
-
-
-
-
-
-
-
-
 }
 
 //////////////////////////////////////////////////////////

@@ -194,15 +194,15 @@ const ClientList= (props)=> {
               <Link to="/form/new"><Button><FontAwesomeIcon icon={faPlus}/>New Service</Button></Link>
             </Col>
             <Col>
-              <Filter name="Show Pending" resetFilter={filterReset} setActivePage={setActivePage} activateFilter={filterPending}/>
-              {props.user.admin?<Filter name="Show Owned By Me" resetFilter={filterReset} setActivePage={setActivePage} activateFilter={filterOwned}/>:null}
+              <Filter name="Show Pending" disable={!services} resetFilter={filterReset} setActivePage={setActivePage} activateFilter={filterPending}/>
+              {props.user.admin?<Filter name="Show Owned By Me"  disable={!services} resetFilter={filterReset} setActivePage={setActivePage} activateFilter={filterOwned}/>:null}
 
             </Col>
             <Col className="options-search" md={3}>
               <InputGroup className="md-12">
                 <FormControl
                 placeholder="Search"
-                onChange={(e)=>{e.target.value?filterClientName(e.target.value):filterReset()}}
+                onChange={(e)=>{services&&e.target.value?filterClientName(e.target.value):services?filterReset():console.log('')}}
                 />
                 <InputGroup.Append>
                   <InputGroup.Text><FontAwesomeIcon icon={faTimes}/></InputGroup.Text>
@@ -222,7 +222,7 @@ const ClientList= (props)=> {
               <React.Fragment>
 
 
-                      {services.map((item,index)=>{
+                      {services?services.map((item,index)=>{
                         if(item.display){
                           renderedConnections++
                         }
@@ -235,7 +235,7 @@ const ClientList= (props)=> {
                           )
                         }
                         return null
-                      })}
+                      }):<tr><td></td><td>No services to display...</td><td></td></tr>}
 
               </React.Fragment>
             </tbody>
@@ -374,14 +374,20 @@ function Confirmation(props){
 function Filter (props) {
   const [active,setActive] = useState(false);
   const handleChange = () =>{
-    if(active){
-      props.resetFilter();
+    if(props.disabled){
+      if(active){
+        props.resetFilter();
+      }
+      else{
+        props.activateFilter();
+      }
+      setActive(!active);
+      props.setActivePage(1);
     }
-    else{
-      props.activateFilter();
+    else {
+      setActive(!active);
     }
-    setActive(!active);
-    props.setActivePage(1);
+
   }
 
   return (

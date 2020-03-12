@@ -598,6 +598,7 @@ const ReviewComponent = (props)=>{
   const [error,setError] = useState(false);
 
   const handleReview = () =>{
+      console.log(typeOfReview);
       if(expandReview){
         if(typeOfReview){
           if(typeOfReview==='request-changes'&&!props.adminComment){
@@ -649,11 +650,11 @@ const ReviewComponent = (props)=>{
                 id="formHorizontalRadios1"
                 onChange={(e)=>{if(e.target.checked){setTypeOfReview(e.target.value)}}}
                 value="approve"
+                checked={typeOfReview==='approve'}
               />
             </Col>
             <Col onClick={()=>{
-              let radiobtn = document.getElementById("formHorizontalRadios1");
-              radiobtn.checked = true;
+              setTypeOfReview('approve');
             }}>
               <Row>
                 <strong>
@@ -673,11 +674,11 @@ const ReviewComponent = (props)=>{
                 id="formHorizontalRadios2"
                 onChange={(e)=>{if(e.target.checked){setTypeOfReview(e.target.value)}}}
                 value="reject"
+                checked={typeOfReview==='reject'}
               />
             </Col>
             <Col onClick={()=>{
-              let radiobtn = document.getElementById("formHorizontalRadios2");
-              radiobtn.checked = true;
+                setTypeOfReview('reject');
             }}>
               <Row>
                 <strong>
@@ -697,11 +698,11 @@ const ReviewComponent = (props)=>{
                 id="formHorizontalRadios3"
                 onChange={(e)=>{if(e.target.checked){setTypeOfReview(e.target.value)}}}
                 value="request-changes"
+                checked={typeOfReview==='request-changes'}
               />
             </Col>
             <Col onClick={()=>{
-              let radiobtn = document.getElementById("formHorizontalRadios3");
-              radiobtn.checked = true;
+              setTypeOfReview('request-changes');
             }}>
               <Row>
                 <strong>

@@ -12,7 +12,7 @@ const Routes = (props) => (
       <Route path="/home">
         <Home />
       </Route>
-      <PrivateRoute path="/petitions">
+      <PrivateRoute user={props.user} path="/petitions">
       <div className="links">
         <Link to="/home">Home</Link>
         <span className="link-seperator">/</span>
@@ -20,7 +20,7 @@ const Routes = (props) => (
       </div>
         <ClientList user={props.user}/>
       </PrivateRoute>
-      <PrivateRoute path="/userinfo">
+      <PrivateRoute user={props.user} path="/userinfo">
         <div className="links">
           <Link to="/home">Home</Link>
           <span className="link-seperator">/</span>
@@ -28,7 +28,7 @@ const Routes = (props) => (
         </div>
         <UserInfo user={props.user} />
       </PrivateRoute>
-      <PrivateRoute path="/form/new">
+      <PrivateRoute user={props.user} path="/form/new">
         <div className="links">
           <Link to="/home">Home</Link>
           <span className="link-seperator">/</span>
@@ -38,7 +38,7 @@ const Routes = (props) => (
         </div>
         <NewClient user={props.user}/>
       </PrivateRoute>
-      <RouteWithState path="/form/edit">
+      <RouteWithState user={props.user} path="/form/edit">
         <div className="links">
           <Link to="/home">Home</Link>
           <span className="link-seperator">/</span>
@@ -48,7 +48,7 @@ const Routes = (props) => (
         </div>
         <EditClient user={props.user}/>
       </RouteWithState>
-      <RouteWithState path="/form/review">
+      <RouteWithState user={props.user} path="/form/review">
         <AdminRoute path="/form/review" user={props.user}>
           <div className="links">
             <Link to="/home">Home</Link>
@@ -60,7 +60,7 @@ const Routes = (props) => (
           <EditClient review={true}/>
         </AdminRoute>
       </RouteWithState>
-      <RouteWithState path="/form/view">
+      <RouteWithState user={props.user} path="/form/view">
           <div className="links">
             <Link to="/home">Home</Link>
             <span className="link-seperator">/</span>
@@ -133,7 +133,7 @@ function PrivateRoute(props) {
     <Route
       path={props.path}
       render={({ location }) =>
-        log_state ? (
+        log_state&&props.user ? (
           props.children
         ) : (
           <Redirect
