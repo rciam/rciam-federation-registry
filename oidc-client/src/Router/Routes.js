@@ -5,6 +5,7 @@ import ClientList from '../ClientList.js';
 import {EditClient,NewClient,ViewClient} from '../FormHandler.js';
 import useGlobalState from '../useGlobalState.js';
 import UserInfo from '../Components/UserInfo.js';
+import {HistoryList,HistoryView} from '../Components/History.js'
 const Routes = (props) => (
   <div className="content-container">
     <Switch>
@@ -48,6 +49,15 @@ const Routes = (props) => (
         </div>
         <EditClient user={props.user}/>
       </RouteWithState>
+      <RouteWithState user={props.user} path='/history/list'>
+
+        <HistoryList user={props.user}/>
+      </RouteWithState>
+      <PrivateRoute user={props.user} path='/history/view'>
+        
+        <HistoryView user={props.user}/>
+      </PrivateRoute>
+
       <RouteWithState user={props.user} path="/form/review">
         <AdminRoute path="/form/review" user={props.user}>
           <div className="links">
@@ -109,7 +119,7 @@ function RouteWithState(props) {
     <Route
       path={props.path}
       render={({ location }) =>
-        log_state ? (
+        log_state&&props.user ? (
           childrenWithProps
         ) : (
           <Redirect

@@ -17,15 +17,15 @@ class ClientServicesRepository {
 
     // Gets All Services with necessary data to create a list view.
     async findAllForList(){
-      return this.db.any('SELECT id,client_description,logo_uri,client_name,deployed,requester FROM client_services');
+      return this.db.any('SELECT id,client_description,logo_uri,client_name,deployed,requester FROM client_services WHERE deleted=FALSE');
     }
     // Get Services owned by user with user_id=id with necessary data to create a list view.
     async findBySubForList(sub){
-      return this.db.any('SELECT id,client_description,logo_uri,client_name,deployed,requester FROM client_services WHERE requester = $1', sub);
+      return this.db.any('SELECT id,client_description,logo_uri,client_name,deployed,requester FROM client_services WHERE requester = $1 AND deleted=false', sub);
     }
     // Checking availability of client_id
     async clientIdIsAvailable(clientId) {
-        return this.db.oneOrNone('SELECT id FROM client_services WHERE client_id = $1', clientId).then(res=>{
+        return this.db.oneOrNone('SELECT id FROM client_services WHERE client_id = $1 and deleted=FALSE', clientId).then(res=>{
           if(res){return false}else{return true}
         });
     }
@@ -40,7 +40,7 @@ class ClientServicesRepository {
       });
     }
     async delete(id){
-      return this.db.none('DELETE FROM client_services WHERE id=$1',+id)
+      return this.db.none('UPDATE client_services SET deleted=TRUE WHERE id=$1',+id)
     }
     async getService(id){
       return this.db.oneOrNone('SELECT * FROM client_services WHERE id=$1',+id)
@@ -88,7 +88,7 @@ class ClientServicesRepository {
         })
     }
     async checkClientId(client_id){
-      return this.db.oneOrNone("SELECT id FROM client_services WHERE client_id=$1",client_id);
+      return this.db.oneOrNone("SELECT id FROM client_services WHERE client_id=$1 AND deleted=FALSE",client_id);
     }
 
 }

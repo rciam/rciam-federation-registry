@@ -435,7 +435,7 @@ router.put('/petition/approve/:id',checkAuthentication,checkAdmin,(req,res)=>{
                  }
 
                }
-               await t.client_petitions.review(req.params.id,req.user.sub,'approved',req.body.comment);
+               await t.client_petitions.approveCreation(req.params.id,req.user.sub,'approved',req.body.comment,result.id);
 
              }).catch(err=>{
                console.log(err);
@@ -489,6 +489,90 @@ router.put('/petition/reject/:id',checkAuthentication,checkAdmin,(req,res)=>{
   })
 })
 
+router.get('/petition/history/:id',checkAuthentication,(req,res)=>{
+  return db.task('find-petition-data',async t=>{
+    await t.client_petitions.findPetitionDataByIdHistory(req.params.id).then(async petition=>{
+      if(petition){
+        if(petition.requester==req.user.sub||isAdmin(req)){
+          delete petition.requester;
+          const grant_types = await t.client_general.findDataById('client_petition_grant_type',req.params.id);
+          const scopes = await t.client_general.findDataById('client_petition_scope',req.params.id);
+          const redirect_uris = await t.client_general.findDataById('client_petition_redirect_uri',req.params.id);
+          const contacts = await t.client_contact.findDataById('client_petition_contact',req.params.id);
+          petition = merge_data(petition,grant_types,'grant_types');
+          petition = merge_data(petition,scopes,'scope');
+          petition = merge_data(petition,redirect_uris,'redirect_uris');
+          petition = merge_data(petition,contacts,'contacts');
+          return res.json({
+            success:true,
+            petition
+          });
+        }
+        else{
+          return res.json({
+            success:false,
+            error:1
+          });
+        }
+      }
+      else{
+        return res.json({
+          success:false,
+          error:2
+        });
+      }
+    });
+  });
+})
+
+router.get('/petition/history/single/:id',checkAuthentication,(req,res)=>{
+  return db.tx('get-history-for-petition-single', async t =>{
+    await t.client_petitions.belongsToRequester(req.params.id,req.user.sub).then(async is_owner=>{
+      if(is_owner||isAdmin(req)){
+        await t.client_petitions.getHistorySingle(req.params.id).then(async petition =>{
+          if(petition){
+            return res.json({
+              success:true,
+              history:petition
+            });
+          }
+          else{
+            return res.json({
+              success:false,
+              error:"Error while querying the database"
+            });
+          }
+        })
+      }
+    });
+  });
+})
+
+// User owned or admin
+router.get('/petition/history/list/:id',checkAuthentication,(req,res)=>{
+  return db.tx('get-history-for-petition', async t =>{
+    await t.client_services.belongsToRequester(req.params.id,req.user.sub).then(async is_owner=>{
+      if(is_owner||isAdmin(req)){
+        await t.client_petitions.getHistory(req.params.id).then(async petition_list =>{
+          if(petition_list){
+            return res.json({
+              success:true,
+              history:petition_list
+            });
+          }
+          else{
+            return res.json({
+              success:false,
+              error:"Error while querying the database"
+            });
+          }
+        })
+      }
+    })
+
+  });
+});
+
 // Leave Comment/Accept With Changes
 router.put('/petition/approve/changes/:id',checkAuthentication,checkAdmin,(req,res)=>{
   return db.tx('approve-with-changes-petition',async t =>{
@@ -497,15 +581,15 @@ router.put('/petition/approve/changes/:id',checkAuthentication,checkAdmin,(req,r
       await t.client_petitions.getPetition(req.params.id).then(async petition =>{
         if(petition){
           petition.comment = req.body.comment;
-          petition.status = 'approved_with_changes';
+          petition.status = 'pending';
           await t.client_petitions.add(petition,petition.requester).then(async result=>{
             if(result){
-              for(const item of tables){
+              for(const table of tables){
                 let repo = 'client_general';
-                if(item==='client_contact'){
+                if(table==='client_contact'){
                   repo = 'client_contact';
                 }
-                await t[repo].findDataById(addToString(item,'petition'),petition.id).then(async details=>{
+                await t[repo].findDataById(addToString(table,'petition'),petition.id).then(async details=>{
 
                   if(details){
                     let data = [];
@@ -519,7 +603,7 @@ router.put('/petition/approve/changes/:id',checkAuthentication,checkAdmin,(req,r
                         data.push(item.value);
                       })
                     }
-                    await t[repo].add(addToString(item,'petition'),data,result.id);
+                    await t[repo].add(addToString(table,'petition'),data,result.id);
                   }
                 })
               }
@@ -676,6 +760,9 @@ function checkClientId(req,res,next){
       }
     });
 }
+
+
+
 
 
 

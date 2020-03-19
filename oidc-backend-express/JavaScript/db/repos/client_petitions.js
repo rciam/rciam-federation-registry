@@ -57,6 +57,13 @@ class ClientPetitionsRepository {
         id:id
       })
     }
+    async findPetitionDataByIdHistory(id){
+      console.log(id);
+      return this.db.oneOrNone(sql.findOneHistory,{
+        id:+id
+      })
+    }
+
     async clientIdIsAvailable(clientId) {
         return this.db.oneOrNone("SELECT id FROM client_petitions WHERE client_id = $1 and type='create' AND reviewed_at IS NULL", clientId).then(res=>{
           if(res){return false}else{return true}
@@ -111,7 +118,12 @@ class ClientPetitionsRepository {
          }
        })
      }
-
+     async getHistory(service_id){
+       return await this.db.any("SELECT id,type,status,reviewed_at from client_petitions where service_id=$1 ORDER BY reviewed_at ASC",+service_id)
+     }
+    async getHistorySingle(id){
+      return await this.db.oneOrNone("SELECT id,type,status,reviewed_at from client_petitions where id=$1",+id)
+    }
 
      async belongsToRequester(petition_id,sub){
        return this.db.oneOrNone('SELECT id FROM client_petitions WHERE id = $1 AND requester= $2 AND reviewed_at IS NULL', [+petition_id,sub]).then(res=>{
@@ -123,6 +135,10 @@ class ClientPetitionsRepository {
        return this.db.none('DELETE FROM client_petitions WHERE id=$1 AND reviewed_at IS NULL',+petition_id)
      }
 
+     async approveCreation(id,approved_by,status,comment,service_id){
+        let date = new Date(Date.now());
+        return this.db.none("UPDATE client_petitions SET status=$1, reviewed_at=$2, reviewer=$3,service_id=$6, comment=$5 WHERE id=$4",[status,date,approved_by,+id,comment,+service_id]);
+     }
 
      async review(id,approved_by,status,comment){
         let date = new Date(Date.now());

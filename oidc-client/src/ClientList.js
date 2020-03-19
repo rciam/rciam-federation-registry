@@ -1,8 +1,10 @@
 import React,{useState,useEffect} from 'react';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
+import DropdownButton from 'react-bootstrap/DropdownButton';
+import Dropdown from 'react-bootstrap/Dropdown';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {faSync,faPlus,faTimes,faEdit, faTrash, faExclamation,faCircle} from '@fortawesome/free-solid-svg-icons';
+import {faSync,faPlus,faTimes,faEdit,faExclamation,faCircle,faEllipsisV,faEye} from '@fortawesome/free-solid-svg-icons';
 import InputGroup from 'react-bootstrap/InputGroup';
 import FormControl from 'react-bootstrap/FormControl';
 import Button from 'react-bootstrap/Button';
@@ -25,12 +27,14 @@ const ClientList= (props)=> {
   const [confirmationId,setConfirmationId] = useState();
   const [activePage,setActivePage] = useState(1);
   const [confirmationAction,setConfirmationAction] = useState();
-  const [cancelDelete,setCancelDelete] = useState(false);
+  const [cancelRequest,setCancelRequest] = useState(false);
   const [displayedServices,setDisplayedServices] = useState(0);
   const [asyncResponse,setAsyncResponse] = useState(false);
   const [message,setMessage] = useState();
   const [responseTitle,setResponseTitle] = useState(null);
-
+  const [searchString,setSearchString] = useState();
+  const [showPending,setShowPending] = useState();
+  const [showOwned,setShowOwned] = useState();
 
   let renderedConnections = 0;
   useEffect(()=>{
@@ -38,6 +42,22 @@ const ClientList= (props)=> {
     getClients();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
+  useEffect(()=>{
+    if(services){
+      services.forEach((item,index)=>{
+        if((showOwned&&(item.requester!==props.user.sub))||(showPending&&!item.petition_id)||(searchString&&!item.client_name.toLowerCase().includes(searchString.toLowerCase().trim()))){
+          services[index].display=false;
+        }
+        else{
+          services[index].display=true;
+        }
+      });
+      setActivePage(1);
+    }
+
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[searchString,showOwned,showPending]);
 
   let items = [];
   let itemsPerPage = 10;
@@ -71,43 +91,7 @@ const ClientList= (props)=> {
       }
     });
   }
-  const filterOwned = ()=>{
-    services.forEach((item,index)=>{
 
-      if(item.requester!==props.user.sub){
-        services[index].display=false;
-      }
-    })
-    setServices([...services]);
-  }
-
-  const filterReset = () => {
-    services.forEach((item,index)=>{
-      services[index].display=true;
-    })
-    setServices([...services]);
-  }
-
-  const filterPending = ()=>{
-    services.forEach((item,index)=>{
-      if(!item.petition_id){
-        services[index].display=false;
-      }
-    })
-    setServices([...services]);
-  }
-
-  const filterClientName = (str)=>{
-    services.forEach((item,index)=>{
-      if(!item.client_name.toLowerCase().includes(str.toLowerCase().trim())){
-        services[index].display=false;
-      }
-      else{
-        services[index].display=true;
-      }
-    })
-    setServices([...services]);
-  }
 
   const deleteService = (id)=>{
     setAsyncResponse(true);
@@ -185,7 +169,7 @@ const ClientList= (props)=> {
   return(
     <React.Fragment>
       <ListResponseModal message={message} modalTitle={responseTitle} setMessage={setMessage}/>
-      <Confirmation confirmationId={confirmationId} cancelDelete={cancelDelete} setConfirmationId={setConfirmationId} confirmationAction={confirmationAction==='petition'?deletePetition:deleteService}/>
+      <Confirmation confirmationId={confirmationId} cancelRequest={cancelRequest} setConfirmationId={setConfirmationId} confirmationAction={confirmationAction==='petition'?deletePetition:deleteService}/>
       <div>
         <LoadingBar loading={loadingList}>
           <Row className="options-bar">
@@ -194,17 +178,18 @@ const ClientList= (props)=> {
               <Link to="/form/new"><Button><FontAwesomeIcon icon={faPlus}/>New Service</Button></Link>
             </Col>
             <Col>
-              <Filter name="Show Pending" disable={!services} resetFilter={filterReset} setActivePage={setActivePage} activateFilter={filterPending}/>
-              {props.user.admin?<Filter name="Show Owned By Me"  disable={!services} resetFilter={filterReset} setActivePage={setActivePage} activateFilter={filterOwned}/>:null}
+              <Filter name="Show Pending" setFilter={setShowPending} filterValue={showPending} />
+              {props.user.admin?<Filter name="Show Owned By Me" setFilter={setShowOwned} filterValue={showOwned}/>:null}
 
             </Col>
             <Col className="options-search" md={3}>
               <InputGroup className="md-12">
                 <FormControl
                 placeholder="Search"
-                onChange={(e)=>{services&&e.target.value?filterClientName(e.target.value):services?filterReset():console.log('')}}
+                value={searchString}
+                onChange={(e)=>{setSearchString(e.target.value)}}
                 />
-                <InputGroup.Append>
+                <InputGroup.Append onClick={()=>{setSearchString('')}}>
                   <InputGroup.Text><FontAwesomeIcon icon={faTimes}/></InputGroup.Text>
                 </InputGroup.Append>
               </InputGroup>
@@ -231,7 +216,7 @@ const ClientList= (props)=> {
                         }
                         if(Math.ceil(renderedConnections/itemsPerPage)===activePage&&item.display){
                           return(
-                            <TableItem item={item} user={props.user} key={index} setCancelDelete={setCancelDelete}  setConfirmationAction={setConfirmationAction} setConfirmationId={setConfirmationId}/>
+                            <TableItem item={item} user={props.user} key={index} setCancelRequest={setCancelRequest}  setConfirmationAction={setConfirmationAction} setConfirmationId={setConfirmationId}/>
                           )
                         }
                         return null
@@ -264,81 +249,142 @@ function TableItem(props) {
           <div className="badge-container">
 
 
-            {props.item.hasOwnProperty('deployed')?<Badge className="status-badge" variant={props.item.deployed?'info':'danger'}>{props.item.deployed?'Deployed':'Deployment in Progress'}</Badge>:null}
+            {props.item.hasOwnProperty('deployed')?<Badge className="status-badge" variant={props.item.deployed?'primary':'danger'}>{props.item.deployed?'Deployed':'Deployment in Progress'}</Badge>:null}
 
             {props.item.hasOwnProperty('type')?<Badge className="status-badge" variant="warning">
 
+
               {props.item.type==='edit'?'Reconfiguration Pending':props.item.type==='create'?'Registration Pending':'Deregistration Pending'}
               </Badge>:null}
+            {props.item.comment?<Badge className="status-badge" variant="info">Changes Requested</Badge>:null}
           </div>
           <p>{props.item.client_description}</p>
         </div>
       </td>
       <td>
         <div className="petition-actions">
-        {props.item.requester===props.user.sub?
-          <React.Fragment>
-          {props.item.status==='approved_with_changes'?
-          <div className="notification">
-            <FontAwesomeIcon icon={faExclamation} className="fa-exclamation"/>
-            <FontAwesomeIcon icon={faCircle} className="fa-circle"/>
-          </div>:null}
+          <Row>
+            <Col className='controls-col  controls-col-buttons'>
+              <Link to={{
+                pathname:"/form/view",
+                state:{
+                  service_id:props.item.id,
+                  petition_id:props.item.petition_id,
+                  type:props.item.type
+                }
+              }}>
+                <Button variant="secondary"><FontAwesomeIcon icon={faEye}/>View</Button>
+              </Link>
+              {props.item.requester===props.user.sub?
+                <React.Fragment>
+                {props.item.comment?
+                <div className="notification">
+                  <FontAwesomeIcon icon={faExclamation} className="fa-exclamation"/>
+                  <FontAwesomeIcon icon={faCircle} className="fa-circle"/>
+                </div>:null}
 
-          <OverlayTrigger
-            placement='top'
-            overlay={
-              <Tooltip id={`tooltip-top`}>
-                {props.item.status==='approved_with_changes'?'An admin has requested changes':'Click to Reconfigure'}
-              </Tooltip>
-            }
-          >
+                <OverlayTrigger
+                  placement='top'
+                  overlay={
+                    <Tooltip id={`tooltip-top`}>
+                      {props.item.comment?'An admin has requested changes':'Click to Reconfigure'}
+                    </Tooltip>
+                  }
+                >
 
 
-          <Link to={{
-            pathname:"/form/edit",
-            state:{
-              service_id:props.item.id,
-              petition_id:props.item.petition_id,
-              type:props.item.type,
-              comment:props.item.comment
-            }
-          }}><Button variant="light"><FontAwesomeIcon icon={faEdit}/>Reconfigure</Button></Link>
+                <Link to={{
+                  pathname:"/form/edit",
+                  state:{
+                    service_id:props.item.id,
+                    petition_id:props.item.petition_id,
+                    type:props.item.type,
+                    comment:props.item.comment
+                  }
+                }}><Button variant="info"><FontAwesomeIcon icon={faEdit}/>Reconfigure</Button></Link>
 
-          </OverlayTrigger>
-          <Button variant="danger" onClick={()=>{
-            if(props.item.type==='create'||props.item.type==='delete'){
-              props.setConfirmationId(props.item.petition_id);
-              props.setConfirmationAction('petition');
-              if(props.item.type==='delete'){
-                props.setCancelDelete(true);
+                </OverlayTrigger>
+
+                </React.Fragment>
+              :null
               }
+              {props.user.admin&&props.item.petition_id&&!props.item.comment?<Link to={{
+                pathname:"/form/review",
+                state:{
+                  service_id:props.item.id,
+                  petition_id:props.item.petition_id,
+                  type:props.item.type,
+                  comment:props.item.comment
+                }
+              }}><Button variant="success"><FontAwesomeIcon icon={faEdit}/>Review</Button></Link>:null}
 
-            }else{
-              props.setConfirmationId(props.item.id);
-              props.setConfirmationAction('service');
-            }
-          }}><FontAwesomeIcon icon={faTrash} />{props.item.type==='delete'||props.item.type==='create'?'Cancel':'Deregister'}</Button>
-          </React.Fragment>
-        :null
-        }
-        {props.user.admin&&props.item.petition_id&&props.item.status!=='approved_with_changes'?<Link to={{
-          pathname:"/form/review",
-          state:{
-            service_id:props.item.id,
-            petition_id:props.item.petition_id,
-            type:props.item.type,
-            comment:props.item.comment
-          }
-        }}><Button variant="success"><FontAwesomeIcon icon={faEdit}/>Review</Button></Link>:null}
-        <Link to={{
-          pathname:"/form/view",
-          state:{
-            service_id:props.item.id,
-            petition_id:props.item.petition_id,
-            type:props.item.type
-          }
-        }}><Button variant="secondary">View</Button></Link>
+            </Col>
+            <Col className='controls-col' md="auto">
+            <DropdownButton
+              variant="link"
+              alignRight
+              className='drop-container-controls'
+              title={<React.Fragment>
+                <div className='controls-options-container'>
+                  <FontAwesomeIcon icon={faEllipsisV}/>
+                </div>
+              </React.Fragment>}
+              id="dropdown-menu-align-right"
+            >
+            {props.item.requester===props.user.sub?
+              <React.Fragment>
+                {props.item.type!=='create'?
+                  <Dropdown.Item>
+                    <div onClick={()=>{
+                      if(props.item.type==='create'||props.item.type==='delete'){
+                        props.setConfirmationId(props.item.petition_id);
+                        props.setConfirmationAction('petition');
+                        if(props.item.type==='delete'){
+                          props.setCancelRequest(true);
+                        }
 
+                      }else{
+                        props.setConfirmationId(props.item.id);
+                        props.setConfirmationAction('service');
+                      }
+                    }}>
+                      {props.item.type==='delete'?'Cancel Deregistration':'Deregister Service'}
+                    </div>
+                  </Dropdown.Item>
+              :null}
+
+                {props.item.type==='edit'|| props.item.type==='create'?
+                <Dropdown.Item>
+                  <div onClick={()=>{
+                      props.setConfirmationId(props.item.petition_id);
+                      props.setConfirmationAction('petition');
+                      props.setCancelRequest(true);
+                  }}>
+                    {props.item.type==='create'?'Cancel Registration':props.item.type==='edit'?'Cancel Reconfiguration':null}
+                  </div>
+                </Dropdown.Item>
+                :null
+                }
+
+
+              </React.Fragment>
+            :null}
+              <Dropdown.Item as='span'>
+              <div>
+                <Link to={{
+                  pathname:"/history/list",
+                  state:{
+                    service_id:props.item.id,
+                    petition_id:props.item.petition_id,
+
+                  }
+                }}>View History</Link>
+              </div>
+              </Dropdown.Item>
+            </DropdownButton>
+
+            </Col>
+        </Row>
 
         </div>
       </td>
@@ -353,7 +399,7 @@ function Confirmation(props){
     <Modal show={props.confirmationId?true:false} onHide={handleClose}>
         <Modal.Header closeButton>
           <Modal.Title>
-              Are you sure sure you would like to {props.cancelDelete?'cancel deregistration request for this client?':'deregister this service?'}
+              Are you sure sure you would like to {props.cancelRequest?'cancel the pending request for this client?':'deregister this service?'}
           </Modal.Title>
         </Modal.Header>
         <Modal.Footer>
@@ -372,28 +418,15 @@ function Confirmation(props){
 
 
 function Filter (props) {
-  const [active,setActive] = useState(false);
-  const handleChange = () =>{
-    if(props.disabled){
-      if(active){
-        props.resetFilter();
-      }
-      else{
-        props.activateFilter();
-      }
-      setActive(!active);
-      props.setActivePage(1);
-    }
-    else {
-      setActive(!active);
-    }
 
+  const handleChange = () =>{
+    props.setFilter(!props.filterValue);
   }
 
   return (
     <div className='filter-container' onClick={handleChange}>
       <span>{props.name}</span>
-      <input type='checkbox' name='filter' checked={active} onChange={handleChange}/>
+      <input type='checkbox' name='filter' checked={props.filterValue} onChange={handleChange}/>
     </div>
   )
 }

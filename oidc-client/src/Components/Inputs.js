@@ -187,7 +187,7 @@ export function CheckboxList(props){
   const [deleted,setDeleted] = useState([]);
   const [existing,setExisting] = useState([]);
   useEffect(()=>{
-    console.log(props.disabled);
+
     let add = [];
     let dlt = [];
     let exst = [];
@@ -216,6 +216,7 @@ export function CheckboxList(props){
         {props.changed?
 
           <Table className="client-list-table">
+            <thead>
               {existing.map((item,index)=>{
                 return (
                   <CheckboxListItem key={index} item={item}/>
@@ -231,6 +232,7 @@ export function CheckboxList(props){
                   <CheckboxListItem key={index} class='row-deleted' item={item}/>
                 )
               })}
+            </thead>
           </Table>
           :
           <React.Fragment>
@@ -446,7 +448,7 @@ export function ListInputArray(props){
   const [newVal,setNewVal] = useState('');
   const [invalid,setInvalid] = useState(false);
 
-  console.log(props.disabled);
+
 
   return (
         <Table striped bordered hover size="sm" className='input-list-table'>
@@ -538,7 +540,7 @@ function ListInputArrayInput1(props){
   const [type, setType] = useState();
   const target = useRef(null);
   useEffect(()=>{
-    console.log(props.disabled);
+
     if(props.changed){
       if(props.changed.N.includes(props.item)){
         setType('Added');
@@ -589,7 +591,7 @@ function ListInputArrayInput2(props){
   const [type, setType] = useState(false);
   const target = useRef(null);
   useEffect(()=>{
-    console.log(props.changed);
+
     if(props.changed){
       if(props.changed.N.includes(props.item)){
         setType('Added');

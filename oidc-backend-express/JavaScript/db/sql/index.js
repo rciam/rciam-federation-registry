@@ -30,6 +30,7 @@ module.exports = {
       add:sql('client_petitions/add.sql'),
       update:sql('client_petitions/update.sql'),
       findOne:sql('client_petitions/findOne.sql'),
+      findOneHistory:sql('client_petitions/findOneHistory.sql'),
     }
 
 
