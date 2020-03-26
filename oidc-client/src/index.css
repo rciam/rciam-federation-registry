@@ -446,7 +446,12 @@ tbody tr td:last-child {
 }
 
 /* Form Tabs Review */
-
+.form-tabs {
+  margin-bottom:1.5rem!important;
+}
+.form-tabs-contianer {
+  margin-bottom: 1.5rem;
+}
 .submit-buttons button:first-child {
   margin-right:2rem;
 }
@@ -629,6 +634,30 @@ textarea {
 }
 
 /* Client List */
+.filters-row {
+  margin-top:0.5rem;
+}
+.filters-col {
+  display: inline-block;
+  float:right;
+}
+.filter-button {
+  float:right;
+  color:#0069d9!important;
+}
+
+.options-bar .row {
+  width:100%!important;
+  margin-left: 0!important;
+}
+.fa-arrow-down {
+  margin:0 0 0.1rem 0.4rem!important;
+}
+.fa-arrow-up {
+  vertical-align: bottom;
+  margin: 0 0 0 0.5rem!important;
+}
+
 .controls-col:first-child {
   padding-right:0!important;
   text-align: right;
@@ -726,14 +755,21 @@ textarea {
   display: none;
 }
 .filter-container {
-  margin-right:1rem;
+  margin-left:0.5rem;
   display:inline-block;
   background-color:rgb(245, 245, 245);
   border:1px solid rgb(227, 227, 227);
   vertical-align: top;
-  margin-top:0.2rem;
-  padding:0.2rem 0.5rem;
+
+  padding:0.3rem 0.5rem;
 }
+.select-filter-container{
+  margin-left:0.5rem;
+  display:inline-block;
+
+
+}
+
 .filter-container input {
   vertical-align: top;
   margin-top: 0.3rem;

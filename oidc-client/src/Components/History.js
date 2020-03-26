@@ -9,13 +9,17 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {faEye} from '@fortawesome/free-solid-svg-icons';
 import {Link} from "react-router-dom";
 import Alert from 'react-bootstrap/Alert';
+import Jumbotron from 'react-bootstrap/Jumbotron';
+import Container from 'react-bootstrap/Container';
+
 
 export const HistoryList = (props) => {
   const [loadingList,setLoadingList] = useState();
   const [historyList,setHistoryList] = useState();
   const [asyncResponse,setAsyncResponse] = useState(false);
   const [petition,setPetition] = useState(null);
-  const [alertVar,setAlertVar] = useState();
+  const [stateProps,setstateProps] = useState();
+
   useEffect(()=>{
     console.log(props);
     setLoadingList(true);
@@ -96,8 +100,19 @@ export const HistoryList = (props) => {
             View State
           </div>
           <Alert variant='warning' className='form-alert'>
-            The following {alertVar[0]==='create'?'Creation':alertVar[0]==='edit'?'Reconfiguration':'Deregistration'} Request {alertVar[1]==='approved'?'was Approved':alertVar[1]==='reject'?'was Rejected':alertVar[1]==='pending'?'is Pending Review':'was Aprroved with Changes'}.
+            The following {stateProps[0]==='create'?'Creation':stateProps[0]==='edit'?'Reconfiguration':'Deregistration'} Request {stateProps[1]==='approved'?'was Approved':stateProps[1]==='reject'?'was Rejected':stateProps[1]==='pending'?'is Pending Review':'was Aprroved with Changes'}.
           </Alert>
+          {stateProps[2]?
+            <Jumbotron fluid className="jumbotron-comment">
+              <Container>
+                <h5>Comment from admin:</h5>
+                <p className="text-comment">
+                  {stateProps[2]}
+                </p>
+              </Container>
+            </Jumbotron>
+          :null}
+
           <PetitionForm initialValues={petition} disabled={true}/>
         </React.Fragment>
         :!loadingList?
@@ -132,7 +147,7 @@ export const HistoryList = (props) => {
                           indx--;
                         }
                         let id = historyList[indx].id;
-                        setAlertVar([item.type,item.status]);
+                        setstateProps([item.type,item.status,item.comment]);
                         getPetition(id,item.type,item.status);}}
                       >
                         <FontAwesomeIcon icon={faEye}/>View

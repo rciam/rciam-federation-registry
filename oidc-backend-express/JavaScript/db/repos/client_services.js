@@ -17,11 +17,11 @@ class ClientServicesRepository {
 
     // Gets All Services with necessary data to create a list view.
     async findAllForList(){
-      return this.db.any('SELECT id,client_description,logo_uri,client_name,deployed,requester FROM client_services WHERE deleted=FALSE');
+      return this.db.any('SELECT id,client_description,logo_uri,client_name,deployed,requester,integration_environment FROM client_services WHERE deleted=FALSE');
     }
     // Get Services owned by user with user_id=id with necessary data to create a list view.
     async findBySubForList(sub){
-      return this.db.any('SELECT id,client_description,logo_uri,client_name,deployed,requester FROM client_services WHERE requester = $1 AND deleted=false', sub);
+      return this.db.any('SELECT id,client_description,logo_uri,client_name,deployed,requester,integration_environment FROM client_services WHERE requester = $1 AND deleted=false', sub);
     }
     // Checking availability of client_id
     async clientIdIsAvailable(clientId) {
@@ -64,6 +64,7 @@ class ClientServicesRepository {
         device_code_validity_seconds: data.device_code_validity_seconds,
         integration_environment: data.integration_environment,
         requester: sub,
+        protocol:data.protocol
       })
     }
 
@@ -84,7 +85,8 @@ class ClientServicesRepository {
           device_code_validity_seconds: data.device_code_validity_seconds,
           integration_environment:data.integration_environment,
           requester:sub,
-          id:id
+          id:id,
+          protocol:data.protocol
         })
     }
     async checkClientId(client_id){
@@ -106,7 +108,7 @@ function createColumnsets(pgp) {
         cs.insert = new pgp.helpers.ColumnSet(['client_description','reuse_refresh_tokens','allow_introspection',
           'client_id','client_secret','access_token_validity_seconds','refresh_token_validity_seconds','client_name',
           'logo_uri','policy_uri','clear_access_tokens_on_refresh','code_challenge_method',
-          'device_code_validity_seconds','integration_environment','requester'],
+          'device_code_validity_seconds','integration_environment','requester','protocol'],
           {table});
         cs.update = cs.insert.extend(['?id','deployed']);
     }

@@ -26,5 +26,6 @@
   "integration_environment":"demo",
   "device_code_validity_seconds":"28800",
   "clear_access_tokens_on_refresh":true,
-  "code_challenge_method":"plain"
+  "code_challenge_method":"plain",
+  "protocol":""
 }

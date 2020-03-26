@@ -40,16 +40,17 @@ class ClientPetitionsRepository {
         type:body.type,
         status:body.status,
         service_id:body.service_id,
-        comment:body.comment
+        comment:body.comment,
+        protocol:body.protocol
       })
     }
 
 
     async findAllForList(){
-      return this.db.any('SELECT id,client_description,logo_uri,client_name,requester,type,service_id,comment,status FROM client_petitions WHERE reviewed_at IS NULL');
+      return this.db.any('SELECT id,client_description,logo_uri,client_name,requester,type,service_id,comment,status,integration_environment FROM client_petitions WHERE reviewed_at IS NULL');
     }
     async findBySubForList(sub){
-      return this.db.any('SELECT id,client_description,logo_uri,client_name,requester,type,service_id,comment,status FROM client_petitions WHERE requester = $1 AND reviewed_at IS NULL', sub);
+      return this.db.any('SELECT id,client_description,logo_uri,client_name,requester,type,service_id,comment,status,integration_environment FROM client_petitions WHERE requester = $1 AND reviewed_at IS NULL', sub);
     }
 
     async findPetitionDataById(id){
@@ -95,7 +96,7 @@ class ClientPetitionsRepository {
           id:id,
           type:type,
           comment:null,
-
+          protocol:body.protocol
 
         })
     }
@@ -119,7 +120,7 @@ class ClientPetitionsRepository {
        })
      }
      async getHistory(service_id){
-       return await this.db.any("SELECT id,type,status,reviewed_at from client_petitions where service_id=$1 ORDER BY reviewed_at ASC",+service_id)
+       return await this.db.any("SELECT id,type,status,reviewed_at,comment from client_petitions where service_id=$1 ORDER BY reviewed_at ASC",+service_id)
      }
     async getHistorySingle(id){
       return await this.db.oneOrNone("SELECT id,type,status,reviewed_at from client_petitions where id=$1",+id)
@@ -201,7 +202,7 @@ function createColumnsets(pgp) {
         cs.insert = new pgp.helpers.ColumnSet(['client_description','reuse_refresh_tokens','allow_introspection',
           'client_id','client_secret','access_token_validity_seconds','refresh_token_validity_seconds','client_name',
           'logo_uri','policy_uri','clear_access_tokens_on_refresh','code_challenge_method',
-          'device_code_validity_seconds','integration_environment','requester'],
+          'device_code_validity_seconds','integration_environment','requester','protocol','comment'],
           {table});
         cs.update = cs.insert.extend(['?id','state','type','reviewed_at','reviewer','service_id']);
     }
