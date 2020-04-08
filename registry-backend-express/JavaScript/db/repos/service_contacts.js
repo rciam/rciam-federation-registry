@@ -1,7 +1,7 @@
 
 let cs= {};
 
-class ClientGeneralRepository {
+class ServiceContactsRepository {
   constructor(db,pgp){
     this.db = db;
     this.pgp = pgp;
@@ -80,4 +80,4 @@ class ClientGeneralRepository {
 
 }
 
-module.exports = ClientGeneralRepository;
+module.exports = ServiceContactsRepository;

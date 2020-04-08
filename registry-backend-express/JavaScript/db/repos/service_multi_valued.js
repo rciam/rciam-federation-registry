@@ -1,17 +1,23 @@
 
 let cs= {};
 
-class ClientGeneralRepository {
+class ServiceMultiValuedRepository {
   constructor(db,pgp){
     this.db = db;
     this.pgp = pgp;
     // set-up all ColumnSet objects, if needed:
      cs = new pgp.helpers.ColumnSet(['owner_id','value']);
   }
-  async add(name,data,id){
+  async add(type,attribute,data,id){
     let values = []
     let date = new Date(Date.now());
-
+    let name = 'service_'
+    if(type==='petition'){
+      name = name + type + '_' + attribute;
+    }
+    else{
+      name = name + attribute;
+    }
     // if not Empty array
     if(data.length>0){
       data.forEach((item)=>{
@@ -38,7 +44,14 @@ class ClientGeneralRepository {
     return this.db.any('SELECT owner_id,value FROM $1 WHERE owner_id IN ($2:csv)',[table,id]);
   }
 
-  async delete_one_or_many(name,data,owner_id){
+  async delete_one_or_many(type,attribute,data,owner_id){
+    let name = 'service_'
+    if(type==='petition'){
+      name = name + type + '_' + attribute;
+    }
+    else{
+      name = name + attribute;
+    }
     const table = new this.pgp.helpers.TableName({table:name});
     if(data.length>0){
 
@@ -80,4 +93,4 @@ class ClientGeneralRepository {
 
 }
 
-module.exports = ClientGeneralRepository;
+module.exports = ServiceMultiValuedRepository;
