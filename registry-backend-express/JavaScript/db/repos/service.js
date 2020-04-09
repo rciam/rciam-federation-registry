@@ -85,7 +85,7 @@ class ServiceRepository {
           else {
             return await t.service_details.add(service,requester).then(async result=>{
               if(result){
-                console.log(result);
+              
                 queries.push(t.service_details_protocol.add('service',service,result.id));
                 queries.push(t.service_contacts.add('service',service.contacts,result.id));
                 if(service.protocol==='oidc'){
@@ -122,6 +122,7 @@ async update(newState,targetId,type){
       return t.service.get(targetId,type).then(async oldState=>{
         if(oldState){
           let edits = calcDiff(oldState.service_data,newState);
+
           if(Object.keys(edits.details).length !== 0){
              queries.push(t[service_details].update(edits.details,targetId));
              queries.push(t.service_details_protocol.update(type,edits.details,targetId));

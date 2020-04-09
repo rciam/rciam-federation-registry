@@ -11,7 +11,7 @@ const calcDiff = (oldState,newState) => {
       dlt:{},
       details:{}
     };
-    console.log(new_values);
+    
 
     new_values.contacts.forEach(item=>{
       new_cont.push(item.email+' '+item.type);

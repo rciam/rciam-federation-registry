@@ -18,13 +18,11 @@ const path = require('path');
 
 module.exports = {
     service_details:{
-      add:sql('client_services/add.sql'),
-      findOne:sql('client_services/findOne.sql'),
-      update:sql('client_services/update.sql'),
-      findForEdit:sql('client_services/findForEdit.sql')
+      add:sql('service_details/add.sql'),
+      update:sql('service_details/update.sql')
     },
     service_details_protocol:{
-      addOidc:sql('service_details_protocol/getOidc.sql'),
+      addOidc:sql('service_details_protocol/addOidc.sql'),
       checkClientId:sql('service_details_protocol/checkClientId.sql'),
       updateOidc:sql('service_details_protocol/updateOidc.sql'),
     },
@@ -35,10 +33,9 @@ module.exports = {
       add:sql('user_info/add.sql')
     },
     service_petition_details:{
-      add:sql('client_petitions/add.sql'),
-      update:sql('client_petitions/update.sql'),
-      findOne:sql('client_petitions/findOne.sql'),
-      findOneHistory:sql('client_petitions/findOneHistory.sql'),
+      add:sql('service_petition_details/add.sql'),
+      update:sql('service_petition_details/update.sql'),
+
     }
 
 

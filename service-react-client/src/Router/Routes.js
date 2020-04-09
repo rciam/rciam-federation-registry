@@ -1,8 +1,8 @@
 import React from 'react';
 import { Switch, Route,Redirect,Link } from 'react-router-dom';
 import Home from '../Home';
-import ClientList from '../ClientList.js';
-import {EditClient,NewClient,ViewClient} from '../FormHandler.js';
+import ServiceList from '../ServiceList.js';
+import {EditService,NewService,ViewService} from '../FormHandler.js';
 import useGlobalState from '../useGlobalState.js';
 import UserInfo from '../Components/UserInfo.js';
 import {HistoryList,HistoryView} from '../Components/History.js'
@@ -19,7 +19,7 @@ const Routes = (props) => (
         <span className="link-seperator">/</span>
         Manage Services
       </div>
-        <ClientList user={props.user}/>
+        <ServiceList user={props.user}/>
       </PrivateRoute>
       <PrivateRoute user={props.user} path="/userinfo">
         <div className="links">
@@ -37,7 +37,7 @@ const Routes = (props) => (
           <span className="link-seperator">/</span>
           New Service
         </div>
-        <NewClient user={props.user}/>
+        <NewService user={props.user}/>
       </PrivateRoute>
       <RouteWithState user={props.user} path="/form/edit">
         <div className="links">
@@ -47,14 +47,14 @@ const Routes = (props) => (
           <span className="link-seperator">/</span>
           Edit Service
         </div>
-        <EditClient user={props.user}/>
+        <EditService user={props.user}/>
       </RouteWithState>
       <RouteWithState user={props.user} path='/history/list'>
 
         <HistoryList user={props.user}/>
       </RouteWithState>
       <PrivateRoute user={props.user} path='/history/view'>
-        
+
         <HistoryView user={props.user}/>
       </PrivateRoute>
 
@@ -67,7 +67,7 @@ const Routes = (props) => (
             <span className="link-seperator">/</span>
             Review
           </div>
-          <EditClient review={true}/>
+          <EditService review={true}/>
         </AdminRoute>
       </RouteWithState>
       <RouteWithState user={props.user} path="/form/view">
@@ -78,7 +78,7 @@ const Routes = (props) => (
             <span className="link-seperator">/</span>
             View Service
           </div>
-          <ViewClient/>
+          <ViewService/>
       </RouteWithState>
     </Switch>
       </div>

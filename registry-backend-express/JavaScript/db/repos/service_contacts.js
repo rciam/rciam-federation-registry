@@ -9,10 +9,14 @@ class ServiceContactsRepository {
      cs = new pgp.helpers.ColumnSet(['owner_id','value','type']);
   }
 
-  async add(name,data,id){
+  async add(type,data,id){
     let values = []
     let date = new Date(Date.now());
     // if not Empty array
+    let name = 'service_contacts';
+    if(type==='petition'){
+      name = 'service_petition_contacts'
+    }
 
     if(data.length>0){
       data.forEach((item)=>{
@@ -38,7 +42,11 @@ class ServiceContactsRepository {
   }
 
 
-  async delete_one_or_many(name,data,owner_id){
+  async delete_one_or_many(type,data,owner_id){
+    let name = 'service_contacts';
+    if(type==='petition'){
+      name = 'service_petition_contacts'
+    }
     const table = new this.pgp.helpers.TableName({table:name});
     let values = '';
     if (data.length>0){

@@ -5,7 +5,7 @@ This project is consisted of two parts
 ### Installing & Running
 
 1. For the front-end portal
-* `cd oidc-client`
+* `cd service-react-client`
 
 * `yarn install`
 
@@ -21,12 +21,12 @@ You will also see any lint errors in the console.
 
 
 2. For the back-end server
-* `cd oidc-backend`
+* `cd registry-backend-express`
 * `npm install`
 * `cd JavaScript`
 * `node index.js`
 
-  Runs the server listening at [http://localhost:5000](http://localhost:3000) for http requests.
+  Runs the server listening at [http://localhost:5000](http://localhost:5000) for http requests.
 
 3. For the backend server connection with the database a PostgresSQL database must be created using the oidc_db.sql file located in the root folder
 
@@ -36,7 +36,7 @@ The connection details are declared in oidc-project/oidc-backend/db-config.json 
  {
    "host": "localhost",
    "port": 5432,
-   "database": "oidc",
+   "database": "service_registry",
    "user": "postgres",
    "password":"postgres"
  }

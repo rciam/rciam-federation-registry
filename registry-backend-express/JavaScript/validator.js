@@ -3,12 +3,12 @@ const {reg} = require('./regex.js');
 var formConfig = require('./config');
 const clientValidationRules = () => {
   return [
-    body('client_name').isString().isLength({min:4, max:36}).exists(),
+    body('service_name').isString().isLength({min:4, max:36}).exists(),
     body('client_id').isString().isLength({min:4, max:36}).exists(),
     body('redirect_uris').isArray({min:1}).custom((value,success=true)=> {value.map((item,index)=>{if(!item.match(reg.regUrl)){success=false}}); return success }).withMessage('Invalid Redirect Uri value!'),
     body('logo_uri').isString().exists().custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Invalid logo Uri value!'),
     body('policy_uri').isString().exists().custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Invalid logo Uri value!'),
-    body('client_description').isString().isLength({min:1}).exists(),
+    body('service_description').isString().isLength({min:1}).exists(),
     body('contacts').isArray({min:1}).custom((value,success=true)=> {value.map((item,index)=>{if(!item.email.match(reg.regEmail)||!formConfig.contact_types.includes(item.type)){success=false}}); return success }).withMessage('Invalid Contacts value!'),
     body('scope').isArray({min:1}).custom((value,success=true)=> {value.map((item,index)=>{if(!item.match(reg.regScope)){success=false}}); return success }).withMessage('Invalid Contacts value!'),
     body('grant_types').isArray({min:1}).custom((value,success=true)=> {value.map((item,index)=>{if(!['implicit','authorization_code','refresh_token','client_credentials','password','redelegation','token_exchange','device'].includes(item)){success=false}}); return success }).withMessage('Invalid Scope value!'),
@@ -143,6 +143,5 @@ const validate = (req, res, next) => {
 
 module.exports = {
   clientValidationRules,
-  editClientValidationRules,
   validate,
 }

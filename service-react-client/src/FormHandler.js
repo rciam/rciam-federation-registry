@@ -2,7 +2,7 @@ import React,{useEffect,useState} from 'react';
 import initialValues from './initialValues';
 import * as config from './config.json';
 //import {useParams} from "react-router-dom";
-import PetitionForm from "./PetitionForm.js";
+import ServiceForm from "./ServiceForm.js";
 //import {FormAlert} from "./Components/FormAlert.js";
 import {LoadingBar} from './Components/LoadingBar';
 import Tabs from 'react-bootstrap/Tabs';
@@ -15,7 +15,7 @@ import { diff } from 'deep-diff';
 
 
 
-const EditClient = (props) => {
+const EditService = (props) => {
     const [petition,setPetition] = useState();
     const [service,setService] = useState();
     const [editPetition,setEditPetition] = useState();
@@ -51,7 +51,6 @@ const EditClient = (props) => {
           }
         };
         let attributes = ['grant_types','scope','contacts','redirect_uris'];
-        console.log(changes);
         for(let i=0;i<changes.length;i++){
           if(! ['grant_types','scope','contacts','redirect_uris'].includes(changes[i].path[0])){
               helper[changes[i].path[0]]=changes[i].kind;
@@ -82,7 +81,6 @@ const EditClient = (props) => {
         }).then(response=>response.json()).then(response=> {
 
           if(response.service){
-            console.log('we have service');
             setService(response.service);
           }
         });
@@ -97,7 +95,6 @@ const EditClient = (props) => {
         }).then(response=>response.json()).then(response=> {
 
           if(response.petition){
-            console.log('we have petition');
             setPetition(response.petition);
           }
         });
@@ -113,7 +110,7 @@ const EditClient = (props) => {
           <Alert variant='warning' className='form-alert'>
             This is a reconfiguration request, changes are highlighted bellow.
           </Alert>
-          {editPetition&&changes?<PetitionForm initialValues={editPetition} changes={changes} {...props}/>:<LoadingBar loading={true}/>}
+          {editPetition&&changes?<ServiceForm initialValues={editPetition} changes={changes} {...props}/>:<LoadingBar loading={true}/>}
         </React.Fragment>
 
       :props.type==='create'?
@@ -121,14 +118,14 @@ const EditClient = (props) => {
           <Alert variant='warning' className='form-alert'>
             This is a registration request.
           </Alert>
-          {petition?<PetitionForm initialValues={petition} {...props}/>:<LoadingBar loading={true}/>}
+          {petition?<ServiceForm initialValues={petition} {...props}/>:<LoadingBar loading={true}/>}
         </React.Fragment>
       :
         <React.Fragment>
           <Alert variant='warning' className='form-alert'>
             User requested to deregister the following service.
           </Alert>
-          {service?<PetitionForm initialValues={service} {...props} />:<LoadingBar loading={true}/>}
+          {service?<ServiceForm initialValues={service} {...props} />:<LoadingBar loading={true}/>}
         </React.Fragment>
       }
     </React.Fragment>
@@ -160,7 +157,7 @@ const EditClient = (props) => {
               </Alert>
           :null
           }
-          {petition?<PetitionForm initialValues={petition} {...props}/>:<LoadingBar loading={true}/>}
+          {petition?<ServiceForm initialValues={petition} {...props}/>:<LoadingBar loading={true}/>}
         </React.Fragment>
         :
         <RequestedChangesAlert comment={props.comment} tab1={service} tab2={service} {...props}/>
@@ -174,7 +171,7 @@ const EditClient = (props) => {
 }
 
 
-const ViewClient = (props)=>{
+const ViewService = (props)=>{
   const [service,setService] = useState();
   const [petition,setPetition] = useState();
   useEffect(()=>{
@@ -216,13 +213,13 @@ const ViewClient = (props)=>{
   }
   return(
     <React.Fragment>
-      {service?<PetitionForm initialValues={service} disabled={true}  />:props.service_id?<LoadingBar loading={true}/>:petition?
+      {service?<ServiceForm initialValues={service} disabled={true}  />:props.service_id?<LoadingBar loading={true}/>:petition?
         <React.Fragment>
 
           <Alert variant='danger' className='form-alert'>
             This service is not registered yet, it is currently pending approval from an administrator
           </Alert>
-          <PetitionForm initialValues={petition} disabled={true}/>
+          <ServiceForm initialValues={petition} disabled={true}/>
         </React.Fragment>
       :props.petition_id?<LoadingBar loading={true}/>:null
       }
@@ -254,21 +251,21 @@ const RequestedChangesAlert = (props) => {
               </Alert>
           :null
           }
-          {props.tab1?<PetitionForm initialValues={props.tab1} {...props}/>:<LoadingBar loading={true}/>}
+          {props.tab1?<ServiceForm initialValues={props.tab1} {...props}/>:<LoadingBar loading={true}/>}
         </Tab>
       <Tab eventKey="service" title="View Deployed Service">
-        {props.tab2?<PetitionForm initialValues={props.tab2} disabled={true}  />:<LoadingBar loading={true}/>}
+        {props.tab2?<ServiceForm initialValues={props.tab2} disabled={true}  />:<LoadingBar loading={true}/>}
       </Tab>
     </Tabs>
     </React.Fragment>
   )
 }
 
-const NewClient = (props)=>{
+const NewService = (props)=>{
   return (
     <React.Fragment>
 
-      <PetitionForm user={props.user} initialValues={initialValues}/>
+      <ServiceForm user={props.user} initialValues={initialValues}/>
     </React.Fragment>
   )
 }
@@ -309,7 +306,7 @@ function calculateMultivalueDiff(old_values,new_values,edits){
 }
 
 export {
-   EditClient,
-   NewClient,
-   ViewClient
+   EditService,
+   NewService,
+   ViewService
 }

@@ -2,7 +2,7 @@ import React,{useEffect,useState} from 'react';
 import Badge from 'react-bootstrap/Badge';
 import * as config from '../config.json';
 import {LoadingBar,ProcessingRequest} from './LoadingBar';
-import PetitionForm from "../PetitionForm.js";
+import ServiceForm from "../ServiceForm.js";
 import Table from 'react-bootstrap/Table';
 import Button from 'react-bootstrap/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -21,13 +21,11 @@ export const HistoryList = (props) => {
   const [stateProps,setstateProps] = useState();
 
   useEffect(()=>{
-    console.log(props);
     setLoadingList(true);
     getHistory();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
   useEffect(()=>{
-    console.log(historyList);
   },[historyList]);
 
 
@@ -39,7 +37,6 @@ export const HistoryList = (props) => {
       headers: {
       'Content-Type': 'application/json'
     }}).then(response=>response.json()).then(response=> {
-      console.log(response);
       if(response){
         setAsyncResponse(false);
         if(response.success){
@@ -50,14 +47,13 @@ export const HistoryList = (props) => {
   }
 
   const getHistory = ()=> {
-    if(props.service_id){
+
       fetch(config.host+'petition/history/list/'+props.service_id, {
         method: 'GET', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
         'Content-Type': 'application/json'
       }}).then(response=>response.json()).then(response=> {
-        console.log(response);
         if(response.success){
           setLoadingList(false);
           if(response.history){
@@ -65,23 +61,8 @@ export const HistoryList = (props) => {
           }
         }
       });
-    }
-    else{
-      fetch(config.host+'petition/history/single/'+props.petition_id, {
-        method: 'GET', // *GET, POST, PUT, DELETE, etc.
-        credentials: 'include', // include, *same-origin, omit
-        headers: {
-        'Content-Type': 'application/json'
-      }}).then(response=>response.json()).then(response=> {
-        console.log(response);
-        if(response.success){
-          setLoadingList(false);
-          if(response.history){
-            setHistoryList([response.history]);
-          }
-        }
-      });
-    }
+
+
 
   }
   return (
@@ -113,7 +94,7 @@ export const HistoryList = (props) => {
             </Jumbotron>
           :null}
 
-          <PetitionForm initialValues={petition} disabled={true}/>
+          <ServiceForm initialValues={petition} disabled={true}/>
         </React.Fragment>
         :!loadingList?
         <React.Fragment>

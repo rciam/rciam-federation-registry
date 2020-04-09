@@ -1,3 +1,3 @@
-INSERT INTO client_petitions (client_description,reuse_refresh_tokens,allow_introspection,client_id,client_secret,access_token_validity_seconds,refresh_token_validity_seconds,client_name,logo_uri,policy_uri,clear_access_tokens_on_refresh,code_challenge_method,device_code_validity_seconds,integration_environment,requester,type,service_id,comment,status,protocol)
-VALUES (${client_description},${reuse_refresh_tokens},${allow_introspection},${client_id},${client_secret},${access_token_validity_seconds},${refresh_token_validity_seconds},${client_name},${logo_uri},${policy_uri},${clear_access_tokens_on_refresh},${code_challenge_method},${device_code_validity_seconds},${integration_environment},${requester},${type},${service_id},${comment},${status},${protocol})
+INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,type,service_id,comment,status,protocol)
+VALUES (${service_description},${service_name},${logo_uri},${policy_uri},${integration_environment},${requester},${type},${service_id},${comment},${status},${protocol})
 RETURNING *

@@ -1,5 +1,5 @@
 {
-  "client_name":"",
+  "service_name":"",
   "client_id":"",
   "redirect_uris": [],
   "logo_uri":"",
@@ -17,7 +17,7 @@
     "authorization_code"
   ],
   "allow_introspection":false,
-  "client_description":"",
+  "service_description":"",
   "generate_client_secret":true,
   "client_secret":"",
   "access_token_validity_seconds":"3600",

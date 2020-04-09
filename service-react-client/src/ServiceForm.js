@@ -24,10 +24,10 @@ const {reg} = require('./regex.js');
 const uuidv1 = require('uuid/v1');
 
 
-const PetitionForm = (props)=> {
+const ServiceForm = (props)=> {
 
   useEffect(()=>{
-    console.log(props.changes);
+
     if(props.disabled||props.review){
       setDisabled(true);
     }
@@ -43,29 +43,36 @@ const PetitionForm = (props)=> {
   });
 
   const schema = yup.object({
-    client_name:yup.string().min(4,'The Client Name must be at least 4 characters long').max(36,'The Client Name exceeds the character limit (15)').required('This is a required field!'),
+    service_name:yup.string().min(4,'The Service Name must be at least 4 characters long').max(36,'The Service Name exceeds the character limit (15)').required('This is a required field!'),
     // Everytime client_id changes we make a fetch request to see if it is available.
     client_id:yup.string().min(4,'The Client ID must be at least 4 characters long').max(36,'The Client ID exceeds the character limit (35)').test('testAvailable','Client Id is not available',function(value){
         return new Promise((resolve,reject)=>{
-          if(props.initialValues.client_id===value||!value){resolve(true)}
-          setCheckingAvailability(true);
-          fetch(config.host+'client/availability/'+ value, {
-            method:'GET',
-            credentials:'include',
-            headers:{
-              'Content-Type':'application/json'
-            }}).then(res => res.json()).then(
-              (res=>{if(res.success){
-                setcheckedId(value);
-                setCheckingAvailability(false);
-                resolve(res.available)}})
-              ).catch(()=>{resolve(true)})
+          if(props.initialValues.client_id===value||!value||value===checkedId)
+            {resolve(true)}
+          else{
+
+            setCheckingAvailability(true);
+            fetch(config.host+'client/availability/'+ value, {
+              method:'GET',
+              credentials:'include',
+              headers:{
+                'Content-Type':'application/json'
+              }}).then(res => res.json()).then(
+                (res=>{if(res.success){
+
+                  setcheckedId(value);
+                  setCheckingAvailability(false);
+                  resolve(res.available)}})
+                ).catch(()=>{resolve(true)})
+          }
+
+
         })
     }),
     redirect_uris:yup.array().of(yup.string().matches(reg.regUrl,'This must be a secure Url starting with https://')).unique('Redirect Uris must be unique!').required('This is a required field!'),
     logo_uri:yup.string().required('This is a required field!').test('testImage','Enter a valid image Url',function(value){ return imageError}),
     policy_uri:yup.string().required('This is a required field!').matches(reg.regSimpleUrl,'Enter a valid Url'),
-    client_description:yup.string().required('This is a required field!'),
+    service_description:yup.string().required('This is a required field!'),
     contacts:yup.array().of(yup.object().shape({
         email:yup.string().email('Enter a valid email address').required('Contact email cannot be empty'),
         type:yup.string().required('This is a required field!')
@@ -118,7 +125,7 @@ const PetitionForm = (props)=> {
     }
     if (diff(petition,props.initialValues)){
       setAsyncResponse(true);
-      fetch(config.host+'petition/create', {
+      fetch(config.host+'newpetition', {
         method: 'POST', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
@@ -158,10 +165,11 @@ const PetitionForm = (props)=> {
   }
 
   const editPetition = (petition) => {
-
-    const editData = prepareEditData(petition,props.initialValues);
-
-    if(Object.keys(editData.petition_details).length !== 0||Object.keys(editData.dlt).length !== 0||Object.keys(editData.add).length !== 0){
+    petition.type =props.type;
+    if(props.type === 'delete'){
+      petition.type = 'edit';
+    }
+    if(diff(petition,props.initialValues)){
       setAsyncResponse(true);
       fetch(config.host+'petition/edit/'+props.petition_id, {
         method: 'POST', // *GET, POST, PUT, DELETE, etc.
@@ -169,7 +177,7 @@ const PetitionForm = (props)=> {
         headers: {
         'Content-Type': 'application/json'
         },
-        body: JSON.stringify(editData) // body data type must match "Content-Type" header
+        body: JSON.stringify(petition) // body data type must match "Content-Type" header
       }).then(response=>response.json()).then(response=> {
         if(response.success){
           setAsyncResponse(false);
@@ -247,7 +255,7 @@ const PetitionForm = (props)=> {
           },
           body:JSON.stringify({comment:adminComment})
       }).then(response=>response.json()).then(response=> {
-          setModalTitle('Reconfiguration request:');
+
           if(response.success){
               setAsyncResponse(false);
               setMessage('Was approved, and changes have been commited.');
@@ -304,10 +312,12 @@ const PetitionForm = (props)=> {
 
   const postApi=(data)=>{
     data = gennerateValues(data);
+
     if(!props.type){
       createNewPetition(data);
     }
     else {
+      data.type = props.type;
       editPetition(data);
     }
   }
@@ -368,16 +378,16 @@ const PetitionForm = (props)=> {
 
                   <Tab eventKey="general" title='General'>
 
-                    <InputRow title='Client name' description='Human-readable application name' error={errors.client_name} touched={touched.client_name}>
+                    <InputRow title='Service name' description='Human-readable application name' error={errors.service_name} touched={touched.service_name}>
                       <SimpleInput
-                        name='client_name'
+                        name='service_name'
                         placeholder='Type something'
                         onChange={handleChange}
-                        value={values.client_name}
-                        isInvalid={hasSubmitted?!!errors.client_name:(!!errors.client_name&&touched.client_name)}
+                        value={values.service_name}
+                        isInvalid={hasSubmitted?!!errors.service_name:(!!errors.service_name&&touched.service_name)}
                         onBlur={handleBlur}
                         disabled={disabled}
-                        changed={props.changes?props.changes.client_name:null}
+                        changed={props.changes?props.changes.service_name:null}
                        />
                      </InputRow>
 
@@ -411,19 +421,19 @@ const PetitionForm = (props)=> {
                           changed={props.changes?props.changes.logo_uri:null}
                         />
                       </InputRow>
-                      <InputRow title='Description' description='Human-readable text description' error={errors.client_description} touched={touched.client_description}>
+                      <InputRow title='Description' description='Human-readable text description' error={errors.service_description} touched={touched.service_description}>
                         <TextAria
-                          value={values.client_description}
+                          value={values.service_description}
                           onChange={handleChange}
                           onBlur={handleBlur}
-                          name='client_description'
+                          name='service_description'
                           placeholder="Type a description"
-                          isInvalid={hasSubmitted?!!errors.client_description:(!!errors.client_description&&touched.client_description)}
+                          isInvalid={hasSubmitted?!!errors.service_description:(!!errors.service_description&&touched.service_description)}
                           disabled={disabled}
-                          changed={props.changes?props.changes.client_description:null}
+                          changed={props.changes?props.changes.service_description:null}
                         />
                       </InputRow>
-                      <InputRow title='Policy Statement' description='URL for the Policy Statement of this client, will be displayed to the user' error={errors.policy_uri} touched={touched.policy_uri}>
+                      <InputRow title='Policy Statement' description='URL for the Policy Statement of this service, will be displayed to the user' error={errors.policy_uri} touched={touched.policy_uri}>
                         <SimpleInput
                           name='policy_uri'
                           placeholder='https://'
@@ -436,7 +446,7 @@ const PetitionForm = (props)=> {
                         />
                       </InputRow>
 
-                      <InputRow title='Contacts' error={typeof(errors.contacts)=='string'?errors.contacts:null} touched={touched.contacts} description='List of contacts for administrators of this client.'>
+                      <InputRow title='Contacts' error={typeof(errors.contacts)=='string'?errors.contacts:null} touched={touched.contacts} description='List of contacts for administrators of this service.'>
                         <Contacts
                           values={values.contacts}
                           placeholder='New contact'
@@ -653,7 +663,7 @@ const ReviewComponent = (props)=>{
   const [error,setError] = useState(false);
 
   const handleReview = () =>{
-      console.log(typeOfReview);
+
       if(expandReview){
         if(typeOfReview){
           if(typeOfReview==='request-changes'&&!props.adminComment){
@@ -818,67 +828,6 @@ function hex(n){
 
 
 
-function prepareEditData(data,initialValues){
-  var new_values = Object.assign({},data);
-  var old_values = Object.assign({},initialValues);
-  let new_cont = [];
-  let old_cont = [];
-  let items;
-  var edits = {
-    add:{},
-    dlt:{},
-    petition_details:{}
-  };
-
-  new_values.contacts.forEach(item=>{
-    new_cont.push(item.email+' '+item.type);
-  });
-  old_values.contacts.forEach(item=>{
-    old_cont.push(item.email+' '+item.type);
-  });
-  edits.add.client_contact = new_cont.filter(x=>!old_cont.includes(x));
-  edits.dlt.client_contact = old_cont.filter(x=>!new_cont.includes(x));
-  if(edits.add.client_contact.length>0){
-      edits.add.client_contact.forEach((item,index)=>{
-        items = item.split(' ');
-        edits.add.client_contact[index] = {email:items[0],type:items[1]};
-      })
-  }
-  if(edits.dlt.client_contact.length>0){
-      edits.dlt.client_contact.forEach((item,index)=>{
-        items = item.split(' ');
-        edits.dlt.client_contact[index] = {email:items[0],type:items[1]};
-    })
-  }
-
-  edits.add.client_grant_type = new_values.grant_types.filter(x=>!old_values.grant_types.includes(x));
-  edits.dlt.client_grant_type = old_values.grant_types.filter(x=>!new_values.grant_types.includes(x));
-  edits.add.client_scope = new_values.scope.filter(x=>!old_values.scope.includes(x));
-  edits.dlt.client_scope = old_values.scope.filter(x=>!new_values.scope.includes(x));
-  edits.add.client_redirect_uri = new_values.redirect_uris.filter(x=>!old_values.redirect_uris.includes(x));
-  edits.dlt.client_redirect_uri = old_values.redirect_uris.filter(x=>!new_values.redirect_uris.includes(x));
-  for(var i in edits){
-    for(var key in edits[i]){
-      if(edits[i][key].length===0){
-        delete edits[i][key]
-      }
-    }
-  }
-
-  delete new_values.grant_types;
-  delete new_values.contacts;
-  delete new_values.redirect_uris;
-  delete new_values.scope;
-  delete old_values.grant_types;
-  delete old_values.contacts;
-  delete old_values.redirect_uris;
-  delete old_values.scope;
-
-  if(diff(old_values,new_values)){
-    edits.petition_details = new_values;
-  }
-  return edits
-}
 
 function capitalWords(array) {
    let return_array = array.map((item,index)=>{
@@ -894,4 +843,4 @@ function capitalWords(array) {
 }
 
 
-export default PetitionForm
+export default ServiceForm

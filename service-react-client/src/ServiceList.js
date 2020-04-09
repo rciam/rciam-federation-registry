@@ -22,7 +22,7 @@ import {LoadingBar,ProcessingRequest} from './Components/LoadingBar';
 import {ListResponseModal} from './Components/Modals.js';
 
 
-const ClientList= (props)=> {
+const ServiceList= (props)=> {
   const [loadingList,setLoadingList] = useState();
   const [services,setServices] = useState([]);
   const [confirmationId,setConfirmationId] = useState();
@@ -41,7 +41,7 @@ const ClientList= (props)=> {
   let renderedConnections = 0;
   useEffect(()=>{
     setLoadingList(true);
-    getClients();
+    getServices();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
 
@@ -59,7 +59,7 @@ const ClientList= (props)=> {
   }
 
   // Get data, to create Service List
-  const getClients = ()=> {
+  const getServices = ()=> {
     fetch(config.host+'services/user', {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
@@ -74,7 +74,6 @@ const ClientList= (props)=> {
           })
         }
         setServices(response.services);
-        console.log(response.services);
       }
     });
   }
@@ -88,7 +87,7 @@ const ClientList= (props)=> {
       headers: {
       'Content-Type': 'application/json'
     }}).then(response=>response.json()).then(response=> {
-      getClients();
+      getServices();
       setResponseTitle('Your deregistration request');
       if(response.success){
         setAsyncResponse(false);
@@ -117,7 +116,7 @@ const ClientList= (props)=> {
       setResponseTitle('Your deregistration request was');
       if(response){
           setAsyncResponse(false);
-          getClients();
+          getServices();
           if(response.success){
             setMessage('Was canceled succesfully.');
           }
@@ -146,7 +145,7 @@ const ClientList= (props)=> {
           setMessage('Was not submited due to the following error: '+response.error);
         }
         setAsyncResponse(false);
-        getClients();
+        getServices();
       }
     });
   }
@@ -161,7 +160,7 @@ const ClientList= (props)=> {
           <div className="options-bar">
           <Row >
             <Col>
-              <Button variant="light" onClick={getClients} ><FontAwesomeIcon icon={faSync} />Refresh</Button>
+              <Button variant="light" onClick={getServices} ><FontAwesomeIcon icon={faSync} />Refresh</Button>
               <Link to="/form/new"><Button><FontAwesomeIcon icon={faPlus}/>New Service</Button></Link>
             </Col>
             <Col>
@@ -247,7 +246,7 @@ function TableItem(props) {
       </td>
       <td>
         <div className="flex-column">
-          <h3 className="petition-title">{props.item.client_name}</h3>
+          <h3 className="petition-title">{props.item.service_name}</h3>
           <div className="badge-container">
             {props.item.hasOwnProperty('deployed')?<Badge className="status-badge" variant={props.item.deployed?'primary':'danger'}>{props.item.deployed?'Deployed':'Deployment in Progress'}</Badge>:null}
             {props.item.hasOwnProperty('type')?<Badge className="status-badge" variant="warning">
@@ -255,7 +254,7 @@ function TableItem(props) {
               </Badge>:null}
             {props.item.comment?<Badge className="status-badge" variant="info">Changes Requested</Badge>:null}
           </div>
-          <p>{props.item.client_description}</p>
+          <p>{props.item.service_description}</p>
         </div>
       </td>
       <td>
@@ -356,17 +355,21 @@ function TableItem(props) {
                 }
               </React.Fragment>
             :null}
+            {props.item.id?
               <Dropdown.Item as='span'>
               <div>
                 <Link to={{
                   pathname:"/history/list",
                   state:{
-                    service_id:props.item.id,
-                    petition_id:props.item.petition_id,
+                    service_id:props.item.id
                   }
                 }}>View History</Link>
               </div>
               </Dropdown.Item>
+
+            :null
+            }
+
             </DropdownButton>
             </Col>
         </Row>
@@ -383,7 +386,7 @@ function Confirmation(props){
     <Modal show={props.confirmationId?true:false} onHide={handleClose}>
         <Modal.Header closeButton>
           <Modal.Title>
-              Are you sure sure you would like to {props.cancelRequest?'cancel the pending request for this client?':'deregister this service?'}
+              Are you sure sure you would like to {props.cancelRequest?'cancel the pending request for this service?':'deregister this service?'}
           </Modal.Title>
         </Modal.Header>
         <Modal.Footer>
@@ -407,7 +410,6 @@ function Filters (props) {
 
   useEffect(()=>{
     if(props.services.length>0){
-      console.log(!props.services);
       props.services.forEach((item,index)=>{
         if(OwnedFilter(item)||PendingFilter(item)||SearchFilter(item)||EnvironmentFilter(item)){
           props.services[index].display=false;
@@ -416,7 +418,6 @@ function Filters (props) {
           props.services[index].display=true;
         }
       });
-      console.log(props.services)
       props.setServices([...props.services])
       props.setActivePage(1);
     }
@@ -425,12 +426,10 @@ function Filters (props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[props.searchString,showOwned,showPending,showEnvironment]);
   const EnvironmentFilter = (item) => {
-    console.log(showEnvironment)
-    console.log(showEnvironment&&!item.integration_environment===showEnvironment)
     return (showEnvironment&&item.integration_environment!==showEnvironment)
   }
   const SearchFilter = (item) => {
-    return (props.searchString&&!item.client_name.toLowerCase().includes(props.searchString.toLowerCase().trim()))
+    return (props.searchString&&!item.service_name.toLowerCase().includes(props.searchString.toLowerCase().trim()))
   }
   const PendingFilter = (item) =>{
     return (showPending&&!item.petition_id)
@@ -474,4 +473,4 @@ function SimpleCheckboxFilter (props) {
 }
 
 
-export default ClientList;
+export default ServiceList;
