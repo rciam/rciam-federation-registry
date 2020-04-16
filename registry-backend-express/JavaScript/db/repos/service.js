@@ -19,6 +19,7 @@ class ServiceRepository {
     }
 
 
+
     async get(id,type){
       if(type==='petition'){
         type=petition;
@@ -28,32 +29,31 @@ class ServiceRepository {
         type=service;
         extra_data='';
       }
-      return this.db.one(sql.getOidc,{
-        id:+id,
-        type:type,
-        extra_data:extra_data
-      }).then(result => {
-        if(result){
-          let data = {};
-          result.json.generate_client_secret = false;
-          if(type==='petition_'){
-            data.meta_data = {};
-            data.meta_data.type = result.json.type;
-            data.meta_data.requester = result.json.requester;
-            data.meta_data.service_id = result.json.service_id;
-            delete result.json.type;
-            delete result.json.service_id;
-            delete result.json.requester;
-            data.service_data = result.json;
+      return this.db.one(sql.getService,{
+          id:+id,
+          type:type,
+          extra_data:extra_data
+        }).then(result => {
+          if(result){
+            let data = {};
+            result.json.generate_client_secret = false;
+            if(type==='petition_'){
+              data.meta_data = {};
+              data.meta_data.type = result.json.type;
+              data.meta_data.requester = result.json.requester;
+              data.meta_data.service_id = result.json.service_id;
+              delete result.json.type;
+              delete result.json.service_id;
+              delete result.json.requester;
+              data.service_data = result.json;
+            }
+            else{
+              data.service_data = result.json;
+            }
+            return data
           }
-          else{
-            data.service_data = result.json;
-          }
-
-          return data
-        }
-      });
-    }
+        });
+      }
 
     async add(service,requester,type) {
       let petition ='';
@@ -67,7 +67,6 @@ class ServiceRepository {
           if(type==='petition'){
             return await t.service_petition_details.add(service,requester).then(async result=>{
               if(result){
-
                 queries.push(t.service_details_protocol.add('petition',service,result.id));
                 queries.push(t.service_contacts.add('petition',service.contacts,result.id));
                 if(service.protocol==='oidc'){
@@ -75,17 +74,14 @@ class ServiceRepository {
                   queries.push(t.service_multi_valued.add('petition','oidc_scopes',service.scope,result.id));
                   queries.push(t.service_multi_valued.add('petition','oidc_redirect_uris',service.redirect_uris,result.id));
                 }
-
                 var result = await t.batch(queries);
-
                 return result
               }
             });
           }
-          else {
+          else{
             return await t.service_details.add(service,requester).then(async result=>{
               if(result){
-              
                 queries.push(t.service_details_protocol.add('service',service,result.id));
                 queries.push(t.service_contacts.add('service',service.contacts,result.id));
                 if(service.protocol==='oidc'){
@@ -108,8 +104,7 @@ class ServiceRepository {
       }
     }
 
-
-async update(newState,targetId,type){
+    async update(newState,targetId,type){
   let petition ='';
   let service_details = 'service_details';
   if(type==='petition'){
@@ -121,8 +116,8 @@ async update(newState,targetId,type){
       let queries = [];
       return t.service.get(targetId,type).then(async oldState=>{
         if(oldState){
-          let edits = calcDiff(oldState.service_data,newState);
 
+          let edits = calcDiff(oldState.service_data,newState);
           if(Object.keys(edits.details).length !== 0){
              queries.push(t[service_details].update(edits.details,targetId));
              queries.push(t.service_details_protocol.update(type,edits.details,targetId));

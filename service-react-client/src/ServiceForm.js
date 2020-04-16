@@ -42,34 +42,38 @@ const ServiceForm = (props)=> {
       });
   });
 
+
   const schema = yup.object({
     service_name:yup.string().min(4,'The Service Name must be at least 4 characters long').max(36,'The Service Name exceeds the character limit (15)').required('This is a required field!'),
     // Everytime client_id changes we make a fetch request to see if it is available.
-    client_id:yup.string().min(4,'The Client ID must be at least 4 characters long').max(36,'The Client ID exceeds the character limit (35)').test('testAvailable','Client Id is not available',function(value){
-        return new Promise((resolve,reject)=>{
-          if(props.initialValues.client_id===value||!value||value===checkedId)
-            {resolve(true)}
-          else{
+    client_id:yup.string().nullable().when('protocol',{
+      is:'oidc',
+      then: yup.string().min(4,'The Client ID must be at least 4 characters long').max(36,'The Client ID exceeds the character limit (35)').test('testAvailable','Client Id is not available',function(value){
+          return new Promise((resolve,reject)=>{
+            if(props.initialValues.client_id===value||!value||value===checkedId)
+              {resolve(true)}
+            else{
+              setCheckingAvailability(true);
+              fetch(config.host+'service/availability/oidc/'+ value, {
+                method:'GET',
+                credentials:'include',
+                headers:{
+                  'Content-Type':'application/json'
+                }}).then(res => res.json()).then(
+                  (res=>{if(res.success){
 
-            setCheckingAvailability(true);
-            fetch(config.host+'client/availability/'+ value, {
-              method:'GET',
-              credentials:'include',
-              headers:{
-                'Content-Type':'application/json'
-              }}).then(res => res.json()).then(
-                (res=>{if(res.success){
-
-                  setcheckedId(value);
-                  setCheckingAvailability(false);
-                  resolve(res.available)}})
-                ).catch(()=>{resolve(true)})
-          }
-
-
-        })
+                    setcheckedId(value);
+                    setCheckingAvailability(false);
+                    resolve(res.available)}})
+                  ).catch(()=>{resolve(true)})
+            }
+          })
+      })
     }),
-    redirect_uris:yup.array().of(yup.string().matches(reg.regUrl,'This must be a secure Url starting with https://')).unique('Redirect Uris must be unique!').required('This is a required field!'),
+    redirect_uris:yup.array().nullable().when('protocol',{
+      is:'oidc',
+      then: yup.array().of(yup.string().matches(reg.regUrl,'This must be a secure Url starting with https://')).unique('Redirect Uris must be unique!').required('This is a required field!')
+    }),
     logo_uri:yup.string().required('This is a required field!').test('testImage','Enter a valid image Url',function(value){ return imageError}),
     policy_uri:yup.string().required('This is a required field!').matches(reg.regSimpleUrl,'Enter a valid Url'),
     service_description:yup.string().required('This is a required field!'),
@@ -82,24 +86,83 @@ const ServiceForm = (props)=> {
           const unique = array.filter((v, i, a) => a.indexOf(v) === i);
           if(unique.length===array.length){return true}else{return false}
           }).required('This is a required field!'),
-
-    scope:yup.array().of(yup.string().min(1,'Scope cannot be empty').max(50,'Scope exceeds character limit (50)').matches(reg.regScope,'Scope must consist of small letters and underscores')).unique('Scope must be unique').required('This is a required field!'),
-    grant_types:yup.array().of(yup.string().test('testGrantTypes','error-granttypes',function(value){return formConfig.grant_types.includes(value)})).required('At least one option must be selected'),
-    access_token_validity_seconds:yup.number().min(0).max(1000000,'Exceeds the maximum value').required('This is a required field!'),
-    refresh_token_validity_seconds:yup.number().min(0).max(34128000,'Exceeds the maximum value').required('This is a required field!'),
-    device_code_validity_seconds:yup.number().min(0).max(34128000,'Exceeds the maximum value').required('This is a required field!'),
-    code_challenge_method:yup.string().matches(reg.regCodeChalMeth).required('This is a required field!'),
-    allow_introspection:yup.boolean().required(),
-    generate_client_secret:yup.boolean().required(),
-    reuse_refresh_tokens:yup.boolean().required(),
+    scope:yup.array().nullable().when('protocol',{
+      is:'oidc',
+      then: yup.array().of(yup.string().min(1,'Scope cannot be empty').max(50,'Scope exceeds character limit (50)').matches(reg.regScope,'Scope must consist of small letters and underscores')).unique('Scope must be unique').required('This is a required field!')
+    }),
+    grant_types:yup.array().nullable().when('protocol',{
+      is:'oidc',
+      then: yup.array().of(yup.string().test('testGrantTypes','error-granttypes',function(value){return formConfig.grant_types.includes(value)})).required('At least one option must be selected')
+    }),
+    access_token_validity_seconds:yup.number().nullable().when('protocol',{
+      is:'oidc',
+      then: yup.number().min(0).max(1000000,'Exceeds the maximum value')}),
+    refresh_token_validity_seconds:yup.number().nullable().when('protocol',{
+      is:'oidc',
+      then: yup.number().min(0).max(34128000,'Exceeds the maximum value')}),
+    device_code_validity_seconds:yup.number().nullable().when('protocol',{
+      is:'oidc',
+      then: yup.number().min(0).max(34128000,'Exceeds the maximum value').required('This is a required field!')
+    }),
+    code_challenge_method:yup.string().nullable().when('protocol',{
+      is:'oidc',
+      then: yup.string().matches(reg.regCodeChalMeth).required('This is a required field!')
+    }),
+    allow_introspection:yup.boolean().nullable().when('protocol',{
+      is:'oidc',
+      then: yup.boolean().required()
+    }),
+    generate_client_secret:yup.boolean().nullable().when('protocol',{
+      is:'oidc',
+      then: yup.boolean().required()
+    }),
+    reuse_refresh_tokens:yup.boolean().nullable().when('protocol',{
+      is:'oidc',
+      then: yup.boolean().required()
+    }),
     protocol: yup.string().test('testProtocol','error-protocol',function(value){return ['saml','oidc'].includes(value)}).required('Select service protocol'),
     integration_environment:yup.string().test('testIntegrationEnv','error-integrationEnvironment',function(value){return formConfig.integration_environment.includes(value)}).required('At least one option must be selected'),
-    clear_access_tokens_on_refresh:yup.boolean().required(),
-    client_secret:yup.string().when('generate_client_secret',{
-      is:false,
-      then: yup.string().required('Client Secret cannot be empty').min(4,'Client Secret must e at least 4 characters long').max(16,'Client Secret must not exceed the character limit (16)')
-    }).nullable(),
+    clear_access_tokens_on_refresh:yup.boolean().nullable().when('protocol',{
+      is:'oidc',
+      then: yup.boolean().required()
+    }),
+    client_secret:yup.string().nullable().when('protocol',{
+      is:'oidc',
+      then: yup.string().when('generate_client_secret',{
+        is:false,
+        then: yup.string().required('Client Secret cannot be empty').min(4,'Client Secret must e at least 4 characters long').max(16,'Client Secret must not exceed the character limit (16)')
+      }).nullable()
+    }),
+    metadata_url:yup.string().nullable().when('protocol',{
+      is:'saml',
+      then: yup.string().required('Metadata URL cannot be empty').matches(reg.regSimpleUrl,'Enter a valid Url')
+    }),
+    entity_id:yup.string().nullable().when('protocol',{
+      is:'saml',
+      then: yup.string().min(4,'Entity ID must be at least 4 characters long').max(36,'Entity ID exceeds the character limit (35)').test('testAvailable','Entity ID is not available',function(value){
+          return new Promise((resolve,reject)=>{
+            if(props.initialValues.entity_id===value||!value||value===checkedId)
+              {resolve(true)}
+            else{
+              setCheckingAvailability(true);
+              fetch(config.host+'service/availability/saml/'+ value, {
+                method:'GET',
+                credentials:'include',
+                headers:{
+                  'Content-Type':'application/json'
+                }}).then(res => res.json()).then(
+                  (res=>{if(res.success){
+
+                    setcheckedId(value);
+                    setCheckingAvailability(false);
+                    resolve(res.available)}})
+                  ).catch(()=>{resolve(true)})
+            }
+          })
+      })
+    })
   });
+
   const [adminComment,setAdminComment] = useState();
   const [disabled,setDisabled] = useState(false);
   const [hasSubmitted,setHasSubmitted] = useState(false);
@@ -125,7 +188,7 @@ const ServiceForm = (props)=> {
     }
     if (diff(petition,props.initialValues)){
       setAsyncResponse(true);
-      fetch(config.host+'newpetition', {
+      fetch(config.host+'newpetition/'+petition.type, {
         method: 'POST', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
@@ -133,28 +196,20 @@ const ServiceForm = (props)=> {
         },
         body: JSON.stringify(petition) // body data type must match "Content-Type" header
       }).then(response=>response.json()).then(response=> {
-
         if(response.success){
           setAsyncResponse(false);
-          if(props.user.admin){
-
-            reviewPetition('approve',response.id);
+          setModalTitle('Your ' + type + ' request with id: ' + petition.client_id + petition.entity_id);
+          if(response.success){
+            setMessage('Was submited succesfully and is currently pending approval from an administrator.');
           }
           else{
-            setModalTitle('Your ' + type + ' request with id: ' + petition.client_id);
-            if(response.success){
-              setMessage('Was submited succesfully and is currently pending approval from an administrator.');
-            }
-            else{
-              setMessage('Was not submited due to the following error: ' + response.error);
-            }
+            setMessage('Was not submited due to the following error: ' + response.error);
           }
         }
         else{
           setModalTitle('Your ' + type + ' request with id: ' + petition.client_id);
           setMessage('Was not submited due to the following error: ' + response.error);
         }
-
       });
     }
     else{
@@ -181,17 +236,12 @@ const ServiceForm = (props)=> {
       }).then(response=>response.json()).then(response=> {
         if(response.success){
           setAsyncResponse(false);
-          if(props.user.admin){
-              reviewPetition('approve',response.id);
+          setModalTitle('Your reconfiguration request for service with id: ' + petition.client_id);
+          if(response.success){
+            setMessage('Was submited succesfully and is currently pending approval from an administrator.');
           }
           else{
-            setModalTitle('Your reconfiguration request for service with id: ' + petition.client_id);
-            if(response.success){
-              setMessage('Was submited succesfully and is currently pending approval from an administrator.');
-            }
-            else{
-              setMessage('Was not submited due to the following error: ' + response.error);
-            }
+            setMessage('Was not submited due to the following error: ' + response.error);
           }
         }
         else{
@@ -215,7 +265,6 @@ const ServiceForm = (props)=> {
       headers: {
       'Content-Type': 'application/json'
     }}).then(response=>response.json()).then(response=> {
-
       if(props.type==='delete'){
           setModalTitle('Your deregistration request:');
       }
@@ -244,7 +293,6 @@ const ServiceForm = (props)=> {
       else if (props.type==='edit'){
           setModalTitle('Sevice reconfiguration request:');
       }
-
       if(type==='approve'){
         setAsyncResponse(true);
         fetch(config.host+'petition/approve/'+id, {
@@ -255,11 +303,9 @@ const ServiceForm = (props)=> {
           },
           body:JSON.stringify({comment:adminComment})
       }).then(response=>response.json()).then(response=> {
-
           if(response.success){
               setAsyncResponse(false);
               setMessage('Was approved, and changes have been commited.');
-
           }
           else{
             setAsyncResponse(false);
@@ -277,7 +323,6 @@ const ServiceForm = (props)=> {
           },
           body:JSON.stringify({comment:adminComment})
       }).then(response=>response.json()).then(response=> {
-
           if(response.success){
             setAsyncResponse(false);
             setMessage('Was rejected succesfully.');
@@ -310,9 +355,10 @@ const ServiceForm = (props)=> {
       }
   }
 
+
+
   const postApi=(data)=>{
     data = gennerateValues(data);
-
     if(!props.type){
       createNewPetition(data);
     }
@@ -321,11 +367,6 @@ const ServiceForm = (props)=> {
       editPetition(data);
     }
   }
-
-
-
-
-
 
 
 
@@ -462,39 +503,7 @@ const ServiceForm = (props)=> {
                         />
                       </InputRow>
 
-                      <InputRow title='Refresh Tokens' extraClass='time-input' error={errors.refresh_token_validity_seconds} touched={touched.refresh_token_validity_seconds}>
-                        <RefreshToken
-                          values={values}
-                          onBlur={handleBlur}
-                          isInvalid={hasSubmitted?!!errors.refresh_token_validity_seconds:(!!errors.refresh_token_validity_seconds&&touched.refresh_token_validity_seconds)}
-                          onChange={handleChange}
-                          disabled={disabled}
-                          changed={props.changes}
-                        />
-                      </InputRow>
-                      <InputRow title='Device Code' extraClass='time-input' error={errors.device_code_validity_seconds} touched={touched.device_code_validity_seconds}>
-                        <DeviceCode
-                          onBlur={handleBlur}
-                          values={values}
-                          isInvalid={hasSubmitted?!!errors.device_code_validity_seconds:(!!errors.device_code_validity_seconds&&touched.device_code_validity_seconds)}
-                          onChange={handleChange}
-                          disabled={disabled}
-                          changed={props.changes}
-                        />
-                      </InputRow>
-                      <InputRow title='Proof Key for Code Exchange (PKCE) Code Challenge Method' extraClass='select-col' error={errors.code_challenge_method} touched={touched.code_challenge_method}>
-                        <Select
-                          onBlur={handleBlur}
-                          optionsTitle={['No code challenge','Plain code challenge','SHA-256 hash algorithm']}
-                          options={['','plain','S256']}
-                          name="code_challenge_method"
-                          values={values}
-                          isInvalid={hasSubmitted?!!errors.code_challenge_method:(!!errors.code_challenge_method&&touched.code_challenge_method)}
-                          onChange={handleChange}
-                          disabled={disabled}
-                          changed={props.changes?props.changes.code_challenge_method:null}
-                        />
-                      </InputRow>
+
                     </Tab>
 
                     <Tab eventKey="protocol" title='Protocol Specific'>
@@ -507,7 +516,7 @@ const ServiceForm = (props)=> {
                           values={values}
                           isInvalid={hasSubmitted?!!errors.protocol:(!!errors.protocol&&touched.protocol)}
                           onChange={handleChange}
-                          disabled={disabled}
+                          disabled={disabled||props.initialValues.protocol}
                           changed={props.changes?props.changes.protocol:null}
                         />
                       </InputRow>
@@ -566,6 +575,39 @@ const ServiceForm = (props)=> {
 
                             />
                           </InputRow>
+                          <InputRow title='Refresh Tokens' extraClass='time-input' error={errors.refresh_token_validity_seconds} touched={touched.refresh_token_validity_seconds}>
+                            <RefreshToken
+                              values={values}
+                              onBlur={handleBlur}
+                              isInvalid={hasSubmitted?!!errors.refresh_token_validity_seconds:(!!errors.refresh_token_validity_seconds&&touched.refresh_token_validity_seconds)}
+                              onChange={handleChange}
+                              disabled={disabled}
+                              changed={props.changes}
+                            />
+                          </InputRow>
+                          <InputRow title='Device Code' extraClass='time-input' error={errors.device_code_validity_seconds} touched={touched.device_code_validity_seconds}>
+                            <DeviceCode
+                              onBlur={handleBlur}
+                              values={values}
+                              isInvalid={hasSubmitted?!!errors.device_code_validity_seconds:(!!errors.device_code_validity_seconds&&touched.device_code_validity_seconds)}
+                              onChange={handleChange}
+                              disabled={disabled}
+                              changed={props.changes}
+                            />
+                          </InputRow>
+                          <InputRow title='Proof Key for Code Exchange (PKCE) Code Challenge Method' extraClass='select-col' error={errors.code_challenge_method} touched={touched.code_challenge_method}>
+                            <Select
+                              onBlur={handleBlur}
+                              optionsTitle={['No code challenge','Plain code challenge','SHA-256 hash algorithm']}
+                              options={['','plain','S256']}
+                              name="code_challenge_method"
+                              values={values}
+                              isInvalid={hasSubmitted?!!errors.code_challenge_method:(!!errors.code_challenge_method&&touched.code_challenge_method)}
+                              onChange={handleChange}
+                              disabled={disabled}
+                              changed={props.changes?props.changes.code_challenge_method:null}
+                            />
+                          </InputRow>
                           <InputRow title='Introspection'>
                             <SimpleCheckbox
                               name='allow_introspection'
@@ -605,21 +647,33 @@ const ServiceForm = (props)=> {
                     :null}
                     {values.protocol==='saml'?
                       <React.Fragment>
-                        <InputRow title='SAML ID' description='Unique identifier.' error={errors.client_id} touched={touched.client_id}>
+                        <InputRow title='Entity Id' description='Unique identifier for a SAML service.' error={errors.entity_id} touched={touched.entity_id}>
                           <SimpleInput
-                            name='client_id'
+                            name='entity_id'
                             placeholder='Type something'
                             onChange={(e)=>{
-                              setFieldTouched('client_id');
+                              setFieldTouched('entity_id');
                               handleChange(e);
                             }}
-                            value={values.client_id}
-                            isInvalid={hasSubmitted?!!errors.client_id:(!!errors.client_id&&touched.client_id)}
+                            value={values.entity_id}
+                            isInvalid={hasSubmitted?!!errors.entity_id:(!!errors.entity_id&&touched.entity_id)}
                             onBlur={handleBlur}
                             disabled={disabled}
-                            isloading={values.client_id&&values.client_id!==checkedId&&checkingAvailability?1:0}
+                            isloading={values.entity_id&&values.entity_id!==checkedId&&checkingAvailability?1:0}
                            />
                          </InputRow>
+                         <InputRow title='Metadata Uri' description='Metadata uri for a SAML service' error={errors.metadata_url} touched={touched.metadata_url}>
+                           <SimpleInput
+                             name='metadata_url'
+                             placeholder='Type something'
+                             onChange={handleChange}
+                             value={values.metadata_url}
+                             isInvalid={hasSubmitted?!!errors.metadata_url:(!!errors.metadata_url&&touched.metadata_url)}
+                             onBlur={handleBlur}
+                             disabled={disabled}
+                             changed={props.changes?props.changes.metadata_url:null}
+                            />
+                          </InputRow>
                        </React.Fragment>
                      :null}
                     </Tab>
@@ -807,10 +861,10 @@ const ReviewComponent = (props)=>{
 
 function gennerateValues(data){
 
-  if(!data.client_id){
+  if(!data.client_id&&data.petition==='oidc'){
     data.client_id=uuidv1();
   }
-  if(data.generate_client_secret){
+  if(data.generate_client_secret&&data.petition==='oidc'){
     data.client_secret= hex(16);
     data.generate_client_secret = false;
   }

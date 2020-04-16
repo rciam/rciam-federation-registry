@@ -2,5 +2,6 @@
   "integration_environment": ["demo","production","development"],
   "grant_types":["implicit","authorization_code","refresh_token","client_credentials","password","redelegation","token_exchange","device"],
   "contact_types":["admin","technical","support","security"],
-  "super_admin_entitlements":["urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu"]
+  "super_admin_entitlements":["urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu"],
+  "protocol":["oidc","saml"]
 }

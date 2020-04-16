@@ -50,7 +50,10 @@ const EditService = (props) => {
             N:[]
           }
         };
-        let attributes = ['grant_types','scope','contacts','redirect_uris'];
+        let attributes = ['contacts'];
+        if(petition.protocol==='oidc'){
+          attributes.push('grant_types','scope','redirect_uris');
+        }
         for(let i=0;i<changes.length;i++){
           if(! ['grant_types','scope','contacts','redirect_uris'].includes(changes[i].path[0])){
               helper[changes[i].path[0]]=changes[i].kind;
@@ -191,7 +194,7 @@ const ViewService = (props)=>{
       }).then(response=>response.json()).then(response=> {
 
         if(response.service){
-
+          console.log(response.service);
           setService(response.service);
         }
       });
@@ -296,12 +299,14 @@ function calculateMultivalueDiff(old_values,new_values,edits){
         edits.contacts.N[index] = {email:items[0],type:items[1]};
     })
   }
-  edits.grant_types.N = new_values.grant_types.filter(x=>!old_values.grant_types.includes(x));
-  edits.grant_types.D = old_values.grant_types.filter(x=>!new_values.grant_types.includes(x));
-  edits.scope.N = new_values.scope.filter(x=>!old_values.scope.includes(x));
-  edits.scope.D = old_values.scope.filter(x=>!new_values.scope.includes(x));
-  edits.redirect_uris.N = new_values.redirect_uris.filter(x=>!old_values.redirect_uris.includes(x));
-  edits.redirect_uris.D = old_values.redirect_uris.filter(x=>!new_values.redirect_uris.includes(x));
+  if(new_values.protocol==='oidc'){
+    edits.grant_types.N = new_values.grant_types.filter(x=>!old_values.grant_types.includes(x));
+    edits.grant_types.D = old_values.grant_types.filter(x=>!new_values.grant_types.includes(x));
+    edits.scope.N = new_values.scope.filter(x=>!old_values.scope.includes(x));
+    edits.scope.D = old_values.scope.filter(x=>!new_values.scope.includes(x));
+    edits.redirect_uris.N = new_values.redirect_uris.filter(x=>!old_values.redirect_uris.includes(x));
+    edits.redirect_uris.D = old_values.redirect_uris.filter(x=>!new_values.redirect_uris.includes(x));
+  }
   return edits
 }
 

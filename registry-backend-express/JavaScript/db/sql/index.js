@@ -25,9 +25,14 @@ module.exports = {
       addOidc:sql('service_details_protocol/addOidc.sql'),
       checkClientId:sql('service_details_protocol/checkClientId.sql'),
       updateOidc:sql('service_details_protocol/updateOidc.sql'),
+      updateSaml:sql('service_details_protocol/updateSaml.sql'),
+      checkEntityId:sql('service_details_protocol/checkEntityId.sql'),
+      addSaml:sql('service_details_protocol/addSaml.sql')
     },
     service:{
-      getOidc:sql('service/getOidc.sql')
+      getOidc:sql('service/getOidc.sql'),
+      getSaml:sql('service/getSaml.sql'),
+      getService:sql('service/getService.sql')
     },
     user_info:{
       add:sql('user_info/add.sql')

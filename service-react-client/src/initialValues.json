@@ -1,10 +1,24 @@
 {
   "service_name":"",
-  "client_id":"",
+  "service_description":"",
   "redirect_uris": [],
   "logo_uri":"",
   "policy_uri":"",
+  "integration_environment":"demo",
+  "protocol":"",
   "contacts":[],
+  "metadata_url":"",
+  "entity_id":"",
+  "client_id":"",
+  "allow_introspection":false,
+  "code_challenge_method":"plain",
+  "device_code_validity_seconds":"28800",
+  "access_token_validity_seconds":"3600",
+  "refresh_token_validity_seconds":"28800",
+  "client_secret":"",
+  "reuse_refresh_tokens":true,
+  "clear_access_tokens_on_refresh":true,
+  "id_token_timeout_seconds":"1000",
   "scope": [
     "openid",
     "profile",
@@ -16,16 +30,5 @@
   "grant_types": [
     "authorization_code"
   ],
-  "allow_introspection":false,
-  "service_description":"",
-  "generate_client_secret":true,
-  "client_secret":"",
-  "access_token_validity_seconds":"3600",
-  "refresh_token_validity_seconds":"28800",
-  "reuse_refresh_tokens":true,
-  "integration_environment":"demo",
-  "device_code_validity_seconds":"28800",
-  "clear_access_tokens_on_refresh":true,
-  "code_challenge_method":"plain",
-  "protocol":""
+  "generate_client_secret":true
 }

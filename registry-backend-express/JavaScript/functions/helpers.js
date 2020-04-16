@@ -11,7 +11,7 @@ const calcDiff = (oldState,newState) => {
       dlt:{},
       details:{}
     };
-    
+
 
     new_values.contacts.forEach(item=>{
       new_cont.push(item.email+' '+item.type);
@@ -33,13 +33,14 @@ const calcDiff = (oldState,newState) => {
           edits.dlt.contacts[index] = {email:items[0],type:items[1]};
       })
     }
-
-    edits.add.oidc_grant_types = new_values.grant_types.filter(x=>!old_values.grant_types.includes(x));
-    edits.dlt.oidc_grant_types = old_values.grant_types.filter(x=>!new_values.grant_types.includes(x));
-    edits.add.oidc_scopes = new_values.scope.filter(x=>!old_values.scope.includes(x));
-    edits.dlt.oidc_scopes = old_values.scope.filter(x=>!new_values.scope.includes(x));
-    edits.add.oidc_redirect_uris = new_values.redirect_uris.filter(x=>!old_values.redirect_uris.includes(x));
-    edits.dlt.oidc_redirect_uris = old_values.redirect_uris.filter(x=>!new_values.redirect_uris.includes(x));
+    if(new_values.protocol==='oidc'){
+      edits.add.oidc_grant_types = new_values.grant_types.filter(x=>!old_values.grant_types.includes(x));
+      edits.dlt.oidc_grant_types = old_values.grant_types.filter(x=>!new_values.grant_types.includes(x));
+      edits.add.oidc_scopes = new_values.scope.filter(x=>!old_values.scope.includes(x));
+      edits.dlt.oidc_scopes = old_values.scope.filter(x=>!new_values.scope.includes(x));
+      edits.add.oidc_redirect_uris = new_values.redirect_uris.filter(x=>!old_values.redirect_uris.includes(x));
+      edits.dlt.oidc_redirect_uris = old_values.redirect_uris.filter(x=>!new_values.redirect_uris.includes(x));
+    }
     for(var i in edits){
       for(var key in edits[i]){
         if(edits[i][key].length===0){

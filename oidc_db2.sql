@@ -21,8 +21,8 @@ create table user_edu_person_entitlement (
 );
 create table service_details (
   id SERIAL PRIMARY KEY,
-  service_description VARCHAR(1024),
   service_name  VARCHAR(256),
+  service_description VARCHAR(1024),
   logo_uri VARCHAR(2048),
   policy_uri VARCHAR(2048),
   integration_environment VARCHAR(256),
@@ -164,6 +164,10 @@ INSERT INTO service_details (service_description,service_name,logo_uri,policy_ur
 VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 4','https://brandmark.io/logo-rank/random/pepsi.png','https://policy_uri.com','development','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',true,'oidc');
 INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,deployed,protocol)
 VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 5','https://brandmark.io/logo-rank/random/pepsi.png','https://policy_uri.com','development','7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu',true,'oidc');
+INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,deployed,protocol)
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Saml 6','https://cdn.auth0.com/blog/duo-saml-exploit/saml.png','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',true,'saml');
+
+
 
 INSERT INTO service_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_tokens,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds)
 VALUES (1,'client1',true,'secret',true,true,600,3600,28800,'plain',10000);
@@ -175,6 +179,10 @@ INSERT INTO service_details_oidc (id,client_id,allow_introspection,client_secret
 VALUES (4,'client4',true,'secret',true,true,600,3600,28800,'plain',10000);
 INSERT INTO service_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_tokens,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds)
 VALUES (5,'client5',true,'secret',true,true,600,3600,28800,'plain',10000);
+
+
+INSERT INTO service_details_saml (id,entity_id,metadata_url)
+VALUES (6,'saml-id-1','https://metadataurl.com');
 
 INSERT INTO service_contacts(owner_id,value,type)
 VALUES ('1','mymail@gmail.com','admin');
@@ -216,7 +224,10 @@ INSERT INTO service_contacts(owner_id,value,type)
 VALUES ('5','mygrail@gmail.com','admin');
 INSERT INTO service_contacts(owner_id,value,type)
 VALUES ('5','myfail@gmail.com','admin');
-
+INSERT INTO service_contacts(owner_id,value,type)
+VALUES ('6','mygrail@gmail.com','admin');
+INSERT INTO service_contacts(owner_id,value,type)
+VALUES ('6','myfail@gmail.com','admin');
 
 INSERT INTO service_oidc_grant_types(owner_id,value)
 VALUES ('1','implicit');
@@ -251,6 +262,8 @@ VALUES ('5','refresh_token');
 
 
 
+
+
 INSERT INTO service_oidc_redirect_uris(owner_id,value)
 VALUES ('1','https://redirecturi1.com');
 INSERT INTO service_oidc_redirect_uris(owner_id,value)
@@ -265,9 +278,10 @@ INSERT INTO service_oidc_redirect_uris(owner_id,value)
 VALUES ('3','https://redirecturi2.com');
 INSERT INTO service_oidc_redirect_uris(owner_id,value)
 VALUES ('4','https://redirecturi.com');
-
 INSERT INTO service_oidc_redirect_uris(owner_id,value)
 VALUES ('5','https://redirecturi.com');
+
+
 
 INSERT INTO service_oidc_scopes(owner_id,value)
 VALUES ('1','electroscope');
@@ -279,6 +293,7 @@ INSERT INTO service_oidc_scopes(owner_id,value)
 VALUES ('4','kaleidoscope');
 INSERT INTO service_oidc_scopes(owner_id,value)
 VALUES ('5','telescope');
+
 
 
 
@@ -298,6 +313,9 @@ INSERT INTO service_petition_details (service_description,service_name,logo_uri,
 VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 7','https://www.bookmarks.design/media/image/hatchful.jpg','https://policy_uri.com','development','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','create','oidc');
 INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,type,service_id,protocol)
 VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 1','https://cdn.vox-cdn.com/thumbor/0n6dqQfk9MuOBSiM39Pog2Bw39Y=/1400x1400/filters:format(jpeg)/cdn.vox-cdn.com/uploads/chorus_asset/file/19341372/microsoftedgenewlogo.jpg','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','delete',1,'oidc');
+INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,status,type,service_id,reviewed_at,protocol)
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Saml 6','https://cdn.auth0.com/blog/duo-saml-exploit/saml.png','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','create','approved',6,'2020-10-4 13:18:11','saml');
+
 
 
 INSERT INTO service_petition_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_tokens,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds)
@@ -316,6 +334,13 @@ INSERT INTO service_petition_details_oidc (id,client_id,allow_introspection,clie
 VALUES (7,'client7',true,'secret',true,true,600,3600,28800,'plain',10000);
 INSERT INTO service_petition_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_tokens,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds)
 VALUES (8,'client1',true,'secret',true,true,600,3600,28800,'plain',10000);
+
+INSERT INTO service_petition_details_saml (id,entity_id,metadata_url)
+VALUES (9,'saml-id-1','https://metadataurl.com');
+INSERT INTO service_petition_contacts(owner_id,value,type)
+VALUES ('9','mygrail@gmail.com','admin');
+INSERT INTO service_petition_contacts(owner_id,value,type)
+VALUES ('9','myfail@gmail.com','admin');
 
 
 

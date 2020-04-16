@@ -50,12 +50,19 @@ class ServiceDetailsRepository {
       return this.db.any('SELECT id,service_description,logo_uri,service_name,deployed,requester,integration_environment FROM service_details WHERE requester = $1 AND deleted=false', sub);
     }
 
-
     async belongsToRequester(service_id,sub){
-      return this.db.oneOrNone('SELECT id FROM service_details WHERE id = $1 AND requester= $2', [+service_id,sub]).then(res=>{
-        if(res){return true}else{return false}
-      });
+      if(sub==='admin'){
+        return this.db.oneOrNone('SELECT protocol FROM service_details WHERE id = $1 AND deleted=FALSE', [+service_id]).then(res=>{
+          if(res){return res.protocol}else{return false}
+        });
+      }
+      else{
+        return this.db.oneOrNone('SELECT protocol FROM service_details WHERE id = $1 AND requester= $2 and deleted=FALSE', [+service_id,sub]).then(res=>{
+          if(res){return res.protocol}else{return false}
+        });
+      }
     }
+
     async delete(id){
       return this.db.none('UPDATE service_details SET deleted=TRUE WHERE id=$1',+id)
     }

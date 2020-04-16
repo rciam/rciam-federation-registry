@@ -14,11 +14,11 @@ const Routes = (props) => (
         <Home />
       </Route>
       <PrivateRoute user={props.user} path="/petitions">
-      <div className="links">
-        <Link to="/home">Home</Link>
-        <span className="link-seperator">/</span>
-        Manage Services
-      </div>
+        <div className="links">
+          <Link to="/home">Home</Link>
+          <span className="link-seperator">/</span>
+          Manage Services
+        </div>
         <ServiceList user={props.user}/>
       </PrivateRoute>
       <PrivateRoute user={props.user} path="/userinfo">
