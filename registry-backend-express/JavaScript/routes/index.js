@@ -8,18 +8,47 @@ var router = require('express').Router();
 var passport = require('passport');
 var config = require('../config');
 
+
 const petitionTables = ['service_petition_oidc_scopes','service_petition_oidc_grant_types','service_petition_oidc_redirect_uris'];
 const serviceTables = ['service_oidc_scopes','service_oidc_grant_types','service_oidc_redirect_uris'];
 const tables = ['service_oidc_scopes','service_oidc_grant_types','service_oidc_redirect_uris','service_contacts'];
 
 
 
+
+
+
+
 // ----------------------------------------------------------
 // ************************* Routes *************************
-// ----------------------------------------------------------
+//
+router.get(('/test'),(req,res)=>{
+  return res.end(JSON.stringify({
+    success:true,
+    services:'yesd'
+  }));
+});
 
+router.post(('/newpetition/create/test'),checkAuthentication,(req,res)=>{
+
+  return res.end(JSON.stringify({
+    success:true,
+    services:'yesd'
+  }));
+});
+
+router.get(('/test/auth'),checkAuthentication,(req,res)=>{
+
+  return res.end(JSON.stringify({
+    success:true,
+    services:'yesd'
+  }));
+});
+
+router.get('/auth/mock', passport.authenticate('my-mock'));
 // Login Route
-router.get('/login',passport.authenticate('oidc', {
+
+router.get('/login',passport.authenticate('my-mock', {
   successReturnToOrRedirect: process.env.OIDC_REACT
 }));
 
@@ -52,6 +81,7 @@ router.get('/callback', passport.authenticate('oidc', {
 
 // Find all clients/petitions from curtain user to create preview list
 router.get('/services/user',checkAuthentication,(req,res)=>{
+
     return db.task('find-services', async t => {
       let services = [];
       if (isAdmin(req)){ // If user is Admin we fetch all services
@@ -128,16 +158,20 @@ router.get('/service/availability/saml/:entity_id',checkAuthentication,(req,res)
 // Add a new client/petition
 router.post('/newpetition/create',clientValidationRules(),validate,checkAuthentication,(req,res)=>{
   res.setHeader('Content-Type', 'application/json');
-  return db.tx('add-client', async t => {
+  return db.tx('add-service', async t => {
     try{
       if(req.body.type==='create'){
-        await t.service.add(req.body,req.user.sub,'petition').then(resp=>{
-          if(resp){
+        await t.service.add(req.body,req.user.sub,'petition').then(id=>{
+          if(id){
             return res.json({
+              id:id,
               success:true
             })
           }
         });
+      }
+      else{
+        throw "Wrong request type";
       }
     }
     catch(err){
@@ -185,7 +219,6 @@ router.post('/newpetition/edit',clientValidationRules(),validate,checkAuthentica
   });
 });
 
-
 // It returns a service with form data
 router.get('/getservice/:id',checkAuthentication,(req,res)=>{
       let requester;
@@ -217,6 +250,7 @@ router.get('/getservice/:id',checkAuthentication,(req,res)=>{
 // It fetches a petition with form data
 router.get('/getpetition/:id',checkAuthentication,(req,res)=>{
   return db.task('find-petition-data',async t=>{
+    console.log(req.params.id);
     let requester;
     if(isAdmin(req)){
       requester = 'admin'
@@ -244,6 +278,7 @@ router.get('/getpetition/:id',checkAuthentication,(req,res)=>{
 
 // Edit Petition
 router.post('/petition/edit/:id',clientValidationRules(),validate,checkAuthentication,(req,res)=>{
+
   return db.task('create-delete-petition',async t =>{
     try{
       await t.service_petition_details.belongsToRequester(req.params.id,req.user.sub).then(async protocol =>{
@@ -264,6 +299,9 @@ router.post('/petition/edit/:id',clientValidationRules(),validate,checkAuthentic
               error:'Protocol can not be modified.'
             })
           }
+        }
+        else{
+          throw 'no petition was found with id: '+req.params.id+" for user: " + req.user.sub;
         }
       });
     }

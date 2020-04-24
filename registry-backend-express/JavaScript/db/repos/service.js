@@ -74,8 +74,10 @@ class ServiceRepository {
                   queries.push(t.service_multi_valued.add('petition','oidc_scopes',service.scope,result.id));
                   queries.push(t.service_multi_valued.add('petition','oidc_redirect_uris',service.redirect_uris,result.id));
                 }
-                var result = await t.batch(queries);
-                return result
+                var result2 = await t.batch(queries);
+                if(result2){
+                  return result.id
+                }
               }
             });
           }

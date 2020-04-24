@@ -1,4 +1,5 @@
-require('dotenv').config();
+var envPath = __dirname + "/.env";
+require('dotenv').config({path:envPath});
 const express = require('express');
 const {db} = require('./db');
 const cors = require('cors');
@@ -8,6 +9,7 @@ const {clientValidationRules,validate} = require('./validator.js');
 const {merge_data} = require('./merge_data.js');
 const {Issuer,Strategy} = require('openid-client');
 const routes= require('./routes/index');
+const MockStrategy = require('passport-mock-strategy');
 var cookieParser = require('cookie-parser');
 var passport = require('passport');
 var session = require("express-session");
@@ -46,6 +48,27 @@ Issuer.discover(process.env.ISSUER_BASE_URI).then((issuer)=>{
   }));
 });
 
+// Test Strategy
+
+passport.use(new MockStrategy({
+	name: 'my-mock',
+	user: {
+    sub: '4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',
+    name: 'Andrew Koza',
+    given_name: 'Andrew',
+    family_name: 'Koza',
+    email: 'koza-sparrow@hotmail.com',
+    acr: 'https://aai.egi.eu/LoA#Low',
+    eduperson_assurance: [ 'https://aai.egi.eu/LoA#Low' ]
+  },
+  callback: process.env.OIDC_REACT
+}, (user, done) => {
+  done(null, user);
+	// Perform actions on user, call done once finished
+}));
+
+
+
 passport.serializeUser(function(user, done) {
   done(null, user);
 });
@@ -77,3 +100,5 @@ const port = 5000;
 app.listen(port, () => {
     console.log('\nReady for GET requests on http://localhost:' + port);
 });
+
+module.exports = app;

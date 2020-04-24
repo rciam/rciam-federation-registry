@@ -28,7 +28,7 @@ class ServicePetitionDetailsRepository {
         integration_environment: body.integration_environment,
         requester: sub,
         type:body.type,
-        status:body.status,
+        status:"pending",
         service_id:body.service_id,
         comment:body.comment,
         protocol:body.protocol
