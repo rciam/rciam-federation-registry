@@ -60,7 +60,7 @@ const ServiceList= (props)=> {
 
   // Get data, to create Service List
   const getServices = ()=> {
-    fetch(config.host+'services/user', {
+    fetch(config.host+'servicelist', {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {

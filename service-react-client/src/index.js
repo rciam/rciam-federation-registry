@@ -9,9 +9,7 @@ import {GlobalStateProvider} from './useGlobalState.js';
 
 const Root = () => (
   <GlobalStateProvider>
-  
       <App />
-
   </GlobalStateProvider>
 )
 

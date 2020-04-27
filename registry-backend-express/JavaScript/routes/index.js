@@ -22,33 +22,11 @@ const tables = ['service_oidc_scopes','service_oidc_grant_types','service_oidc_r
 // ----------------------------------------------------------
 // ************************* Routes *************************
 //
-router.get(('/test'),(req,res)=>{
-  return res.end(JSON.stringify({
-    success:true,
-    services:'yesd'
-  }));
-});
-
-router.post(('/newpetition/create/test'),checkAuthentication,(req,res)=>{
-
-  return res.end(JSON.stringify({
-    success:true,
-    services:'yesd'
-  }));
-});
-
-router.get(('/test/auth'),checkAuthentication,(req,res)=>{
-
-  return res.end(JSON.stringify({
-    success:true,
-    services:'yesd'
-  }));
-});
 
 router.get('/auth/mock', passport.authenticate('my-mock'));
 // Login Route
 
-router.get('/login',passport.authenticate('my-mock', {
+router.get('/login',passport.authenticate('oidc', {
   successReturnToOrRedirect: process.env.OIDC_REACT
 }));
 
@@ -80,7 +58,7 @@ router.get('/callback', passport.authenticate('oidc', {
 }));
 
 // Find all clients/petitions from curtain user to create preview list
-router.get('/services/user',checkAuthentication,(req,res)=>{
+router.get('/servicelist',checkAuthentication,(req,res)=>{
 
     return db.task('find-services', async t => {
       let services = [];
@@ -111,48 +89,6 @@ router.get('/services/user',checkAuthentication,(req,res)=>{
         services
       }));
     });
-});
-
-// checking if clientId is available
-router.get('/service/availability/oidc/:client_id',checkAuthentication,(req,res)=>{
-  return db.task('check-client_id-exists', async t => {
-    try{
-      await isAvailable(t,req.params.client_id,'oidc').then(available=>{
-        res.json({
-          success:true,
-          available:available
-        })
-      })
-    }
-    catch(error){
-      console.log(error);
-      res.json({
-        success:false,
-        error:'Error while querying the database'
-      })
-    }
-  })
-});
-
-// check entity_id is available
-router.get('/service/availability/saml/:entity_id',checkAuthentication,(req,res)=>{
-  return db.task('check-entity_id-exists', async t => {
-    try{
-      await isAvailable(t,req.params.entity_id,'saml').then(available=>{
-        res.json({
-          success:true,
-          available:available
-        })
-      })
-    }
-    catch(error){
-      console.log(error);
-      res.json({
-        success:false,
-        error:'Error while querying the database'
-      })
-    }
-  })
 });
 
 // Add a new client/petition
@@ -250,7 +186,7 @@ router.get('/getservice/:id',checkAuthentication,(req,res)=>{
 // It fetches a petition with form data
 router.get('/getpetition/:id',checkAuthentication,(req,res)=>{
   return db.task('find-petition-data',async t=>{
-    console.log(req.params.id);
+
     let requester;
     if(isAdmin(req)){
       requester = 'admin'
@@ -278,7 +214,6 @@ router.get('/getpetition/:id',checkAuthentication,(req,res)=>{
 
 // Edit Petition
 router.post('/petition/edit/:id',clientValidationRules(),validate,checkAuthentication,(req,res)=>{
-
   return db.task('create-delete-petition',async t =>{
     try{
       await t.service_petition_details.belongsToRequester(req.params.id,req.user.sub).then(async protocol =>{
@@ -385,6 +320,51 @@ router.put('/petition/delete/:id',checkAuthentication,(req,res)=>{
   })
 });
 
+
+
+// checking if clientId is available
+router.get('/service/availability/oidc/:client_id',checkAuthentication,(req,res)=>{
+  return db.task('check-client_id-exists', async t => {
+    try{
+      await isAvailable(t,req.params.client_id,'oidc').then(available=>{
+        res.json({
+          success:true,
+          available:available
+        })
+      })
+    }
+    catch(error){
+      console.log(error);
+      res.json({
+        success:false,
+        error:'Error while querying the database'
+      })
+    }
+  })
+});
+
+// check entity_id is available
+router.get('/service/availability/saml/:entity_id',checkAuthentication,(req,res)=>{
+  return db.task('check-entity_id-exists', async t => {
+    try{
+      await isAvailable(t,req.params.entity_id,'saml').then(available=>{
+        res.json({
+          success:true,
+          available:available
+        })
+      })
+    }
+    catch(error){
+      console.log(error);
+      res.json({
+        success:false,
+        error:'Error while querying the database'
+      })
+    }
+  })
+});
+
+
 // Admin rejects petition
 router.put('/petition/reject/:id',checkAuthentication,checkAdmin,(req,res)=>{
   return db.task('reject-petition',async t =>{
@@ -404,7 +384,7 @@ router.put('/petition/reject/:id',checkAuthentication,checkAdmin,(req,res)=>{
       })
     }
   })
-})
+});
 
 // Leave Comment/Accept With Changes
 router.put('/petition/approve/changes/:id',checkAuthentication,checkAdmin,(req,res)=>{
@@ -451,9 +431,11 @@ router.put('/petition/approve/changes/:id',checkAuthentication,checkAdmin,(req,r
 router.put('/petition/approve/:id',checkAuthentication,checkAdmin,(req,res)=>{
   return db.tx('approve-petition',async t =>{
     try{
+      let service_id;
       await t.service.get(req.params.id,'petition').then(async petition =>{
         if(petition){
           if(petition.meta_data.type==='delete'){
+            service_id = petition.meta_data.service_id;
             await t.batch([
               t.service_details.delete(petition.meta_data.service_id),
               t.service_petition_details.review(req.params.id,req.user.sub,'approved',req.body.comment)
@@ -461,6 +443,7 @@ router.put('/petition/approve/:id',checkAuthentication,checkAdmin,(req,res)=>{
           }
           else if(petition.meta_data.type==='edit'){
             // Edit Service
+            service_id = petition.meta_data.service_id;
             await t.batch([
                t.service.update(petition.service_data,petition.meta_data.service_id,'service'),
                t.service_petition_details.review(req.params.id,req.user.sub,'approved',req.body.comment)
@@ -469,11 +452,13 @@ router.put('/petition/approve/:id',checkAuthentication,checkAdmin,(req,res)=>{
            else if(petition.meta_data.type==='create'){
              await t.service.add(petition.service_data,petition.meta_data.requester,'service').then(async id=>{
                if(id){
+                 service_id = id;
                  await t.service_petition_details.approveCreation(req.params.id,req.user.sub,'approved',req.body.comment,id);
                }
              })
           }
            return res.json({
+             service_id:service_id,
              success:true
            })
          }

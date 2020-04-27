@@ -94,6 +94,9 @@ const ServiceForm = (props)=> {
       is:'oidc',
       then: yup.array().of(yup.string().test('testGrantTypes','error-granttypes',function(value){return formConfig.grant_types.includes(value)})).required('At least one option must be selected')
     }),
+    id_token_timeout_seconds:yup.number().nullable().when('protocol',{
+      is:'oidc',
+      then: yup.number().min(0).max(1000000,'Exceeds the maximum value')}),
     access_token_validity_seconds:yup.number().nullable().when('protocol',{
       is:'oidc',
       then: yup.number().min(0).max(1000000,'Exceeds the maximum value')}),
@@ -641,6 +644,17 @@ const ServiceForm = (props)=> {
                               onChange={handleChange}
                               disabled={disabled}
                               changed={props.changes?props.changes.access_token_validity_seconds:null}
+                            />
+                          </InputRow>
+                          <InputRow title='Id Token Timeout' extraClass='time-input' error={errors.id_token_timeout_seconds} touched={touched.id_token_timeout_seconds} description='Enter this time in seconds, minutes, or hours (Max value is 1000000 seconds (11.5 days)).'>
+                            <TimeInput
+                              name='access_token_validity_seconds'
+                              value={values.id_token_timeout_seconds}
+                              isInvalid={hasSubmitted?!!errors.id_token_timeout_seconds:(!!errors.id_token_timeout_seconds&&touched.id_token_timeout_seconds)}
+                              onBlur={handleBlur}
+                              onChange={handleChange}
+                              disabled={disabled}
+                              changed={props.changes?props.changes.id_token_timeout_seconds:null}
                             />
                           </InputRow>
                         </React.Fragment>

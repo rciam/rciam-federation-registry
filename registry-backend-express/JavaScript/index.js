@@ -42,7 +42,7 @@ Issuer.discover(process.env.ISSUER_BASE_URI).then((issuer)=>{
     //console.log('access_token', tokenset.access_token);
     //console.log('id_token', tokenset.id_token);
     //console.log('claims', tokenset.claims);
-    //console.log('userinfo', userinfo);
+    console.log('userinfo', userinfo);
     routes.saveUser(userinfo);
     return done(null, userinfo)
   }));
@@ -53,13 +53,22 @@ Issuer.discover(process.env.ISSUER_BASE_URI).then((issuer)=>{
 passport.use(new MockStrategy({
 	name: 'my-mock',
 	user: {
-    sub: '4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',
-    name: 'Andrew Koza',
-    given_name: 'Andrew',
-    family_name: 'Koza',
-    email: 'koza-sparrow@hotmail.com',
-    acr: 'https://aai.egi.eu/LoA#Low',
-    eduperson_assurance: [ 'https://aai.egi.eu/LoA#Low' ]
+    sub: '7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu',
+    name: 'Andreas Kozadinos',
+    preferred_username: 'akozadinos',
+    given_name: 'Andreas',
+    family_name: 'Kozadinos',
+    email: 'andreaskoza@grnet.gr',
+    acr: 'https://aai.egi.eu/LoA#Substantial',
+    eduperson_entitlement: [
+     'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu',
+     'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=vm_operator#aai.egi.eu'
+    ],
+    edu_person_entitlements: [
+     'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu',
+     'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=vm_operator#aai.egi.eu'
+    ],
+    eduperson_assurance: [ 'https://aai.egi.eu/LoA#Substantial' ]
   },
   callback: process.env.OIDC_REACT
 }, (user, done) => {
