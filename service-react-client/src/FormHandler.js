@@ -75,7 +75,7 @@ const EditService = (props) => {
 
     const getData = () => {
       if(props.service_id){
-        fetch(config.host+'getservice/'+props.service_id, {
+        fetch(config.host+'service/'+props.service_id, {
           method: 'GET', // *GET, POST, PUT, DELETE, etc.
           credentials: 'include', // include, *same-origin, omit
           headers: {
@@ -89,7 +89,7 @@ const EditService = (props) => {
         });
       }
       if(props.petition_id&&props.type!=='delete'){
-        fetch(config.host+'getpetition/'+props.petition_id, {
+        fetch(config.host+'petition/'+props.petition_id, {
           method: 'GET', // *GET, POST, PUT, DELETE, etc.
           credentials: 'include', // include, *same-origin, omit
           headers: {
@@ -185,7 +185,7 @@ const ViewService = (props)=>{
 
   const getData = () => {
     if(props.service_id){
-      fetch(config.host+'getservice/'+props.service_id, {
+      fetch(config.host+'service/'+props.service_id, {
         method: 'GET', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
@@ -200,7 +200,7 @@ const ViewService = (props)=>{
       });
     }
     if(props.petition_id&&props.type!=='delete'){
-      fetch(config.host+'getpetition/'+props.petition_id, {
+      fetch(config.host+'petition/'+props.petition_id, {
         method: 'GET', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {

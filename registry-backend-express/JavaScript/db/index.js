@@ -3,7 +3,8 @@ const pgPromise = require('pg-promise'); // pg-promise core library
 const dbConfig = require('../../db-config.json'); // db connection details
 const {Diagnostics} = require('./diagnostics'); // optional diagnostics
 const {ServiceContacts,ServiceDetailsProtocol,ServiceDetails,UserInfo,UserEduPersonEntitlement,ServiceMultiValued,ServicePetitionDetails,Service} = require('./repos');
-
+const testdbConfig = require('../../test-db-config.json');
+let config;
 // pg-promise initialization options:
 const initOptions = {
 
@@ -29,10 +30,19 @@ const initOptions = {
 };
 
 // Initializing the library:
+
 const pgp = pgPromise(initOptions);
 
 // Creating the database instance:
-const db = pgp(dbConfig);
+
+if(process.env.NODE_ENV==='test'){
+  config = testdbConfig;
+
+}
+else{
+  config = dbConfig;
+}
+const db = pgp(config);
 
 // Initializing optional diagnostics:
 Diagnostics.init(initOptions);

@@ -106,50 +106,49 @@ class ServiceRepository {
       }
     }
 
-    async update(newState,targetId,type){
-  let petition ='';
-  let service_details = 'service_details';
-  if(type==='petition'){
-    petition = type;
-    service_details = 'service_petition_details';
-  }
-  try{
-    return this.db.tx('update-service',async t =>{
-      let queries = [];
-      return t.service.get(targetId,type).then(async oldState=>{
-        if(oldState){
+  async update(newState,targetId,type){
+    let petition ='';
+    let service_details = 'service_details';
+    if(type==='petition'){
+      petition = type;
+      service_details = 'service_petition_details';
+    }
+    try{
+      return this.db.tx('update-service',async t =>{
+        let queries = [];
+        return t.service.get(targetId,type).then(async oldState=>{
+          if(oldState){
 
-          let edits = calcDiff(oldState.service_data,newState);
-          if(Object.keys(edits.details).length !== 0){
-             queries.push(t[service_details].update(edits.details,targetId));
-             queries.push(t.service_details_protocol.update(type,edits.details,targetId));
-          }
-          for (var key in edits.add){
-            if(key==='contacts') {
-              queries.push(t.service_contacts.add(type,edits.add[key],targetId));
+            let edits = calcDiff(oldState.service_data,newState);
+            if(Object.keys(edits.details).length !== 0){
+               queries.push(t[service_details].update(edits.details,targetId));
+               queries.push(t.service_details_protocol.update(type,edits.details,targetId));
             }
-            else {
-              queries.push(t.service_multi_valued.add(type,key,edits.add[key],targetId));
+            for (var key in edits.add){
+              if(key==='contacts') {
+                queries.push(t.service_contacts.add(type,edits.add[key],targetId));
+              }
+              else {
+                queries.push(t.service_multi_valued.add(type,key,edits.add[key],targetId));
+              }
+            }
+            for (var key in edits.dlt){
+              if(key==='contacts'){queries.push(t.service_contacts.delete_one_or_many(type,edits.dlt[key],targetId));}
+              else {queries.push(t.service_multi_valued.delete_one_or_many(type,key,edits.dlt[key],targetId));}
+            }
+            var result = await t.batch(queries);
+            if(result){
+              return true
             }
           }
-          for (var key in edits.dlt){
-            if(key==='contacts'){queries.push(t.service_contacts.delete_one_or_many(type,edits.dlt[key],targetId));}
-            else {queries.push(t.service_multi_valued.delete_one_or_many(type,key,edits.dlt[key],targetId));}
-          }
-          var result = await t.batch(queries);
-          if(result){
-            return true
-          }
-        }
+        })
       })
-    })
+    }
+    catch(err){
+      console.log(error);
+      return false
+    }
   }
-  catch(err){
-    console.log(error);
-    return false
-  }
-
-}
 
 }
 

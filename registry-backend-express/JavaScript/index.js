@@ -106,8 +106,14 @@ app.use('/', routes.router);
 
 const port = 5000;
 
-app.listen(port, () => {
+var server = app.listen(port, () => {
     console.log('\nReady for GET requests on http://localhost:' + port);
 });
+function stop() {
+  server.close();
+}
 
-module.exports = app;
+
+module.exports = server;
+
+module.exports.stop = stop;

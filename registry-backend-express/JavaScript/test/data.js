@@ -1,6 +1,5 @@
  const create = {
    oidc:{
-
       service_name:"Test Oidc Service",
       service_description:"This is a test service",
       redirect_uris: ["https://redirecturi1.com"],
@@ -17,13 +16,13 @@
       client_id:"testCreate",
       allow_introspection:false,
       code_challenge_method:"plain",
-      device_code_validity_seconds:"28800",
-      access_token_validity_seconds:"3600",
-      refresh_token_validity_seconds:"28800",
+      device_code_validity_seconds:28800,
+      access_token_validity_seconds:3600,
+      refresh_token_validity_seconds:28800,
       client_secret:"secret",
       reuse_refresh_tokens:true,
       clear_access_tokens_on_refresh:true,
-      id_token_timeout_seconds:"1000",
+      id_token_timeout_seconds:1000,
       scope: [
         "openid",
         "profile",
@@ -35,10 +34,10 @@
       grant_types: [
         "authorization_code"
       ],
-      generate_client_secret:true
+      generate_client_secret:false
     },
     saml:{
-      
+
       service_name:"Test Saml Service",
       service_description:"This is a test service",
       redirect_uris: null,

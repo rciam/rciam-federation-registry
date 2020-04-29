@@ -54,7 +54,7 @@ const ServiceForm = (props)=> {
               {resolve(true)}
             else{
               setCheckingAvailability(true);
-              fetch(config.host+'service/availability/oidc/'+ value, {
+              fetch(config.host+'/availability/oidc/'+ value, {
                 method:'GET',
                 credentials:'include',
                 headers:{
@@ -148,7 +148,7 @@ const ServiceForm = (props)=> {
               {resolve(true)}
             else{
               setCheckingAvailability(true);
-              fetch(config.host+'service/availability/saml/'+ value, {
+              fetch(config.host+'/availability/saml/'+ value, {
                 method:'GET',
                 credentials:'include',
                 headers:{
@@ -191,7 +191,7 @@ const ServiceForm = (props)=> {
     }
     if (diff(petition,props.initialValues)){
       setAsyncResponse(true);
-      fetch(config.host+'newpetition/'+petition.type, {
+      fetch(config.host+'petition', {
         method: 'POST', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
@@ -229,8 +229,8 @@ const ServiceForm = (props)=> {
     }
     if(diff(petition,props.initialValues)){
       setAsyncResponse(true);
-      fetch(config.host+'petition/edit/'+props.petition_id, {
-        method: 'POST', // *GET, POST, PUT, DELETE, etc.
+      fetch(config.host+'petition/'+props.petition_id, {
+        method: 'PUT', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
         'Content-Type': 'application/json'
@@ -262,8 +262,8 @@ const ServiceForm = (props)=> {
 
   const deletePetition = ()=>{
     setAsyncResponse(true);
-    fetch(config.host+'petition/delete/'+props.petition_id, {
-      method: 'PUT', // *GET, POST, PUT, DELETE, etc.
+    fetch(config.host+'petition/'+props.petition_id, {
+      method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
       'Content-Type': 'application/json'

@@ -2,7 +2,12 @@ const { body, validationResult } = require('express-validator');
 const {reg} = require('./regex.js');
 var formConfig = require('./config');
 const clientValidationRules = () => {
+
+  // if(body('type').custom((value)=>{return type==='delete'})){
+  //   return [];
+  // }
   return [
+    body('type').isString().custom((value)=>{if(['edit','create'].includes(value)){return true}else{return false}}),
     body('service_name').isString().isLength({min:4, max:36}).exists(),
     body('client_id').if(body('protocol').custom((value)=>{return value==='oidc'})).isString().isLength({min:4, max:36}).exists(),
     body('redirect_uris').if(body('protocol').custom((value)=>{return value==='oidc'})).isArray({min:1}).custom((value,success=true)=> {value.map((item,index)=>{if(!item.match(reg.regUrl)){success=false}}); return success }).withMessage('Invalid Redirect Uri value!'),

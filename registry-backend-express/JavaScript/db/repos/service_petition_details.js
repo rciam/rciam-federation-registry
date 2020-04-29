@@ -68,15 +68,10 @@ class ServicePetitionDetailsRepository {
 
     async belongsToRequester(petition_id,sub){
       if(sub==='admin'){
-        return this.db.oneOrNone('SELECT protocol FROM service_petition_details WHERE id = $1 AND reviewed_at IS NULL', [+petition_id]).then(res=>{
-          if(res){return res.protocol}else{return false}
-        });
+        return this.db.oneOrNone('SELECT protocol,type FROM service_petition_details WHERE id = $1 AND reviewed_at IS NULL', [+petition_id]);
       }
       else{
-        return this.db.oneOrNone('SELECT protocol FROM service_petition_details WHERE id = $1 AND requester= $2 AND reviewed_at IS NULL', [+petition_id,sub]).then(res=>{
-          if(res){return res.protocol}else{return false}
-        });
-
+        return this.db.oneOrNone('SELECT protocol,type FROM service_petition_details WHERE id = $1 AND requester= $2 AND reviewed_at IS NULL', [+petition_id,sub]);
       }
     }
     async review(id,approved_by,status,comment){

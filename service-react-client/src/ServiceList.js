@@ -107,8 +107,8 @@ const ServiceList= (props)=> {
   }
   const deletePetition = (id)=>{
     setAsyncResponse(true);
-    fetch(config.host+'petition/delete/'+id, {
-      method: 'PUT', // *GET, POST, PUT, DELETE, etc.
+    fetch(config.host+'petition/'+id, {
+      method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
       'Content-Type': 'application/json'
