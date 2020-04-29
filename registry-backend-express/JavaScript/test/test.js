@@ -341,7 +341,9 @@ describe('Service registry API Integration Tests', function() {
         })
       });
       it('should request changes petition',function(done){
-        var req = request(server).put('/petition/reject/'+petition);
+        var req = request(server).put('/petition/changes/'+petition).send({
+          comment:"comment"
+        });
         req.cookies = Cookies;
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
@@ -350,6 +352,7 @@ describe('Service registry API Integration Tests', function() {
           let body = JSON.parse(res.text);
           expect(body.success).to.equal(true);
           expect(body.id).to.be.a('number');
+          petition = body.id;
           done();
         })
       });
