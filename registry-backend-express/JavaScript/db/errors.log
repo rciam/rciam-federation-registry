@@ -1,0 +1,4 @@
+
+
+15:46:27 error: invalid input syntax for integer: "{"service_id":"7"}"
+         tx(user-check): SELECT t1.id as service_id FROM (SELECT id FROM service_details_oidc WHERE client_id='05c03f50-8acf-11ea-b334-274ec1b9f9ec' and id!='{"service_id":"7"}') as t1 JOIN (SELECT id FROM service_details WHERE deleted = false) as t2 USING (id) UNION SELECT t1.id as petition_id FROM (SELECT id FROM service_petition_details_oidc WHERE client_id='05c03f50-8acf-11ea-b334-274ec1b9f9ec' and id!='13') as t1 JOIN ( SELECT id FROM service_petition_details WHERE reviewed_at IS NULL) as t2 USING (id)

@@ -178,6 +178,7 @@ describe('Service registry API Integration Tests', function() {
         })
       });
       it('should approve petition and create service',function(done){
+        console.log('asdasd');
         var req = request(server).put('/petition/approve/'+petition);
         req.cookies = Cookies;
         req.set('Accept','application/json')
@@ -217,6 +218,7 @@ describe('Service registry API Integration Tests', function() {
         .expect(200)
         .end(function(err,res){
           let body = JSON.parse(res.text);
+          petition = body.id;
           expect(body.success).to.equal(true);
           done();
         })
@@ -259,7 +261,7 @@ describe('Service registry API Integration Tests', function() {
         .end(function(err,res){
           let body = JSON.parse(res.text);
           expect(body.id).to.be.a('number');
-          petition = body.id
+          petition = body.id;
           expect(body.success).to.equal(true);
           done();
         })

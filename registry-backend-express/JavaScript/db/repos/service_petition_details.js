@@ -48,7 +48,16 @@ class ServicePetitionDetailsRepository {
         })
     }
 
-
+    async getServiceId(id){
+      return this.db.oneOrNone('SELECT service_id FROM service_petition_details WHERE id=$1 and reviewed_at IS NULL',+id).then(res=>{
+        if(res){
+          return res.service_id;
+        }
+        else {
+          return false;
+        }
+      });
+    }
     async findAllForList(){
       return this.db.any('SELECT id,service_description,logo_uri,service_name,requester,type,service_id,comment,status,integration_environment FROM service_petition_details WHERE reviewed_at IS NULL');
     }
@@ -68,10 +77,10 @@ class ServicePetitionDetailsRepository {
 
     async belongsToRequester(petition_id,sub){
       if(sub==='admin'){
-        return this.db.oneOrNone('SELECT protocol,type FROM service_petition_details WHERE id = $1 AND reviewed_at IS NULL', [+petition_id]);
+        return this.db.oneOrNone('SELECT protocol,type,service_id FROM service_petition_details WHERE id = $1 AND reviewed_at IS NULL', [+petition_id]);
       }
       else{
-        return this.db.oneOrNone('SELECT protocol,type FROM service_petition_details WHERE id = $1 AND requester= $2 AND reviewed_at IS NULL', [+petition_id,sub]);
+        return this.db.oneOrNone('SELECT protocol,type,service_id FROM service_petition_details WHERE id = $1 AND requester= $2 AND reviewed_at IS NULL', [+petition_id,sub]);
       }
     }
     async review(id,approved_by,status,comment){

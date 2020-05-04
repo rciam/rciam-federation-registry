@@ -91,6 +91,8 @@ router.get('/servicelist',checkAuthentication,(req,res)=>{
     });
 });
 
+
+
 // It fetches a petition with form data
 router.get('/petition/:id',checkAuthentication,(req,res)=>{
   return db.task('find-petition-data',async t=>{
@@ -121,52 +123,24 @@ router.get('/petition/:id',checkAuthentication,(req,res)=>{
 });
 
 // Add a new client/petition
-router.post('/petition',clientValidationRules(),validate,checkAuthentication,(req,res)=>{
+router.post('/petition',clientValidationRules(),validate,checkAuthentication,asyncPetitionValidation,(req,res)=>{
   res.setHeader('Content-Type', 'application/json');
   return db.tx('add-service', async t => {
     try{
-      if(req.body.type==='create'){
         await t.service.add(req.body,req.user.sub,'petition').then(id=>{
           if(id){
             return res.json({
               id:id,
               success:true
-            })
+            });
           }
         });
-      }
-      else if(req.body.type==='edit'){
-        await t.service_details.belongsToRequester(req.body.service_id,req.user.sub).then(async protocol =>{
-          if(protocol){
-            if(protocol===req.body.protocol){
-              await t.service.add(req.body,req.user.sub,'petition').then(id=>{
-                if(id){
-                  return res.json({
-                    success:true,
-                    id:id
-                  })
-                }
-              });
-            }
-            else {
-              return res.json({
-                success:false,
-                error:'Protocol can not be modified.'
-              })
-            }
-          }
-        });
-      }
-      else{
-        throw "Wrong request type";
-      }
     }
     catch(err){
-      console.log(err);
       res.end(JSON.stringify({
         success:false,
         error:'Error querying the database.'
-      }))
+      }));
     }
   });
 });
@@ -195,29 +169,18 @@ router.delete('/petition/:id',checkAuthentication,(req,res)=>{
   })
 });
 
+
+
 // Edit Petition
-router.put('/petition/:id',clientValidationRules(),validate,checkAuthentication,(req,res)=>{
+router.put('/petition/:id',clientValidationRules(),validate,checkAuthentication,asyncPetitionValidation,(req,res)=>{
   return db.task('create-delete-petition',async t =>{
     try{
-      await t.service_petition_details.belongsToRequester(req.params.id,req.user.sub).then(async result =>{
-        if(result){
-          if(result.protocol!==req.body.protocol){
-            throw 'Protocol can not be modified.';
-          }
-          if(result.type!==req.body.type){
-            throw 'Type of request cannot be modified';
-          }
-          await t.service.update(req.body,req.params.id,'petition').then(resp=>{
-            if(resp){
-              return res.json({
-                success:true,
-                id:req.params.id
-              })
-            }
-          });
-        }
-        else{
-          throw 'No petition was found with id: '+req.params.id+" for user: " + req.user.sub;
+      await t.service.update(req.body,req.params.id,'petition').then(resp=>{
+        if(resp){
+          return res.json({
+            success:true,
+            id:req.params.id
+          })
         }
       });
     }
@@ -314,7 +277,7 @@ router.put('/service/delete/:service_id',checkAuthentication,(req,res)=>{
 router.get('/availability/oidc/:client_id',checkAuthentication,(req,res)=>{
   return db.task('check-client_id-exists', async t => {
     try{
-      await isAvailable(t,req.params.client_id,'oidc').then(available=>{
+      await isAvailable(t,req.params.client_id,'oidc',0,0).then(available=>{
         res.json({
           success:true,
           available:available
@@ -335,7 +298,7 @@ router.get('/availability/oidc/:client_id',checkAuthentication,(req,res)=>{
 router.get('/availability/saml/:entity_id',checkAuthentication,(req,res)=>{
   return db.task('check-entity_id-exists', async t => {
     try{
-      await isAvailable(t,req.params.entity_id,'saml').then(available=>{
+      await isAvailable(t,req.params.entity_id,'saml',0,0).then(available=>{
         res.json({
           success:true,
           available:available
@@ -403,6 +366,9 @@ router.put('/petition/changes/:id',checkAuthentication,checkAdmin,(req,res)=>{
               error:err,
             }));
           })
+        }
+        else{
+          throw 'Petition not found';
         }
       })
       }
@@ -534,6 +500,8 @@ function checkAuthentication(req,res,next){
   else{res.json({auth:false});}
 }
 
+
+
 // Admin Authenctication Middleware
 function checkAdmin(req,res,next){
     if(isAdmin(req)){
@@ -577,13 +545,98 @@ const saveUser=(userinfo)=>{
   });
 }
 
-// Checking Availability of Client Id
-const isAvailable=(t,id,protocol)=>{
+// Checking Availability of Client Id/Entity Id
+const isAvailable=(t,id,protocol,petition_id,service_id)=>{
   if(protocol==='oidc'){
-    return t.service_details_protocol.checkClientId(id,0,0);
+    return t.service_details_protocol.checkClientId(id,service_id,petition_id);
   }
   else if (protocol==='saml'){
-    return t.service_details_protocol.checkEntityId(id,0,0);
+    return t.service_details_protocol.checkEntityId(id,service_id,petition_id);
+  }
+}
+
+
+// This validation is for the POST,PUT /petition
+function asyncPetitionValidation(req,res,next){
+  // for all petitions we need to check for Client Id/Entity Id availability
+  try{
+
+    return db.tx('user-check',async t=>{
+      // For the post
+      if(req.route.methods.post){
+
+        if(req.body.type==='create'){
+          await isAvailable.apply(this,(req.body.protocol==='oidc'?[t,req.body.client_id,'oidc',0,0]:[t,req.body.entity_id,'saml',0,0])).then(async available=>{
+            if(available){
+              next();
+            }
+            else {throw 'Id is not available'};
+          });
+        }
+        else{
+          // Here we handle petitons of edit type
+          // First we need to make sure there aren't any open petitions for target service
+          await t.service_petition_details.openPetition(req.body.service_id).then(async open_petition_id =>{
+            if(!open_petition_id){
+              // Checking if client_id/entity_id is available
+              await isAvailable.apply(this,(req.body.protocol==='oidc'?[t,req.body.client_id,'oidc',0,req.body.service_id]:[t,req.body.entity_id,'saml',0,req.body.service_id])).then(async available=>{
+                if(available){
+                  await t.service_details.belongsToRequester(req.body.service_id,req.user.sub).then(async protocol =>{
+                    if(protocol){
+                      if(protocol===req.body.protocol){
+                        next();
+                      }
+                      else {throw 'Protocol cannot be modified';}
+                    }
+                  });
+                }
+                else {throw 'Id is not available';}
+              });
+            }
+            else {throw 'A petition already exists for target service';}
+          });
+        }
+      }
+      else if(req.route.methods.put){
+        await t.service_petition_details.belongsToRequester(req.params.id,req.user.sub).then(async petition => {
+          if(petition){
+            if(petition.protocol!==req.body.protocol){
+              throw 'Protocol can not be modified.';
+            }
+            if(petition.type!==req.body.type){
+              throw 'Type of request cannot be modified';
+            }
+            if(req.body.type==='create'){
+              await isAvailable.apply(this,(req.body.protocol==='oidc'?[t,req.body.client_id,'oidc',req.params.id,0]:[t,req.body.entity_id,'saml',req.params.id,0])).then(async available=>{
+                if(available){
+                  next();
+                }
+                else{
+                   throw 'Id is not available'}
+              });
+            }
+            else{
+              await t.service_petition_details.getServiceId(req.params.id).then(async service_id => {
+                await isAvailable.apply(this,(req.body.protocol==='oidc'?[t,req.body.client_id,'oidc',req.params.id,service_id]:[t,req.body.entity_id,'saml',req.params.id,service_id])).then(async available=>{
+                  if(available){
+                    next();
+                  }
+                  else{ throw 'Id is not available'}
+                });
+              })
+            }
+          }
+          else {throw 'Petition not found';}
+        });
+      }
+    })
+  }
+  catch(err){
+    console.log(err);
+    return res.json({
+      success:false,
+      error:err
+    });
   }
 }
 

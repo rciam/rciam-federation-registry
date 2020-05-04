@@ -123,7 +123,7 @@ const ServiceForm = (props)=> {
       is:'oidc',
       then: yup.boolean().required()
     }),
-    protocol: yup.string().test('testProtocol','error-protocol',function(value){return ['saml','oidc'].includes(value)}).required('Select service protocol'),
+    protocol: yup.string().test('testProtocol','Select Protocol',function(value){return ['saml','oidc'].includes(value)}).required('Select service protocol'),
     integration_environment:yup.string().test('testIntegrationEnv','error-integrationEnvironment',function(value){return formConfig.integration_environment.includes(value)}).required('At least one option must be selected'),
     clear_access_tokens_on_refresh:yup.boolean().nullable().when('protocol',{
       is:'oidc',
@@ -338,7 +338,7 @@ const ServiceForm = (props)=> {
       }
       else {
         setAsyncResponse(true);
-        fetch(config.host+'petition/approve/changes/'+id, {
+        fetch(config.host+'petition/changes/'+id, {
           method: 'PUT', // *GET, POST, PUT, DELETE, etc.
           credentials: 'include', // include, *same-origin, omit
           headers: {
@@ -505,12 +505,9 @@ const ServiceForm = (props)=> {
                           changed={props.changes?props.changes.contacts:null}
                         />
                       </InputRow>
-
-
                     </Tab>
-
                     <Tab eventKey="protocol" title='Protocol Specific'>
-                      <InputRow title='Select Protocol' extraClass='select-col' error={errors.code_challenge_method} touched={touched.code_challenge_method}>
+                      <InputRow title='Select Protocol' extraClass='select-col' error={errors.protocol} touched={touched.code_challenge_method}>
                         <Select
                           onBlur={handleBlur}
                           optionsTitle={['Select one option','OIDC Service','SAML Service']}
@@ -648,7 +645,7 @@ const ServiceForm = (props)=> {
                           </InputRow>
                           <InputRow title='Id Token Timeout' extraClass='time-input' error={errors.id_token_timeout_seconds} touched={touched.id_token_timeout_seconds} description='Enter this time in seconds, minutes, or hours (Max value is 1000000 seconds (11.5 days)).'>
                             <TimeInput
-                              name='access_token_validity_seconds'
+                              name='id_token_timeout_seconds'
                               value={values.id_token_timeout_seconds}
                               isInvalid={hasSubmitted?!!errors.id_token_timeout_seconds:(!!errors.id_token_timeout_seconds&&touched.id_token_timeout_seconds)}
                               onBlur={handleBlur}
@@ -875,10 +872,11 @@ const ReviewComponent = (props)=>{
 
 function gennerateValues(data){
 
-  if(!data.client_id&&data.petition==='oidc'){
+  if(!data.client_id&&data.protocol==='oidc'){
+    console.log('id-g');
     data.client_id=uuidv1();
   }
-  if(data.generate_client_secret&&data.petition==='oidc'){
+  if(data.generate_client_secret&&data.protocol==='oidc'){
     data.client_secret= hex(16);
     data.generate_client_secret = false;
   }

@@ -13,7 +13,7 @@
     "pg-promise service-registry"
   ],
   "scripts":{
-    "test": "NODE_ENV=test mocha './JavaScript/test/test.js' --timeout 10000"
+    "test": "NODE_ENV=test mocha './JavaScript/test/test.js' --timeout 10000 --bail"
   },
   "author": {
     "name": "Andreas Kozadinos",

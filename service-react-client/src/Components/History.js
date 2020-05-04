@@ -81,7 +81,7 @@ export const HistoryList = (props) => {
             View State
           </div>
           <Alert variant='warning' className='form-alert'>
-            The following {stateProps[0]==='create'?'Creation':stateProps[0]==='edit'?'Reconfiguration':'Deregistration'} Request {stateProps[1]==='approved'?'was Approved':stateProps[1]==='reject'?'was Rejected':stateProps[1]==='pending'?'is Pending Review':'was Aprroved with Changes'}.
+            The following {stateProps[0]==='create'?'Creation':stateProps[0]==='edit'?'Reconfiguration':'Deregistration'} Request {stateProps[1]==='approved'?'was Approved':stateProps[1]==='rejected'?'was Rejected':stateProps[1]==='pending'?'is Pending Review':'was Aprroved with Changes'}.
           </Alert>
           {stateProps[2]?
             <Jumbotron fluid className="jumbotron-comment">

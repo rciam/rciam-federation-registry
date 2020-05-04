@@ -42,7 +42,7 @@ Issuer.discover(process.env.ISSUER_BASE_URI).then((issuer)=>{
     //console.log('access_token', tokenset.access_token);
     //console.log('id_token', tokenset.id_token);
     //console.log('claims', tokenset.claims);
-    console.log('userinfo', userinfo);
+    //console.log('userinfo', userinfo);
     routes.saveUser(userinfo);
     return done(null, userinfo)
   }));
