@@ -1,5 +1,5 @@
 {
-  "host": "localhost",
+  "host": "database",
   "port": 5432,
   "database": "service_registry_test_db",
   "user": "postgres",
