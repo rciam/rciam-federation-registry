@@ -1,7 +1,7 @@
 pipeline {
-    agent { 
-        docker { 
-            image 'argo.registry:5000/epel-7-mgo' 
+    agent {
+        docker {
+            image 'argo.registry:5000/epel-7-mgo'
             args '-u jenkins:jenkins'
         }
     }
@@ -18,7 +18,7 @@ pipeline {
                 echo 'Build...'
                 sh """
                     cd ${WORKSPACE}/${PROJECT_DIR}/registry-backend-express
-                    npm install 
+                    npm install
                     npm test
                 """
             }
