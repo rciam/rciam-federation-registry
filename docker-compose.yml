@@ -1,26 +1,21 @@
 version: '3'
 services:
   node:
-    image: node:buster 
+    image: node:13-buster
+    ports: 
+      - 5000:5000
     volumes:
       - ./:/home
       - ./wait-for-it.sh:/wait-for-it.sh
       - ./run_tests.sh:/run_tests.sh
     depends_on: 
-      - postgresA
-    command: ["./wait-for-it.sh", "postgresA:5432", "--", "/run_tests.sh"]
-    restart: unless-stopped
-  postgresA:
+      - database
+    command: ["./wait-for-it.sh", "database:5432", "--", "/run_tests.sh"]
+  database:
     image: postgres:11
     volumes:
-      - ./:/home
       - ./create_db.sh:/docker-entrypoint-initdb.d/create_db.sh
       - ./setup_db.sql:/setup_db.sql
     environment:
       POSTGRES_PASSWORD: postgres
       POSTGRES_USER: postgres
-      POSTGRES_DB: postgres
-      TEST_DB: service_registry_test_db
-    ports:
-      - 5432:5432
-    restart: unless-stopped
