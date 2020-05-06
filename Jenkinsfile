@@ -1,10 +1,5 @@
 pipeline {
-    agent {
-        docker {
-            image 'argo.registry:5000/epel-7-mgo'
-            args '-u jenkins:jenkins'
-        }
-    }
+    agent any
     options {
         checkoutToSubdirectory('rciam-service-registry')
         newContainerPerStage()
@@ -17,10 +12,14 @@ pipeline {
             steps {
                 echo 'Build...'
                 sh """
-                    cd ${WORKSPACE}/${PROJECT_DIR}/registry-backend-express
-                    npm install
-                    npm test
+                    cd ${WORKSPACE}/${PROJECT_DIR}/registry-backend-express/docker
+                    docker-compose run node
                 """
+            }
+            post{
+                always {
+                    sh "docker-compose down"
+                }
             }
         }
     }
