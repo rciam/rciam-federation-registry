@@ -12,7 +12,7 @@ pipeline {
             steps {
                 echo 'Build...'
                 sh """
-                    cd ${WORKSPACE}/${PROJECT_DIR}/registry-backend-express/docker
+                    cd ${WORKSPACE}/${PROJECT_DIR}/docker
                     docker-compose run node
                 """
             }
