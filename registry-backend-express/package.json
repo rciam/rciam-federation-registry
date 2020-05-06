@@ -12,7 +12,7 @@
     "pg-promise",
     "pg-promise service-registry"
   ],
-  "scripts":{
+  "scripts": {
     "test": "NODE_ENV=test mocha './JavaScript/test/test.js' --timeout 10000 --bail"
   },
   "author": {

@@ -7,4 +7,4 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL
     GRANT ALL PRIVILEGES ON DATABASE service_registry_test_db TO postgres;
 EOSQL
 
-psql  -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname service_registry_test_db < /setup_db.sql
+psql  -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname service_registry_test_db < /run/setup_db.sql
