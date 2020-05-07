@@ -12,20 +12,16 @@ pipeline {
             steps {
                 echo 'Build...'
                 sh """
-                    cd ${WORKSPACE}/${PROJECT_DIR}/registry-backend-express/docker
+                    cd ${WORKSPACE}/${PROJECT_DIR}/docker
                     docker-compose run node
                 """
             }
             post{
                 always {
                     sh "docker-compose down"
+                    cleanWs()
                 }
             }
-        }
-    }
-    post{
-        always {
-            cleanWs()
         }
     }
 }
