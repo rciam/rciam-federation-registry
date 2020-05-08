@@ -178,7 +178,6 @@ describe('Service registry API Integration Tests', function() {
         })
       });
       it('should approve petition and create service',function(done){
-        console.log('asdasd');
         var req = request(server).put('/petition/approve/'+petition);
         req.cookies = Cookies;
         req.set('Accept','application/json')

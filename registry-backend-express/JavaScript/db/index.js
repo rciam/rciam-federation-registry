@@ -1,9 +1,10 @@
 const promise = require('bluebird'); // best promise library today
 const pgPromise = require('pg-promise'); // pg-promise core library
-const dbConfig = require('../../db-config.json'); // db connection details
+const dbConfig = require('../../db-config/db-config.json'); // db connection details
 const {Diagnostics} = require('./diagnostics'); // optional diagnostics
 const {ServiceContacts,ServiceDetailsProtocol,ServiceDetails,UserInfo,UserEduPersonEntitlement,ServiceMultiValued,ServicePetitionDetails,Service} = require('./repos');
-const testdbConfig = require('../../test-db-config.json');
+const testdbConfig = require('../../db-config/test-db-config.json');
+const dockerTestdbConfig = require('../../db-config/docker-test-db-config.json');
 let config;
 // pg-promise initialization options:
 const initOptions = {
@@ -38,6 +39,9 @@ const pgp = pgPromise(initOptions);
 if(process.env.NODE_ENV==='test'){
   config = testdbConfig;
 
+}
+else if(process.env.NODE_ENV==='test-docker'){
+  config = dockerTestdbConfig;
 }
 else{
   config = dbConfig;
