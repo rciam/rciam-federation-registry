@@ -53,8 +53,9 @@ const ServiceForm = (props)=> {
             if(props.initialValues.client_id===value||!value||value===checkedId)
               {resolve(true)}
             else{
+
               setCheckingAvailability(true);
-              fetch(config.host+'/availability/oidc/'+ value, {
+              fetch(config.host+'availability/oidc/'+ value, {
                 method:'GET',
                 credentials:'include',
                 headers:{
@@ -148,7 +149,7 @@ const ServiceForm = (props)=> {
               {resolve(true)}
             else{
               setCheckingAvailability(true);
-              fetch(config.host+'/availability/saml/'+ value, {
+              fetch(config.host+'availability/saml/'+ value, {
                 method:'GET',
                 credentials:'include',
                 headers:{
@@ -873,7 +874,7 @@ const ReviewComponent = (props)=>{
 function gennerateValues(data){
 
   if(!data.client_id&&data.protocol==='oidc'){
-    console.log('id-g');
+    
     data.client_id=uuidv1();
   }
   if(data.generate_client_secret&&data.protocol==='oidc'){

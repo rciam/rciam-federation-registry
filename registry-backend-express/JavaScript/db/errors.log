@@ -1,4 +1,19 @@
 
 
-15:46:27 error: invalid input syntax for integer: "{"service_id":"7"}"
-         tx(user-check): SELECT t1.id as service_id FROM (SELECT id FROM service_details_oidc WHERE client_id='05c03f50-8acf-11ea-b334-274ec1b9f9ec' and id!='{"service_id":"7"}') as t1 JOIN (SELECT id FROM service_details WHERE deleted = false) as t2 USING (id) UNION SELECT t1.id as petition_id FROM (SELECT id FROM service_petition_details_oidc WHERE client_id='05c03f50-8acf-11ea-b334-274ec1b9f9ec' and id!='13') as t1 JOIN ( SELECT id FROM service_petition_details WHERE reviewed_at IS NULL) as t2 USING (id)
+15:19:37 error: invalid input syntax for type bigint: "NaN"
+         tx(update-service): UPDATE service_state SET state='sending' WHERE id='NaN' RETURNING id
+
+15:52:19 error: invalid input syntax for type bigint: "NaN"
+         tx(update-service): UPDATE service_state SET state='sending' WHERE id='NaN'
+
+15:52:19 error: current transaction is aborted, commands ignored until end of transaction block
+         tx(update-service): insert into "service_oidc_scopes"("owner_id","value") values(5,'stethoscope'),(5,'kaleidoscope')
+
+15:52:19 error: current transaction is aborted, commands ignored until end of transaction block
+         tx(update-service): DELETE FROM "service_contacts" WHERE owner_id=5 AND (value,type) IN (('mymail@gmail.com','admin'),('mysnail@gmail.com','admin'))
+
+15:52:19 error: current transaction is aborted, commands ignored until end of transaction block
+         tx(update-service): DELETE FROM "service_oidc_grant_types" WHERE owner_id=5 AND value IN ('authorization_code','refresh_token')
+
+15:52:19 error: current transaction is aborted, commands ignored until end of transaction block
+         tx(update-service): DELETE FROM "service_oidc_scopes" WHERE owner_id=5 AND value IN ('telescope')

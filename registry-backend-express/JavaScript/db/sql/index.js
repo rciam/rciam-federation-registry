@@ -41,6 +41,10 @@ module.exports = {
       add:sql('service_petition_details/add.sql'),
       update:sql('service_petition_details/update.sql'),
 
+    },
+    service_state:{
+      add:sql('service_state/add.sql'),
+      update:sql('service_state/update.sql'),
     }
 
 

@@ -73,7 +73,8 @@ const ServiceList= (props)=> {
             response.services[index].display = true;
           })
         }
-        setServices(response.services);
+        console.log(response.services);
+      setServices(response.services);
       }
     });
   }
@@ -248,7 +249,7 @@ function TableItem(props) {
         <div className="flex-column">
           <h3 className="petition-title">{props.item.service_name}</h3>
           <div className="badge-container">
-            {props.item.hasOwnProperty('deployed')?<Badge className="status-badge" variant={props.item.deployed?'primary':'danger'}>{props.item.deployed?'Deployed':'Deployment in Progress'}</Badge>:null}
+            {props.item.hasOwnProperty('state')&&props.item.state!==null?<Badge className="status-badge" variant={props.item.state==='deployed'?'primary':'danger'}>{props.item.state==='deployed'?'Deployed':'Deployment in Progress'}</Badge>:null}
             {props.item.hasOwnProperty('type')?<Badge className="status-badge" variant="warning">
               {props.item.type==='edit'?'Reconfiguration Pending':props.item.type==='create'?'Registration Pending':'Deregistration Pending'}
               </Badge>:null}
@@ -261,7 +262,9 @@ function TableItem(props) {
         <div className="petition-actions">
           <Row>
             <Col className='controls-col  controls-col-buttons'>
-              <Link to={{
+              <Link
+                className='button-link'
+                to={{
                 pathname:"/form/view",
                 state:{
                   service_id:props.item.id,
@@ -282,11 +285,14 @@ function TableItem(props) {
                     placement='top'
                     overlay={
                       <Tooltip id={`tooltip-top`}>
-                        {props.item.comment?'An admin has requested changes':'Click to Reconfigure'}
+                        {props.item.comment?'An admin has requested changes':props.item.state==='deployed'?'Click to Reconfigure':'Cannot be edited while waiting deployment'}
                       </Tooltip>
                     }
                   >
-                  <Link to={{
+
+                  <Link
+                  className='button-link'
+                  to={{
                     pathname:"/form/edit",
                     state:{
                       service_id:props.item.id,
@@ -294,12 +300,15 @@ function TableItem(props) {
                       type:props.item.type,
                       comment:props.item.comment
                     }
-                  }}><Button variant="info"><FontAwesomeIcon icon={faEdit}/>Reconfigure</Button></Link>
+                  }}>
+                  <Button variant="info" disabled={props.item.state==='deployed'||props.item.state===null?false:true}><FontAwesomeIcon icon={faEdit}/>Reconfigure</Button></Link>
                   </OverlayTrigger>
                 </React.Fragment>
               :null
               }
-              {props.user.admin&&props.item.petition_id&&!props.item.comment?<Link to={{
+              {props.user.admin&&props.item.petition_id&&!props.item.comment?<Link
+                className='button-link'
+                to={{
                 pathname:"/form/review",
                 state:{
                   service_id:props.item.id,

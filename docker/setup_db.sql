@@ -1,6 +1,6 @@
 DROP TABLE IF EXISTS user_edu_person_entitlement, user_info, service_petition_contacts, service_petition_oidc_grant_types, service_petition_oidc_redirect_uris, service_petition_oidc_scopes,
 service_petition_details_oidc,service_petition_details_saml, service_petition_details, service_oidc_scopes,service_contacts,service_oidc_grant_types,service_oidc_redirect_uris,service_details_oidc,
-service_details_saml,service_details;
+service_details_saml,service_details,service_state;
 
 
 create table user_info (
@@ -31,6 +31,7 @@ create table service_details (
   deleted BOOLEAN DEFAULT FALSE,
   deployed BOOLEAN DEFAULT FALSE
 );
+
 create table service_details_oidc (
   id bigint PRIMARY KEY,
   client_id VARCHAR(256),
@@ -46,7 +47,11 @@ create table service_details_oidc (
   FOREIGN KEY (id) REFERENCES service_details(id) ON DELETE CASCADE
 );
 
-
+create table service_state (
+  id bigint PRIMARY KEY,
+  state VARCHAR(256),
+  FOREIGN KEY (id) REFERENCES service_details(id) ON DELETE CASCADE
+);
 
 create table service_details_saml (
   id bigint PRIMARY KEY,
@@ -167,7 +172,16 @@ VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex i
 INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,deployed,protocol)
 VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Saml 6','https://cdn.auth0.com/blog/duo-saml-exploit/saml.png','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',true,'saml');
 
-
+INSERT INTO service_state (id,state)
+VALUES (1,'deployed');
+INSERT INTO service_state (id,state)
+VALUES (2,'deployed');
+INSERT INTO service_state (id,state)
+VALUES (3,'deployed');
+INSERT INTO service_state (id,state)
+VALUES (4,'deployed');
+INSERT INTO service_state (id,state)
+VALUES (5,'deployed');
 
 INSERT INTO service_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_tokens,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds)
 VALUES (1,'client1',true,'secret',true,true,600,3600,28800,'plain',10000);
@@ -308,7 +322,7 @@ VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex i
 INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,status,service_id,reviewed_at,protocol)
 VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 5','https://brandmark.io/logo-rank/random/pepsi.png','https://policy_uri.com','development','7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu','approved',5,'2004-10-19 10:23:54','oidc');
 INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,type,service_id,protocol)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 5 new','https://images.fastcompany.net/image/upload/w_596,c_limit,q_auto:best,f_auto/fc/3034007-inline-i-applelogo.jpg','https://policy_uri.com','development','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','edit',3,'oidc');
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 5 new','https://images.fastcompany.net/image/upload/w_596,c_limit,q_auto:best,f_auto/fc/3034007-inline-i-applelogo.jpg','https://policy_uri.com','development','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','edit',5,'oidc');
 INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,type,protocol)
 VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 7','https://www.bookmarks.design/media/image/hatchful.jpg','https://policy_uri.com','development','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','create','oidc');
 INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,type,service_id,protocol)
@@ -338,9 +352,9 @@ VALUES (8,'client1',true,'secret',true,true,600,3600,28800,'plain',10000);
 INSERT INTO service_petition_details_saml (id,entity_id,metadata_url)
 VALUES (9,'saml-id-1','https://metadataurl.com');
 INSERT INTO service_petition_contacts(owner_id,value,type)
-VALUES ('9','mygrail@gmail.com','admin');
+VALUES (9,'mygrail@gmail.com','admin');
 INSERT INTO service_petition_contacts(owner_id,value,type)
-VALUES ('9','myfail@gmail.com','admin');
+VALUES (9,'myfail@gmail.com','admin');
 
 
 

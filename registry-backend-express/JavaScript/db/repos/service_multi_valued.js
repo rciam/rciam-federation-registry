@@ -9,6 +9,7 @@ class ServiceMultiValuedRepository {
      cs = new pgp.helpers.ColumnSet(['owner_id','value']);
   }
   async add(type,attribute,data,id){
+    
     let values = []
     let date = new Date(Date.now());
     let name = 'service_'

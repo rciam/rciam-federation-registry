@@ -29,7 +29,7 @@ class ServiceDetailsRepository {
     }
 
     async update(data,id,sub){
-        return this.db.none(sql.update,{
+        return this.db.oneOrNone(sql.update,{
           service_description: data.service_description,
           service_name: data.service_name,
           logo_uri: data.logo_uri,
@@ -38,28 +38,24 @@ class ServiceDetailsRepository {
           requester:sub,
           id:id,
           protocol:data.protocol
-        })
+        });
     }
 
     // Gets All Services with necessary data to create a list view.
     async findAllForList(){
-      return this.db.any('SELECT id,service_description,logo_uri,service_name,deployed,requester,integration_environment FROM service_details WHERE deleted=FALSE');
+      return this.db.any('SELECT id,service_description,logo_uri,service_name,deployed,requester,integration_environment,state FROM service_details JOIN service_state USING (id) WHERE deleted=FALSE');
     }
     // Get Services owned by user with user_id=id with necessary data to create a list view.
     async findBySubForList(sub){
-      return this.db.any('SELECT id,service_description,logo_uri,service_name,deployed,requester,integration_environment FROM service_details WHERE requester = $1 AND deleted=false', sub);
+      return this.db.any('SELECT id,service_description,logo_uri,service_name,deployed,requester,integration_environment,state FROM service_details JOIN service_state USING (id) WHERE requester = $1 AND deleted=false', sub);
     }
 
     async belongsToRequester(service_id,sub){
       if(sub==='admin'){
-        return this.db.oneOrNone('SELECT protocol FROM service_details WHERE id = $1 AND deleted=FALSE', [+service_id]).then(res=>{
-          if(res){return res.protocol}else{return false}
-        });
+        return this.db.oneOrNone('SELECT protocol,deployed,state FROM service_details JOIN service_state USING (id) WHERE id = $1 AND deleted=FALSE', [+service_id]);
       }
       else{
-        return this.db.oneOrNone('SELECT protocol FROM service_details WHERE id = $1 AND requester= $2 and deleted=FALSE', [+service_id,sub]).then(res=>{
-          if(res){return res.protocol}else{return false}
-        });
+        return this.db.oneOrNone('SELECT protocol,deployed,state FROM service_details JOIN service_state USING (id) WHERE id = $1 AND requester= $2 and deleted=FALSE', [+service_id,sub]);
       }
     }
 

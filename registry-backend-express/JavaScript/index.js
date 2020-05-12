@@ -15,6 +15,8 @@ var passport = require('passport');
 var session = require("express-session");
 
 // We set Cors options so that express can handle preflight requests containing cookies
+
+
 var corsOptions = {
     origin:  process.env.OIDC_REACT,
     methods: "GET,HEAD,POST,PATCH,DELETE,OPTIONS,PUT",
@@ -23,6 +25,9 @@ var corsOptions = {
     optionsSuccessStatus: 200,
     preflightContinue:true
 }
+
+
+
 // Issuer and Passport Strategy initialization
 Issuer.discover(process.env.ISSUER_BASE_URI).then((issuer)=>{
   //console.log(issuer.metadata);
@@ -42,7 +47,7 @@ Issuer.discover(process.env.ISSUER_BASE_URI).then((issuer)=>{
     //console.log('access_token', tokenset.access_token);
     //console.log('id_token', tokenset.id_token);
     //console.log('claims', tokenset.claims);
-    console.log('userinfo', userinfo);
+    //console.log('userinfo', userinfo);
     routes.saveUser(userinfo);
     return done(null, userinfo)
   }));
@@ -103,6 +108,16 @@ app.use(bodyParser.json());
 app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use('/', routes.router);
+
+
+
+// setInterval(Updater,500);
+// function Updater() {
+//     console.log('test');
+// }
+
+
+
 
 const port = 5000;
 

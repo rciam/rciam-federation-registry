@@ -86,6 +86,7 @@ class ServiceRepository {
               if(result){
                 queries.push(t.service_details_protocol.add('service',service,result.id));
                 queries.push(t.service_contacts.add('service',service.contacts,result.id));
+                queries.push(t.service_state.add(result.id,'sending'));
                 if(service.protocol==='oidc'){
                   queries.push(t.service_multi_valued.add('service','oidc_grant_types',service.grant_types,result.id));
                   queries.push(t.service_multi_valued.add('service','oidc_scopes',service.scope,result.id));
@@ -107,6 +108,7 @@ class ServiceRepository {
     }
 
   async update(newState,targetId,type){
+
     let petition ='';
     let service_details = 'service_details';
     if(type==='petition'){
@@ -123,6 +125,10 @@ class ServiceRepository {
             if(Object.keys(edits.details).length !== 0){
                queries.push(t[service_details].update(edits.details,targetId));
                queries.push(t.service_details_protocol.update(type,edits.details,targetId));
+
+            }
+            if(service_details==='service_details'){
+              queries.push(t.service_state.update(targetId,'sending'));
             }
             for (var key in edits.add){
               if(key==='contacts') {

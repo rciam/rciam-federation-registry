@@ -17,7 +17,10 @@ code {
     monospace;
 }
 /* General */
-
+.button-link {
+  display: inline-block!important;
+  margin-bottom: 0.5rem!important;
+}
 
 /* Main Page */
 .main-container {
@@ -400,7 +403,7 @@ tbody tr td:last-child {
 }
 
 .petition-actions button {
-  margin-bottom:0.5rem;
+
   font-size: 0.8rem!important;
 }
 
