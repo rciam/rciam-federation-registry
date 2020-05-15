@@ -41,7 +41,7 @@ router.put('/setDeployment',(req,res)=>{
 });
 router.get('/ams_verification_hash',(req,res)=>{
   res.setHeader('Content-type', 'plain/text');
-  res.status(200).send();
+  res.status(200).send('400f162b6d05b3cf24880c46a9decbcf930bd83c');
 })
 
 
