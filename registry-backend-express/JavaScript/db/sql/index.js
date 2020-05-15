@@ -32,7 +32,8 @@ module.exports = {
     service:{
       getOidc:sql('service/getOidc.sql'),
       getSaml:sql('service/getSaml.sql'),
-      getService:sql('service/getService.sql')
+      getService:sql('service/getService.sql'),
+      getPending:sql('service/getPending.sql')
     },
     user_info:{
       add:sql('user_info/add.sql')

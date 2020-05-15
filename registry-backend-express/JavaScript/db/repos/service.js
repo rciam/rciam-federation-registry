@@ -10,17 +10,15 @@ const petition_data = "'requester',sd.requester,'service_id',sd.service_id,'type
  */
 
 class ServiceRepository {
-    constructor(db, pgp) {
-        this.db = db;
-        this.pgp = pgp;
+  constructor(db, pgp) {
+      this.db = db;
+      this.pgp = pgp;
 
-        // set-up all ColumnSet objects, if needed:
+      // set-up all ColumnSet objects, if needed:
 
-    }
+  }
 
-
-
-    async get(id,type){
+  async get(id,type){
       if(type==='petition'){
         type=petition;
         extra_data=petition_data;
@@ -55,7 +53,7 @@ class ServiceRepository {
         });
       }
 
-    async add(service,requester,type) {
+  async add(service,requester,type) {
       let petition ='';
       if(type==='petition'){
         petition = type;
@@ -86,7 +84,7 @@ class ServiceRepository {
               if(result){
                 queries.push(t.service_details_protocol.add('service',service,result.id));
                 queries.push(t.service_contacts.add('service',service.contacts,result.id));
-                queries.push(t.service_state.add(result.id,'sending'));
+                queries.push(t.service_state.add(result.id,'pending'));
                 if(service.protocol==='oidc'){
                   queries.push(t.service_multi_valued.add('service','oidc_grant_types',service.grant_types,result.id));
                   queries.push(t.service_multi_valued.add('service','oidc_scopes',service.scope,result.id));
@@ -128,7 +126,7 @@ class ServiceRepository {
 
             }
             if(service_details==='service_details'){
-              queries.push(t.service_state.update(targetId,'sending'));
+              queries.push(t.service_state.update(targetId,'pending'));
             }
             for (var key in edits.add){
               if(key==='contacts') {
@@ -156,6 +154,16 @@ class ServiceRepository {
     }
   }
 
+  async getPending(){
+    return this.db.any(sql.getPending).then(services=>{
+      if(services){
+        return services;
+      }
+      else{
+        return null;
+      }
+    })
+  }
 }
 
 

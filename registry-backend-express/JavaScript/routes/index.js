@@ -22,8 +22,49 @@ const tables = ['service_oidc_scopes','service_oidc_grant_types','service_oidc_r
 // ----------------------------------------------------------
 // ************************* Routes *************************
 //
-router.get('/test',(req,res)=>{
-  res.json({test:'test'});
+router.put('/updateState',(req,res)=>{
+  db.service_state.updateMultiple(req.body).then(result=>{
+    res.json({result});
+  });
+});
+
+router.put('/setDeployment',(req,res)=>{
+  let updateData=[];
+  req.body.messages.forEach((message) => {
+    updataData.push(JSON.parse(Buffer.from(message.message.data, 'base64').toString()));
+  });
+  db.service_state.updateMultiple(updateData).then(result=>{
+    if(result.success){
+      res.sendStatus(200).send();
+    }
+  });
+});
+router.get('/ams_verification_hash',(req,res)=>{
+  res.setHeader('Content-type', 'plain/text');
+  res.status(200).send();
+})
+
+
+router.get('/getPending',(req,res)=>{
+  db.service.getPending().then(services=>{
+    if(services){
+      res.json({
+        success:true,
+        services:services
+      })
+    }
+    else{
+      res.json({
+        succes:true,
+        services:[]
+      })
+    }
+  }).catch((err)=>{
+    res.json({
+      success:false,
+      error:err
+    })
+  })
 })
 router.get('/auth/mock',checkTest, passport.authenticate('my-mock'));
 // Login Route
@@ -527,7 +568,7 @@ function asyncPetitionValidation(req,res,next){
                   await t.service_details.belongsToRequester(req.body.service_id,req.user.sub).then(async service =>{
                     if(service){
                       if(service.protocol===req.body.protocol){
-                        if(service.status==='deployed'){
+                        if(service.state==='deployed'){
                           next();
                         }
                         else{return res.json({success:false,error:'Cannot edit service awaiting deployment'});}
@@ -558,7 +599,7 @@ function asyncPetitionValidation(req,res,next){
             if(petition.protocol!==req.body.protocol){
               return res.json({success:false,error:'Protocol can not be modified.'});
             }
-            if(petition.type!==req.body.type){
+            if(petition.type!=='delete'&&petition.type!==req.body.type){
               return res.json({success:false,error:'Type of request cannot be modified'});
             }
             if(req.body.type==='create'){
