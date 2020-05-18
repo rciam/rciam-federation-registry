@@ -2,6 +2,8 @@ var envPath = __dirname + "/.env";
 require('dotenv').config({path:envPath});
 const express = require('express');
 const {db} = require('./db');
+var https = require('https');
+var fs = require('fs');
 const cors = require('cors');
 const bodyParser = require('body-parser')
 const {check,validationResult,body}= require('express-validator');
@@ -121,9 +123,17 @@ app.use('/', routes.router);
 
 const port = 5000;
 
-var server = app.listen(port, () => {
-    console.log('\nReady for GET requests on http://localhost:' + port);
+var server = https.createServer({
+  key: fs.readFileSync('/etc/letsencrypt/live/snf-871007.vm.okeanos.grnet.gr/privkey.pem','utf-8'),
+  cert: fs.readFileSync('/etc/letsencrypt/live/snf-871007.vm.okeanos.grnet.gr/fullchain.pem','utf-8')
+}, app)
+.listen(port, function () {
+  console.log('Example app listening on https://localhost:'+port);
 });
+
+//var server = app.listen(port, () => {
+//    console.log('\nReady for GET requests on http://localhost:' + port);
+//});
 function stop() {
   server.close();
 }

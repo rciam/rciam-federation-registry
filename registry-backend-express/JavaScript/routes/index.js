@@ -22,7 +22,10 @@ const tables = ['service_oidc_scopes','service_oidc_grant_types','service_oidc_r
 // ----------------------------------------------------------
 // ************************* Routes *************************
 //
+
 router.put('/updateState',(req,res)=>{
+  console.log("updateState request from ams agent");
+  console.log(req.body);
   db.service_state.updateMultiple(req.body).then(result=>{
     res.json({result});
   });
@@ -30,8 +33,24 @@ router.put('/updateState',(req,res)=>{
 
 router.put('/setDeployment',(req,res)=>{
   let updateData=[];
+  console.log("setDeployment request from ams all is good put");
+  console.log(req.body);
+  //req.body.messages.forEach((message) => {
+  //  updataData.push(JSON.parse(Buffer.from(message.message.data, 'base64').toString()));
+  //});
+  //db.service_state.updateMultiple(updateData).then(result=>{
+  //  if(result.success){
+  //    res.sendStatus(200).send();
+  //  }
+  //});
+});
+
+router.post('/setDeployment',(req,res)=>{
+  let updateData=[];
+  console.log("setDeployment request from ams all is good post");
+  console.log(req.body);
   req.body.messages.forEach((message) => {
-    updataData.push(JSON.parse(Buffer.from(message.message.data, 'base64').toString()));
+    updateData.push(JSON.parse(Buffer.from(message.message.data, 'base64').toString()));
   });
   db.service_state.updateMultiple(updateData).then(result=>{
     if(result.success){
@@ -39,9 +58,12 @@ router.put('/setDeployment',(req,res)=>{
     }
   });
 });
+
+
 router.get('/ams_verification_hash',(req,res)=>{
+  console.log('ams verification');
   res.setHeader('Content-type', 'plain/text');
-  res.status(200).send('400f162b6d05b3cf24880c46a9decbcf930bd83c');
+  res.status(200).send('f0500d9b6d62469f05dd6abacf588100e9fe829f');
 })
 
 
