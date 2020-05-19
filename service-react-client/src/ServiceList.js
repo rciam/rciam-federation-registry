@@ -249,7 +249,7 @@ function TableItem(props) {
         <div className="flex-column">
           <h3 className="petition-title">{props.item.service_name}</h3>
           <div className="badge-container">
-            {props.item.hasOwnProperty('state')&&props.item.state!==null?<Badge className="status-badge" variant={props.item.state==='deployed'?'primary':'danger'}>{props.item.state==='deployed'?'Deployed':'Deployment in Progress'}</Badge>:null}
+            {props.item.hasOwnProperty('state')&&props.item.state!==null?<Badge className="status-badge" variant={props.item.state==='deployed'?'primary':'danger'}>{props.item.state==='deployed'?'Deployed':props.item.deleted===false?'Deployment in Progress':'Deregistration in Progress'}</Badge>:null}
             {props.item.hasOwnProperty('type')?<Badge className="status-badge" variant="warning">
               {props.item.type==='edit'?'Reconfiguration Pending':props.item.type==='create'?'Registration Pending':'Deregistration Pending'}
               </Badge>:null}

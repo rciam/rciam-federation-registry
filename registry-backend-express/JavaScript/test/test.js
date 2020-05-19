@@ -191,6 +191,29 @@ describe('Service registry API Integration Tests', function() {
           done();
         })
       });
+      it('should mock deployment of service configuration',function(done){
+        let messages = [];
+        messages.push(
+          {
+             "message":{
+                "attributes":{
+                   "key":"value"
+                },
+                "data":Buffer.from(JSON.stringify({id:service,state:'deployed'})).toString("base64"),
+                "messageId":"136969346945"
+             },
+             "subscription":"projects/myproject/subscriptions/mysubscription"
+          }
+        );
+
+        var req = request(server).post('/setDeployment').send({
+          messages
+        });
+        req.expect(200).end(function(err,res){
+          res.status.should.equal(200);
+          done();
+        });
+      });
       it('should get created service',function(done){
         var req = request(server).get('/service/'+service);
         req.cookies = Cookies;
@@ -236,6 +259,29 @@ describe('Service registry API Integration Tests', function() {
           done();
         })
       });
+      it('should mock deployment of service configuration',function(done){
+        let messages = [];
+        messages.push(
+          {
+             "message":{
+                "attributes":{
+                   "key":"value"
+                },
+                "data":Buffer.from(JSON.stringify({id:service,state:'deployed'})).toString("base64"),
+                "messageId":"136969346945"
+             },
+             "subscription":"projects/myproject/subscriptions/mysubscription"
+          }
+        );
+
+        var req = request(server).post('/setDeployment').send({
+          messages
+        });
+        req.expect(200).end(function(err,res){
+          res.status.should.equal(200);
+          done();
+        });
+      });
       it('should get edited service',function(done){
         var req = request(server).get('/service/'+service);
         req.cookies = Cookies;
@@ -276,6 +322,29 @@ describe('Service registry API Integration Tests', function() {
           expect(body.success).to.equal(true);
           done();
         })
+      });
+      it('should mock deployment of service configuration',function(done){
+        let messages = [];
+        messages.push(
+          {
+             "message":{
+                "attributes":{
+                   "key":"value"
+                },
+                "data":Buffer.from(JSON.stringify({id:service,state:'deployed'})).toString("base64"),
+                "messageId":"136969346945"
+             },
+             "subscription":"projects/myproject/subscriptions/mysubscription"
+          }
+        );
+
+        var req = request(server).post('/setDeployment').send({
+          messages
+        });
+        req.expect(200).end(function(err,res){
+          res.status.should.equal(200);
+          done();
+        });
       });
       it('should fail to get deleted service',function(done){
         var req = request(server).get('/service/'+service);

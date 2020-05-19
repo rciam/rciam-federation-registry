@@ -28,8 +28,7 @@ create table service_details (
   integration_environment VARCHAR(256),
   requester VARCHAR(256),
   protocol VARCHAR(256),
-  deleted BOOLEAN DEFAULT FALSE,
-  deployed BOOLEAN DEFAULT FALSE
+  deleted BOOLEAN DEFAULT FALSE
 );
 
 create table service_details_oidc (
@@ -159,18 +158,18 @@ create table service_petition_oidc_scopes (
 );
 
 
-INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,deployed,protocol)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 1','https://cdn.vox-cdn.com/thumbor/0n6dqQfk9MuOBSiM39Pog2Bw39Y=/1400x1400/filters:format(jpeg)/cdn.vox-cdn.com/uploads/chorus_asset/file/19341372/microsoftedgenewlogo.jpg','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',true,'oidc');
-INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,deployed,protocol)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 2','https://i.pinimg.com/originals/33/b8/69/33b869f90619e81763dbf1fccc896d8d.jpg','https://policy_uri.com','production','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',true,'oidc');
-INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,deployed,protocol)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 3','http://logok.org/wp-content/uploads/2014/05/Total-logo-earth.png','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',true,'oidc');
-INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,deployed,protocol)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 4','https://brandmark.io/logo-rank/random/pepsi.png','https://policy_uri.com','development','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',true,'oidc');
-INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,deployed,protocol)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 5','https://brandmark.io/logo-rank/random/pepsi.png','https://policy_uri.com','development','7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu',true,'oidc');
-INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,deployed,protocol)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Saml 6','https://cdn.auth0.com/blog/duo-saml-exploit/saml.png','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',true,'saml');
+INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol)
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 1','https://cdn.vox-cdn.com/thumbor/0n6dqQfk9MuOBSiM39Pog2Bw39Y=/1400x1400/filters:format(jpeg)/cdn.vox-cdn.com/uploads/chorus_asset/file/19341372/microsoftedgenewlogo.jpg','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','oidc');
+INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol)
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 2','https://i.pinimg.com/originals/33/b8/69/33b869f90619e81763dbf1fccc896d8d.jpg','https://policy_uri.com','production','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','oidc');
+INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol)
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 3','http://logok.org/wp-content/uploads/2014/05/Total-logo-earth.png','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','oidc');
+INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol)
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 4','https://brandmark.io/logo-rank/random/pepsi.png','https://policy_uri.com','development','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','oidc');
+INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol)
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 5','https://brandmark.io/logo-rank/random/pepsi.png','https://policy_uri.com','development','7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu','oidc');
+INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol)
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Saml 6','https://cdn.auth0.com/blog/duo-saml-exploit/saml.png','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','saml');
 
 INSERT INTO service_state (id,state)
 VALUES (1,'deployed');

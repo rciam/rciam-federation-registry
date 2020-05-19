@@ -31,23 +31,11 @@ router.put('/updateState',(req,res)=>{
   });
 });
 
-router.put('/setDeployment',(req,res)=>{
-  let updateData=[];
-  console.log("setDeployment request from ams all is good put");
-  console.log(req.body);
-  //req.body.messages.forEach((message) => {
-  //  updataData.push(JSON.parse(Buffer.from(message.message.data, 'base64').toString()));
-  //});
-  //db.service_state.updateMultiple(updateData).then(result=>{
-  //  if(result.success){
-  //    res.sendStatus(200).send();
-  //  }
-  //});
-});
+
 
 router.post('/setDeployment',(req,res)=>{
   let updateData=[];
-  console.log("setDeployment request from ams all is good post");
+  console.log("setDeployment request from ams all is good!");
   console.log(req.body);
   req.body.messages.forEach((message) => {
     updateData.push(JSON.parse(Buffer.from(message.message.data, 'base64').toString()));
@@ -88,6 +76,7 @@ router.get('/getPending',(req,res)=>{
     })
   })
 })
+
 router.get('/auth/mock',checkTest, passport.authenticate('my-mock'));
 // Login Route
 
@@ -289,7 +278,7 @@ router.put('/service/delete/:service_id',checkAuthentication,(req,res)=>{
   return db.task('create-delete-petition',async t =>{
     try{
       await t.service_details.belongsToRequester(req.params.service_id,req.user.sub).then(async belongs =>{
-        if(belongs&&(belongs.status==='deployed')){
+        if(belongs&&(belongs.state==='deployed')){
           await t.service.get(req.params.service_id,'service').then(async service => {
             if (service) {
               service = service.service_data;
