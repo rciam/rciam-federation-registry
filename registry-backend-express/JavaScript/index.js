@@ -99,6 +99,7 @@ passport.deserializeUser(function(obj, done) {
 
 const app = express();
 
+
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
@@ -123,17 +124,29 @@ app.use('/', routes.router);
 
 const port = 5000;
 
-var server = https.createServer({
-  key: fs.readFileSync('/etc/letsencrypt/live/snf-871007.vm.okeanos.grnet.gr/privkey.pem','utf-8'),
-  cert: fs.readFileSync('/etc/letsencrypt/live/snf-871007.vm.okeanos.grnet.gr/fullchain.pem','utf-8')
-}, app)
-.listen(port, function () {
-  console.log('Example app listening on https://localhost:'+port);
-});
 
-//var server = app.listen(port, () => {
-//    console.log('\nReady for GET requests on http://localhost:' + port);
-//});
+var server;
+
+if(process.env.NODE_ENV==='test'||process.env.NODE_ENV==='test-docker'){
+  server = app.listen(port, () => {
+     console.log('\nReady for GET requests on http://localhost:' + port);
+  });
+  function stop() {
+    server.close();
+  }
+}
+else{
+  server = https.createServer({
+    key: fs.readFileSync('/etc/letsencrypt/live/snf-871007.vm.okeanos.grnet.gr/privkey.pem','utf-8'),
+    cert: fs.readFileSync('/etc/letsencrypt/live/snf-871007.vm.okeanos.grnet.gr/fullchain.pem','utf-8')
+  }, app)
+  .listen(port, function () {
+    console.log('Example app listening on https://localhost:'+port);
+  });
+}
+
+
+
 function stop() {
   server.close();
 }

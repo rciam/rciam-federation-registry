@@ -1,3 +1,4 @@
+
 const axios = require('axios');
 const base64 = require('base-64');
 var envPath = __dirname + "/.env";
@@ -14,7 +15,6 @@ function run() {
   axios.get(process.env.EXPRESS+'/getPending')
   .then(function (response) {
     // handle success
-    console.log('Step 1 get pending');
     let updateData = [];
     if(response.data.services){
       response.data.services.forEach((service) => {
@@ -22,14 +22,11 @@ function run() {
         messages.push({"attributes":{},"data": Buffer.from(JSON.stringify(service.json)).toString("base64")});
       });
       if(messages.length>0){
-        console.log('Step 2 we have new message');
         data={"messages":messages};
         axios.post(publish_url,data, options).then((res) => {
           if(res.status===200){
-            console.log('Step 3 publish message to ams');
             axios.put(process.env.EXPRESS+'/updateState',updateData,options).then((res)=>{
               if(res){
-                console.log('Step 4 update state Express');
                 fakeThirdParty(updateData);
                 if(res.success===false){
 	          console.log(res.error);
@@ -57,10 +54,8 @@ function fakeThirdParty(data){
     messages.push({"attributes":{},"data": Buffer.from(JSON.stringify(data[i])).toString("base64")});
   });
   data={"messages":messages};
-  console.log('Step 5 we publish to ams');
   axios.post(fake_publish_url,data, options).then((res) => {
     if(res.status===200){
-      console.log('Step 6 fake publish success');
     }
   });
 }

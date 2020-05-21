@@ -24,8 +24,6 @@ const tables = ['service_oidc_scopes','service_oidc_grant_types','service_oidc_r
 //
 
 router.put('/updateState',(req,res)=>{
-  console.log("updateState request from ams agent");
-  console.log(req.body);
   db.service_state.updateMultiple(req.body).then(result=>{
     res.json({result});
   });
@@ -35,8 +33,7 @@ router.put('/updateState',(req,res)=>{
 
 router.post('/setDeployment',(req,res)=>{
   let updateData=[];
-  console.log("setDeployment request from ams all is good!");
-  console.log(req.body);
+  console.log(req);
   req.body.messages.forEach((message) => {
     updateData.push(JSON.parse(Buffer.from(message.message.data, 'base64').toString()));
   });
@@ -493,7 +490,7 @@ function checkAuthentication(req,res,next){
 }
 
 function checkTest(req,res,next){
-  if(process.env.NODE_ENV==='test-docker'||process.env.NODE_ENV==='test'){
+ if(process.env.NODE_ENV==='test-docker'||process.env.NODE_ENV==='test'){
     next();
   }
   else{
