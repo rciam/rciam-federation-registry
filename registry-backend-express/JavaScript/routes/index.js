@@ -23,7 +23,7 @@ const tables = ['service_oidc_scopes','service_oidc_grant_types','service_oidc_r
 // ************************* Routes *************************
 //
 
-router.put('/updateState',(req,res)=>{
+router.put('/updateState',amsAgentAuth,(req,res)=>{
   db.service_state.updateMultiple(req.body).then(result=>{
     res.json({result});
   });
@@ -52,7 +52,7 @@ router.get('/ams_verification_hash',(req,res)=>{
 })
 
 
-router.get('/getPending',(req,res)=>{
+router.get('/getPending',amsAgentAuth,(req,res)=>{
   db.service.getPending().then(services=>{
     if(services){
       res.json({
@@ -487,6 +487,15 @@ router.get('/availability/:protocol/:id',checkAuthentication,(req,res)=>{
 function checkAuthentication(req,res,next){
   if(req.isAuthenticated()){next();}
   else{res.json({auth:false});}
+}
+// bZwolIWwWH9AzCjKB60dLCG6bYCCVinx
+function amsAgentAuth(req,res,next){
+  if(req.header('X-Api-Key')===process.env.NODE_ENV){
+    next();
+  }
+  else{
+    res.json({success:false,error:'Authentication failure'})
+  }
 }
 
 function checkTest(req,res,next){

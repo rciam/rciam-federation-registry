@@ -3,7 +3,11 @@ const axios = require('axios');
 const base64 = require('base-64');
 var envPath = __dirname + "/.env";
 require('dotenv').config({path:envPath});
-const options = {headers:{'Content-Type': 'application/json'}};
+const options = {
+  headers:{
+    'Content-Type': 'application/json',
+    'X-Api-Key': process.env.KEY
+}};
 const publish_url = process.env.AMS + '/projects/' + process.env.PROJECT + "/topics/tasks:publish?key=" +process.env.TOKEN;
 const fake_publish_url = process.env.AMS + '/projects/' + process.env.PROJECT + '/topics/updates:publish?key=' +process.env.TOKEN;
 const fake_consume_url = process.env.AMS + '/projects/' + process.env.PROJECT + '/subscriptions/mock:pull?key=' +process.env.TOKEN;
@@ -12,7 +16,7 @@ var intervalID;
 
 function run() {
   let messages = [];
-  axios.get(process.env.EXPRESS+'/getPending')
+  axios.get(process.env.EXPRESS+'/getPending',options)
   .then(function (response) {
     // handle success
     let updateData = [];
@@ -29,7 +33,7 @@ function run() {
               if(res){
                 fakeThirdParty(updateData);
                 if(res.success===false){
-	          console.log(res.error);
+                 console.log(res.error);
                 }
               }
             });
@@ -50,7 +54,7 @@ function run() {
 function fakeThirdParty(data){
   let messages = [];
   data.forEach((message,i)=>{
-    data[i].state = 'deployed';
+    data[i].state = 'error';
     messages.push({"attributes":{},"data": Buffer.from(JSON.stringify(data[i])).toString("base64")});
   });
   data={"messages":messages};

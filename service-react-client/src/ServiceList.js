@@ -249,7 +249,7 @@ function TableItem(props) {
         <div className="flex-column">
           <h3 className="petition-title">{props.item.service_name}</h3>
           <div className="badge-container">
-            {props.item.hasOwnProperty('state')&&props.item.state!==null?<Badge className="status-badge" variant={props.item.state==='deployed'?'primary':'danger'}>{props.item.state==='deployed'?'Deployed':props.item.deleted===false?'Deployment in Progress':'Deregistration in Progress'}</Badge>:null}
+            {props.item.hasOwnProperty('state')&&props.item.state!==null?<Badge className="status-badge" variant={props.item.state==='deployed'?'primary':'danger'}>{props.item.state==='deployed'?'Deployed':props.item.state==='error'?'Deployment Malfunction':props.item.deleted===false?'Deployment in Progress':'Deregistration in Progress'}</Badge>:null}
             {props.item.hasOwnProperty('type')?<Badge className="status-badge" variant="warning">
               {props.item.type==='edit'?'Reconfiguration Pending':props.item.type==='create'?'Registration Pending':'Deregistration Pending'}
               </Badge>:null}
@@ -334,16 +334,20 @@ function TableItem(props) {
               <React.Fragment>
                 {props.item.type!=='create'?
                   <Dropdown.Item>
-                    <div onClick={()=>{
-                      if(props.item.type==='create'||props.item.type==='delete'){
-                        props.setConfirmationId(props.item.petition_id);
-                        props.setConfirmationAction('petition');
-                        if(props.item.type==='delete'){
-                          props.setCancelRequest(true);
+                    <div
+                    className={props.item.state==='deployed'?'options-disabled':null}
+                    onClick={()=>{
+                      if(props.item.state==='deployed'){
+                        if(props.item.type==='create'||props.item.type==='delete'){
+                          props.setConfirmationId(props.item.petition_id);
+                          props.setConfirmationAction('petition');
+                          if(props.item.type==='delete'){
+                            props.setCancelRequest(true);
+                          }
+                        }else{
+                          props.setConfirmationId(props.item.id);
+                          props.setConfirmationAction('service');
                         }
-                      }else{
-                        props.setConfirmationId(props.item.id);
-                        props.setConfirmationAction('service');
                       }
                     }}>
                       {props.item.type==='delete'?'Cancel Deregistration':'Deregister Service'}
