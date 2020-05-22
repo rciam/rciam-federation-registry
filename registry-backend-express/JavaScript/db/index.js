@@ -41,7 +41,7 @@ if(process.env.NODE_ENV==='test'){
   config = testdbConfig;
 
 }
-else if(process.env.NODE_ENV==='docker-test'){
+else if(process.env.NODE_ENV==='test-docker'){
   config = dockerTestdbConfig;
 }
 else{

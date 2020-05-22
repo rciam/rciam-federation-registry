@@ -34,7 +34,7 @@ const ServiceList= (props)=> {
   const [message,setMessage] = useState();
   const [responseTitle,setResponseTitle] = useState(null);
   const [searchString,setSearchString] = useState();
-
+  const [alertMessage,setAlertMessage] = useState();
   const [expandFilters,setExpandFilters] = useState();
 
 
@@ -156,6 +156,7 @@ const ServiceList= (props)=> {
     <React.Fragment>
       <ListResponseModal message={message} modalTitle={responseTitle} setMessage={setMessage}/>
       <Confirmation confirmationId={confirmationId} cancelRequest={cancelRequest} setConfirmationId={setConfirmationId} confirmationAction={confirmationAction==='petition'?deletePetition:deleteService}/>
+      <Alert alertMessage={alertMessage} setAlertMessage={setAlertMessage}/>
       <div>
         <LoadingBar loading={loadingList}>
           <div className="options-bar">
@@ -221,7 +222,7 @@ const ServiceList= (props)=> {
                         }
                         if(Math.ceil(renderedConnections/itemsPerPage)===activePage&&item.display){
                           return(
-                            <TableItem item={item} user={props.user} key={index} setCancelRequest={setCancelRequest}  setConfirmationAction={setConfirmationAction} setConfirmationId={setConfirmationId}/>
+                            <TableItem item={item} user={props.user} key={index} setAlertMessage={setAlertMessage} setCancelRequest={setCancelRequest}  setConfirmationAction={setConfirmationAction} setConfirmationId={setConfirmationId}/>
                           )
                         }
                         return null
@@ -348,6 +349,8 @@ function TableItem(props) {
                           props.setConfirmationId(props.item.id);
                           props.setConfirmationAction('service');
                         }
+                      }else{
+                        props.setAlertMessage('Service cannot be deregistered until it is deployed');
                       }
                     }}>
                       {props.item.type==='delete'?'Cancel Deregistration':'Deregister Service'}
@@ -391,7 +394,23 @@ function TableItem(props) {
     </tr>
   )
 }
-
+function Alert(props){
+  const handleClose = () => props.setAlertMessage();
+  return (
+    <Modal show={props.alertMessage?true:false} onHide={handleClose}>
+        <Modal.Header closeButton>
+          <Modal.Title>
+              {props.alertMessage}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Footer>
+          <Button variant="primary" onClick={handleClose}>
+            Continue
+          </Button>
+        </Modal.Footer>
+    </Modal>
+  )
+}
 
 function Confirmation(props){
   const handleClose = () => props.setConfirmationId();

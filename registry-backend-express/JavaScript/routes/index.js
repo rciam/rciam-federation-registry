@@ -147,7 +147,7 @@ router.get('/servicelist',checkAuthentication,(req,res)=>{
 router.get('/petition/:id',checkAuthentication,(req,res)=>{
   return db.task('find-petition-data',async t=>{
 
-    let requester;console.log
+    let requester;
     if(isAdmin(req)){
       requester = 'admin'
     }
@@ -280,7 +280,7 @@ router.put('/service/delete/:service_id',checkAuthentication,(req,res)=>{
             if (service) {
               service = service.service_data;
               service.service_id = req.params.service_id;
-              service.type = 'delete';console.log
+              service.type = 'delete';
               await t.service_petition_details.openPetition(req.params.service_id).then(async open_petition_id=>{
                 if(open_petition_id){
                   await t.service.update(service,open_petition_id,'petition').then(resp=>{
@@ -490,7 +490,7 @@ function checkAuthentication(req,res,next){
 }
 // bZwolIWwWH9AzCjKB60dLCG6bYCCVinx
 function amsAgentAuth(req,res,next){
-  if(req.header('X-Api-Key')===process.env.NODE_ENV){
+  if(req.header('X-Api-Key')===process.env.AMS_AGENT_KEY){
     next();
   }
   else{
@@ -499,7 +499,7 @@ function amsAgentAuth(req,res,next){
 }
 
 function checkTest(req,res,next){
- if(process.env.NODE_ENV==='docker-test'||process.env.NODE_ENV==='test'){
+ if(process.env.NODE_ENV==='test-docker'||process.env.NODE_ENV==='test'){
     next();
   }
   else{

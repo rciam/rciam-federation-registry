@@ -60,7 +60,6 @@ class ServiceDetailsRepository {
     }
 
     async delete(id){
-      console.log(id);
       try {
         return this.db.tx('update-service',async t =>{
           let queries = [];
@@ -68,7 +67,6 @@ class ServiceDetailsRepository {
           queries.push(t.none('UPDATE service_details SET deleted=TRUE WHERE id=$1',+id));
           var result = await t.batch(queries);
           if(result){
-            console.log('delete ok');
             return true
           }
           else {
