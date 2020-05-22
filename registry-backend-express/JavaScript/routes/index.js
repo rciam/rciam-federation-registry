@@ -33,7 +33,7 @@ router.put('/updateState',amsAgentAuth,(req,res)=>{
 
 router.post('/setDeployment',(req,res)=>{
   let updateData=[];
-  console.log(req);
+
   req.body.messages.forEach((message) => {
     updateData.push(JSON.parse(Buffer.from(message.message.data, 'base64').toString()));
   });
@@ -499,7 +499,7 @@ function amsAgentAuth(req,res,next){
 }
 
 function checkTest(req,res,next){
- if(process.env.NODE_ENV==='test-docker'||process.env.NODE_ENV==='test'){
+ if(process.env.NODE_ENV==='docker-test'||process.env.NODE_ENV==='test'){
     next();
   }
   else{

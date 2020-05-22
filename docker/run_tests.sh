@@ -2,4 +2,4 @@
 
 cd /home/registry-backend-express
 npm install
-npm run test-docker
+npm run docker-test

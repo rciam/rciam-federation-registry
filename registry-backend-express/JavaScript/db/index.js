@@ -41,12 +41,13 @@ if(process.env.NODE_ENV==='test'){
   config = testdbConfig;
 
 }
-else if(process.env.NODE_ENV==='test-docker'){
+else if(process.env.NODE_ENV==='docker-test'){
   config = dockerTestdbConfig;
 }
 else{
   config = dbConfig;
 }
+
 const db = pgp(config);
 
 // Initializing optional diagnostics:

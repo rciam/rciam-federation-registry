@@ -18,7 +18,10 @@ pipeline {
             }
             post{
                 always {
-                    sh "docker-compose down"
+                    sh """
+                        cd ${WORKSPACE}/${PROJECT_DIR}/docker
+                        docker-compose down
+                    """
                     cleanWs()
                 }
             }

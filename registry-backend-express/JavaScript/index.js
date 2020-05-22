@@ -127,7 +127,7 @@ const port = 5000;
 
 var server;
 
-if(process.env.NODE_ENV==='test'||process.env.NODE_ENV==='test-docker'||process.env.OIDC_REACT==='http://localhost:3000'){
+if(process.env.NODE_ENV==='test'||process.env.NODE_ENV==='docker-test'||process.env.OIDC_REACT==='http://localhost:3000'){
   server = app.listen(port, () => {
      console.log('\nReady for GET requests on http://localhost:' + port);
   });
