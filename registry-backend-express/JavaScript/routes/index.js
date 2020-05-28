@@ -1,14 +1,12 @@
 require('dotenv').config();
 const {clientValidationRules,validate} = require('../validator.js');
 const {merge_data,merge_services_and_petitions} = require('../merge_data.js');
-const {addToString,clearPetitionData} = require('../functions/helpers.js');
+const {addToString,clearPetitionData,sendMail} = require('../functions/helpers.js');
 const {db} = require('../db');
 var diff = require('deep-diff').diff;
 var router = require('express').Router();
 var passport = require('passport');
 var config = require('../config');
-
-
 const petitionTables = ['service_petition_oidc_scopes','service_petition_oidc_grant_types','service_petition_oidc_redirect_uris'];
 const serviceTables = ['service_oidc_scopes','service_oidc_grant_types','service_oidc_redirect_uris'];
 const tables = ['service_oidc_scopes','service_oidc_grant_types','service_oidc_redirect_uris','service_contacts'];
@@ -22,56 +20,19 @@ const tables = ['service_oidc_scopes','service_oidc_grant_types','service_oidc_r
 // ----------------------------------------------------------
 // ************************* Routes *************************
 //
+router.get('/test',(req,res)=>{
+  try{
+    let updateData = [{id:1,state:'deployed'},{id:2,state:'deployed'},{id:3,state:'failed'}];
+    db.service_state.updateMultiple(updateData).then(result=>{
 
-router.put('/updateState',amsAgentAuth,(req,res)=>{
-  db.service_state.updateMultiple(req.body).then(result=>{
-    res.json({result});
-  });
-});
-
-
-
-router.post('/setDeployment',(req,res)=>{
-  let updateData=[];
-
-  req.body.messages.forEach((message) => {
-    updateData.push(JSON.parse(Buffer.from(message.message.data, 'base64').toString()));
-  });
-  db.service_state.updateMultiple(updateData).then(result=>{
-    if(result.success){
-      res.sendStatus(200).send();
-    }
-  });
-});
-
-
-router.get('/ams_verification_hash',(req,res)=>{
-  console.log('ams verification');
-  res.setHeader('Content-type', 'plain/text');
-  res.status(200).send('f0500d9b6d62469f05dd6abacf588100e9fe829f');
-})
-
-
-router.get('/getPending',amsAgentAuth,(req,res)=>{
-  db.service.getPending().then(services=>{
-    if(services){
-      res.json({
-        success:true,
-        services:services
-      })
-    }
-    else{
-      res.json({
-        succes:true,
-        services:[]
-      })
-    }
-  }).catch((err)=>{
-    res.json({
-      success:false,
-      error:err
-    })
-  })
+      res.json({result});
+    }).catch(err=>{
+      sendError(res,err);
+    });
+  }
+  catch(err){
+    res.json({error:err})
+  }
 })
 
 router.get('/auth/mock',checkTest, passport.authenticate('my-mock'));
@@ -108,40 +69,108 @@ router.get('/callback', passport.authenticate('oidc', {
   failureRedirect: process.env.OIDC_REACT
 }));
 
-// Find all clients/petitions from curtain user to create preview list
-router.get('/servicelist',checkAuthentication,(req,res)=>{
-
-    return db.task('find-services', async t => {
-      let services = [];
-      if (isAdmin(req)){ // If user is Admin we fetch all services
-         await t.service_details.findAllForList().then(async response=>{
-           services = response;
-           await t.service_petition_details.findAllForList().then(petitions=>{
-            services = merge_services_and_petitions(services,petitions);
-           })
-         })
+// ams push subscription for deployment results
+// needs Authentication
+router.post('/setDeployment',(req,res)=>{
+  let updateData=[];
+  let ids=[];
+  req.body.messages.forEach((message) => {
+    let decoded_message=(JSON.parse(Buffer.from(message.message.data, 'base64').toString()));
+    updateData.push(decoded_message);
+    ids.push(decoded_message.id);
+  });
+  return db.task('setDeployment', async t => {
+    await t.service_state.updateMultiple(updateData).then(async result=>{
+      if(result.success){
+        t.user.getServiceOwners(ids).then(data=>{
+          if(data){
+            data.forEach(email_data=>{
+              sendMail({subject:'Service Deployment Result',service_name:email_data.service_name,state:email_data.state},'deployment-notification.html',[{name:email_data.name,email:email_data.email}]);
+            })
+          }
+        }).catch(err=>{
+          console.log('Could not sent deployment email.' + err);
+        })
+        res.sendStatus(200).send();
       }
-      else {
-        await t.service_details.findBySubForList(req.user.sub).then(async response=>{
-           services = response;
-           await t.service_petition_details.findBySubForList(req.user.sub).then(petitions=>{
-             services = merge_services_and_petitions(services,petitions);
-           });
-        });
-      }
-      if(services.length<1){
-        return res.end(JSON.stringify({
-          success:true,
-          services:null
-        }));
-      }
-      return res.end(JSON.stringify({
-        success:true,
-        services
-      }));
     });
+  });
 });
 
+// Route used for verifing push subscription
+router.get('/ams_verification_hash',(req,res)=>{
+  console.log('ams verification');
+  res.setHeader('Content-type', 'plain/text');
+  res.status(200).send('f0500d9b6d62469f05dd6abacf588100e9fe829f');
+})
+
+// ams-agent requests to set state to waiting development
+router.put('/updateState',amsAgentAuth,(req,res)=>{
+  try{
+    db.service_state.updateMultiple(req.body).then(result=>{
+      res.json({result});
+    });
+  }
+  catch(err){
+    console.log('Could not set state sent by ams agent'+ err);
+  }
+});
+
+// ams-agent requests to get pending services
+router.get('/getPending',amsAgentAuth,(req,res)=>{
+  db.service.getPending().then(services=>{
+    if(services){
+      res.json({
+        success:true,
+        services:services
+      });
+    }
+    else{
+      res.json({
+        succes:true,
+        services:[]
+      });
+    }
+  }).catch((err)=>{
+    res.json({
+      success:false,
+      error:err
+    });
+  })
+})
+
+// Find all clients/petitions from curtain user to create preview list
+router.get('/servicelist',checkAuthentication,(req,res)=>{
+  return db.task('find-services', async t => {
+    let services = [];
+    if (isAdmin(req)){ // If user is Admin we fetch all services
+       await t.service_details.findAllForList().then(async response=>{
+         services = response;
+         await t.service_petition_details.findAllForList().then(petitions=>{
+          services = merge_services_and_petitions(services,petitions);
+         })
+       }).catch(err=>{sendError(err);})
+    }
+    else {
+      await t.service_details.findBySubForList(req.user.sub).then(async response=>{
+         services = response;
+         await t.service_petition_details.findBySubForList(req.user.sub).then(petitions=>{
+           services = merge_services_and_petitions(services,petitions);
+         });
+      }).catch(err=>{sendError(err);});
+    }
+    if(services.length<1){
+      return res.end(JSON.stringify({
+        success:true,
+        services:null
+      }));
+    }
+    return res.end(JSON.stringify({
+      success:true,
+      services
+    }));
+  });
+});
 
 // It fetches a petition with form data
 router.get('/petition/:id',checkAuthentication,(req,res)=>{
@@ -168,7 +197,7 @@ router.get('/petition/:id',checkAuthentication,(req,res)=>{
           error:'Petition could not be found.'
         });
       }
-    });
+    }).catch(err=>{sendError(err);});
   });
 });
 
@@ -177,14 +206,22 @@ router.post('/petition',clientValidationRules(),validate,checkAuthentication,asy
   res.setHeader('Content-Type', 'application/json');
   return db.tx('add-service', async t => {
     try{
-        await t.service.add(req.body,req.user.sub,'petition').then(id=>{
+        await t.service.add(req.body,req.user.sub,'petition').then(async id=>{
           if(id){
+            t.user.getReviewers().then(users=>{
+              sendMail({subject:'New Petition to Review',service_name:req.body.service_name},'reviewer-notification.html',users);
+            }).catch(error=>{
+              return res.json({
+                id:id,
+                success:true
+              });
+            });
             return res.json({
               id:id,
               success:true
             });
           }
-        });
+        }).catch(err=>{sendError(err);});
     }
     catch(err){
       res.end(JSON.stringify({
@@ -207,7 +244,7 @@ router.delete('/petition/:id',checkAuthentication,(req,res)=>{
             deleted:deleted
           })
         }
-      })
+      }).catch(err=>{sendError(err);})
     }
     catch(error){
       console.log(error);
@@ -233,11 +270,7 @@ router.put('/petition/:id',clientValidationRules(),validate,checkAuthentication,
       });
     }
     catch(error){
-      console.log(error);
-      return res.json({
-        success:false,
-        error:error
-      })
+      sendError(error);
     }
   })
 });
@@ -254,7 +287,7 @@ router.get('/service/:id',checkAuthentication,(req,res)=>{
       return db.task('find-service-data',async t=>{
         await t.service_details.belongsToRequester(req.params.id,requester).then(async exists=>{
           if(exists){
-              const service = await t.service.get(req.params.id,'service').then(result=>{return result.service_data})
+              const service = await t.service.get(req.params.id,'service').then(result=>{return result.service_data}).catch(err=>{sendError(err);})
               return res.json({
                 success:true,
                 service
@@ -316,11 +349,25 @@ router.put('/service/delete/:service_id',checkAuthentication,(req,res)=>{
 router.put('/petition/reject/:id',checkAuthentication,checkAdmin,(req,res)=>{
   return db.task('reject-petition',async t =>{
     try{
-      await t.service_petition_details.review(req.params.id,req.user.sub,'reject',req.body.comment);
-        return res.json({
-          success:true,
-          message:'Request has been succesfully rejected'
-        })
+      await t.service_petition_details.review(req.params.id,req.user.sub,'reject',req.body.comment).then(async results=>{
+        if (results){
+          await t.user.getPetitionOwner(req.params.id).then(email_data=>{
+            if(email_data){
+              sendMail({subject:'Service Petition Review',service_name:email_data.service_name,state:'rejected'},'review-notification.html',[{name:email_data.name,email:email_data.email}]);
+            }
+          });
+          return res.json({
+            success:true,
+            message:'Request has been succesfully rejected'
+          });
+        }
+        else{
+          return res.json({
+            success:false,
+            error:"Error while querying the database"
+          });
+        }
+      })
 
     }
     catch(error){
@@ -347,12 +394,21 @@ router.put('/petition/changes/:id',checkAuthentication,checkAdmin,(req,res)=>{
           petition.status = 'pending';
           await t.service.add(petition,petition.requester,'petition').then(async id=>{
             if(id){
-              await t.service_petition_details.review(req.params.id,req.user.sub,'approved_with_changes',req.body.comment);
-              res.end(JSON.stringify({
-                success:true,
-                id:id,
-                message:'Request has been succesfully reviewed'
-              }));
+              await t.service_petition_details.review(req.params.id,req.user.sub,'approved_with_changes',req.body.comment).then(async result=>{
+                if(result){
+                  res.end(JSON.stringify({
+                    success:true,
+                    id:id,
+                    message:'Request has been succesfully reviewed'
+                  }));
+                  await t.user.getPetitionOwner(req.params.id).then(email_data=>{
+                    if(email_data){
+                      sendMail({subject:'Service Petition Review',service_name:email_data.service_name,state:'approved with changes'},'review-notification.html',[{name:email_data.name,email:email_data.email}]);
+                    }
+                  });
+                }
+              });
+
             }
           }).catch(err=>{
             console.log(err);
@@ -402,6 +458,11 @@ router.put('/petition/approve/:id',checkAuthentication,checkAdmin,(req,res)=>{
                }
              })
           }
+          await t.user.getPetitionOwner(req.params.id).then(email_data=>{
+            if(email_data){
+              sendMail({subject:'Service Petition Review',service_name:email_data.service_name,state:'aprroved'},'review-notification.html',[{name:email_data.name,email:email_data.email}]);
+            }
+          });
            return res.json({service_id:service_id,success:true});
          }
          else{
@@ -414,6 +475,7 @@ router.put('/petition/approve/:id',checkAuthentication,checkAdmin,(req,res)=>{
        return res.json({success:false,error:"Error while querying the database"});
      }
   })
+
 });
 
 // Get History For Service from Service id
@@ -652,6 +714,12 @@ function asyncPetitionValidation(req,res,next){
     return res.json({success:false,error:err});
   }
 }
+
+//
+function sendError(res,err){
+  res.json({success:false,error:err});
+}
+
 
 
 // Edit request missing validation

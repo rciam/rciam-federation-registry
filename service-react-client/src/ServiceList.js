@@ -307,6 +307,7 @@ function TableItem(props) {
                 </React.Fragment>
               :null
               }
+              {props.user?console.log(props.user.admin):console.log(props.user.admin)}
               {props.user.admin&&props.item.petition_id&&!props.item.comment?<Link
                 className='button-link'
                 to={{

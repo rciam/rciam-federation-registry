@@ -1,4 +1,10 @@
 var diff = require('deep-diff').diff;
+require('dotenv').config();
+var path = require("path")
+var fs = require('fs');
+var handlebars = require('handlebars');
+nodeMailer = require('nodemailer');
+
 
 const calcDiff = (oldState,newState) => {
     var new_values = Object.assign({},newState);
@@ -62,6 +68,65 @@ const calcDiff = (oldState,newState) => {
     return edits
 }
 
+const sendMail= (data,template_uri,users)=>{
+  var currentDate = new Date();
+
+  var result;
+  readHTMLFile(path.join(__dirname, '../html/', template_uri), function(err, html) {
+      let transporter = nodeMailer.createTransport({
+          host: 'smtp.gmail.com',
+          port: 465,
+          secure: true,
+          auth: {
+              user: process.env.EMAIL,
+              pass: process.env.EMAIL_PASSWORD
+          }
+      });
+      var template = handlebars.compile(html);
+      //var replacements = {username: "John Doe",name:"The name"};
+      var state;
+      if(data.state){
+        if(data.state==='deployed'){
+          state= 'Deployed';
+        }
+        else if(data.state==='error'){
+          state= 'Deployment Malfunction';
+        }
+        else{
+          state=data.state
+        }
+      }
+      var replacements = {
+        service_name:data.service_name,
+        date:currentDate,
+        state:state
+      };
+
+      users.forEach((user) => {
+          replacements.name = user.name;
+          replacements.email = user.email;
+          var htmlToSend = template(replacements);
+          var mailOptions = {
+            from: process.env.EMAIL,
+            to : 'koza-sparrow@hotmail.com',
+            subject : data.subject,
+            html : htmlToSend
+          };
+          transporter.sendMail(mailOptions, function (error, response) {
+            if (error) {
+              console.log(error);
+              result = ({success:false,error:error});
+              callback(error);
+            }
+            else {
+              result = ({success:true});
+            }
+          });
+      });
+
+  });
+  return result
+}
 
 const addToString = (str,value) =>{
   let sentence='';
@@ -75,10 +140,21 @@ const addToString = (str,value) =>{
   sentence = sentence.slice(0,-1);
   return sentence
 }
-
+var readHTMLFile = function(path, callback) {
+    fs.readFile(path, {encoding: 'utf-8'}, function (err, html) {
+        if (err) {
+            throw err;
+            callback(err);
+        }
+        else {
+            callback(null, html);
+        }
+    });
+};
 
 
 module.exports = {
   calcDiff,
-  addToString
+  addToString,
+  sendMail
 }

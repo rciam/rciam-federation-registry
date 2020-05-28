@@ -85,7 +85,7 @@ class ServicePetitionDetailsRepository {
     }
     async review(id,approved_by,status,comment){
        let date = new Date(Date.now());
-       return this.db.none("UPDATE service_petition_details SET status=$1, reviewed_at=$2, reviewer=$3, comment=$5 WHERE id=$4",[status,date,approved_by,+id,comment]);
+       return this.db.any("UPDATE service_petition_details SET status=$1, reviewed_at=$2, reviewer=$3, comment=$5 WHERE id=$4 RETURNING *",[status,date,approved_by,+id,comment]);
     }
 
 

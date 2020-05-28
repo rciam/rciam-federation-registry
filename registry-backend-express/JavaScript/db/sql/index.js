@@ -46,6 +46,11 @@ module.exports = {
     service_state:{
       add:sql('service_state/add.sql'),
       update:sql('service_state/update.sql'),
+    },
+    user:{
+      getReviewers:sql('user/getReviewers.sql'),
+      getServiceOwners:sql('user/getServiceOwners.sql'),
+      getPetitionOwner:sql('user/getPetitionOwner.sql')
     }
 
 
@@ -58,7 +63,6 @@ function sql(file) {
     const fullPath = path.join(__dirname, file); // generating full path;
 
     const options = {
-
         // minifying the SQL is always advised;
         // see also option 'compress' in the API;
         minify: true
