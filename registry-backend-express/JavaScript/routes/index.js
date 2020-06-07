@@ -7,6 +7,7 @@ var diff = require('deep-diff').diff;
 var router = require('express').Router();
 var passport = require('passport');
 var config = require('../config');
+const customLogger = require('../loggers.js');
 const petitionTables = ['service_petition_oidc_scopes','service_petition_oidc_grant_types','service_petition_oidc_redirect_uris'];
 const serviceTables = ['service_oidc_scopes','service_oidc_grant_types','service_oidc_redirect_uris'];
 const tables = ['service_oidc_scopes','service_oidc_grant_types','service_oidc_redirect_uris','service_contacts'];
@@ -15,25 +16,25 @@ const tables = ['service_oidc_scopes','service_oidc_grant_types','service_oidc_r
 
 
 
-
-
 // ----------------------------------------------------------
 // ************************* Routes *************************
 //
-router.get('/test',(req,res)=>{
-  try{
-    let updateData = [{id:1,state:'deployed'},{id:2,state:'deployed'},{id:3,state:'failed'}];
-    db.service_state.updateMultiple(updateData).then(result=>{
-
-      res.json({result});
-    }).catch(err=>{
-      sendError(res,err);
-    });
-  }
-  catch(err){
-    res.json({error:err})
-  }
-})
+// router.get('/test',(req,res,next)=>{
+//   try{
+//     let updateData = [{id:1,state:'deployed'},{id:2,state:'deployed'},{id:20,state:'failed'}];
+//     db.service_state.updateMultiple(updateData).then(result=>{
+//       if(result.success){
+//         res.status(200);
+//       }
+//       else{
+//          throw 'broken';
+//       }
+//     }).catch(next);
+//   }
+//   catch(err){
+//     next(new Error(err));
+//   }
+// })
 
 router.get('/auth/mock',checkTest, passport.authenticate('my-mock'));
 // Login Route
@@ -71,7 +72,7 @@ router.get('/callback', passport.authenticate('oidc', {
 
 // ams push subscription for deployment results
 // needs Authentication
-router.post('/setDeployment',(req,res)=>{
+router.post('/setDeployment',(req,res,next)=>{
   let updateData=[];
   let ids=[];
   req.body.messages.forEach((message) => {
@@ -82,6 +83,7 @@ router.post('/setDeployment',(req,res)=>{
   return db.task('setDeployment', async t => {
     await t.service_state.updateMultiple(updateData).then(async result=>{
       if(result.success){
+        res.sendStatus(200).end();
         t.user.getServiceOwners(ids).then(data=>{
           if(data){
             data.forEach(email_data=>{
@@ -89,10 +91,14 @@ router.post('/setDeployment',(req,res)=>{
             })
           }
         }).catch(err=>{
-          console.log('Could not sent deployment email.' + err);
-        })
-        res.sendStatus(200).send();
+          next('Could not sent deployment email.' + err);
+        });
       }
+      else{
+        next(result.error);
+      }
+    }).catch(err=>{
+      next(err);
     });
   });
 });
@@ -105,77 +111,73 @@ router.get('/ams_verification_hash',(req,res)=>{
 })
 
 // ams-agent requests to set state to waiting development
-router.put('/updateState',amsAgentAuth,(req,res)=>{
+router.put('/state',amsAgentAuth,(req,res,next)=>{
   try{
     db.service_state.updateMultiple(req.body).then(result=>{
-      res.json({result});
+      if(result.success){
+        res.status(200).end();
+      }
+      else{
+        next(result.error);
+      }
     });
   }
   catch(err){
-    console.log('Could not set state sent by ams agent'+ err);
+    next('Could not set state sent by ams agent'+ err);
   }
 });
 
 // ams-agent requests to get pending services
-router.get('/getPending',amsAgentAuth,(req,res)=>{
-  db.service.getPending().then(services=>{
-    if(services){
-      res.json({
-        success:true,
-        services:services
-      });
-    }
-    else{
-      res.json({
-        succes:true,
-        services:[]
-      });
-    }
-  }).catch((err)=>{
-    res.json({
-      success:false,
-      error:err
+router.get('/pending',amsAgentAuth,(req,res,next)=>{
+  try{
+    db.service.getPending().then(services=>{
+      if(services){
+        res.status(200).json({services});
+      }
+    }).catch((err)=>{
+      next(err);
     });
-  })
+  }
+  catch(err){
+    next(err);
+  }
+
 })
 
 // Find all clients/petitions from curtain user to create preview list
-router.get('/servicelist',checkAuthentication,(req,res)=>{
-  return db.task('find-services', async t => {
-    let services = [];
-    if (isAdmin(req)){ // If user is Admin we fetch all services
-       await t.service_details.findAllForList().then(async response=>{
-         services = response;
-         await t.service_petition_details.findAllForList().then(petitions=>{
-          services = merge_services_and_petitions(services,petitions);
-         })
-       }).catch(err=>{sendError(err);})
-    }
-    else {
-      await t.service_details.findBySubForList(req.user.sub).then(async response=>{
-         services = response;
-         await t.service_petition_details.findBySubForList(req.user.sub).then(petitions=>{
-           services = merge_services_and_petitions(services,petitions);
-         });
-      }).catch(err=>{sendError(err);});
-    }
-    if(services.length<1){
-      return res.end(JSON.stringify({
-        success:true,
-        services:null
-      }));
-    }
-    return res.end(JSON.stringify({
-      success:true,
-      services
-    }));
-  });
+router.get('/servicelist',checkAuthentication,(req,res,next)=>{
+  try{
+    db.task('find-services', async t => {
+      let services;
+      if (isAdmin(req)){ // If user is Admin we fetch all services
+         await t.service_details.findAllForList().then(async response=>{
+           if(response){
+             services = response;
+             await t.service_petition_details.findAllForList().then(petitions=>{
+               services = merge_services_and_petitions(services,petitions);
+             }).catch(err=>{next(err);});
+           }
+         }).catch(err=>{next(err);})
+      }
+      else {
+        await t.service_details.findBySubForList(req.user.sub).then(async response=>{
+           services = response;
+           await t.service_petition_details.findBySubForList(req.user.sub).then(petitions=>{
+             services = merge_services_and_petitions(services,petitions);
+           }).catch(err=>{next(err);});
+        }).catch(err=>{next(err);});
+      }
+      return res.status(200).json({services});
+    });
+  }
+  catch(err){
+    next(err);
+  }
 });
 
 // It fetches a petition with form data
-router.get('/petition/:id',checkAuthentication,(req,res)=>{
+router.get('/petition/:id',checkAuthentication,(req,res,next)=>{
   return db.task('find-petition-data',async t=>{
-
     let requester;
     if(isAdmin(req)){
       requester = 'admin'
@@ -186,97 +188,81 @@ router.get('/petition/:id',checkAuthentication,(req,res)=>{
     await t.service_petition_details.belongsToRequester(req.params.id,requester).then(async protocol=>{
       if(protocol){
         let petition = await t.service.get(req.params.id,'petition').then(result=>{return result.service_data})
-          return res.json({
-            success:true,
-            petition
-          });
+          return res.status(200).json({petition});
         }
       else{
-        return res.json({
-          success:false,
-          error:'Petition could not be found.'
-        });
+        res.status(204);
+        customLogger(req,res,'warn','Petition not found');
+        res.end();
       }
-    }).catch(err=>{sendError(err);});
+    }).catch(err=>{next(err);});
   });
 });
 
 // Add a new client/petition
-router.post('/petition',clientValidationRules(),validate,checkAuthentication,asyncPetitionValidation,(req,res)=>{
+router.post('/petition',clientValidationRules(),validate,checkAuthentication,asyncPetitionValidation,(req,res,next)=>{
   res.setHeader('Content-Type', 'application/json');
-  return db.tx('add-service', async t => {
-    try{
-        await t.service.add(req.body,req.user.sub,'petition').then(async id=>{
-          if(id){
-            t.user.getReviewers().then(users=>{
-              sendMail({subject:'New Petition to Review',service_name:req.body.service_name},'reviewer-notification.html',users);
-            }).catch(error=>{
-              return res.json({
-                id:id,
-                success:true
+  try{
+    db.tx('add-service', async t => {
+          await t.service.add(req.body,req.user.sub,'petition').then(async id=>{
+            if(id){
+              res.status(200).json({id:id});
+              t.user.getReviewers().then(users=>{
+                sendMail({subject:'New Petition to Review',service_name:req.body.service_name},'reviewer-notification.html',users);
+              }).catch(error=>{
+                next('Could not sent email to reviewers:' + err);
               });
-            });
-            return res.json({
-              id:id,
-              success:true
-            });
-          }
-        }).catch(err=>{sendError(err);});
-    }
-    catch(err){
-      res.end(JSON.stringify({
-        success:false,
-        error:'Error querying the database.'
-      }));
-    }
-  });
+            }
+          }).catch(err=>{next(err)});
+    });
+  }
+  catch(err){
+    res.status(500).json({error:'Error querying the database.'});
+    next(err);
+  }
 });
 
 // Delete Petition
-router.delete('/petition/:id',checkAuthentication,(req,res)=>{
+router.delete('/petition/:id',checkAuthentication,(req,res,next)=>{
   return db.tx('delete-petition',async t =>{
     try{
       await t.service_petition_details.belongsToRequester(req.params.id,req.user.sub).then(async belongs =>{
         if(belongs){
           const deleted = await t.service_petition_details.deletePetition(req.params.id);
-          return res.json({
-            success:true,
-            deleted:deleted
-          })
+          return res.status(200).end();
         }
-      }).catch(err=>{sendError(err);})
+      }).catch(err=>{next(err);})
     }
     catch(error){
-      console.log(error);
-      return res.json({
-        success:false,
-        error:"Error while querying the database"
-      })
+      next(err);
     }
-  })
+  });
 });
 
 // Edit Petition
-router.put('/petition/:id',clientValidationRules(),validate,checkAuthentication,asyncPetitionValidation,(req,res)=>{
-  return db.task('create-delete-petition',async t =>{
+router.put('/petition/:id',clientValidationRules(),validate,checkAuthentication,asyncPetitionValidation,(req,res,next)=>{
+  return db.task('update-petition',async t =>{
     try{
-      await t.service.update(req.body,req.params.id,'petition').then(resp=>{
-        if(resp){
-          return res.json({
-            success:true,
-            id:req.params.id
-          })
+      
+      await t.service.update(req.body,req.params.id,'petition').then(response=>{
+        if(respose.success){
+          res.status(200).end();
         }
-      });
+        else{
+          if(response.error){
+            next(response.error);
+          }
+        }
+      }).catch(err=>{next(err)});
     }
-    catch(error){
-      sendError(error);
+    catch(err){
+      next(err);
     }
   })
 });
 
 // It returns a service with form data
-router.get('/service/:id',checkAuthentication,(req,res)=>{
+router.get('/service/:id',checkAuthentication,(req,res,next)=>{
       let requester;
       if(isAdmin(req)){
         requester = 'admin'
@@ -284,28 +270,27 @@ router.get('/service/:id',checkAuthentication,(req,res)=>{
       else {
         requester = req.user.sub
       }
-      return db.task('find-service-data',async t=>{
-        await t.service_details.belongsToRequester(req.params.id,requester).then(async exists=>{
-          if(exists){
-              const service = await t.service.get(req.params.id,'service').then(result=>{return result.service_data}).catch(err=>{sendError(err);})
-              return res.json({
-                success:true,
-                service
-              });
+      try{
+        return db.task('find-service-data',async t=>{
+          await t.service_details.belongsToRequester(req.params.id,requester).then(async exists=>{
+            if(exists){
+                const service = await t.service.get(req.params.id,'service').then(result=>{return result.service_data}).catch(err=>{next(err);});
+                return res.status(200).json({service});
+              }
+            else{
+              res.status(204).end();
             }
-          else{
-            return res.json({
-              success:false,
-              error:'Service with id: ' +req.params.id + ' could not be found.'
-            });
-          }
+          }).catch(err=>{next(err);});;
         });
-      });
+      }
+      catch(err){
+        next(err);
+      }
 });
 
 // Create petition for service deletion
-router.put('/service/delete/:service_id',checkAuthentication,(req,res)=>{
-  return db.task('create-delete-petition',async t =>{
+router.put('/service/delete/:service_id',checkAuthentication,(req,res,next)=>{
+   db.task('create-delete-petition',async t =>{
     try{
       await t.service_details.belongsToRequester(req.params.service_id,req.user.sub).then(async belongs =>{
         if(belongs&&(belongs.state==='deployed')){
@@ -317,73 +302,63 @@ router.put('/service/delete/:service_id',checkAuthentication,(req,res)=>{
               await t.service_petition_details.openPetition(req.params.service_id).then(async open_petition_id=>{
                 if(open_petition_id){
                   await t.service.update(service,open_petition_id,'petition').then(resp=>{
-                    if(resp){
-                      return res.json({id:open_petition_id,success:true});
+                    if(resp.success){
+                       res.status(200).end();
+                    }
+                    else{
+                      //  throw warning
                     }
                   });
                 }
                 else {
                   await t.service.add(service,req.user.sub,'petition').then(id=>{
                     if(id){
-                      return res.json({id:id,success:true});
+                      res.status(200).end();
                     }
                   });
                 }
               })
             }
-          });
+          }).catch(err=>{next(err);});
         }
         else{
-          return res.json({success:false,error:"Not authorized for deletion"});
+          // counld not find petition for target user
+          res.status(204).end();
         }
-      })
+      }).catch(err=>{next(err)})
     }
-    catch(error){
-      console.log(error);
-      return res.json({success:false,error:"Error while querying the database"});
+    catch(err){
+      next(err);
     }
   })
 });
 
 // Admin rejects petition
-router.put('/petition/reject/:id',checkAuthentication,checkAdmin,(req,res)=>{
-  return db.task('reject-petition',async t =>{
-    try{
+router.put('/petition/reject/:id',checkAuthentication,checkAdmin,(req,res,next)=>{
+  try{
+    db.task('reject-petition',async t =>{
       await t.service_petition_details.review(req.params.id,req.user.sub,'reject',req.body.comment).then(async results=>{
         if (results){
           await t.user.getPetitionOwner(req.params.id).then(email_data=>{
             if(email_data){
               sendMail({subject:'Service Petition Review',service_name:email_data.service_name,state:'rejected'},'review-notification.html',[{name:email_data.name,email:email_data.email}]);
             }
-          });
-          return res.json({
-            success:true,
-            message:'Request has been succesfully rejected'
-          });
+          }).catch(err=>{next(err)});
+         res.status(200).end();
         }
         else{
-          return res.json({
-            success:false,
-            error:"Error while querying the database"
-          });
+         res.status(204).end();
         }
-      })
-
-    }
-    catch(error){
-      console.log(error);
-      return res.json({
-        success:false,
-        error:"Error while querying the database"
-      })
-    }
-  })
+      }).catch(err=>{next(err);});
+    })
+  }
+  catch(error){next(error);}
 });
 
 // Leave Comment/Accept With Changes
 router.put('/petition/changes/:id',checkAuthentication,checkAdmin,(req,res)=>{
-  return db.tx('approve-with-changes-petition',async t =>{
-    try{
+  try{
+    db.tx('approve-with-changes-petition',async t =>{
       await t.service.get(req.params.id,'petition').then(async petition =>{
         if(petition){
           petition.service_data.type = petition.meta_data.type;
@@ -396,47 +371,34 @@ router.put('/petition/changes/:id',checkAuthentication,checkAdmin,(req,res)=>{
             if(id){
               await t.service_petition_details.review(req.params.id,req.user.sub,'approved_with_changes',req.body.comment).then(async result=>{
                 if(result){
-                  res.end(JSON.stringify({
-                    success:true,
-                    id:id,
-                    message:'Request has been succesfully reviewed'
-                  }));
+                  res.status(200).end();
                   await t.user.getPetitionOwner(req.params.id).then(email_data=>{
                     if(email_data){
                       sendMail({subject:'Service Petition Review',service_name:email_data.service_name,state:'approved with changes'},'review-notification.html',[{name:email_data.name,email:email_data.email}]);
                     }
-                  });
+                  }).catch(err=>{next(err);});
                 }
-              });
-
+              }).catch(err=>{next(err);});
             }
-          }).catch(err=>{
-            console.log(err);
-            console.log('point-error');
-            res.end(JSON.stringify({success:false,error:err}));
-          })
+          }).catch(err=>{next(err);});
         }
         else{
-          return res.json({success:false,error:"Petition not found"});
+          res.status(204).end();
         }
-      })
-      }
-     catch(error){
-       console.log(error);
-       return res.json({success:false,error:"Error while querying the database"});
-     }
-  })
+      }).catch(err=>{next(err);});
+    })
+  }
+  catch(error){next(error);}
 });
 
 // Approve petition
-router.put('/petition/approve/:id',checkAuthentication,checkAdmin,(req,res)=>{
-  return db.tx('approve-petition',async t =>{
-    try{
-      let service_id;
+router.put('/petition/approve/:id',checkAuthentication,checkAdmin,(req,res,next)=>{
+  try{
+    db.tx('approve-petition',async t =>{
       await t.service.get(req.params.id,'petition').then(async petition =>{
         if(petition){
           if(petition.meta_data.type==='delete'){
-            service_id = petition.meta_data.service_id;
+            let service_id = petition.meta_data.service_id;
             await t.batch([
               t.service_details.delete(petition.meta_data.service_id),
               t.service_petition_details.review(req.params.id,req.user.sub,'approved',req.body.comment)
@@ -456,88 +418,82 @@ router.put('/petition/approve/:id',checkAuthentication,checkAdmin,(req,res)=>{
                  service_id = id;
                  await t.service_petition_details.approveCreation(req.params.id,req.user.sub,'approved',req.body.comment,id);
                }
-             })
+             }).catch(err=>{next(err);});
           }
+          res.status(200).end();
           await t.user.getPetitionOwner(req.params.id).then(email_data=>{
             if(email_data){
               sendMail({subject:'Service Petition Review',service_name:email_data.service_name,state:'aprroved'},'review-notification.html',[{name:email_data.name,email:email_data.email}]);
             }
-          });
-           return res.json({service_id:service_id,success:true});
+          }).catch(err=>{next(err);})
          }
          else{
-           return res.json({success:false,error:"No Petition was found!"});
+           res.status(204).end();
          }
-       })
-     }
-     catch(error){
-       console.log(error);
-       return res.json({success:false,error:"Error while querying the database"});
-     }
-  })
-
+       }).catch(err=>{next(err);})
+     })
+  }
+  catch(error){
+    next(error);
+  }
 });
 
 // Get History For Service from Service id
 router.get('/petition/history/:id',checkAuthentication,(req,res)=>{
-  return db.task('find-petition-data',async t=>{
-    await t.service_petition_details.belongsToRequesterHistory(req.params.id,req.user.sub).then(async belongs=>{
-      if(belongs!== null){
-        if(belongs||isAdmin(req)){
-          let petition = await t.service.get(req.params.id,'petition');
-          petition = petition.service_data;
-          return res.json({success:true,petition});
-        }
-        else{
-          return res.json({success:false,error:1});
-        }
-      }
-      else{
-        return res.json({success:false,error:2});
-      }
+  try{
+    return db.task('find-petition-data',async t=>{
+      await t.service_petition_details.belongsToRequesterHistory(req.params.id,req.user.sub).then(async belongs=>{
+          if(belongs||isAdmin(req)){
+            let petition = await t.service.get(req.params.id,'petition');
+            petition = petition.service_data;
+            return res.status(200).json({petition});
+          }
+          else{
+            return res.status(204).end();
+          }
+      }).catch(err=>{next(err);});
     });
-  });
+  }
+  catch(err){
+    next(err);
+  }
 });
 
 // User owned or admin
 router.get('/petition/history/list/:id',checkAuthentication,(req,res)=>{
-  return db.tx('get-history-for-petition', async t =>{
-    if(isAdmin(req)){
-      requester = 'admin'
-    }
-    else {
-      requester = req.user.sub
-    }
-    try{
+  try{
+    return db.tx('get-history-for-petition', async t =>{
+      if(isAdmin(req)){
+        requester = 'admin'
+      }
+      else {
+        requester = req.user.sub
+      }
       await t.service_details.belongsToRequester(req.params.id,requester).then(async exists=>{
         if(exists){
           await t.service_petition_details.getHistory(req.params.id).then(async petition_list =>{
-            if(petition_list){
-              return res.json({success:true,history:petition_list});
-            }
-            else {return res.json({success:false,error:"Error while querying the database"});}
-          });
+            return res.json({success:true,history:petition_list});
+          }).catch(err=>{next(err)});
         }
-        else {return res.json({success:false,error:"Error while querying the database"});}
-      });
-    }
-    catch(e){
-      return res.json({success:false,error:"Error while querying the database"});
-    }
-  });
+        else {res.status(204).end();}
+      }).catch(err=>{next(err)});
+    });
+  }
+  catch(e){
+    next(e);
+  }
 });
 
-router.get('/availability/:protocol/:id',checkAuthentication,(req,res)=>{
-  return db.tx('get-history-for-petition', async t =>{
+router.get('/availability/:protocol/:id',checkAuthentication,(req,res,next)=>{
+  db.tx('get-history-for-petition', async t =>{
     try{
       await isAvailable(t,req.params.id,req.params.protocol,0,0).then(available =>{
-        return res.json({success:true,available:available});
-      });
+        res.status(200).json({available:available});
+      }).catch(err=>{next(err)});
     }
     catch(err){
-      return res.json({success:false,error:"Error while querying the databse"});
+      next(err);
     }
-
   });
 });
 
@@ -556,6 +512,8 @@ function amsAgentAuth(req,res,next){
     next();
   }
   else{
+    res.status(401)
+    customLogger(req,res,'warn','Unauthenticated request');
     res.json({success:false,error:'Authentication failure'})
   }
 }
@@ -565,6 +523,8 @@ function checkTest(req,res,next){
     next();
   }
   else{
+    res.status(403);
+    customLogger(req,res,'warn','Forbidden resourse');
     res.json({error:'Mock auth only available in test mode'});
   }
 }
@@ -633,7 +593,10 @@ function asyncPetitionValidation(req,res,next){
             if(available){
               next();
             }
-            else {return res.json({success:false,error:'Protocol id is not available'});};
+            else {
+              res.status(422);
+              customLogger(req,res,'warn','Protocol id is not available');
+              return res.end();};
           });
         }
         else{
@@ -650,25 +613,37 @@ function asyncPetitionValidation(req,res,next){
                         if(service.state==='deployed'){
                           next();
                         }
-                        else{return res.json({success:false,error:'Cannot edit service awaiting deployment'});}
+                        else{
+                          res.status(403);
+                          customLogger(req,res,'warn','Tried to edit petition awaiting development.');
+                          return res.end();}
                       }
                       else {
-                        return res.json({success:false,error:'Protocol cannot be modified'});
+                        res.status(403);
+                        customLogger(req,res,'warn','Tried to edit protocol petition.');
+                        return res.end();
+
                       }
                     }
                     else {
-                      return res.json({success:false,error:'Target service missing'});
+                      res.status(403);
+                      customLogger(req,res,'warn','Could not find service with id:'+req.body.service_id);
+                      return res.end();
                     }
                   });
                 }
                 else {
-                  return res.json({success:false,error:'Id is not available'});
-                  }
+                  res.status(422);
+                  customLogger(req,res,'warn','Protocol id is not available');
+                  return res.end();
+                }
               });
             }
             else {
-              return res.json({success:false,error:'A petition already exists for target service'});
-              }
+              res.status(403);
+              customLogger(req,res,'warn','Cannot create new petition because there is an open petition existing for target service');
+              return res.end();
+            }
           });
         }
       }
@@ -676,7 +651,9 @@ function asyncPetitionValidation(req,res,next){
         await t.service_petition_details.belongsToRequester(req.params.id,req.user.sub).then(async petition => {
           if(petition){
             if(petition.protocol!==req.body.protocol){
-              return res.json({success:false,error:'Protocol can not be modified.'});
+              res.status(403);
+              customLogger(req,res,'warn','Tried to edit protocol petition.');
+              return res.end();
             }
             if(petition.type!=='delete'&&petition.type!==req.body.type){
               return res.json({success:false,error:'Type of request cannot be modified'});
@@ -687,7 +664,9 @@ function asyncPetitionValidation(req,res,next){
                   next();
                 }
                 else{
-                  return res.json({success:false,error:'Id is not available'});
+                  res.status(422);
+                  customLogger(req,res,'warn','Protocol id is not available');
+                  return res.end();
                 }
               });
             }
@@ -698,26 +677,32 @@ function asyncPetitionValidation(req,res,next){
                     next();
                   }
                   else{
-                    return res.json({success:false,error:'Id is not available'});}
+                    res.status(422);
+                    customLogger(req,res,'warn','Protocol id is not available');
+                    return res.end();
+                  }
                 });
-              })
+              }).catch(err=>{next(err);})
             }
           }
           else {
-            return res.json({success:false,error:'Petition not found'});
+            res.status(403);
+            customLogger(req,res,'warn','Could not find service with id:'+req.body.service_id);
+            return res.end();
           }
-        });
+        }).catch(err=>{next(err);});
       }
     })
   }
   catch(err){
-    return res.json({success:false,error:err});
+    next(err)
   }
 }
 
 //
-function sendError(res,err){
+function sendError(res,err,next){
   res.json({success:false,error:err});
+  next(new Error(err));
 }
 
 

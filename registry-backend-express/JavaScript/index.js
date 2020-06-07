@@ -5,6 +5,8 @@ const {db} = require('./db');
 var https = require('https');
 var fs = require('fs');
 const cors = require('cors');
+var winston = require('winston');
+var expressWinston = require('express-winston');
 const bodyParser = require('body-parser')
 const {check,validationResult,body}= require('express-validator');
 const {clientValidationRules,validate} = require('./validator.js');
@@ -55,7 +57,7 @@ Issuer.discover(process.env.ISSUER_BASE_URI).then((issuer)=>{
   }));
 });
 
-// Test Strategy
+// Mock Strategy for Tests
 
 passport.use(new MockStrategy({
 	name: 'my-mock',
@@ -99,12 +101,61 @@ passport.deserializeUser(function(obj, done) {
 
 const app = express();
 
+// var level = "";
+// if (res.statusCode >= 100) { level = "info"; }
+// if (res.statusCode >= 400) { level = "warn"; }
+// if (res.statusCode >= 500) { level = "error"; }
+// // Ops is worried about hacking attempts so make Unauthorized and Forbidden critical
+// if (res.statusCode == 401 || res.statusCode == 403) { level = "critical"; }
+// // No one should be using the old path, so always warn for those
+// if (req.path === "/v1" && level === "info") { level = "warn"; }
+// return level;
+
+app.use(expressWinston.logger({
+      transports: [
+        new (winston.transports.Console)({'timestamp':true})
+      ],
+      format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.json()
+      ),
+      level: function (req,res) {
+        return 'info';
+      },
+      baseMeta:null,
+      metaField:null,
+      meta: true, // optional: control whether you want to log the meta data about the request (default to true)
+      requestWhitelist: [],
+      responseWhitelist: [],
+      dynamicMeta: function(req, res) {
+        const meta={};
+        if(req.user){
+          meta.user = {};
+          meta.user.sub= req.user ? req.user.sub : null;
+          meta.user.role= req.user ? req.user.role : null;
+        }
+        meta.method= req.method;
+        meta.status= res.statusCode;
+        meta.url= req.url;
+        meta.type='access_log';
+        meta.responseTime= res.responseTime;
+        return meta;
+      },
+      msg: "HTTP {{req.method}} {{req.url}}", // optional: customize the default logging message. E.g. "{{res.statusCode}} {{req.method}} {{res.responseTime}}ms {{req.url}}"
+      expressFormat: true, // Use the default Express/morgan request formatting. Enabling this will override any msg if true. Will only output colors with colorize set to true
+      colorize: false, // Color the text and status code, using the Express/morgan color palette (text: gray, status: default green, 3XX cyan, 4XX yellow, 5XX red).
+      ignoreRoute: function (req, res) { return false; } // optional: allows to skip some log messages based on request and/or response
+    }));
+
+
+
 
 app.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: true
 }));
+
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(bodyParser.json());
@@ -113,11 +164,39 @@ app.use(cookieParser());
 app.use('/', routes.router);
 
 
+app.use(expressWinston.errorLogger({
+      transports: [
+        new winston.transports.Console()
+      ],
+      format: winston.format.combine(
+        winston.format.json()
+      ),
+      meta:true,
+      metaField:null,
+      dynamicMeta: function(req, res) {
+        const meta={};
+        meta.type='error_log';
+        return meta;
+      },
+      requestWhitelist: ['url','method'],
+      blacklistedMetaFields: ['error','exception','process','execPath','memoryUsage','os','trace','message'],
+      msg:"{{err}}"
+}));
 
-// setInterval(Updater,500);
-// function Updater() {
-//     console.log('test');
-// }
+
+
+
+app.use(function (err, req, res, next) {
+  if (res.headersSent) {
+     return next(err)
+   }
+   res.status(500)
+   res.json({ error: err.stack })
+
+});
+
+
+
 
 
 
@@ -151,7 +230,6 @@ function stop() {
   server.close();
 }
 
-
-module.exports = server;
+module.exports = {server};
 
 module.exports.stop = stop;

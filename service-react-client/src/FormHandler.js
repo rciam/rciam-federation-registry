@@ -22,8 +22,6 @@ const EditService = (props) => {
     const [changes,setChanges] = useState();
 
     useEffect(()=>{
-
-
       getData();
       // eslint-disable-next-line react-hooks/exhaustive-deps
     },[]);
@@ -81,23 +79,36 @@ const EditService = (props) => {
           headers: {
             'Content-Type': 'application/json'
           }
-        }).then(response=>response.json()).then(response=> {
-
-          if(response.service){
+        }).then(response=>{
+          if(response.status===200){
+            return response.json();
+          }
+          else {
+            return false
+          }
+          }).then(response=> {
+          if(response){
             setService(response.service);
           }
         });
       }
-      if(props.petition_id&&props.type!=='delete'){
+
+      if(props.type==='create'){
         fetch(config.host+'petition/'+props.petition_id, {
           method: 'GET', // *GET, POST, PUT, DELETE, etc.
           credentials: 'include', // include, *same-origin, omit
           headers: {
             'Content-Type': 'application/json'
           }
-        }).then(response=>response.json()).then(response=> {
-
-          if(response.petition){
+        }).then(response=>{
+          if(response.status===200){
+            return response.json();
+          }
+          else {
+            return false
+          }
+        }).then(response=> {
+          if(response){
             setPetition(response.petition);
           }
         });

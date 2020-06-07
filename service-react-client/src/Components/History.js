@@ -37,33 +37,25 @@ export const HistoryList = (props) => {
       headers: {
       'Content-Type': 'application/json'
     }}).then(response=>response.json()).then(response=> {
-      if(response){
-        setAsyncResponse(false);
-        if(response.success){
-          setPetition(response.petition);
-        }
+      setAsyncResponse(false);
+      if(response.petition){
+        setPetition(response.petition);
       }
     });
   }
 
   const getHistory = ()=> {
-
-      fetch(config.host+'petition/history/list/'+props.service_id, {
-        method: 'GET', // *GET, POST, PUT, DELETE, etc.
-        credentials: 'include', // include, *same-origin, omit
-        headers: {
-        'Content-Type': 'application/json'
-      }}).then(response=>response.json()).then(response=> {
-        if(response.success){
-          setLoadingList(false);
-          if(response.history){
-              setHistoryList(response.history);
-          }
-        }
-      });
-
-
-
+    fetch(config.host+'petition/history/list/'+props.service_id, {
+      method: 'GET', // *GET, POST, PUT, DELETE, etc.
+      credentials: 'include', // include, *same-origin, omit
+      headers: {
+      'Content-Type': 'application/json'
+    }}).then(response=>response.json()).then(response=> {
+      setLoadingList(false);
+      if(response.history){
+          setHistoryList(response.history);
+      }
+    });
   }
   return (
     <React.Fragment>

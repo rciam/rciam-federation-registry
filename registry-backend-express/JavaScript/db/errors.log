@@ -1,0 +1,67 @@
+
+
+13:23:39 error: connect ECONNREFUSED 127.0.0.1:5432
+         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+
+13:24:06 error: connect ECONNREFUSED 127.0.0.1:5432
+         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+
+13:31:48 error: connect ECONNREFUSED 127.0.0.1:5432
+         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+
+13:36:55 error: connect ECONNREFUSED 127.0.0.1:5432
+         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+
+13:37:11 error: connect ECONNREFUSED 127.0.0.1:5432
+         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+
+13:37:25 error: connect ECONNREFUSED 127.0.0.1:5432
+         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+
+13:40:49 error: connect ECONNREFUSED 127.0.0.1:5432
+         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+
+13:40:56 error: connect ECONNREFUSED 127.0.0.1:5432
+         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+
+13:40:59 error: connect ECONNREFUSED 127.0.0.1:5432
+         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+
+13:41:30 error: connect ECONNREFUSED 127.0.0.1:5432
+         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+
+13:41:39 error: connect ECONNREFUSED 127.0.0.1:5432
+         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+
+13:45:56 error: connect ECONNREFUSED 127.0.0.1:5432
+         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+
+14:14:24 error: missing FROM-clause entry for table "v"
+         query: update "service_state" set "state"='deployed' WHERE v.id = t.id RETURNING t.id
+
+14:14:44 error: missing FROM-clause entry for table "v"
+         query: update "service_state" set "state"='deployed' WHERE v.id = t.id RETURNING t.id
+
+14:16:26 error: connect ECONNREFUSED 127.0.0.1:5432
+         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+
+14:25:41 error: connect ECONNREFUSED 127.0.0.1:5432
+         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+
+14:26:21 error: connect ECONNREFUSED 127.0.0.1:5432
+         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+
+14:26:29 error: connect ECONNREFUSED 127.0.0.1:5432
+         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+
+14:26:38 error: connect ECONNREFUSED 127.0.0.1:5432
+         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+
+14:27:03 error: connect ECONNREFUSED 127.0.0.1:5432
+         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+
+14:28:25 error: connect ECONNREFUSED 127.0.0.1:5432
+         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+
+14:32:48 error: connect ECONNREFUSED 127.0.0.1:5432
+         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}

@@ -506,3 +506,8 @@ INSERT INTO service_petition_oidc_scopes(owner_id,value)
 VALUES ('7','telescope');
 INSERT INTO service_petition_oidc_scopes(owner_id,value)
 VALUES ('8','electroscope');
+
+INSERT INTO user_info(sub,preferred_username,name,given_name,family_name,email)
+VALUES ('4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621934@egi.eu','Helen Char','helen charopia','helen','charopia','testmail@mail.com');
+INSERT INTO user_edu_person_entitlement (user_id,edu_person_entitlement)
+VALUES (1,'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu');

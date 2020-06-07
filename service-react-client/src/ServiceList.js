@@ -65,16 +65,20 @@ const ServiceList= (props)=> {
       credentials: 'include', // include, *same-origin, omit
       headers: {
       'Content-Type': 'application/json'
-    }}).then(response=>response.json()).then(response=> {
-      if(response.success){
-        setLoadingList(false);
-        if(response.services){
-          response.services.forEach((item,index)=>{
+    }}).then(response=>{
+      if(response.status===200){
+        return response.json();
+      }
+      else {
+        return false
+      }
+    }).then(response=> {
+      setLoadingList(false);
+      if(response){
+        response.services.forEach((item,index)=>{
             response.services[index].display = true;
           })
-        }
-        console.log(response.services);
-      setServices(response.services);
+        setServices(response.services);
       }
     });
   }
@@ -87,47 +91,39 @@ const ServiceList= (props)=> {
       credentials: 'include', // include, *same-origin, omit
       headers: {
       'Content-Type': 'application/json'
-    }}).then(response=>response.json()).then(response=> {
+    }}).then(response=> {
       getServices();
       setResponseTitle('Your deregistration request');
-      if(response.success){
-        setAsyncResponse(false);
-        if(props.user.admin){
-            confirmPetition(response.id);
-        }
-        else{
-
-          setMessage('Was submited succesfully and is currently pending approval from an administrator.');
-        }
-
+      setAsyncResponse(false);
+      if(response.status===200){
+        setMessage('Was submited succesfully and is currently pending approval from an administrator.');
       }
       else{
-        setMessage('Was not submited due to the following error: ' + response.error);
+        setMessage('Was not submited Status:' + response.status);
       }
     });
   }
   const deletePetition = (id)=>{
+    console.log('here we cancel');
     setAsyncResponse(true);
     fetch(config.host+'petition/'+id, {
       method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
       'Content-Type': 'application/json'
-    }}).then(response=>response.json()).then(response=> {
-      setResponseTitle('Your deregistration request was');
-      if(response){
-          setAsyncResponse(false);
-          getServices();
-          if(response.success){
-            setMessage('Was canceled succesfully.');
-          }
-          else{
-            setMessage('Could not get canceled due to the following error: '+response.error);
-          }
+    }}).then(response=> {
+      setResponseTitle('Your pending request:');
+      setAsyncResponse(false);
+      getServices();
+      if(response.status===200){
+        setMessage('Was succesfully canceled!');
       }
-
+      else{
+      setMessage('Could not be canceled please try again. Status:'+response.status);
+      }
     });
   }
+
   const confirmPetition = (id) => {
     setAsyncResponse(true);
     fetch(config.host+'petition/approve/'+id, {
@@ -213,7 +209,7 @@ const ServiceList= (props)=> {
             </thead>
             <tbody>
               <React.Fragment>
-                      {services?services.map((item,index)=>{
+                      {services.length>=1?services.map((item,index)=>{
                         if(item.display){
                           renderedConnections++
                         }
@@ -307,7 +303,6 @@ function TableItem(props) {
                 </React.Fragment>
               :null
               }
-              {props.user?console.log(props.user.admin):console.log(props.user.admin)}
               {props.user.admin&&props.item.petition_id&&!props.item.comment?<Link
                 className='button-link'
                 to={{

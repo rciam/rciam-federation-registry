@@ -11,7 +11,13 @@ const initOptions = {
 
     // Use a custom promise library, instead of the default ES6 Promise:
     promiseLib: promise,
-
+    error: function (error, e) {
+       if (e.cn) {
+           // A connection-related error;
+           console.log("CN:", e.cn);
+           console.log("EVENT:", error.message);
+       }
+     },
     // Extending the database protocol with our custom repositories;
     // API: http://vitaly-t.github.io/pg-promise/global.html#event:extend
     extend(obj, dc) {
@@ -53,6 +59,14 @@ const db = pgp(config);
 
 // Initializing optional diagnostics:
 Diagnostics.init(initOptions);
+
+db.connect()
+    .then(function (obj) {
+        obj.done(); // success, release connection;
+    })
+    .catch(function (error) {
+        console.log("ERROR:", error.message);
+    });
 
 // Alternatively, you can get access to pgp via db.$config.pgp
 // See: https://vitaly-t.github.io/pg-promise/Database.html#$config

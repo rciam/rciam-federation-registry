@@ -142,15 +142,16 @@ class ServiceRepository {
             }
             var result = await t.batch(queries);
             if(result){
-              return true
+              return {success:true};
             }
           }
-        })
-      })
+        }).catch(err =>{
+          return {success:false,error:err}
+        });
+      });
     }
     catch(err){
-      console.log(error);
-      return false
+      return {success:false,error:err}
     }
   }
 
@@ -162,7 +163,7 @@ class ServiceRepository {
       else{
         return null;
       }
-    })
+    });
   }
 }
 

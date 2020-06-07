@@ -47,7 +47,7 @@ export function ResponseModal(props){
 
   let history = useHistory();
 
-
+  //const handleClose = () => props.setMessage();
   const handleClose = () => history.push('/petitions');
   return (
     <Modal show={props.message?true:false} onHide={handleClose}>

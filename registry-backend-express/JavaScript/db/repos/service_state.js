@@ -22,16 +22,22 @@ class ServiceStateRepository {
     })
   }
 
-  
+
 
   async updateMultiple(updateData){
     // updateData = [{id:1,state:'deployed'},{id:2,state:'deployed'},{id:3,state:'failed'}];
-    const update = this.pgp.helpers.update(updateData, cs) + ' WHERE v.id = t.id';
+
+    const update = this.pgp.helpers.update(updateData, cs) + ' WHERE v.id = t.id RETURNING t.id';
     //=> UPDATE "service_data" AS t SET "state"=v."state"
     //   FROM (VALUES(1,'deployed'),(2,'deployed'),(3,'failed'))
     //   AS v("id","state") WHERE v.id = t.id
-    return this.db.none(update).then(()=>{
-      return {success:true}
+    return this.db.any(update).then((ids)=>{
+      if(ids.length===updateData.length){
+        return {success:true}
+      }
+      else{
+        return {success:false,error:'Could not update state'}
+      }
     }).catch(error=>{
       return {success:false,error:error}
     });

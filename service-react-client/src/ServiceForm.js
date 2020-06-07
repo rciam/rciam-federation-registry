@@ -27,7 +27,6 @@ const uuidv1 = require('uuid/v1');
 const ServiceForm = (props)=> {
 
   useEffect(()=>{
-
     if(props.disabled||props.review){
       setDisabled(true);
     }
@@ -53,7 +52,6 @@ const ServiceForm = (props)=> {
             if(props.initialValues.client_id===value||!value||value===checkedId)
               {resolve(true)}
             else{
-
               setCheckingAvailability(true);
               fetch(config.host+'availability/oidc/'+ value, {
                 method:'GET',
@@ -62,7 +60,6 @@ const ServiceForm = (props)=> {
                   'Content-Type':'application/json'
                 }}).then(res => res.json()).then(
                   (res=>{if(res.success){
-
                     setcheckedId(value);
                     setCheckingAvailability(false);
                     resolve(res.available)}})
@@ -156,7 +153,6 @@ const ServiceForm = (props)=> {
                   'Content-Type':'application/json'
                 }}).then(res => res.json()).then(
                   (res=>{if(res.success){
-
                     setcheckedId(value);
                     setCheckingAvailability(false);
                     resolve(res.available)}})
@@ -199,20 +195,14 @@ const ServiceForm = (props)=> {
         'Content-Type': 'application/json'
         },
         body: JSON.stringify(petition) // body data type must match "Content-Type" header
-      }).then(response=>response.json()).then(response=> {
-        if(response.success){
-          setAsyncResponse(false);
-          setModalTitle('Your ' + type + ' request with id: ' + petition.client_id + petition.entity_id);
-          if(response.success){
-            setMessage('Was submited succesfully and is currently pending approval from an administrator.');
-          }
-          else{
-            setMessage('Was not submited due to the following error: ' + response.error);
-          }
+      }).then(response=> {
+        setAsyncResponse(false);
+        setModalTitle('Your ' + type + ' request with id: ' + petition.client_id + petition.entity_id);
+        if(response.status===200){
+          setMessage('Was submited succesfully and is currently pending approval from an administrator.');
         }
         else{
-          setModalTitle('Your ' + type + ' request with id: ' + petition.client_id);
-          setMessage('Was not submited due to the following error: ' + response.error);
+          setMessage('Could not be submitted, please try again. Status:' + response.status);
         }
       });
     }
@@ -237,23 +227,16 @@ const ServiceForm = (props)=> {
         'Content-Type': 'application/json'
         },
         body: JSON.stringify(petition) // body data type must match "Content-Type" header
-      }).then(response=>response.json()).then(response=> {
-        if(response.success){
-          setAsyncResponse(false);
-          setModalTitle('Your reconfiguration request for service with id: ' + petition.client_id);
-          if(response.success){
-            setMessage('Was submited succesfully and is currently pending approval from an administrator.');
-          }
-          else{
-            setMessage('Was not submited due to the following error: ' + response.error);
-          }
+      }).then(response=> {
+        setAsyncResponse(false);
+        setModalTitle('Your reconfiguration request for service with id: ' + petition.client_id);
+        if(response.status===200){
+          setMessage('Was submited succesfully and is currently pending approval from an administrator.');
         }
         else{
-          setAsyncResponse(false);
-          setModalTitle('Your reconfiguration request for service with id: ' + petition.client_id);
-          setMessage('Was not submited due to the following error: ' + response.error);
+          setMessage('Could not be submited returning status:' + response.status);
         }
-      })
+      });
     }
     else{
       setModalTitle('Request could not be submitted.');
@@ -268,22 +251,15 @@ const ServiceForm = (props)=> {
       credentials: 'include', // include, *same-origin, omit
       headers: {
       'Content-Type': 'application/json'
-    }}).then(response=>response.json()).then(response=> {
-      if(props.type==='delete'){
-          setModalTitle('Your deregistration request:');
+    }}).then(response=> {
+      setModalTitle('Your pending request:');
+      setAsyncResponse(false);
+      if(response.status===200){
+        setMessage('Was succesfully canceled!');
       }
       else{
-        setModalTitle('Your regonfiguration request:');
+      setMessage('Could not be canceled please try again. Status:'+response.status);
       }
-      if(response.success){
-        setAsyncResponse(false);
-        setMessage('Was canceled succesfully');
-      }
-      else{
-        setAsyncResponse(false);
-        setMessage("Wasn't canceled due to the following error: " + response.error)
-      }
-
     });
   }
 
@@ -306,14 +282,13 @@ const ServiceForm = (props)=> {
           'Content-Type': 'application/json'
           },
           body:JSON.stringify({comment:adminComment})
-      }).then(response=>response.json()).then(response=> {
-          if(response.success){
-              setAsyncResponse(false);
-              setMessage('Was approved, and changes have been commited.');
+      }).then(response=> {
+          setAsyncResponse(false);
+          if(response.status===200){
+            setMessage('Was reviewed succesfully.');
           }
           else{
-            setAsyncResponse(false);
-            setMessage("Could not be approved due to following error " +response.error );
+            setMessage("Could not be reviewed. Status:" +response.status);
           }
         });
       }
@@ -326,14 +301,13 @@ const ServiceForm = (props)=> {
           'Content-Type': 'application/json'
           },
           body:JSON.stringify({comment:adminComment})
-      }).then(response=>response.json()).then(response=> {
-          if(response.success){
-            setAsyncResponse(false);
-            setMessage('Was rejected succesfully.');
+      }).then(response=> {
+          setAsyncResponse(false);
+          if(response.status===200){
+            setMessage('Was reviewed succesfully.');
           }
           else{
-            setAsyncResponse(false);
-            setMessage("Could not be rejected due to following error " +response.error );
+            setMessage("Could not be reviewed. Status:" +response.status);
           }
         });
       }
@@ -346,14 +320,13 @@ const ServiceForm = (props)=> {
           'Content-Type': 'application/json'
           },
           body:JSON.stringify({comment:adminComment})
-      }).then(response=>response.json()).then(response=> {
-          if(response.success){
-            setAsyncResponse(false);
-            setMessage('Was approved with changes.');
+      }).then(response=> {
+          setAsyncResponse(false);
+          if(response.status===200){
+            setMessage('Was reviewed succesfully.');
           }
           else{
-            setAsyncResponse(false);
-            setMessage("Could not be approved due to following error " +response.error );
+            setMessage("Could not be reviewed. Status:" +response.status);
           }
         });
       }
@@ -376,7 +349,6 @@ const ServiceForm = (props)=> {
 
   return(
     <React.Fragment>
-
     <Formik
     initialValues={props.initialValues}
       validationSchema={schema}
@@ -874,7 +846,7 @@ const ReviewComponent = (props)=>{
 function gennerateValues(data){
 
   if(!data.client_id&&data.protocol==='oidc'){
-    
+
     data.client_id=uuidv1();
   }
   if(data.generate_client_secret&&data.protocol==='oidc'){
