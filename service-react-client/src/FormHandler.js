@@ -92,8 +92,7 @@ const EditService = (props) => {
           }
         });
       }
-
-      if(props.type==='create'){
+      if(props.petition_id&&props.type!=='delete'){
         fetch(config.host+'petition/'+props.petition_id, {
           method: 'GET', // *GET, POST, PUT, DELETE, etc.
           credentials: 'include', // include, *same-origin, omit

@@ -32,12 +32,9 @@ describe('Service registry API Integration Tests', function() {
       req.cookies = Cookies;
       req.set('Accept','application/json')
       .expect('Content-Type',/json/)
-      .expect(200)
-      .end(function(err,res){
-        let body = JSON.parse(res.text);
-        expect(body.success).to.equal(true);
-        done();
-      })
+      .expect(200).end(function(err,res){
+        expect(res.statusCode).to.equal(200);
+        done();})
     })
   });
   describe('# OIDC Petition lifecycle',function(){
@@ -53,8 +50,8 @@ describe('Service registry API Integration Tests', function() {
       .expect(200)
         .end(function(err,res){
           let body = JSON.parse(res.text);
-          expect(body.success).to.equal(true);
           expect(body.id).to.be.a('number');
+          expect(res.statusCode).to.equal(200);
           petition = body.id;
           done();
         })
@@ -67,7 +64,7 @@ describe('Service registry API Integration Tests', function() {
         .expect(200)
           .end(function(err,res){
             let body = JSON.parse(res.text);
-            expect(body.success).to.equal(true);
+            expect(res.statusCode).to.equal(200);
             should(diff(create.oidc,body.petition)).not.exist();
             done();
           })
@@ -81,11 +78,9 @@ describe('Service registry API Integration Tests', function() {
       req.set('Accept','application/json')
         .expect('Content-Type',/json/)
         .expect(200)
-          .end(function(err,res){
-            let body = JSON.parse(res.text);
-            expect(body.success).to.equal(true);
-            done();
-          })
+        .end(function(err,res){
+          expect(res.statusCode).to.equal(200);
+          done();});
     });
     it('should delete petition that was created',function(done){
       var req = request(server).delete('/petition/'+petition)
@@ -93,11 +88,9 @@ describe('Service registry API Integration Tests', function() {
       req.set('Accept','application/json')
         .expect('Content-Type',/json/)
         .expect(200)
-          .end(function(err,res){
-            let body = JSON.parse(res.text);
-            expect(body.success).to.equal(true);
-            done();
-          })
+        .end(function(err,res){
+          expect(res.statusCode).to.equal(200);
+          done();});
     });
   });
   describe('# SAML Petition lifecycle',function(){
@@ -112,8 +105,8 @@ describe('Service registry API Integration Tests', function() {
       .expect(200)
         .end(function(err,res){
           let body = JSON.parse(res.text);
-          expect(body.success).to.equal(true);
           expect(body.id).to.be.a('number');
+          expect(res.statusCode).to.equal(200);
           petition = body.id;
           done();
         })
@@ -124,11 +117,9 @@ describe('Service registry API Integration Tests', function() {
       req.set('Accept','application/json')
         .expect('Content-Type',/json/)
         .expect(200)
-          .end(function(err,res){
-            let body = JSON.parse(res.text);
-            expect(body.success).to.equal(true);
-            done();
-          })
+        .end(function(err,res){
+          expect(res.statusCode).to.equal(200);
+          done();});
     });
     it('should edit petition that was created',function(done){
       var req = request(server).put('/petition/'+petition).send({
@@ -139,11 +130,9 @@ describe('Service registry API Integration Tests', function() {
       req.set('Accept','application/json')
         .expect('Content-Type',/json/)
         .expect(200)
-          .end(function(err,res){
-            let body = JSON.parse(res.text);
-            expect(body.success).to.equal(true);
-            done();
-          })
+        .end(function(err,res){
+          expect(res.statusCode).to.equal(200);
+          done();});
     });
     it('should delete petition that was created',function(done){
       var req = request(server).delete('/petition/'+petition)
@@ -151,11 +140,9 @@ describe('Service registry API Integration Tests', function() {
       req.set('Accept','application/json')
         .expect('Content-Type',/json/)
         .expect(200)
-          .end(function(err,res){
-            let body = JSON.parse(res.text);
-            expect(body.success).to.equal(true);
-            done();
-          })
+        .end(function(err,res){
+          expect(res.statusCode).to.equal(200);
+          done();});
     });
   });
   describe('# Service lifecycle',function(){
@@ -171,8 +158,8 @@ describe('Service registry API Integration Tests', function() {
         .expect(200)
         .end(function(err,res){
           let body = JSON.parse(res.text);
-          expect(body.success).to.equal(true);
           expect(body.id).to.be.a('number');
+          expect(res.statusCode).to.equal(200);
           petition = body.id;
           done();
         })
@@ -185,8 +172,8 @@ describe('Service registry API Integration Tests', function() {
         .expect(200)
         .end(function(err,res){
           let body = JSON.parse(res.text);
-          expect(body.success).to.equal(true);
           expect(body.service_id).to.be.a('number');
+          expect(res.statusCode).to.equal(200);
           service = body.service_id;
           done();
         })
@@ -210,9 +197,11 @@ describe('Service registry API Integration Tests', function() {
           messages
         });
         req.expect(200).end(function(err,res){
-          res.status.should.equal(200);
+          expect(res.statusCode).to.equal(200);
           done();
         });
+
+
       });
       it('should get created service',function(done){
         var req = request(server).get('/service/'+service);
@@ -221,10 +210,8 @@ describe('Service registry API Integration Tests', function() {
         .expect('Content-Type',/json/)
         .expect(200)
         .end(function(err,res){
-          let body = JSON.parse(res.text);
-          expect(body.success).to.equal(true);
-          done();
-        })
+          expect(res.statusCode).to.equal(200);
+          done();});
       });
     });
     describe('# Edit Service',function(){
@@ -240,8 +227,8 @@ describe('Service registry API Integration Tests', function() {
         .expect(200)
         .end(function(err,res){
           let body = JSON.parse(res.text);
+          expect(res.statusCode).to.equal(200);
           petition = body.id;
-          expect(body.success).to.equal(true);
           done();
         })
       });
@@ -253,8 +240,8 @@ describe('Service registry API Integration Tests', function() {
         .expect(200)
         .end(function(err,res){
           let body = JSON.parse(res.text);
-          expect(body.success).to.equal(true);
           expect(body.service_id).to.be.a('number');
+          expect(res.statusCode).to.equal(200);
           service = body.service_id;
           done();
         })
@@ -278,7 +265,7 @@ describe('Service registry API Integration Tests', function() {
           messages
         });
         req.expect(200).end(function(err,res){
-          res.status.should.equal(200);
+          expect(res.statusCode).to.equal(200);
           done();
         });
       });
@@ -290,7 +277,7 @@ describe('Service registry API Integration Tests', function() {
         .expect(200)
         .end(function(err,res){
           let body = JSON.parse(res.text);
-          expect(body.success).to.equal(true);
+          expect(res.statusCode).to.equal(200);
           should(diff(edit.oidc,body.service)).not.exist();
           done();
         })
@@ -306,8 +293,8 @@ describe('Service registry API Integration Tests', function() {
         .end(function(err,res){
           let body = JSON.parse(res.text);
           expect(body.id).to.be.a('number');
+          expect(res.statusCode).to.equal(200);
           petition = body.id;
-          expect(body.success).to.equal(true);
           done();
         })
       });
@@ -318,10 +305,8 @@ describe('Service registry API Integration Tests', function() {
         .expect('Content-Type',/json/)
         .expect(200)
         .end(function(err,res){
-          let body = JSON.parse(res.text);
-          expect(body.success).to.equal(true);
-          done();
-        })
+          expect(res.statusCode).to.equal(200);
+          done();});
       });
       it('should mock deployment of service configuration',function(done){
         let messages = [];
@@ -342,7 +327,7 @@ describe('Service registry API Integration Tests', function() {
           messages
         });
         req.expect(200).end(function(err,res){
-          res.status.should.equal(200);
+          expect(res.statusCode).to.equal(200);
           done();
         });
       });
@@ -353,8 +338,7 @@ describe('Service registry API Integration Tests', function() {
         .expect('Content-Type',/json/)
         .expect(200)
         .end(function(err,res){
-          let body = JSON.parse(res.text);
-          expect(body.success).to.equal(false);
+          expect(res.statusCode).to.equal(204);
           done();
         })
       });
@@ -373,8 +357,8 @@ describe('Service registry API Integration Tests', function() {
         .expect(200)
         .end(function(err,res){
           let body = JSON.parse(res.text);
-          expect(body.success).to.equal(true);
           expect(body.id).to.be.a('number');
+          expect(res.statusCode).to.equal(200);
           petition = body.id;
           done();
         })
@@ -386,10 +370,8 @@ describe('Service registry API Integration Tests', function() {
         .expect('Content-Type',/json/)
         .expect(200)
         .end(function(err,res){
-          let body = JSON.parse(res.text);
-          expect(body.success).to.equal(true);
-          done();
-        })
+          expect(res.statusCode).to.equal(200);
+          done();});
       });
     });
     describe('# Request Changes Petition',function(){
@@ -404,8 +386,8 @@ describe('Service registry API Integration Tests', function() {
         .expect(200)
         .end(function(err,res){
           let body = JSON.parse(res.text);
-          expect(body.success).to.equal(true);
           expect(body.id).to.be.a('number');
+          expect(res.statusCode).to.equal(200);
           petition = body.id;
           done();
         })
@@ -420,8 +402,8 @@ describe('Service registry API Integration Tests', function() {
         .expect(200)
         .end(function(err,res){
           let body = JSON.parse(res.text);
-          expect(body.success).to.equal(true);
           expect(body.id).to.be.a('number');
+          expect(res.statusCode).to.equal(200);
           petition = body.id;
           done();
         })
@@ -433,11 +415,10 @@ describe('Service registry API Integration Tests', function() {
         .expect('Content-Type',/json/)
         .expect(200)
         .end(function(err,res){
-          let body = JSON.parse(res.text);
-          expect(body.success).to.equal(true);
-          done();
-        })
+          expect(res.statusCode).to.equal(200);
+          done();});
       });
     });
   });
 });
+

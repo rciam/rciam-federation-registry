@@ -94,11 +94,11 @@ class ServicePetitionDetailsRepository {
        return await this.db.any("SELECT id,type,status,reviewed_at,comment from service_petition_details where service_id=$1 ORDER BY reviewed_at ASC",+service_id)
      }
 
-
-
      async deletePetition(petition_id){
-       return this.db.none('DELETE FROM service_petition_details WHERE id=$1 AND reviewed_at IS NULL',+petition_id)
+       return this.db.oneOrNone('DELETE FROM service_petition_details WHERE id=$1 AND reviewed_at IS NULL RETURNING id',+petition_id);
      }
+
+     
 
 
 

@@ -16,7 +16,7 @@ class User {
 
   async getServiceOwners(ids){
     return this.db.any(sql.getServiceOwners,{ids:ids}).then( info =>{
-      console.log(info);
+      return info;
     })
   }
   async getPetitionOwner(id){

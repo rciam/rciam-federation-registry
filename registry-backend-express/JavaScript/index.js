@@ -81,6 +81,7 @@ passport.use(new MockStrategy({
   },
   callback: process.env.OIDC_REACT
 }, (user, done) => {
+  routes.saveUser(user); 
   done(null, user);
 	// Perform actions on user, call done once finished
 }));
@@ -129,7 +130,7 @@ app.use(expressWinston.logger({
       responseWhitelist: [],
       dynamicMeta: function(req, res) {
         const meta={};
-        if(req.user){
+        if(req.user&&req.user.sub&&req.user.role){
           meta.user = {};
           meta.user.sub= req.user ? req.user.sub : null;
           meta.user.role= req.user ? req.user.role : null;
@@ -230,6 +231,6 @@ function stop() {
   server.close();
 }
 
-module.exports = {server};
+module.exports = server;
 
 module.exports.stop = stop;

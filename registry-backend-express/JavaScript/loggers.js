@@ -7,7 +7,7 @@ const customLogger = (req,res,level,message)=>{
   log.level =level;
   log.status=res.statusCode;
   log.message=message;
-  if(req.user){
+  if(req.user&&req.user.sub&&req.user.role){
     log.user.sub = req.user.sub;
     log.user.role = req.user.role;
   }

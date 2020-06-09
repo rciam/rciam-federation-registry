@@ -70,7 +70,9 @@ const calcDiff = (oldState,newState) => {
 
 const sendMail= (data,template_uri,users)=>{
   var currentDate = new Date();
-
+  console.log(process.env.EMAIL);
+  console.log(process.env.EMAIL_PASSWORD);
+  console.log(data);
   var result;
   readHTMLFile(path.join(__dirname, '../html/', template_uri), function(err, html) {
       let transporter = nodeMailer.createTransport({

@@ -84,7 +84,7 @@ router.post('/setDeployment',(req,res,next)=>{
     await t.service_state.updateMultiple(updateData).then(async result=>{
       if(result.success){
         res.sendStatus(200).end();
-        t.user.getServiceOwners(ids).then(data=>{
+        await t.user.getServiceOwners(ids).then(data=>{
           if(data){
             data.forEach(email_data=>{
               sendMail({subject:'Service Deployment Result',service_name:email_data.service_name,state:email_data.state},'deployment-notification.html',[{name:email_data.name,email:email_data.email}]);
@@ -147,6 +147,7 @@ router.get('/pending',amsAgentAuth,(req,res,next)=>{
 // Find all clients/petitions from curtain user to create preview list
 router.get('/servicelist',checkAuthentication,(req,res,next)=>{
   try{
+
     db.task('find-services', async t => {
       let services;
       if (isAdmin(req)){ // If user is Admin we fetch all services
@@ -207,7 +208,7 @@ router.post('/petition',clientValidationRules(),validate,checkAuthentication,asy
           await t.service.add(req.body,req.user.sub,'petition').then(async id=>{
             if(id){
               res.status(200).json({id:id});
-              t.user.getReviewers().then(users=>{
+              await t.user.getReviewers().then(users=>{
                 sendMail({subject:'New Petition to Review',service_name:req.body.service_name},'reviewer-notification.html',users);
               }).catch(error=>{
                 next('Could not sent email to reviewers:' + err);
@@ -224,12 +225,19 @@ router.post('/petition',clientValidationRules(),validate,checkAuthentication,asy
 
 // Delete Petition
 router.delete('/petition/:id',checkAuthentication,(req,res,next)=>{
+
   return db.tx('delete-petition',async t =>{
     try{
       await t.service_petition_details.belongsToRequester(req.params.id,req.user.sub).then(async belongs =>{
         if(belongs){
           const deleted = await t.service_petition_details.deletePetition(req.params.id);
-          return res.status(200).end();
+          if(deleted){
+              return res.status(200).end();
+          }
+          else{
+            next('Cant delete Petition');
+          }
+
         }
       }).catch(err=>{next(err);})
     }
@@ -243,9 +251,9 @@ router.delete('/petition/:id',checkAuthentication,(req,res,next)=>{
 router.put('/petition/:id',clientValidationRules(),validate,checkAuthentication,asyncPetitionValidation,(req,res,next)=>{
   return db.task('update-petition',async t =>{
     try{
-      
+
       await t.service.update(req.body,req.params.id,'petition').then(response=>{
-        if(respose.success){
+        if(response.success){
           res.status(200).end();
         }
         else{
@@ -303,7 +311,7 @@ router.put('/service/delete/:service_id',checkAuthentication,(req,res,next)=>{
                 if(open_petition_id){
                   await t.service.update(service,open_petition_id,'petition').then(resp=>{
                     if(resp.success){
-                       res.status(200).end();
+                       res.status(200).json({id:open_petition_id});
                     }
                     else{
                       //  throw warning
@@ -313,7 +321,7 @@ router.put('/service/delete/:service_id',checkAuthentication,(req,res,next)=>{
                 else {
                   await t.service.add(service,req.user.sub,'petition').then(id=>{
                     if(id){
-                      res.status(200).end();
+                      res.status(200).json({id});
                     }
                   });
                 }
@@ -371,7 +379,7 @@ router.put('/petition/changes/:id',checkAuthentication,checkAdmin,(req,res)=>{
             if(id){
               await t.service_petition_details.review(req.params.id,req.user.sub,'approved_with_changes',req.body.comment).then(async result=>{
                 if(result){
-                  res.status(200).end();
+                  res.status(200).json({id});
                   await t.user.getPetitionOwner(req.params.id).then(email_data=>{
                     if(email_data){
                       sendMail({subject:'Service Petition Review',service_name:email_data.service_name,state:'approved with changes'},'review-notification.html',[{name:email_data.name,email:email_data.email}]);
@@ -420,7 +428,7 @@ router.put('/petition/approve/:id',checkAuthentication,checkAdmin,(req,res,next)
                }
              }).catch(err=>{next(err);});
           }
-          res.status(200).end();
+          res.status(200).json({service_id});
           await t.user.getPetitionOwner(req.params.id).then(email_data=>{
             if(email_data){
               sendMail({subject:'Service Petition Review',service_name:email_data.service_name,state:'aprroved'},'review-notification.html',[{name:email_data.name,email:email_data.email}]);
@@ -717,3 +725,4 @@ module.exports = {
   router:router,
   saveUser:saveUser
 }
+

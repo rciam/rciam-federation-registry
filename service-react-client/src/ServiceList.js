@@ -122,30 +122,7 @@ const ServiceList= (props)=> {
       setMessage('Could not be canceled please try again. Status:'+response.status);
       }
     });
-  }
-
-  const confirmPetition = (id) => {
-    setAsyncResponse(true);
-    fetch(config.host+'petition/approve/'+id, {
-      method: 'PUT', // *GET, POST, PUT, DELETE, etc.
-      credentials: 'include', // include, *same-origin, omit
-      headers: {
-      'Content-Type': 'application/json'
-    },
-      body:JSON.stringify({comment:null})
-    }).then(response=>response.json()).then(response=> {
-      if(response){
-        if(response.success){
-          setMessage('Was submited succesfully.');
-        }
-        else{
-          setMessage('Was not submited due to the following error: '+response.error);
-        }
-        setAsyncResponse(false);
-        getServices();
-      }
-    });
-  }
+ }
 
 
   return(
