@@ -4,7 +4,7 @@ var path = require("path")
 var fs = require('fs');
 var handlebars = require('handlebars');
 nodeMailer = require('nodemailer');
-
+const customLogger = require('../loggers.js');
 
 const calcDiff = (oldState,newState) => {
     var new_values = Object.assign({},newState);
@@ -70,9 +70,9 @@ const calcDiff = (oldState,newState) => {
 
 const sendMail= (data,template_uri,users)=>{
   var currentDate = new Date();
-  console.log(process.env.EMAIL);
-  console.log(process.env.EMAIL_PASSWORD);
-  console.log(data);
+  if (!process.env.EMAIL_PASSOWRD){
+    customLogger(null,null,'info',[{error:'EMAIL_PASSWORD missing'},{type:'email_log'},{message:'Trying to send email without providing password'}]);
+  }
   var result;
   readHTMLFile(path.join(__dirname, '../html/', template_uri), function(err, html) {
       let transporter = nodeMailer.createTransport({
@@ -116,12 +116,10 @@ const sendMail= (data,template_uri,users)=>{
           };
           transporter.sendMail(mailOptions, function (error, response) {
             if (error) {
-              console.log(error);
-              result = ({success:false,error:error});
-              callback(error);
+              customLogger(null,null,'info',[{type:'email_log'},{message:'Email not sent'},{error:error},{user:users},{data:data}]);
             }
             else {
-              result = ({success:true});
+              customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{user:users},{data:data}]);
             }
           });
       });
@@ -160,3 +158,4 @@ module.exports = {
   addToString,
   sendMail
 }
+
