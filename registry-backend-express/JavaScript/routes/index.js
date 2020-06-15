@@ -72,7 +72,7 @@ router.get('/callback', passport.authenticate('oidc', {
 
 // ams push subscription for deployment results
 // needs Authentication
-router.post('/setDeployment',(req,res,next)=>{
+router.post('/deployed',(req,res,next)=>{
   let updateData=[];
   let ids=[];
   req.body.messages.forEach((message) => {
@@ -107,7 +107,7 @@ router.post('/setDeployment',(req,res,next)=>{
 router.get('/ams_verification_hash',(req,res)=>{
   console.log('ams verification');
   res.setHeader('Content-type', 'plain/text');
-  res.status(200).send('f0500d9b6d62469f05dd6abacf588100e9fe829f');
+  res.status(200).send('54e943121a923d3d32d8728d1a0878e7915dbfb4');
 })
 
 // ams-agent requests to set state to waiting development

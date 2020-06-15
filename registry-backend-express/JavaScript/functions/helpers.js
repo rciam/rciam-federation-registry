@@ -70,19 +70,12 @@ const calcDiff = (oldState,newState) => {
 
 const sendMail= (data,template_uri,users)=>{
   var currentDate = new Date();
-  if (!process.env.EMAIL_PASSOWRD){
-    customLogger(null,null,'info',[{error:'EMAIL_PASSWORD missing'},{type:'email_log'},{message:'Trying to send email without providing password'}]);
-  }
   var result;
   readHTMLFile(path.join(__dirname, '../html/', template_uri), function(err, html) {
       let transporter = nodeMailer.createTransport({
-          host: 'smtp.gmail.com',
-          port: 465,
-          secure: true,
-          auth: {
-              user: process.env.EMAIL,
-              pass: process.env.EMAIL_PASSWORD
-          }
+          host: 'relay.grnet.gr',
+          port: 587,
+          secure: false
       });
       var template = handlebars.compile(html);
       //var replacements = {username: "John Doe",name:"The name"};

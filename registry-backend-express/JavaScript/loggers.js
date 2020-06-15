@@ -3,7 +3,7 @@ var winston = require('winston');
 
 
 const customLogger = (req,res,level,message)=>{
-  if(!process.env.NODE_ENV==='test'&&!process.env.NODE_ENV==='test-docker'){
+  
     var log ={};
     log.level =level;
     if(req){
@@ -25,7 +25,7 @@ const customLogger = (req,res,level,message)=>{
       log.message=message;
     }
     logger.log(log);    
-  }
+  
 }
 
 

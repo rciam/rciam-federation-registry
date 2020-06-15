@@ -217,8 +217,8 @@ if(process.env.NODE_ENV==='test'||process.env.NODE_ENV==='test-docker'||process.
 }
 else{
   server = https.createServer({
-    key: fs.readFileSync('/etc/letsencrypt/live/snf-871007.vm.okeanos.grnet.gr/privkey.pem','utf-8'),
-    cert: fs.readFileSync('/etc/letsencrypt/live/snf-871007.vm.okeanos.grnet.gr/fullchain.pem','utf-8')
+    key: fs.readFileSync('/etc/letsencrypt/live/service-registry.aai-dev.grnet.gr/privkey.pem','utf-8'),
+    cert: fs.readFileSync('/etc/letsencrypt/live/service-registry.aai-dev.grnet.gr/fullchain.pem','utf-8')
   }, app)
   .listen(port, function () {
     console.log('Example app listening on https://localhost:'+port);
