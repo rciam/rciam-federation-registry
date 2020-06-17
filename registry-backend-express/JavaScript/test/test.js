@@ -193,7 +193,7 @@ describe('Service registry API Integration Tests', function() {
           }
         );
 
-        var req = request(server).post('/setDeployment').send({
+        var req = request(server).post('/deployed').send({
           messages
         });
         req.expect(200).end(function(err,res){
@@ -261,7 +261,7 @@ describe('Service registry API Integration Tests', function() {
           }
         );
 
-        var req = request(server).post('/setDeployment').send({
+        var req = request(server).post('/deployed').send({
           messages
         });
         req.expect(200).end(function(err,res){
@@ -323,7 +323,7 @@ describe('Service registry API Integration Tests', function() {
           }
         );
 
-        var req = request(server).post('/setDeployment').send({
+        var req = request(server).post('/deployed').send({
           messages
         });
         req.expect(200).end(function(err,res){
@@ -421,4 +421,3 @@ describe('Service registry API Integration Tests', function() {
     });
   });
 });
-

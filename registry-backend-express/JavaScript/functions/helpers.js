@@ -71,6 +71,7 @@ const calcDiff = (oldState,newState) => {
 const sendMail= (data,template_uri,users)=>{
   var currentDate = new Date();
   var result;
+  if(!(process.env.NODE_ENV==='test')&&!(process.env.NODE_ENV==='test-docker')){
   readHTMLFile(path.join(__dirname, '../html/', template_uri), function(err, html) {
       let transporter = nodeMailer.createTransport({
           host: 'relay.grnet.gr',
@@ -118,6 +119,7 @@ const sendMail= (data,template_uri,users)=>{
       });
 
   });
+  }
   return result
 }
 
@@ -151,4 +153,3 @@ module.exports = {
   addToString,
   sendMail
 }
-
