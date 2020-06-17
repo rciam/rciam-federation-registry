@@ -1,14 +1,14 @@
-import React from 'react';
+import React,{useContext} from 'react';
 import ProgressBar from 'react-bootstrap/ProgressBar';
 import Spinner from 'react-bootstrap/Spinner';
-
+import StringsContext from '../localContext';
 export const LoadingBar = (props) => {
-
+  const strings = useContext(StringsContext);
   return (
     <React.Fragment>
     {props.loading?
       <div className="loading-container">
-        <h1>Loading...</h1>
+        <h1>{strings.loading_msg}</h1>
         <div className="progress-bar-container">
           <ProgressBar animated now={100} />
         </div>
@@ -25,11 +25,12 @@ export const LoadingBar = (props) => {
 }
 
 export const ProcessingRequest = (props) => {
+  const strings = useContext(StringsContext);
   return (
       <React.Fragment>
       {props.active?
         <div className="loader-container">
-          <h3>Proccessing Request  . . .</h3>
+          <h3>{strings.proccessing_request}</h3>
           <Spinner animation="border" variant="primary" />
         </div>
       :null}

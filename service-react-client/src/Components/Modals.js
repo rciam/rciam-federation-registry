@@ -1,13 +1,16 @@
-import React from 'react';
+import React,{useContext} from 'react';
 import Modal from 'react-bootstrap/Modal';
 import {useHistory} from "react-router-dom";
 import Button from 'react-bootstrap/Button';
+import StringsContext from '../localContext';
 
 export class SimpleModal extends React.Component {
 
   constructor(props){
     super(props);
-    this.state = {active:false}
+    this.state = {active:false,
+      strings:useContext(StringsContext)
+    }
   }
 
   componentDidUpdate(prevProps) {
@@ -30,11 +33,11 @@ export class SimpleModal extends React.Component {
   return (
       <Modal show={active} onHide={handleClose}>
          <Modal.Header >
-           <Modal.Title>Not all form fields are filled correctly!</Modal.Title>
+           <Modal.Title>{this.state.strings.modal_field_error}</Modal.Title>
          </Modal.Header>
          <Modal.Footer>
            <Button variant="secondary" onClick={handleClose}>
-             Close
+             {this.state.strings.modal_close}
            </Button>
          </Modal.Footer>
       </Modal>
@@ -44,7 +47,7 @@ export class SimpleModal extends React.Component {
 
 
 export function ResponseModal(props){
-
+  const strings = useContext(StringsContext);
   let history = useHistory();
 
   //const handleClose = () => props.setMessage();
@@ -62,7 +65,7 @@ export function ResponseModal(props){
         <Modal.Footer>
 
           <Button variant="secondary" onClick={handleClose}>
-            Continue
+            {strings.modal_continue}
           </Button>
 
         </Modal.Footer>
@@ -72,7 +75,7 @@ export function ResponseModal(props){
 export function ListResponseModal(props){
 
 
-
+    const strings = useContext(StringsContext);
 
   const handleClose = () => props.setMessage();
   return (
@@ -88,7 +91,7 @@ export function ListResponseModal(props){
         <Modal.Footer>
 
           <Button variant="secondary" onClick={handleClose}>
-            Continue
+            {strings.modal_continue}
           </Button>
 
         </Modal.Footer>

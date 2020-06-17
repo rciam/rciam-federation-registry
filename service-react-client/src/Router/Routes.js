@@ -5,8 +5,10 @@ import ServiceList from '../ServiceList.js';
 import {EditService,NewService,ViewService} from '../FormHandler.js';
 import useGlobalState from '../useGlobalState.js';
 import UserInfo from '../Components/UserInfo.js';
-import {HistoryList,HistoryView} from '../Components/History.js'
+import {HistoryList} from '../Components/History.js'
+
 const Routes = (props) => (
+
   <div className="content-container">
     <Switch>
       <Route exact path="/" component={Home}/>
@@ -15,7 +17,7 @@ const Routes = (props) => (
       </Route>
       <PrivateRoute user={props.user} path="/petitions">
         <div className="links">
-          <Link to="/home">Home</Link>
+          <Link to="/home">{props.strings.link_home}</Link>
           <span className="link-seperator">/</span>
           Manage Services
         </div>
@@ -23,7 +25,7 @@ const Routes = (props) => (
       </PrivateRoute>
       <PrivateRoute user={props.user} path="/userinfo">
         <div className="links">
-          <Link to="/home">Home</Link>
+          <Link to="/home">{props.strings.link_home}</Link>
           <span className="link-seperator">/</span>
            View User Profile
         </div>
@@ -31,9 +33,9 @@ const Routes = (props) => (
       </PrivateRoute>
       <PrivateRoute user={props.user} path="/form/new">
         <div className="links">
-          <Link to="/home">Home</Link>
+          <Link to="/home">{props.strings.link_home}</Link>
           <span className="link-seperator">/</span>
-          <Link to="/petitions">Manage Services</Link>
+          <Link to="/petitions">{props.strings.link_petitions}</Link>
           <span className="link-seperator">/</span>
           New Service
         </div>
@@ -41,9 +43,9 @@ const Routes = (props) => (
       </PrivateRoute>
       <RouteWithState user={props.user} path="/form/edit">
         <div className="links">
-          <Link to="/home">Home</Link>
+          <Link to="/home">{props.strings.link_home}</Link>
           <span className="link-seperator">/</span>
-          <Link to="/petitions">Manage Services</Link>
+          <Link to="/petitions">{props.strings.link_petitions}</Link>
           <span className="link-seperator">/</span>
           Edit Service
         </div>
@@ -53,17 +55,14 @@ const Routes = (props) => (
 
         <HistoryList user={props.user}/>
       </RouteWithState>
-      <PrivateRoute user={props.user} path='/history/view'>
 
-        <HistoryView user={props.user}/>
-      </PrivateRoute>
 
       <RouteWithState user={props.user} path="/form/review">
         <AdminRoute path="/form/review" user={props.user}>
           <div className="links">
-            <Link to="/home">Home</Link>
+            <Link to="/home">{props.strings.link_home}</Link>
             <span className="link-seperator">/</span>
-            <Link to="/petitions">Manage Services</Link>
+            <Link to="/petitions">{props.strings.link_petitions}</Link>
             <span className="link-seperator">/</span>
             Review
           </div>
@@ -72,9 +71,9 @@ const Routes = (props) => (
       </RouteWithState>
       <RouteWithState user={props.user} path="/form/view">
           <div className="links">
-            <Link to="/home">Home</Link>
+            <Link to="/home">{props.strings.link_home}</Link>
             <span className="link-seperator">/</span>
-            <Link to="/petitions">Manage Services</Link>
+            <Link to="/petitions">{props.strings.link_petitions}</Link>
             <span className="link-seperator">/</span>
             View Service
           </div>

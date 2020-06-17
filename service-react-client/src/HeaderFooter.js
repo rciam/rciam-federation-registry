@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useContext} from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {faUser, faSignOutAlt} from '@fortawesome/free-solid-svg-icons';
 import Col from 'react-bootstrap/Col';
@@ -10,11 +10,14 @@ import useGlobalState from './useGlobalState.js';
 import * as config from './config.json';
 import DropdownButton from 'react-bootstrap/DropdownButton';
 import Dropdown from 'react-bootstrap/Dropdown';
+import StringsContext from './localContext';
+
 
 export const Header= (props)=> {
 
   const globalState = useGlobalState();
   const logged = globalState.global_state.log_state;
+  const strings = useContext(StringsContext);
 
     return(
       <React.Fragment>
@@ -37,11 +40,11 @@ export const Header= (props)=> {
                 </Dropdown.Item>
               ):null}
               <Dropdown.Item href={config.host+"logout"}>
-                LOGOUT<FontAwesomeIcon icon={faSignOutAlt}/>
+                {strings.logout}<FontAwesomeIcon icon={faSignOutAlt}/>
               </Dropdown.Item>
             </DropdownButton>):(
             <React.Fragment>
-              <a href={config.host+"login"}><Button className="log-button" variant="outline-primary">Login</Button></a>
+              <a href={config.host+"login"}><Button className="log-button" variant="outline-primary">{strings.login}</Button></a>
             </React.Fragment>
             )
           }
@@ -53,36 +56,34 @@ export const Header= (props)=> {
           </a>
         </div>
         <h1 className="text-center main-title">
-          EGI AAI OpenID Connect Provider
+          {strings.main_title}
         </h1>
       </React.Fragment>
     );
 }
-
-export class Footer extends React.Component {
-  render(){
-    return(
-      <React.Fragment>
-        <div className='footer'>
-          <Row>
-            <Col md={4}>
-            </Col>
-            <Col md={4}>
-              <Image className="logo-grnet" src='https://aai-dev.egi.eu/oidc/resources/images/grnet_logo_en.svg' fluid />
-              <Image className="logo-eu" src='https://aai-dev.egi.eu/oidc/resources/images/eu.svg' fluid />
-            </Col>
-            <Col className="footer-links" md={4}>
-              <a href="https://aai.egi.eu/ToU.html">Terms</a>
-              <a href="https://aai.egi.eu/privacy.html">Privacy</a>
-            </Col>
-          </Row>
-          <Row className='footer-description'>
-            <Col>
-            <p>Check-in is an EGI service provided by GRNET, receiving funding from the <a href='https://www.egi.eu/about/egi-foundation/'>EGI Foundation (EGI.eu)</a> and the <a href="https://eosc-hub.eu/">EOSC-hub project (Horizon 2020)</a> under Grant number 777536</p>
-            </Col>
-          </Row>
-        </div>
-      </React.Fragment>
-    );
-  }
+export const Footer = ()=>{
+  const strings = useContext(StringsContext);
+  return(
+    <React.Fragment>
+      <div className='footer'>
+        <Row>
+          <Col md={4}>
+          </Col>
+          <Col md={4}>
+            <Image className="logo-grnet" src={strings.footer_logo_uri} fluid />
+            <Image className="logo-eu" src={strings.footer_flag_uri} fluid />
+          </Col>
+          <Col className="footer-links" md={4}>
+            <a href={strings.terms_uri}>Terms</a>
+            <a href={strings.privacy_uri}>Privacy</a>
+          </Col>
+        </Row>
+        <Row className='footer-description'>
+          <Col>
+          <p>Check-in is an EGI service provided by GRNET, receiving funding from the <a href='https://www.egi.eu/about/egi-foundation/'>EGI Foundation (EGI.eu)</a> and the <a href="https://eosc-hub.eu/">EOSC-hub project (Horizon 2020)</a> under Grant number 777536</p>
+          </Col>
+        </Row>
+      </div>
+    </React.Fragment>
+  );
 }

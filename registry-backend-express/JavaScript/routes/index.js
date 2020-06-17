@@ -403,10 +403,11 @@ router.put('/petition/changes/:id',checkAuthentication,checkAdmin,(req,res)=>{
 router.put('/petition/approve/:id',checkAuthentication,checkAdmin,(req,res,next)=>{
   try{
     db.tx('approve-petition',async t =>{
+      let service_id;
       await t.service.get(req.params.id,'petition').then(async petition =>{
         if(petition){
           if(petition.meta_data.type==='delete'){
-            let service_id = petition.meta_data.service_id;
+            service_id = petition.meta_data.service_id;
             await t.batch([
               t.service_details.delete(petition.meta_data.service_id),
               t.service_petition_details.review(req.params.id,req.user.sub,'approved',req.body.comment)
@@ -494,9 +495,12 @@ router.get('/petition/history/list/:id',checkAuthentication,(req,res)=>{
 
 router.get('/availability/:protocol/:id',checkAuthentication,(req,res,next)=>{
   db.tx('get-history-for-petition', async t =>{
+    console.log('yes')
     try{
       await isAvailable(t,req.params.id,req.params.protocol,0,0).then(available =>{
-        res.status(200).json({available:available});
+        console.log(available);
+            res.status(200).json({available:available});
+
       }).catch(err=>{next(err)});
     }
     catch(err){
@@ -725,4 +729,3 @@ module.exports = {
   router:router,
   saveUser:saveUser
 }
-

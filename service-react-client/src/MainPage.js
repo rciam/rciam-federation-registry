@@ -1,19 +1,21 @@
-import React,{useState,useEffect} from 'react';
+import React,{useState,useEffect,useContext } from 'react';
 import {BrowserRouter as Router} from "react-router-dom";
 import useGlobalState from './useGlobalState.js';
 import {Header,Footer} from './HeaderFooter.js';
 import Routes from './Router';
 import {SideNav} from './Components/SideNav.js';
 import * as config from './config.json';
+import StringsContext from './localContext';
 
- const MainPage= ()=> {
-
+ const MainPage= (context,props)=> {
+      const strings = useContext(StringsContext);
       const [user,setUser] = useState();
 
       const globalState = useGlobalState();
       const logged = globalState.global_state.log_state;
 
       useEffect(()=>{
+
         if(!logged){
           setUser(null);
         }
@@ -41,7 +43,7 @@ import * as config from './config.json';
           <Router >
             <div className="flex-container">
               {logged&&<SideNav/>}
-              <Routes user={user} />
+              <Routes user={user} strings={strings}/>
             </div>
           </Router>
           <Footer/>

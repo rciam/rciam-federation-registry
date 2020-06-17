@@ -1,4 +1,4 @@
-import React,{useEffect,useState} from 'react';
+import React,{useEffect,useState,useContext} from 'react';
 import initialValues from './initialValues';
 import * as config from './config.json';
 //import {useParams} from "react-router-dom";
@@ -12,7 +12,7 @@ import Alert from 'react-bootstrap/Alert';
 import Jumbotron from 'react-bootstrap/Jumbotron';
 import Container from 'react-bootstrap/Container';
 import { diff } from 'deep-diff';
-
+import StringsContext from './localContext'
 
 
 const EditService = (props) => {
@@ -20,7 +20,7 @@ const EditService = (props) => {
     const [service,setService] = useState();
     const [editPetition,setEditPetition] = useState();
     const [changes,setChanges] = useState();
-
+    const strings = useContext(StringsContext);
     useEffect(()=>{
       getData();
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -121,7 +121,7 @@ const EditService = (props) => {
       {props.type==='edit'?
         <React.Fragment>
           <Alert variant='warning' className='form-alert'>
-            This is a reconfiguration request, changes are highlighted bellow.
+            {strings.reconfiguration_info}
           </Alert>
           {editPetition&&changes?<ServiceForm initialValues={editPetition} changes={changes} {...props}/>:<LoadingBar loading={true}/>}
         </React.Fragment>
@@ -129,14 +129,14 @@ const EditService = (props) => {
       :props.type==='create'?
         <React.Fragment>
           <Alert variant='warning' className='form-alert'>
-            This is a registration request.
+            {strings.edit_create_info}
           </Alert>
           {petition?<ServiceForm initialValues={petition} {...props}/>:<LoadingBar loading={true}/>}
         </React.Fragment>
       :
         <React.Fragment>
           <Alert variant='warning' className='form-alert'>
-            User requested to deregister the following service.
+            {strings.edit_delete_info}
           </Alert>
           {service?<ServiceForm initialValues={service} {...props} />:<LoadingBar loading={true}/>}
         </React.Fragment>
@@ -153,7 +153,7 @@ const EditService = (props) => {
           {props.comment?
             <React.Fragment>
               <Alert variant='warning' className='form-alert'>
-                An administrator has reviewed your registration request and has requested changes.
+                {strings.edit_changes_info}
               </Alert>
               <Jumbotron fluid className="jumbotron-comment">
                 <Container>
@@ -166,7 +166,7 @@ const EditService = (props) => {
             </React.Fragment>
           :props.type?
               <Alert variant='warning' className='form-alert'>
-              This is a registration request which is currently pending approval from an administrator. You can modify or cancel it here.
+              {strings.edit_create_pending_info}
               </Alert>
           :null
           }
@@ -187,6 +187,7 @@ const EditService = (props) => {
 const ViewService = (props)=>{
   const [service,setService] = useState();
   const [petition,setPetition] = useState();
+  const strings = useContext(StringsContext);
   useEffect(()=>{
 
     getData();
@@ -230,7 +231,7 @@ const ViewService = (props)=>{
         <React.Fragment>
 
           <Alert variant='danger' className='form-alert'>
-            This service is not registered yet, it is currently pending approval from an administrator
+            {strings.view_create_info}
           </Alert>
           <ServiceForm initialValues={petition} disabled={true}/>
         </React.Fragment>
@@ -239,7 +240,10 @@ const ViewService = (props)=>{
     </React.Fragment>
   )
 }
+
+
 const RequestedChangesAlert = (props) => {
+  const strings = useContext(StringsContext);
   return(
     <React.Fragment>
       <Tabs className="edit-tabs" defaultActiveKey="petition" id="uncontrolled-tab-example">
@@ -247,11 +251,11 @@ const RequestedChangesAlert = (props) => {
           {props.comment?
             <React.Fragment>
               <Alert variant='warning' className='form-alert'>
-                An administrator has reviewed your {props.type} request and has requested changes.
+                {strings.changes_info_1_1}{props.type}{strings.changes_info_1_2}
               </Alert>
               <Jumbotron fluid className="jumbotron-comment">
                 <Container>
-                  <h5>Comment from admin:</h5>
+                  <h5>{strings.changes_title}</h5>
                   <p className="text-comment">
                     {props.comment}
                   </p>
@@ -260,7 +264,7 @@ const RequestedChangesAlert = (props) => {
             </React.Fragment>
           :props.type?
               <Alert variant='warning' className='form-alert'>
-              This is a {props.type==='delete'?'deregistration':props.type==='edit'?'reconfiguration':'registration'} request which is currently pending approval from an administrator. You can modify or cancel it here.
+              {strings.changes_info_2_1} {props.type==='delete'?'deregistration':props.type==='edit'?'reconfiguration':'registration'} {strings.changes_info_2_2}
               </Alert>
           :null
           }

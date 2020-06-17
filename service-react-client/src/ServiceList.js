@@ -1,4 +1,4 @@
-import React,{useState,useEffect} from 'react';
+import React,{useState,useEffect,useContext} from 'react';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
 import DropdownButton from 'react-bootstrap/DropdownButton';
@@ -20,9 +20,11 @@ import Modal from 'react-bootstrap/Modal';
 import Pagination from 'react-bootstrap/Pagination';
 import {LoadingBar,ProcessingRequest} from './Components/LoadingBar';
 import {ListResponseModal} from './Components/Modals.js';
+import StringsContext from './localContext';
 
 
 const ServiceList= (props)=> {
+  const strings = useContext(StringsContext);
   const [loadingList,setLoadingList] = useState();
   const [services,setServices] = useState([]);
   const [confirmationId,setConfirmationId] = useState();
@@ -93,18 +95,17 @@ const ServiceList= (props)=> {
       'Content-Type': 'application/json'
     }}).then(response=> {
       getServices();
-      setResponseTitle('Your deregistration request');
+      setResponseTitle(strings.request_submit_title);
       setAsyncResponse(false);
       if(response.status===200){
-        setMessage('Was submited succesfully and is currently pending approval from an administrator.');
+        setMessage(strings.request_submit_success_msg);
       }
       else{
-        setMessage('Was not submited Status:' + response.status);
+        setMessage(strings.request_submit_failled_msg + response.status);
       }
     });
   }
   const deletePetition = (id)=>{
-    console.log('here we cancel');
     setAsyncResponse(true);
     fetch(config.host+'petition/'+id, {
       method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
@@ -112,14 +113,14 @@ const ServiceList= (props)=> {
       headers: {
       'Content-Type': 'application/json'
     }}).then(response=> {
-      setResponseTitle('Your pending request:');
+      setResponseTitle(strings.request_cancel_title);
       setAsyncResponse(false);
       getServices();
       if(response.status===200){
-        setMessage('Was succesfully canceled!');
+        setMessage(strings.request_cancel_success_msg);
       }
       else{
-      setMessage('Could not be canceled please try again. Status:'+response.status);
+      setMessage(strings.request_cancel_fail_msg + response.status);
       }
     });
  }
@@ -135,19 +136,19 @@ const ServiceList= (props)=> {
           <div className="options-bar">
           <Row >
             <Col>
-              <Button variant="light" onClick={getServices} ><FontAwesomeIcon icon={faSync} />Refresh</Button>
-              <Link to="/form/new"><Button><FontAwesomeIcon icon={faPlus}/>New Service</Button></Link>
+              <Button variant="light" onClick={getServices} ><FontAwesomeIcon icon={faSync} />{strings.petitions_refresh}</Button>
+              <Link to="/form/new"><Button><FontAwesomeIcon icon={faPlus}/>{strings.petitions_new}</Button></Link>
             </Col>
             <Col>
               <Button variant="light" className='filter-button' onClick={()=>setExpandFilters(!expandFilters)}><FontAwesomeIcon icon={faFilter} />
                 {expandFilters?
                   <React.Fragment>
-                    Hide Filters
+                    {strings.filters_hide}
                     <FontAwesomeIcon className='fa-arrow-up' icon={faSortUp}/>
                   </React.Fragment>
                   :
                   <React.Fragment>
-                    Show Filters
+                    {strings.filters_show}
                     <FontAwesomeIcon className='fa-arrow-down' icon={faSortDown}/>
                   </React.Fragment>
                 }
@@ -156,7 +157,7 @@ const ServiceList= (props)=> {
             <Col className="options-search" md={3}>
               <InputGroup className="md-12">
                 <FormControl
-                placeholder="Search"
+                placeholder={strings.search}
                 value={searchString}
                 onChange={(e)=>{setSearchString(e.target.value)}}
                 />
@@ -179,9 +180,9 @@ const ServiceList= (props)=> {
           <Table striped bordered hover className="petitions-table">
             <thead>
               <tr>
-                <td>Service</td>
-                <td>Details</td>
-                <td>Controls</td>
+                <td>{strings.td_service_name}</td>
+                <td>{strings.td_service_desc}</td>
+                <td>{strings.td_service_controls}</td>
               </tr>
             </thead>
             <tbody>
@@ -199,7 +200,7 @@ const ServiceList= (props)=> {
                           )
                         }
                         return null
-                      }):<tr><td></td><td>No services to display...</td><td></td></tr>}
+                      }):<tr><td></td><td>{strings.no_services}</td><td></td></tr>}
               </React.Fragment>
             </tbody>
           </Table>
@@ -212,6 +213,7 @@ const ServiceList= (props)=> {
   }
 
 function TableItem(props) {
+  const strings = useContext(StringsContext);
   return (
     <tr>
       <td className="petition-details">
@@ -223,11 +225,12 @@ function TableItem(props) {
         <div className="flex-column">
           <h3 className="petition-title">{props.item.service_name}</h3>
           <div className="badge-container">
-            {props.item.hasOwnProperty('state')&&props.item.state!==null?<Badge className="status-badge" variant={props.item.state==='deployed'?'primary':'danger'}>{props.item.state==='deployed'?'Deployed':props.item.state==='error'?'Deployment Malfunction':props.item.deleted===false?'Deployment in Progress':'Deregistration in Progress'}</Badge>:null}
+
+            {props.item.hasOwnProperty('state')&&props.item.state!==null?<Badge className="status-badge" variant={props.item.state==='deployed'?'primary':'danger'}>{props.item.state==='deployed'?strings.badge_deployed:props.item.state==='error'?strings.badge_error:props.item.deleted===false?strings.badge_pending:strings.badge_deleting}</Badge>:null}
             {props.item.hasOwnProperty('type')?<Badge className="status-badge" variant="warning">
-              {props.item.type==='edit'?'Reconfiguration Pending':props.item.type==='create'?'Registration Pending':'Deregistration Pending'}
+              {props.item.type==='edit'?strings.badge_edit_pending:props.item.type==='create'?strings.badge_create_pending:strings.badge_delete_pending}
               </Badge>:null}
-            {props.item.comment?<Badge className="status-badge" variant="info">Changes Requested</Badge>:null}
+            {props.item.comment?<Badge className="status-badge" variant="info">{strings.badge_changes_requested}</Badge>:null}
           </div>
           <p>{props.item.service_description}</p>
         </div>
@@ -246,7 +249,7 @@ function TableItem(props) {
                   type:props.item.type
                 }
               }}>
-                <Button variant="secondary"><FontAwesomeIcon icon={faEye}/>View</Button>
+                <Button variant="secondary"><FontAwesomeIcon icon={faEye}/>{strings.button_view}</Button>
               </Link>
               {props.item.requester===props.user.sub?
                 <React.Fragment>
@@ -259,7 +262,7 @@ function TableItem(props) {
                     placement='top'
                     overlay={
                       <Tooltip id={`tooltip-top`}>
-                        {props.item.comment?'An admin has requested changes':props.item.state==='deployed'?'Click to Reconfigure':'Cannot be edited while waiting deployment'}
+                        {props.item.comment?strings.changes_notification:props.item.state==='deployed'?strings.edit_notification:strings.pending_notification}
                       </Tooltip>
                     }
                   >
@@ -275,7 +278,7 @@ function TableItem(props) {
                       comment:props.item.comment
                     }
                   }}>
-                  <Button variant="info" disabled={props.item.state==='deployed'||props.item.state===null?false:true}><FontAwesomeIcon icon={faEdit}/>Reconfigure</Button></Link>
+                  <Button variant="info" disabled={props.item.state==='deployed'||props.item.state===null?false:true}><FontAwesomeIcon icon={faEdit}/>{strings.button_reconfigure}</Button></Link>
                   </OverlayTrigger>
                 </React.Fragment>
               :null
@@ -290,7 +293,7 @@ function TableItem(props) {
                   type:props.item.type,
                   comment:props.item.comment
                 }
-              }}><Button variant="success"><FontAwesomeIcon icon={faEdit}/>Review</Button></Link>:null}
+              }}><Button variant="success"><FontAwesomeIcon icon={faEdit}/>{strings.button_review}</Button></Link>:null}
             </Col>
             <Col className='controls-col' md="auto">
             <DropdownButton
@@ -323,10 +326,10 @@ function TableItem(props) {
                           props.setConfirmationAction('service');
                         }
                       }else{
-                        props.setAlertMessage('Service cannot be deregistered until it is deployed');
+                        props.setAlertMessage(strings.delete_pending_alert);
                       }
                     }}>
-                      {props.item.type==='delete'?'Cancel Deregistration':'Deregister Service'}
+                      {props.item.type==='delete'?strings.options_cancel_delete:strings.options_cancel_delete}
                     </div>
                   </Dropdown.Item>
               :null}
@@ -337,7 +340,7 @@ function TableItem(props) {
                       props.setConfirmationAction('petition');
                       props.setCancelRequest(true);
                   }}>
-                    {props.item.type==='create'?'Cancel Registration':props.item.type==='edit'?'Cancel Reconfiguration':null}
+                    {props.item.type==='create'?strings.options_cancel_create:props.item.type==='edit'?strings.options_cancel_edit:null}
                   </div>
                 </Dropdown.Item>
                 :null
@@ -352,7 +355,7 @@ function TableItem(props) {
                   state:{
                     service_id:props.item.id
                   }
-                }}>View History</Link>
+                }}>{strings.options_history}</Link>
               </div>
               </Dropdown.Item>
 
@@ -386,12 +389,13 @@ function Alert(props){
 }
 
 function Confirmation(props){
+  const strings = useContext(StringsContext);
   const handleClose = () => props.setConfirmationId();
   return (
     <Modal show={props.confirmationId?true:false} onHide={handleClose}>
         <Modal.Header closeButton>
           <Modal.Title>
-              Are you sure sure you would like to {props.cancelRequest?'cancel the pending request for this service?':'deregister this service?'}
+              {strings.confirmation_title} {props.cancelRequest?strings.confirmation_cancel_request:strings.confirmation_delete}
           </Modal.Title>
         </Modal.Header>
         <Modal.Footer>
@@ -411,7 +415,7 @@ function Filters (props) {
   const [showPending,setShowPending] = useState(false);
   const [showOwned,setShowOwned] = useState(false);
   const [showEnvironment,setShowEnvironment] = useState();
-
+  const strings = useContext(StringsContext);
 
   useEffect(()=>{
     if(props.services.length>0){
@@ -446,17 +450,17 @@ function Filters (props) {
 
   return (
     <React.Fragment>
-      <SimpleCheckboxFilter name="Show Pending" setFilter={setShowPending} filterValue={showPending} />
-      {props.user.admin?<SimpleCheckboxFilter name="Show Owned By Me" setFilter={setShowOwned} filterValue={showOwned}/>:null}
+      <SimpleCheckboxFilter name={strings.pending_filter} setFilter={setShowPending} filterValue={showPending} />
+      {props.user.admin?<SimpleCheckboxFilter name={strings.owned_filter} setFilter={setShowOwned} filterValue={showOwned}/>:null}
 
       <div className='select-filter-container'>
           <select value={showEnvironment} onChange={(e)=>{
 
             setShowEnvironment(e.target.value);}}>
-            <option value=''>All Environments</option>
-            <option value='demo'>Demo</option>
-            <option value='production'>Production</option>
-            <option value='development'>Development</option>
+            <option value=''>{strings.all_environments_filter}</option>
+            <option value='demo'>{strings.demo_filter}</option>
+            <option value='production'>{strings.production_filter}</option>
+            <option value='development'>{strings.development_filter}</option>
           </select>
       </div>
     </React.Fragment>
