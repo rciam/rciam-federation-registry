@@ -1,22 +1,31 @@
 import React from 'react';
 import './App.css';
+import { withTranslation } from 'react-i18next';
 import MainPage from './MainPage.js';
-import LocalizedStrings from 'react-localization';
-import * as localise from './localise.json';
-import {StringsProvider} from './localContext';
-
-export default function App() {
-
-  let strings = new LocalizedStrings(localise.default);
-  strings.setLanguage("standard");
 
 
-  return (
 
-        <StringsProvider value={strings}>
-        <div className="App">
-          <MainPage/>
-        </div>
-      </StringsProvider>
-  );
+
+class  App extends React.Component {
+
+  constructor(props) {
+     super(props);
+     this.state = {
+         lang: "en"
+     }
+  }
+
+  onLanguageHandle = (newLang) => {
+    this.setState({lang: newLang})
+    this.props.i18n.changeLanguage(newLang)
+  }
+
+
+    render(){
+      return (
+        <MainPage lang={this.state.lang} changeLanguage={this.onLanguageHandle}/>
+      );
+    }
 }
+
+export default withTranslation()(App);

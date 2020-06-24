@@ -1,21 +1,20 @@
-import React,{useState,useEffect,useContext } from 'react';
+import React,{useState,useEffect} from 'react';
 import {BrowserRouter as Router} from "react-router-dom";
 import useGlobalState from './useGlobalState.js';
-import {Header,Footer} from './HeaderFooter.js';
+import {Header,Footer,NavbarTop} from './HeaderFooter.js';
 import Routes from './Router';
 import {SideNav} from './Components/SideNav.js';
 import * as config from './config.json';
-import StringsContext from './localContext';
+import { useTranslation } from 'react-i18next';
 
- const MainPage= (context,props)=> {
-      const strings = useContext(StringsContext);
+ const MainPage= (props)=> {
+      // eslint-disable-next-line
+      const { t, i18n } = useTranslation();
       const [user,setUser] = useState();
-
       const globalState = useGlobalState();
       const logged = globalState.global_state.log_state;
 
       useEffect(()=>{
-
         if(!logged){
           setUser(null);
         }
@@ -37,17 +36,20 @@ import StringsContext from './localContext';
 
       return(
         <React.Fragment>
-        <div className="main-container">
 
           <Header user={user}/>
-          <Router >
+          <NavbarTop user={user}/>
+          <div className="ssp-container main">
+          <Router>
             <div className="flex-container">
               {logged&&<SideNav/>}
-              <Routes user={user} strings={strings}/>
+              <Routes user={user} t={t} />
             </div>
           </Router>
-          <Footer/>
-        </div>
+          </div>
+
+        <Footer lang={props.lang} changeLanguage={props.changeLanguage}/>
+
 
         </React.Fragment>
       );

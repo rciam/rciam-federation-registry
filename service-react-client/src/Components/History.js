@@ -1,4 +1,4 @@
-import React,{useEffect,useState,useContext} from 'react';
+import React,{useEffect,useState} from 'react';
 import Badge from 'react-bootstrap/Badge';
 import * as config from '../config.json';
 import {LoadingBar,ProcessingRequest} from './LoadingBar';
@@ -11,7 +11,7 @@ import {Link} from "react-router-dom";
 import Alert from 'react-bootstrap/Alert';
 import Jumbotron from 'react-bootstrap/Jumbotron';
 import Container from 'react-bootstrap/Container';
-import StringsContext from '../localContext';
+import { useTranslation } from 'react-i18next';
 
 export const HistoryList = (props) => {
   const [loadingList,setLoadingList] = useState();
@@ -19,7 +19,8 @@ export const HistoryList = (props) => {
   const [asyncResponse,setAsyncResponse] = useState(false);
   const [petition,setPetition] = useState(null);
   const [stateProps,setstateProps] = useState();
-  const strings = useContext(StringsContext);
+  // eslint-disable-next-line
+  const { t, i18n } = useTranslation();
 
   useEffect(()=>{
     setLoadingList(true);
@@ -65,21 +66,21 @@ export const HistoryList = (props) => {
       {petition?
         <React.Fragment>
           <div className="links">
-            <Link to="/home">{strings.link_home}</Link>
+            <Link to="/home">{t('link_home')}</Link>
             <span className="link-seperator">/</span>
-            <Link to="/petitions">{strings.link_petitions}</Link>
+            <Link to="/petitions">{t('link_petitions')}</Link>
             <span className="link-seperator">/</span>
-            <span className="fake-link" onClick={()=>{setPetition(null);}}>{strings.history_title}</span>
+            <span className="fake-link" onClick={()=>{setPetition(null);}}>{t('history_title')}</span>
             <span className="link-seperator">/</span>
-            {strings.history_view_state}
+            {t('history_view_state')}
           </div>
           <Alert variant='warning' className='form-alert'>
-            {strings.history_info_1} {stateProps[0]==='create'?strings.registration:stateProps[0]==='edit'?strings.reconfiguration:strings.deregistration} {strings.history_info_2}{stateProps[1]==='approved'?strings.history_info_approved:stateProps[1]==='rejected'?strings.history_info_rejected:stateProps[1]==='pending'?strings.history_info_pending:strings.history_info_changes}.
+            {t('history_info_1')} {stateProps[0]==='create'?t('registration'):stateProps[0]==='edit'?t('reconfiguration'):t('deregistration')} {t('history_info_2')}{stateProps[1]==='approved'?t('history_info_approved'):stateProps[1]==='rejected'?t('history_info_rejected'):stateProps[1]==='pending'?t('history_info_pending'):t('history_info_changes')}.
           </Alert>
           {stateProps[2]?
             <Jumbotron fluid className="jumbotron-comment">
               <Container>
-                <h5>{strings.history_commend}</h5>
+                <h5>{t('history_commend')}</h5>
                 <p className="text-comment">
                   {stateProps[2]}
                 </p>
@@ -92,18 +93,18 @@ export const HistoryList = (props) => {
         :!loadingList?
         <React.Fragment>
           <div className="links">
-            <Link to="/home">{strings.link_home}</Link>
+            <Link to="/home">{t('link_home')}</Link>
             <span className="link-seperator">/</span>
-            <Link to="/petitions">{strings.history_title}</Link>
+            <Link to="/petitions">{t('history_title')}</Link>
             <span className="link-seperator">/</span>
-            {strings.history_title}
+            {t('history_title')}
           </div>
           <Table striped bordered hover className="history-table">
             <thead>
               <tr>
-                <td>{strings.history_td_date}</td>
-                <td>{strings.history_td_type}</td>
-                <td>{strings.history_td_status}</td>
+                <td>{t('history_td_date')}</td>
+                <td>{t('history_td_type')}</td>
+                <td>{t('history_td_status')}</td>
                 <td></td>
               </tr>
             </thead>
@@ -111,8 +112,8 @@ export const HistoryList = (props) => {
               {historyList?historyList.map((item,index)=>{
                 return(
                 <tr key={index}>
-                  <td>{item.reviewed_at?item.reviewed_at.slice(0,10).split('-').join('/'):strings.history_not_reviewed}</td>
-                  <td><Badge className="status-badge" variant='info'>{item.type==="create"?strings.registration:item.type==="edit"?strings.reconfiguration:strings.deregistration} {strings.history_info_2}</Badge></td>
+                  <td>{item.reviewed_at?item.reviewed_at.slice(0,10).split('-').join('/'):t('history_not_reviewed')}</td>
+                  <td><Badge className="status-badge" variant='info'>{item.type==="create"?t('registration'):item.type==="edit"?t('reconfiguration'):t('deregistration')} {t('history_info_2')}</Badge></td>
                   <td><Badge className="status-badge" variant={item.status==="pending"?'warning':item.status==="reject"?'danger':'success'}>{item.status}</Badge></td>
                   <td>
                       <Button variant="secondary" onClick={()=>{

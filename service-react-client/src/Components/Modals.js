@@ -1,27 +1,28 @@
-import React,{useContext} from 'react';
+import React from 'react';
 import Modal from 'react-bootstrap/Modal';
 import {useHistory} from "react-router-dom";
 import Button from 'react-bootstrap/Button';
-import StringsContext from '../localContext';
+import { useTranslation } from 'react-i18next';
+import { Translation } from 'react-i18next';
 
 export class SimpleModal extends React.Component {
 
   constructor(props){
     super(props);
     this.state = {active:false,
-      strings:useContext(StringsContext)
+      strings:null
     }
   }
 
   componentDidUpdate(prevProps) {
    // if form was submitting, but now is not submitting because it is invalid
-   if (prevProps.isSubmitting && !this.props.isSubmitting && !this.props.isValid) {
+    if (prevProps.isSubmitting && !this.props.isSubmitting && !this.props.isValid) {
       // and assume you've added refs to each input: `ref={ i => this[name] = i}` , then...
       this.setState({active:true});
       // or do other imperative stuff that DOES NOT SET STATE
       // smoothScroll(Object.keys(this.props.errors)[0].<offsetY | or whatever>)
+    }
   }
-}
 
   render(){
     const active=this.state.active;
@@ -30,24 +31,33 @@ export class SimpleModal extends React.Component {
     }
 
 
-  return (
-      <Modal show={active} onHide={handleClose}>
-         <Modal.Header >
-           <Modal.Title>{this.state.strings.modal_field_error}</Modal.Title>
-         </Modal.Header>
-         <Modal.Footer>
-           <Button variant="secondary" onClick={handleClose}>
-             {this.state.strings.modal_close}
-           </Button>
-         </Modal.Footer>
-      </Modal>
-  )}
+    return (
+      <Translation>
+        {t=> {
+          return(
+            <Modal show={active} onHide={handleClose}>
+              <Modal.Header >
+                <Modal.Title>{t('modal_field_error')}</Modal.Title>
+              </Modal.Header>
+              <Modal.Footer>
+                <Button variant="secondary" onClick={handleClose}>
+                  {t('modal_close')}
+                </Button>
+              </Modal.Footer>
+            </Modal>
+          )
+        }}
+      </Translation>
+    )
+  }
 }
 
 
 
+
 export function ResponseModal(props){
-  const strings = useContext(StringsContext);
+  // eslint-disable-next-line
+  const { t, i18n } = useTranslation();
   let history = useHistory();
 
   //const handleClose = () => props.setMessage();
@@ -65,7 +75,7 @@ export function ResponseModal(props){
         <Modal.Footer>
 
           <Button variant="secondary" onClick={handleClose}>
-            {strings.modal_continue}
+            {t('modal_continue')}
           </Button>
 
         </Modal.Footer>
@@ -74,10 +84,10 @@ export function ResponseModal(props){
 }
 export function ListResponseModal(props){
 
-
-    const strings = useContext(StringsContext);
-
+  // eslint-disable-next-line
+  const { t, i18n } = useTranslation();
   const handleClose = () => props.setMessage();
+  
   return (
     <Modal show={props.message?true:false} onHide={handleClose}>
         <Modal.Header closeButton>
@@ -91,7 +101,7 @@ export function ListResponseModal(props){
         <Modal.Footer>
 
           <Button variant="secondary" onClick={handleClose}>
-            {strings.modal_continue}
+            {t('modal_continue')}
           </Button>
 
         </Modal.Footer>

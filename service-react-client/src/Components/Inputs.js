@@ -1,4 +1,4 @@
-import React, {useState, useRef ,useEffect,useContext} from 'react';
+import React, {useState, useRef ,useEffect} from 'react';
 import Col from 'react-bootstrap/Col';
 import { Field, FieldArray,FormikConsumer } from 'formik';
 import Form from 'react-bootstrap/Form';
@@ -9,7 +9,7 @@ import Table from 'react-bootstrap/Table';
 import Tooltip from 'react-bootstrap/Tooltip';
 import Overlay from 'react-bootstrap/Overlay';
 import * as formConfig from '../form-config.json';
-import StringsContext from '../localContext';
+import { useTranslation } from 'react-i18next';
 /*
 const [show, setShow] = useState(false);
 const target = useRef(null);
@@ -253,7 +253,8 @@ export function CheckboxList(props){
 export function RefreshToken(props){
     const [show, setShow] = useState(false);
     const target = useRef(null);
-    const strings = useContext(StringsContext);
+    // eslint-disable-next-line
+    const { t, i18n } = useTranslation();
     return(
       <React.Fragment>
         <div
@@ -263,18 +264,18 @@ export function RefreshToken(props){
           onMouseOut={()=>setShow(false)}
           >
           <Checkbox name="scope" disabled={props.disabled} checked={props.values.scope.includes('offline_access')} value='offline_access'/>
-            {strings.form_reuse_refresh_tokens_scope}
+            {t('form_reuse_refresh_tokens_scope')}
           <MyOverLay show={props.changed&&(props.changed.scope.D.includes('offline_access')||props.changed.scope.N.includes('offline_access'))&&show} type='Edited' target={target}/>
         </div>
         <Form.Text className="text-muted text-left label-checkbox" id="uri-small-desc">
-          {strings.form_offline_acces_desc}
+          {t('form_offline_acces_desc')}
         </Form.Text>
         {props.values.scope.includes('offline_access')?(
           <React.Fragment>
             <div className={"checkbox-item "+(props.changed&&props.changed.reuse_refresh_tokens?"spacing-bot":'')}>
               <SimpleCheckbox
                 name="reuse_refresh_tokens"
-                label={strings.form_reuse_refresh_tokens}
+                label={t('form_reuse_refresh_tokens')}
                 changed={props.changed?props.changed.reuse_refresh_tokens:null}
                 checked={props.values.reuse_refresh_tokens}
                 disabled={props.disabled}
@@ -285,7 +286,7 @@ export function RefreshToken(props){
             <div className={"checkbox-item "+(props.changed&&props.changed.reuse_refresh_tokens?"spacing-bot":'')}>
             <SimpleCheckbox
               name="clear_access_tokens_on_refresh"
-              label={strings.form_clear_access_tokens_on_refresh}
+              label={t('form_clear_access_tokens_on_refresh')}
               checked={props.values.clear_access_tokens_on_refresh}
               changed={props.changed?props.changed.clear_access_tokens_on_refresh:null}
               onChange={props.onChange}
@@ -304,7 +305,7 @@ export function RefreshToken(props){
               changed={props.changed?props.changed.refresh_token_validity_seconds:null}
             />
             <Form.Text className="text-muted text-left label-checkbox" id="uri-small-desc">
-              {strings.form_refresh_token_validity_seconds_desc}
+              {t('form_refresh_token_validity_seconds_desc')}
             </Form.Text>
           </React.Fragment>
           ):null}
@@ -324,7 +325,8 @@ onMouseOut={()=>setShow(false)}
 export function DeviceCode(props){
   const [show, setShow] = useState(false);
   const target = useRef(null);
-  const strings = useContext(StringsContext);
+  // eslint-disable-next-line
+  const { t, i18n } = useTranslation();
   return(
     <React.Fragment>
       <div
@@ -334,11 +336,11 @@ export function DeviceCode(props){
         onMouseOut={()=>setShow(false)}
       >
         <Checkbox name="grant_types" disabled={props.disabled} value='device'/>
-          {strings.form_device_code_desc}
+          {t('form_device_code_desc')}
         <MyOverLay show={(props.changed&&(props.changed.grant_types.D.includes('device')||props.changed.grant_types.N.includes('device'))?'input-edited checkbox-item-edited':'')&&show} type='Edited' target={target}/>
       </div>
       <Form.Text className="text-muted text-left label-checkbox" id="uri-small-desc">
-      {strings.form_device_code_info}
+      {t('form_device_code_info')}
       </Form.Text>
       {props.values.grant_types.includes('device')?(
         <React.Fragment>
@@ -352,7 +354,7 @@ export function DeviceCode(props){
             changed={props.changed?props.changed.device_code_validity_seconds:null}
           />
           <Form.Text className="text-muted text-left label-checkbox" id="uri-small-desc">
-           {strings.form_device_code_validity_seconds_desc}
+           {t('form_device_code_validity_seconds_desc')}
           </Form.Text>
         </React.Fragment>
         ):null}
@@ -372,7 +374,8 @@ export function ClientSecret(props){
   const [editSecret,toggleEditSecret] = useState(true);
   const [show, setShow] = useState(false);
   const target = useRef(null);
-  const strings = useContext(StringsContext);
+  // eslint-disable-next-line
+  const { t, i18n } = useTranslation();
   return(
     <React.Fragment>
       {!props.disabled?
@@ -386,7 +389,7 @@ export function ClientSecret(props){
             disabled={props.disabled}
           />
           <Form.Text className="text-muted text-left label-checkbox" id="uri-small-desc">
-            {strings.imput_client_secret_info}
+            {t('imput_client_secret_info')}
           </Form.Text>
         </React.Fragment>
         :null}
@@ -397,12 +400,12 @@ export function ClientSecret(props){
            type="text"
            name="client_secret"
            className='col-form-label-sm'
-           value={strings.input_generate}
+           value={t('input_generate')}
            disabled={true}
          />):(
          <React.Fragment>
            <Form.Check
-             label={strings.input_display_secret}
+             label={t('input_display_secret')}
              checked={!editSecret}
              onChange={()=>{toggleEditSecret(!editSecret)}}
              className="checkbox col-form-label"
@@ -639,7 +642,8 @@ function ListInputArrayInput2(props){
 export  function LogoInput(props){
   const [show, setShow] = useState(false);
   const target = useRef(null);
-  const strings = useContext(StringsContext);
+  // eslint-disable-next-line
+  const { t, i18n } = useTranslation();
   const addDefaultSrc= (ev)=>{
       props.setImageError(false);
       ev.target.src = process.env.PUBLIC_URL + '/logo_placeholder.gif';
@@ -670,7 +674,7 @@ export  function LogoInput(props){
         {props.description}
       </Form.Text>
       <MyOverLay show={props.changed&&show?'string':null} type='Edited' target={target}/>
-      {props.error && props.touched ? (typeof(props.error)=='string')?(<div className="error-message">{props.error}</div>):(<div className="error-message">{strings.input_image_error}</div>):null}
+      {props.error && props.touched ? (typeof(props.error)=='string')?(<div className="error-message">{props.error}</div>):(<div className="error-message">{t('input_image_error')}</div>):null}
       <FormikConsumer>
         {({ validationSchema, validate, onSubmit, ...rest }) => (
           <pre
@@ -690,7 +694,8 @@ export  function LogoInput(props){
 }
 
 function MyOverLay(props) {
-  const strings = useContext(StringsContext);
+  // eslint-disable-next-line
+  const { t, i18n } = useTranslation();
   const [show,setShow] = useState(false);
   useEffect(()=>{
     if(props.show){
@@ -705,7 +710,7 @@ function MyOverLay(props) {
     <Overlay target={props.target.current}  show={show} placement="right">
       {propsOv => (
         <Tooltip id="overlay-example" placement={propsOv.placement} arrowProps={propsOv.arrowProps} ref={propsOv.ref} style={propsOv.style} outOfBoundaries={propsOv.outOfBoundaries} >
-          {props.type==="Added"?strings.input_added:props.type==="Deleted"?strings.input_deleted:props.type==="Edited"?strings.input_edited:null}
+          {props.type==="Added"?t('input_added'):props.type==="Deleted"?t('input_deleted'):props.type==="Edited"?t('input_edited'):null}
         </Tooltip>
 
       )}
@@ -756,7 +761,8 @@ function ListSingleInput(props){
 
 export function ListInput(props){
   const [newVal,setNewVal] = useState('');
-  const strings = useContext(StringsContext);
+  // eslint-disable-next-line
+  const { t, i18n } = useTranslation();
   return (
         <FieldArray name={props.name}>
           {({push,remove,insert})=>(
@@ -783,7 +789,7 @@ export function ListInput(props){
                       setNewVal('');
                     }}
                   >
-                    {strings.input_add_button}
+                    {t('input_add_button')}
                   </Button>
                 </InputGroup.Prepend>
                 </InputGroup>:null}
@@ -820,7 +826,8 @@ export function Contacts(props){
 
   const [newVal,setNewVal] = useState('');
   const [newVal2,setNewVal2] = useState('admin');
-  const strings = useContext(StringsContext);
+  // eslint-disable-next-line
+  const { t, i18n } = useTranslation();
   return (
         <FieldArray name={props.name}>
           {({push,remove,insert})=>(
@@ -859,7 +866,7 @@ export function Contacts(props){
                           setNewVal2('admin');
                         }}
                       >
-                        {strings.input_add_button}
+                        {t('input_add_button')}
                       </Button>
                     </InputGroup.Prepend>
                   </InputGroup>
@@ -891,7 +898,8 @@ function ContactInput(props){
   const [show, setShow] = useState(false);
   const target = useRef(null);
   const [type,setType] = useState();
-  const strings = useContext(StringsContext);
+  // eslint-disable-next-line
+  const { t, i18n } = useTranslation();
 
   useEffect(()=>{
     if(props.changed){
@@ -957,7 +965,7 @@ function ContactInput(props){
       {!props.disabled?
         <React.Fragment>
           <InputGroup.Prepend>
-            <Button disabled={props.disabled} variant="outline-danger" onClick={()=>{props.remove(props.index)}}>{strings.input_remove_button}</Button>
+            <Button disabled={props.disabled} variant="outline-danger" onClick={()=>{props.remove(props.index)}}>{t('input_remove_button')}</Button>
           </InputGroup.Prepend>
         </React.Fragment>
         :null}

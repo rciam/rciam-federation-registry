@@ -1,16 +1,17 @@
-import React,{useContext} from 'react';
+import React from 'react';
 import Nav from 'react-bootstrap/Nav';
 import {Link} from "react-router-dom";
-import StringsContext from '../localContext'
+import { useTranslation } from 'react-i18next';
 
 export const SideNav = () => {
-  const strings = useContext(StringsContext);
+  // eslint-disable-next-line
+  const { t, i18n } = useTranslation();
 
   return (
     <Nav defaultActiveKey="/home" className="flex-column nav-side">
-      <div className="nav-title">{strings.nav_title}</div>
-      <Link to="/petitions">{strings.nav_link_petitions}</Link>
-      <Link to="/userinfo">{strings.nav_link_userinfo}</Link>
+      <div className="nav-title">{t('nav_title')}</div>
+      <Link to="/petitions">{t('nav_link_petitions')}</Link>
+      <Link to="/userinfo">{t('nav_link_userinfo')}</Link>
     </Nav>
   )
 }

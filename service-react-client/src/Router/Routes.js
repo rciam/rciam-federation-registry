@@ -7,6 +7,8 @@ import useGlobalState from '../useGlobalState.js';
 import UserInfo from '../Components/UserInfo.js';
 import {HistoryList} from '../Components/History.js'
 
+
+
 const Routes = (props) => (
 
   <div className="content-container">
@@ -17,7 +19,7 @@ const Routes = (props) => (
       </Route>
       <PrivateRoute user={props.user} path="/petitions">
         <div className="links">
-          <Link to="/home">{props.strings.link_home}</Link>
+          <Link to="/home">{props.t('link_home')}</Link>
           <span className="link-seperator">/</span>
           Manage Services
         </div>
@@ -25,7 +27,7 @@ const Routes = (props) => (
       </PrivateRoute>
       <PrivateRoute user={props.user} path="/userinfo">
         <div className="links">
-          <Link to="/home">{props.strings.link_home}</Link>
+          <Link to="/home">{props.t('link_home')}</Link>
           <span className="link-seperator">/</span>
            View User Profile
         </div>
@@ -33,9 +35,9 @@ const Routes = (props) => (
       </PrivateRoute>
       <PrivateRoute user={props.user} path="/form/new">
         <div className="links">
-          <Link to="/home">{props.strings.link_home}</Link>
+          <Link to="/home">{props.t('link_home')}</Link>
           <span className="link-seperator">/</span>
-          <Link to="/petitions">{props.strings.link_petitions}</Link>
+          <Link to="/petitions">{props.t('link_petitions')}</Link>
           <span className="link-seperator">/</span>
           New Service
         </div>
@@ -43,9 +45,9 @@ const Routes = (props) => (
       </PrivateRoute>
       <RouteWithState user={props.user} path="/form/edit">
         <div className="links">
-          <Link to="/home">{props.strings.link_home}</Link>
+          <Link to="/home">{props.t('link_home')}</Link>
           <span className="link-seperator">/</span>
-          <Link to="/petitions">{props.strings.link_petitions}</Link>
+          <Link to="/petitions">{props.t('link_petitions')}</Link>
           <span className="link-seperator">/</span>
           Edit Service
         </div>
@@ -60,9 +62,9 @@ const Routes = (props) => (
       <RouteWithState user={props.user} path="/form/review">
         <AdminRoute path="/form/review" user={props.user}>
           <div className="links">
-            <Link to="/home">{props.strings.link_home}</Link>
+            <Link to="/home">{props.t('link_home')}</Link>
             <span className="link-seperator">/</span>
-            <Link to="/petitions">{props.strings.link_petitions}</Link>
+            <Link to="/petitions">{props.t('link_petitions')}</Link>
             <span className="link-seperator">/</span>
             Review
           </div>
@@ -71,9 +73,9 @@ const Routes = (props) => (
       </RouteWithState>
       <RouteWithState user={props.user} path="/form/view">
           <div className="links">
-            <Link to="/home">{props.strings.link_home}</Link>
+            <Link to="/home">{props.t('link_home')}</Link>
             <span className="link-seperator">/</span>
-            <Link to="/petitions">{props.strings.link_petitions}</Link>
+            <Link to="/petitions">{props.t('link_petitions')}</Link>
             <span className="link-seperator">/</span>
             View Service
           </div>

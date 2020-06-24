@@ -1,17 +1,5 @@
 {
-  "en":{
-    "how":"How do you want your egg today?",
-    "boiledEgg":"Boiled egg",
-    "softBoiledEgg":"Soft-boiled egg",
-    "choice":"How to choose the egg"
-  },
-  "it": {
-    "how":"Come vuoi il tuo uovo oggi?",
-    "boiledEgg":"Uovo sodo",
-    "softBoiledEgg":"Uovo alla coque",
-    "choice":"Come scegliere l'uovo"
-  },
-  "standard":{
+  "translations":{
     "main_title":"EGI AAI OpenID Connect Provider",
     "footer_logo_uri":"https://aai-dev.egi.eu/oidc/resources/images/grnet_logo_en.svg",
     "footer_flag_uri":"https://aai-dev.egi.eu/oidc/resources/images/eu.svg",
@@ -213,7 +201,5 @@
     "history_not_reviewed":"Not yet reviewed",
     "history_td_type":"Type of Request",
     "history_td_status":"Review Status"
-
-
   }
 }

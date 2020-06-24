@@ -1,11 +1,13 @@
-import React,{useEffect,useContext} from 'react';
+import React,{useEffect} from 'react';
 import useGlobalState from './useGlobalState.js';
 import * as config from './config.json';
-import StringsContext from './localContext';
+import { useTranslation } from 'react-i18next';
 
 const Home = ()=> {
+  // eslint-disable-next-line
+  const { t, i18n } = useTranslation();
   const globalState = useGlobalState();
-  const strings = useContext(StringsContext);
+
 
   useEffect(()=>{
     getAuth();
@@ -21,7 +23,9 @@ const Home = ()=> {
       }
     }).then(response=>response.json()).then(response => {
       const new_state = {
-        log_state:response.auth
+        tenant:'vanilla',
+        log_state:response.auth,
+
       };
       globalState.setLogState(new_state);
     });
@@ -29,8 +33,8 @@ const Home = ()=> {
 
   return (
       <div className="home-container">
-        <h1>{strings.main_greeting}</h1>
-        <p>{strings.main_description}</p>
+        <h1>{t('main_greeting')}</h1>
+        <p>{t('main_description')}</p>
       </div>
   )
 }

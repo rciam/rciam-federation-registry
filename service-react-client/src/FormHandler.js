@@ -1,26 +1,24 @@
-import React,{useEffect,useState,useContext} from 'react';
+import React,{useEffect,useState} from 'react';
 import initialValues from './initialValues';
 import * as config from './config.json';
-//import {useParams} from "react-router-dom";
 import ServiceForm from "./ServiceForm.js";
-//import {FormAlert} from "./Components/FormAlert.js";
 import {LoadingBar} from './Components/LoadingBar';
 import Tabs from 'react-bootstrap/Tabs';
 import Tab from 'react-bootstrap/Tab';
 import Alert from 'react-bootstrap/Alert';
-//import Form from 'react-bootstrap/Form';
 import Jumbotron from 'react-bootstrap/Jumbotron';
 import Container from 'react-bootstrap/Container';
 import { diff } from 'deep-diff';
-import StringsContext from './localContext'
-
+import { useTranslation } from 'react-i18next';
 
 const EditService = (props) => {
+    // eslint-disable-next-line
+    const { t, i18n } = useTranslation();
     const [petition,setPetition] = useState();
     const [service,setService] = useState();
     const [editPetition,setEditPetition] = useState();
     const [changes,setChanges] = useState();
-    const strings = useContext(StringsContext);
+
     useEffect(()=>{
       getData();
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -121,7 +119,7 @@ const EditService = (props) => {
       {props.type==='edit'?
         <React.Fragment>
           <Alert variant='warning' className='form-alert'>
-            {strings.reconfiguration_info}
+            {t('reconfiguration_info')}
           </Alert>
           {editPetition&&changes?<ServiceForm initialValues={editPetition} changes={changes} {...props}/>:<LoadingBar loading={true}/>}
         </React.Fragment>
@@ -129,14 +127,14 @@ const EditService = (props) => {
       :props.type==='create'?
         <React.Fragment>
           <Alert variant='warning' className='form-alert'>
-            {strings.edit_create_info}
+            {t('edit_create_info')}
           </Alert>
           {petition?<ServiceForm initialValues={petition} {...props}/>:<LoadingBar loading={true}/>}
         </React.Fragment>
       :
         <React.Fragment>
           <Alert variant='warning' className='form-alert'>
-            {strings.edit_delete_info}
+            {t('edit_delete_info')}
           </Alert>
           {service?<ServiceForm initialValues={service} {...props} />:<LoadingBar loading={true}/>}
         </React.Fragment>
@@ -153,7 +151,7 @@ const EditService = (props) => {
           {props.comment?
             <React.Fragment>
               <Alert variant='warning' className='form-alert'>
-                {strings.edit_changes_info}
+                {t('edit_changes_info')}
               </Alert>
               <Jumbotron fluid className="jumbotron-comment">
                 <Container>
@@ -166,7 +164,7 @@ const EditService = (props) => {
             </React.Fragment>
           :props.type?
               <Alert variant='warning' className='form-alert'>
-              {strings.edit_create_pending_info}
+              {t('edit_create_pending_info')}
               </Alert>
           :null
           }
@@ -185,9 +183,11 @@ const EditService = (props) => {
 
 
 const ViewService = (props)=>{
+  // eslint-disable-next-line
+  const { t, i18n } = useTranslation();
   const [service,setService] = useState();
   const [petition,setPetition] = useState();
-  const strings = useContext(StringsContext);
+
   useEffect(()=>{
 
     getData();
@@ -231,7 +231,7 @@ const ViewService = (props)=>{
         <React.Fragment>
 
           <Alert variant='danger' className='form-alert'>
-            {strings.view_create_info}
+            {t('view_create_info')}
           </Alert>
           <ServiceForm initialValues={petition} disabled={true}/>
         </React.Fragment>
@@ -243,7 +243,9 @@ const ViewService = (props)=>{
 
 
 const RequestedChangesAlert = (props) => {
-  const strings = useContext(StringsContext);
+  // eslint-disable-next-line
+  const { t, i18n } = useTranslation();
+
   return(
     <React.Fragment>
       <Tabs className="edit-tabs" defaultActiveKey="petition" id="uncontrolled-tab-example">
@@ -251,11 +253,11 @@ const RequestedChangesAlert = (props) => {
           {props.comment?
             <React.Fragment>
               <Alert variant='warning' className='form-alert'>
-                {strings.changes_info_1_1}{props.type}{strings.changes_info_1_2}
+                {t('changes_info_1_1')}{props.type}{t('changes_info_1_2')}
               </Alert>
               <Jumbotron fluid className="jumbotron-comment">
                 <Container>
-                  <h5>{strings.changes_title}</h5>
+                  <h5>{t('changes_title')}</h5>
                   <p className="text-comment">
                     {props.comment}
                   </p>
@@ -264,7 +266,7 @@ const RequestedChangesAlert = (props) => {
             </React.Fragment>
           :props.type?
               <Alert variant='warning' className='form-alert'>
-              {strings.changes_info_2_1} {props.type==='delete'?'deregistration':props.type==='edit'?'reconfiguration':'registration'} {strings.changes_info_2_2}
+              {t('changes_info_2_1')} {props.type==='delete'?'deregistration':props.type==='edit'?'reconfiguration':'registration'} {t('changes_info_2_2')}
               </Alert>
           :null
           }

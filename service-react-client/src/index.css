@@ -15,6 +15,9 @@ html {
   scroll-behavior: smooth;
 
 }
+#root {
+  display:flex;
+}
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
@@ -25,14 +28,18 @@ code {
 
 /* Main Page */
 .main-container {
-  margin: 0 1em;
+
 
 }
 
 .flex-container {
   display:flex;
-
+  margin: 0 2em;
 }
+/* Template */
+
+
+
 
 /* Home Page */
 
@@ -660,6 +667,8 @@ form {
 
 .content-container {
   width:100%;
+  margin:auto;
+  max-width:1600px;
   overflow: hidden;
 }
 
