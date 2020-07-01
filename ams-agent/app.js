@@ -17,8 +17,8 @@ var intervalID;
 function run() {
   let messages = [];
   axios.get(process.env.EXPRESS+'/pending',options)
-  .then(function (response) {
-    // handle success
+  .then(function (response) {  
+	// handle success
     let updateData = [];
     if(response.data.services){
       response.data.services.forEach((service) => {
