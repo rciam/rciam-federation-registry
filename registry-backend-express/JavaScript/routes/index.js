@@ -36,6 +36,11 @@ const tables = ['service_oidc_scopes','service_oidc_grant_types','service_oidc_r
 //   }
 // })
 
+router.get('/test',(req,res,next)=>{
+	console.log('we have request');
+	res.send('hello im burp22');
+})
+
 router.get('/auth/mock',checkTest, passport.authenticate('my-mock'));
 // Login Route
 
@@ -72,7 +77,7 @@ router.get('/callback', passport.authenticate('oidc', {
 
 // ams push subscription for deployment results
 // needs Authentication
-router.post('/deployed',(req,res,next)=>{
+router.post('/service/state',(req,res,next)=>{
   let updateData=[];
   let ids=[];
   req.body.messages.forEach((message) => {
@@ -80,7 +85,7 @@ router.post('/deployed',(req,res,next)=>{
     updateData.push(decoded_message);
     ids.push(decoded_message.id);
   });
-  return db.task('setDeployment', async t => {
+  return db.task('deploymentResults', async t => {
     await t.service_state.updateMultiple(updateData).then(async result=>{
       if(result.success){
         res.sendStatus(200).end();
@@ -107,7 +112,7 @@ router.post('/deployed',(req,res,next)=>{
 router.get('/ams_verification_hash',(req,res)=>{
   console.log('ams verification');
   res.setHeader('Content-type', 'plain/text');
-  res.status(200).send('54e943121a923d3d32d8728d1a0878e7915dbfb4');
+  res.status(200).send('67647c730ced41b9c60ad4da4c06170bf3f1d3c9');
 })
 
 // ams-agent requests to set state to waiting development
