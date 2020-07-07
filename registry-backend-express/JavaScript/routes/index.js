@@ -56,7 +56,7 @@ router.get('/logout',checkAuthentication,(req,res)=>{
 
 // Check Authentication
 router.get('/auth',checkAuthentication,(req,res)=>{
-  res.json({auth:true});
+  res.status(200).end();
 });
 
 // Get User User Info
@@ -521,7 +521,7 @@ router.get('/availability/:protocol/:id',checkAuthentication,(req,res,next)=>{
 // Authentication Middleware
 function checkAuthentication(req,res,next){
   if(req.isAuthenticated()){next();}
-  else{res.json({auth:false});}
+  else{res.status(401).end();}
 }
 // bZwolIWwWH9AzCjKB60dLCG6bYCCVinx
 function amsAgentAuth(req,res,next){

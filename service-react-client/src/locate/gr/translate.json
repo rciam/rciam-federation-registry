@@ -6,7 +6,7 @@
     "terms_uri":"https://aai.egi.eu/ToU.html",
     "privacy_uri":"https://aai.egi.eu/privacy.html",
     "main_greeting":"Hello Greek",
-    "main_description":"OpenID Connect (OIDC) is an identity protocol built on top of the OAuth2 authorization framework. Service Providers can connect to the EGI AAI using OIDC as an alternative to the SAML2 protocol.",
+    "main_description":"The EGI CheckIn Service provides a secure web interface through which service operators can register their OpenID Connect and SAML based services.",
     "login":"Login",
     "logout":"Logout",
     "reconfiguration_info":"This is a reconfiguration request, changes are highlighted bellow.",

@@ -408,7 +408,7 @@ code {
 }
 
 .comment-input {
-  margin:0 0.5rem;
+  margin:0 1rem;
 }
 textarea {
   resize: none!important;
@@ -668,6 +668,7 @@ form {
 .content-container {
   width:100%;
   margin:auto;
+  margin-top:0;
   max-width:1600px;
   overflow: hidden;
 }

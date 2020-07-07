@@ -21,12 +21,20 @@ const Home = ()=> {
       headers:{
         'Content-Type': 'application/json'
       }
-    }).then(response=>response.json()).then(response => {
-      const new_state = {
-        tenant:'vanilla',
-        log_state:response.auth,
-
-      };
+    }).then(response => {
+      let new_state;
+      if(response.status===200){
+        new_state = {
+          tenant:'vanilla',
+          log_state:true
+        };
+      }
+      else {
+        new_state = {
+          tenant:'vanilla',
+          log_state:false
+        };
+      }
       globalState.setLogState(new_state);
     });
   }

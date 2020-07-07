@@ -407,7 +407,7 @@ const ServiceForm = (props)=> {
 
 
                 {props.disabled?null:
-                  <div className="form-controls-container container">
+                  <div className="form-controls-container">
                     {props.review?
                       <ReviewComponent petition_id={props.petition_id} setAdminComment={setAdminComment} adminComment={adminComment} reviewPetition={reviewPetition}/>
                       :
