@@ -9,7 +9,7 @@ import {ProcessingRequest} from './Components/LoadingBar';
 import Col from 'react-bootstrap/Col';
 import Collapse from 'react-bootstrap/Collapse';
 import { diff } from 'deep-diff';
-import {Debug} from './Components/Debug.js';
+//import {Debug} from './Components/Debug.js';
 import {SimpleModal,ResponseModal} from './Components/Modals.js';
 import Form from 'react-bootstrap/Form';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -712,7 +712,7 @@ const ServiceForm = (props)=> {
 
 
 
-        <Debug/>
+
       </div>
       )}
     </Formik>

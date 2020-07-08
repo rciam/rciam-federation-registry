@@ -21,7 +21,7 @@ const Routes = (props) => (
         <div className="links">
           <Link to="/home">{props.t('link_home')}</Link>
           <span className="link-seperator">/</span>
-          Manage Services
+          {props.t('link_petitions')}
         </div>
         <ServiceList user={props.user}/>
       </PrivateRoute>

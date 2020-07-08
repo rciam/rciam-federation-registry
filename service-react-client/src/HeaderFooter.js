@@ -1,6 +1,6 @@
-import React from 'react';
+import React,{useState,useEffect} from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {faUser, faSignOutAlt} from '@fortawesome/free-solid-svg-icons';
+import {faUser,faUserShield, faSignOutAlt} from '@fortawesome/free-solid-svg-icons';
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import Image from 'react-bootstrap/Image';
@@ -39,7 +39,20 @@ export const NavbarTop = (props)=>{
   const globalState = useGlobalState();
   const logged = globalState.global_state.log_state;
   const tenant = tenant_data.data[globalState.global_state.tenant];
+  const [admin,setAdmin] = useState(false);
+  useEffect(()=>{
+    let admin = false;
 
+    if(props.user&&props.user.eduperson_entitlement){
+      ["urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu"].forEach((item)=>{
+        if(props.user.eduperson_entitlement.includes(item)){
+          admin = true;
+        }
+      })
+    }
+    setAdmin(admin);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[props.user]);
   return (
     <Navbar className="navbar-fixed-top">
       <Navbar.Collapse className="justify-content-end">
@@ -51,7 +64,7 @@ export const NavbarTop = (props)=>{
           title={<React.Fragment>
             <span style={{color:tenant.color}}>
             {props.user?props.user.name:'login'}
-            <FontAwesomeIcon icon={faUser}/>
+            <FontAwesomeIcon icon={admin?faUserShield:faUser}/>
             </span>
           </React.Fragment>}
           id="dropdown-menu-align-right"

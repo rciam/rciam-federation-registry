@@ -25,13 +25,13 @@ const Home = ()=> {
       let new_state;
       if(response.status===200){
         new_state = {
-          tenant:'vanilla',
+          tenant:'EGI',
           log_state:true
         };
       }
       else {
         new_state = {
-          tenant:'vanilla',
+          tenant:'EGI',
           log_state:false
         };
       }

@@ -51,7 +51,7 @@ const ServiceList= (props)=> {
   },[]);
 
   let items = [];
-  let itemsPerPage = 2;
+  let itemsPerPage = 5;
   // issue here displaying less
   if(services){
     for (let number = 1; number <= Math.ceil(displayedServices/itemsPerPage) ; number++) {
@@ -84,6 +84,7 @@ const ServiceList= (props)=> {
             response.services[index].display = true;
           })
         setServices(response.services);
+
       }
     });
   }
@@ -220,7 +221,7 @@ function TableItem(props) {
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   const globalState = useGlobalState();
-
+  console.log(props.item.state);
   let tenant = tenant_data.data[globalState.global_state.tenant];
   return (
     <tr>
@@ -286,7 +287,7 @@ function TableItem(props) {
                       comment:props.item.comment
                     }
                   }}>
-                  <Button variant="info" style={{background:tenant.color}} disabled={props.item.state==='deployed'||props.item.state===null?false:true}><FontAwesomeIcon icon={faEdit}/>{t('button_reconfigure')}</Button></Link>
+                  <Button variant="info" style={{background:tenant.color}} disabled={props.item.state==='deployed'||!props.item.state?false:true}><FontAwesomeIcon icon={faEdit}/>{t('button_reconfigure')}</Button></Link>
                   </OverlayTrigger>
                 </React.Fragment>
               :null
@@ -315,7 +316,7 @@ function TableItem(props) {
               </React.Fragment>}
               id="dropdown-menu-align-right"
             >
-            {props.item.requester===props.user.sub?
+            {props.item.requester===props.user.sub && props.item.state==='deployed'?
               <React.Fragment>
                 {props.item.type!=='create'?
                   <Dropdown.Item>
@@ -337,7 +338,7 @@ function TableItem(props) {
                         props.setAlertMessage(t('delete_pending_alert'));
                       }
                     }}>
-                      {props.item.type==='delete'?t('options_cancel_delete'):t('options_cancel_delete')}
+                      {props.item.type==='delete'?t('options_cancel_delete'):t('options_delete')}
                     </div>
                   </Dropdown.Item>
               :null}
@@ -366,7 +367,6 @@ function TableItem(props) {
                 }}>{t('options_history')}</Link>
               </div>
               </Dropdown.Item>
-
             :null
             }
 

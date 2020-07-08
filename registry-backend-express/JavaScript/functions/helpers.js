@@ -103,7 +103,7 @@ const sendMail= (data,template_uri,users)=>{
           replacements.email = user.email;
           var htmlToSend = template(replacements);
           var mailOptions = {
-            from: process.env.EMAIL,
+            from: "noreply@faai.grnet.gr",
             to : 'koza-sparrow@hotmail.com',
             subject : data.subject,
             html : htmlToSend

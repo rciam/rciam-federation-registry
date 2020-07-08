@@ -951,6 +951,9 @@ tbody tr td:last-child {
   text-decoration: none;
 }
 
+.edit-tabs {
+  margin-top:1rem
+}
 
 /* Not sure */
 
