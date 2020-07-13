@@ -372,7 +372,7 @@ paths:
           description: "Internal Error"
       security:
       - cookieAuth: []
-  /servicelist:
+  /service/list:
     get:
       tags:
       - "Services"

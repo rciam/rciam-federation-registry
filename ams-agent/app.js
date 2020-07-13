@@ -16,8 +16,8 @@ var intervalID;
 
 function run() {
   let messages = [];
-  axios.get(process.env.EXPRESS+'/pending',options)
-  .then(function (response) {  
+  axios.get(process.env.EXPRESS+'/service/pending',options)
+  .then(function (response) {
 	// handle success
     let updateData = [];
     if(response.data.services){
@@ -29,7 +29,7 @@ function run() {
         data={"messages":messages};
         axios.post(publish_url,data, options).then((res) => {
           if(res.status===200){
-            axios.put(process.env.EXPRESS+'/state',updateData,options).then((res)=>{
+            axios.put(process.env.EXPRESS+'/service/state',updateData,options).then((res)=>{
               if(res.status===200){
                 fakeThirdParty(updateData);
                 if(res.success===false){

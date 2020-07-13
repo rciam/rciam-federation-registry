@@ -36,10 +36,7 @@ const tables = ['service_oidc_scopes','service_oidc_grant_types','service_oidc_r
 //   }
 // })
 
-router.get('/test',(req,res,next)=>{
-	console.log('we have request');
-	res.send('hello im burp22');
-})
+
 
 router.get('/auth/mock',checkTest, passport.authenticate('my-mock'));
 // Login Route
@@ -116,7 +113,7 @@ router.get('/ams_verification_hash',(req,res)=>{
 })
 
 // ams-agent requests to set state to waiting development
-router.put('/state',amsAgentAuth,(req,res,next)=>{
+router.put('/service/state',amsAgentAuth,(req,res,next)=>{
   try{
     db.service_state.updateMultiple(req.body).then(result=>{
       if(result.success){
@@ -133,7 +130,7 @@ router.put('/state',amsAgentAuth,(req,res,next)=>{
 });
 
 // ams-agent requests to get pending services
-router.get('/pending',amsAgentAuth,(req,res,next)=>{
+router.get('/service/pending',amsAgentAuth,(req,res,next)=>{
   try{
     db.service.getPending().then(services=>{
       if(services){
@@ -150,7 +147,7 @@ router.get('/pending',amsAgentAuth,(req,res,next)=>{
 })
 
 // Find all clients/petitions from curtain user to create preview list
-router.get('/servicelist',checkAuthentication,(req,res,next)=>{
+router.get('/service/list',checkAuthentication,(req,res,next)=>{
   try{
 
     db.task('find-services', async t => {
@@ -302,7 +299,7 @@ router.get('/service/:id',checkAuthentication,(req,res,next)=>{
 });
 
 // Create petition for service deletion
-router.put('/service/delete/:service_id',checkAuthentication,(req,res,next)=>{
+router.put('/petition/delete/:service_id',checkAuthentication,(req,res,next)=>{
    db.task('create-delete-petition',async t =>{
     try{
       await t.service_details.belongsToRequester(req.params.service_id,req.user.sub).then(async belongs =>{
@@ -474,7 +471,7 @@ router.get('/petition/history/:id',checkAuthentication,(req,res)=>{
 });
 
 // User owned or admin
-router.get('/petition/history/list/:id',checkAuthentication,(req,res)=>{
+router.get('/service/history/list/:id',checkAuthentication,(req,res)=>{
   try{
     return db.tx('get-history-for-petition', async t =>{
       if(isAdmin(req)){
@@ -498,12 +495,10 @@ router.get('/petition/history/list/:id',checkAuthentication,(req,res)=>{
   }
 });
 
-router.get('/availability/:protocol/:id',checkAuthentication,(req,res,next)=>{
+router.get('/petition/availability/:protocol/:id',checkAuthentication,(req,res,next)=>{
   db.tx('get-history-for-petition', async t =>{
-    console.log('yes')
     try{
       await isAvailable(t,req.params.id,req.params.protocol,0,0).then(available =>{
-        console.log(available);
             res.status(200).json({available:available});
 
       }).catch(err=>{next(err)});

@@ -1,4 +1,5 @@
 var envPath = __dirname + "/.env";
+var logPath = __dirname + "/logs/logs.log";
 require('dotenv').config({path:envPath});
 const express = require('express');
 const {db} = require('./db');
@@ -81,7 +82,7 @@ passport.use(new MockStrategy({
   },
   callback: process.env.OIDC_REACT
 }, (user, done) => {
-  routes.saveUser(user); 
+  routes.saveUser(user);
   done(null, user);
 	// Perform actions on user, call done once finished
 }));
@@ -114,7 +115,8 @@ const app = express();
 
 app.use(expressWinston.logger({
       transports: [
-        new (winston.transports.Console)({'timestamp':true})
+        new (winston.transports.Console)({'timestamp':true}),
+        new(winston.transports.File)({filename:logPath})
       ],
       format: winston.format.combine(
         winston.format.timestamp(),
@@ -205,24 +207,13 @@ app.use(function (err, req, res, next) {
 const port = 5000;
 
 
-var server;
 
-if(process.env.NODE_ENV==='test'||process.env.NODE_ENV==='test-docker'||process.env.OIDC_REACT==='http://localhost:3000'){
-  server = app.listen(port, () => {
-     console.log('\nReady for GET requests on http://localhost:' + port);
+
+var server = app.listen(port, () => {
+    console.log('\nReady for GET requests on http://localhost:' + port);
   });
   function stop() {
     server.close();
-  }
-}
-else{
-  server = https.createServer({
-    key: fs.readFileSync('/etc/letsencrypt/live/service-registry.aai-dev.grnet.gr/privkey.pem','utf-8'),
-    cert: fs.readFileSync('/etc/letsencrypt/live/service-registry.aai-dev.grnet.gr/fullchain.pem','utf-8')
-  }, app)
-  .listen(port, function () {
-    console.log('Example app listening on https://localhost:'+port);
-  });
 }
 
 

@@ -26,9 +26,9 @@ describe('Service registry API Integration Tests', function() {
         });
     });
   });
-  describe('# GET /servicelist', function(){
+  describe('# GET /service/list', function(){
     it('should get service list data',function(done){
-      var req = request(server).get('/servicelist');
+      var req = request(server).get('/service/list');
       req.cookies = Cookies;
       req.set('Accept','application/json')
       .expect('Content-Type',/json/)
@@ -193,7 +193,7 @@ describe('Service registry API Integration Tests', function() {
           }
         );
 
-        var req = request(server).post('/deployed').send({
+        var req = request(server).post('/service/state').send({
           messages
         });
         req.expect(200).end(function(err,res){
@@ -261,7 +261,7 @@ describe('Service registry API Integration Tests', function() {
           }
         );
 
-        var req = request(server).post('/deployed').send({
+        var req = request(server).post('/service/state').send({
           messages
         });
         req.expect(200).end(function(err,res){
@@ -285,7 +285,7 @@ describe('Service registry API Integration Tests', function() {
     });
     describe('# Delete Service',function(){
       it('should create a new delete petition',function(done){
-        var req = request(server).put('/service/delete/'+service);
+        var req = request(server).put('/petition/delete/'+service);
         req.cookies = Cookies;
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
@@ -323,7 +323,7 @@ describe('Service registry API Integration Tests', function() {
           }
         );
 
-        var req = request(server).post('/deployed').send({
+        var req = request(server).post('/service/state').send({
           messages
         });
         req.expect(200).end(function(err,res){

@@ -1,9 +1,10 @@
 var winston = require('winston');
+var logPath = __dirname + "/logs/logs.log";
 
 
 
 const customLogger = (req,res,level,message)=>{
-  
+
     var log ={};
     log.level =level;
     if(req){
@@ -24,8 +25,8 @@ const customLogger = (req,res,level,message)=>{
     else{
       log.message=message;
     }
-    logger.log(log);    
-  
+    logger.log(log);
+
 }
 
 
@@ -34,9 +35,10 @@ const logger = winston.createLogger({
     winston.format.timestamp(),
     winston.format.json()
   ),
-  transports: [new winston.transports.Console({'timestamp':true})]
+  transports: [
+    new winston.transports.Console({'timestamp':true}),
+    new(winston.transports.File)({filename:logPath})]
 
 });
 
 module.exports = customLogger;
-

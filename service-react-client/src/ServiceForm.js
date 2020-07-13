@@ -57,7 +57,7 @@ const ServiceForm = (props)=> {
               {resolve(true)}
             else{
               setCheckingAvailability(true);
-              fetch(config.host+'availability/oidc/'+ value, {
+              fetch(config.host+'petition/availability/oidc/'+ value, {
                 method:'GET',
                 credentials:'include',
                 headers:{
@@ -162,7 +162,7 @@ const ServiceForm = (props)=> {
               {resolve(true)}
             else{
               setCheckingAvailability(true);
-              fetch(config.host+'availability/saml/'+ value, {
+              fetch(config.host+'petition/availability/saml/'+ value, {
                 method:'GET',
                 credentials:'include',
                 headers:{

@@ -46,14 +46,15 @@ code {
 .home-container {
   background-color:rgb(245, 245, 245);
   font-weight: 300;
-  font-family: "Lato";
+  font-family: "Roboto";
   text-align: left;
 }
 .home-container h1{
   color: #4DB3CF;
-  font-size: 1.7rem;
-  padding-top:1.5rem;
-  margin:0 0 1rem 1em;
+  font-size: 2rem;
+  padding-top: 1.5rem;
+  margin: 0 0 1rem 0.7em;
+  font-weight: bold;
 }
 
 .home-container p {
@@ -66,7 +67,7 @@ code {
 /* Header */
 
 .drop-menu a {
-  font:300 13px / 23px 'Lato' !important;
+  font:300 13px / 23px 'Roboto' !important;
   padding:0.2rem 1rem!important;
 }
 
@@ -101,7 +102,7 @@ code {
 }
 .main-title {
   color:rgb(91, 91, 91);
-  font-family:"Open Sans";
+  font-family:"Roboto";
   font-weight: 300;
   font-size: 1.9rem;
   margin-top:1rem;
@@ -114,7 +115,7 @@ code {
   width:90%;
   margin:auto;
   margin-top:1rem;
-  font-family:'Lato';
+  font-family:'Roboto';
   font-weight:300;
 }
 .logo-grnet {
@@ -168,7 +169,7 @@ code {
 }
 .options-bar, .links {
   text-align: left;
-  font-family:'Lato';
+  font-family:'Roboto';
   font-weight:300;
 }
 .options-bar button:first-child {
@@ -206,7 +207,7 @@ code {
 
 .petitions-table {
   text-align: left;
-  font-family:'Lato';
+  font-family:'Roboto';
   font-weight:300;
   table-layout: fixed;
   width:100%;
@@ -640,7 +641,7 @@ form {
   height:12rem;
   background-color:rgb(245, 245, 245);
 
-  font-family:'Lato';
+  font-family:'Roboto';
   font-weight:300;
   border:1px solid rgb(227, 227, 227);
   margin-right:2rem;
@@ -659,7 +660,7 @@ form {
   color:#4b4b4b;
   font-size: 1rem;
   font-weight: 300;
-  font-family: "Lato";
+  font-family: "Roboto";
   line-height: 3rem;
   margin-bottom: -0.5rem;
 }
@@ -747,11 +748,11 @@ tbody tr td:last-child {
   height:20px;
 }
 .dl-text-info {
-  font: 300 15px / 23px 'Lato';
+  font: 300 15px / 23px 'Roboto';
   color:rgb(43, 63, 68)!important;
 }
 .text-info {
-  font: 300 15px / 23px 'Lato';
+  font: 300 15px / 23px 'Roboto';
 }
 
 /* Form Tabs Review */
@@ -814,7 +815,7 @@ tbody tr td:last-child {
   margin-left:3.5rem;
   font-size: 1.6rem;
   font-weight: 300;
-  font-family: "Lato";
+  font-family: "Roboto";
   width:auto;
   margin-top: 1.44rem;
   margin-bottom:  1.4rem;
@@ -860,7 +861,7 @@ tbody tr td:last-child {
   margin:auto;
 }
 .loading-container h1 {
-  font-family:'Lato';
+  font-family:'Roboto';
   font-weight:300;
   font-size: 1.5vw;
   text-align: left;
@@ -889,7 +890,7 @@ tbody tr td:last-child {
 /* History */
 .history-container {
   font-weight: 300;
-  font-family: "Lato";
+  font-family: "Roboto";
   text-align: left;
   margin-top:1rem;
   display:inline-block;
@@ -924,7 +925,7 @@ tbody tr td:last-child {
 
 .history-table {
   font-weight: 300;
-  font-family: "Lato";
+  font-family: "Roboto";
   text-align: left;
   margin-top:1rem;
   width:40rem!important;
@@ -959,4 +960,9 @@ tbody tr td:last-child {
 
 #hide-tooltip {
   display: none;
+}
+
+/* Lang fix */
+html:lang(gr) .home-container h1 {
+  font-size: 10rem;
 }

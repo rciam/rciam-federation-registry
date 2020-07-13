@@ -65,7 +65,7 @@ const ServiceList= (props)=> {
 
   // Get data, to create Service List
   const getServices = ()=> {
-    fetch(config.host+'servicelist', {
+    fetch(config.host+'service/list', {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -92,7 +92,7 @@ const ServiceList= (props)=> {
 
   const deleteService = (id)=>{
     setAsyncResponse(true);
-    fetch(config.host+'service/delete/'+id, {
+    fetch(config.host+'petition/delete/'+id, {
       method: 'PUT', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -221,7 +221,6 @@ function TableItem(props) {
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   const globalState = useGlobalState();
-  console.log(props.item.state);
   let tenant = tenant_data.data[globalState.global_state.tenant];
   return (
     <tr>
@@ -316,7 +315,7 @@ function TableItem(props) {
               </React.Fragment>}
               id="dropdown-menu-align-right"
             >
-            {props.item.requester===props.user.sub && props.item.state==='deployed'?
+            {props.item.requester===props.user.sub && (props.item.state==='deployed'||!props.item.service_id)?
               <React.Fragment>
                 {props.item.type!=='create'?
                   <Dropdown.Item>

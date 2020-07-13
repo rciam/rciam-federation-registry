@@ -47,7 +47,7 @@ export const HistoryList = (props) => {
   }
 
   const getHistory = ()=> {
-    fetch(config.host+'petition/history/list/'+props.service_id, {
+    fetch(config.host+'service/history/list/'+props.service_id, {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
