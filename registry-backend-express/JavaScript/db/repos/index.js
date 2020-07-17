@@ -9,5 +9,7 @@ module.exports = {
     ServiceMultiValued: require('./service_multi_valued'),
     ServicePetitionDetails: require('./service_petition_details'),
     Service: require('./service'),
-    ServiceState: require('./service_state')
+    ServiceState: require('./service_state'),
+    Petition: require('./petition'),
+    ServiceList: require('./servicelist')
 };

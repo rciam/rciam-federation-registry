@@ -6,21 +6,20 @@ SELECT json_build_object('service_name', sd.service_name,'service_description',s
 						 'client_secret',sd.client_secret,'reuse_refresh_tokens',sd.reuse_refresh_tokens,'protocol',sd.protocol,
 						 'clear_access_tokens_on_refresh',sd.clear_access_tokens_on_refresh,'id_token_timeout_seconds',sd.id_token_timeout_seconds,'metadata_url',sd.metadata_url
 						 ,'entity_id',sd.entity_id,
-						 ${extra_data:raw}
 						 'grant_types',
 							(SELECT json_agg((v.value))
-							 FROM service_${type:raw}oidc_grant_types v WHERE sd.id = v.owner_id),
+							 FROM service_oidc_grant_types v WHERE sd.id = v.owner_id),
 						 'scope',
 						 	(SELECT json_agg((v.value))
-							 FROM service_${type:raw}oidc_scopes v WHERE sd.id = v.owner_id),
+							 FROM service_oidc_scopes v WHERE sd.id = v.owner_id),
 						 'redirect_uris',
 						 	(SELECT json_agg((v.value))
-							 FROM service_${type:raw}oidc_redirect_uris v WHERE sd.id = v.owner_id),
+							 FROM service_oidc_redirect_uris v WHERE sd.id = v.owner_id),
 						 'contacts',
 						 	(SELECT json_agg(json_build_object('email',v.value,'type',v.type))
-							 FROM service_${type:raw}contacts v WHERE sd.id = v.owner_id)
+							 FROM service_contacts v WHERE sd.id = v.owner_id)
 							) json
     FROM (SELECT *
-	FROM (SELECT * FROM service_${type:raw}details WHERE id=${id}) AS foo
-	LEFT JOIN service_${type:raw}details_oidc USING (id) 
-	LEFT JOIN service_${type:raw}details_saml USING (id)) as sd
+	FROM (SELECT * FROM service_details WHERE id=${id}) AS foo
+	LEFT JOIN service_details_oidc USING (id)
+	LEFT JOIN service_details_saml USING (id)) as sd

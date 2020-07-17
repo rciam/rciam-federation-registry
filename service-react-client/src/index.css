@@ -4,7 +4,7 @@ body {
   display: flex;
   min-height: 100vh;
   flex-direction: column;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Manrope", "Oxygen",
     "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
     sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -46,7 +46,7 @@ code {
 .home-container {
   background-color:rgb(245, 245, 245);
   font-weight: 300;
-  font-family: "Roboto";
+  font-family: "Manrope";
   text-align: left;
 }
 .home-container h1{
@@ -67,7 +67,7 @@ code {
 /* Header */
 
 .drop-menu a {
-  font:300 13px / 23px 'Roboto' !important;
+  font:300 13px / 23px 'Manrope' !important;
   padding:0.2rem 1rem!important;
 }
 
@@ -102,7 +102,7 @@ code {
 }
 .main-title {
   color:rgb(91, 91, 91);
-  font-family:"Roboto";
+  font-family:"Manrope";
   font-weight: 300;
   font-size: 1.9rem;
   margin-top:1rem;
@@ -115,7 +115,7 @@ code {
   width:90%;
   margin:auto;
   margin-top:1rem;
-  font-family:'Roboto';
+  font-family:'Manrope';
   font-weight:300;
 }
 .logo-grnet {
@@ -169,7 +169,7 @@ code {
 }
 .options-bar, .links {
   text-align: left;
-  font-family:'Roboto';
+  font-family:'Manrope';
   font-weight:300;
 }
 .options-bar button:first-child {
@@ -207,7 +207,7 @@ code {
 
 .petitions-table {
   text-align: left;
-  font-family:'Roboto';
+  font-family:'Manrope';
   font-weight:300;
   table-layout: fixed;
   width:100%;
@@ -641,7 +641,7 @@ form {
   height:12rem;
   background-color:rgb(245, 245, 245);
 
-  font-family:'Roboto';
+  font-family:'Manrope';
   font-weight:300;
   border:1px solid rgb(227, 227, 227);
   margin-right:2rem;
@@ -660,7 +660,7 @@ form {
   color:#4b4b4b;
   font-size: 1rem;
   font-weight: 300;
-  font-family: "Roboto";
+  font-family: "Manrope";
   line-height: 3rem;
   margin-bottom: -0.5rem;
 }
@@ -748,11 +748,11 @@ tbody tr td:last-child {
   height:20px;
 }
 .dl-text-info {
-  font: 300 15px / 23px 'Roboto';
+  font: 300 15px / 23px 'Manrope';
   color:rgb(43, 63, 68)!important;
 }
 .text-info {
-  font: 300 15px / 23px 'Roboto';
+  font: 300 15px / 23px 'Manrope';
 }
 
 /* Form Tabs Review */
@@ -815,7 +815,7 @@ tbody tr td:last-child {
   margin-left:3.5rem;
   font-size: 1.6rem;
   font-weight: 300;
-  font-family: "Roboto";
+  font-family: "Manrope";
   width:auto;
   margin-top: 1.44rem;
   margin-bottom:  1.4rem;
@@ -861,7 +861,7 @@ tbody tr td:last-child {
   margin:auto;
 }
 .loading-container h1 {
-  font-family:'Roboto';
+  font-family:'Manrope';
   font-weight:300;
   font-size: 1.5vw;
   text-align: left;
@@ -890,7 +890,7 @@ tbody tr td:last-child {
 /* History */
 .history-container {
   font-weight: 300;
-  font-family: "Roboto";
+  font-family: "Manrope";
   text-align: left;
   margin-top:1rem;
   display:inline-block;
@@ -925,7 +925,7 @@ tbody tr td:last-child {
 
 .history-table {
   font-weight: 300;
-  font-family: "Roboto";
+  font-family: "Manrope";
   text-align: left;
   margin-top:1rem;
   width:40rem!important;

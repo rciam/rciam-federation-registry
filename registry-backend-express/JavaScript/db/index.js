@@ -2,7 +2,7 @@ const promise = require('bluebird'); // best promise library today
 const pgPromise = require('pg-promise'); // pg-promise core library
 const dbConfig = require('../../db-config/db-config.json'); // db connection details
 const {Diagnostics} = require('./diagnostics'); // optional diagnostics
-const {ServiceContacts,ServiceDetailsProtocol,ServiceState,ServiceDetails,User,UserInfo,UserEduPersonEntitlement,ServiceMultiValued,ServicePetitionDetails,Service} = require('./repos');
+const {ServiceContacts,ServiceDetailsProtocol,ServiceState,ServiceDetails,User,UserInfo,UserEduPersonEntitlement,ServiceMultiValued,ServicePetitionDetails,Service,Petition,ServiceList} = require('./repos');
 const testdbConfig = require('../../db-config/test-db-config.json');
 const dockerTestdbConfig = require('../../db-config/docker-test-db-config.json');
 let config;
@@ -32,6 +32,8 @@ const initOptions = {
         obj.service = new Service(obj,pgp);
         obj.service_state = new ServiceState(obj,pgp);
         obj.user = new User(obj,pgp);
+        obj.petition = new Petition(obj,pgp);
+        obj.service_list = new ServiceList(obj,pgp);
         // Do not use 'require()' here, because this event occurs for every task and transaction being executed,
         // which should be as fast as possible.
 

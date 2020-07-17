@@ -32,7 +32,6 @@ var corsOptions = {
 }
 
 
-
 // Issuer and Passport Strategy initialization
 Issuer.discover(process.env.ISSUER_BASE_URI).then((issuer)=>{
   //console.log(issuer.metadata);
@@ -47,13 +46,38 @@ Issuer.discover(process.env.ISSUER_BASE_URI).then((issuer)=>{
     scope: 'openid profile email eduperson_entitlement',
   }
   const passReqToCallback = false;
-  passport.use('oidc',new Strategy({client,params,passReqToCallback},(tokenset,userinfo,done)=>{
+  passport.use('egi',new Strategy({client,params,passReqToCallback},(tokenset,userinfo,done)=>{
   //  console.log('tokenset', tokenset);
     //console.log('access_token', tokenset.access_token);
     //console.log('id_token', tokenset.id_token);
     //console.log('claims', tokenset.claims);
     //console.log('userinfo', userinfo);
     routes.saveUser(userinfo);
+    return done(null, userinfo)
+  }));
+});
+
+Issuer.discover("https://aai.eosc-portal.eu/oidc/").then((issuer)=>{
+  //console.log(issuer.metadata);
+  const client = new issuer.Client({
+    client_id: "5d305fe0-d34f-44c9-98f6-e027a7cd852b",
+    client_secret: "ALYg2PMDaNsJOpFt2-LrRekBHFb6Gs7M62_k5CLaDaM5ie-SmALWLxnZYKy108WwuNtRGOPc3zYRYckta91QLVQ",
+    redirect_uris: process.env.REDIRECT_URI
+  });
+  const params = {
+    client_id: "5d305fe0-d34f-44c9-98f6-e027a7cd852b",
+    redirect_uri: "http://localhost:5000/callback/eosc",
+    scope: 'openid profile email eduperson_entitlement',
+  }
+  const passReqToCallback = false;
+  passport.use('eosc',new Strategy({client,params,passReqToCallback},(tokenset,userinfo,done)=>{
+    // console.log('tokenset', tokenset);
+    // console.log('access_token', tokenset.access_token);
+    // console.log('id_token', tokenset.id_token);
+    // console.log('claims', tokenset.claims);
+    // console.log('userinfo', userinfo);
+
+    //routes.saveUser(userinfo);
     return done(null, userinfo)
   }));
 });

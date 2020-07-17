@@ -26,7 +26,6 @@ class ServiceStateRepository {
 
   async updateMultiple(updateData){
     // updateData = [{id:1,state:'deployed'},{id:2,state:'deployed'},{id:3,state:'failed'}];
-
     const update = this.pgp.helpers.update(updateData, cs) + ' WHERE v.id = t.id RETURNING t.id';
     //=> UPDATE "service_data" AS t SET "state"=v."state"
     //   FROM (VALUES(1,'deployed'),(2,'deployed'),(3,'failed'))

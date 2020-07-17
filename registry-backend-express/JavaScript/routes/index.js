@@ -18,32 +18,30 @@ const tables = ['service_oidc_scopes','service_oidc_grant_types','service_oidc_r
 
 // ----------------------------------------------------------
 // ************************* Routes *************************
-//
-// router.get('/test',(req,res,next)=>{
-//   try{
-//     let updateData = [{id:1,state:'deployed'},{id:2,state:'deployed'},{id:20,state:'failed'}];
-//     db.service_state.updateMultiple(updateData).then(result=>{
-//       if(result.success){
-//         res.status(200);
-//       }
-//       else{
-//          throw 'broken';
-//       }
-//     }).catch(next);
-//   }
-//   catch(err){
-//     next(new Error(err));
-//   }
-// })
+// ----------------------------------------------------------
 
 
-
+// Route used to mock authentication during tests
 router.get('/auth/mock',checkTest, passport.authenticate('my-mock'));
-// Login Route
 
-router.get('/login',passport.authenticate('oidc', {
+
+
+
+
+
+// Login Route
+router.get('/login/:tenant',function(req,res,next){passport.authenticate(req.params.tenant, {
   successReturnToOrRedirect: process.env.OIDC_REACT
-}));
+})(req,res,next);});
+
+// Callback Route
+router.get('/callback/:tenant',function(req,res,next){passport.authenticate(req.params.tenant, {
+  callback: true,
+  successReturnToOrRedirect: process.env.OIDC_REACT,
+  failureRedirect: process.env.OIDC_REACT
+})(req,res,next);});
+
+
 
 // Logout Route
 router.get('/logout',checkAuthentication,(req,res)=>{
@@ -65,16 +63,12 @@ router.get('/user',checkAuthentication,(req,res)=>{
   }));
 });
 
-// Callback Route
-router.get('/callback', passport.authenticate('oidc', {
-  callback: true,
-  successReturnToOrRedirect: process.env.OIDC_REACT,
-  failureRedirect: process.env.OIDC_REACT
-}));
+
 
 // ams push subscription for deployment results
 // needs Authentication
 router.post('/service/state',(req,res,next)=>{
+  // Decode messages
   let updateData=[];
   let ids=[];
   req.body.messages.forEach((message) => {
@@ -82,10 +76,14 @@ router.post('/service/state',(req,res,next)=>{
     updateData.push(decoded_message);
     ids.push(decoded_message.id);
   });
+
   return db.task('deploymentResults', async t => {
+    // update state
     await t.service_state.updateMultiple(updateData).then(async result=>{
       if(result.success){
+        // send acknowledgement regardless if notification are successfully sent
         res.sendStatus(200).end();
+        // get service owner user info to send email notifications
         await t.user.getServiceOwners(ids).then(data=>{
           if(data){
             data.forEach(email_data=>{
@@ -105,12 +103,14 @@ router.post('/service/state',(req,res,next)=>{
   });
 });
 
+
 // Route used for verifing push subscription
 router.get('/ams_verification_hash',(req,res)=>{
   console.log('ams verification');
   res.setHeader('Content-type', 'plain/text');
   res.status(200).send('67647c730ced41b9c60ad4da4c06170bf3f1d3c9');
 })
+
 
 // ams-agent requests to set state to waiting development
 router.put('/service/state',amsAgentAuth,(req,res,next)=>{
@@ -143,35 +143,19 @@ router.get('/service/pending',amsAgentAuth,(req,res,next)=>{
   catch(err){
     next(err);
   }
-
 })
 
 // Find all clients/petitions from curtain user to create preview list
 router.get('/service/list',checkAuthentication,(req,res,next)=>{
   try{
-
-    db.task('find-services', async t => {
-      let services;
-      if (isAdmin(req)){ // If user is Admin we fetch all services
-         await t.service_details.findAllForList().then(async response=>{
-           if(response){
-             services = response;
-             await t.service_petition_details.findAllForList().then(petitions=>{
-               services = merge_services_and_petitions(services,petitions);
-             }).catch(err=>{next(err);});
-           }
-         }).catch(err=>{next(err);})
+    db.service_list.get(req.user.sub,isAdmin(req)).then(response =>{
+      if(response.success){
+        return res.status(200).json({services:response.services})
       }
-      else {
-        await t.service_details.findBySubForList(req.user.sub).then(async response=>{
-           services = response;
-           await t.service_petition_details.findBySubForList(req.user.sub).then(petitions=>{
-             services = merge_services_and_petitions(services,petitions);
-           }).catch(err=>{next(err);});
-        }).catch(err=>{next(err);});
+      else{
+        next(response.error);
       }
-      return res.status(200).json({services});
-    });
+    }).catch(err=>{next(err);});
   }
   catch(err){
     next(err);
@@ -190,9 +174,10 @@ router.get('/petition/:id',checkAuthentication,(req,res,next)=>{
     }
     await t.service_petition_details.belongsToRequester(req.params.id,requester).then(async protocol=>{
       if(protocol){
-        let petition = await t.service.get(req.params.id,'petition').then(result=>{return result.service_data})
+        await t.petition.get(req.params.id).then(result=>{return result.service_data}).then(petition => {
           return res.status(200).json({petition});
-        }
+        }).catch(err=>{next(err);});
+      }
       else{
         res.status(204);
         customLogger(req,res,'warn','Petition not found');
@@ -207,7 +192,7 @@ router.post('/petition',clientValidationRules(),validate,checkAuthentication,asy
   res.setHeader('Content-Type', 'application/json');
   try{
     db.tx('add-service', async t => {
-          await t.service.add(req.body,req.user.sub,'petition').then(async id=>{
+          await t.petition.add(req.body,req.user.sub).then(async id=>{
             if(id){
               res.status(200).json({id:id});
               await t.user.getReviewers().then(users=>{
@@ -227,7 +212,6 @@ router.post('/petition',clientValidationRules(),validate,checkAuthentication,asy
 
 // Delete Petition
 router.delete('/petition/:id',checkAuthentication,(req,res,next)=>{
-
   return db.tx('delete-petition',async t =>{
     try{
       await t.service_petition_details.belongsToRequester(req.params.id,req.user.sub).then(async belongs =>{
@@ -254,7 +238,7 @@ router.put('/petition/:id',clientValidationRules(),validate,checkAuthentication,
   return db.task('update-petition',async t =>{
     try{
 
-      await t.service.update(req.body,req.params.id,'petition').then(response=>{
+      await t.petition.update(req.body,req.params.id).then(response=>{
         if(response.success){
           res.status(200).end();
         }
@@ -311,7 +295,7 @@ router.put('/petition/delete/:service_id',checkAuthentication,(req,res,next)=>{
               service.type = 'delete';
               await t.service_petition_details.openPetition(req.params.service_id).then(async open_petition_id=>{
                 if(open_petition_id){
-                  await t.service.update(service,open_petition_id,'petition').then(resp=>{
+                  await t.petition.update(service,open_petition_id).then(resp=>{
                     if(resp.success){
                        res.status(200).json({id:open_petition_id});
                     }
@@ -369,7 +353,7 @@ router.put('/petition/reject/:id',checkAuthentication,checkAdmin,(req,res,next)=
 router.put('/petition/changes/:id',checkAuthentication,checkAdmin,(req,res)=>{
   try{
     db.tx('approve-with-changes-petition',async t =>{
-      await t.service.get(req.params.id,'petition').then(async petition =>{
+      await t.petition.get(req.params.id).then(async petition =>{
         if(petition){
           petition.service_data.type = petition.meta_data.type;
           petition.service_data.service_id = petition.meta_data.service_id;
@@ -377,7 +361,7 @@ router.put('/petition/changes/:id',checkAuthentication,checkAdmin,(req,res)=>{
           petition = petition.service_data;
           petition.comment = req.body.comment;
           petition.status = 'pending';
-          await t.service.add(petition,petition.requester,'petition').then(async id=>{
+          await t.petition.add(petition,petition.requester).then(async id=>{
             if(id){
               await t.service_petition_details.review(req.params.id,req.user.sub,'approved_with_changes',req.body.comment).then(async result=>{
                 if(result){
@@ -406,7 +390,7 @@ router.put('/petition/approve/:id',checkAuthentication,checkAdmin,(req,res,next)
   try{
     db.tx('approve-petition',async t =>{
       let service_id;
-      await t.service.get(req.params.id,'petition').then(async petition =>{
+      await t.petition.get(req.params.id).then(async petition =>{
         if(petition){
           if(petition.meta_data.type==='delete'){
             service_id = petition.meta_data.service_id;
@@ -455,7 +439,7 @@ router.get('/petition/history/:id',checkAuthentication,(req,res)=>{
     return db.task('find-petition-data',async t=>{
       await t.service_petition_details.belongsToRequesterHistory(req.params.id,req.user.sub).then(async belongs=>{
           if(belongs||isAdmin(req)){
-            let petition = await t.service.get(req.params.id,'petition');
+            let petition = await t.petition.get(req.params.id);
             petition = petition.service_data;
             return res.status(200).json({petition});
           }
@@ -516,7 +500,9 @@ router.get('/petition/availability/:protocol/:id',checkAuthentication,(req,res,n
 // Authentication Middleware
 function checkAuthentication(req,res,next){
   if(req.isAuthenticated()){next();}
-  else{res.status(401).end();}
+  else{
+    console.log('not goood');
+    res.status(401).end();}
 }
 // bZwolIWwWH9AzCjKB60dLCG6bYCCVinx
 function amsAgentAuth(req,res,next){
