@@ -1,7 +1,11 @@
 DROP TABLE IF EXISTS user_edu_person_entitlement, user_info, service_petition_contacts, service_petition_oidc_grant_types, service_petition_oidc_redirect_uris, service_petition_oidc_scopes,
 service_petition_details_oidc,service_petition_details_saml, service_petition_details, service_oidc_scopes,service_contacts,service_oidc_grant_types,service_oidc_redirect_uris,service_details_oidc,
-service_details_saml,service_details,service_state;
+service_details_saml,service_details,service_state,user_roles,role_actions,role_entitlements,groups,tenants,tokens;
 
+create table tokens (
+  token VARCHAR(1054),
+  code VARCHAR(1054) PRIMARY KEY
+);
 
 create table user_info (
   id SERIAL PRIMARY KEY,
@@ -11,6 +15,41 @@ create table user_info (
   given_name VARCHAR(256),
   family_name VARCHAR(256),
   email VARCHAR(256)
+);
+
+create table user_roles (
+  id SERIAL PRIMARY KEY,
+  role_name VARCHAR(256),
+  tenant_id bigint
+);
+
+create table role_actions (
+  role_id bigint,
+  action VARCHAR(256),
+  PRIMARY KEY (role_id,action),
+  FOREIGN KEY (role_id) REFERENCES user_roles(id)
+);
+create table role_entitlements (
+  role_id bigint,
+  entitlement VARCHAR(256),
+  PRIMARY KEY (role_id,entitlement),
+  FOREIGN KEY (role_id) REFERENCES user_roles(id)
+);
+
+
+
+create table groups (
+  id SERIAL PRIMARY KEY,
+  user_sub VARCHAR(256),
+  is_group_owner BOOLEAN,
+);
+
+create table tenants (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(256),
+  client_id VARCHAR(256),
+  client_secret VARCHAR(256),
+  redirect_uri VARCHAR(256)
 );
 
 create table user_edu_person_entitlement (
@@ -338,7 +377,7 @@ VALUES (2,'client2',true,'secret',true,true,600,3600,28800,'plain',10000);
 INSERT INTO service_petition_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_tokens,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds)
 VALUES (3,'client3',true,'secret',true,true,600,3600,28800,'plain',10000);
 INSERT INTO service_petition_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_tokens,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds)
-VALUES (4,'client4',true,'secret',true,true,600,3600,28800,'plain',10000);
+VALUES (4,'client4',true,'secret',true,true,600,36,28800,'plain',10000);
 INSERT INTO service_petition_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_tokens,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds)
 VALUES (5,'client5',true,'secret',true,true,600,3600,28800,'plain',10000);
 INSERT INTO service_petition_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_tokens,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds)
@@ -511,3 +550,84 @@ INSERT INTO user_info(sub,preferred_username,name,given_name,family_name,email)
 VALUES ('4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621934@egi.eu','Helen Char','helen charopia','helen','charopia','testmail@mail.com');
 INSERT INTO user_edu_person_entitlement (user_id,edu_person_entitlement)
 VALUES (1,'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu');
+
+
+
+INSERT INTO user_roles (role_name,tenant_id)
+VALUES ('End User',1);
+INSERT INTO user_roles(role_name,tenant_id)
+VALUES ('Site Operations Manager',1);
+INSERT INTO user_roles(role_name,tenant_id)
+VALUES ('Administrator',1);
+
+
+INSERT INTO role_actions(role_id,action)
+VALUES(1,'get_user');
+INSERT INTO role_actions(role_id,action)
+VALUES(1,'get_own_services');
+INSERT INTO role_actions(role_id,action)
+VALUES(1,'get_own_service');
+INSERT INTO role_actions(role_id,action)
+VALUES(1,'get_own_petitions');
+INSERT INTO role_actions(role_id,action)
+VALUES(1,'get_own_petition');
+INSERT INTO role_actions(role_id,action)
+VALUES(1,'add_own_petition');
+INSERT INTO role_actions(role_id,action)
+VALUES(1,'update_own_petition');
+INSERT INTO role_actions(role_id,action)
+VALUES(1,'delete_own_petition');
+INSERT INTO role_actions(role_id,action)
+VALUES(2,'get_user');
+INSERT INTO role_actions(role_id,action)
+VALUES(2,'get_own_services');
+INSERT INTO role_actions(role_id,action)
+VALUES(2,'get_own_service');
+INSERT INTO role_actions(role_id,action)
+VALUES(2,'get_own_petitions');
+INSERT INTO role_actions(role_id,action)
+VALUES(2,'get_own_petition');
+INSERT INTO role_actions(role_id,action)
+VALUES(2,'add_own_petition');
+INSERT INTO role_actions(role_id,action)
+VALUES(2,'update_own_petition');
+INSERT INTO role_actions(role_id,action)
+VALUES(2,'delete_own_petition');
+INSERT INTO role_actions(role_id,action)
+VALUES(2,'review_own_petition');
+INSERT INTO role_actions(role_id,action)
+VALUES(3,'get_user');
+INSERT INTO role_actions(role_id,action)
+VALUES(3,'get_own_services');
+INSERT INTO role_actions(role_id,action)
+VALUES(3,'get_own_service');
+INSERT INTO role_actions(role_id,action)
+VALUES(3,'get_service');
+INSERT INTO role_actions(role_id,action)
+VALUES(3,'get_own_petitions');
+INSERT INTO role_actions(role_id,action)
+VALUES(3,'get_own_petition');
+INSERT INTO role_actions(role_id,action)
+VALUES(3,'get_petition');
+INSERT INTO role_actions(role_id,action)
+VALUES(3,'add_own_petition');
+INSERT INTO role_actions(role_id,action)
+VALUES(3,'update_own_petition');
+INSERT INTO role_actions(role_id,action)
+VALUES(3,'delete_own_petition');
+INSERT INTO role_actions(role_id,action)
+VALUES(3,'review_own_petition');
+INSERT INTO role_actions(role_id,action)
+VALUES(3,'review_petition');
+INSERT INTO role_actions(role_id,action)
+VALUES(3,'get_petitions');
+INSERT INTO role_actions(role_id,action)
+VALUES(3,'get_services');
+
+
+
+INSERT INTO role_entitlements (role_id,entitlement)
+VALUES (3,'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu');
+
+INSERT INTO role_entitlements (role_id,entitlement)
+VALUES (2,'fake_entitlement');

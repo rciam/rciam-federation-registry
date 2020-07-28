@@ -75,7 +75,8 @@ const EditService = (props) => {
           method: 'GET', // *GET, POST, PUT, DELETE, etc.
           credentials: 'include', // include, *same-origin, omit
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': localStorage.getItem('token')
           }
         }).then(response=>{
           if(response.status===200){
@@ -95,7 +96,8 @@ const EditService = (props) => {
           method: 'GET', // *GET, POST, PUT, DELETE, etc.
           credentials: 'include', // include, *same-origin, omit
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': localStorage.getItem('token')
           }
         }).then(response=>{
           if(response.status===200){
@@ -200,7 +202,8 @@ const ViewService = (props)=>{
         method: 'GET', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': localStorage.getItem('token')
         }
       }).then(response=>response.json()).then(response=> {
 
@@ -215,7 +218,8 @@ const ViewService = (props)=>{
         method: 'GET', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': localStorage.getItem('token')
         }
       }).then(response=>response.json()).then(response=> {
 

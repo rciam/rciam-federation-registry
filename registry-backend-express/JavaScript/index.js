@@ -18,9 +18,11 @@ const MockStrategy = require('passport-mock-strategy');
 var cookieParser = require('cookie-parser');
 var passport = require('passport');
 var session = require("express-session");
+const { generators } = require('openid-client');
+const code_verifier = generators.codeVerifier();
 
 // We set Cors options so that express can handle preflight requests containing cookies
-
+let clients= {};
 
 var corsOptions = {
     origin:  process.env.OIDC_REACT,
@@ -35,26 +37,25 @@ var corsOptions = {
 // Issuer and Passport Strategy initialization
 Issuer.discover(process.env.ISSUER_BASE_URI).then((issuer)=>{
   //console.log(issuer.metadata);
-  const client = new issuer.Client({
+   clients.egi = new issuer.Client({
     client_id: process.env.CLIENT_ID,
     client_secret: process.env.CLIENT_SECRET,
     redirect_uris: process.env.REDIRECT_URI
   });
-  const params = {
-    client_id: process.env.CLIENT_ID,
-    redirect_uri: process.env.REDIRECT_URI,
-    scope: 'openid profile email eduperson_entitlement',
-  }
-  const passReqToCallback = false;
-  passport.use('egi',new Strategy({client,params,passReqToCallback},(tokenset,userinfo,done)=>{
-  //  console.log('tokenset', tokenset);
-    //console.log('access_token', tokenset.access_token);
-    //console.log('id_token', tokenset.id_token);
-    //console.log('claims', tokenset.claims);
-    //console.log('userinfo', userinfo);
-    routes.saveUser(userinfo);
-    return done(null, userinfo)
-  }));
+
+  // client.callback('http://localhost:5000/callback/egi', params, { code_verifier }) // => Promise
+  //   .then(function (tokenSet) {
+  //     console.log('received and validated tokens %j', tokenSet);
+  //     console.log('validated ID Token claims %j', tokenSet.claims());
+  //   });
+
+  // authUrls.egi = client.authorizationUrl({
+  //   client_id:process.env.CLIENT_ID,
+  //   scope: 'openid email profile eduperson_entitlement',
+  //   redirect_uri: 'http://localhost:5000/callback/eosc',
+  // });
+  //const passReqToCallback = false;
+
 });
 
 Issuer.discover("https://aai.eosc-portal.eu/oidc/").then((issuer)=>{
@@ -64,11 +65,16 @@ Issuer.discover("https://aai.eosc-portal.eu/oidc/").then((issuer)=>{
     client_secret: "ALYg2PMDaNsJOpFt2-LrRekBHFb6Gs7M62_k5CLaDaM5ie-SmALWLxnZYKy108WwuNtRGOPc3zYRYckta91QLVQ",
     redirect_uris: process.env.REDIRECT_URI
   });
+
+  const code_challenge = generators.codeChallenge(code_verifier);
   const params = {
     client_id: "5d305fe0-d34f-44c9-98f6-e027a7cd852b",
     redirect_uri: "http://localhost:5000/callback/eosc",
     scope: 'openid profile email eduperson_entitlement',
   }
+
+
+
   const passReqToCallback = false;
   passport.use('eosc',new Strategy({client,params,passReqToCallback},(tokenset,userinfo,done)=>{
     // console.log('tokenset', tokenset);
@@ -77,7 +83,7 @@ Issuer.discover("https://aai.eosc-portal.eu/oidc/").then((issuer)=>{
     // console.log('claims', tokenset.claims);
     // console.log('userinfo', userinfo);
 
-    //routes.saveUser(userinfo);
+    routes.saveUser(userinfo);
     return done(null, userinfo)
   }));
 });
@@ -182,7 +188,7 @@ app.use(session({
   resave: false,
   saveUninitialized: true
 }));
-
+app.set('clients',clients);
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(bodyParser.json());

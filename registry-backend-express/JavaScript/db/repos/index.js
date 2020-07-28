@@ -11,5 +11,7 @@ module.exports = {
     Service: require('./service'),
     ServiceState: require('./service_state'),
     Petition: require('./petition'),
-    ServiceList: require('./servicelist')
+    ServiceList: require('./servicelist'),
+    UserRole: require('./user_role'),
+    Tokens: require('./tokens')
 };

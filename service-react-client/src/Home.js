@@ -8,18 +8,22 @@ const Home = ()=> {
   const { t, i18n } = useTranslation();
   const globalState = useGlobalState();
 
-
   useEffect(()=>{
+
     getAuth();
     // eslint-disable-next-line
   },[]);
 
   const getAuth = ()=>{
+
+    if (localStorage.getItem('token')){
+
     fetch(config.host+'auth',{
       method:'GET',
       credentials:'include',
       headers:{
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': localStorage.getItem('token')
       }
     }).then(response => {
       let new_state;
@@ -37,6 +41,11 @@ const Home = ()=> {
       }
       globalState.setLogState(new_state);
     });
+    }
+    else{
+        globalState.setLogState({tenant:'EGI',log_state:false});
+
+    }
   }
 
   return (

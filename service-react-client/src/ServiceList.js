@@ -69,7 +69,8 @@ const ServiceList= (props)=> {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'Authorization': localStorage.getItem('token')
     }}).then(response=>{
       if(response.status===200){
         return response.json();
@@ -96,7 +97,8 @@ const ServiceList= (props)=> {
       method: 'PUT', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'Authorization': localStorage.getItem('token')
     }}).then(response=> {
       getServices();
       setResponseTitle(t('request_submit_title'));
@@ -115,7 +117,8 @@ const ServiceList= (props)=> {
       method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'Authorization': localStorage.getItem('token')
     }}).then(response=> {
       setResponseTitle(t('request_cancel_title'));
       setAsyncResponse(false);

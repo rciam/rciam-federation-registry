@@ -12,44 +12,44 @@ import { useTranslation } from 'react-i18next';
       const { t, i18n } = useTranslation();
       const [user,setUser] = useState();
       const globalState = useGlobalState();
-      const logged = globalState.global_state.log_state;
 
       useEffect(()=>{
-        if(!logged){
+        if(!localStorage.getItem('token')){
           setUser(null);
         }
-        if(logged&&!user){
+        if(localStorage.getItem('token')&&!user){
           getUser();
         }
-    },[logged,user])
+    },[localStorage.getItem('token'),user])
 
       const getUser = ()=> {
         fetch(config.host+'user', {
           method: 'GET', // *GET, POST, PUT, DELETE, etc.
           credentials: 'include', // include, *same-origin, omit
           headers: {
-          'Content-Type': 'application/json'
-        }}).then(response=>response.json()).then(response=> {
+          'Content-Type': 'application/json',
+          'Authorization': localStorage.getItem('token')
+          }}).then(response=>response.json()).then(response=> {
             setUser(response.user);
         });
       }
 
       return(
         <React.Fragment>
-
+          <Router>
           <Header user={user}/>
           <NavbarTop user={user}/>
           <div className="ssp-container main">
-          <Router>
+
             <div className="flex-container">
-              {logged&&<SideNav/>}
+              {localStorage.getItem('token')&&<SideNav/>}
               <Routes user={user} t={t} />
             </div>
-          </Router>
+
           </div>
 
-        <Footer lang={props.lang} changeLanguage={props.changeLanguage}/>
-
+          <Footer lang={props.lang} changeLanguage={props.changeLanguage}/>
+        </Router>
 
         </React.Fragment>
       );

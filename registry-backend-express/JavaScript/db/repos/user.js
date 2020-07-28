@@ -13,6 +13,9 @@ class User {
       // set-up all ColumnSet objects, if needed:
 
   }
+  async getUser(sub){
+
+  }
 
   async getServiceOwners(ids){
     return this.db.any(sql.getServiceOwners,{ids:ids}).then( info =>{

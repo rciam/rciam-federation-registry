@@ -6,7 +6,8 @@ const GlobalStateContext = createContext();
 
 const initialState = {
   global_state: {
-    log_state:false
+    log_state:false,
+    tenant:null
   },
 };
 

@@ -37,7 +37,8 @@ export const HistoryList = (props) => {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'Authorization': localStorage.getItem('token')
     }}).then(response=>response.json()).then(response=> {
       setAsyncResponse(false);
       if(response.petition){
@@ -51,7 +52,8 @@ export const HistoryList = (props) => {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'Authorization': localStorage.getItem('token')
     }}).then(response=>response.json()).then(response=> {
       setLoadingList(false);
       if(response.history){

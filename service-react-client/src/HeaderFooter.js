@@ -12,6 +12,7 @@ import DropdownButton from 'react-bootstrap/DropdownButton';
 import Dropdown from 'react-bootstrap/Dropdown';
 import * as tenant_data from './tenant-config.json'
 import { useTranslation } from 'react-i18next';
+import {useHistory} from "react-router-dom";
 
 export const Header= (props)=> {
     const globalState = useGlobalState();
@@ -33,7 +34,10 @@ export const Header= (props)=> {
     );
 }
 
+
+
 export const NavbarTop = (props)=>{
+  const history = useHistory();
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   const globalState = useGlobalState();
@@ -42,6 +46,7 @@ export const NavbarTop = (props)=>{
   const [admin,setAdmin] = useState(false);
   useEffect(()=>{
     let admin = false;
+
 
     if(props.user&&props.user.eduperson_entitlement){
       ["urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu"].forEach((item)=>{
@@ -74,12 +79,12 @@ export const NavbarTop = (props)=>{
               {props.user.sub}
             </Dropdown.Item>
           ):null}
-          <Dropdown.Item href={config.host+"logout" } >
+          <Dropdown.Item onClick={()=>{localStorage.removeItem('token'); history.push('/'); }} >
             {t('logout')}<FontAwesomeIcon icon={faSignOutAlt}/>
           </Dropdown.Item>
         </DropdownButton>):(
         <React.Fragment>
-          <a href={config.host+"login/egi"}><Button className="log-button" variant="outline-primary">{t('login')}</Button></a>
+          <a href={config.host+"login"}><Button className="log-button" variant="outline-primary">{t('login')}</Button></a>
         </React.Fragment>
         )
       }

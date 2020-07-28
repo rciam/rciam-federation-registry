@@ -87,7 +87,7 @@ export function ListResponseModal(props){
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   const handleClose = () => props.setMessage();
-  
+
   return (
     <Modal show={props.message?true:false} onHide={handleClose}>
         <Modal.Header closeButton>

@@ -96,7 +96,9 @@ class ServiceRepository {
       return {success:false,error:err}
     }
   }
-
+  async getOwner(){
+    
+  }
   async getPending(){
     return this.db.any(sql.getPending).then(services=>{
       if(services){
