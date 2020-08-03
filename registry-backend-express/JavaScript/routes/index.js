@@ -27,7 +27,7 @@ const code_verifier = generators.codeVerifier();
 
 
 // Route used to mock authentication during tests
-router.get('/auth/mock',checkTest, passport.authenticate('my-mock'));
+//router.get('/auth/mock',checkTest, passport.authenticate('my-mock'));
 
 router.get('/login',(req,res)=>{
   var clients = req.app.get('clients');
