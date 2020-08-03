@@ -61,6 +61,10 @@ class ServicePetitionDetailsRepository {
     async findAllForList(){
       return this.db.any('SELECT id,service_description,logo_uri,service_name,requester,type,service_id,comment,status,integration_environment FROM service_petition_details WHERE reviewed_at IS NULL');
     }
+
+    async findByServiceIds(ids){
+      return this.db.any('SELECT id,service_description,logo_uri,service_name,requester,type,service_id,comment,status,integration_environment FROM service_petition_details WHERE service_id IN ($1:csv) AND reviewed_at IS NULL',ids);
+    }
     async findBySubForList(sub){
       return this.db.any('SELECT id,service_description,logo_uri,service_name,requester,type,service_id,comment,status,integration_environment FROM service_petition_details WHERE requester = $1 AND reviewed_at IS NULL', sub);
     }
@@ -98,7 +102,7 @@ class ServicePetitionDetailsRepository {
        return this.db.oneOrNone('DELETE FROM service_petition_details WHERE id=$1 AND reviewed_at IS NULL RETURNING id',+petition_id);
      }
 
-     
+
 
 
 

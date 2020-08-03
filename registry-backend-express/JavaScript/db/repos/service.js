@@ -16,7 +16,7 @@ class ServiceRepository {
   }
 
   async get(id){
-      return this.db.one(sql.getService,{
+      return this.db.oneOrNone(sql.getService,{
           id:+id
         }).then(result => {
           if(result){
@@ -25,34 +25,45 @@ class ServiceRepository {
             data.service_data = result.json;
             return data
           }
+          else {
+            return null;
+          }
         });
   }
 
   async add(service,requester) {
       try{
+        let service_id;
         return this.db.tx('add-service',async t =>{
           let queries = [];
-          return await t.service_details.add(service,requester).then(async result=>{
-            if(result){
-              queries.push(t.service_details_protocol.add('service',service,result.id));
-              queries.push(t.service_contacts.add('service',service.contacts,result.id));
-              queries.push(t.service_state.add(result.id,'pending'));
-              if(service.protocol==='oidc'){
-                queries.push(t.service_multi_valued.add('service','oidc_grant_types',service.grant_types,result.id));
-                queries.push(t.service_multi_valued.add('service','oidc_scopes',service.scope,result.id));
-                queries.push(t.service_multi_valued.add('service','oidc_redirect_uris',service.redirect_uris,result.id));
-              }
-              const result2 = await t.batch(queries);
-              if(result2){
-                return result.id
-              }
+          return t.group.addGroup(requester).then(async id =>{
+
+            if(id){
+              service.group_id = id;
+              return await t.service_details.add(service,requester).then(async result=>{
+                if(result){
+                  service_id = result.id;
+                  queries.push(t.service_details_protocol.add('service',service,result.id));
+                  queries.push(t.service_contacts.add('service',service.contacts,result.id));
+                  queries.push(t.service_state.add(result.id,'pending'));
+                  if(service.protocol==='oidc'){
+                    queries.push(t.service_multi_valued.add('service','oidc_grant_types',service.grant_types,result.id));
+                    queries.push(t.service_multi_valued.add('service','oidc_scopes',service.scope,result.id));
+                    queries.push(t.service_multi_valued.add('service','oidc_redirect_uris',service.redirect_uris,result.id));
+                  }
+                  return t.batch(queries);
+                }
+              });
             }
           });
+        }).then(data => {
+          return service_id;
+        }).catch(stuff=>{
+          throw 'error'
         });
       }
       catch(error){
-        console.log(error);
-        return error
+        throw 'error'
       }
     }
 
@@ -67,9 +78,7 @@ class ServiceRepository {
                queries.push(t.service_details.update(edits.details,targetId));
                queries.push(t.service_details_protocol.update('service',edits.details,targetId));
             }
-            if(service_details==='service_details'){
-              queries.push(t.service_state.update(targetId,'pending'));
-            }
+            queries.push(t.service_state.update(targetId,'pending'));
             for (var key in edits.add){
               if(key==='contacts') {
                 queries.push(t.service_contacts.add('service',edits.add[key],targetId));
@@ -96,9 +105,7 @@ class ServiceRepository {
       return {success:false,error:err}
     }
   }
-  async getOwner(){
-    
-  }
+
   async getPending(){
     return this.db.any(sql.getPending).then(services=>{
       if(services){

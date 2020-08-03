@@ -84,6 +84,7 @@ const ServiceList= (props)=> {
         response.services.forEach((item,index)=>{
             response.services[index].display = true;
           })
+        console.log(response.services);
         setServices(response.services);
 
       }
@@ -204,7 +205,7 @@ const ServiceList= (props)=> {
                         }
                         if(Math.ceil(renderedConnections/itemsPerPage)===activePage&&item.display){
                           return(
-                            <TableItem item={item} user={props.user} key={index} setAlertMessage={setAlertMessage} setCancelRequest={setCancelRequest}  setConfirmationAction={setConfirmationAction} setConfirmationId={setConfirmationId}/>
+                            <TableItem service={item} user={props.user} key={index} setAlertMessage={setAlertMessage} setCancelRequest={setCancelRequest}  setConfirmationAction={setConfirmationAction} setConfirmationId={setConfirmationId}/>
                           )
                         }
                         return null
@@ -224,26 +225,27 @@ function TableItem(props) {
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   const globalState = useGlobalState();
+  console.log(props);
   let tenant = tenant_data.data[globalState.global_state.tenant];
   return (
     <tr>
       <td className="petition-details">
         <div className="table-image-container">
-          <Image src={props.item.logo_uri} thumbnail/>
+          <Image src={props.service.logo_uri} thumbnail/>
         </div>
       </td>
       <td>
         <div className="flex-column">
-          <h3 className="petition-title">{props.item.service_name}</h3>
+          <h3 className="petition-title">{props.service.service_name}</h3>
           <div className="badge-container">
 
-            {props.item.hasOwnProperty('state')&&props.item.state!==null?<Badge className="status-badge" style={props.item.state==='deployed'?{background:tenant.color}:null} variant={props.item.state==='deployed'?'primary':'danger'}>{props.item.state==='deployed'?t('badge_deployed'):props.item.state==='error'?t('badge_error'):props.item.deleted===false?t('badge_pending'):t('badge_deleting')}</Badge>:null}
-            {props.item.hasOwnProperty('type')?<Badge className="status-badge" variant="warning">
-              {props.item.type==='edit'?t('badge_edit_pending'):props.item.type==='create'?t('badge_create_pending'):t('badge_delete_pending')}
+            {props.service.hasOwnProperty('state')&&props.service.state!==null?<Badge className="status-badge" style={props.service.state==='deployed'?{background:tenant.color}:null} variant={props.service.state==='deployed'?'primary':'danger'}>{props.service.state==='deployed'?t('badge_deployed'):props.service.state==='error'?t('badge_error'):props.service.deleted===false?t('badge_pending'):t('badge_deleting')}</Badge>:null}
+            {props.service.type?<Badge className="status-badge" variant="warning">
+              {props.service.type==='edit'?t('badge_edit_pending'):props.service.type==='create'?t('badge_create_pending'):t('badge_delete_pending')}
               </Badge>:null}
-            {props.item.comment?<Badge className="status-badge" variant="info">{t('badge_changes_requested')}</Badge>:null}
+            {props.service.comment?<Badge className="status-badge" variant="info">{t('badge_changes_requested')}</Badge>:null}
           </div>
-          <p>{props.item.service_description}</p>
+          <p>{props.service.service_description}</p>
         </div>
       </td>
       <td>
@@ -255,16 +257,16 @@ function TableItem(props) {
                 to={{
                 pathname:"/form/view",
                 state:{
-                  service_id:props.item.id,
-                  petition_id:props.item.petition_id,
-                  type:props.item.type
+                  service_id:props.service.service_id,
+                  petition_id:props.service.petition_id,
+                  type:props.service.type
                 }
               }}>
                 <Button variant="secondary"><FontAwesomeIcon icon={faEye}/>{t('button_view')}</Button>
               </Link>
-              {props.item.requester===props.user.sub?
+              {props.service.owned?
                 <React.Fragment>
-                  {props.item.comment?
+                  {props.service.comment?
                   <div className="notification">
                     <FontAwesomeIcon icon={faExclamation} className="fa-exclamation"/>
                     <FontAwesomeIcon icon={faCircle} className="fa-circle"/>
@@ -273,7 +275,7 @@ function TableItem(props) {
                     placement='top'
                     overlay={
                       <Tooltip id={`tooltip-top`}>
-                        {props.item.comment?t('changes_notification'):props.item.state==='deployed'?t('edit_notification'):t('pending_notification')}
+                        {props.service.comment?t('changes_notification'):props.service.state==='deployed'?t('edit_notification'):t('pending_notification')}
                       </Tooltip>
                     }
                   >
@@ -283,26 +285,26 @@ function TableItem(props) {
                   to={{
                     pathname:"/form/edit",
                     state:{
-                      service_id:props.item.id,
-                      petition_id:props.item.petition_id,
-                      type:props.item.type,
-                      comment:props.item.comment
+                      service_id:props.service.service_id,
+                      petition_id:props.service.petition_id,
+                      type:props.service.type,
+                      comment:props.service.comment
                     }
                   }}>
-                  <Button variant="info" style={{background:tenant.color}} disabled={props.item.state==='deployed'||!props.item.state?false:true}><FontAwesomeIcon icon={faEdit}/>{t('button_reconfigure')}</Button></Link>
+                  <Button variant="info" style={{background:tenant.color}} disabled={props.service.state==='deployed'||!props.service.state?false:true}><FontAwesomeIcon icon={faEdit}/>{t('button_reconfigure')}</Button></Link>
                   </OverlayTrigger>
                 </React.Fragment>
               :null
               }
-              {props.user.admin&&props.item.petition_id&&!props.item.comment?<Link
+              {props.user.admin&&props.service.petition_id&&!props.service.comment?<Link
                 className='button-link'
                 to={{
                 pathname:"/form/review",
                 state:{
-                  service_id:props.item.id,
-                  petition_id:props.item.petition_id,
-                  type:props.item.type,
-                  comment:props.item.comment
+                  service_id:props.service.service_id,
+                  petition_id:props.service.petition_id,
+                  type:props.service.type,
+                  comment:props.service.comment
                 }
               }}><Button variant="success"><FontAwesomeIcon icon={faEdit}/>{t('button_review')}</Button></Link>:null}
             </Col>
@@ -318,53 +320,53 @@ function TableItem(props) {
               </React.Fragment>}
               id="dropdown-menu-align-right"
             >
-            {props.item.requester===props.user.sub && (props.item.state==='deployed'||!props.item.service_id)?
+            {props.service.owned && (props.service.state==='deployed'||!props.service.service_id)?
               <React.Fragment>
-                {props.item.type!=='create'?
+                {props.service.type!=='create'?
                   <Dropdown.Item>
                     <div
-                    className={props.item.state==='deployed'?'options-disabled':null}
+                    className={props.service.state==='deployed'?'options-disabled':null}
                     onClick={()=>{
-                      if(props.item.state==='deployed'){
-                        if(props.item.type==='create'||props.item.type==='delete'){
-                          props.setConfirmationId(props.item.petition_id);
+                      if(props.service.state==='deployed'){
+                        if(props.service.type==='create'||props.service.type==='delete'){
+                          props.setConfirmationId(props.service.petition_id);
                           props.setConfirmationAction('petition');
-                          if(props.item.type==='delete'){
+                          if(props.service.type==='delete'){
                             props.setCancelRequest(true);
                           }
                         }else{
-                          props.setConfirmationId(props.item.id);
+                          props.setConfirmationId(props.service.service_id);
                           props.setConfirmationAction('service');
                         }
                       }else{
                         props.setAlertMessage(t('delete_pending_alert'));
                       }
                     }}>
-                      {props.item.type==='delete'?t('options_cancel_delete'):t('options_delete')}
+                      {props.service.type==='delete'?t('options_cancel_delete'):t('options_delete')}
                     </div>
                   </Dropdown.Item>
               :null}
-                {props.item.type==='edit'|| props.item.type==='create'?
+                {props.service.type==='edit'|| props.service.type==='create'?
                 <Dropdown.Item>
                   <div onClick={()=>{
-                      props.setConfirmationId(props.item.petition_id);
+                      props.setConfirmationId(props.service.petition_id);
                       props.setConfirmationAction('petition');
                       props.setCancelRequest(true);
                   }}>
-                    {props.item.type==='create'?t('options_cancel_create'):props.item.type==='edit'?t('options_cancel_edit'):null}
+                    {props.service.type==='create'?t('options_cancel_create'):props.service.type==='edit'?t('options_cancel_edit'):null}
                   </div>
                 </Dropdown.Item>
                 :null
                 }
               </React.Fragment>
             :null}
-            {props.item.id?
+            {props.service.service_id?
               <Dropdown.Item as='span'>
               <div>
                 <Link to={{
                   pathname:"/history/list",
                   state:{
-                    service_id:props.item.id
+                    service_id:props.service.service_id
                   }
                 }}>{t('options_history')}</Link>
               </div>
@@ -456,7 +458,7 @@ function Filters (props) {
     return (showPending&&!item.petition_id)
   }
   const OwnedFilter = (item)=>{
-    return (showOwned&&(item.requester!==props.user.sub))
+    return (showOwned&&(item.owned))
   }
 
 

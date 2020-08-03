@@ -6,23 +6,26 @@ import Routes from './Router';
 import {SideNav} from './Components/SideNav.js';
 import * as config from './config.json';
 import { useTranslation } from 'react-i18next';
+import {LoadingPage} from './Components/LoadingPage.js';
 
  const MainPage= (props)=> {
       // eslint-disable-next-line
       const { t, i18n } = useTranslation();
       const [user,setUser] = useState();
       const globalState = useGlobalState();
-
+      const logged = globalState.global_state.log_state;
+      const [loading,setLoading] = useState(false);
       useEffect(()=>{
-        if(!localStorage.getItem('token')){
+        if(!logged){
           setUser(null);
         }
-        if(localStorage.getItem('token')&&!user){
+        if(logged&&!user){
           getUser();
         }
-    },[localStorage.getItem('token'),user])
+    },[logged,user])
 
       const getUser = ()=> {
+        setLoading(true);
         fetch(config.host+'user', {
           method: 'GET', // *GET, POST, PUT, DELETE, etc.
           credentials: 'include', // include, *same-origin, omit
@@ -31,25 +34,27 @@ import { useTranslation } from 'react-i18next';
           'Authorization': localStorage.getItem('token')
           }}).then(response=>response.json()).then(response=> {
             setUser(response.user);
+            setLoading(false);
         });
       }
 
       return(
         <React.Fragment>
-          <Router>
+        <Router>
           <Header user={user}/>
           <NavbarTop user={user}/>
+          {loading?<LoadingPage/>:null}
           <div className="ssp-container main">
 
             <div className="flex-container">
-              {localStorage.getItem('token')&&<SideNav/>}
+              {logged&&<SideNav/>}
               <Routes user={user} t={t} />
             </div>
 
           </div>
 
-          <Footer lang={props.lang} changeLanguage={props.changeLanguage}/>
-        </Router>
+        <Footer lang={props.lang} changeLanguage={props.changeLanguage}/>
+      </Router>
 
         </React.Fragment>
       );

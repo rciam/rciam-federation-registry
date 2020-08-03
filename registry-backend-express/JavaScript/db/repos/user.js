@@ -19,18 +19,35 @@ class User {
 
   async getServiceOwners(ids){
     return this.db.any(sql.getServiceOwners,{ids:ids}).then( info =>{
-      return info;
+      if(info){
+        return info;
+      }
+      else{
+        return [];
+      }
     })
   }
-  async getPetitionOwner(id){
-    return this.db.any(sql.getPetitionOwner,{id:+id}).then( data => {
-      return data[0];
+  async getPetitionOwners(id){
+    return this.db.any(sql.getPetitionOwners,{id:+id}).then( data => {
+      if(data){
+        return data;
+      }
+      else{
+        return [];
+      }
     });
   }
 
   async getReviewers() {
     return this.db.any(sql.getReviewers,{
       entitlements:config.super_admin_entitlements
+    }).then(info=>{
+      if(info){
+        return info;
+      }
+      else{
+        return [];
+      }
     });
 
   }

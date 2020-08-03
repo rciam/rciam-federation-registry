@@ -48,10 +48,18 @@ module.exports = {
     user:{
       getReviewers:sql('user/getReviewers.sql'),
       getServiceOwners:sql('user/getServiceOwners.sql'),
-      getPetitionOwner:sql('user/getPetitionOwner.sql')
+      getPetitionOwners:sql('user/getPetitionOwners.sql')
     },
     petition: {
-      getPetition:sql('petition/getPetition.sql')
+      getPetition:sql('petition/getPetition.sql'),
+      getOwnPetition:sql('petition/getOwnPetition.sql'),
+      canReviewOwn:sql('petition/canReviewOwn.sql'),
+      getOldOwnPetition:sql('petition/getOldOwnPetition.sql'),
+      getOldPetition:sql('petition/getOldPetition.sql')
+    },
+    service_list: {
+      getOwnList:sql('service_list/getOwnList.sql'),
+      getAllList:sql('service_list/getAllList.sql')
     }
 
 

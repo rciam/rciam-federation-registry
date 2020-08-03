@@ -245,7 +245,8 @@ const ServiceForm = (props)=> {
   }
 
   const editPetition = (petition) => {
-    petition.type =props.type;
+    petition.type=props.type;
+    petition.service_id=props.service_id;
     if(props.type === 'delete'){
       petition.type = 'edit';
     }

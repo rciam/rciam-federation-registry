@@ -79,7 +79,7 @@ export const NavbarTop = (props)=>{
               {props.user.sub}
             </Dropdown.Item>
           ):null}
-          <Dropdown.Item onClick={()=>{localStorage.removeItem('token'); history.push('/'); }} >
+          <Dropdown.Item onClick={()=>{localStorage.removeItem('token'); globalState.setLogState({tenant:'EGI',log_state:false}); history.push('/'); }} >
             {t('logout')}<FontAwesomeIcon icon={faSignOutAlt}/>
           </Dropdown.Item>
         </DropdownButton>):(

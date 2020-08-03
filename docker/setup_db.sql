@@ -1,6 +1,6 @@
 DROP TABLE IF EXISTS user_edu_person_entitlement, user_info, service_petition_contacts, service_petition_oidc_grant_types, service_petition_oidc_redirect_uris, service_petition_oidc_scopes,
 service_petition_details_oidc,service_petition_details_saml, service_petition_details, service_oidc_scopes,service_contacts,service_oidc_grant_types,service_oidc_redirect_uris,service_details_oidc,
-service_details_saml,service_details,service_state,user_roles,role_actions,role_entitlements,groups,tenants,tokens;
+service_details_saml,service_details,service_state,user_roles,role_actions,role_entitlements,groups,group_subs,tenants,tokens;
 
 create table tokens (
   token VARCHAR(1054),
@@ -40,8 +40,15 @@ create table role_entitlements (
 
 create table groups (
   id SERIAL PRIMARY KEY,
-  user_sub VARCHAR(256),
-  is_group_owner BOOLEAN,
+  group_name VARCHAR(256)
+);
+
+create table group_subs (
+  group_id bigint,
+  sub VARCHAR(256),
+  is_owner BOOLEAN,
+  PRIMARY KEY (group_id,sub),
+  FOREIGN KEY (group_id) REFERENCES groups(id)
 );
 
 create table tenants (
@@ -61,6 +68,7 @@ create table user_edu_person_entitlement (
 create table service_details (
   id SERIAL PRIMARY KEY,
   service_name  VARCHAR(256),
+  group_id bigint,
   service_description VARCHAR(1024),
   logo_uri VARCHAR(2048),
   policy_uri VARCHAR(2048),
@@ -129,7 +137,7 @@ create table service_oidc_scopes (
 
 create table service_petition_details (
   id SERIAL PRIMARY KEY,
-  service_id bigint DEFAULT NULL,
+  service_id INTEGER DEFAULT NULL,
   service_description VARCHAR(1024),
   service_name  VARCHAR(256),
   logo_uri VARCHAR(2048),
@@ -197,18 +205,18 @@ create table service_petition_oidc_scopes (
 );
 
 
-INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 1','https://cdn.vox-cdn.com/thumbor/0n6dqQfk9MuOBSiM39Pog2Bw39Y=/1400x1400/filters:format(jpeg)/cdn.vox-cdn.com/uploads/chorus_asset/file/19341372/microsoftedgenewlogo.jpg','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','oidc');
-INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 2','https://i.pinimg.com/originals/33/b8/69/33b869f90619e81763dbf1fccc896d8d.jpg','https://policy_uri.com','production','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','oidc');
-INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 3','https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcROY_lTxPGm6_XjUncdBfqkSbRoFoEf4BLBlQ&usqp=CAU','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','oidc');
-INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 4','https://brandmark.io/logo-rank/random/pepsi.png','https://policy_uri.com','development','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','oidc');
-INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 5','https://brandmark.io/logo-rank/random/pepsi.png','https://policy_uri.com','development','7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu','oidc');
-INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Saml 6','https://cdn.auth0.com/blog/duo-saml-exploit/saml.png','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','saml');
+INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol,group_id)
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 1','https://cdn.vox-cdn.com/thumbor/0n6dqQfk9MuOBSiM39Pog2Bw39Y=/1400x1400/filters:format(jpeg)/cdn.vox-cdn.com/uploads/chorus_asset/file/19341372/microsoftedgenewlogo.jpg','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','oidc',1);
+INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol,group_id)
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 2','https://i.pinimg.com/originals/33/b8/69/33b869f90619e81763dbf1fccc896d8d.jpg','https://policy_uri.com','production','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','oidc',2);
+INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol,group_id)
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 3','https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcROY_lTxPGm6_XjUncdBfqkSbRoFoEf4BLBlQ&usqp=CAU','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','oidc',3);
+INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol,group_id)
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 4','https://brandmark.io/logo-rank/random/pepsi.png','https://policy_uri.com','development','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','oidc',4);
+INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol,group_id)
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 5','https://brandmark.io/logo-rank/random/pepsi.png','https://policy_uri.com','development','7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu','oidc',5);
+INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol,group_id)
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Saml 6','https://cdn.auth0.com/blog/duo-saml-exploit/saml.png','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','saml',6);
 
 INSERT INTO service_state (id,state)
 VALUES (1,'deployed');
@@ -220,6 +228,8 @@ INSERT INTO service_state (id,state)
 VALUES (4,'deployed');
 INSERT INTO service_state (id,state)
 VALUES (5,'deployed');
+INSERT INTO service_state (id,state)
+VALUES (6,'deployed');
 
 INSERT INTO service_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_tokens,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds)
 VALUES (1,'client1',true,'secret',true,true,600,3600,28800,'plain',10000);
@@ -624,6 +634,33 @@ VALUES(3,'get_petitions');
 INSERT INTO role_actions(role_id,action)
 VALUES(3,'get_services');
 
+INSERT INTO groups (group_name)
+VALUES ('group_1');
+INSERT INTO groups (group_name)
+VALUES ('group_2');
+INSERT INTO groups (group_name)
+VALUES ('group_3');
+INSERT INTO groups (group_name)
+VALUES ('group_4');
+INSERT INTO groups (group_name)
+VALUES ('group_5');
+INSERT INTO groups (group_name)
+VALUES ('group_6');
+
+INSERT INTO group_subs (group_id,sub,is_owner)
+VALUES (1,'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',true);
+INSERT INTO group_subs (group_id,sub,is_owner)
+VALUES (2,'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',true);
+INSERT INTO group_subs (group_id,sub,is_owner)
+VALUES (3,'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',true);
+INSERT INTO group_subs (group_id,sub,is_owner)
+VALUES (4,'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',true);
+INSERT INTO group_subs (group_id,sub,is_owner)
+VALUES (6,'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',true);
+INSERT INTO group_subs (group_id,sub,is_owner)
+VALUES (5,'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',true);
+INSERT INTO group_subs (group_id,sub,is_owner)
+VALUES (5,'7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu',true);
 
 
 INSERT INTO role_entitlements (role_id,entitlement)

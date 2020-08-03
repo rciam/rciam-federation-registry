@@ -38,9 +38,9 @@ var corsOptions = {
 Issuer.discover(process.env.ISSUER_BASE_URI).then((issuer)=>{
   //console.log(issuer.metadata);
    clients.egi = new issuer.Client({
-    client_id: process.env.CLIENT_ID,
-    client_secret: process.env.CLIENT_SECRET,
-    redirect_uris: process.env.REDIRECT_URI
+    client_id: process.env.CLIENT_ID_EGI,
+    client_secret: process.env.CLIENT_SECRET_EGI,
+    redirect_uris: process.env.REDIRECT_URI_EGI
   });
 
   // client.callback('http://localhost:5000/callback/egi', params, { code_verifier }) // => Promise
@@ -61,61 +61,41 @@ Issuer.discover(process.env.ISSUER_BASE_URI).then((issuer)=>{
 Issuer.discover("https://aai.eosc-portal.eu/oidc/").then((issuer)=>{
   //console.log(issuer.metadata);
   const client = new issuer.Client({
-    client_id: "5d305fe0-d34f-44c9-98f6-e027a7cd852b",
-    client_secret: "ALYg2PMDaNsJOpFt2-LrRekBHFb6Gs7M62_k5CLaDaM5ie-SmALWLxnZYKy108WwuNtRGOPc3zYRYckta91QLVQ",
-    redirect_uris: process.env.REDIRECT_URI
+    client_id: process.env.CLIENT_ID_EOSC,
+    client_secret: process.env.CLIENT_SECRET_EOSC,
+    redirect_uris: process.env.REDIRECT_URI_EOSC
   });
 
-  const code_challenge = generators.codeChallenge(code_verifier);
-  const params = {
-    client_id: "5d305fe0-d34f-44c9-98f6-e027a7cd852b",
-    redirect_uri: "http://localhost:5000/callback/eosc",
-    scope: 'openid profile email eduperson_entitlement',
-  }
-
-
-
-  const passReqToCallback = false;
-  passport.use('eosc',new Strategy({client,params,passReqToCallback},(tokenset,userinfo,done)=>{
-    // console.log('tokenset', tokenset);
-    // console.log('access_token', tokenset.access_token);
-    // console.log('id_token', tokenset.id_token);
-    // console.log('claims', tokenset.claims);
-    // console.log('userinfo', userinfo);
-
-    routes.saveUser(userinfo);
-    return done(null, userinfo)
-  }));
 });
 
 // Mock Strategy for Tests
 
-passport.use(new MockStrategy({
-	name: 'my-mock',
-	user: {
-    sub: '7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu',
-    name: 'Andreas Kozadinos',
-    preferred_username: 'akozadinos',
-    given_name: 'Andreas',
-    family_name: 'Kozadinos',
-    email: 'andreaskoza@grnet.gr',
-    acr: 'https://aai.egi.eu/LoA#Substantial',
-    eduperson_entitlement: [
-     'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu',
-     'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=vm_operator#aai.egi.eu'
-    ],
-    edu_person_entitlements: [
-     'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu',
-     'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=vm_operator#aai.egi.eu'
-    ],
-    eduperson_assurance: [ 'https://aai.egi.eu/LoA#Substantial' ]
-  },
-  callback: process.env.OIDC_REACT
-}, (user, done) => {
-  routes.saveUser(user);
-  done(null, user);
-	// Perform actions on user, call done once finished
-}));
+// passport.use(new MockStrategy({
+// 	name: 'my-mock',
+// 	user: {
+//     sub: '7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu',
+//     name: 'Andreas Kozadinos',
+//     preferred_username: 'akozadinos',
+//     given_name: 'Andreas',
+//     family_name: 'Kozadinos',
+//     email: 'andreaskoza@grnet.gr',
+//     acr: 'https://aai.egi.eu/LoA#Substantial',
+//     eduperson_entitlement: [
+//      'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu',
+//      'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=vm_operator#aai.egi.eu'
+//     ],
+//     edu_person_entitlements: [
+//      'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu',
+//      'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=vm_operator#aai.egi.eu'
+//     ],
+//     eduperson_assurance: [ 'https://aai.egi.eu/LoA#Substantial' ]
+//   },
+//   callback: process.env.OIDC_REACT
+// }, (user, done) => {
+//   routes.saveUser(user);
+//   done(null, user);
+// 	// Perform actions on user, call done once finished
+// }));
 
 
 
@@ -145,7 +125,6 @@ const app = express();
 
 app.use(expressWinston.logger({
       transports: [
-        new (winston.transports.Console)({'timestamp':true}),
         new(winston.transports.File)({filename:logPath})
       ],
       format: winston.format.combine(

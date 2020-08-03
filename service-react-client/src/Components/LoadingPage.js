@@ -3,10 +3,10 @@ import {useParams,Redirect} from "react-router-dom";
 import Spinner from 'react-bootstrap/Spinner';
 import * as config from '../config.json';
 
-export const LoadingPage = () => {
+export const CallbackPage = () => {
   // eslint-disable-next-line
   let {code} = useParams();
-  const [done,setDone] = useState(false);
+  const [loading,setLoading] = useState(true);
 
   useEffect(()=>{
     getToken(code);
@@ -32,16 +32,22 @@ export const LoadingPage = () => {
       console.log(response);
       if(response){
         localStorage.setItem('token','Bearer '+response.token);
-        setDone(true);
+        setLoading(false);
       }
     });
   }
   return (
     <React.Fragment>
+      <LoadingPage loading={loading}/>
 
-      <div className="loading-page">
-        {done?<Redirect to='/'/>:<Spinner animation="border" variant="primary" />}
-      </div>
     </React.Fragment>
+  )
+}
+
+export const LoadingPage = (props) => {
+  return (
+    <div className="loading-page">
+      {props.loading?<Spinner animation="border" variant="primary" />:<Redirect to='/'/>}
+    </div>
   )
 }

@@ -5,7 +5,7 @@ import ServiceList from '../ServiceList.js';
 import {EditService,NewService,ViewService} from '../FormHandler.js';
 import UserInfo from '../Components/UserInfo.js';
 import {HistoryList} from '../Components/History.js';
-import {LoadingPage} from '../Components/LoadingPage.js';
+import {CallbackPage} from '../Components/LoadingPage.js';
 
 
 
@@ -19,7 +19,7 @@ const Routes = (props) => (
         <Home/>
       </Route>
       <Route path="/code/:code">
-        <LoadingPage/>
+        <CallbackPage/>
       </Route>
 
       <PrivateRoute user={props.user} path="/petitions">
@@ -115,6 +115,7 @@ function AdminRoute(props) {
 
 
 function RouteWithState(props) {
+  console.log(props);
   const childrenWithProps = React.Children.map(props.children, child =>
       React.cloneElement(child, { petition_id:props.location.state.petition_id,service_id:props.location.state.service_id,type:props.location.state.type,comment:props.location.state.comment})
     );

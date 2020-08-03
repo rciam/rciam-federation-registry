@@ -14,27 +14,105 @@ class PetitionRepository {
   }
 
   async get(id){
-      return this.db.one(sql.getPetition,{
-          id:+id,
-        }).then(result => {
-          if(result){
-            let data = {};
-            result.json.generate_client_secret = false;
-            data.meta_data = {};
-            data.meta_data.type = result.json.type;
-            data.meta_data.requester = result.json.requester;
-            data.meta_data.service_id = result.json.service_id;
-            delete result.json.type;
-            delete result.json.service_id;
-            delete result.json.requester;
-            data.service_data = result.json;
-            return data
-          }
-        });
+    return this.db.oneOrNone(sql.getPetition,{
+      id:+id,
+    }).then(result => {
+      if(result){
+        let data = {};
+        result.json.generate_client_secret = false;
+        data.meta_data = {};
+        data.meta_data.type = result.json.type;
+        data.meta_data.requester = result.json.requester;
+        data.meta_data.service_id = result.json.service_id;
+        delete result.json.type;
+        delete result.json.service_id;
+        delete result.json.requester;
+        data.service_data = result.json;
+        return data
       }
+      else {
+        return null
+      }
+    })
+  }
+  async canReviewOwn(petition_id,sub){
+    return this.db.oneOrNone(sql.canReviewOwn,{
+      sub:sub,
+      id:+petition_id
+    })
+  }
+  async getOwnOld(id,sub){
+    return this.db.oneOrNone(sql.getOwnOldPetition,{
+      sub:sub,
+      id:+id
+    }).then(result => {
+      if(result){
+        let data = {};
+        result.json.generate_client_secret = false;
+        data.meta_data = {};
+        data.meta_data.type = result.json.type;
+        data.meta_data.requester = result.json.requester;
+        data.meta_data.service_id = result.json.service_id;
+        delete result.json.type;
+        delete result.json.service_id;
+        delete result.json.requester;
+        data.service_data = result.json;
+        return data
+      }
+      else {
+        return null
+      }
+    })
+  }
+  async getOld(id,sub){
+    return this.db.oneOrNone(sql.getOldPetition,{
+      sub:sub,
+      id:+id
+    }).then(result => {
+      if(result){
+        let data = {};
+        result.json.generate_client_secret = false;
+        data.meta_data = {};
+        data.meta_data.type = result.json.type;
+        data.meta_data.requester = result.json.requester;
+        data.meta_data.service_id = result.json.service_id;
+        delete result.json.type;
+        delete result.json.service_id;
+        delete result.json.requester;
+        data.service_data = result.json;
+        return data
+      }
+      else {
+        return null
+      }
+    })
+  }
+
+  async getOwn(id,sub){
+    return this.db.oneOrNone(sql.getOwnPetition,{
+      sub:sub,
+      id:+id
+    }).then(result => {
+      if(result){
+        let data = {};
+        result.json.generate_client_secret = false;
+        data.meta_data = {};
+        data.meta_data.type = result.json.type;
+        data.meta_data.requester = result.json.requester;
+        data.meta_data.service_id = result.json.service_id;
+        delete result.json.type;
+        delete result.json.service_id;
+        delete result.json.requester;
+        data.service_data = result.json;
+        return data
+      }
+      else {
+        return null
+      }
+    })
+  }
 
   async add(petition,requester){
-      try{
         return this.db.tx('add-service',async t =>{
           let queries = [];
           return await t.service_petition_details.add(petition,requester).then(async result=>{
@@ -53,10 +131,6 @@ class PetitionRepository {
             }
           });
         });
-      }
-      catch(error){
-        return error
-      }
     }
 
   async update(newState,targetId){
@@ -65,8 +139,6 @@ class PetitionRepository {
         let queries = [];
         return t.petition.get(targetId).then(async oldState=>{
           if(oldState){
-            console.log(oldState.service_data);
-            console.log(newState);
             let edits = calcDiff(oldState.service_data,newState);
             if(Object.keys(edits.details).length !== 0){
                queries.push(t.service_petition_details.update(edits.details,targetId));

@@ -31,7 +31,6 @@ router.get('/auth/mock',checkTest, passport.authenticate('my-mock'));
 
 router.get('/login',(req,res)=>{
   var clients = req.app.get('clients');
-
   res.redirect(clients.egi.authorizationUrl({
     client_id:process.env.CLIENT_ID,
     scope: 'openid email profile eduperson_entitlement',
@@ -52,7 +51,9 @@ router.get('/callback/:tenant',(req,res,next)=>{
   var clients = req.app.get('clients');
   clients.egi.callback('http://localhost:5000/callback/egi',{code:req.query.code}).then(async response => {
     let code = await db.tokens.addToken(response.access_token);
-    console.log(code);
+    clients.egi.userinfo(response.access_token).then(usr_info=>{
+      saveUser(usr_info);
+    }); // => Promise
     res.redirect('http://localhost:3000/code/' + code.code);
   });
 });
@@ -75,18 +76,7 @@ router.get('/token/:code',(req,res,next)=>{
     next(err)
   }
 });
-// router.get('/callback/:tenant',function(req,res,next){passport.authenticate(req.params.tenant, {
-//   callback: true,
-//   successReturnToOrRedirect: process.env.OIDC_REACT,
-//   failureRedirect: process.env.OIDC_REACT
-// })(req,res,next);});
 
-
-// Logout Route
-router.get('/logout',authenticate,(req,res)=>{
-  req.logout();
-  res.redirect(process.env.OIDC_REACT);
-});
 
 // Check Authentication
 router.get('/auth',authenticate,(req,res,next)=>{
@@ -105,9 +95,9 @@ router.get('/user',authenticate,(req,res)=>{
   clients.egi.userinfo(TokenArray[1]) // => Promise
   .then(function (userinfo) {
     let user = userinfo;
-    if(req.user.role.actions.includes('review_own_petition')){
+    // if(req.user.role.actions.includes('review_own_petition')){
       user.admin = true;
-    }
+    // }
     user.role = req.user.role.name;
     res.end(JSON.stringify({
       user
@@ -201,29 +191,20 @@ router.get('/service/pending',amsAgentAuth,(req,res,next)=>{
 // Find all clients/petitions from curtain user to create preview list
 router.get('/service/list',authenticate,(req,res,next)=>{
   try{
-    if(req.user.role.actions.includes('get_services')&&req.user.role.actions.includes('get_petitions')){
-      db.service_list.getAll().then(response =>{
-        if(response.success){
-          return res.status(200).json({services:response.services})
-        }
-        else{
-          next(response.error);
-        }
-      }).catch(err=>{next(err);});
-    }
-    else if(req.user.role.actions.includes('get_own_services')&&req.user.role.actions.includes('get_own_petitions')){
-      db.service_list.getOwn(req.user.sub).then(response =>{
-        if(response.success){
-          return res.status(200).json({services:response.services})
-        }
-        else{
-          next(response.error);
-        }
-      }).catch(err=>{next(err);});
-    }
-    else{
-      res.status(401).json({err:'Requested action not authorised'})
-    }
+      if(req.user.role.actions.includes('get_services')&&req.user.role.actions.includes('get_petitions')){
+        db.service_list.getAll(req.user.sub).then(response =>{
+            return res.status(200).json({services:response});
+
+        }).catch(err=>{next(err);});
+      }
+      else if(req.user.role.actions.includes('get_own_services')&&req.user.role.actions.includes('get_own_petitions')){
+        db.service_list.getOwn(req.user.sub).then(response =>{
+          return res.status(200).json({services:response});
+        }).catch(err=>{next(err);});
+      }
+      else{
+        res.status(401).json({err:'Requested action not authorised'})
+      }
   }
   catch(err){
     next(err);
@@ -232,33 +213,37 @@ router.get('/service/list',authenticate,(req,res,next)=>{
 
 // It fetches a petition with form data
 router.get('/petition/:id',authenticate,(req,res,next)=>{
-  if(req.user.role.actions.includes('get_own_petition')){
-    return db.task('find-petition-data',async t=>{
-      let requester;
-      if(req.user.role.actions.includes('get_petition')){
-        requester = 'admin'
+     db.task('find-petition-data',async t=>{
+     if(req.user.role.actions.includes('get_petition')){
+       await t.petition.get(req.params.id).then(result=>{return result.service_data}).then(petition => {
+          if(petition){
+             res.status(200).json({petition});
+          }
+          else {
+            res.status(204);
+            customLogger(req,res,'warn','Petition not found');
+            res.end();
+          }
+        }).catch(err=>{next(err);});
+      }
+      else if(req.user.role.actions.includes('get_own_petition')){
+        await t.petition.getOwn(req.params.id,req.user.sub).then(result=>{return result.service_data}).then(petition => {
+          if(petition){
+             res.status(200).json({petition});
+          }
+          else {
+            res.status(204);
+            customLogger(req,res,'warn','Petition not found');
+            res.end();
+          }
+        }).catch(err=>{next(err);});
       }
       else {
-        requester = req.user.sub
+        res.status(401).json({err:'Requested action not authorised'})
       }
-      await t.service_petition_details.belongsToRequester(req.params.id,requester).then(async protocol=>{
-        if(protocol){
-          await t.petition.get(req.params.id).then(result=>{return result.service_data}).then(petition => {
-            return res.status(200).json({petition});
-          }).catch(err=>{next(err);});
-        }
-        else{
-          res.status(204);
-          customLogger(req,res,'warn','Petition not found');
-          res.end();
-        }
-      }).catch(err=>{next(err);});
     });
-  }
-  else{
-    res.status(401).json({err:'Requested action not authorised'})
-  }
 });
+
 
 // Add a new client/petition
 router.post('/petition',clientValidationRules(),validate,authenticate,asyncPetitionValidation,(req,res,next)=>{
@@ -345,25 +330,36 @@ router.put('/petition/:id',clientValidationRules(),validate,authenticate,asyncPe
 // It returns a service with form data
 router.get('/service/:id',authenticate,(req,res,next)=>{
   if(req.user.role.actions.includes('get_own_service')){
-    let requester;
-    if(req.user.role.actions.includes('get_service')){
-      requester = 'admin'
-    }
-    else {
-      requester = req.user.sub
-    }
     try{
-      return db.task('find-service-data',async t=>{
-        await t.service_details.belongsToRequester(req.params.id,requester).then(async exists=>{
-          if(exists){
-            const service = await t.service.get(req.params.id,'service').then(result=>{return result.service_data}).catch(err=>{next(err);});
-            return res.status(200).json({service});
+      if(req.user.role.actions.includes('get_service')){
+        db.service.get(req.params.id,'service').then(result=>{
+          if(result){
+            res.status(200).json({service:result.service_data});
           }
-          else{
+          else {
             res.status(204).end();
           }
-        }).catch(err=>{next(err);});;
-      });
+        }).catch(err=>{next(err);})
+      }
+      else{
+        return db.task('find-service-data',async t=>{
+          await t.service_details.getProtocol(req.params.id,req.user.sub).then(async exists=>{
+            if(exists){
+              await t.service.get(req.params.id,'service').then(result=>{
+                if(result){
+                  res.status(200).json({service:result.service_data});
+                }
+                else {
+                  res.status(204).end();
+                }
+              }).catch(err=>{next(err);})
+            }
+            else{
+              res.status(204).end();
+            }
+          }).catch(err=>{next(err);});;
+        });
+      }
     }
     catch(err){
       next(err);
@@ -379,8 +375,8 @@ router.put('/petition/delete/:service_id',authenticate,(req,res,next)=>{
   if(req.user.role.actions.includes('add_own_petition')&&req.user.role.actions.includes('update_own_petition')){
     db.task('create-delete-petition',async t =>{
       try{
-        await t.service_details.belongsToRequester(req.params.service_id,req.user.sub).then(async belongs =>{
-          if(belongs&&(belongs.state==='deployed')){
+        await t.service_details.getProtocol(req.params.service_id,req.user.sub).then(async belongs =>{
+          if(belongs){
             await t.service.get(req.params.service_id,'service').then(async service => {
               if (service) {
                 service = service.service_data;
@@ -398,7 +394,7 @@ router.put('/petition/delete/:service_id',authenticate,(req,res,next)=>{
                     });
                   }
                   else {
-                    await t.service.add(service,req.user.sub,'petition').then(id=>{
+                    await t.petition.add(service,req.user.sub).then(id=>{
                       if(id){
                         res.status(200).json({id});
                       }
@@ -425,37 +421,33 @@ router.put('/petition/delete/:service_id',authenticate,(req,res,next)=>{
 });
 
 // Admin rejects petition
-router.put('/petition/reject/:id',authenticate,(req,res,next)=>{
-  if(req.user.role.actions.includes('review_own_petition')){
+router.put('/petition/reject/:id',authenticate,canReview,(req,res,next)=>{
     try{
-      db.task('reject-petition',async t =>{
-        
-        await t.service_petition_details.review(req.params.id,req.user.sub,'reject',req.body.comment).then(async results=>{
-          if (results){
-            await t.user.getPetitionOwner(req.params.id).then(email_data=>{
-              if(email_data){
-                sendMail({subject:'Service Petition Review',service_name:email_data.service_name,state:'rejected'},'review-notification.html',[{name:email_data.name,email:email_data.email}]);
-              }
-            }).catch(err=>{next(err)});
-            res.status(200).end();
-          }
-          else{
-            res.status(204).end();
-          }
-        }).catch(err=>{next(err);});
-      })
-    }
-    catch(error){next(error);}
-  }
-  else{
-    res.status(401).json({err:'Requested action not authorised'})
-  }
+        db.task('reject-petition',async t =>{
+          await t.service_petition_details.review(req.params.id,req.user.sub,'reject',req.body.comment).then(async results=>{
+            if (results){
+              await t.user.getPetitionOwners(req.params.id).then(data=>{
+                if(data){
+                  data.forEach(email_data=>{
+                    sendMail({subject:'Service Petition Review',service_name:email_data.service_name,state:'rejected'},'review-notification.html',[{name:email_data.name,email:email_data.email}]);
+                  })
+                }
 
+              }).catch(err=>{next(err)});
+              res.status(200).end();
+            }
+            else{
+              res.status(204).end();
+            }
+          }).catch(err=>{next(err);});
+        })
+      }
+    catch(error){next(error);}
 });
 
+
 // Leave Comment/Accept With Changes
-router.put('/petition/changes/:id',authenticate,(req,res)=>{
-  if(req.user.role.actions.includes('review_own_petition')){
+router.put('/petition/changes/:id',authenticate,canReview,(req,res)=>{
     try{
       db.tx('approve-with-changes-petition',async t =>{
         await t.petition.get(req.params.id).then(async petition =>{
@@ -471,10 +463,13 @@ router.put('/petition/changes/:id',authenticate,(req,res)=>{
                 await t.service_petition_details.review(req.params.id,req.user.sub,'approved_with_changes',req.body.comment).then(async result=>{
                   if(result){
                     res.status(200).json({id});
-                    await t.user.getPetitionOwner(req.params.id).then(email_data=>{
-                      if(email_data){
-                        sendMail({subject:'Service Petition Review',service_name:email_data.service_name,state:'approved with changes'},'review-notification.html',[{name:email_data.name,email:email_data.email}]);
+                    await t.user.getPetitionOwners(req.params.id).then(data=>{
+                      if(data){
+                        data.forEach(email_data=>{
+                          sendMail({subject:'Service Petition Review',service_name:email_data.service_name,state:'approved with changes'},'review-notification.html',[{name:email_data.name,email:email_data.email}]);
+                        })
                       }
+
                     }).catch(err=>{next(err);});
                   }
                 }).catch(err=>{next(err);});
@@ -488,15 +483,11 @@ router.put('/petition/changes/:id',authenticate,(req,res)=>{
       })
     }
     catch(error){next(error);}
-  }
-  else{
-    res.status(401).json({err:'Requested action not authorised'})
-  }
+
 });
 
 // Approve petition
-router.put('/petition/approve/:id',authenticate,(req,res,next)=>{
-  if(req.user.role.actions.includes('review_own_petition')){
+router.put('/petition/approve/:id',authenticate,canReview,(req,res,next)=>{
     try{
       db.tx('approve-petition',async t =>{
         let service_id;
@@ -513,12 +504,12 @@ router.put('/petition/approve/:id',authenticate,(req,res,next)=>{
               // Edit Service
               service_id = petition.meta_data.service_id;
               await t.batch([
-                t.service.update(petition.service_data,petition.meta_data.service_id,'service'),
+                t.service.update(petition.service_data,petition.meta_data.service_id),
                 t.service_petition_details.review(req.params.id,req.user.sub,'approved',req.body.comment)
               ]);
             }
             else if(petition.meta_data.type==='create'){
-              await t.service.add(petition.service_data,petition.meta_data.requester,'service').then(async id=>{
+              await t.service.add(petition.service_data,petition.meta_data.requester).then(async id=>{
                 if(id){
                   service_id = id;
                   await t.service_petition_details.approveCreation(req.params.id,req.user.sub,'approved',req.body.comment,id);
@@ -526,9 +517,11 @@ router.put('/petition/approve/:id',authenticate,(req,res,next)=>{
               }).catch(err=>{next(err);});
             }
             res.status(200).json({service_id});
-            await t.user.getPetitionOwner(req.params.id).then(email_data=>{
-              if(email_data){
-                sendMail({subject:'Service Petition Review',service_name:email_data.service_name,state:'aprroved'},'review-notification.html',[{name:email_data.name,email:email_data.email}]);
+            await t.user.getPetitionOwners(req.params.id).then(data=>{
+              if(data){
+                data.forEach(email_data=>{
+                  sendMail({subject:'Service Petition Review',service_name:email_data.service_name,state:'approved'},'review-notification.html',[{name:email_data.name,email:email_data.email}]);
+                })
               }
             }).catch(err=>{next(err);})
           }
@@ -541,67 +534,69 @@ router.put('/petition/approve/:id',authenticate,(req,res,next)=>{
     catch(error){
       next(error);
     }
-  }
-  else{
-    res.status(401).json({err:'Requested action not authorised'})
-  }
 });
 
 // Get History For Service from Service id
 router.get('/petition/history/:id',authenticate,(req,res)=>{
-  if(req.user.role.actions.includes('get_own_petition')){
     try{
-      return db.task('find-petition-data',async t=>{
-        await t.service_petition_details.belongsToRequesterHistory(req.params.id,req.user.sub).then(async belongs=>{
-          if(belongs||req.user.role.actions.includes('get_petition')){
-            let petition = await t.petition.get(req.params.id);
-            petition = petition.service_data;
-            return res.status(200).json({petition});
+      if(req.user.role.actions.includes('get_petition')){
+        db.petition.getOld(req.params.id,req.user.sub).then(petition =>{
+          if(petition){
+            res.status(200).json({petition:petition.service_data});
           }
           else{
             return res.status(204).end();
           }
-        }).catch(err=>{next(err);});
-      });
+        }).catch(err=>{next(err)});
+      }
+      else if (req.user.role.actions.includes('get_own_petition')){
+        db.petition.getOwnOld(req.params.id,req.user.sub).then(petition =>{
+          if(petition){
+            res.status(200).json({petition:petition.service_data});
+          }
+          else{
+            return res.status(204).end();
+          }
+        }).catch(err=>{next(err)});
+      }
+      else{
+        res.status(401).json({err:'Requested action not authorised'})
+      }
     }
     catch(err){
       next(err);
     }
-  }
-  else{
-    res.status(401).json({err:'Requested action not authorised'})
-  }
 });
 
 // User owned or admin
 router.get('/service/history/list/:id',authenticate,(req,res)=>{
 
-  if(req.user.role.actions.includes('get_own_petitions')){
     try{
       return db.tx('get-history-for-petition', async t =>{
         if(req.user.role.actions.includes('get_petitions')){
-          requester = 'admin'
+          await t.service_petition_details.getHistory(req.params.id).then(petition_list =>{
+            return res.status(200).json({history:petition_list});
+          }).catch(err=>{next(err)});
+        }
+        else if(req.user.role.actions.includes('get_own_petitions')){
+          await t.service_petition_details.getProtocol(req.params.id).then(async service=>{
+            if(service){
+              await t.service_petition_details.getHistory(req.params.id).then(petition_list =>{
+                return res.status(200).json({history:petition_list});
+              }).catch(err=>{next(err)});
+            }
+          }).catch(err =>{next(err)});
         }
         else {
-          requester = req.user.sub
+          res.status(401).json({err:'Requested action not authorised'});
         }
-        await t.service_details.belongsToRequester(req.params.id,requester).then(async exists=>{
-          if(exists){
-            await t.service_petition_details.getHistory(req.params.id).then(async petition_list =>{
-              return res.json({success:true,history:petition_list});
-            }).catch(err=>{next(err)});
-          }
-          else {res.status(204).end();}
-        }).catch(err=>{next(err)});
+
       });
     }
     catch(e){
       next(e);
     }
-  }
-  else{
-    res.status(401).json({err:'Requested action not authorised'})
-  }
+
 
 });
 
@@ -622,59 +617,72 @@ router.get('/petition/availability/:protocol/:id',authenticate,(req,res,next)=>{
 // ******************** HELPER FUNCTIONS ********************
 // ----------------------------------------------------------
 
+
 // Authentication Middleware
-function checkAuthentication(req,res,next){
-  if(req.isAuthenticated()){next();}
-  else{
-    res.status(401).end();}
-}
-
 function authenticate(req,res,next){
-  const data = {'client_secret':'AO4C3x6WiORO4f5ha3WETllykfVwQfBcboCl8ETZKmm1hOAyA6ku8YxZu90MfHk7gp6LX_HBFqK_sQlVezY96L0'}
-  if(req.headers.authorization){
-    TokenArray = req.headers.authorization.split(" ");
+  try{
+    if(process.env.NODE_ENV==='test-docker'||process.env.NODE_ENV==='test'){
+      req.user ={};
+      req.user.edu_person_entitlement = ['urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu','urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=vm_operator#aai.egi.eu'];
+      req.user.sub =  "7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu";
+      db.user_role.getRoleActions(req.user.edu_person_entitlement,1).then(role=>{
+        if(role.success){
+          req.user.role = role.role;
+          next();
+        }
+      }).catch(err=>{next(err)});
+    }
+    else{
+      const data = {'client_secret':process.env.CLIENT_SECRET_EGI}
+      if(req.headers.authorization){
+        TokenArray = req.headers.authorization.split(" ");
+        axios({
+          method:'post',
+          url: 'https://aai-dev.egi.eu/oidc/introspect',
+          params: {
+            client_id:process.env.CLIENT_ID_EGI,
+            token:TokenArray[1]
+          },
+          headers: {
+            'Content-Type':'application/x-www-form-urlencoded',
+            'Accept': 'application/json'
+          },
+          data: qs.stringify(data)
+        }).then(result => {
+          req.user = {};
+          req.user.sub = result.data.sub;
+          req.user.edu_person_entitlement = result.data.eduperson_entitlement;
+          req.user.iss = result.data.iss
+          db.user_role.getRoleActions(req.user.edu_person_entitlement,1).then(role=>{
+            if(role.success){
+              req.user.role = role.role;
+              next();
+            }
+            else{
+              next(role.err);
+            }
+          }).catch((err)=> {
+            next(err);
+          });
 
-    axios({
-      method:'post',
-      url: 'https://aai-dev.egi.eu/oidc/introspect',
-      params: {
-        client_id:'966c3bcf-0a24-4874-80f0-822ef8c7a5be',
-        token:TokenArray[1]
-      },
-      headers: {
-        'Content-Type':'application/x-www-form-urlencoded',
-        'Accept': 'application/json'
-      },
-      data: qs.stringify(data)
-    }).then(result => {
-        req.user = {};
-        req.user.sub = result.data.sub;
-        req.user.edu_person_entitlement = result.data.eduperson_entitlement;
-        req.user.iss = result.data.iss
-        db.user_role.getRoleActions(req.user.edu_person_entitlement,1).then(role=>{
-          if(role.success){
-            req.user.role = role.role;
-            next();
-          }
-          else{
-            next(role.err);
-          }
-        }).catch((err)=> {
-          next(err);
-        });
 
-
-      }, (error) =>{
+        }, (error) =>{
           next(error)
         })
-  }
-  else{
-    res.status(401).end();
-  }
+      }
+      else{
+        res.status(401).end();
+      }
+    }
 
+  }
+  catch(err){
+    next(err);
+  }
 
 }
-// bZwolIWwWH9AzCjKB60dLCG6bYCCVinx
+
+// Authenticating AmsAgent
 function amsAgentAuth(req,res,next){
   if(req.header('X-Api-Key')===process.env.AMS_AGENT_KEY){
     next();
@@ -686,19 +694,26 @@ function amsAgentAuth(req,res,next){
   }
 }
 
-function checkTest(req,res,next){
- if(process.env.NODE_ENV==='test-docker'||process.env.NODE_ENV==='test'){
+
+// Checking Review Permitions
+function canReview(req,res,next){
+  if(req.user.role.actions.includes('review_petition')){
     next();
   }
+  else if (true||req.user.role.actions.includes('review_own_petition')) {
+    db.petition.canReviewOwn(req.params.id,req.user.sub).then(canReview=>{
+      if(canReview){
+        next();
+      }
+      else{
+        res.status(401).json({err:'Requested action not authorised'});
+      }
+    })
+  }
   else{
-    res.status(403);
-    customLogger(req,res,'warn','Forbidden resourse');
-    res.json({error:'Mock auth only available in test mode'});
+    res.status(401).json({err:'Requested action not authorised'});
   }
 }
-
-
-
 
 // Save new User to db. Gets called on Authentication
 const saveUser=(userinfo)=>{
@@ -752,22 +767,15 @@ function asyncPetitionValidation(req,res,next){
               // Checking if client_id/entity_id is available
               await isAvailable.apply(this,(req.body.protocol==='oidc'?[t,req.body.client_id,'oidc',0,req.body.service_id]:[t,req.body.entity_id,'saml',0,req.body.service_id])).then(async available=>{
                 if(available){
-                  await t.service_details.belongsToRequester(req.body.service_id,req.user.sub).then(async service =>{
-                    if(service){
+                  await t.service_details.getProtocol(req.body.service_id,req.user.sub).then(async service =>{
+                    if(service.protocol){
                       if(service.protocol===req.body.protocol){
-                        if(service.state==='deployed'){
                           next();
-                        }
-                        else{
-                          res.status(403);
-                          customLogger(req,res,'warn','Tried to edit petition awaiting development.');
-                          return res.end();}
                       }
                       else {
                         res.status(403);
                         customLogger(req,res,'warn','Tried to edit protocol petition.');
                         return res.end();
-
                       }
                     }
                     else {
@@ -793,17 +801,17 @@ function asyncPetitionValidation(req,res,next){
         }
       }
       else if(req.route.methods.put){
-        await t.service_petition_details.belongsToRequester(req.params.id,req.user.sub).then(async petition => {
-          if(petition){
-            if(petition.protocol!==req.body.protocol){
-              res.status(403);
-              customLogger(req,res,'warn','Tried to edit protocol petition.');
-              return res.end();
-            }
-            if(petition.type!=='delete'&&petition.type!==req.body.type){
-              return res.json({success:false,error:'Type of request cannot be modified'});
-            }
-            if(req.body.type==='create'){
+        if(req.body.type==='create'){
+          await t.service_petition_details.belongsToRequester(req.params.id,req.user.sub).then(async petition => {
+            if(petition){
+              if(petition.protocol!==req.body.protocol){
+                res.status(403);
+                customLogger(req,res,'warn','Tried to edit protocol petition.');
+                return res.end();
+              }
+              if(petition.type!==req.body.type){
+                return res.json({success:false,error:'Type of request cannot be modified'});
+              }
               await isAvailable.apply(this,(req.body.protocol==='oidc'?[t,req.body.client_id,'oidc',req.params.id,0]:[t,req.body.entity_id,'saml',req.params.id,0])).then(async available=>{
                 if(available){
                   next();
@@ -815,9 +823,23 @@ function asyncPetitionValidation(req,res,next){
                 }
               });
             }
-            else{
-              await t.service_petition_details.getServiceId(req.params.id).then(async service_id => {
-                await isAvailable.apply(this,(req.body.protocol==='oidc'?[t,req.body.client_id,'oidc',req.params.id,service_id]:[t,req.body.entity_id,'saml',req.params.id,service_id])).then(async available=>{
+            else {
+              res.status(403);
+              customLogger(req,res,'warn','Could not find petition with id:'+req.params.id);
+              return res.end();
+            }
+          }).catch(err=>{next(err);});
+        }
+        else if (req.body.type==='edit'){
+          await t.service_details.getProtocol(req.body.service_id,req.user.sub).then(async service => {
+            if(service.protocol){
+              if(service.protocol!==req.body.protocol){
+                res.status(403);
+                customLogger(req,res,'warn','Tried to edit protocol petition.');
+                return res.end();
+              }
+              else{
+                await isAvailable.apply(this,(req.body.protocol==='oidc'?[t,req.body.client_id,'oidc',req.params.id,req.body.service_id]:[t,req.body.entity_id,'saml',req.params.id,req.body.service_id])).then(async available=>{
                   if(available){
                     next();
                   }
@@ -827,15 +849,18 @@ function asyncPetitionValidation(req,res,next){
                     return res.end();
                   }
                 });
-              }).catch(err=>{next(err);})
+              }
             }
-          }
-          else {
-            res.status(403);
-            customLogger(req,res,'warn','Could not find service with id:'+req.body.service_id);
-            return res.end();
-          }
-        }).catch(err=>{next(err);});
+            else {
+              res.status(403);
+              customLogger(req,res,'warn','Could not find service with id:'+req.body.service_id);
+              return res.end();
+            }
+          });
+        }
+        else if (req.body.type==='delete'){
+            throw 'delete error';
+        }
       }
     })
   }
@@ -844,21 +869,12 @@ function asyncPetitionValidation(req,res,next){
   }
 }
 
-//
-function sendError(res,err,next){
-  res.json({success:false,error:err});
-  next(new Error(err));
-}
 
-
-
-// Edit request missing validation
 
 
 
 
 
 module.exports = {
-  router:router,
-  saveUser:saveUser
+  router:router
 }

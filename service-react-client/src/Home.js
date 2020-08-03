@@ -9,7 +9,6 @@ const Home = ()=> {
   const globalState = useGlobalState();
 
   useEffect(()=>{
-
     getAuth();
     // eslint-disable-next-line
   },[]);

@@ -16,23 +16,13 @@ describe('Service registry API Integration Tests', function() {
     require('../index.js').stop();
   });
   beforeEach(done => setTimeout(done, 500));
-  describe('#GET /auth/mock', function() {
-    it('should get session cookie', function(done) {
-      request(server).get('/auth/mock').expect('Content-Type', /json/)
-        .end(function(err, res) {
-          expect(200);
-          Cookies = res.headers['set-cookie'].pop().split(';')[0];
-          done();
-        });
-    });
-  });
   describe('# GET /service/list', function(){
     it('should get service list data',function(done){
       var req = request(server).get('/service/list');
-      req.cookies = Cookies;
       req.set('Accept','application/json')
       .expect('Content-Type',/json/)
       .expect(200).end(function(err,res){
+
         expect(res.statusCode).to.equal(200);
         done();})
     })
@@ -44,7 +34,6 @@ describe('Service registry API Integration Tests', function() {
         ...create.oidc
       }
       );
-      req.cookies = Cookies;
       req.set('Accept','application/json')
       .expect('Content-Type',/json/)
       .expect(200)
@@ -58,7 +47,6 @@ describe('Service registry API Integration Tests', function() {
     });
     it('should fetch created petition',function(done){
       var req = request(server).get('/petition/'+petition);
-      req.cookies = Cookies;
       req.set('Accept','application/json')
         .expect('Content-Type',/json/)
         .expect(200)
@@ -74,7 +62,6 @@ describe('Service registry API Integration Tests', function() {
         type:'create',
         ...edit.oidc
       });
-      req.cookies = Cookies;
       req.set('Accept','application/json')
         .expect('Content-Type',/json/)
         .expect(200)
@@ -84,7 +71,6 @@ describe('Service registry API Integration Tests', function() {
     });
     it('should delete petition that was created',function(done){
       var req = request(server).delete('/petition/'+petition)
-      req.cookies = Cookies;
       req.set('Accept','application/json')
         .expect('Content-Type',/json/)
         .expect(200)
@@ -99,7 +85,6 @@ describe('Service registry API Integration Tests', function() {
         type:'create',
         ...create.saml
       });
-      req.cookies = Cookies;
       req.set('Accept','application/json')
       .expect('Content-Type',/json/)
       .expect(200)
@@ -113,7 +98,6 @@ describe('Service registry API Integration Tests', function() {
     });
     it('should fetch created petition',function(done){
       var req = request(server).get('/petition/'+petition);
-      req.cookies = Cookies;
       req.set('Accept','application/json')
         .expect('Content-Type',/json/)
         .expect(200)
@@ -126,7 +110,6 @@ describe('Service registry API Integration Tests', function() {
         type:'create',
         ...edit.saml
       });
-      req.cookies = Cookies;
       req.set('Accept','application/json')
         .expect('Content-Type',/json/)
         .expect(200)
@@ -136,7 +119,7 @@ describe('Service registry API Integration Tests', function() {
     });
     it('should delete petition that was created',function(done){
       var req = request(server).delete('/petition/'+petition)
-      req.cookies = Cookies;
+
       req.set('Accept','application/json')
         .expect('Content-Type',/json/)
         .expect(200)
@@ -152,7 +135,7 @@ describe('Service registry API Integration Tests', function() {
           type:'create',
           ...create.oidc
         });
-        req.cookies = Cookies;
+
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
         .expect(200)
@@ -166,7 +149,7 @@ describe('Service registry API Integration Tests', function() {
       });
       it('should approve petition and create service',function(done){
         var req = request(server).put('/petition/approve/'+petition);
-        req.cookies = Cookies;
+
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
         .expect(200)
@@ -205,7 +188,7 @@ describe('Service registry API Integration Tests', function() {
       });
       it('should get created service',function(done){
         var req = request(server).get('/service/'+service);
-        req.cookies = Cookies;
+
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
         .expect(200)
@@ -221,7 +204,7 @@ describe('Service registry API Integration Tests', function() {
           service_id:service,
           ...edit.oidc
         });
-        req.cookies = Cookies;
+
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
         .expect(200)
@@ -234,7 +217,7 @@ describe('Service registry API Integration Tests', function() {
       });
       it('should approve petition and edit service',function(done){
         var req = request(server).put('/petition/approve/'+petition);
-        req.cookies = Cookies;
+
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
         .expect(200)
@@ -271,7 +254,7 @@ describe('Service registry API Integration Tests', function() {
       });
       it('should get edited service',function(done){
         var req = request(server).get('/service/'+service);
-        req.cookies = Cookies;
+
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
         .expect(200)
@@ -286,7 +269,7 @@ describe('Service registry API Integration Tests', function() {
     describe('# Delete Service',function(){
       it('should create a new delete petition',function(done){
         var req = request(server).put('/petition/delete/'+service);
-        req.cookies = Cookies;
+
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
         .expect(200)
@@ -300,7 +283,7 @@ describe('Service registry API Integration Tests', function() {
       });
       it('should approve petition and delete service',function(done){
         var req = request(server).put('/petition/approve/'+petition);
-        req.cookies = Cookies;
+
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
         .expect(200)
@@ -333,7 +316,7 @@ describe('Service registry API Integration Tests', function() {
       });
       it('should fail to get deleted service',function(done){
         var req = request(server).get('/service/'+service);
-        req.cookies = Cookies;
+
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
         .expect(200)
@@ -351,7 +334,7 @@ describe('Service registry API Integration Tests', function() {
           type:'create',
           ...create.oidc
         });
-        req.cookies = Cookies;
+
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
         .expect(200)
@@ -365,7 +348,7 @@ describe('Service registry API Integration Tests', function() {
       });
       it('should reject petition',function(done){
         var req = request(server).put('/petition/reject/'+petition);
-        req.cookies = Cookies;
+
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
         .expect(200)
@@ -380,7 +363,7 @@ describe('Service registry API Integration Tests', function() {
           type:'create',
           ...create.oidc
         });
-        req.cookies = Cookies;
+
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
         .expect(200)
@@ -396,7 +379,7 @@ describe('Service registry API Integration Tests', function() {
         var req = request(server).put('/petition/changes/'+petition).send({
           comment:"comment"
         });
-        req.cookies = Cookies;
+
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
         .expect(200)
@@ -410,7 +393,7 @@ describe('Service registry API Integration Tests', function() {
       });
       it('should delete petition',function(done){
         var req = request(server).delete('/petition/'+petition);
-        req.cookies = Cookies;
+
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
         .expect(200)
