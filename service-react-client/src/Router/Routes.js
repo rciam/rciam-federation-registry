@@ -1,27 +1,28 @@
 import React from 'react';
-import { Switch, Route,Redirect,Link } from 'react-router-dom';
+import {Switch,Route,Redirect,Link} from 'react-router-dom';
 import Home from '../Home';
 import ServiceList from '../ServiceList.js';
 import {EditService,NewService,ViewService} from '../FormHandler.js';
 import UserInfo from '../Components/UserInfo.js';
 import {HistoryList} from '../Components/History.js';
 import {CallbackPage} from '../Components/LoadingPage.js';
-
-
+import {InvitationRoute} from '../Components/InvitationRoute.js';
+import GroupsPage from '../Groups.js'
 
 
 const Routes = (props) => (
-
   <div className="content-container">
     <Switch>
       <Route exact path="/" component={Home}/>
       <Route path="/home">
-        <Home/>
+        <Home />
       </Route>
       <Route path="/code/:code">
         <CallbackPage/>
       </Route>
-
+      <Route path="/invitation/:code">
+        <InvitationRoute/>
+      </Route>
       <PrivateRoute user={props.user} path="/petitions">
         <div className="links">
           <Link to="/home">{props.t('link_home')}</Link>
@@ -57,6 +58,16 @@ const Routes = (props) => (
           Edit Service
         </div>
         <EditService user={props.user}/>
+      </RouteWithState>
+      <RouteWithState user={props.user} path="/group">
+        <div className="links">
+          <Link to="/home">{props.t('link_home')}</Link>
+          <span className="link-seperator">/</span>
+          <Link to="/petitions">{props.t('link_petitions')}</Link>
+          <span className="link-seperator">/</span>
+          {props.t('group')}
+        </div>
+        <GroupsPage/>
       </RouteWithState>
       <RouteWithState user={props.user} path='/history/list'>
         <HistoryList user={props.user}/>
@@ -117,7 +128,7 @@ function AdminRoute(props) {
 function RouteWithState(props) {
   console.log(props);
   const childrenWithProps = React.Children.map(props.children, child =>
-      React.cloneElement(child, { petition_id:props.location.state.petition_id,service_id:props.location.state.service_id,type:props.location.state.type,comment:props.location.state.comment})
+      React.cloneElement(child, {...props.location.state})
     );
   return (
     <Route

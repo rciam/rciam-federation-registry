@@ -200,6 +200,21 @@
     "history_td_date":"Date",
     "history_not_reviewed":"Not yet reviewed",
     "history_td_type":"Type of Request",
-    "history_td_status":"Review Status"
+    "history_td_status":"Review Status",
+    "manage_group":"Διαχείριση Ομάδας",
+    "view_group":"Εμφάνιση Ομάδας",
+    "group":"Ομάδα",
+    "group_member":"Απλό Μέλος",
+    "group_manager":"Διαχειριστής",
+    "group_send_invitation":"Αποστολή Πρόσκλησης",
+    "username":"Όνομα Χρήστη",
+    "user_role":"Ρόλος Χρήστη",
+    "is_group_manager":"Διαχειριστής Ομάδας",
+    "group_status":"Κατάσταση",
+    "active":"Ενεργή",
+    "pending":"Σε αναμονή",
+    "invitation_success":"Invitation was sent successfully to: ",
+    "invitation_error":"Invitation could not be sent to: "
+
   }
 }

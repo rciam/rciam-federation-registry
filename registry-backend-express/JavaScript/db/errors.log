@@ -1,70 +1,432 @@
 
 
-13:23:39 error: connect ECONNREFUSED 127.0.0.1:5432
-         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+16:31:53 error: column "group_id" does not exist
+         query: SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,CASE WHEN owned IS NULL THEN false ELSE owned END,status,type,state,group_manager,CASE WHEN notification IS NULL THEN false ELSE notification END AS notification,deleted,comment,group_id FROM (SELECT id AS service_id,service_description,logo_uri,service_name,deleted,requester,integration_environment,group_id FROM service_details) AS service_details LEFT JOIN service_state ON service_details.service_id=service_state.id LEFT JOIN (SELECT id AS group_id,true AS owned,is_owner AS group_manager FROM groups LEFT JOIN group_subs ON groups.id=group_subs.group_id WHERE sub='7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu') AS group_ids USING (group_id) LEFT JOIN (SELECT id AS petition_id,status,type,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification, service_id,comment FROM service_petition_details WHERE reviewed_at IS NULL) AS petitions USING (service_id) WHERE deleted=false OR (deleted=TRUE AND state!='deployed') UNION SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,owned,status,type,state,group_manager,notification,deleted,comment,group_id FROM (SELECT service_id,id AS petition_id,comment,service_description,logo_uri,service_name,integration_environment,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification,CASE WHEN requester='7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu' THEN true ELSE false END AS owned,status,type,null AS state,false as group_manager,false AS deleted FROM service_petition_details WHERE reviewed_at IS NULL AND type='create') as petitions
 
-13:24:06 error: connect ECONNREFUSED 127.0.0.1:5432
-         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+16:31:58 error: column "group_id" does not exist
+         query: SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,CASE WHEN owned IS NULL THEN false ELSE owned END,status,type,state,group_manager,CASE WHEN notification IS NULL THEN false ELSE notification END AS notification,deleted,comment,group_id FROM (SELECT id AS service_id,service_description,logo_uri,service_name,deleted,requester,integration_environment,group_id FROM service_details) AS service_details LEFT JOIN service_state ON service_details.service_id=service_state.id LEFT JOIN (SELECT id AS group_id,true AS owned,is_owner AS group_manager FROM groups LEFT JOIN group_subs ON groups.id=group_subs.group_id WHERE sub='7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu') AS group_ids USING (group_id) LEFT JOIN (SELECT id AS petition_id,status,type,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification, service_id,comment FROM service_petition_details WHERE reviewed_at IS NULL) AS petitions USING (service_id) WHERE deleted=false OR (deleted=TRUE AND state!='deployed') UNION SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,owned,status,type,state,group_manager,notification,deleted,comment,group_id FROM (SELECT service_id,id AS petition_id,comment,service_description,logo_uri,service_name,integration_environment,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification,CASE WHEN requester='7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu' THEN true ELSE false END AS owned,status,type,null AS state,false as group_manager,false AS deleted FROM service_petition_details WHERE reviewed_at IS NULL AND type='create') as petitions
 
-13:31:48 error: connect ECONNREFUSED 127.0.0.1:5432
-         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+16:32:52 error: UNION types bigint and text cannot be matched
+         query: SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,CASE WHEN owned IS NULL THEN false ELSE owned END,status,type,state,group_manager,CASE WHEN notification IS NULL THEN false ELSE notification END AS notification,deleted,comment,group_id FROM (SELECT id AS service_id,service_description,logo_uri,service_name,deleted,requester,integration_environment,group_id FROM service_details) AS service_details LEFT JOIN service_state ON service_details.service_id=service_state.id LEFT JOIN (SELECT id AS group_id,true AS owned,is_owner AS group_manager FROM groups LEFT JOIN group_subs ON groups.id=group_subs.group_id WHERE sub='7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu') AS group_ids USING (group_id) LEFT JOIN (SELECT id AS petition_id,status,type,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification, service_id,comment FROM service_petition_details WHERE reviewed_at IS NULL) AS petitions USING (service_id) WHERE deleted=false OR (deleted=TRUE AND state!='deployed') UNION SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,owned,status,type,state,group_manager,notification,deleted,comment,group_id FROM (SELECT service_id,id AS petition_id,comment,service_description,logo_uri,service_name,integration_environment,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification,CASE WHEN requester='7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu' THEN true ELSE false END AS owned,status,type,null AS state,false as group_manager,false AS deleted,NULL as group_id FROM service_petition_details WHERE reviewed_at IS NULL AND type='create') as petitions
 
-13:36:55 error: connect ECONNREFUSED 127.0.0.1:5432
-         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+16:34:36 error: UNION types bigint and text cannot be matched
+         query: SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,CASE WHEN owned IS NULL THEN false ELSE owned END,status,type,state,group_manager,CASE WHEN notification IS NULL THEN false ELSE notification END AS notification,deleted,comment,group_id FROM (SELECT id AS service_id,service_description,logo_uri,service_name,deleted,requester,integration_environment,group_id FROM service_details) AS service_details LEFT JOIN service_state ON service_details.service_id=service_state.id LEFT JOIN (SELECT id AS group_id,true AS owned,is_owner AS group_manager FROM groups LEFT JOIN group_subs ON groups.id=group_subs.group_id WHERE sub='7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu') AS group_ids USING (group_id) LEFT JOIN (SELECT id AS petition_id,status,type,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification, service_id,comment FROM service_petition_details WHERE reviewed_at IS NULL) AS petitions USING (service_id) WHERE deleted=false OR (deleted=TRUE AND state!='deployed') UNION SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,owned,status,type,state,group_manager,notification,deleted,comment,group_id FROM (SELECT service_id,id AS petition_id,comment,service_description,logo_uri,service_name,integration_environment,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification,CASE WHEN requester='7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu' THEN true ELSE false END AS owned,status,type,null AS state,false as group_manager,false AS deleted,NULL as group_id FROM service_petition_details WHERE reviewed_at IS NULL AND type='create') as petitions
 
-13:37:11 error: connect ECONNREFUSED 127.0.0.1:5432
-         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+09:28:01 error: column "is_owner" does not exist
+         query: SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,CASE WHEN owned IS NULL THEN false ELSE owned END,status,type,state,group_manager,CASE WHEN notification IS NULL THEN false ELSE notification END AS notification,deleted,comment,group_id FROM (SELECT id AS service_id,service_description,logo_uri,service_name,deleted,requester,integration_environment,group_id FROM service_details) AS service_details LEFT JOIN service_state ON service_details.service_id=service_state.id LEFT JOIN (SELECT id AS group_id,true AS owned,is_owner AS group_manager FROM groups LEFT JOIN group_subs ON groups.id=group_subs.group_id WHERE sub='7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu') AS group_ids USING (group_id) LEFT JOIN (SELECT id AS petition_id,status,type,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification, service_id,comment FROM service_petition_details WHERE reviewed_at IS NULL) AS petitions USING (service_id) WHERE deleted=false OR (deleted=TRUE AND state!='deployed') UNION SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,owned,status,type,state,group_manager,notification,deleted,comment,group_id FROM (SELECT service_id,id AS petition_id,comment,service_description,logo_uri,service_name,integration_environment,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification,CASE WHEN requester='7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu' THEN true ELSE false END AS owned,status,type,null AS state,false as group_manager,false AS deleted,NULL::bigint as group_id FROM service_petition_details WHERE reviewed_at IS NULL AND type='create') as petitions
 
-13:37:25 error: connect ECONNREFUSED 127.0.0.1:5432
-         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+09:28:16 error: column "is_owner" does not exist
+         query: SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,CASE WHEN owned IS NULL THEN false ELSE owned END,status,type,state,group_manager,CASE WHEN notification IS NULL THEN false ELSE notification END AS notification,deleted,comment,group_id FROM (SELECT id AS service_id,service_description,logo_uri,service_name,deleted,requester,integration_environment,group_id FROM service_details) AS service_details LEFT JOIN service_state ON service_details.service_id=service_state.id LEFT JOIN (SELECT id AS group_id,true AS owned,is_owner AS group_manager FROM groups LEFT JOIN group_subs ON groups.id=group_subs.group_id WHERE sub='7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu') AS group_ids USING (group_id) LEFT JOIN (SELECT id AS petition_id,status,type,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification, service_id,comment FROM service_petition_details WHERE reviewed_at IS NULL) AS petitions USING (service_id) WHERE deleted=false OR (deleted=TRUE AND state!='deployed') UNION SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,owned,status,type,state,group_manager,notification,deleted,comment,group_id FROM (SELECT service_id,id AS petition_id,comment,service_description,logo_uri,service_name,integration_environment,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification,CASE WHEN requester='7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu' THEN true ELSE false END AS owned,status,type,null AS state,false as group_manager,false AS deleted,NULL::bigint as group_id FROM service_petition_details WHERE reviewed_at IS NULL AND type='create') as petitions
 
-13:40:49 error: connect ECONNREFUSED 127.0.0.1:5432
-         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+23:57:13 error: Variable $2 out of range. Parameters array length: 1
+         query: UPDATE invitations SET code=NULL,sub=$1,email=$2 RETURNING id
+         params: [null]
 
-13:40:56 error: connect ECONNREFUSED 127.0.0.1:5432
-         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+23:57:16 error: Variable $2 out of range. Parameters array length: 1
+         query: UPDATE invitations SET code=NULL,sub=$1,email=$2 RETURNING id
+         params: [null]
 
-13:40:59 error: connect ECONNREFUSED 127.0.0.1:5432
-         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+23:57:54 error: Multiple rows were not expected.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' RETURNING id
 
-13:41:30 error: connect ECONNREFUSED 127.0.0.1:5432
-         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+00:01:11 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
 
-13:41:39 error: connect ECONNREFUSED 127.0.0.1:5432
-         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+08:49:32 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
 
-13:45:56 error: connect ECONNREFUSED 127.0.0.1:5432
-         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+08:52:03 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
 
-14:14:24 error: missing FROM-clause entry for table "v"
-         query: update "service_state" set "state"='deployed' WHERE v.id = t.id RETURNING t.id
+08:53:21 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
 
-14:14:44 error: missing FROM-clause entry for table "v"
-         query: update "service_state" set "state"='deployed' WHERE v.id = t.id RETURNING t.id
+08:54:15 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
 
-14:16:26 error: connect ECONNREFUSED 127.0.0.1:5432
-         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+08:55:09 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
 
-14:25:41 error: connect ECONNREFUSED 127.0.0.1:5432
-         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+08:57:19 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
 
-14:26:21 error: connect ECONNREFUSED 127.0.0.1:5432
-         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+08:57:30 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
 
-14:26:29 error: connect ECONNREFUSED 127.0.0.1:5432
-         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+09:02:48 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
 
-14:26:38 error: connect ECONNREFUSED 127.0.0.1:5432
-         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+09:03:07 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
 
-14:27:03 error: connect ECONNREFUSED 127.0.0.1:5432
-         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+09:03:45 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
 
-14:28:25 error: connect ECONNREFUSED 127.0.0.1:5432
-         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+09:07:29 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
 
-14:32:48 error: connect ECONNREFUSED 127.0.0.1:5432
-         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+09:12:14 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
 
-02:03:09 error: terminating connection due to administrator command
-         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+09:13:01 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:15:14 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:21:07 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:29:48 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:29:49 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:29:50 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:29:50 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:29:51 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:29:52 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:29:53 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:29:54 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:29:55 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:29:56 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:29:58 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:29:58 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:29:59 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:00 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:01 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:01 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:02 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:04 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:05 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:06 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:06 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:07 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:08 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:08 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:09 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:10 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:12 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:15 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:16 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:18 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:19 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:21 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:23 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:24 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:25 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:27 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:28 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:29 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:30 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:31 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:32 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:33 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:33 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:35 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:36 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:36 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:37 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:37 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:38 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:39 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:40 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:41 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:41 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:42 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:43 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:44 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:45 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:46 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:48 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:50 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:52 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:52 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:53 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:54 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:54 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:55 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:56 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:57 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:58 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:58 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:59 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:30:59 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:00 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:01 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:02 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:03 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:03 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:04 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:05 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:06 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:08 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:09 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:10 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:11 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:12 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:12 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:13 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:14 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:15 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:16 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:17 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:18 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:18 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:19 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:19 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:20 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:21 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:28 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:28 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:29 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:29 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:30 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:31 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:32 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:32 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:33 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:33 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:34 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:34 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:35 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:35 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:36 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:37 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:37 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:31:39 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:32:29 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+09:34:36 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+
+10:03:02 error: No data returned from the query.
+         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id

@@ -1,9 +1,10 @@
 require('dotenv').config();
 const {clientValidationRules,validate} = require('../validator.js');
 const qs = require('qs');
+const {v1:uuidv1} = require('uuid');
 const axios = require('axios').default;
 const {merge_data,merge_services_and_petitions} = require('../merge_data.js');
-const {addToString,clearPetitionData,sendMail} = require('../functions/helpers.js');
+const {addToString,clearPetitionData,sendMail,sendInvitationMail} = require('../functions/helpers.js');
 const {db} = require('../db');
 var diff = require('deep-diff').diff;
 var router = require('express').Router();
@@ -32,14 +33,62 @@ const code_verifier = generators.codeVerifier();
 router.get('/login',(req,res)=>{
   var clients = req.app.get('clients');
   res.redirect(clients.egi.authorizationUrl({
-    client_id:process.env.CLIENT_ID,
+    client_id:process.env.CLIENT_ID_EGI,
     scope: 'openid email profile eduperson_entitlement',
-    redirect_uri: 'http://localhost:5000/callback/egi',
+    redirect_uri: process.env.REDIRECT_URI_EGI
   }));
 })
 
 
+router.post('/invitation',async (req,res,next)=>{
+  try{
+    req.body.code = uuidv1();
+    if(await sendInvitationMail(req.body)){
+        db.invitation.add(req.body).then((response)=>{
+          if(response){
+            res.status(200).end();
+          }
+        }).catch(err=>{next(err)})
+    }
+    else{
+      throw 'Could not sent email invite';
+    }
+  }
+  catch(err){
+    next(err);
+  }
+})
 
+router.get('/group/:group_id',(req,res,next)=>{
+  try{
+    db.group.getMembers(req.params.group_id).then(group_members =>{
+      if(group_members){
+        res.status(200).json({group_members});
+      }
+      else{
+        throw 'No group meber could be found';
+      }
+    })
+  }
+  catch(err){next(err);}
+})
+
+router.put('/invitation',(req,res,next)=>{
+  console.log(req.body);
+  try{
+    db.invitation.setUser(req.body.code,'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','newmai@mail.com').then(success=>{
+      if(success){
+        res.status(200).send('Success');
+      }
+    }).catch(err=>{next(err)})
+  }
+  catch(err){
+    next(err);
+  }
+})
+router.get('/test',(req,res)=>{
+  res.send('Andreas');
+})
 
 // // Login Route
 // router.get('/login/:tenant',function(req,res,next){passport.authenticate(req.params.tenant, {
@@ -633,6 +682,7 @@ function authenticate(req,res,next){
       }).catch(err=>{next(err)});
     }
     else{
+      console.log('at least');
       const data = {'client_secret':process.env.CLIENT_SECRET_EGI}
       if(req.headers.authorization){
         TokenArray = req.headers.authorization.split(" ");

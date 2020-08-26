@@ -15,35 +15,74 @@ import {LoadingPage} from './Components/LoadingPage.js';
       const globalState = useGlobalState();
       const logged = globalState.global_state.log_state;
       const [loading,setLoading] = useState(false);
-      useEffect(()=>{
-        if(!logged){
-          setUser(null);
-        }
-        if(logged&&!user){
-          getUser();
-        }
-    },[logged,user])
 
-      const getUser = ()=> {
-        setLoading(true);
-        fetch(config.host+'user', {
-          method: 'GET', // *GET, POST, PUT, DELETE, etc.
+      useEffect(()=>{
+
+        login();
+        // eslint-disable-next-line
+      },[]);
+
+      const login = () => {
+          if(localStorage.getItem('token')){
+            setLoading(true);
+            fetch(config.host+'user', {
+              method: 'GET', // *GET, POST, PUT, DELETE, etc.
+              credentials: 'include', // include, *same-origin, omit
+              headers: {
+              'Content-Type': 'application/json',
+              'Authorization': localStorage.getItem('token')
+              }}).then(response=>{
+                  if(response.status===200){return response.json();}
+                  else {return false}
+                }).then(response=> {
+                console.log(response);
+                if(response){
+                  console.log(response.user);
+                  setUser(response.user);
+                  if(localStorage.getItem('invitation')){
+                    activateInvitation();
+                  }
+                }
+                else{
+                  setUser(null);
+                  localStorage.removeItem('token');
+                }
+                globalState.setLogState({tenant:'EGI',log_state:response});
+                setLoading(false);
+            })
+          }
+          else{
+            globalState.setLogState({tenant:'EGI',log_state:false});
+          }
+
+        }
+
+
+
+      const activateInvitation = () => {
+        fetch(config.host+'invitation', {
+          method: 'PUT', // *GET, POST, PUT, DELETE, etc.
           credentials: 'include', // include, *same-origin, omit
           headers: {
           'Content-Type': 'application/json',
           'Authorization': localStorage.getItem('token')
-          }}).then(response=>response.json()).then(response=> {
-            setUser(response.user);
-            setLoading(false);
-        });
+          },
+          body: JSON.stringify({code:localStorage.getItem('invitation')})
+        }).then(response=>{
+              if(response.status===200){
+                localStorage.setItem('invitation',null)
+              }
+            })
       }
+
+
 
       return(
         <React.Fragment>
         <Router>
           <Header user={user}/>
           <NavbarTop user={user}/>
-          {loading?<LoadingPage/>:null}
+          {loading?<LoadingPage  loading={loading}/>:null}
           <div className="ssp-container main">
 
             <div className="flex-container">
@@ -60,4 +99,9 @@ import {LoadingPage} from './Components/LoadingPage.js';
       );
 
 }
+
+
+
+
+
 export default MainPage;

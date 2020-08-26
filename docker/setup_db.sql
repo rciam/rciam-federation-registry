@@ -1,11 +1,12 @@
-DROP TABLE IF EXISTS user_edu_person_entitlement, user_info, service_petition_contacts, service_petition_oidc_grant_types, service_petition_oidc_redirect_uris, service_petition_oidc_scopes,
+DROP TABLE IF EXISTS user_edu_person_entitlement,tokens,user_info, service_petition_contacts, service_petition_oidc_grant_types, service_petition_oidc_redirect_uris, service_petition_oidc_scopes,
 service_petition_details_oidc,service_petition_details_saml, service_petition_details, service_oidc_scopes,service_contacts,service_oidc_grant_types,service_oidc_redirect_uris,service_details_oidc,
-service_details_saml,service_details,service_state,user_roles,role_actions,role_entitlements,groups,group_subs,tenants,tokens;
+service_details_saml,service_details,service_state,user_roles,role_actions,role_entitlements,groups,invitations,group_subs,tenants;
 
 create table tokens (
   token VARCHAR(1054),
   code VARCHAR(1054) PRIMARY KEY
 );
+
 
 create table user_info (
   id SERIAL PRIMARY KEY,
@@ -43,10 +44,22 @@ create table groups (
   group_name VARCHAR(256)
 );
 
+create table invitations (
+  id SERIAL PRIMARY KEY,
+  code VARCHAR(1054),
+  email VARCHAR(256),
+  group_id INTEGER,
+  sub VARCHAR(256) DEFAULT NULL,
+  group_manager BOOLEAN,
+  FOREIGN KEY (group_id) REFERENCES groups(id)
+);
+
+
+
 create table group_subs (
-  group_id bigint,
+  group_id INTEGER,
   sub VARCHAR(256),
-  is_owner BOOLEAN,
+  group_manager BOOLEAN,
   PRIMARY KEY (group_id,sub),
   FOREIGN KEY (group_id) REFERENCES groups(id)
 );
@@ -60,7 +73,7 @@ create table tenants (
 );
 
 create table user_edu_person_entitlement (
-  user_id bigint,
+  user_id INTEGER,
   edu_person_entitlement VARCHAR(256),
   PRIMARY KEY (user_id,edu_person_entitlement),
   FOREIGN KEY (user_id) REFERENCES user_info(id)
@@ -647,19 +660,19 @@ VALUES ('group_5');
 INSERT INTO groups (group_name)
 VALUES ('group_6');
 
-INSERT INTO group_subs (group_id,sub,is_owner)
+INSERT INTO group_subs (group_id,sub,group_manager)
 VALUES (1,'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',true);
-INSERT INTO group_subs (group_id,sub,is_owner)
+INSERT INTO group_subs (group_id,sub,group_manager)
 VALUES (2,'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',true);
-INSERT INTO group_subs (group_id,sub,is_owner)
+INSERT INTO group_subs (group_id,sub,group_manager)
 VALUES (3,'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',true);
-INSERT INTO group_subs (group_id,sub,is_owner)
+INSERT INTO group_subs (group_id,sub,group_manager)
 VALUES (4,'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',true);
-INSERT INTO group_subs (group_id,sub,is_owner)
+INSERT INTO group_subs (group_id,sub,group_manager)
 VALUES (6,'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',true);
-INSERT INTO group_subs (group_id,sub,is_owner)
+INSERT INTO group_subs (group_id,sub,group_manager)
 VALUES (5,'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',true);
-INSERT INTO group_subs (group_id,sub,is_owner)
+INSERT INTO group_subs (group_id,sub,group_manager)
 VALUES (5,'7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu',true);
 
 
@@ -668,3 +681,8 @@ VALUES (3,'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.
 
 INSERT INTO role_entitlements (role_id,entitlement)
 VALUES (2,'fake_entitlement');
+
+INSERT INTO invitations(code,email,group_id,sub,group_manager)
+VALUES (null,'andreaskoza@grnet.gr',1,'7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu',true);
+INSERT INTO invitations(code,email,group_id,sub,group_manager)
+VALUES ('random_generated_code','alekaelias@yahoo.gr',1,null,false);

@@ -45,17 +45,11 @@ export const NavbarTop = (props)=>{
   const tenant = tenant_data.data[globalState.global_state.tenant];
   const [admin,setAdmin] = useState(false);
   useEffect(()=>{
-    let admin = false;
 
 
-    if(props.user&&props.user.eduperson_entitlement){
-      ["urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu"].forEach((item)=>{
-        if(props.user.eduperson_entitlement.includes(item)){
-          admin = true;
-        }
-      })
+    if(props.user){
+      setAdmin(props.user.admin);
     }
-    setAdmin(admin);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[props.user]);
   return (
@@ -69,6 +63,7 @@ export const NavbarTop = (props)=>{
           title={<React.Fragment>
             <span style={{color:tenant.color}}>
             {props.user?props.user.name:'login'}
+            <span className="user-role">{props.user?' ('+props.user.role+')':null}</span>
             <FontAwesomeIcon icon={admin?faUserShield:faUser}/>
             </span>
           </React.Fragment>}

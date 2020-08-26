@@ -996,3 +996,56 @@ html:lang(gr) .home-container h1 {
 .ssp-footer {
   z-index: 50!important;
 }
+.user-role {
+}
+
+
+/* Groups PPage */
+
+.groups-table {
+  width:auto;
+  margin-top:1rem;
+  min-width: 0;
+  max-width: 40rem;
+}
+.groups-table td,.groups-table th{
+    padding-left: 0.7rem;
+    width:auto;
+    white-space: nowrap;
+}
+.groups-table th{
+  text-align:center;
+  width:0;
+}
+.groups-table th:nth-child(3) {
+  width:9rem;
+  text-align:  center;
+}
+.groups-table th:nth-child(3) {
+  width:3rem!important;
+  text-align:  center;
+}
+.groups-table td:nth-child(3) {
+  padding:0.7;
+  color:#28A745;
+  text-align:  center;
+}
+.group_invite_row {
+  margin:0;
+  margin-left:0.3rem;
+
+  margin-top:1rem;
+  max-width:50rem;
+}
+.group_invite_row .input-group {
+  padding: 0rem!important;
+  margin-bottom:0.2rem!important;
+}
+
+.invitation-error {
+  font-size: 0.8rem;
+  margin:0;
+  margin-left:0.5rem;
+  color:#DC3545;
+  font-weight: bold;
+}

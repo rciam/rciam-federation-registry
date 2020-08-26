@@ -1,3 +1,4 @@
+const sql = require('../sql').group;
 const cs = {};
 
 class GroupRepository {
@@ -5,12 +6,14 @@ class GroupRepository {
       this.db = db;
       this.pgp = pgp;
   }
-
+  async getMembers(group_id){
+    return this.db.any(sql.getGroupMembers,{group_id: +group_id}).then(res => {return res});
+  }
 
   async addGroup(sub){
     return this.db.one('INSERT INTO groups(group_name) VALUES($1) RETURNING id',sub).then(async res =>{
       if(res){
-        return await this.db.one('INSERT INTO group_subs(group_id,sub,is_owner) VALUES($1,$2,true) RETURNING group_id',[+res.id,sub]).then(res=>{
+        return await this.db.one('INSERT INTO group_subs(group_id,sub,group_manager) VALUES($1,$2,true) RETURNING group_id',[+res.id,sub]).then(res=>{
           if(res){
             return res.group_id
           }

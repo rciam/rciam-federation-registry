@@ -200,6 +200,21 @@
     "history_td_date":"Date",
     "history_not_reviewed":"Not yet reviewed",
     "history_td_type":"Type of Request",
-    "history_td_status":"Review Status"
+    "history_td_status":"Review Status",
+    "manage_group":"Manage Group",
+    "view_group":"View Group",
+    "group":"Group",
+    "group_member":"Member",
+    "group_manager":"Manager",
+    "group_send_invitation":"Send Invite",
+    "username":"Username",
+    "user_role":"Role",
+    "is_group_manager":"Group Manager",
+    "group_status":"Status",
+    "active":"Active",
+    "pending":"Pending",
+    "invitation_success":"Invitation was sent successfully to: ",
+    "invitation_error":"Invitation could not be sent to: "
+
   }
 }

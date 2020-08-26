@@ -225,7 +225,7 @@ const ServiceForm = (props)=> {
         'Content-Type': 'application/json',
         'Authorization': localStorage.getItem('token')
         },
-        body: JSON.stringify(petition) // body data type must match "Content-Type" header
+        body: JSON.stringify(petition) 
       }).then(response=> {
         setAsyncResponse(false);
         setModalTitle(t('new_petition_title_1') + type + t('new_petition_title_2') + petition.client_id + petition.entity_id);

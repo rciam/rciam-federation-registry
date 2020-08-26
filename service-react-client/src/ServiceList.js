@@ -360,6 +360,21 @@ function TableItem(props) {
                 }
               </React.Fragment>
             :null}
+            {props.service.owned?
+              <Dropdown.Item as='span'>
+              <div>
+                <Link to={{
+                  pathname:"/group",
+                  state:{
+                    manager:props.service.owned.toString(),
+                    service_id:props.service.service_id,
+                    group_id:props.service.group_id
+                  }
+                }}>{t('manage_group')}</Link>
+              </div>
+              </Dropdown.Item>
+            :null
+            }
             {props.service.service_id?
               <Dropdown.Item as='span'>
               <div>
@@ -458,7 +473,7 @@ function Filters (props) {
     return (showPending&&!item.petition_id)
   }
   const OwnedFilter = (item)=>{
-    return (showOwned&&(item.owned))
+    return (showOwned&&!item.owned)
   }
 
 

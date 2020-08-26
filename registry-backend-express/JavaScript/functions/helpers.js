@@ -68,6 +68,40 @@ const calcDiff = (oldState,newState) => {
     return edits
 }
 
+const sendInvitationMail = (data) => {
+  console.log(data);
+  var currentDate = new Date();
+  readHTMLFile(path.join(__dirname, '../html/invitation.html'), function(err, html) {
+    let transporter = nodeMailer.createTransport({
+        host: 'relay.grnet.gr',
+        port: 587,
+        secure: false
+    });
+    var template = handlebars.compile(html);
+    var replacements = {
+      email:data.email,
+      uri:'http://https://service-registry.aai-dev.grnet.gr/' + data.code
+    }
+    var htmlToSend = template(replacements);
+    var mailOptions = {
+      from: "noreply@faai.grnet.gr",
+      to : 'koza-sparrow@hotmail.com',
+      subject : 'Invitation to manage service',
+      html : htmlToSend
+    };
+    transporter.sendMail(mailOptions, function (error, response) {
+      if (error) {
+        return false;
+        customLogger(null,null,'info',[{type:'email_log'},{message:'Email not sent'},{error:error},{user:null},{data:data.email}]);
+      }
+      else {
+        return true;
+        customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{user:null},{data:data.email}]);
+      }
+    });
+  });
+}
+
 const sendMail= (data,template_uri,users)=>{
   var currentDate = new Date();
   var result;
@@ -151,5 +185,6 @@ var readHTMLFile = function(path, callback) {
 module.exports = {
   calcDiff,
   addToString,
-  sendMail
+  sendMail,
+  sendInvitationMail
 }

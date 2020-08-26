@@ -14,5 +14,6 @@ module.exports = {
     ServiceList: require('./service_list'),
     UserRole: require('./user_role'),
     Tokens: require('./tokens'),
-    Group: require('./group')
+    Group: require('./group'),
+    Invitation: require('./invitation')
 };

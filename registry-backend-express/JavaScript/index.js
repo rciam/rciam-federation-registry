@@ -125,7 +125,8 @@ const app = express();
 
 app.use(expressWinston.logger({
       transports: [
-        new(winston.transports.File)({filename:logPath})
+        new(winston.transports.File)({filename:logPath}),
+        new (winston.transports.Console)({'timestamp':true}),
       ],
       format: winston.format.combine(
         winston.format.timestamp(),
