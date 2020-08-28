@@ -21,14 +21,14 @@ class GroupRepository {
       }
     })
   }
+  async addMember(data){
+    return this.db.one('INSERT INTO group_subs (sub,group_manager,group_id) VALUES($1,$2,$3) RETURNING sub',[data.sub,data.group_manager,+data.group_id]);
+  }
 
-  async deleteToken(code){
-    return this.db.one('DELETE FROM tokens WHERE code=$1 RETURNING code',code);
+  async isGroupManager(sub,group_id){
+    return this.db.oneOrNone('SELECT group_manager FROM group_subs WHERE sub=$1 AND group_id=$2',[sub,+group_id]).then(res=>{if(res&&res.group_manager){return true}else{return false} });
   }
-  async addToken(token){
-    let code = uuidv1();
-    return this.db.one('INSERT INTO tokens(code,token) VALUES ($1,$2) RETURNING code',[code,token]);
-  }
+
 }
 
 

@@ -12,6 +12,7 @@
     "reconfiguration_info":"This is a reconfiguration request, changes are highlighted bellow.",
     "nav_title":"Προσωπικά",
     "nav_link_petitions":"Διαχείριση υπηρεσιών",
+    "nav_link_invites":"Πλοσκλήσεις",
     "nav_link_userinfo":"Προβολή πληροφοριών προφίλ",
     "petitions_refresh":"Ανανέωση",
     "petitions_new":"Νέα Υπηρεσία",
@@ -214,7 +215,15 @@
     "active":"Ενεργή",
     "pending":"Σε αναμονή",
     "invitation_success":"Invitation was sent successfully to: ",
-    "invitation_error":"Invitation could not be sent to: "
+    "invitation_error":"Invitation could not be sent to: ",
+    "invitation_alert_1":"Έχετε ",
+    "invitation_alert_mult":" προσκλήσεις για διαχείρηση υπηρεσιών πατήστε ",
+    "invitation_alert_single":" προσκλήση για διαχείρηση μίας υπηρεσίας πατήστε ",
+    "invitation_alert_link":"εδώ ",
+    "invitation_alert_2":"για λεπτομέριες.",
+    "invitations_accept":"Αποδοχή",
+    "invitations_accept":"Απορριψη",
+    "view_group":"Εμφάνιση Ομάδας"
 
   }
 }

@@ -327,14 +327,14 @@ code {
 .controls-options-container:hover {
   color:#007bff;
 }
-.fa-exclamation {
+.notification .fa-exclamation {
   margin-left: 0.5rem;
   font-size: 0.6rem;
   margin-top: 0.3rem;
   color: white;
   z-index: 10;
 }
-.fa-circle {
+.notification .fa-circle {
   font-size: 1.2rem;
   color:red;
 }
@@ -654,6 +654,31 @@ form {
 }
 .nav-side a , .nav-side div {
   margin-left: 1rem;
+}
+
+.nav-side-notification .fa-exclamation {
+  position:absolute;
+
+  font-size: 0.5rem;
+  color: white;
+  z-index: 10;
+}
+.nav-side-notification .fa-circle {
+  position: absolute;
+  margin-top:-0.15rem;
+  margin-left:-0.3rem;
+  font-size: 0.8rem;
+  color:red;
+}
+
+.nav-side-notification svg {
+
+}
+.nav-side-notification {
+  position: absolute;
+  margin-left:0rem!important;
+  display: inline-block;
+
 }
 
 .nav-title {
@@ -1030,6 +1055,13 @@ html:lang(gr) .home-container h1 {
   color:#28A745;
   text-align:  center;
 }
+.groups-table td{
+  line-height: 1.6rem;
+  text-align: center;
+}
+.groups-table button {
+  padding:0.1rem 0.4rem 0.1rem 0.4rem;
+}
 .group_invite_row {
   margin:0;
   margin-left:0.3rem;
@@ -1048,4 +1080,40 @@ html:lang(gr) .home-container h1 {
   margin-left:0.5rem;
   color:#DC3545;
   font-weight: bold;
+}
+.invitation_alert {
+  margin-top:1rem;
+}
+.invitation_alert span {
+  font-weight: bold;
+}
+
+
+.group_title {
+  margin-top: 1rem!important;
+}
+
+
+.invitation-container {
+  margin-top:1rem;
+  padding:0.5rem;
+
+  border: 1px solid rgb(227, 227, 227);
+  background-color: rgb(245, 245, 245);
+}
+.invitation-container button{
+
+    margin-left: 1rem;
+}
+
+.invitation-container h3 {
+  margin-left:0.5rem;
+  margin-top:0.4rem;
+  height:100%;
+  display: inline-block;
+  font-size: 1.1rem;
+}
+.invitation-container div {
+
+
 }

@@ -80,7 +80,7 @@ const sendInvitationMail = (data) => {
     var template = handlebars.compile(html);
     var replacements = {
       email:data.email,
-      uri:'http://https://service-registry.aai-dev.grnet.gr/' + data.code
+      uri:process.env.EXPRESS_BASE +'/invitation/' + data.code
     }
     var htmlToSend = template(replacements);
     var mailOptions = {
@@ -91,11 +91,9 @@ const sendInvitationMail = (data) => {
     };
     transporter.sendMail(mailOptions, function (error, response) {
       if (error) {
-        return false;
         customLogger(null,null,'info',[{type:'email_log'},{message:'Email not sent'},{error:error},{user:null},{data:data.email}]);
       }
       else {
-        return true;
         customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{user:null},{data:data.email}]);
       }
     });

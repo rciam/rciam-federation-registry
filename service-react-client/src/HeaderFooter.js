@@ -1,4 +1,4 @@
-import React,{useState,useEffect} from 'react';
+import React,{useState,useEffect,useContext} from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {faUser,faUserShield, faSignOutAlt} from '@fortawesome/free-solid-svg-icons';
 import Col from 'react-bootstrap/Col';
@@ -13,8 +13,10 @@ import Dropdown from 'react-bootstrap/Dropdown';
 import * as tenant_data from './tenant-config.json'
 import { useTranslation } from 'react-i18next';
 import {useHistory} from "react-router-dom";
+import {Context} from './user-context.js';
 
 export const Header= (props)=> {
+
     const globalState = useGlobalState();
     const tenant = tenant_data.data[globalState.global_state.tenant];
     return(
@@ -38,6 +40,7 @@ export const Header= (props)=> {
 
 export const NavbarTop = (props)=>{
   const history = useHistory();
+  const user = useContext(Context);
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   const globalState = useGlobalState();
@@ -46,12 +49,12 @@ export const NavbarTop = (props)=>{
   const [admin,setAdmin] = useState(false);
   useEffect(()=>{
 
-
-    if(props.user){
-      setAdmin(props.user.admin);
+    console.log(user[0]);
+    if(user[0]){
+      setAdmin(user[0].admin);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[props.user]);
+  },[user[0]]);
   return (
     <Navbar className="navbar-fixed-top">
       <Navbar.Collapse className="justify-content-end">
@@ -62,16 +65,16 @@ export const NavbarTop = (props)=>{
           className='drop-menu drop-container-header'
           title={<React.Fragment>
             <span style={{color:tenant.color}}>
-            {props.user?props.user.name:'login'}
-            <span className="user-role">{props.user?' ('+props.user.role+')':null}</span>
+            {user[0]?user[0].name:'login'}
+            <span className="user-role">{user[0]?' ('+user[0].role+')':null}</span>
             <FontAwesomeIcon icon={admin?faUserShield:faUser}/>
             </span>
           </React.Fragment>}
           id="dropdown-menu-align-right"
         >
-          {props.user?(
+          {user[0]?(
             <Dropdown.Item>
-              {props.user.sub}
+              {user[0].sub}
             </Dropdown.Item>
           ):null}
           <Dropdown.Item onClick={()=>{localStorage.removeItem('token'); globalState.setLogState({tenant:'EGI',log_state:false}); history.push('/'); }} >
@@ -88,35 +91,6 @@ export const NavbarTop = (props)=>{
   )
 }
 
-
-// no extra css
-export const FooterOld = ()=>{
-  // eslint-disable-next-line
-  const { t, i18n } = useTranslation();
-  return(
-    <React.Fragment>
-      <div className="text-center footer">
-        <Row>
-          <Col md={4}>
-          </Col>
-          <Col md={4}>
-            <Image className="logo-grnet" src={t('footer_logo_uri')} fluid />
-            <Image className="logo-eu" src={t('footer_flag_uri')} fluid />
-          </Col>
-          <Col className="footer-links" md={4}>
-            <a href={t('terms_uri')}>Terms</a>
-            <a href={t('privacy_uri')}>Privacy</a>
-          </Col>
-        </Row>
-        <Row className='footer-description'>
-          <Col>
-          <p>Check-in is an EGI service provided by GRNET, receiving funding from the <a href='https://www.egi.eu/about/egi-foundation/'>EGI Foundation (EGI.eu)</a> and the <a href="https://eosc-hub.eu/">EOSC-hub project (Horizon 2020)</a> under Grant number 777536</p>
-          </Col>
-        </Row>
-      </div>
-    </React.Fragment>
-  );
-}
 
 
 
@@ -152,38 +126,6 @@ export const Footer =(props) =>{
         </Row>
       </div>
     </footer>
-
-  )
-}
-
-
-// oidc-base.css
-export const Footer1 =() =>{
-  // eslint-disable-next-line
-  const { t, i18n } = useTranslation();
-  return (
-    <div className="text-center" id="footer">
-      <div className="container">
-    		<Row className="row align-items-center">
-    			<Col md="4" className="ssp-footer__item"></Col>
-    			<Col md="4" className="ssp-footer__item text-center col-images">
-            <a href="https://grnet.gr/">
-              <Image className="ssp-footer__item__logo" src={t('footer_logo_uri')} alt="GRNET" fluid/>
-            </a>
-            <Image className="ssp-footer__item__logo--eu" src={t('footer_flag_uri')} alt="European Union" text=""/>
-    			</Col>
-    			<Col md="4" className="ssp-footer__item ssp-footer__item--links text-right">
-    		    <a href="https://aai.egi.eu/ToU.html">Terms</a>
-    		    <a href="https://aai.egi.eu/privacy.html">Privacy</a>
-    			</Col>
-    		</Row>
-        <Row>
-          <Col className="text-center">
-            <p> Check-in is an EGI service provided by GRNET, receiving funding from the <a href="https://www.egi.eu/about/egi-foundation/">EGI Foundation (EGI.eu)</a> and the <a href="https://eosc-hub.eu">EOSC-hub project</a> (Horizon 2020) under Grant number 777536</p>
-          </Col>
-        </Row>
-      </div>
-    </div>
 
   )
 }

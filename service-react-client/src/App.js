@@ -1,31 +1,26 @@
-import React from 'react';
+import React,{useState} from 'react';
 import './App.css';
 import { withTranslation } from 'react-i18next';
 import MainPage from './MainPage.js';
+import {Context} from './user-context.js';
 
 
 
+const App = (props) =>{
+  const [lang,setLang]= useState('en');
+  const [context,setContext] = useState(null);
 
-class  App extends React.Component {
-
-  constructor(props) {
-     super(props);
-     this.state = {
-         lang: "en"
-     }
+  const onLanguageHandle = (newLang) => {
+    setLang(newLang);
+    props.i18n.changeLanguage(newLang);
   }
+  return (
+    <Context.Provider value={[context, setContext]}>
 
-  onLanguageHandle = (newLang) => {
-    this.setState({lang: newLang})
-    this.props.i18n.changeLanguage(newLang)
-  }
+      <MainPage lang={lang} changeLanguage={onLanguageHandle}/>
+    </Context.Provider>
 
-
-    render(){
-      return (
-        <MainPage lang={this.state.lang} changeLanguage={this.onLanguageHandle}/>
-      );
-    }
+  );
 }
 
 export default withTranslation()(App);

@@ -7,7 +7,8 @@ import UserInfo from '../Components/UserInfo.js';
 import {HistoryList} from '../Components/History.js';
 import {CallbackPage} from '../Components/LoadingPage.js';
 import {InvitationRoute} from '../Components/InvitationRoute.js';
-import GroupsPage from '../Groups.js'
+import GroupsPage from '../Groups.js';
+import InvitationsPage from '../Invitations.js'
 
 
 const Routes = (props) => (
@@ -15,7 +16,7 @@ const Routes = (props) => (
     <Switch>
       <Route exact path="/" component={Home}/>
       <Route path="/home">
-        <Home />
+        <Home/>
       </Route>
       <Route path="/code/:code">
         <CallbackPage/>
@@ -23,6 +24,7 @@ const Routes = (props) => (
       <Route path="/invitation/:code">
         <InvitationRoute/>
       </Route>
+
       <PrivateRoute user={props.user} path="/petitions">
         <div className="links">
           <Link to="/home">{props.t('link_home')}</Link>
@@ -49,6 +51,16 @@ const Routes = (props) => (
         </div>
         <NewService user={props.user}/>
       </PrivateRoute>
+      <RouteWithState user={props.user} path="/invitations">
+        <div className="links">
+          <Link to="/home">{props.t('link_home')}</Link>
+          <span className="link-seperator">/</span>
+          <Link to="/petitions">{props.t('link_petitions')}</Link>
+          <span className="link-seperator">/</span>
+          Invitations
+        </div>
+        <InvitationsPage/>
+      </RouteWithState>
       <RouteWithState user={props.user} path="/form/edit">
         <div className="links">
           <Link to="/home">{props.t('link_home')}</Link>
@@ -151,7 +163,7 @@ function RouteWithState(props) {
 
 function PrivateRoute(props) {
 
-
+  console.log(props);
   return (
     <Route
       path={props.path}

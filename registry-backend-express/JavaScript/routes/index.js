@@ -1,5 +1,5 @@
 require('dotenv').config();
-const {clientValidationRules,validate} = require('../validator.js');
+const {clientValidationRules,validate,postInvitationValidation} = require('../validator.js');
 const qs = require('qs');
 const {v1:uuidv1} = require('uuid');
 const axios = require('axios').default;
@@ -40,55 +40,8 @@ router.get('/login',(req,res)=>{
 })
 
 
-router.post('/invitation',async (req,res,next)=>{
-  try{
-    req.body.code = uuidv1();
-    if(await sendInvitationMail(req.body)){
-        db.invitation.add(req.body).then((response)=>{
-          if(response){
-            res.status(200).end();
-          }
-        }).catch(err=>{next(err)})
-    }
-    else{
-      throw 'Could not sent email invite';
-    }
-  }
-  catch(err){
-    next(err);
-  }
-})
 
-router.get('/group/:group_id',(req,res,next)=>{
-  try{
-    db.group.getMembers(req.params.group_id).then(group_members =>{
-      if(group_members){
-        res.status(200).json({group_members});
-      }
-      else{
-        throw 'No group meber could be found';
-      }
-    })
-  }
-  catch(err){next(err);}
-})
 
-router.put('/invitation',(req,res,next)=>{
-  console.log(req.body);
-  try{
-    db.invitation.setUser(req.body.code,'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','newmai@mail.com').then(success=>{
-      if(success){
-        res.status(200).send('Success');
-      }
-    }).catch(err=>{next(err)})
-  }
-  catch(err){
-    next(err);
-  }
-})
-router.get('/test',(req,res)=>{
-  res.send('Andreas');
-})
 
 // // Login Route
 // router.get('/login/:tenant',function(req,res,next){passport.authenticate(req.params.tenant, {
@@ -98,12 +51,12 @@ router.get('/test',(req,res)=>{
 // Callback Route
 router.get('/callback/:tenant',(req,res,next)=>{
   var clients = req.app.get('clients');
-  clients.egi.callback('http://localhost:5000/callback/egi',{code:req.query.code}).then(async response => {
+  clients.egi.callback(process.env.REDIRECT_URI_EGI,{code:req.query.code}).then(async response => {
     let code = await db.tokens.addToken(response.access_token);
     clients.egi.userinfo(response.access_token).then(usr_info=>{
       saveUser(usr_info);
     }); // => Promise
-    res.redirect('http://localhost:3000/code/' + code.code);
+    res.redirect(process.env.OIDC_REACT+'/code/' + code.code);
   });
 });
 
@@ -662,10 +615,158 @@ router.get('/petition/availability/:protocol/:id',authenticate,(req,res,next)=>{
   });
 });
 
+
+// ----------------------------------------------------------
+// ********************** DEVELOPMENT ***********************
+// ----------------------------------------------------------
+
+
+
+router.post('/invitation',authenticate,postInvitationValidation(),validate,is_group_manager, (req,res,next)=>{
+  try{
+    req.body.code = uuidv1();
+    req.body.invited_by = req.user.email;
+    sendInvitationMail(req.body)
+    db.invitation.add(req.body).then((response)=>{
+
+      if(response){
+        res.status(200).end();
+      }
+      else{
+        res.status(204).end();
+      }
+    }).catch(err=>{next(err)})
+  }
+  catch(err){
+    next(err);
+  }
+});
+
+router.put('/invitation/:action/:invite_id',authenticate,(req,res,next)=>{
+  try{
+    if(req.params.action==='accept'){
+      db.tx('accept-invite',async t =>{
+        await t.invitation.getOne(req.params.invite_id,req.user.sub).then(async invitation_data=>{
+          if(invitation_data){
+            let done = await t.batch([
+              t.group.addMember(invitation_data),
+              t.invitation.delete(req.params.invite_id,req.user.sub)
+            ]).catch(err=>{next(err)});
+            res.status(200).end();
+          }
+          else{
+            throw 'No invitation was found';
+          }
+        }).catch(err=>{next(err)})
+      })
+    }
+    else if(req.params.action==='decline'){
+      db.invitation.delete(req.params.invite_id,req.user.sub).then(response=>{
+        if(response){
+          res.status(200).end();
+        }
+        else{
+          res.status(204).end();
+        }
+      }).catch(err=>{next(err);})
+    }
+    else{
+      throw 'Invalid invitation response type';
+    }
+  }
+  catch(err){
+    next(err);
+  }
+})
+
+router.get('/invitation',authenticate,(req,res,next)=>{
+  try{
+    db.invitation.get(req.user.sub).then((response)=>{
+      if(response){
+        res.status(200).json(response);
+      }
+      else{
+        res.status(204).end()
+      }
+    }).catch(err=>{next(err)})
+  }
+  catch(err){
+    next(err);
+  }
+});
+
+router.get('/group/:group_id',authenticate,view_group,(req,res,next)=>{
+  try{
+    db.group.getMembers(req.params.group_id).then(group_members =>{
+      if(group_members){
+        res.status(200).json({group_members});
+      }
+      else{
+        throw 'No group meber could be found';
+      }
+    })
+  }
+  catch(err){next(err);}
+})
+
+router.put('/invitation',authenticate,(req,res,next)=>{
+  console.log(req.body);
+  try{
+    db.invitation.setUser(req.body.code,req.user.sub,req.user.email).then(success=>{
+      if(success){
+        res.status(200).send('Success');
+      }
+    }).catch(err=>{next(err)})
+  }
+  catch(err){
+    next(err);
+  }
+})
+
+
+
+
 // ----------------------------------------------------------
 // ******************** HELPER FUNCTIONS ********************
 // ----------------------------------------------------------
 
+function is_group_manager(req,res,next){
+  try{
+//    req.body.group_id
+    db.group.isGroupManager(req.user.sub,req.body.group_id).then(result=>{
+      if(result){
+        next();
+      }
+      else{
+        throw "Can't access this resource";
+      }
+    }).catch(err=>{next(err)});
+  }
+  catch(err){
+    next(err);
+  }
+}
+
+function view_group(req,res,next){
+  try{
+    if(req.user.role.actions.includes('view_groups')){
+      next();
+    }
+    else{
+      db.group.isGroupManager(req.user.sub,req.params.group_id).then(result=>{
+        if(result){
+          next();
+        }
+        else{
+          throw "Can't access this resource";
+        }
+      }).catch(err=>{next(err)});
+    }
+  }
+  catch(err){
+      next(err);
+  }
+}
 
 // Authentication Middleware
 function authenticate(req,res,next){
@@ -682,7 +783,6 @@ function authenticate(req,res,next){
       }).catch(err=>{next(err)});
     }
     else{
-      console.log('at least');
       const data = {'client_secret':process.env.CLIENT_SECRET_EGI}
       if(req.headers.authorization){
         TokenArray = req.headers.authorization.split(" ");

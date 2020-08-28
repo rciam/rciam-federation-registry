@@ -23,6 +23,7 @@ import {LoadingBar,ProcessingRequest} from './Components/LoadingBar';
 import {ListResponseModal} from './Components/Modals.js';
 import * as tenant_data from './tenant-config.json';
 import { useTranslation } from 'react-i18next';
+import Alert from 'react-bootstrap/Alert';
 
 const ServiceList= (props)=> {
   // eslint-disable-next-line
@@ -35,6 +36,7 @@ const ServiceList= (props)=> {
   const [cancelRequest,setCancelRequest] = useState(false);
   const [displayedServices,setDisplayedServices] = useState(0);
   const [asyncResponse,setAsyncResponse] = useState(false);
+  const [invites,setInvites] = useState();
   const [message,setMessage] = useState();
   const [responseTitle,setResponseTitle] = useState(null);
   const [searchString,setSearchString] = useState();
@@ -47,8 +49,33 @@ const ServiceList= (props)=> {
   useEffect(()=>{
     setLoadingList(true);
     getServices();
+    getInvites();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
+
+  const getInvites = () => {
+    fetch(config.host+'invitation', {
+      method: 'GET', // *GET, POST, PUT, DELETE, etc.
+      credentials: 'include', // include, *same-origin, omit
+      headers: {
+      'Content-Type': 'application/json',
+      'Authorization': localStorage.getItem('token')
+    }}).then(response=>{
+      if(response.status===200){
+        return response.json();
+      }
+      else {
+        return false
+      }
+    }).then(response=> {
+        if(response){
+          setInvites(response);
+        }
+        else{
+          setInvites();
+        }
+      });
+  }
 
   let items = [];
   let itemsPerPage = 5;
@@ -81,10 +108,10 @@ const ServiceList= (props)=> {
     }).then(response=> {
       setLoadingList(false);
       if(response){
+        console.log(response.services);
         response.services.forEach((item,index)=>{
             response.services[index].display = true;
           })
-        console.log(response.services);
         setServices(response.services);
 
       }
@@ -136,14 +163,26 @@ const ServiceList= (props)=> {
 
   return(
     <React.Fragment>
-
       <ListResponseModal message={message} modalTitle={responseTitle} setMessage={setMessage}/>
       <Confirmation confirmationId={confirmationId} cancelRequest={cancelRequest} setConfirmationId={setConfirmationId} confirmationAction={confirmationAction==='petition'?deletePetition:deleteService}/>
-      <Alert alertMessage={alertMessage} setAlertMessage={setAlertMessage}/>
+      <MyAlert alertMessage={alertMessage} setAlertMessage={setAlertMessage}/>
       <div>
         <LoadingBar loading={loadingList}>
+        {invites&&invites.length>0?
+          <React.Fragment>
+          <Alert variant='primary' className="invitation_alert">
+            {t('invitation_alert_1')}
+            <span>{invites.length}</span>
+            {invites.length>1?t('invitation_alert_mult'):t('invitation_alert_single')}
+            <Link to={{pathname:"/invitations", state:{invitations:invites}}}>
+              {t('invitation_alert_link')}
+            </Link>
+            {t('invitation_alert_2')}
+          </Alert>
+          </React.Fragment>
+        :null}
           <div className="options-bar">
-          <Row >
+          <Row>
             <Col>
               <Button variant="light" onClick={getServices} ><FontAwesomeIcon icon={faSync} />{t('petitions_refresh')}</Button>
               <Link to="/form/new"><Button style={{background:tenant.color}}><FontAwesomeIcon icon={faPlus}/>{t('petitions_new')}</Button></Link>
@@ -225,7 +264,6 @@ function TableItem(props) {
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   const globalState = useGlobalState();
-  console.log(props);
   let tenant = tenant_data.data[globalState.global_state.tenant];
   return (
     <tr>
@@ -360,21 +398,19 @@ function TableItem(props) {
                 }
               </React.Fragment>
             :null}
-            {props.service.owned?
-              <Dropdown.Item as='span'>
+            <Dropdown.Item as='span'>
               <div>
                 <Link to={{
                   pathname:"/group",
                   state:{
-                    manager:props.service.owned.toString(),
+                    group_manager:props.service.group_manager.toString(),
                     service_id:props.service.service_id,
                     group_id:props.service.group_id
                   }
-                }}>{t('manage_group')}</Link>
+                }}>{props.service.group_manager?t('manage_group'):t('view_group')}</Link>
               </div>
-              </Dropdown.Item>
-            :null
-            }
+            </Dropdown.Item>
+
             {props.service.service_id?
               <Dropdown.Item as='span'>
               <div>
@@ -397,7 +433,7 @@ function TableItem(props) {
     </tr>
   )
 }
-function Alert(props){
+function MyAlert(props){
   const handleClose = () => props.setAlertMessage();
   return (
     <Modal show={props.alertMessage?true:false} onHide={handleClose}>

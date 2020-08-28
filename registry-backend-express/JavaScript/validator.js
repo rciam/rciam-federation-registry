@@ -3,6 +3,14 @@ const {reg} = require('./regex.js');
 const customLogger = require('./loggers.js');
 var formConfig = require('./config');
 
+
+const postInvitationValidation = () => {
+  return[
+    body('email').isString().custom((value,success=true)=> {if(!value.match(reg.regEmail)){success=false} return success }).withMessage('Invalid Email value!'),
+    body('group_manager').custom((value)=> typeof(value)==='boolean').withMessage('Group role must have boolean value')
+  ]
+}
+
 const clientValidationRules = () => {
 
   // if(body('type').custom((value)=>{return type==='delete'})){
@@ -153,4 +161,5 @@ const validate = (req, res, next) => {
 module.exports = {
   clientValidationRules,
   validate,
+  postInvitationValidation
 }

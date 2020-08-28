@@ -1,6 +1,6 @@
-SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,status,type,state,group_manager,deleted,CASE WHEN owned IS NULL THEN false ELSE owned END,CASE WHEN notification IS NULL THEN false ELSE notification END AS notification,comment,group_id
+SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,status,type,state,CASE WHEN group_manager IS NULL then false ELSE group_manager END,deleted,CASE WHEN owned IS NULL THEN false ELSE owned END,CASE WHEN notification IS NULL THEN false ELSE notification END AS notification,comment,group_id
 FROM
-  (SELECT id AS group_id,true AS owned,group_manager FROM groups LEFT JOIN group_subs ON groups.id=group_subs.group_id WHERE sub=${sub}) AS group_ids LEFT JOIN
+  (SELECT id AS group_id,true AS owned,CASE WHEN group_manager IS NULL then false ELSE group_manager END FROM groups LEFT JOIN group_subs ON groups.id=group_subs.group_id WHERE sub=${sub}) AS group_ids LEFT JOIN
   (SELECT id AS service_id,service_description,logo_uri,service_name,deleted,requester,integration_environment,group_id FROM service_details) AS service_details USING (group_id) LEFT JOIN service_state ON service_details.service_id=service_state.id
   LEFT JOIN (SELECT id AS petition_id,status,type, service_id,comment,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification
     FROM service_petition_details WHERE reviewed_at IS NULL AND requester=${sub}) AS petitions USING (service_id)

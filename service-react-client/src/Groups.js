@@ -1,6 +1,6 @@
 import React,{useState,useEffect} from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {faCheckSquare} from '@fortawesome/free-solid-svg-icons';
+import {faCheckSquare,faBan} from '@fortawesome/free-solid-svg-icons';
 import { useTranslation } from 'react-i18next';
 import Form from 'react-bootstrap/Form';
 import * as config from './config.json';
@@ -30,13 +30,13 @@ const getGroupMembers = (group_id,setGroup,setLoading) => {
       if(response){
         setGroup(response.group_members);
         setLoading(false);
+        console.log(response.group_members);
       }
   });
 }
 
 const sendInvitation = (invitation,setSending,setInvitationResult) => {
   setSending(true);
-
   console.log(invitation);
   fetch(config.host+'invitation', {
     method: 'POST', // *GET, POST, PUT, DELETE, etc.
@@ -46,16 +46,11 @@ const sendInvitation = (invitation,setSending,setInvitationResult) => {
       'Authorization': localStorage.getItem('token')
     },
     body:JSON.stringify(invitation)
-  }).then(response=>{
-    if(response.status===200){
-      return response.json();
-    }
-    else {return false}
   }).then(response=> {
     setSending(false);
-    setInvitationResult({success:(response)?true:false,email:invitation.email});
-  });
 
+    setInvitationResult({success:(response.status===200)?true:false,email:invitation.email});
+  });
 }
 
 const GroupsPage = (props) => {
@@ -92,14 +87,16 @@ const GroupsPage = (props) => {
         let test = await checkError();
         console.log(test);
         if(test){
-          sendInvitation({email:email,group_manager:(role==='manager')},setSending,setInvitationResult);
+          sendInvitation({email:email,group_manager:(role==='manager'),group_id:props.group_id},setSending,setInvitationResult);
         }
   }
+
 
   return(
     <React.Fragment>
       <ProcessingRequest active={sending}/>
       <LoadingBar loading={loading}>
+      <h3 className="group_title">Group Members</h3>
       <Table striped bordered hover size='sm' className="groups-table">
         <thead>
           <tr>
@@ -107,6 +104,7 @@ const GroupsPage = (props) => {
             <th>Email</th>
             <th>{t('is_group_manager')}</th>
             <th>{t('group_status')}</th>
+            {props.group_manager==='true'?<th>Action</th>:null}
           </tr>
         </thead>
         <tbody>
@@ -117,6 +115,7 @@ const GroupsPage = (props) => {
               <td>{user.email}</td>
               <td>{user.group_manager?<FontAwesomeIcon icon={faCheckSquare}/>:null}</td>
               <td>{user.pending?<Badge variant="warning">{t('pending')}</Badge>:<Badge variant="primary">{t('active')}</Badge>}</td>
+              {props.group_manager==='true'?<td><Button variant="danger" onClick={()=>{}} ><FontAwesomeIcon icon={faBan} /></Button></td>:null}
             </tr>
           )
         })}
@@ -127,42 +126,48 @@ const GroupsPage = (props) => {
           {invitationResult.success?t('invitation_success'):t('invitation_error')}{invitationResult.email}
         </Alert>:null
       }
-      <Row className="group_invite_row">
-        <InputGroup className={error?'invalid-input mb-3':'mb-3'}>
-          <Form.Control
-            value={email}
-            onChange={(e)=>{setEmail(e.target.value);}}
-            onFocus={()=>{setInvitationResult(null);}}
-            onBlur={()=>{checkError();}}
-            column="true"
-            lg='2'
-            type="text"
-            className='col-form-label.sm'
-            placeholder={t('yup_email')}
-          />
-          <InputGroup.Prepend>
-              <Form.Control as="select" value={role} className="input-hide" onChange={(e)=>{
-                setRole(e.target.value)
-              }}>
-                <option key='member' value='member'>{t('group_member')}</option>
-                  <option key='manager' value='ASDFASDF'>{t('group_manager')}</option>
-              </Form.Control>
-          </InputGroup.Prepend>
-          <InputGroup.Prepend>
-              <Button
-                variant="outline-primary"
-                onClick={()=>{
-                  sendInvite();
-                }}
-              >
-                {t('group_send_invitation')}
-              </Button>
-          </InputGroup.Prepend>
-        </InputGroup>
-      </Row>
-      <div className='invitation-error'>
-        {error}
-      </div>
+      {props.group_manager==='true'?
+        <React.Fragment>
+          <h3 className="group_title">Send Invites</h3>
+          <Row className="group_invite_row">
+            <InputGroup className={error?'invalid-input mb-3':'mb-3'}>
+              <Form.Control
+                value={email}
+                onChange={(e)=>{setEmail(e.target.value);}}
+                onFocus={()=>{setInvitationResult(null);}}
+                onBlur={()=>{checkError();}}
+                column="true"
+                lg='2'
+                type="text"
+                className='col-form-label.sm'
+                placeholder={t('yup_email')}
+              />
+              <InputGroup.Prepend>
+                  <Form.Control as="select" value={role} className="input-hide" onChange={(e)=>{
+                    setRole(e.target.value)
+                  }}>
+                    <option key='member' value='member'>{t('group_member')}</option>
+                      <option key='manager' value='manager'>{t('group_manager')}</option>
+                  </Form.Control>
+              </InputGroup.Prepend>
+              <InputGroup.Prepend>
+                  <Button
+                    variant="outline-primary"
+                    onClick={()=>{
+                      sendInvite();
+                    }}
+                  >
+                    {t('group_send_invitation')}
+                  </Button>
+              </InputGroup.Prepend>
+            </InputGroup>
+          </Row>
+          <div className='invitation-error'>
+            {error}
+          </div>
+        </React.Fragment>
+      :null}
+
 
       </LoadingBar>
     </React.Fragment>
