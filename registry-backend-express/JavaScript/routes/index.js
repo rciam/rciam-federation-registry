@@ -642,6 +642,39 @@ router.post('/invitation',authenticate,postInvitationValidation(),validate,is_gr
   }
 });
 
+
+router.put('/group/remove_member',authenticate,is_group_manager,(req,res,next)=>{
+  try{
+    db.group.deleteSub(req.body.sub,req.body.group_id).then(response=>{
+      if(response){
+        res.status(200).end();
+      }
+      else{
+        res.status(204).end();
+      }
+    }).catch(err=>{next(err)})
+  }
+  catch(err){
+    next(err);
+  }
+})
+
+router.put('/invitation/cancel/:id',authenticate,is_group_manager,(req,res,next)=>{
+  try{
+    db.invitation.delete(req.params.id).then(response=>{
+      if(response){
+        res.status(200).end();
+      }
+      else{
+        res.status(204).end();
+      }
+    }).catch(err=>{next(err);})
+  }
+  catch(err){
+      next(err);
+  }
+});
+
 router.put('/invitation/:action/:invite_id',authenticate,(req,res,next)=>{
   try{
     if(req.params.action==='accept'){
@@ -650,7 +683,7 @@ router.put('/invitation/:action/:invite_id',authenticate,(req,res,next)=>{
           if(invitation_data){
             let done = await t.batch([
               t.group.addMember(invitation_data),
-              t.invitation.delete(req.params.invite_id,req.user.sub)
+              t.invitation.reject(req.params.invite_id,req.user.sub)
             ]).catch(err=>{next(err)});
             res.status(200).end();
           }
@@ -661,7 +694,7 @@ router.put('/invitation/:action/:invite_id',authenticate,(req,res,next)=>{
       })
     }
     else if(req.params.action==='decline'){
-      db.invitation.delete(req.params.invite_id,req.user.sub).then(response=>{
+      db.invitation.reject(req.params.invite_id,req.user.sub).then(response=>{
         if(response){
           res.status(200).end();
         }
@@ -731,8 +764,11 @@ router.put('/invitation',authenticate,(req,res,next)=>{
 // ----------------------------------------------------------
 
 function is_group_manager(req,res,next){
+  console.log('asdfasdf');
+
   try{
 //    req.body.group_id
+    console.log(req.body)
     db.group.isGroupManager(req.user.sub,req.body.group_id).then(result=>{
       if(result){
         next();

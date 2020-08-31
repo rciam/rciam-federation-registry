@@ -26,10 +26,13 @@ class InvitationRepository {
     return this.db.oneOrNone('SELECT group_id,sub,group_manager FROM invitations WHERE id=$1 and sub=$2',[+id,sub]);
   }
 
-  async delete(id,sub){
+  async reject(id,sub){
     return this.db.oneOrNone('DELETE FROM invitations WHERE id=$1 AND sub=$2 RETURNING id',[+id,sub]);
   }
 
+  async delete(id){
+    return this.db.oneOrNone('DELETE FROM invitations WHERE id=$1 RETURNING id',+id);
+  }
 
   async setUser(code,sub,email){
     return this.db.one('UPDATE invitations SET code=NULL,sub=$1,email=$2 WHERE code=$3 RETURNING id',[sub,email,code]);

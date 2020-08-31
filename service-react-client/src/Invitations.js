@@ -10,7 +10,13 @@ import Row from 'react-bootstrap/Row';
 
 const InvitationsPage = (props) => {
   useEffect(()=>{
-    setInvitations(props.invitations);
+
+    if(props.invitations){
+      setInvitations(props.invitations);
+    }
+    else {
+      setInvitations([])
+    }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
@@ -36,11 +42,13 @@ const InvitationsPage = (props) => {
     }).then(response=> {
       if(response.status===200){
         let new_invitations = [];
-        invitations.foreach((invitation,index)=>{
-          if(invitation.id!==id){
-            new_invitations.push(invitation);
-          }
-        })
+        if(invitations.length>1){
+          invitations.foreach((invitation,index)=>{
+            if(invitation.id!==id){
+              new_invitations.push(invitation);
+            }
+          })
+        }
         setInvitations(new_invitations);
       }
       setSending(false);
@@ -51,7 +59,7 @@ const InvitationsPage = (props) => {
   return(
     <React.Fragment>
       <ProcessingRequest active={sending}/>
-      {invitations?
+      {invitations.length>0?
         <React.Fragment>
          {invitations.map((invitation,index)=>{
            return(
@@ -72,7 +80,15 @@ const InvitationsPage = (props) => {
            )
          })}
         </React.Fragment>
-        :null}
+        :
+        <React.Fragment>
+          <div className='invitation-container'>
+            <h3>
+              No invitations pending ...
+            </h3>
+          </div>
+        </React.Fragment>
+      }
 
     </React.Fragment>
   )

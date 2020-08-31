@@ -12,6 +12,7 @@ export const SideNav = () => {
       <div className="nav-title">{t('nav_title')}</div>
       <Link to="/petitions">{t('nav_link_petitions')}</Link>
       <Link to="/userinfo">{t('nav_link_userinfo')}</Link>
+      <Link to="/invitations">Invitations</Link>
     </Nav>
   )
 }

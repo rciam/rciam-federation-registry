@@ -13,53 +13,102 @@ import Badge from 'react-bootstrap/Badge';
 import * as yup from 'yup';
 import Alert from 'react-bootstrap/Alert';
 
-const getGroupMembers = (group_id,setGroup,setLoading) => {
-  setLoading(true);
-  fetch(config.host+'group/'+group_id, {
-    method: 'GET', // *GET, POST, PUT, DELETE, etc.
-    credentials: 'include', // include, *same-origin, omit
-    headers: {
-    'Content-Type': 'application/json',
-    'Authorization': localStorage.getItem('token')
-    }}).then(response=>{
-        if(response.status===200){
-          return response.json();
-        }
-        else {return false}
-      }).then(response=> {
-      if(response){
-        setGroup(response.group_members);
-        setLoading(false);
-        console.log(response.group_members);
-      }
-  });
-}
 
-const sendInvitation = (invitation,setSending,setInvitationResult) => {
-  setSending(true);
-  console.log(invitation);
-  fetch(config.host+'invitation', {
-    method: 'POST', // *GET, POST, PUT, DELETE, etc.
-    credentials: 'include', // include, *same-origin, omit
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': localStorage.getItem('token')
-    },
-    body:JSON.stringify(invitation)
-  }).then(response=> {
-    setSending(false);
 
-    setInvitationResult({success:(response.status===200)?true:false,email:invitation.email});
-  });
-}
+
+
 
 const GroupsPage = (props) => {
   useEffect(()=>{
-    getGroupMembers(props.service_id,setGroup,setLoading);
-
+    getData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
+  const getData = () => {
+    getGroupMembers(props.service_id);
+  }
 
+
+  const getGroupMembers = (group_id) => {
+    let i = 0;
+    setLoading(true);
+    fetch(config.host+'group/'+group_id, {
+      method: 'GET', // *GET, POST, PUT, DELETE, etc.
+      credentials: 'include', // include, *same-origin, omit
+      headers: {
+      'Content-Type': 'application/json',
+      'Authorization': localStorage.getItem('token')
+      }}).then(response=>{
+          if(response.status===200){
+            return response.json();
+          }
+          else {return false}
+        }).then(response=> {
+        if(response){
+          response.group_members.forEach((member, i) => {
+            if(member.group_manager){
+              i++;
+            }
+          });
+          setGroupManagers(i);
+          setGroup(response.group_members);
+          setLoading(false);
+        }
+    });
+  }
+
+  const cancelInvitation = (id,group_id)=>{
+    setSending(true);
+    fetch(config.host+'invitation/cancel/'+id, {
+      method: 'PUT', // *GET, POST, PUT, DELETE, etc.
+      credentials: 'include', // include, *same-origin, omit
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': localStorage.getItem('token')
+      },
+      body:JSON.stringify({group_id:group_id})
+    }).then(response=> {
+      setSending(false);
+      getData()
+    });
+  }
+
+
+  const sendInvitation = (invitation,setSending,setInvitationResult) => {
+    setSending(true);
+    console.log(invitation);
+    fetch(config.host+'invitation', {
+      method: 'POST', // *GET, POST, PUT, DELETE, etc.
+      credentials: 'include', // include, *same-origin, omit
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': localStorage.getItem('token')
+      },
+      body:JSON.stringify(invitation)
+    }).then(response=> {
+      setSending(false);
+
+      setInvitationResult({success:(response.status===200)?true:false,email:invitation.email});
+      getData();
+    });
+  }
+
+  const removeMember = (sub,group_id) => {
+    setSending(true);
+    fetch(config.host+'group/remove_member', {
+      method: 'PUT', // *GET, POST, PUT, DELETE, etc.
+      credentials: 'include', // include, *same-origin, omit
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': localStorage.getItem('token')
+      },
+      body:JSON.stringify({sub:sub,group_id:group_id})
+    }).then(response=> {
+      setSending(false);
+      getData()
+    });
+  }
+
+  const [group_managers,setGroupManagers] = useState();
   const [invitationResult,setInvitationResult] = useState();
   const [sending,setSending] = useState();
   const [loading,setLoading] = useState();
@@ -115,7 +164,14 @@ const GroupsPage = (props) => {
               <td>{user.email}</td>
               <td>{user.group_manager?<FontAwesomeIcon icon={faCheckSquare}/>:null}</td>
               <td>{user.pending?<Badge variant="warning">{t('pending')}</Badge>:<Badge variant="primary">{t('active')}</Badge>}</td>
-              {props.group_manager==='true'?<td><Button variant="danger" onClick={()=>{}} ><FontAwesomeIcon icon={faBan} /></Button></td>:null}
+              {props.group_manager==='true'?<td>
+              <Button
+                variant="danger"
+                onClick={()=>{if(user.pending){cancelInvitation(user.invitation_id,user.group_id)}else{removeMember(user.sub,user.group_id)} }}
+                disabled={group.length<1||(group_managers<2&&user.group_manager)}
+              >
+                <FontAwesomeIcon icon={faBan} />
+              </Button></td>:null}
             </tr>
           )
         })}

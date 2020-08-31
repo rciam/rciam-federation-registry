@@ -21,6 +21,21 @@ class GroupRepository {
       }
     })
   }
+
+  async deleteSub(sub,group_id){
+    return this.db.any('SELECT COUNT(*) FROM group_subs WHERE group_manager=true AND group_id=$1 AND sub!=$2',[+group_id,sub]).then(res=>{
+      if(res){
+        if(res[0].count>0){
+            return this.db.oneOrNone('DELETE FROM group_subs WHERE group_id=$1 AND sub=$2 RETURNING sub',[+group_id,sub]);
+        }
+        else{
+          return false;
+        }
+
+      }
+    })
+  }
+
   async addMember(data){
     return this.db.one('INSERT INTO group_subs (sub,group_manager,group_id) VALUES($1,$2,$3) RETURNING sub',[data.sub,data.group_manager,+data.group_id]);
   }

@@ -9,6 +9,7 @@ import * as config from './config.json';
 const Home = ()=> {
   // eslint-disable-next-line
   const user = useContext(Context);
+  // eslint-disable-next-line
   const [context, setContext] = useContext(Context);
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
