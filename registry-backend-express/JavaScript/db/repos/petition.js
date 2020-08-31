@@ -22,6 +22,7 @@ class PetitionRepository {
         result.json.generate_client_secret = false;
         data.meta_data = {};
         data.meta_data.type = result.json.type;
+        data.meta_data.group_id = result.json.group_id;
         data.meta_data.requester = result.json.requester;
         data.meta_data.service_id = result.json.service_id;
         delete result.json.type;
@@ -115,21 +116,45 @@ class PetitionRepository {
   async add(petition,requester){
         return this.db.tx('add-service',async t =>{
           let queries = [];
-          return await t.service_petition_details.add(petition,requester).then(async result=>{
-            if(result){
-              queries.push(t.service_details_protocol.add('petition',petition,result.id));
-              queries.push(t.service_contacts.add('petition',petition.contacts,result.id));
-              if(petition.protocol==='oidc'){
-                queries.push(t.service_multi_valued.add('petition','oidc_grant_types',petition.grant_types,result.id));
-                queries.push(t.service_multi_valued.add('petition','oidc_scopes',petition.scope,result.id));
-                queries.push(t.service_multi_valued.add('petition','oidc_redirect_uris',petition.redirect_uris,result.id));
+          if(petition.type==='create'){
+            return await t.group.addGroup(requester).then(async id =>{
+              if(id){
+                petition.group_id = id;
+                return await t.service_petition_details.add(petition,requester).then(async result=>{
+                  if(result){
+                    queries.push(t.service_details_protocol.add('petition',petition,result.id));
+                    queries.push(t.service_contacts.add('petition',petition.contacts,result.id));
+                    if(petition.protocol==='oidc'){
+                      queries.push(t.service_multi_valued.add('petition','oidc_grant_types',petition.grant_types,result.id));
+                      queries.push(t.service_multi_valued.add('petition','oidc_scopes',petition.scope,result.id));
+                      queries.push(t.service_multi_valued.add('petition','oidc_redirect_uris',petition.redirect_uris,result.id));
+                    }
+                    var result2 = await t.batch(queries);
+                    if(result2){
+                      return result.id
+                    }
+                  }
+                });
               }
-              var result2 = await t.batch(queries);
-              if(result2){
-                return result.id
+            });
+          }
+          else{
+            return await t.service_petition_details.add(petition,requester).then(async result=>{
+              if(result){
+                queries.push(t.service_details_protocol.add('petition',petition,result.id));
+                queries.push(t.service_contacts.add('petition',petition.contacts,result.id));
+                if(petition.protocol==='oidc'){
+                  queries.push(t.service_multi_valued.add('petition','oidc_grant_types',petition.grant_types,result.id));
+                  queries.push(t.service_multi_valued.add('petition','oidc_scopes',petition.scope,result.id));
+                  queries.push(t.service_multi_valued.add('petition','oidc_redirect_uris',petition.redirect_uris,result.id));
+                }
+                var result2 = await t.batch(queries);
+                if(result2){
+                  return result.id
+                }
               }
-            }
-          });
+            });
+          }
         });
     }
 

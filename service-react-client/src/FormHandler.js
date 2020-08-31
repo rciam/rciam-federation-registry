@@ -70,10 +70,7 @@ const EditService = (props) => {
     },[petition, service, props.review, editPetition]);
 
     const getData = () => {
-      console.log('get Datra')
-      console.log(props);
       if(props.service_id){
-        console.log('get service');
         fetch(config.host+'service/'+props.service_id, {
           method: 'GET', // *GET, POST, PUT, DELETE, etc.
           credentials: 'include', // include, *same-origin, omit
@@ -90,13 +87,11 @@ const EditService = (props) => {
           }
           }).then(response=> {
           if(response){
-            console.log(response.service);
             setService(response.service);
           }
         });
       }
       if(props.petition_id&&props.type!=='delete'){
-        console.log('getPetition');
         fetch(config.host+'petition/'+props.petition_id, {
           method: 'GET', // *GET, POST, PUT, DELETE, etc.
           credentials: 'include', // include, *same-origin, omit
@@ -113,7 +108,6 @@ const EditService = (props) => {
           }
         }).then(response=> {
           if(response){
-            console.log(response.petition);
             setPetition(response.petition);
           }
         });
@@ -214,7 +208,6 @@ const ViewService = (props)=>{
       }).then(response=>response.json()).then(response=> {
 
         if(response.service){
-          console.log(response.service);
           setService(response.service);
         }
       });

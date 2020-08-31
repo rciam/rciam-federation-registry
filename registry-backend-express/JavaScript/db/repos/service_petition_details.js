@@ -31,7 +31,8 @@ class ServicePetitionDetailsRepository {
         status:"pending",
         service_id:body.service_id,
         comment:body.comment,
-        protocol:body.protocol
+        protocol:body.protocol,
+        group_id:body.group_id
       })
     }
 

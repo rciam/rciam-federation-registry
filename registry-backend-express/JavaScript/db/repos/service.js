@@ -31,31 +31,28 @@ class ServiceRepository {
         });
   }
 
-  async add(service,requester) {
+  async add(service,requester,group_id) {
       try{
         let service_id;
         return this.db.tx('add-service',async t =>{
           let queries = [];
-          return t.group.addGroup(requester).then(async id =>{
 
-            if(id){
-              service.group_id = id;
-              return await t.service_details.add(service,requester).then(async result=>{
-                if(result){
-                  service_id = result.id;
-                  queries.push(t.service_details_protocol.add('service',service,result.id));
-                  queries.push(t.service_contacts.add('service',service.contacts,result.id));
-                  queries.push(t.service_state.add(result.id,'pending'));
-                  if(service.protocol==='oidc'){
-                    queries.push(t.service_multi_valued.add('service','oidc_grant_types',service.grant_types,result.id));
-                    queries.push(t.service_multi_valued.add('service','oidc_scopes',service.scope,result.id));
-                    queries.push(t.service_multi_valued.add('service','oidc_redirect_uris',service.redirect_uris,result.id));
-                  }
-                  return t.batch(queries);
-                }
-              });
+          service.group_id = group_id;
+          return await t.service_details.add(service,requester).then(async result=>{
+            if(result){
+              service_id = result.id;
+              queries.push(t.service_details_protocol.add('service',service,result.id));
+              queries.push(t.service_contacts.add('service',service.contacts,result.id));
+              queries.push(t.service_state.add(result.id,'pending'));
+              if(service.protocol==='oidc'){
+                queries.push(t.service_multi_valued.add('service','oidc_grant_types',service.grant_types,result.id));
+                queries.push(t.service_multi_valued.add('service','oidc_scopes',service.scope,result.id));
+                queries.push(t.service_multi_valued.add('service','oidc_redirect_uris',service.redirect_uris,result.id));
+              }
+              return t.batch(queries);
             }
           });
+
         }).then(data => {
           return service_id;
         }).catch(stuff=>{

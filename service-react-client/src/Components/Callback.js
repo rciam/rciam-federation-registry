@@ -24,7 +24,6 @@ export const CallbackPage = () => {
         return false
       }
     }).then(response=>{
-      console.log(response);
       if(response){
 
         localStorage.setItem('token','Bearer '+response.token);

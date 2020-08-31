@@ -49,7 +49,6 @@ export const NavbarTop = (props)=>{
   const [admin,setAdmin] = useState(false);
   useEffect(()=>{
 
-    console.log(user[0]);
     if(user[0]){
       setAdmin(user[0].admin);
     }

@@ -511,7 +511,7 @@ router.put('/petition/approve/:id',authenticate,canReview,(req,res,next)=>{
               ]);
             }
             else if(petition.meta_data.type==='create'){
-              await t.service.add(petition.service_data,petition.meta_data.requester).then(async id=>{
+              await t.service.add(petition.service_data,petition.meta_data.requester,petition.meta_data.group_id).then(async id=>{
                 if(id){
                   service_id = id;
                   await t.service_petition_details.approveCreation(req.params.id,req.user.sub,'approved',req.body.comment,id);
@@ -743,7 +743,6 @@ router.get('/group/:group_id',authenticate,view_group,(req,res,next)=>{
 })
 
 router.put('/invitation',authenticate,(req,res,next)=>{
-  console.log(req.body);
   try{
     db.invitation.setUser(req.body.code,req.user.sub,req.user.email).then(success=>{
       if(success){
@@ -764,11 +763,9 @@ router.put('/invitation',authenticate,(req,res,next)=>{
 // ----------------------------------------------------------
 
 function is_group_manager(req,res,next){
-  console.log('asdfasdf');
 
   try{
 //    req.body.group_id
-    console.log(req.body)
     db.group.isGroupManager(req.user.sub,req.body.group_id).then(result=>{
       if(result){
         next();
@@ -838,7 +835,8 @@ function authenticate(req,res,next){
           req.user = {};
           req.user.sub = result.data.sub;
           req.user.edu_person_entitlement = result.data.eduperson_entitlement;
-          req.user.iss = result.data.iss
+          req.user.iss = result.data.iss;
+          req.user.email = result.data.email;
           db.user_role.getRoleActions(req.user.edu_person_entitlement,1).then(role=>{
             if(role.success){
               req.user.role = role.role;

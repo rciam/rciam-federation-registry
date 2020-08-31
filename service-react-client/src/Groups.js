@@ -24,12 +24,11 @@ const GroupsPage = (props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
   const getData = () => {
-    getGroupMembers(props.service_id);
+    getGroupMembers(props.group_id);
   }
 
 
   const getGroupMembers = (group_id) => {
-    let i = 0;
     setLoading(true);
     fetch(config.host+'group/'+group_id, {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
@@ -44,12 +43,13 @@ const GroupsPage = (props) => {
           else {return false}
         }).then(response=> {
         if(response){
+          let count = 0;
           response.group_members.forEach((member, i) => {
-            if(member.group_manager){
-              i++;
+            if(member.group_manager&&!member.pending){
+              count = count +1;
             }
           });
-          setGroupManagers(i);
+          setGroupManagers(count);
           setGroup(response.group_members);
           setLoading(false);
         }
@@ -75,7 +75,6 @@ const GroupsPage = (props) => {
 
   const sendInvitation = (invitation,setSending,setInvitationResult) => {
     setSending(true);
-    console.log(invitation);
     fetch(config.host+'invitation', {
       method: 'POST', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
@@ -134,7 +133,6 @@ const GroupsPage = (props) => {
 
   const sendInvite = async () => {
         let test = await checkError();
-        console.log(test);
         if(test){
           sendInvitation({email:email,group_manager:(role==='manager'),group_id:props.group_id},setSending,setInvitationResult);
         }

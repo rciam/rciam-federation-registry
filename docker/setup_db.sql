@@ -84,7 +84,7 @@ create table user_edu_person_entitlement (
 create table service_details (
   id SERIAL PRIMARY KEY,
   service_name  VARCHAR(256),
-  group_id bigint,
+  group_id INTEGER,
   service_description VARCHAR(1024),
   logo_uri VARCHAR(2048),
   policy_uri VARCHAR(2048),
@@ -165,6 +165,7 @@ create table service_petition_details (
   protocol VARCHAR(256),
   requester VARCHAR(256),
   reviewer VARCHAR(256) DEFAULT NULL,
+  group_id INTEGER DEFAULT NULL,
   reviewed_at timestamp without time zone DEFAULT NULL,
   FOREIGN KEY (service_id) REFERENCES service_details(id) ON DELETE SET NULL
 );
@@ -387,8 +388,8 @@ INSERT INTO service_petition_details (service_description,service_name,logo_uri,
 VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 5','https://brandmark.io/logo-rank/random/pepsi.png','https://policy_uri.com','development','7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu','approved',5,'2004-10-19 10:23:54','oidc');
 INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,type,service_id,protocol)
 VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 5 new','https://images.fastcompany.net/image/upload/w_596,c_limit,q_auto:best,f_auto/fc/3034007-inline-i-applelogo.jpg','https://policy_uri.com','development','7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu','edit',5,'oidc');
-INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,type,protocol)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 7','https://www.bookmarks.design/media/image/hatchful.jpg','https://policy_uri.com','development','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','create','oidc');
+INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,type,protocol,group_id)
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 7','https://www.bookmarks.design/media/image/hatchful.jpg','https://policy_uri.com','development','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','create','oidc',7);
 INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,type,service_id,protocol)
 VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 1','https://cdn.vox-cdn.com/thumbor/0n6dqQfk9MuOBSiM39Pog2Bw39Y=/1400x1400/filters:format(jpeg)/cdn.vox-cdn.com/uploads/chorus_asset/file/19341372/microsoftedgenewlogo.jpg','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','delete',1,'oidc');
 INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,status,type,service_id,reviewed_at,protocol)
@@ -665,6 +666,8 @@ INSERT INTO groups (group_name)
 VALUES ('group_5');
 INSERT INTO groups (group_name)
 VALUES ('group_6');
+INSERT INTO groups (group_name)
+VALUES ('group_7');
 
 INSERT INTO group_subs (group_id,sub,group_manager)
 VALUES (1,'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',true);
@@ -680,6 +683,8 @@ INSERT INTO group_subs (group_id,sub,group_manager)
 VALUES (5,'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',true);
 INSERT INTO group_subs (group_id,sub,group_manager)
 VALUES (5,'7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu',true);
+INSERT INTO group_subs (group_id,sub,group_manager)
+VALUES (7,'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',true);
 
 
 
