@@ -69,7 +69,6 @@ const calcDiff = (oldState,newState) => {
 }
 
 const sendInvitationMail = (data) => {
-  console.log(data);
   var currentDate = new Date();
   readHTMLFile(path.join(__dirname, '../html/invitation.html'), function(err, html) {
     let transporter = nodeMailer.createTransport({

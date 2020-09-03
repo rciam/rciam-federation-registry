@@ -81,13 +81,13 @@ class ServicePetitionDetailsRepository {
     }
 
     async belongsToRequester(petition_id,sub){
-      if(sub==='admin'){
-        return this.db.oneOrNone('SELECT protocol,type,service_id FROM service_petition_details WHERE id = $1 AND reviewed_at IS NULL', [+petition_id]);
-      }
-      else{
-        return this.db.oneOrNone('SELECT protocol,type,service_id FROM service_petition_details WHERE id = $1 AND requester= $2 AND reviewed_at IS NULL', [+petition_id,sub]);
-      }
+        return this.db.oneOrNone(sql.belongsToRequester,{
+          id:+petition_id,
+          sub:sub
+        })
     }
+
+
     async review(id,approved_by,status,comment){
        let date = new Date(Date.now());
        return this.db.any("UPDATE service_petition_details SET status=$1, reviewed_at=$2, reviewer=$3, comment=$5 WHERE id=$4 RETURNING *",[status,date,approved_by,+id,comment]);

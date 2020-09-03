@@ -202,8 +202,8 @@
     "history_not_reviewed":"Not yet reviewed",
     "history_td_type":"Type of Request",
     "history_td_status":"Review Status",
-    "manage_group":"Manage Group",
-    "view_group":"View Group",
+    "manage_group":"Manage Owners",
+    "view_group":"View Owners",
     "group":"Group",
     "group_member":"Member",
     "group_manager":"Manager",
@@ -222,8 +222,7 @@
     "invitation_alert_link":"here ",
     "invitation_alert_2":"to view.",
     "invitations_accept":"Accept",
-    "invitations_decline":"Dismiss",
-    "view_group":"View Group"
+    "invitations_decline":"Dismiss"
 
 
   }

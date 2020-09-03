@@ -51,6 +51,7 @@ create table invitations (
   group_id INTEGER,
   sub VARCHAR(256) DEFAULT NULL,
   invited_by VARCHAR(256),
+  date timestamp without time zone DEFAULT NULL,
   group_manager BOOLEAN,
   FOREIGN KEY (group_id) REFERENCES groups(id)
 );
@@ -695,7 +696,9 @@ VALUES (3,'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.
 INSERT INTO role_entitlements (role_id,entitlement)
 VALUES (2,'fake_entitlement');
 
-INSERT INTO invitations(code,email,group_id,sub,group_manager,invited_by)
-VALUES (null,'andreaskoza@grnet.gr',1,'7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu',true,'koza-sparrow@hotmail.com');
-INSERT INTO invitations(code,email,group_id,sub,group_manager,invited_by)
-VALUES ('random_generated_code','alekaelias@yahoo.gr',1,null,false,'koza-sparrow@hotmail.com');
+INSERT INTO invitations(code,email,group_id,sub,group_manager,invited_by,date)
+VALUES (null,'andreaskoza@grnet.gr',1,'7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu',true,'koza-sparrow@hotmail.com','2020-09-1 10:23:54');
+INSERT INTO invitations(code,email,group_id,sub,group_manager,invited_by,date)
+VALUES (null,'andreaskoza@grnet.gr',6,'7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu',true,'koza-sparrow@hotmail.com','2020-09-1 10:23:54');
+INSERT INTO invitations(code,email,group_id,sub,group_manager,invited_by,date)
+VALUES ('random_generated_code','alekaelias@yahoo.gr',1,null,false,'koza-sparrow@hotmail.com','2020-09-1 10:23:54');

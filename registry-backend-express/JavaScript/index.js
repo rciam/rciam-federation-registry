@@ -99,18 +99,6 @@ Issuer.discover("https://aai.eosc-portal.eu/oidc/").then((issuer)=>{
 
 
 
-passport.serializeUser(function(user, done) {
-  done(null, user);
-});
-
-passport.deserializeUser(function(obj, done) {
-  /*
-   Example: if only a user identifier is stored in the session, this is where
-   the full set could be retrieved, e.g. from a database, and passed to the next step
- */
-  done(null, obj);
-});
-
 const app = express();
 
 // var level = "";

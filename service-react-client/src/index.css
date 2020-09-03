@@ -1060,6 +1060,10 @@ html:lang(gr) .home-container h1 {
   text-align: center;
 }
 .groups-table button {
+  padding:0.1rem 0.5rem 0.1rem 0.5rem;
+}
+
+.groups-table button:nth-child(2) {
   padding:0.1rem 0.4rem 0.1rem 0.4rem;
 }
 .group_invite_row {
@@ -1113,7 +1117,15 @@ html:lang(gr) .home-container h1 {
   display: inline-block;
   font-size: 1.1rem;
 }
-.invitation-container div {
 
 
+.confirmation-table td:first-child {
+  text-align: right;
+  padding-right: 0.5rem;
+  font-weight: bold;
+}
+
+
+.groups-invite-table button {
+  margin-right: 0.5rem;
 }

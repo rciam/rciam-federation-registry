@@ -97,9 +97,9 @@ router.get('/user',authenticate,(req,res)=>{
   clients.egi.userinfo(TokenArray[1]) // => Promise
   .then(function (userinfo) {
     let user = userinfo;
-    // if(req.user.role.actions.includes('review_own_petition')){
+    if(req.user.role.actions.includes('review_own_petition')){
       user.admin = true;
-    // }
+    }
     user.role = req.user.role.name;
     res.end(JSON.stringify({
       user
@@ -290,6 +290,9 @@ router.delete('/petition/:id',authenticate,(req,res,next)=>{
               next('Cant delete Petition');
             }
 
+          }
+          else{
+            next('Cannot find petition');
           }
         }).catch(err=>{next(err);})
       }
@@ -675,10 +678,28 @@ router.put('/invitation/cancel/:id',authenticate,is_group_manager,(req,res,next)
   }
 });
 
+router.put('/invitation/resend/:id',authenticate,is_group_manager,(req,res,next)=>{
+  try{
+    db.invitation.refresh(req.params.id).then(response=>{
+      if(response.code){
+        sendInvitationMail(response)
+        res.status(200).end();
+      }
+      else{
+        res.status(204).end();
+      }
+    }).catch(err=>{next(err);})
+  }
+  catch(err){
+      next(err);
+  }
+});
+
 router.put('/invitation/:action/:invite_id',authenticate,(req,res,next)=>{
   try{
     if(req.params.action==='accept'){
       db.tx('accept-invite',async t =>{
+
         await t.invitation.getOne(req.params.invite_id,req.user.sub).then(async invitation_data=>{
           if(invitation_data){
             let done = await t.batch([
@@ -745,8 +766,11 @@ router.get('/group/:group_id',authenticate,view_group,(req,res,next)=>{
 router.put('/invitation',authenticate,(req,res,next)=>{
   try{
     db.invitation.setUser(req.body.code,req.user.sub,req.user.email).then(success=>{
-      if(success){
-        res.status(200).send('Success');
+      if(success.id){
+        res.status(200).end();
+      }
+      else{
+        res.status(304).end();
       }
     }).catch(err=>{next(err)})
   }

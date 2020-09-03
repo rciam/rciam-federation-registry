@@ -1,6 +1,8 @@
-import React,{useState,useEffect} from 'react';
+import React,{useState,useEffect,useContext} from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {faCheckSquare,faBan} from '@fortawesome/free-solid-svg-icons';
+import {faCheckSquare,faTimes,faSync} from '@fortawesome/free-solid-svg-icons';
+import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
+import Tooltip from 'react-bootstrap/Tooltip';
 import { useTranslation } from 'react-i18next';
 import Form from 'react-bootstrap/Form';
 import * as config from './config.json';
@@ -12,15 +14,15 @@ import {LoadingBar,ProcessingRequest} from './Components/LoadingBar';
 import Badge from 'react-bootstrap/Badge';
 import * as yup from 'yup';
 import Alert from 'react-bootstrap/Alert';
-
-
-
+import {Context} from './user-context.js';
+import {ConfirmationModal} from './Components/Modals';
 
 
 
 const GroupsPage = (props) => {
   useEffect(()=>{
     getData();
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
   const getData = () => {
@@ -49,6 +51,7 @@ const GroupsPage = (props) => {
               count = count +1;
             }
           });
+          console.log(count);
           setGroupManagers(count);
           setGroup(response.group_members);
           setLoading(false);
@@ -72,8 +75,24 @@ const GroupsPage = (props) => {
     });
   }
 
+  const resendInvitation = (id,group_id,email) => {
+    setSending(true);
+    fetch(config.host+'invitation/resend/'+id, {
+      method: 'PUT', // *GET, POST, PUT, DELETE, etc.
+      credentials: 'include', // include, *same-origin, omit
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': localStorage.getItem('token')
+      },
+      body:JSON.stringify({group_id:group_id})
+    }).then(response=> {
+      setSending(false);
+      setInvitationResult({success:(response.status===200)?true:false,email:email});
+      getData()
+    });
+  }
 
-  const sendInvitation = (invitation,setSending,setInvitationResult) => {
+  const sendInvitation = (invitation) => {
     setSending(true);
     fetch(config.host+'invitation', {
       method: 'POST', // *GET, POST, PUT, DELETE, etc.
@@ -107,6 +126,7 @@ const GroupsPage = (props) => {
     });
   }
 
+  const user = useContext(Context);
   const [group_managers,setGroupManagers] = useState();
   const [invitationResult,setInvitationResult] = useState();
   const [sending,setSending] = useState();
@@ -114,8 +134,10 @@ const GroupsPage = (props) => {
   const [group,setGroup] = useState([]);
   const [email,setEmail] = useState('');
   const [role,setRole] = useState('member');
-
   const [error,setError] = useState('');
+  const [confirmationData,setConfirmationData] = useState({});
+
+
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   let schema = yup.object({
@@ -141,6 +163,8 @@ const GroupsPage = (props) => {
 
   return(
     <React.Fragment>
+    <ConfirmationModal active={confirmationData.action?true:false} setActive={setConfirmationData} action={()=>{if(confirmationData.action==='cancel'){cancelInvitation(...confirmationData.args)}else{removeMember(...confirmationData.args)}}} title={confirmationData.title} message={confirmationData.message} accept={'Yes'} decline={'No'}/>
+
       <ProcessingRequest active={sending}/>
       <LoadingBar loading={loading}>
       <h3 className="group_title">Group Members</h3>
@@ -155,24 +179,155 @@ const GroupsPage = (props) => {
           </tr>
         </thead>
         <tbody>
-        {group.map((user,index)=>{
-          return (
-            <tr key={index}>
-              <td>{user.username}</td>
-              <td>{user.email}</td>
-              <td>{user.group_manager?<FontAwesomeIcon icon={faCheckSquare}/>:null}</td>
-              <td>{user.pending?<Badge variant="warning">{t('pending')}</Badge>:<Badge variant="primary">{t('active')}</Badge>}</td>
+        {group.map((member,index)=>{
+          if(!member.pending){
+            return (
+              <tr key={index}>
+              <td>{member.username}</td>
+              <td><a href={'mailto:'+member.email}>{member.email}</a></td>
+              <td>{member.group_manager?<FontAwesomeIcon icon={faCheckSquare}/>:null}</td>
+              <td>{member.pending?<Badge variant="warning">invited</Badge>:<Badge variant="primary">{t('active')}</Badge>}</td>
               {props.group_manager==='true'?<td>
-              <Button
-                variant="danger"
-                onClick={()=>{if(user.pending){cancelInvitation(user.invitation_id,user.group_id)}else{removeMember(user.sub,user.group_id)} }}
-                disabled={group.length<1||(group_managers<2&&user.group_manager)}
+              <OverlayTrigger
+              placement='top'
+              overlay={
+                <Tooltip id={`tooltip-top`}>
+                {user[0].sub===member.sub?'Leave Group':member.pending?'Cancel Invitation':'Remove Member'}
+                </Tooltip>
+              }
               >
-                <FontAwesomeIcon icon={faBan} />
-              </Button></td>:null}
-            </tr>
-          )
+              <Button
+              variant="danger"
+              onClick={()=>{
+                setConfirmationData({
+                  action:'remove',
+                  args:[member.sub,member.group_id],
+                  message:(member.sub!==user[0].sub?
+                    <React.Fragment>
+                      <table style={{border:'none'}} className="confirmation-table">
+                      <tr>
+                      <td>username:</td>
+                      <td>{member.username}</td>
+                      </tr>
+                      <tr>
+                      <td>email:</td>
+                      <td>{member.email}</td>
+                      </tr>
+                      <tr>
+                      <td>role:</td>
+                      <td>{member.group_manager?'group_manager':'group_member'}</td>
+                      </tr>
+                      </table>
+                    </React.Fragment>
+                    :null
+                  ),
+                  title:(member.sub===user[0].sub?'Are you sure you want to leave the owners group?':'Are you sure you want to remove following user from owners group')
+                });
+              }}
+              disabled={group.length<1||(group_managers<2&&member.group_manager&&!member.pending)}
+              >
+              <FontAwesomeIcon icon={faTimes} />
+              </Button>
+              </OverlayTrigger>
+              </td>:null}
+              </tr>
+            )
+          }
+          else {return (null)}
         })}
+        </tbody>
+      </Table>
+      <h3 className="group_title">Group Invites</h3>
+      <Table striped bordered hover size='sm' className="groups-table groups-invite-table">
+        <thead>
+          <tr>
+            <th>
+              Username
+            </th>
+            <th>
+              Email
+            </th>
+            <th>
+              Group Manager
+            </th>
+            <th>
+              Invitation Date
+            </th>
+            <th>
+              Action
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            props.group_manager?
+              group.map((member)=>{
+                if(member.pending){
+                  return (
+                    <tr>
+                      <td>{member.username?member.username:'Not linked to account'}</td>
+                      <td><a href={'mailto:'+member.email}>{member.email}</a></td>
+                      <td>{member.group_manager?<FontAwesomeIcon icon={faCheckSquare}/>:null}</td>
+                      <td>{member.invitation_date.slice(0,10)}</td>
+                      <td>
+                        <OverlayTrigger
+                        placement='top'
+                        overlay={
+                          <Tooltip id={`tooltip-top`}>
+                            Cancel Invitation
+                          </Tooltip>
+                        }
+                        >
+                          <Button
+                            variant="danger"
+                            onClick={()=>{
+                              setConfirmationData({
+                                action:'cancel',
+                                args:[member.invitation_id,member.group_id],
+                                message:
+                                <React.Fragment>
+                                  <table style={{border:'none'}} className="confirmation-table">
+                                  {member.username?
+                                    <tr>
+                                    <td>username:</td>
+                                    <td>{member.username}</td>
+                                    </tr>
+                                    :null}
+                                    <tr>
+                                      <td>email:</td>
+                                      <td><a href={'mailto:'+member.email}>{member.email}</a></td>
+                                    </tr>
+                                    <tr>
+                                      <td>role:</td>
+                                      <td>{member.group_manager?'group_manager':'group_member'}</td>
+                                    </tr>
+                                  </table>
+                                </React.Fragment>
+                                ,
+                                title:'Are you sure you want to cancel this invitation?'
+                              })
+                            }}
+                          >
+                            <FontAwesomeIcon icon={faTimes} />
+                          </Button>
+                        </OverlayTrigger>
+                        <OverlayTrigger
+                        placement='top'
+                        overlay={
+                          <Tooltip id={`tooltip-top`}>
+                            Resend Invitation
+                          </Tooltip>
+                        }
+                        >
+                        <Button variant="primary" onClick={()=>{resendInvitation(member.invitation_id,member.group_id,member.email)}}><FontAwesomeIcon icon={faSync}/></Button>
+                        </OverlayTrigger>
+                      </td>
+                    </tr>
+                  )
+                }
+                else {return (null)}
+              }):null
+          }
         </tbody>
       </Table>
       {invitationResult?

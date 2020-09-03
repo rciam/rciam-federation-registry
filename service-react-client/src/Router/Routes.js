@@ -6,7 +6,7 @@ import {EditService,NewService,ViewService} from '../FormHandler.js';
 import UserInfo from '../Components/UserInfo.js';
 import {HistoryList} from '../Components/History.js';
 import {CallbackPage} from '../Components/LoadingPage.js';
-import {InvitationRoute} from '../Components/InvitationRoute.js';
+import {InvitationRoute,InvitationNotFound} from '../Components/InvitationRoute.js';
 import GroupsPage from '../Groups.js';
 import InvitationsPage from '../Invitations.js'
 
@@ -24,7 +24,9 @@ const Routes = (props) => (
       <Route path="/invitation/:code">
         <InvitationRoute/>
       </Route>
-
+      <PrivateRoute path="/invitation_error">
+        <InvitationNotFound/>
+      </PrivateRoute>
       <PrivateRoute user={props.user} path="/petitions">
         <div className="links">
           <Link to="/home">{props.t('link_home')}</Link>
@@ -84,8 +86,6 @@ const Routes = (props) => (
       <RouteWithState user={props.user} path='/history/list'>
         <HistoryList user={props.user}/>
       </RouteWithState>
-
-
       <RouteWithState user={props.user} path="/form/review">
         <AdminRoute path="/form/review" user={props.user}>
           <div className="links">

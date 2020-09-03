@@ -10,6 +10,7 @@ export const InvitationRoute = () => {
 
   useEffect(()=>{
     setInvitationToken(code);
+    console.log('setCode');
     // eslint-disable-next-line
   },[]);
 
@@ -24,6 +25,19 @@ export const InvitationRoute = () => {
     </React.Fragment>
   )
 }
+
+
+
+export const InvitationNotFound = () => {
+  return (
+    <div className="home-container">
+      <h1>Invitation not found...</h1>
+      <p>We are sorry but there was no invitation found, new invitations can be issued by service owners.</p>
+    </div>
+  )
+}
+
+
 
 export const LoadingPage = (props) => {
   return (

@@ -53,7 +53,36 @@ export class SimpleModal extends React.Component {
 }
 
 
+export const ConfirmationModal = (props) =>{
+  const close = () => {props.setActive({})}
+  return (
+    <Modal show={props.active} onHide={close}>
+        <Modal.Header closeButton>
+          <Modal.Title>
+              {props.title}
+          </Modal.Title>
+        </Modal.Header>
 
+          {props.message?
+              <Modal.Body>
+                {props.message}
+              </Modal.Body>
+              :null
+          }
+
+        <Modal.Footer>
+            <React.Fragment>
+              <Button variant="primary" onClick={()=>{props.action(); close();}}>
+                {props.accept}
+              </Button>
+              <Button variant="danger" onClick={close}>
+                {props.decline}
+              </Button>
+            </React.Fragment>
+        </Modal.Footer>
+    </Modal>
+  )
+}
 
 export function ResponseModal(props){
   // eslint-disable-next-line

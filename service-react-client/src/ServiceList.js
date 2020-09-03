@@ -108,6 +108,7 @@ const ServiceList= (props)=> {
     }).then(response=> {
       setLoadingList(false);
       if(response){
+        console.log(response.services);
         response.services.forEach((item,index)=>{
             response.services[index].display = true;
           })

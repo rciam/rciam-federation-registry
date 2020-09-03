@@ -39,7 +39,7 @@ module.exports = {
     service_petition_details:{
       add:sql('service_petition_details/add.sql'),
       update:sql('service_petition_details/update.sql'),
-
+      belongsToRequester:sql('service_petition_details/belongsToRequester.sql')
     },
     service_state:{
       add:sql('service_state/add.sql'),

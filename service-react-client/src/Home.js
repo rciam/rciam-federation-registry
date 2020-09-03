@@ -1,6 +1,7 @@
 import React,{useEffect,useState,useContext} from 'react';
 import { useTranslation } from 'react-i18next';
 import {Context} from './user-context.js';
+import { useHistory } from "react-router-dom";
 import useGlobalState from './useGlobalState.js';
 import {LoadingPage} from './Components/LoadingPage.js';
 import * as config from './config.json';
@@ -8,7 +9,8 @@ import * as config from './config.json';
 
 const Home = ()=> {
   // eslint-disable-next-line
-  const user = useContext(Context);
+  let history = useHistory();
+  
   // eslint-disable-next-line
   const [context, setContext] = useContext(Context);
   // eslint-disable-next-line
@@ -58,6 +60,7 @@ const Home = ()=> {
 
 
    const activateInvitation = () => {
+     console.log('Activate Invitation');
      fetch(config.host+'invitation', {
        method: 'PUT', // *GET, POST, PUT, DELETE, etc.
        credentials: 'include', // include, *same-origin, omit
@@ -67,8 +70,14 @@ const Home = ()=> {
        },
        body: JSON.stringify({code:localStorage.getItem('invitation')})
      }).then(response=>{
-             localStorage.removeItem('invitation')
-         })
+        localStorage.removeItem('invitation');
+        console.log(response.status);
+        console.log('Hello');
+        if(response.status!==200){
+          console.log('asdfsadf');
+          history.push('/invitation_error');
+        }
+     })
    }
 
 
