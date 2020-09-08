@@ -191,10 +191,10 @@ const GroupsPage = (props) => {
               <OverlayTrigger
               placement='top'
               overlay={
-                <Tooltip id={`tooltip-top`}>
-                {user[0].sub===member.sub?'Leave Group':member.pending?'Cancel Invitation':'Remove Member'}
-                </Tooltip>
-              }
+                  <Tooltip id={`tooltip-top`}>
+                  {group_managers<2&&member.group_manager?"Can't remove user, at least one group manager must remain in the group":user[0].sub===member.sub?'Leave Group':member.pending?'Cancel Invitation':'Remove Member'}
+                  </Tooltip>
+                }
               >
               <Button
               variant="danger"
@@ -224,7 +224,7 @@ const GroupsPage = (props) => {
                   title:(member.sub===user[0].sub?'Are you sure you want to leave the owners group?':'Are you sure you want to remove following user from owners group')
                 });
               }}
-              disabled={group.length<1||(group_managers<2&&member.group_manager&&!member.pending)}
+              disabled={group.length<1||(group_managers<2&&member.group_manager)}
               >
               <FontAwesomeIcon icon={faTimes} />
               </Button>

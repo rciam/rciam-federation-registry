@@ -1,6 +1,6 @@
 const sql = require('../sql').group;
 const cs = {};
-
+const {newMemberNotificationMail} = require('../../functions/helpers.js');
 class GroupRepository {
   constructor(db, pgp) {
       this.db = db;
@@ -8,6 +8,13 @@ class GroupRepository {
   }
   async getMembers(group_id){
     return this.db.any(sql.getGroupMembers,{group_id: +group_id}).then(res => {return res});
+  }
+  async newMemberNotification(invitation_data){
+    //group_id,sub,group_manager,email invitation data
+    return this.db.any(sql.getGroupManagers,{group_id: +invitation_data.group_id}).then(res => {
+
+      return res
+    });
   }
 
   async addGroup(sub){

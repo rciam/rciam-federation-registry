@@ -10,7 +10,7 @@ import * as config from './config.json';
 const Home = ()=> {
   // eslint-disable-next-line
   let history = useHistory();
-  
+
   // eslint-disable-next-line
   const [context, setContext] = useContext(Context);
   // eslint-disable-next-line
@@ -37,18 +37,22 @@ const Home = ()=> {
                if(response.status===200){return response.json();}
                else {return false}
              }).then(response=> {
+             globalState.setLogState({tenant:'EGI',log_state:response});
              if(response){
                setContext(response.user);
                if(localStorage.getItem('invitation')){
                  activateInvitation();
                }
+               else{
+                 setLoading(false);
+               }
              }
              else{
+               setLoading(false);
                setContext(null);
                localStorage.removeItem('token');
              }
-             globalState.setLogState({tenant:'EGI',log_state:response});
-             setLoading(false);
+
          })
        }
        else{
@@ -60,7 +64,6 @@ const Home = ()=> {
 
 
    const activateInvitation = () => {
-     console.log('Activate Invitation');
      fetch(config.host+'invitation', {
        method: 'PUT', // *GET, POST, PUT, DELETE, etc.
        credentials: 'include', // include, *same-origin, omit
@@ -69,14 +72,19 @@ const Home = ()=> {
        'Authorization': localStorage.getItem('token')
        },
        body: JSON.stringify({code:localStorage.getItem('invitation')})
-     }).then(response=>{
-        localStorage.removeItem('invitation');
-        console.log(response.status);
-        console.log('Hello');
-        if(response.status!==200){
-          console.log('asdfsadf');
-          history.push('/invitation_error');
-        }
+     }).then( response=>{
+           if(response.status===200){return response.json();}
+           else {return false}
+         }).then(response=>{
+           setLoading(false);
+           localStorage.removeItem('invitation');
+           if(response.expired){
+             history.push('/invitation_error',{expired: 'true'});
+           }
+           else if(!response){
+             history.push('/invitation_error');
+           }
+
      })
    }
 

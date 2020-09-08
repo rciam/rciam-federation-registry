@@ -60,6 +60,8 @@ router.get('/callback/:tenant',(req,res,next)=>{
   });
 });
 
+
+
 router.get('/token/:code',(req,res,next)=>{
   try{
     db.task('deploymentResults', async t => {
@@ -703,6 +705,7 @@ router.put('/invitation/:action/:invite_id',authenticate,(req,res,next)=>{
         await t.invitation.getOne(req.params.invite_id,req.user.sub).then(async invitation_data=>{
           if(invitation_data){
             let done = await t.batch([
+              t.group.newMemberNotification(invitation_data),
               t.group.addMember(invitation_data),
               t.invitation.reject(req.params.invite_id,req.user.sub)
             ]).catch(err=>{next(err)});
@@ -763,14 +766,19 @@ router.get('/group/:group_id',authenticate,view_group,(req,res,next)=>{
   catch(err){next(err);}
 })
 
+
+
 router.put('/invitation',authenticate,(req,res,next)=>{
   try{
-    db.invitation.setUser(req.body.code,req.user.sub,req.user.email).then(success=>{
-      if(success.id){
-        res.status(200).end();
+    db.invitation.setUser(req.body.code,req.user.sub).then(result=>{
+      if(result.success){
+        res.status(200).send(result);
+      }
+      else if(result.expired){
+        res.status(200).json({expired:true});
       }
       else{
-        res.status(304).end();
+        res.status(204).end();
       }
     }).catch(err=>{next(err)})
   }

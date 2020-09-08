@@ -10,7 +10,6 @@ export const InvitationRoute = () => {
 
   useEffect(()=>{
     setInvitationToken(code);
-    console.log('setCode');
     // eslint-disable-next-line
   },[]);
 
@@ -28,11 +27,14 @@ export const InvitationRoute = () => {
 
 
 
-export const InvitationNotFound = () => {
+export const InvitationNotFound = (props) => {
+  useEffect(()=>{
+    console.log(props);
+  },[props])
   return (
     <div className="home-container">
-      <h1>Invitation not found...</h1>
-      <p>We are sorry but there was no invitation found, new invitations can be issued by service owners.</p>
+      <h1>Invitation {props.expired?'has expired':'not found...'}</h1>
+      <p>We are sorry but {props.expired?' the invitation link has expired, ':' there was no invitation found, invitation link is invalid, '}   new invitations can be issued by service owners.</p>
     </div>
   )
 }

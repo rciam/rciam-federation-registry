@@ -62,7 +62,8 @@ module.exports = {
       getAllList:sql('service_list/getAllList.sql')
     },
     group: {
-      getGroupMembers:(sql('group/getGroupMembers.sql'))
+      getGroupMembers:(sql('group/getGroupMembers.sql')),
+      getGroupManagers:(sql('group/getGroupManagers.sql'))
     }
 
 

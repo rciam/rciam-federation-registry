@@ -14,7 +14,9 @@ import InvitationsPage from '../Invitations.js'
 const Routes = (props) => (
   <div className="content-container">
     <Switch>
-      <Route exact path="/" component={Home}/>
+      <Route exact path="/">
+      <Home/>
+      </Route>
       <Route path="/home">
         <Home/>
       </Route>
@@ -24,9 +26,9 @@ const Routes = (props) => (
       <Route path="/invitation/:code">
         <InvitationRoute/>
       </Route>
-      <PrivateRoute path="/invitation_error">
+      <RouteWithState user={props.user} path="/invitation_error">
         <InvitationNotFound/>
-      </PrivateRoute>
+      </RouteWithState>
       <PrivateRoute user={props.user} path="/petitions">
         <div className="links">
           <Link to="/home">{props.t('link_home')}</Link>
@@ -138,7 +140,6 @@ function AdminRoute(props) {
 
 
 function RouteWithState(props) {
-  console.log(props);
   const childrenWithProps = React.Children.map(props.children, child =>
       React.cloneElement(child, {...props.location.state})
     );
@@ -163,7 +164,7 @@ function RouteWithState(props) {
 
 function PrivateRoute(props) {
 
-  console.log(props);
+  // console.log(props);
   return (
     <Route
       path={props.path}

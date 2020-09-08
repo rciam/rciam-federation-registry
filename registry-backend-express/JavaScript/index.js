@@ -37,6 +37,7 @@ var corsOptions = {
 // Issuer and Passport Strategy initialization
 Issuer.discover(process.env.ISSUER_BASE_URI).then((issuer)=>{
   //console.log(issuer.metadata);
+
    clients.egi = new issuer.Client({
     client_id: process.env.CLIENT_ID_EGI,
     client_secret: process.env.CLIENT_SECRET_EGI,
@@ -59,8 +60,8 @@ Issuer.discover(process.env.ISSUER_BASE_URI).then((issuer)=>{
 });
 
 Issuer.discover("https://aai.eosc-portal.eu/oidc/").then((issuer)=>{
-  //console.log(issuer.metadata);
-  const client = new issuer.Client({
+
+  clients.eosc = new issuer.Client({
     client_id: process.env.CLIENT_ID_EOSC,
     client_secret: process.env.CLIENT_SECRET_EOSC,
     redirect_uris: process.env.REDIRECT_URI_EOSC
