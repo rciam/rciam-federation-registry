@@ -64,9 +64,11 @@ module.exports = {
     group: {
       getGroupMembers:(sql('group/getGroupMembers.sql')),
       getGroupManagers:(sql('group/getGroupManagers.sql'))
+    },
+    invitations: {
+      getAll:(sql('invitations/getAll.sql')),
+      get:(sql('invitations/get.sql'))
     }
-
-
 };
 
 ///////////////////////////////////////////////

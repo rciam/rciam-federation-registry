@@ -1,4 +1,6 @@
 const cs = {};
+const sql = require('../sql').invitations;
+var config = require('../../config');
 const {v1:uuidv1} = require('uuid');
 class InvitationRepository {
   constructor(db, pgp) {
@@ -23,12 +25,14 @@ class InvitationRepository {
     return this.db.oneOrNone('UPDATE invitations SET date=$1 WHERE id=$2 AND sub IS NULL returning *',[date,+id]);
   }
 
-  async get(sub){
-    return this.db.any('SELECT id,group_manager,invited_by,date FROM invitations WHERE sub=$1',sub);
+  async getAll(sub){
+    let date = new Date(Date.now());
+
+    return this.db.any(sql.getAll,{sub: sub});
   }
 
-  async getOne(id,sub){
-    return this.db.oneOrNone('SELECT group_id,invitation_mail,preferred_username,email,sub,group_manager FROM (SELECT group_id,sub,group_manager,email as invitation_mail FROM invitations WHERE id=$1 and sub=$2) as invitation LEFT JOIN user_info USING (sub)',[+id,sub]);
+  async get(id,sub){
+    return this.db.oneOrNone(sql.get,{sub: sub,id:+id});
   }
 
   async reject(id,sub){
@@ -41,24 +45,30 @@ class InvitationRepository {
 
   async setUser(code,sub){
     let date2 = new Date(Date.now());
-    return this.db.oneOrNone('SELECT date FROM invitations WHERE code=$1',code).then(res=>{
-      if(res){
-        const diffTime = Math.abs(date2 - res.date);
-        const diffMinutes = Math.ceil(diffTime / (1000 * 60 * 60));
-        if(diffMinutes>3){
-          return {success:false,expired:true}
+    return this.db.task('set-user',async t=>{
+      return await t.oneOrNone('SELECT date,groups.group_id FROM (SELECT date,group_id FROM invitations WHERE code=$1) as invitation LEFT JOIN (SELECT group_id FROM group_subs WHERE sub=$2) AS groups USING (group_id)',[code,sub]).then(res=>{
+        if(res){
+          if(res.group_id){
+            return {success:false,error:'member'}
+
+          }
+          const diffTime = Math.abs(date2 - res.date);
+          const diffMinutes = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          if(diffMinutes>100){
+            return {success:false,error:'expired'}
+          }
+          else{
+            return t.oneOrNone('UPDATE invitations SET code=NULL,sub=$1 WHERE code=$2 RETURNING id',[sub,code]).then(res=>{
+              if(res){
+                return {success:true}
+              }
+            });
+          }
         }
         else{
-          return this.db.oneOrNone('UPDATE invitations SET code=NULL,sub=$1 WHERE code=$2 RETURNING id',[sub,code]).then(res=>{
-            if(res){
-              return {success:true}
-            }
-          });
+          return {success:false}
         }
-      }
-      else{
-        return {success:false}
-      }
+      })
     })
   }
 

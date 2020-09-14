@@ -33,8 +33,8 @@ export const InvitationNotFound = (props) => {
   },[props])
   return (
     <div className="home-container">
-      <h1>Invitation {props.expired?'has expired':'not found...'}</h1>
-      <p>We are sorry but {props.expired?' the invitation link has expired, ':' there was no invitation found, invitation link is invalid, '}   new invitations can be issued by service owners.</p>
+      <h1>Invitation {props.error==='expired'?'has expired':props.error==='member'?'invalid':'not found...'}</h1>
+      <p>We are sorry but {props.error==='expired'?' the invitation link has expired, new invitations can be issued by service owners.':props.error==='member'?' you cannot accept the invitation because you are already a member of the owners group.':' there was no invitation found, invitation link is invalid, new invitations can be issued by service owners.'}   </p>
     </div>
   )
 }

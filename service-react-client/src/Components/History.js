@@ -33,7 +33,7 @@ export const HistoryList = (props) => {
 
   const getPetition = (id)=> {
     setAsyncResponse(true);
-    fetch(config.host+'petition/history/'+id, {
+    fetch(config.host+'petitions/'+id, {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -48,7 +48,7 @@ export const HistoryList = (props) => {
   }
 
   const getHistory = ()=> {
-    fetch(config.host+'service/history/list/'+props.service_id, {
+    fetch(config.host+'services/'+props.service_id+'/petitions', {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {

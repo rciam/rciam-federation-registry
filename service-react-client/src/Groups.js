@@ -32,7 +32,7 @@ const GroupsPage = (props) => {
 
   const getGroupMembers = (group_id) => {
     setLoading(true);
-    fetch(config.host+'group/'+group_id, {
+    fetch(config.host+'groups/'+group_id+'/members', {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -51,6 +51,7 @@ const GroupsPage = (props) => {
               count = count +1;
             }
           });
+          console.log(response.group_members);
           console.log(count);
           setGroupManagers(count);
           setGroup(response.group_members);
@@ -61,14 +62,13 @@ const GroupsPage = (props) => {
 
   const cancelInvitation = (id,group_id)=>{
     setSending(true);
-    fetch(config.host+'invitation/cancel/'+id, {
-      method: 'PUT', // *GET, POST, PUT, DELETE, etc.
+    fetch(config.host+'groups/'+group_id+'/invitations/'+id, {
+      method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
         'Content-Type': 'application/json',
         'Authorization': localStorage.getItem('token')
-      },
-      body:JSON.stringify({group_id:group_id})
+      }
     }).then(response=> {
       setSending(false);
       getData()
@@ -77,14 +77,13 @@ const GroupsPage = (props) => {
 
   const resendInvitation = (id,group_id,email) => {
     setSending(true);
-    fetch(config.host+'invitation/resend/'+id, {
+    fetch(config.host+'groups/'+group_id+'/invitations/'+id, {
       method: 'PUT', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
         'Content-Type': 'application/json',
         'Authorization': localStorage.getItem('token')
-      },
-      body:JSON.stringify({group_id:group_id})
+      }
     }).then(response=> {
       setSending(false);
       setInvitationResult({success:(response.status===200)?true:false,email:email});
@@ -94,7 +93,7 @@ const GroupsPage = (props) => {
 
   const sendInvitation = (invitation) => {
     setSending(true);
-    fetch(config.host+'invitation', {
+    fetch(config.host+'groups/'+invitation.group_id+'/invitations', {
       method: 'POST', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -112,8 +111,8 @@ const GroupsPage = (props) => {
 
   const removeMember = (sub,group_id) => {
     setSending(true);
-    fetch(config.host+'group/remove_member', {
-      method: 'PUT', // *GET, POST, PUT, DELETE, etc.
+    fetch(config.host+'groups/'+group_id+'/members/'+sub, {
+      method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
         'Content-Type': 'application/json',
@@ -146,8 +145,18 @@ const GroupsPage = (props) => {
   });
   const checkError = async () => {
     setError('');
-    return await schema.validate({email:email,role:role}).then(()=>{return true}).catch(function(value){
+    return await schema.validate({email:email,role:role}).then(()=>{
+      let valid = true;
+      group.forEach(member=>{
+        if(member.email===email&&member.pending){
+          setError('Invite already send to this email');
+          valid = false;
+        }
+      })
+      return valid;
+    }).catch(function(value){
       setError(value.errors[0]);
+
       return false;
     });
   }
@@ -156,7 +165,7 @@ const GroupsPage = (props) => {
   const sendInvite = async () => {
         let test = await checkError();
         if(test){
-          sendInvitation({email:email,group_manager:(role==='manager'),group_id:props.group_id},setSending,setInvitationResult);
+          sendInvitation({email:email,group_manager:(role==='manager'),group_id:props.group_id});
         }
   }
 
@@ -261,10 +270,10 @@ const GroupsPage = (props) => {
         <tbody>
           {
             props.group_manager?
-              group.map((member)=>{
+              group.map((member,key)=>{
                 if(member.pending){
                   return (
-                    <tr>
+                    <tr key={key}>
                       <td>{member.username?member.username:'Not linked to account'}</td>
                       <td><a href={'mailto:'+member.email}>{member.email}</a></td>
                       <td>{member.group_manager?<FontAwesomeIcon icon={faCheckSquare}/>:null}</td>
@@ -315,11 +324,11 @@ const GroupsPage = (props) => {
                         placement='top'
                         overlay={
                           <Tooltip id={`tooltip-top`}>
-                            Resend Invitation
+                            {member.sub?'Invitation is linked to an account':'Resend Invitation'}
                           </Tooltip>
                         }
                         >
-                        <Button variant="primary" onClick={()=>{resendInvitation(member.invitation_id,member.group_id,member.email)}}><FontAwesomeIcon icon={faSync}/></Button>
+                        <Button disabled={member.sub?true:false} variant="primary" onClick={()=>{resendInvitation(member.invitation_id,member.group_id,member.email)}}><FontAwesomeIcon icon={faSync}/></Button>
                         </OverlayTrigger>
                       </td>
                     </tr>

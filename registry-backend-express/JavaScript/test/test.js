@@ -16,20 +16,9 @@ describe('Service registry API Integration Tests', function() {
     require('../index.js').stop();
   });
   beforeEach(done => setTimeout(done, 500));
-  describe('# GET /service/list', function(){
-    it('should get service list data',function(done){
-      var req = request(server).get('/service/list');
-      req.set('Accept','application/json')
-      .expect('Content-Type',/json/)
-      .expect(200).end(function(err,res){
-
-        expect(res.statusCode).to.equal(200);
-        done();})
-    })
-  });
   describe('# OIDC Petition lifecycle',function(){
     it('should create a new petition and return the id',function(done){
-      var req = request(server).post('/petition').send({
+      var req = request(server).post('/petitions').send({
         type:'create',
         ...create.oidc
       }
@@ -46,7 +35,7 @@ describe('Service registry API Integration Tests', function() {
         })
     });
     it('should fetch created petition',function(done){
-      var req = request(server).get('/petition/'+petition);
+      var req = request(server).get('/petitions/'+petition+'?type=open');
       req.set('Accept','application/json')
         .expect('Content-Type',/json/)
         .expect(200)
@@ -58,7 +47,7 @@ describe('Service registry API Integration Tests', function() {
           })
     });
     it('should edit petition that was created',function(done){
-      var req = request(server).put('/petition/'+petition).send({
+      var req = request(server).put('/petitions/'+petition).send({
         type:'create',
         ...edit.oidc
       });
@@ -70,7 +59,7 @@ describe('Service registry API Integration Tests', function() {
           done();});
     });
     it('should delete petition that was created',function(done){
-      var req = request(server).delete('/petition/'+petition)
+      var req = request(server).delete('/petitions/'+petition)
       req.set('Accept','application/json')
         .expect('Content-Type',/json/)
         .expect(200)
@@ -81,7 +70,7 @@ describe('Service registry API Integration Tests', function() {
   });
   describe('# SAML Petition lifecycle',function(){
     it('should create a new petition and return the id',function(done){
-      var req = request(server).post('/petition').send({
+      var req = request(server).post('/petitions').send({
         type:'create',
         ...create.saml
       });
@@ -97,7 +86,7 @@ describe('Service registry API Integration Tests', function() {
         })
     });
     it('should fetch created petition',function(done){
-      var req = request(server).get('/petition/'+petition);
+      var req = request(server).get('/petitions/'+petition+'?type=open');
       req.set('Accept','application/json')
         .expect('Content-Type',/json/)
         .expect(200)
@@ -106,7 +95,7 @@ describe('Service registry API Integration Tests', function() {
           done();});
     });
     it('should edit petition that was created',function(done){
-      var req = request(server).put('/petition/'+petition).send({
+      var req = request(server).put('/petitions/'+petition).send({
         type:'create',
         ...edit.saml
       });
@@ -118,7 +107,7 @@ describe('Service registry API Integration Tests', function() {
           done();});
     });
     it('should delete petition that was created',function(done){
-      var req = request(server).delete('/petition/'+petition)
+      var req = request(server).delete('/petitions/'+petition)
 
       req.set('Accept','application/json')
         .expect('Content-Type',/json/)
@@ -131,7 +120,7 @@ describe('Service registry API Integration Tests', function() {
   describe('# Service lifecycle',function(){
     describe('# Create Service',function(){
       it('should create a new petition and return the id',function(done){
-        var req = request(server).post('/petition').send({
+        var req = request(server).post('/petitions').send({
           type:'create',
           ...create.oidc
         });
@@ -148,7 +137,7 @@ describe('Service registry API Integration Tests', function() {
         })
       });
       it('should approve petition and create service',function(done){
-        var req = request(server).put('/petition/approve/'+petition);
+        var req = request(server).put('/petitions/'+petition+'/review').send({type:'approve'});
 
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
@@ -176,7 +165,7 @@ describe('Service registry API Integration Tests', function() {
           }
         );
 
-        var req = request(server).post('/service/state').send({
+        var req = request(server).post('/services/deployment').send({
           messages
         });
         req.expect(200).end(function(err,res){
@@ -187,7 +176,7 @@ describe('Service registry API Integration Tests', function() {
 
       });
       it('should get created service',function(done){
-        var req = request(server).get('/service/'+service);
+        var req = request(server).get('/services/'+service);
 
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
@@ -199,7 +188,7 @@ describe('Service registry API Integration Tests', function() {
     });
     describe('# Edit Service',function(){
       it('should create a new edit petition and return the id',function(done){
-        var req = request(server).post('/petition').send({
+        var req = request(server).post('/petitions').send({
           type:'edit',
           service_id:service,
           ...edit.oidc
@@ -216,7 +205,7 @@ describe('Service registry API Integration Tests', function() {
         })
       });
       it('should approve petition and edit service',function(done){
-        var req = request(server).put('/petition/approve/'+petition);
+        var req = request(server).put('/petitions/'+petition+'/review').send({type:'approve'});
 
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
@@ -244,7 +233,7 @@ describe('Service registry API Integration Tests', function() {
           }
         );
 
-        var req = request(server).post('/service/state').send({
+        var req = request(server).post('/services/deployment').send({
           messages
         });
         req.expect(200).end(function(err,res){
@@ -253,8 +242,7 @@ describe('Service registry API Integration Tests', function() {
         });
       });
       it('should get edited service',function(done){
-        var req = request(server).get('/service/'+service);
-
+        var req = request(server).get('/services/'+service);
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
         .expect(200)
@@ -268,21 +256,23 @@ describe('Service registry API Integration Tests', function() {
     });
     describe('# Delete Service',function(){
       it('should create a new delete petition',function(done){
-        var req = request(server).put('/petition/delete/'+service);
+        var req = request(server).post('/petitions').send({
+          type:'delete',
+          service_id:service
+        });
 
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
         .expect(200)
         .end(function(err,res){
           let body = JSON.parse(res.text);
-          expect(body.id).to.be.a('number');
           expect(res.statusCode).to.equal(200);
           petition = body.id;
           done();
         })
       });
       it('should approve petition and delete service',function(done){
-        var req = request(server).put('/petition/approve/'+petition);
+        var req = request(server).put('/petitions/'+petition+'/review').send({type:'approve'});
 
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
@@ -306,7 +296,7 @@ describe('Service registry API Integration Tests', function() {
           }
         );
 
-        var req = request(server).post('/service/state').send({
+        var req = request(server).post('/services/deployment').send({
           messages
         });
         req.expect(200).end(function(err,res){
@@ -315,7 +305,7 @@ describe('Service registry API Integration Tests', function() {
         });
       });
       it('should fail to get deleted service',function(done){
-        var req = request(server).get('/service/'+service);
+        var req = request(server).get('/services/'+service);
 
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
@@ -330,7 +320,7 @@ describe('Service registry API Integration Tests', function() {
   describe('# Admin Actions',function(){
     describe('# Reject Petition',function(){
       it('should create a new petition and return the id',function(done){
-        var req = request(server).post('/petition').send({
+        var req = request(server).post('/petitions').send({
           type:'create',
           ...create.oidc
         });
@@ -347,7 +337,7 @@ describe('Service registry API Integration Tests', function() {
         })
       });
       it('should reject petition',function(done){
-        var req = request(server).put('/petition/reject/'+petition);
+        var req = request(server).put('/petitions/'+petition+'/review').send({type:'reject'});
 
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
@@ -359,7 +349,7 @@ describe('Service registry API Integration Tests', function() {
     });
     describe('# Request Changes Petition',function(){
       it('should create a new petition and return the id',function(done){
-        var req = request(server).post('/petition').send({
+        var req = request(server).post('/petitions').send({
           type:'create',
           ...create.oidc
         });
@@ -376,10 +366,7 @@ describe('Service registry API Integration Tests', function() {
         })
       });
       it('should request changes petition',function(done){
-        var req = request(server).put('/petition/changes/'+petition).send({
-          comment:"comment"
-        });
-
+        var req = request(server).put('/petitions/'+petition+'/review').send({type:'changes',comment:"comment"});
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
         .expect(200)
@@ -392,7 +379,7 @@ describe('Service registry API Integration Tests', function() {
         })
       });
       it('should delete petition',function(done){
-        var req = request(server).delete('/petition/'+petition);
+        var req = request(server).delete('/petitions/'+petition);
 
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
@@ -402,5 +389,87 @@ describe('Service registry API Integration Tests', function() {
           done();});
       });
     });
+
   });
+  describe('# Test Group Actions',function(){
+    it('# POST /groups/:group_id/invitations',function(done){
+      var req = request(server).post('/groups/5/invitations').send({
+        email:'test_email@mail.com',
+        group_manager:false
+        }
+      );
+      req.set('Accept','application/json')
+      .expect('Content-Type',/json/)
+      .expect(200)
+      .end(function(err,res){
+        expect(res.statusCode).to.equal(200);
+        done();
+      });
+    });
+    it('# PUT /groups/:group_id/invitations/:id',function(done){
+      var req = request(server).put('/groups/5/invitations/4');
+      req.set('Accept','application/json')
+      .expect('Content-Type',/json/)
+      .expect(200)
+      .end(function(err,res){
+        expect(res.statusCode).to.equal(200);
+        done();
+      });
+    });
+    it('# DELETE /groups/:group_id/invitations/:id',function(done){
+      var req = request(server).delete('/groups/5/invitations/4');
+      req.set('Accept','application/json')
+      .expect('Content-Type',/json/)
+      .expect(200)
+      .end(function(err,res){
+        expect(res.statusCode).to.equal(200);
+        done();
+      });
+    });
+    it('# GET /invitations',function(done){
+      var req = request(server).get('/invitations');
+      req.set('Accept','application/json')
+      .expect('Content-Type',/json/)
+      .expect(200)
+      .end(function(err,res){
+        expect(res.statusCode).to.equal(200);
+        done();
+      });
+    });
+    it('# PUT /invitations',function(done){
+      var req = request(server).put('/invitations').send({
+        code:'generated_code_for_tests'
+      });
+      req.set('Accept','application/json')
+      .expect('Content-Type',/json/)
+      .expect(200)
+      .end(function(err,res){
+        expect(res.statusCode).to.equal(200);
+        done();
+      });
+    });
+    it('# PUT /invitations/:invite_id/:action/',function(done){
+      var req = request(server).put('/invitations/1/accept');
+      req.set('Accept','application/json')
+      .expect('Content-Type',/json/)
+      .expect(200)
+      .end(function(err,res){
+        expect(res.statusCode).to.equal(200);
+        done();
+      });
+    });
+    it('# PUT /invitations/:invite_id/:action/',function(done){
+      var req = request(server).put('/invitations/3/decline');
+      req.set('Accept','application/json')
+      .expect('Content-Type',/json/)
+      .expect(200)
+      .end(function(err,res){
+        expect(res.statusCode).to.equal(200);
+        done();
+      });
+    });
+
+
+  });
+
 });

@@ -50,7 +50,7 @@
           "type": "admin"
         }],
       metadata_url:'https://metadata.com',
-      entity_id:"SamlID",
+      entity_id:"https://entity_id.com",
       client_id:null,
       allow_introspection:null,
       code_challenge_method:null,
@@ -130,7 +130,7 @@ const edit = {
       }
     ],
     metadata_url:'https://metadataedit.com',
-    entity_id:"SamlIDedit",
+    entity_id:"https://entity_id_edit.com",
     client_id:null,
     allow_introspection:null,
     code_challenge_method:null,

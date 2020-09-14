@@ -10,7 +10,7 @@ export const CallbackPage = () => {
   },[]);
 
   const getToken = (code)=>{
-    fetch(config.host+'token/'+code,{
+    fetch(config.host+'tokens/'+code,{
       method:'GET',
       credentials:'include',
       headers:{

@@ -7,6 +7,13 @@ create table tokens (
   code VARCHAR(1054) PRIMARY KEY
 );
 
+create table tenants (
+  tenant_name VARCHAR(256) PRIMARY KEY,
+  client_id VARCHAR(256),
+  client_secret VARCHAR(1054),
+  issuer_url VARCHAR(256)
+);
+
 
 create table user_info (
   id SERIAL PRIMARY KEY,
@@ -96,7 +103,7 @@ create table service_details (
 );
 
 create table service_details_oidc (
-  id bigint PRIMARY KEY,
+  id INTEGER PRIMARY KEY,
   client_id VARCHAR(256),
   allow_introspection BOOLEAN,
   code_challenge_method VARCHAR(256),
@@ -262,7 +269,7 @@ VALUES (5,'client5',true,'secret',true,true,600,3600,28800,'plain',10000);
 
 
 INSERT INTO service_details_saml (id,entity_id,metadata_url)
-VALUES (6,'saml-id-1','https://metadataurl.com');
+VALUES (6,'https://saml-id-1.com','https://metadataurl.com');
 
 INSERT INTO service_contacts(owner_id,value,type)
 VALUES ('1','mymail@gmail.com','admin');
@@ -416,7 +423,7 @@ INSERT INTO service_petition_details_oidc (id,client_id,allow_introspection,clie
 VALUES (8,'client1',true,'secret',true,true,600,3600,28800,'plain',10000);
 
 INSERT INTO service_petition_details_saml (id,entity_id,metadata_url)
-VALUES (9,'saml-id-1','https://metadataurl.com');
+VALUES (9,'https://saml-id-1.com','https://metadataurl.com');
 INSERT INTO service_petition_contacts(owner_id,value,type)
 VALUES (9,'mygrail@gmail.com','admin');
 INSERT INTO service_petition_contacts(owner_id,value,type)
@@ -701,4 +708,4 @@ VALUES (null,'andreaskoza@grnet.gr',1,'7a6ae5617ea76389401e3c3839127fd2a01957206
 INSERT INTO invitations(code,email,group_id,sub,group_manager,invited_by,date)
 VALUES (null,'andreaskoza@grnet.gr',6,'7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu',true,'koza-sparrow@hotmail.com','2020-09-1 10:23:54');
 INSERT INTO invitations(code,email,group_id,sub,group_manager,invited_by,date)
-VALUES ('random_generated_code','alekaelias@yahoo.gr',1,null,false,'koza-sparrow@hotmail.com','2020-09-1 10:23:54');
+VALUES ('generated_code_for_tests','test-email@yahoo.gr',2,null,false,'koza-sparrow@hotmail.com','2020-09-1 10:23:54');

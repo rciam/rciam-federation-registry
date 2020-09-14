@@ -64,7 +64,7 @@ const Home = ()=> {
 
 
    const activateInvitation = () => {
-     fetch(config.host+'invitation', {
+     fetch(config.host+'invitations', {
        method: 'PUT', // *GET, POST, PUT, DELETE, etc.
        credentials: 'include', // include, *same-origin, omit
        headers: {
@@ -78,22 +78,19 @@ const Home = ()=> {
          }).then(response=>{
            setLoading(false);
            localStorage.removeItem('invitation');
-           if(response.expired){
-             history.push('/invitation_error',{expired: 'true'});
-           }
-           else if(!response){
-             history.push('/invitation_error');
-           }
+
+           history.push('/invitation_error',{error: response.error});
+
 
      })
    }
 
-
+   const test = "greet";
   return (
     <React.Fragment>
       {loading?<LoadingPage  loading={loading}/>:null}
       <div className="home-container">
-        <h1>{t('main_greeting')}</h1>
+        <h1>{t('main_'+test+'ing')}</h1>
         <p>{t('main_description')}</p>
       </div>
     </React.Fragment>

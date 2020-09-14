@@ -22,7 +22,6 @@ import * as yup from 'yup';
 import { useTranslation } from 'react-i18next';
 import {SimpleInput,DeviceCode,Select,ListInput,LogoInput,TextAria,ListInputArray,CheckboxList,SimpleCheckbox,ClientSecret,TimeInput,RefreshToken,Contacts} from './Components/Inputs.js'// eslint-disable-next-line
 const {reg} = require('./regex.js');
-const uuidv1 = require('uuid/v1');
 
 
 
@@ -51,13 +50,13 @@ const ServiceForm = (props)=> {
     // Everytime client_id changes we make a fetch request to see if it is available.
     client_id:yup.string().nullable().when('protocol',{
       is:'oidc',
-      then: yup.string().min(4,t('yup_char_min') + ' ('+4+')').max(36,t('yup_char_max') + ' ('+36+')').required(t('yup_required')).test('testAvailable',t('yup_client_id_available'),function(value){
+      then: yup.string().min(4,t('yup_char_min') + ' ('+4+')').max(36,t('yup_char_max') + ' ('+36+')').test('testAvailable',t('yup_client_id_available'),function(value){
           return new Promise((resolve,reject)=>{
             if(props.initialValues.client_id===value||!value||value===checkedId)
               {resolve(true)}
             else{
               setCheckingAvailability(true);
-              fetch(config.host+'petition/availability/oidc/'+ value, {
+              fetch(config.host+'/check-availability?value='+ value +'&protocol=oidc', {
                 method:'GET',
                 credentials:'include',
                 headers:{
@@ -155,15 +154,15 @@ const ServiceForm = (props)=> {
       is:'saml',
       then: yup.string().required(t('yup_required')).matches(reg.regSimpleUrl,'Enter a valid Url')
     }),
-    entity_id:yup.string().nullable().when('protocol',{
+    entity_id:yup.string().matches(reg.regUrl,t('yup_secure_url')).nullable().when('protocol',{
       is:'saml',
-      then: yup.string().min(4,t('yup_char_min') + ' ('+4+')').max(36,t('yup_char_max') + ' ('+36+')').test('testAvailable',t('yup_entity_id'),function(value){
+      then: yup.string().min(4,t('yup_char_min') + ' ('+4+')').test('testAvailable',t('yup_entity_id'),function(value){
           return new Promise((resolve,reject)=>{
             if(props.initialValues.entity_id===value||!value||value===checkedId)
               {resolve(true)}
             else{
               setCheckingAvailability(true);
-              fetch(config.host+'petition/availability/saml/'+ value, {
+              fetch(config.host+'/check-availability?value='+ value +'&protocol=saml', {
                 method:'GET',
                 credentials:'include',
                 headers:{
@@ -193,7 +192,6 @@ const ServiceForm = (props)=> {
     })
   });
 
-  const [adminComment,setAdminComment] = useState();
   const [disabled,setDisabled] = useState(false);
   const [hasSubmitted,setHasSubmitted] = useState(false);
   const [message,setMessage] = useState();
@@ -218,14 +216,14 @@ const ServiceForm = (props)=> {
     }
     if (diff(petition,props.initialValues)){
       setAsyncResponse(true);
-      fetch(config.host+'petition', {
+      fetch(config.host+'petitions', {
         method: 'POST', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
         'Content-Type': 'application/json',
         'Authorization': localStorage.getItem('token')
         },
-        body: JSON.stringify(petition) 
+        body: JSON.stringify(petition)
       }).then(response=> {
         setAsyncResponse(false);
         setModalTitle(t('new_petition_title_1') + type + t('new_petition_title_2') + petition.client_id + petition.entity_id);
@@ -252,7 +250,7 @@ const ServiceForm = (props)=> {
     }
     if(diff(petition,props.initialValues)){
       setAsyncResponse(true);
-      fetch(config.host+'petition/'+props.petition_id, {
+      fetch(config.host+'petitions/'+props.petition_id, {
         method: 'PUT', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
@@ -279,7 +277,7 @@ const ServiceForm = (props)=> {
 
   const deletePetition = ()=>{
     setAsyncResponse(true);
-    fetch(config.host+'petition/'+props.petition_id, {
+    fetch(config.host+'petitions/'+props.petition_id, {
       method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -297,76 +295,26 @@ const ServiceForm = (props)=> {
     });
   }
 
-  const reviewPetition = (type,id)=>{
-      if(props.type==='create'){
-        setModalTitle(t('review_create_title'));
-      }
-      else if (props.type==='delete'){
-        setModalTitle(t('review_delete_titler'));
-      }
-      else if (props.type==='edit'){
-          setModalTitle(t('review_edit_title'));
-      }
-      if(type==='approve'){
-        setAsyncResponse(true);
-        fetch(config.host+'petition/approve/'+id, {
-          method: 'PUT', // *GET, POST, PUT, DELETE, etc.
-          credentials: 'include', // include, *same-origin, omit
-          headers: {
-          'Content-Type': 'application/json',
-          'Authorization': localStorage.getItem('token')
-          },
-          body:JSON.stringify({comment:adminComment})
-      }).then(response=> {
-          setAsyncResponse(false);
-          if(response.status===200){
-            setMessage(t('review_success'));
-          }
-          else{
-            setMessage(t('review_error +response.status'));
-          }
-        });
-      }
-      else if (type==='reject') {
-        setAsyncResponse(true);
-        fetch(config.host+'petition/reject/'+id, {
-          method: 'PUT', // *GET, POST, PUT, DELETE, etc.
-          credentials: 'include', // include, *same-origin, omit
-          headers: {
-          'Content-Type': 'application/json',
-          'Authorization': localStorage.getItem('token')
-          },
-          body:JSON.stringify({comment:adminComment})
-      }).then(response=> {
-          setAsyncResponse(false);
-          if(response.status===200){
-            setMessage(t('review_success'));
-          }
-          else{
-            setMessage(t('review_error +response.status'));
-          }
-        });
-      }
-      else {
-        setAsyncResponse(true);
-        fetch(config.host+'petition/changes/'+id, {
-          method: 'PUT', // *GET, POST, PUT, DELETE, etc.
-          credentials: 'include', // include, *same-origin, omit
-          headers: {
-          'Content-Type': 'application/json',
-          'Authorization': localStorage.getItem('token')
-          },
-          body:JSON.stringify({comment:adminComment})
-      }).then(response=> {
-          setAsyncResponse(false);
-          if(response.status===200){
-            setMessage(t('review_success'));
-          }
-          else{
-            setMessage(t('review_error +response.status'));
-          }
-        });
-      }
+  const reviewPetition = (comment,type)=>{
+      setModalTitle(t('review_'+props.type+'_title'))
+      setAsyncResponse(true);
+      fetch(config.host+'petitions/'+props.petition_id+'/review', {
+        method: 'PUT', // *GET, POST, PUT, DELETE, etc.
+        credentials: 'include', // include, *same-origin, omit
+        headers: {
+        'Content-Type': 'application/json',
+        'Authorization': localStorage.getItem('token')
+        },
+        body:JSON.stringify({comment:comment,type:type})
+    }).then(response=> {
+        setAsyncResponse(false);
+        if(response.status===200){
+          setMessage(t('review_success'));
+        }
+        else{
+          setMessage(t('review_error +response.status'));
+        }
+      });
   }
 
 
@@ -418,7 +366,7 @@ const ServiceForm = (props)=> {
                 {props.disabled?null:
                   <div className="form-controls-container">
                     {props.review?
-                      <ReviewComponent petition_id={props.petition_id} setAdminComment={setAdminComment} adminComment={adminComment} reviewPetition={reviewPetition}/>
+                      <ReviewComponent reviewPetition={reviewPetition}/>
                       :
                       <React.Fragment>
                         <Button className='submit-button' type="submit" variant="primary" ><FontAwesomeIcon icon={faCheckCircle}/>{t('button_submit')}</Button>
@@ -704,7 +652,7 @@ const ServiceForm = (props)=> {
                   {props.disabled?null:
                     <div className="form-controls-container">
                       {props.review?
-                          <ReviewComponent petition_id={props.petition_id} setAdminComment={setAdminComment} adminComment={adminComment} reviewPetition={reviewPetition}/>
+                          <ReviewComponent reviewPetition={reviewPetition}/>
                         :
                         <React.Fragment>
                           <Button className='submit-button' type="submit" variant="primary" ><FontAwesomeIcon icon={faCheckCircle}/>Submit</Button>
@@ -733,21 +681,21 @@ const ServiceForm = (props)=> {
 
 const ReviewComponent = (props)=>{
 
-  const [typeOfReview,setTypeOfReview] = useState();
-  const [expandReview,setExpandReview] = useState(false);
+  const [type,setType] = useState();
+  const [expand,setExpand] = useState(false);
   const [error,setError] = useState(false);
+  const [comment,setComment] = useState();
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
 
   const handleReview = () =>{
-
-      if(expandReview){
-        if(typeOfReview){
-          if(typeOfReview==='request-changes'&&!props.adminComment){
+      if(expand){
+        if(type){
+          if(type==='changes'&&comment){
             setError(t('review_comment_required_msg'));
           }
           else{
-            props.reviewPetition(typeOfReview,props.petition_id);
+            props.reviewPetition(comment,type);
           }
         }
         else {
@@ -755,32 +703,32 @@ const ReviewComponent = (props)=>{
         }
       }else{
         setError(false);
-        setExpandReview(true);
+        setExpand(true);
       }
   }
   return (
     <React.Fragment>
         <Row className="review-button-row">
           <ButtonGroup>
-            <Button className="review-button" variant="success" onClick={()=> handleReview()}>{expandReview?t('review_submit'):
+            <Button className="review-button" variant="success" onClick={()=> handleReview()}>{expand?t('review_submit'):
               <React.Fragment>
                 {t('review')}
                 <FontAwesomeIcon icon={faSortDown}/>
               </React.Fragment>
               }</Button>
-              {expandReview?
-                <Button variant="success" className="review-button-expand" onClick={()=>setExpandReview(!expandReview)}>
+              {expand?
+                <Button variant="success" className="review-button-expand" onClick={()=>setExpand(!expand)}>
                   <FontAwesomeIcon icon={faSortDown}/>
                 </Button>:null}
 
           </ButtonGroup>
-          {error&&expandReview?
+          {error&&expand?
             <div className="review-error">
               {error}
             </div>
             :null}
         </Row>
-        <Collapse in={expandReview}>
+        <Collapse in={expand}>
         <div className="expand-container">
         <div className="review-controls flex-column">
         <Form.Group>
@@ -790,13 +738,13 @@ const ReviewComponent = (props)=>{
                 type="radio"
                 name="formHorizontalRadios"
                 id="formHorizontalRadios1"
-                onChange={(e)=>{if(e.target.checked){setTypeOfReview(e.target.value)}}}
+                onChange={(e)=>{if(e.target.checked){setType(e.target.value)}}}
                 value="approve"
-                checked={typeOfReview==='approve'}
+                checked={type==='approve'}
               />
             </Col>
             <Col onClick={()=>{
-              setTypeOfReview('approve');
+              setType('approve');
             }}>
               <Row>
                 <strong>
@@ -814,13 +762,13 @@ const ReviewComponent = (props)=>{
                 type="radio"
                 name="formHorizontalRadios"
                 id="formHorizontalRadios2"
-                onChange={(e)=>{if(e.target.checked){setTypeOfReview(e.target.value)}}}
+                onChange={(e)=>{if(e.target.checked){setType(e.target.value)}}}
                 value="reject"
-                checked={typeOfReview==='reject'}
+                checked={type==='reject'}
               />
             </Col>
             <Col onClick={()=>{
-                setTypeOfReview('reject');
+                setType('reject');
             }}>
               <Row>
                 <strong>
@@ -838,13 +786,13 @@ const ReviewComponent = (props)=>{
                 type="radio"
                 name="formHorizontalRadios"
                 id="formHorizontalRadios3"
-                onChange={(e)=>{if(e.target.checked){setTypeOfReview(e.target.value)}}}
+                onChange={(e)=>{if(e.target.checked){setType(e.target.value)}}}
                 value="request-changes"
-                checked={typeOfReview==='request-changes'}
+                checked={type==='changes'}
               />
             </Col>
             <Col onClick={()=>{
-              setTypeOfReview('request-changes');
+              setType('changes');
             }}>
               <Row>
                 <strong>
@@ -868,8 +816,8 @@ const ReviewComponent = (props)=>{
           rows='7'
           className="comment-input"
           placeholder={t('review_comment_prompt')}
-          onChange={e => props.setAdminComment(e.target.value)}
-          value={props.adminComment}
+          onChange={e => setComment(e.target.value)}
+          value={comment}
         />
 
       </Row>
@@ -882,10 +830,7 @@ const ReviewComponent = (props)=>{
 
 function gennerateValues(data){
 
-  if(!data.client_id&&data.protocol==='oidc'){
 
-    data.client_id=uuidv1();
-  }
   if(data.generate_client_secret&&data.protocol==='oidc'){
     data.client_secret= hex(16);
     data.generate_client_secret = false;

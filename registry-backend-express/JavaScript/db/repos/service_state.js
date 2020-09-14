@@ -21,8 +21,36 @@ class ServiceStateRepository {
       state:state
     })
   }
-
-
+  async deploymentUpdate(messages){
+    let updateState=[];
+    let updateClientId =[];
+    let ids=[];
+    messages.forEach((message) => {
+      let decoded_message=(JSON.parse(Buffer.from(message.message.data, 'base64').toString()));
+      updateState.push({id:decoded_message.id,state:decoded_message.state});
+      if(decoded_message.client_id){
+        updateClientId.push({id:decoded_message.client_id,state:decoded_message.client_id})
+      }
+      ids.push(decoded_message.id);
+    });
+    return await this.db.service_state.updateMultiple(updateState).then(async res=>{
+      if(res.success){
+        if(updateClientId.length>0){
+          return await this.db.service_details_protocol.updateClientId(updateClientId).then(async result=>{
+            if(result.success){
+              return {success:true,ids:ids};
+            }
+            else{
+              throw 'Could not update client_id'
+            }
+          })
+        }
+        else{
+          return {success:true,ids:ids};
+        }
+      }
+    })
+  }
 
   async updateMultiple(updateData){
     // updateData = [{id:1,state:'deployed'},{id:2,state:'deployed'},{id:3,state:'failed'}];

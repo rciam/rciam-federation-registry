@@ -15,21 +15,53 @@ var intervalID;
 
 
 function run() {
-  let messages = [];
-  axios.get(process.env.EXPRESS+'/service/pending',options)
+  let messages = {
+    egi: {
+      saml: [],
+      oidc: []
+    }
+  };
+  axios.get(process.env.EXPRESS+'/services/pending',options)
   .then(function (response) {
 	// handle success
-    let updateData = [];
+    let data;
+    let updateData = {
+
+      egi: {
+        saml: [],
+        oidc: []
+      }
+    };
     if(response.data.services){
       response.data.services.forEach((service) => {
-        updateData.push({id:service.json.id,state:'waiting-deployment'});
-        messages.push({"attributes":{},"data": Buffer.from(JSON.stringify(service.json)).toString("base64")});
+        for (var propName in service.json) {
+          if (service.json[propName] === null || service.json[propName] === undefined) {
+            delete service.json[propName];
+          }
+        }
+        updateData.egi[service.json.protocol].push({id:service.json.id,state:'waiting-deployment'});
+        messages.egi[service.json.protocol].push({"attributes":{},"data": Buffer.from(JSON.stringify(service.json)).toString("base64")});
       });
-      if(messages.length>0){
-        data={"messages":messages};
-        axios.post(publish_url,data, options).then((res) => {
+      if(messages.egi.oidc>0){
+        data={"messages":messages.egi.oidc};
+        axios.post(publish_url_oidc,data, options).then((res) => {
           if(res.status===200){
-            axios.put(process.env.EXPRESS+'/service/state',updateData,options).then((res)=>{
+            axios.put(process.env.EXPRESS+'/services/state',updateData.egi.oidc,options).then((res)=>{
+              if(res.status===200){
+                fakeThirdParty(updateData);
+                if(res.success===false){
+                 console.log(res.error);
+                }
+              }
+            });
+          }
+        });
+      }
+      if(messages.egi.saml>0){
+        data={"messages":messages.egi.saml};
+        axios.post(publish_url_saml,data, options).then((res) => {
+          if(res.status===200){
+            axios.put(process.env.EXPRESS+'/services/state',updateData.egi.saml,options).then((res)=>{
               if(res.status===200){
                 fakeThirdParty(updateData);
                 if(res.success===false){

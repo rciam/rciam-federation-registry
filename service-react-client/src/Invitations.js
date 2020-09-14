@@ -32,7 +32,7 @@ const InvitationsPage = (props) => {
 
   const getInvitations = () => {
     setLoading(true)
-    fetch(config.host+'invitation', {
+    fetch(config.host+'invitations', {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -58,7 +58,7 @@ const InvitationsPage = (props) => {
 
   const invitationResponse =  (id,action) => {
     setSending(true);
-    fetch(config.host+'invitation/'+action+'/'+id, {
+    fetch(config.host+'invitations/'+id+'/'+action, {
       method: 'PUT', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -91,12 +91,13 @@ const InvitationsPage = (props) => {
              return(
 
                <div key={index} className='invitation-container'>
-                <Row>
-                  <Col>
-                    <h3 className="align-middle"> You have been invited by <a href={"mailto: "+invitation.invited_by}>{invitation.invited_by}</a> to participate in his group</h3>
+                <Row >
+                  <Col className="d-flex">
+                    <div className="justify-content-center align-self-center"><h3> You have been invited by <a href={"mailto: "+invitation.invited_by}>{invitation.invited_by}</a> to manage a service named: {invitation.service_name}</h3> </div>
+
                   </Col>
-                  <Col md="auto">
-                    <div>
+                  <Col md="auto" className="d-flex">
+                    <div className="justify-content-center align-self-center">
                       <Button variant="success" onClick={()=>{invitationResponse(invitation.id,'accept')}} >{t('invitations_accept')}</Button>
                       <Button variant="danger" onClick={()=>{invitationResponse(invitation.id,'decline')}} >{t('invitations_decline')}</Button>
                     </div>

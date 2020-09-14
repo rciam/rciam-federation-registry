@@ -1,19 +1,21 @@
 const sql = require('../sql').group;
 const cs = {};
+var config = require('../../config');
 const {newMemberNotificationMail} = require('../../functions/helpers.js');
 class GroupRepository {
   constructor(db, pgp) {
       this.db = db;
       this.pgp = pgp;
   }
-  async getMembers(group_id){
-    return this.db.any(sql.getGroupMembers,{group_id: +group_id}).then(res => {return res});
-  }
-  async newMemberNotification(invitation_data){
-    //group_id,sub,group_manager,email invitation data
-    return this.db.any(sql.getGroupManagers,{group_id: +invitation_data.group_id}).then(res => {
 
-      return res
+  async getMembers(group_id){
+    let date = new Date(Date.now());
+    return this.db.any(sql.getGroupMembers,{group_id: +group_id,now:date,validity_seconds:+config.invitation_validity_seconds}).then(members => {return members});
+  }
+
+  async newMemberNotification(invitation_data){
+    this.db.any(sql.getGroupManagers,{group_id: +invitation_data.group_id}).then(managers => {
+      newMemberNotificationMail(invitation_data,managers)
     });
   }
 
@@ -30,16 +32,18 @@ class GroupRepository {
   }
 
   async deleteSub(sub,group_id){
-    return this.db.any('SELECT COUNT(*) FROM group_subs WHERE group_manager=true AND group_id=$1 AND sub!=$2',[+group_id,sub]).then(res=>{
-      if(res){
-        if(res[0].count>0){
-            return this.db.oneOrNone('DELETE FROM group_subs WHERE group_id=$1 AND sub=$2 RETURNING sub',[+group_id,sub]);
-        }
-        else{
-          return false;
-        }
+    return this.db.task('delete-group-sub',t=>{
+      return t.any('SELECT COUNT(*) FROM group_subs WHERE group_manager=true AND group_id=$1 AND sub!=$2',[+group_id,sub]).then(res=>{
+        if(res){
+          if(res[0].count>0){
+            return t.oneOrNone('DELETE FROM group_subs WHERE group_id=$1 AND sub=$2 RETURNING sub',[+group_id,sub]);
+          }
+          else{
+            return false;
+          }
 
-      }
+        }
+      })
     })
   }
 

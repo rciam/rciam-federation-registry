@@ -17,32 +17,30 @@ import * as config from './config.json';
 import Image from 'react-bootstrap/Image';
 import {Link} from "react-router-dom";
 import Badge from 'react-bootstrap/Badge';
-import Modal from 'react-bootstrap/Modal';
 import Pagination from 'react-bootstrap/Pagination';
 import {LoadingBar,ProcessingRequest} from './Components/LoadingBar';
 import {ListResponseModal} from './Components/Modals.js';
 import * as tenant_data from './tenant-config.json';
 import { useTranslation } from 'react-i18next';
 import Alert from 'react-bootstrap/Alert';
+import {ConfirmationModal} from './Components/Modals';
+
 
 const ServiceList= (props)=> {
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   const [loadingList,setLoadingList] = useState();
   const [services,setServices] = useState([]);
-  const [confirmationId,setConfirmationId] = useState();
   const [activePage,setActivePage] = useState(1);
-  const [confirmationAction,setConfirmationAction] = useState();
-  const [cancelRequest,setCancelRequest] = useState(false);
   const [displayedServices,setDisplayedServices] = useState(0);
   const [asyncResponse,setAsyncResponse] = useState(false);
   const [invites,setInvites] = useState();
   const [message,setMessage] = useState();
   const [responseTitle,setResponseTitle] = useState(null);
   const [searchString,setSearchString] = useState();
-  const [alertMessage,setAlertMessage] = useState();
   const [expandFilters,setExpandFilters] = useState();
   const globalState = useGlobalState();
+  const [confirmationData,setConfirmationData] = useState({})
   let tenant = tenant_data.data[globalState.global_state.tenant];
 
   let renderedConnections = 0;
@@ -54,7 +52,7 @@ const ServiceList= (props)=> {
   },[]);
 
   const getInvites = () => {
-    fetch(config.host+'invitation', {
+    fetch(config.host+'invitations', {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -77,22 +75,9 @@ const ServiceList= (props)=> {
       });
   }
 
-  let items = [];
-  let itemsPerPage = 5;
-  // issue here displaying less
-  if(services){
-    for (let number = 1; number <= Math.ceil(displayedServices/itemsPerPage) ; number++) {
-      items.push(
-        <Pagination.Item key={number} onClick={()=>{setActivePage(number)}} active={number === activePage}>
-          {number}
-        </Pagination.Item>,
-      );
-    }
-  }
-
   // Get data, to create Service List
   const getServices = ()=> {
-    fetch(config.host+'service/list', {
+    fetch(config.host+'services', {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -119,29 +104,70 @@ const ServiceList= (props)=> {
   }
 
 
-  const deleteService = (id)=>{
+  let items = [];
+  let itemsPerPage = 5;
+  // issue here displaying less
+  if(services){
+    for (let number = 1; number <= Math.ceil(displayedServices/itemsPerPage) ; number++) {
+      items.push(
+        <Pagination.Item key={number} onClick={()=>{setActivePage(number)}} active={number === activePage}>
+          {number}
+        </Pagination.Item>,
+      );
+    }
+  }
+
+
+
+
+  const deleteService = (service_id,petition_id)=>{
     setAsyncResponse(true);
-    fetch(config.host+'petition/delete/'+id, {
-      method: 'PUT', // *GET, POST, PUT, DELETE, etc.
-      credentials: 'include', // include, *same-origin, omit
-      headers: {
-      'Content-Type': 'application/json',
-      'Authorization': localStorage.getItem('token')
-    }}).then(response=> {
-      getServices();
-      setResponseTitle(t('request_submit_title'));
-      setAsyncResponse(false);
-      if(response.status===200){
-        setMessage(t('request_submit_success_msg'));
-      }
-      else{
-        setMessage(t('request_submit_failled_msg') + response.status);
-      }
-    });
+    if(petition_id){
+      fetch(config.host+'petitions/'+petition_id, {
+        method: 'PUT', // *GET, POST, PUT, DELETE, etc.
+        credentials: 'include', // include, *same-origin, omit
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': localStorage.getItem('token')
+        },
+        body:JSON.stringify({service_id:service_id,type:'delete'})
+      }).then(response=> {
+        getServices();
+        setResponseTitle(t('request_submit_title'));
+        setAsyncResponse(false);
+        if(response.status===200){
+          setMessage(t('request_submit_success_msg'));
+        }
+        else{
+          setMessage(t('request_submit_failled_msg') + response.status);
+        }
+      });
+    }
+    else {
+      fetch(config.host+'petitions', {
+        method: 'POST', // *GET, POST, PUT, DELETE, etc.
+        credentials: 'include', // include, *same-origin, omit
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': localStorage.getItem('token')
+        },
+        body:JSON.stringify({service_id:service_id,type:'delete'})
+      }).then(response=> {
+        getServices();
+        setResponseTitle(t('request_submit_title'));
+        setAsyncResponse(false);
+        if(response.status===200){
+          setMessage(t('request_submit_success_msg'));
+        }
+        else{
+          setMessage(t('request_submit_failled_msg') + response.status);
+        }
+      });
+    }
   }
   const deletePetition = (id)=>{
     setAsyncResponse(true);
-    fetch(config.host+'petition/'+id, {
+    fetch(config.host+'petitions/'+id, {
       method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -164,8 +190,8 @@ const ServiceList= (props)=> {
   return(
     <React.Fragment>
       <ListResponseModal message={message} modalTitle={responseTitle} setMessage={setMessage}/>
-      <Confirmation confirmationId={confirmationId} cancelRequest={cancelRequest} setConfirmationId={setConfirmationId} confirmationAction={confirmationAction==='petition'?deletePetition:deleteService}/>
-      <MyAlert alertMessage={alertMessage} setAlertMessage={setAlertMessage}/>
+      <ConfirmationModal active={confirmationData.action?true:false} setActive={setConfirmationData} action={()=>{if(confirmationData.action==='delete_service'){deleteService(...confirmationData.args)}else{deletePetition(...confirmationData.args)}}} title={confirmationData.title} accept={'Yes'} decline={'No'}/>
+
       <div>
         <LoadingBar loading={loadingList}>
         {invites&&invites.length>0?
@@ -244,7 +270,7 @@ const ServiceList= (props)=> {
                         }
                         if(Math.ceil(renderedConnections/itemsPerPage)===activePage&&item.display){
                           return(
-                            <TableItem service={item} user={props.user} key={index} setAlertMessage={setAlertMessage} setCancelRequest={setCancelRequest}  setConfirmationAction={setConfirmationAction} setConfirmationId={setConfirmationId}/>
+                            <TableItem service={item} user={props.user} key={index} setConfirmationData={setConfirmationData} />
                           )
                         }
                         return null
@@ -358,72 +384,61 @@ function TableItem(props) {
               </React.Fragment>}
               id="dropdown-menu-align-right"
             >
-            {props.service.owned && (props.service.state==='deployed'||!props.service.service_id)?
-              <React.Fragment>
-                {props.service.type!=='create'?
-                  <Dropdown.Item>
-                    <div
-                    className={props.service.state==='deployed'?'options-disabled':null}
-                    onClick={()=>{
-                      if(props.service.state==='deployed'){
-                        if(props.service.type==='create'||props.service.type==='delete'){
-                          props.setConfirmationId(props.service.petition_id);
-                          props.setConfirmationAction('petition');
-                          if(props.service.type==='delete'){
-                            props.setCancelRequest(true);
-                          }
-                        }else{
-                          props.setConfirmationId(props.service.service_id);
-                          props.setConfirmationAction('service');
-                        }
-                      }else{
-                        props.setAlertMessage(t('delete_pending_alert'));
-                      }
-                    }}>
-                      {props.service.type==='delete'?t('options_cancel_delete'):t('options_delete')}
-                    </div>
-                  </Dropdown.Item>
-              :null}
-                {props.service.type==='edit'|| props.service.type==='create'?
+              {props.service.owned && props.service.state==='deployed' && props.service.type!=='delete'?
                 <Dropdown.Item>
-                  <div onClick={()=>{
-                      props.setConfirmationId(props.service.petition_id);
-                      props.setConfirmationAction('petition');
-                      props.setCancelRequest(true);
+                  <div
+                  onClick={()=>{
+                    props.setConfirmationData({
+                      action:'delete_service',
+                      args:[props.service.service_id,props.service.petition_id],
+                      title:t('confirmation_title')+' '+t('confirmation_delete')
+                    })
                   }}>
-                    {props.service.type==='create'?t('options_cancel_create'):props.service.type==='edit'?t('options_cancel_edit'):null}
+                    {t('options_delete')}
                   </div>
                 </Dropdown.Item>
-                :null
-                }
-              </React.Fragment>
-            :null}
-            <Dropdown.Item as='span'>
-              <div>
-                <Link to={{
-                  pathname:"/group",
-                  state:{
-                    group_manager:props.service.group_manager.toString(),
-                    service_id:props.service.service_id,
-                    group_id:props.service.group_id
-                  }
-                }}>{props.service.group_manager?t('manage_group'):t('view_group')}</Link>
-              </div>
-            </Dropdown.Item>
+              :null}
+              {props.service.owned && props.service.state==='deployed'?
+                <Dropdown.Item>
+                  <div
+                  onClick={()=>{
+                    props.setConfirmationData({
+                      action:'delete_petition',
+                      args:[props.service.petition_id],
+                      title:t('confirmation_title')+' '+t('confirmation_cancel_request')
+                    })
+                  }}>
+                    {props.service.type==='create'?t('options_cancel_create'):props.service.type==='edit'?t('options_cancel_edit'):t('options_cancel_delete')}
+                  </div>
+                </Dropdown.Item>
+              :null}
 
-            {props.service.service_id?
               <Dropdown.Item as='span'>
-              <div>
-                <Link to={{
-                  pathname:"/history/list",
-                  state:{
-                    service_id:props.service.service_id
-                  }
-                }}>{t('options_history')}</Link>
-              </div>
+                <div>
+                  <Link to={{
+                    pathname:"/group",
+                    state:{
+                      group_manager:props.service.group_manager.toString(),
+                      service_id:props.service.service_id,
+                      group_id:props.service.group_id
+                    }
+                  }}>{props.service.group_manager?t('manage_group'):t('view_group')}</Link>
+                </div>
               </Dropdown.Item>
-            :null
-            }
+
+              {props.service.service_id?
+                <Dropdown.Item as='span'>
+                <div>
+                  <Link to={{
+                    pathname:"/history/list",
+                    state:{
+                      service_id:props.service.service_id
+                    }
+                  }}>{t('options_history')}</Link>
+                </div>
+                </Dropdown.Item>
+              :null
+              }
 
             </DropdownButton>
             </Col>
@@ -433,46 +448,9 @@ function TableItem(props) {
     </tr>
   )
 }
-function MyAlert(props){
-  const handleClose = () => props.setAlertMessage();
-  return (
-    <Modal show={props.alertMessage?true:false} onHide={handleClose}>
-        <Modal.Header closeButton>
-          <Modal.Title>
-              {props.alertMessage}
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Footer>
-          <Button variant="primary" onClick={handleClose}>
-            Continue
-          </Button>
-        </Modal.Footer>
-    </Modal>
-  )
-}
 
-function Confirmation(props){
-  // eslint-disable-next-line
-  const { t, i18n } = useTranslation();
-  const handleClose = () => props.setConfirmationId();
-  return (
-    <Modal show={props.confirmationId?true:false} onHide={handleClose}>
-        <Modal.Header closeButton>
-          <Modal.Title>
-              {t('confirmation_title')} {props.cancelRequest?t('confirmation_cancel_request'):t('confirmation_delete')}
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Footer>
-          <Button variant="danger" onClick={handleClose}>
-            Cancel
-          </Button>
-          <Button variant="primary" onClick={()=>{props.confirmationAction(props.confirmationId); handleClose();}}>
-            OK
-          </Button>
-        </Modal.Footer>
-    </Modal>
-  )
-}
+
+
 
 function Filters (props) {
 
