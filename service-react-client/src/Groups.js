@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import Form from 'react-bootstrap/Form';
 import * as config from './config.json';
 import InputGroup from 'react-bootstrap/InputGroup';
+import {useParams } from "react-router-dom";
 import Button from 'react-bootstrap/Button';
 import Table from 'react-bootstrap/Table';
 import Row from 'react-bootstrap/Row';
@@ -14,25 +15,26 @@ import {LoadingBar,ProcessingRequest} from './Components/LoadingBar';
 import Badge from 'react-bootstrap/Badge';
 import * as yup from 'yup';
 import Alert from 'react-bootstrap/Alert';
-import {Context} from './user-context.js';
+import {userContext} from './context.js';
 import {ConfirmationModal} from './Components/Modals';
 
 
 
 const GroupsPage = (props) => {
+  let {tenant_name} = useParams();
+
   useEffect(()=>{
     getData();
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
+
   const getData = () => {
     getGroupMembers(props.group_id);
   }
 
-
   const getGroupMembers = (group_id) => {
     setLoading(true);
-    fetch(config.host+'groups/'+group_id+'/members', {
+    fetch(config.host+'tenants/'+tenant_name+'/groups/'+group_id+'/members', {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -51,8 +53,6 @@ const GroupsPage = (props) => {
               count = count +1;
             }
           });
-          console.log(response.group_members);
-          console.log(count);
           setGroupManagers(count);
           setGroup(response.group_members);
           setLoading(false);
@@ -62,7 +62,7 @@ const GroupsPage = (props) => {
 
   const cancelInvitation = (id,group_id)=>{
     setSending(true);
-    fetch(config.host+'groups/'+group_id+'/invitations/'+id, {
+    fetch(config.host+'tenants/'+tenant_name+'/groups/'+group_id+'/invitations/'+id, {
       method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -77,7 +77,7 @@ const GroupsPage = (props) => {
 
   const resendInvitation = (id,group_id,email) => {
     setSending(true);
-    fetch(config.host+'groups/'+group_id+'/invitations/'+id, {
+    fetch(config.host+'tenants/'+tenant_name+'/groups/'+group_id+'/invitations/'+id, {
       method: 'PUT', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -93,7 +93,7 @@ const GroupsPage = (props) => {
 
   const sendInvitation = (invitation) => {
     setSending(true);
-    fetch(config.host+'groups/'+invitation.group_id+'/invitations', {
+    fetch(config.host+'tenants/'+tenant_name+'/groups/'+invitation.group_id+'/invitations', {
       method: 'POST', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -111,7 +111,7 @@ const GroupsPage = (props) => {
 
   const removeMember = (sub,group_id) => {
     setSending(true);
-    fetch(config.host+'groups/'+group_id+'/members/'+sub, {
+    fetch(config.host+'tenants/'+tenant_name+'/groups/'+group_id+'/members/'+sub, {
       method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -125,7 +125,7 @@ const GroupsPage = (props) => {
     });
   }
 
-  const user = useContext(Context);
+  const user = useContext(userContext);
   const [group_managers,setGroupManagers] = useState();
   const [invitationResult,setInvitationResult] = useState();
   const [sending,setSending] = useState();

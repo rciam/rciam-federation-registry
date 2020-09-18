@@ -1,432 +1,82 @@
 
 
-16:31:53 error: column "group_id" does not exist
-         query: SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,CASE WHEN owned IS NULL THEN false ELSE owned END,status,type,state,group_manager,CASE WHEN notification IS NULL THEN false ELSE notification END AS notification,deleted,comment,group_id FROM (SELECT id AS service_id,service_description,logo_uri,service_name,deleted,requester,integration_environment,group_id FROM service_details) AS service_details LEFT JOIN service_state ON service_details.service_id=service_state.id LEFT JOIN (SELECT id AS group_id,true AS owned,is_owner AS group_manager FROM groups LEFT JOIN group_subs ON groups.id=group_subs.group_id WHERE sub='7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu') AS group_ids USING (group_id) LEFT JOIN (SELECT id AS petition_id,status,type,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification, service_id,comment FROM service_petition_details WHERE reviewed_at IS NULL) AS petitions USING (service_id) WHERE deleted=false OR (deleted=TRUE AND state!='deployed') UNION SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,owned,status,type,state,group_manager,notification,deleted,comment,group_id FROM (SELECT service_id,id AS petition_id,comment,service_description,logo_uri,service_name,integration_environment,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification,CASE WHEN requester='7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu' THEN true ELSE false END AS owned,status,type,null AS state,false as group_manager,false AS deleted FROM service_petition_details WHERE reviewed_at IS NULL AND type='create') as petitions
+15:45:09 error: duplicate key value violates unique constraint "group_subs_pkey"
+         tx(accept-invite): INSERT INTO group_subs (sub,group_manager,group_id) VALUES('4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',false,7) RETURNING sub
 
-16:31:58 error: column "group_id" does not exist
-         query: SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,CASE WHEN owned IS NULL THEN false ELSE owned END,status,type,state,group_manager,CASE WHEN notification IS NULL THEN false ELSE notification END AS notification,deleted,comment,group_id FROM (SELECT id AS service_id,service_description,logo_uri,service_name,deleted,requester,integration_environment,group_id FROM service_details) AS service_details LEFT JOIN service_state ON service_details.service_id=service_state.id LEFT JOIN (SELECT id AS group_id,true AS owned,is_owner AS group_manager FROM groups LEFT JOIN group_subs ON groups.id=group_subs.group_id WHERE sub='7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu') AS group_ids USING (group_id) LEFT JOIN (SELECT id AS petition_id,status,type,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification, service_id,comment FROM service_petition_details WHERE reviewed_at IS NULL) AS petitions USING (service_id) WHERE deleted=false OR (deleted=TRUE AND state!='deployed') UNION SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,owned,status,type,state,group_manager,notification,deleted,comment,group_id FROM (SELECT service_id,id AS petition_id,comment,service_description,logo_uri,service_name,integration_environment,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification,CASE WHEN requester='7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu' THEN true ELSE false END AS owned,status,type,null AS state,false as group_manager,false AS deleted FROM service_petition_details WHERE reviewed_at IS NULL AND type='create') as petitions
+15:45:09 error: current transaction is aborted, commands ignored until end of transaction block
+         tx(accept-invite): DELETE FROM invitations WHERE id=4 AND sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu' RETURNING id
 
-16:32:52 error: UNION types bigint and text cannot be matched
-         query: SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,CASE WHEN owned IS NULL THEN false ELSE owned END,status,type,state,group_manager,CASE WHEN notification IS NULL THEN false ELSE notification END AS notification,deleted,comment,group_id FROM (SELECT id AS service_id,service_description,logo_uri,service_name,deleted,requester,integration_environment,group_id FROM service_details) AS service_details LEFT JOIN service_state ON service_details.service_id=service_state.id LEFT JOIN (SELECT id AS group_id,true AS owned,is_owner AS group_manager FROM groups LEFT JOIN group_subs ON groups.id=group_subs.group_id WHERE sub='7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu') AS group_ids USING (group_id) LEFT JOIN (SELECT id AS petition_id,status,type,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification, service_id,comment FROM service_petition_details WHERE reviewed_at IS NULL) AS petitions USING (service_id) WHERE deleted=false OR (deleted=TRUE AND state!='deployed') UNION SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,owned,status,type,state,group_manager,notification,deleted,comment,group_id FROM (SELECT service_id,id AS petition_id,comment,service_description,logo_uri,service_name,integration_environment,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification,CASE WHEN requester='7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu' THEN true ELSE false END AS owned,status,type,null AS state,false as group_manager,false AS deleted,NULL as group_id FROM service_petition_details WHERE reviewed_at IS NULL AND type='create') as petitions
+09:45:34 error: the database system is shutting down
+         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
 
-16:34:36 error: UNION types bigint and text cannot be matched
-         query: SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,CASE WHEN owned IS NULL THEN false ELSE owned END,status,type,state,group_manager,CASE WHEN notification IS NULL THEN false ELSE notification END AS notification,deleted,comment,group_id FROM (SELECT id AS service_id,service_description,logo_uri,service_name,deleted,requester,integration_environment,group_id FROM service_details) AS service_details LEFT JOIN service_state ON service_details.service_id=service_state.id LEFT JOIN (SELECT id AS group_id,true AS owned,is_owner AS group_manager FROM groups LEFT JOIN group_subs ON groups.id=group_subs.group_id WHERE sub='7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu') AS group_ids USING (group_id) LEFT JOIN (SELECT id AS petition_id,status,type,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification, service_id,comment FROM service_petition_details WHERE reviewed_at IS NULL) AS petitions USING (service_id) WHERE deleted=false OR (deleted=TRUE AND state!='deployed') UNION SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,owned,status,type,state,group_manager,notification,deleted,comment,group_id FROM (SELECT service_id,id AS petition_id,comment,service_description,logo_uri,service_name,integration_environment,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification,CASE WHEN requester='7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu' THEN true ELSE false END AS owned,status,type,null AS state,false as group_manager,false AS deleted,NULL as group_id FROM service_petition_details WHERE reviewed_at IS NULL AND type='create') as petitions
+08:36:35 error: connect ECONNREFUSED ::1:5432
+         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
 
-09:28:01 error: column "is_owner" does not exist
-         query: SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,CASE WHEN owned IS NULL THEN false ELSE owned END,status,type,state,group_manager,CASE WHEN notification IS NULL THEN false ELSE notification END AS notification,deleted,comment,group_id FROM (SELECT id AS service_id,service_description,logo_uri,service_name,deleted,requester,integration_environment,group_id FROM service_details) AS service_details LEFT JOIN service_state ON service_details.service_id=service_state.id LEFT JOIN (SELECT id AS group_id,true AS owned,is_owner AS group_manager FROM groups LEFT JOIN group_subs ON groups.id=group_subs.group_id WHERE sub='7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu') AS group_ids USING (group_id) LEFT JOIN (SELECT id AS petition_id,status,type,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification, service_id,comment FROM service_petition_details WHERE reviewed_at IS NULL) AS petitions USING (service_id) WHERE deleted=false OR (deleted=TRUE AND state!='deployed') UNION SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,owned,status,type,state,group_manager,notification,deleted,comment,group_id FROM (SELECT service_id,id AS petition_id,comment,service_description,logo_uri,service_name,integration_environment,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification,CASE WHEN requester='7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu' THEN true ELSE false END AS owned,status,type,null AS state,false as group_manager,false AS deleted,NULL::bigint as group_id FROM service_petition_details WHERE reviewed_at IS NULL AND type='create') as petitions
+06:16:22 error: syntax error at or near "AND"
+         query: SELECT preferred_username as username, email, group_manager, false as pending,group_id,sub,Null::INTEGER as invitation_id,NULL::TIMESTAMP WITHOUT TIME ZONE as invitation_date FROM ((SELECT sub, group_manager,group_id FROM group_subs WHERE group_id=5) as foo LEFT JOIN user_info USING (sub)) UNION SELECT preferred_username as username, foo.email, group_manager, true as pending,group_id,sub,invitation_id,date as invitation_date FROM ((SELECT sub, group_manager,email,group_id,id as invitation_id,date FROM invitations WHERE group_id=5 AND AND EXTRACT(EPOCH FROM '2020-09-11T06:16:22.301+03:00' - date)<2592000 ) as foo LEFT JOIN user_info USING (sub))
 
-09:28:16 error: column "is_owner" does not exist
-         query: SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,CASE WHEN owned IS NULL THEN false ELSE owned END,status,type,state,group_manager,CASE WHEN notification IS NULL THEN false ELSE notification END AS notification,deleted,comment,group_id FROM (SELECT id AS service_id,service_description,logo_uri,service_name,deleted,requester,integration_environment,group_id FROM service_details) AS service_details LEFT JOIN service_state ON service_details.service_id=service_state.id LEFT JOIN (SELECT id AS group_id,true AS owned,is_owner AS group_manager FROM groups LEFT JOIN group_subs ON groups.id=group_subs.group_id WHERE sub='7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu') AS group_ids USING (group_id) LEFT JOIN (SELECT id AS petition_id,status,type,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification, service_id,comment FROM service_petition_details WHERE reviewed_at IS NULL) AS petitions USING (service_id) WHERE deleted=false OR (deleted=TRUE AND state!='deployed') UNION SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,owned,status,type,state,group_manager,notification,deleted,comment,group_id FROM (SELECT service_id,id AS petition_id,comment,service_description,logo_uri,service_name,integration_environment,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification,CASE WHEN requester='7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu' THEN true ELSE false END AS owned,status,type,null AS state,false as group_manager,false AS deleted,NULL::bigint as group_id FROM service_petition_details WHERE reviewed_at IS NULL AND type='create') as petitions
+06:51:04 error: duplicate key value violates unique constraint "group_subs_pkey"
+         tx(accept-invite): INSERT INTO group_subs (sub,group_manager,group_id) VALUES('7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu',false,1) RETURNING sub
 
-23:57:13 error: Variable $2 out of range. Parameters array length: 1
-         query: UPDATE invitations SET code=NULL,sub=$1,email=$2 RETURNING id
-         params: [null]
+06:51:04 error: current transaction is aborted, commands ignored until end of transaction block
+         tx(accept-invite): DELETE FROM invitations WHERE id=4 AND sub='7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu' RETURNING id
 
-23:57:16 error: Variable $2 out of range. Parameters array length: 1
-         query: UPDATE invitations SET code=NULL,sub=$1,email=$2 RETURNING id
-         params: [null]
+18:41:01 error: the database system is shutting down
+         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
 
-23:57:54 error: Multiple rows were not expected.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' RETURNING id
+23:26:37 error: the database system is shutting down
+         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
 
-00:01:11 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+23:40:01 error: terminating connection due to administrator command
+         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
 
-08:49:32 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+20:29:39 error: column "name" does not exist
+         query: SELECT name,logo,main_title,color FROM tenants WHERE name='egi'
 
-08:52:03 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+22:55:52 error: relation "service_details" does not exist
+         query: SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,CASE WHEN owned IS NULL THEN false ELSE owned END,status,type,state,CASE WHEN group_manager IS NULL then false ELSE group_manager END,CASE WHEN notification IS NULL THEN false ELSE notification END AS notification,deleted,comment,group_id FROM (SELECT id AS service_id,service_description,logo_uri,service_name,deleted,requester,integration_environment,group_id FROM service_details WHERE tenant='egi') AS service_details LEFT JOIN service_state ON service_details.service_id=service_state.id LEFT JOIN (SELECT id AS group_id,true AS owned,CASE WHEN group_manager IS NULL then false ELSE group_manager END FROM groups LEFT JOIN group_subs ON groups.id=group_subs.group_id WHERE sub='7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu') AS group_ids USING (group_id) LEFT JOIN (SELECT id AS petition_id,status,type,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification, service_id,comment FROM service_petition_details WHERE reviewed_at IS NULL) AS petitions USING (service_id) WHERE deleted=false OR (deleted=TRUE AND state!='deployed') UNION SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,CASE WHEN group_subs.sub='7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu' THEN true ELSE false END AS owned,status,type,state,CASE WHEN group_manager IS NULL THEN false ELSE group_manager END,notification,deleted,comment,petitions.group_id FROM (SELECT service_id,id AS petition_id,comment,service_description,logo_uri,service_name,integration_environment,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification,status,type,null AS state,false AS deleted,group_id FROM service_petition_details WHERE reviewed_at IS NULL AND type='create' AND tenant='egi') as petitions LEFT JOIN group_subs ON petitions.group_id= group_subs.group_id AND group_subs.sub='7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu'
 
-08:53:21 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+23:00:43 error: relation "service_petition_details" does not exist
+         query: SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,CASE WHEN owned IS NULL THEN false ELSE owned END,status,type,state,CASE WHEN group_manager IS NULL then false ELSE group_manager END,CASE WHEN notification IS NULL THEN false ELSE notification END AS notification,deleted,comment,group_id FROM (SELECT id AS service_id,service_description,logo_uri,service_name,deleted,requester,integration_environment,group_id FROM service_details WHERE tenant='egi') AS service_details LEFT JOIN service_state ON service_details.service_id=service_state.id LEFT JOIN (SELECT id AS group_id,true AS owned,CASE WHEN group_manager IS NULL then false ELSE group_manager END FROM groups LEFT JOIN group_subs ON groups.id=group_subs.group_id WHERE sub='7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu') AS group_ids USING (group_id) LEFT JOIN (SELECT id AS petition_id,status,type,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification, service_id,comment FROM service_petition_details WHERE reviewed_at IS NULL) AS petitions USING (service_id) WHERE deleted=false OR (deleted=TRUE AND state!='deployed') UNION SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,CASE WHEN group_subs.sub='7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu' THEN true ELSE false END AS owned,status,type,state,CASE WHEN group_manager IS NULL THEN false ELSE group_manager END,notification,deleted,comment,petitions.group_id FROM (SELECT service_id,id AS petition_id,comment,service_description,logo_uri,service_name,integration_environment,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification,status,type,null AS state,false AS deleted,group_id FROM service_petition_details WHERE reviewed_at IS NULL AND type='create' AND tenant='egi') as petitions LEFT JOIN group_subs ON petitions.group_id= group_subs.group_id AND group_subs.sub='7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu'
 
-08:54:15 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+09:46:15 error: connect ECONNREFUSED ::1:5432
+         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
 
-08:55:09 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+09:46:21 error: connect ECONNREFUSED ::1:5432
+         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
 
-08:57:19 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+09:54:31 error: No data returned from the query.
+         task(deploymentResults): DELETE FROM tokens WHERE code='54d27fd0-f8b2-11ea-a1b0-511fd4b6876c' RETURNING code
 
-08:57:30 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+13:49:36 error: syntax error at or near "AND"
+         query: SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,status,type,state,CASE WHEN group_manager IS NULL then false ELSE group_manager END,deleted,CASE WHEN owned IS NULL THEN false ELSE owned END,CASE WHEN notification IS NULL THEN false ELSE notification END AS notification,comment,group_id FROM (SELECT id AS group_id,true AS owned,CASE WHEN group_manager IS NULL then false ELSE group_manager END FROM groups LEFT JOIN group_subs ON groups.id=group_subs.group_id WHERE sub='4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.eosc-portal.eu') AS group_ids LEFT JOIN (SELECT id AS service_id,service_description,logo_uri,service_name,deleted,requester,integration_environment,group_id FROM service_details AND tenant='eosc') AS service_details USING (group_id) LEFT JOIN service_state ON service_details.service_id=service_state.id LEFT JOIN (SELECT id AS petition_id,status,type, service_id,comment,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification FROM service_petition_details WHERE reviewed_at IS NULL) AS petitions USING (service_id) WHERE deleted=false OR (deleted=TRUE AND state!='deployed') UNION SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,status,type,state,CASE WHEN group_manager IS NULL THEN false ELSE group_manager END,deleted,owned,notification,comment,petitions.group_id FROM (SELECT service_id,id AS petition_id,service_description,logo_uri,comment,service_name,integration_environment,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification,CASE WHEN requester='4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.eosc-portal.eu' THEN true ELSE false END AS owned,status,type,null AS state,false AS deleted, group_id FROM service_petition_details WHERE reviewed_at IS NULL AND type='create' AND tenant='eosc') as petitions LEFT JOIN group_subs ON petitions.group_id= group_subs.group_id AND group_subs.sub='4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.eosc-portal.eu'
 
-09:02:48 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+13:49:54 error: syntax error at or near "AND"
+         query: SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,status,type,state,CASE WHEN group_manager IS NULL then false ELSE group_manager END,deleted,CASE WHEN owned IS NULL THEN false ELSE owned END,CASE WHEN notification IS NULL THEN false ELSE notification END AS notification,comment,group_id FROM (SELECT id AS group_id,true AS owned,CASE WHEN group_manager IS NULL then false ELSE group_manager END FROM groups LEFT JOIN group_subs ON groups.id=group_subs.group_id WHERE sub='4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.eosc-portal.eu') AS group_ids LEFT JOIN (SELECT id AS service_id,service_description,logo_uri,service_name,deleted,requester,integration_environment,group_id FROM service_details AND tenant='eosc') AS service_details USING (group_id) LEFT JOIN service_state ON service_details.service_id=service_state.id LEFT JOIN (SELECT id AS petition_id,status,type, service_id,comment,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification FROM service_petition_details WHERE reviewed_at IS NULL) AS petitions USING (service_id) WHERE deleted=false OR (deleted=TRUE AND state!='deployed') UNION SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,status,type,state,CASE WHEN group_manager IS NULL THEN false ELSE group_manager END,deleted,owned,notification,comment,petitions.group_id FROM (SELECT service_id,id AS petition_id,service_description,logo_uri,comment,service_name,integration_environment,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification,CASE WHEN requester='4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.eosc-portal.eu' THEN true ELSE false END AS owned,status,type,null AS state,false AS deleted, group_id FROM service_petition_details WHERE reviewed_at IS NULL AND type='create' AND tenant='eosc') as petitions LEFT JOIN group_subs ON petitions.group_id= group_subs.group_id AND group_subs.sub='4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.eosc-portal.eu'
 
-09:03:07 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+13:49:56 error: syntax error at or near "AND"
+         query: SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,status,type,state,CASE WHEN group_manager IS NULL then false ELSE group_manager END,deleted,CASE WHEN owned IS NULL THEN false ELSE owned END,CASE WHEN notification IS NULL THEN false ELSE notification END AS notification,comment,group_id FROM (SELECT id AS group_id,true AS owned,CASE WHEN group_manager IS NULL then false ELSE group_manager END FROM groups LEFT JOIN group_subs ON groups.id=group_subs.group_id WHERE sub='4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.eosc-portal.eu') AS group_ids LEFT JOIN (SELECT id AS service_id,service_description,logo_uri,service_name,deleted,requester,integration_environment,group_id FROM service_details AND tenant='eosc') AS service_details USING (group_id) LEFT JOIN service_state ON service_details.service_id=service_state.id LEFT JOIN (SELECT id AS petition_id,status,type, service_id,comment,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification FROM service_petition_details WHERE reviewed_at IS NULL) AS petitions USING (service_id) WHERE deleted=false OR (deleted=TRUE AND state!='deployed') UNION SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,status,type,state,CASE WHEN group_manager IS NULL THEN false ELSE group_manager END,deleted,owned,notification,comment,petitions.group_id FROM (SELECT service_id,id AS petition_id,service_description,logo_uri,comment,service_name,integration_environment,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification,CASE WHEN requester='4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.eosc-portal.eu' THEN true ELSE false END AS owned,status,type,null AS state,false AS deleted, group_id FROM service_petition_details WHERE reviewed_at IS NULL AND type='create' AND tenant='eosc') as petitions LEFT JOIN group_subs ON petitions.group_id= group_subs.group_id AND group_subs.sub='4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.eosc-portal.eu'
 
-09:03:45 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+13:55:22 error: syntax error at or near "AND"
+         query: SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,status,type,state,CASE WHEN group_manager IS NULL then false ELSE group_manager END,deleted,CASE WHEN owned IS NULL THEN false ELSE owned END,CASE WHEN notification IS NULL THEN false ELSE notification END AS notification,comment,group_id FROM (SELECT id AS group_id,true AS owned,CASE WHEN group_manager IS NULL then false ELSE group_manager END FROM groups LEFT JOIN group_subs ON groups.id=group_subs.group_id WHERE sub='4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.eosc-portal.eu') AS group_ids LEFT JOIN (SELECT id AS service_id,service_description,logo_uri,service_name,deleted,requester,integration_environment,group_id FROM service_details AND tenant='eosc') AS service_details USING (group_id) LEFT JOIN service_state ON service_details.service_id=service_state.id LEFT JOIN (SELECT id AS petition_id,status,type, service_id,comment,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification FROM service_petition_details WHERE reviewed_at IS NULL) AS petitions USING (service_id) WHERE deleted=false OR (deleted=TRUE AND state!='deployed') UNION SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,status,type,state,CASE WHEN group_manager IS NULL THEN false ELSE group_manager END,deleted,owned,notification,comment,petitions.group_id FROM (SELECT service_id,id AS petition_id,service_description,logo_uri,comment,service_name,integration_environment,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification,CASE WHEN requester='4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.eosc-portal.eu' THEN true ELSE false END AS owned,status,type,null AS state,false AS deleted, group_id FROM service_petition_details WHERE reviewed_at IS NULL AND type='create' AND tenant='eosc') as petitions LEFT JOIN group_subs ON petitions.group_id= group_subs.group_id AND group_subs.sub='4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.eosc-portal.eu'
 
-09:07:29 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+13:55:35 error: syntax error at or near "AND"
+         query: SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,status,type,state,CASE WHEN group_manager IS NULL then false ELSE group_manager END,deleted,CASE WHEN owned IS NULL THEN false ELSE owned END,CASE WHEN notification IS NULL THEN false ELSE notification END AS notification,comment,group_id FROM (SELECT id AS group_id,true AS owned,CASE WHEN group_manager IS NULL then false ELSE group_manager END FROM groups LEFT JOIN group_subs ON groups.id=group_subs.group_id WHERE sub='4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.eosc-portal.eu') AS group_ids LEFT JOIN (SELECT id AS service_id,service_description,logo_uri,service_name,deleted,requester,integration_environment,group_id FROM service_details AND tenant='eosc') AS service_details USING (group_id) LEFT JOIN service_state ON service_details.service_id=service_state.id LEFT JOIN (SELECT id AS petition_id,status,type, service_id,comment,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification FROM service_petition_details WHERE reviewed_at IS NULL) AS petitions USING (service_id) WHERE deleted=false OR (deleted=TRUE AND state!='deployed') UNION SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,status,type,state,CASE WHEN group_manager IS NULL THEN false ELSE group_manager END,deleted,owned,notification,comment,petitions.group_id FROM (SELECT service_id,id AS petition_id,service_description,logo_uri,comment,service_name,integration_environment,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification,CASE WHEN requester='4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.eosc-portal.eu' THEN true ELSE false END AS owned,status,type,null AS state,false AS deleted, group_id FROM service_petition_details WHERE reviewed_at IS NULL AND type='create' AND tenant='eosc') as petitions LEFT JOIN group_subs ON petitions.group_id= group_subs.group_id AND group_subs.sub='4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.eosc-portal.eu'
 
-09:12:14 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+13:58:11 error: syntax error at or near "AND"
+         query: SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,status,type,state,CASE WHEN group_manager IS NULL then false ELSE group_manager END,deleted,CASE WHEN owned IS NULL THEN false ELSE owned END,CASE WHEN notification IS NULL THEN false ELSE notification END AS notification,comment,group_id FROM (SELECT id AS group_id,true AS owned,CASE WHEN group_manager IS NULL then false ELSE group_manager END FROM groups LEFT JOIN group_subs ON groups.id=group_subs.group_id WHERE sub='4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.eosc-portal.eu') AS group_ids LEFT JOIN (SELECT id AS service_id,service_description,logo_uri,service_name,deleted,requester,integration_environment,group_id FROM service_details AND tenant='eosc') AS service_details USING (group_id) LEFT JOIN service_state ON service_details.service_id=service_state.id LEFT JOIN (SELECT id AS petition_id,status,type, service_id,comment,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification FROM service_petition_details WHERE reviewed_at IS NULL) AS petitions USING (service_id) WHERE deleted=false OR (deleted=TRUE AND state!='deployed') UNION SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,status,type,state,CASE WHEN group_manager IS NULL THEN false ELSE group_manager END,deleted,owned,notification,comment,petitions.group_id FROM (SELECT service_id,id AS petition_id,service_description,logo_uri,comment,service_name,integration_environment,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification,CASE WHEN requester='4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.eosc-portal.eu' THEN true ELSE false END AS owned,status,type,null AS state,false AS deleted, group_id FROM service_petition_details WHERE reviewed_at IS NULL AND type='create' AND tenant='eosc') as petitions LEFT JOIN group_subs ON petitions.group_id= group_subs.group_id AND group_subs.sub='4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.eosc-portal.eu'
 
-09:13:01 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+11:24:49 error: column "description" does not exist
+         query: SELECT name,logo,main_title,color,description FROM tenants WHERE name='egi'
 
-09:15:14 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+11:24:49 error: column "description" does not exist
+         query: SELECT name,logo,main_title,color,description FROM tenants WHERE name='eosc'
 
-09:21:07 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+11:25:00 error: column "description" does not exist
+         query: SELECT name,logo,main_title,color,description FROM tenants WHERE name='eosc'
 
-09:29:48 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+13:50:37 error: column "z" does not exist
+         query: SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,CASE WHEN owned IS NULL THEN false ELSE owned END,status,type,state,CASE WHEN group_manager IS NULL then false ELSE group_manager END,CASE WHEN notification IS NULL THEN false ELSE notification END AS notification,deleted,comment,group_id FROM (SELECT id AS service_id,service_description,logo_uri,service_name,deleted,requester,integration_environment,group_id FROM service_details WHERE tenant=z) AS service_details LEFT JOIN service_state ON service_details.service_id=service_state.id LEFT JOIN (SELECT id AS group_id,true AS owned,CASE WHEN group_manager IS NULL then false ELSE group_manager END FROM groups LEFT JOIN group_subs ON groups.id=group_subs.group_id WHERE sub='7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu') AS group_ids USING (group_id) LEFT JOIN (SELECT id AS petition_id,status,type,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification, service_id,comment FROM service_petition_details WHERE reviewed_at IS NULL) AS petitions USING (service_id) WHERE deleted=false OR (deleted=TRUE AND state!='deployed') UNION SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,CASE WHEN group_subs.sub='7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu' THEN true ELSE false END AS owned,status,type,state,CASE WHEN group_manager IS NULL THEN false ELSE group_manager END,notification,deleted,comment,petitions.group_id FROM (SELECT service_id,id AS petition_id,comment,service_description,logo_uri,service_name,integration_environment,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification,status,type,null AS state,false AS deleted,group_id FROM service_petition_details WHERE reviewed_at IS NULL AND type='create' AND tenant='egi') as petitions LEFT JOIN group_subs ON petitions.group_id= group_subs.group_id AND group_subs.sub='7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu'
 
-09:29:49 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:29:50 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:29:50 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:29:51 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:29:52 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:29:53 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:29:54 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:29:55 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:29:56 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:29:58 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:29:58 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:29:59 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:00 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:01 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:01 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:02 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:04 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:05 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:06 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:06 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:07 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:08 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:08 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:09 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:10 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:12 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:15 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:16 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:18 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:19 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:21 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:23 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:24 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:25 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:27 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:28 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:29 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:30 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:31 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:32 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:33 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:33 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:35 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:36 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:36 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:37 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:37 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:38 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:39 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:40 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:41 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:41 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:42 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:43 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:44 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:45 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:46 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:48 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:50 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:52 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:52 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:53 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:54 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:54 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:55 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:56 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:57 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:58 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:58 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:59 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:30:59 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:00 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:01 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:02 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:03 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:03 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:04 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:05 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:06 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:08 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:09 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:10 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:11 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:12 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:12 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:13 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:14 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:15 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:16 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:17 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:18 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:18 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:19 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:19 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:20 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:21 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:28 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:28 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:29 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:29 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:30 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:31 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:32 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:32 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:33 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:33 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:34 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:34 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:35 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:35 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:36 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:37 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:37 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:31:39 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:32:29 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-09:34:36 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
-
-10:03:02 error: No data returned from the query.
-         query: UPDATE invitations SET code=NULL,sub='4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',email='newmai@mail.com' WHERE code='random_generated_code' RETURNING id
+13:50:41 error: column "z" does not exist
+         query: SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,CASE WHEN owned IS NULL THEN false ELSE owned END,status,type,state,CASE WHEN group_manager IS NULL then false ELSE group_manager END,CASE WHEN notification IS NULL THEN false ELSE notification END AS notification,deleted,comment,group_id FROM (SELECT id AS service_id,service_description,logo_uri,service_name,deleted,requester,integration_environment,group_id FROM service_details WHERE tenant=z) AS service_details LEFT JOIN service_state ON service_details.service_id=service_state.id LEFT JOIN (SELECT id AS group_id,true AS owned,CASE WHEN group_manager IS NULL then false ELSE group_manager END FROM groups LEFT JOIN group_subs ON groups.id=group_subs.group_id WHERE sub='7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu') AS group_ids USING (group_id) LEFT JOIN (SELECT id AS petition_id,status,type,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification, service_id,comment FROM service_petition_details WHERE reviewed_at IS NULL) AS petitions USING (service_id) WHERE deleted=false OR (deleted=TRUE AND state!='deployed') UNION SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,CASE WHEN group_subs.sub='7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu' THEN true ELSE false END AS owned,status,type,state,CASE WHEN group_manager IS NULL THEN false ELSE group_manager END,notification,deleted,comment,petitions.group_id FROM (SELECT service_id,id AS petition_id,comment,service_description,logo_uri,service_name,integration_environment,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification,status,type,null AS state,false AS deleted,group_id FROM service_petition_details WHERE reviewed_at IS NULL AND type='create' AND tenant='egi') as petitions LEFT JOIN group_subs ON petitions.group_id= group_subs.group_id AND group_subs.sub='7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu'

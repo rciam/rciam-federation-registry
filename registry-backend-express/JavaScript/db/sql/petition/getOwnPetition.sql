@@ -22,7 +22,7 @@ SELECT json_build_object('service_name', sd.service_name,'service_description',s
 							) json
     FROM (SELECT *
 	FROM ( SELECT * FROM
-		(((SELECT * FROM service_petition_details WHERE id=${id} AND reviewed_at IS NULL) as petition LEFT JOIN
+		(((SELECT * FROM service_petition_details WHERE id=${id} AND reviewed_at IS NULL AND tenant=${tenant}) as petition LEFT JOIN
 			(SELECT id as srv_id,group_id FROM service_details) as service ON service.srv_id = petition.service_id) as data LEFT JOIN (
 				SELECT id as group_id,sub as my_sub FROM groups LEFT JOIN group_subs ON groups.id=group_subs.group_id WHERE sub=${sub}
 			) AS groups USING (group_id)) WHERE my_sub IS NOT NULL OR (type='create' AND requester=${sub})) AS foo

@@ -20,6 +20,6 @@ SELECT json_build_object('service_name', sd.service_name,'service_description',s
 							 FROM service_contacts v WHERE sd.id = v.owner_id)
 							) json
     FROM (SELECT *
-	FROM (SELECT * FROM service_details WHERE id=${id} AND deleted = FALSE ) AS foo
+	FROM (SELECT * FROM service_details WHERE id=${id} AND deleted = FALSE AND tenant=${tenant}) AS foo
 	LEFT JOIN service_details_oidc USING (id)
 	LEFT JOIN service_details_saml USING (id)) as sd

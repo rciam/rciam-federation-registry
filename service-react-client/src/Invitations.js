@@ -1,5 +1,5 @@
 import React,{useState,useEffect} from 'react';
-
+import {useParams} from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import * as config from './config.json';
 import Button from 'react-bootstrap/Button';
@@ -21,7 +21,7 @@ const InvitationsPage = (props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
 
-
+  let {tenant_name} = useParams();
   const [sending,setSending] = useState();
   const [invitations,setInvitations] = useState([]);
   const [loading,setLoading] = useState(false);
@@ -32,7 +32,7 @@ const InvitationsPage = (props) => {
 
   const getInvitations = () => {
     setLoading(true)
-    fetch(config.host+'invitations', {
+    fetch(config.host+'tenants/'+tenant_name+'/invitations', {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -58,7 +58,7 @@ const InvitationsPage = (props) => {
 
   const invitationResponse =  (id,action) => {
     setSending(true);
-    fetch(config.host+'invitations/'+id+'/'+action, {
+    fetch(config.host+'tenants/'+tenant_name+'/invitations/'+id+'/'+action, {
       method: 'PUT', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {

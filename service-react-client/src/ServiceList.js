@@ -1,9 +1,8 @@
-import React,{useState,useEffect} from 'react';
+import React,{useState,useEffect,useContext} from 'react';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
 import DropdownButton from 'react-bootstrap/DropdownButton';
 import Dropdown from 'react-bootstrap/Dropdown';
-import useGlobalState from './useGlobalState.js';
 import Collapse from 'react-bootstrap/Collapse';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {faSync,faPlus,faTimes,faEdit,faExclamation,faCircle,faEllipsisV,faEye,faSortDown,faSortUp,faFilter} from '@fortawesome/free-solid-svg-icons';
@@ -15,18 +14,20 @@ import Row from 'react-bootstrap/Row';
 import Table from 'react-bootstrap/Table';
 import * as config from './config.json';
 import Image from 'react-bootstrap/Image';
-import {Link} from "react-router-dom";
+import {Link,useParams} from "react-router-dom";
 import Badge from 'react-bootstrap/Badge';
 import Pagination from 'react-bootstrap/Pagination';
 import {LoadingBar,ProcessingRequest} from './Components/LoadingBar';
 import {ListResponseModal} from './Components/Modals.js';
-import * as tenant_data from './tenant-config.json';
 import { useTranslation } from 'react-i18next';
 import Alert from 'react-bootstrap/Alert';
 import {ConfirmationModal} from './Components/Modals';
-
+import {tenantContext} from './context.js';
 
 const ServiceList= (props)=> {
+  // eslint-disable-next-line
+  const [tenant,setTeanant] = useContext(tenantContext);
+  const {tenant_name} = useParams();
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   const [loadingList,setLoadingList] = useState();
@@ -39,9 +40,8 @@ const ServiceList= (props)=> {
   const [responseTitle,setResponseTitle] = useState(null);
   const [searchString,setSearchString] = useState();
   const [expandFilters,setExpandFilters] = useState();
-  const globalState = useGlobalState();
   const [confirmationData,setConfirmationData] = useState({})
-  let tenant = tenant_data.data[globalState.global_state.tenant];
+
 
   let renderedConnections = 0;
   useEffect(()=>{
@@ -52,7 +52,7 @@ const ServiceList= (props)=> {
   },[]);
 
   const getInvites = () => {
-    fetch(config.host+'invitations', {
+    fetch(config.host+'tenants/'+tenant_name+'/invitations', {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -77,7 +77,7 @@ const ServiceList= (props)=> {
 
   // Get data, to create Service List
   const getServices = ()=> {
-    fetch(config.host+'services', {
+    fetch(config.host+'tenants/'+tenant_name+'/services', {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -123,7 +123,7 @@ const ServiceList= (props)=> {
   const deleteService = (service_id,petition_id)=>{
     setAsyncResponse(true);
     if(petition_id){
-      fetch(config.host+'petitions/'+petition_id, {
+      fetch(config.host+'tenants/'+tenant_name+'/petitions/'+petition_id, {
         method: 'PUT', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
@@ -144,7 +144,7 @@ const ServiceList= (props)=> {
       });
     }
     else {
-      fetch(config.host+'petitions', {
+      fetch(config.host+'tenants/'+tenant_name+'/petitions', {
         method: 'POST', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
@@ -167,7 +167,7 @@ const ServiceList= (props)=> {
   }
   const deletePetition = (id)=>{
     setAsyncResponse(true);
-    fetch(config.host+'petitions/'+id, {
+    fetch(config.host+'tenants/'+tenant_name+'/petitions/'+id, {
       method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -200,7 +200,7 @@ const ServiceList= (props)=> {
             {t('invitation_alert_1')}
             <span>{invites.length}</span>
             {invites.length>1?t('invitation_alert_mult'):t('invitation_alert_single')}
-            <Link to={{pathname:"/invitations", state:{invitations:invites}}}>
+            <Link to={{pathname:'/'+tenant_name+"/invitations", state:{invitations:invites}}}>
               {t('invitation_alert_link')}
             </Link>
             {t('invitation_alert_2')}
@@ -211,7 +211,7 @@ const ServiceList= (props)=> {
           <Row>
             <Col>
               <Button variant="light" onClick={getServices} ><FontAwesomeIcon icon={faSync} />{t('petitions_refresh')}</Button>
-              <Link to="/form/new"><Button style={{background:tenant.color}}><FontAwesomeIcon icon={faPlus}/>{t('petitions_new')}</Button></Link>
+              <Link to={'/'+tenant_name+"/form/new"}><Button style={{background:tenant.color,borderColor:tenant.color}}><FontAwesomeIcon icon={faPlus}/>{t('petitions_new')}</Button></Link>
             </Col>
             <Col>
               <Button variant="light" className='filter-button' style={{color:tenant.color}} onClick={()=>setExpandFilters(!expandFilters)}><FontAwesomeIcon icon={faFilter} />
@@ -288,9 +288,11 @@ const ServiceList= (props)=> {
 
 function TableItem(props) {
   // eslint-disable-next-line
+  const [tenant,setTenant] = useContext(tenantContext);
+  // eslint-disable-next-line
+  const {tenant_name} = useParams();
+  // eslint-disable-next-line
   const { t, i18n } = useTranslation();
-  const globalState = useGlobalState();
-  let tenant = tenant_data.data[globalState.global_state.tenant];
   return (
     <tr>
       <td className="petition-details">
@@ -319,7 +321,7 @@ function TableItem(props) {
               <Link
                 className='button-link'
                 to={{
-                pathname:"/form/view",
+                pathname:'/'+tenant_name+"/form/view",
                 state:{
                   service_id:props.service.service_id,
                   petition_id:props.service.petition_id,
@@ -347,7 +349,7 @@ function TableItem(props) {
                   <Link
                   className='button-link'
                   to={{
-                    pathname:"/form/edit",
+                    pathname:'/'+tenant_name+"/form/edit",
                     state:{
                       service_id:props.service.service_id,
                       petition_id:props.service.petition_id,
@@ -363,7 +365,7 @@ function TableItem(props) {
               {props.user.admin&&props.service.petition_id&&!props.service.comment?<Link
                 className='button-link'
                 to={{
-                pathname:"/form/review",
+                pathname:'/'+tenant_name+"/form/review",
                 state:{
                   service_id:props.service.service_id,
                   petition_id:props.service.petition_id,
@@ -416,7 +418,7 @@ function TableItem(props) {
               <Dropdown.Item as='span'>
                 <div>
                   <Link to={{
-                    pathname:"/group",
+                    pathname:'/'+tenant_name+"/group",
                     state:{
                       group_manager:props.service.group_manager.toString(),
                       service_id:props.service.service_id,
@@ -430,7 +432,7 @@ function TableItem(props) {
                 <Dropdown.Item as='span'>
                 <div>
                   <Link to={{
-                    pathname:"/history/list",
+                    pathname:'/'+tenant_name+"/history/list",
                     state:{
                       service_id:props.service.service_id
                     }

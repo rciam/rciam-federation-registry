@@ -1,6 +1,6 @@
 import React from 'react';
 import Modal from 'react-bootstrap/Modal';
-import {useHistory} from "react-router-dom";
+import {useHistory,useParams} from "react-router-dom";
 import Button from 'react-bootstrap/Button';
 import { useTranslation } from 'react-i18next';
 import { Translation } from 'react-i18next';
@@ -86,11 +86,14 @@ export const ConfirmationModal = (props) =>{
 
 export function ResponseModal(props){
   // eslint-disable-next-line
+  let {tenant_name} = useParams();
   const { t, i18n } = useTranslation();
   let history = useHistory();
 
   //const handleClose = () => props.setMessage();
-  const handleClose = () => history.push('/petitions');
+  const handleClose = () => {
+    console.log(tenant_name);
+    history.push('/'+tenant_name+'/petitions');}
   return (
     <Modal show={props.message?true:false} onHide={handleClose}>
         <Modal.Header closeButton>

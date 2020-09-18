@@ -15,5 +15,6 @@ module.exports = {
     UserRole: require('./user_role'),
     Tokens: require('./tokens'),
     Group: require('./group'),
-    Invitation: require('./invitation')
+    Invitation: require('./invitation'),
+    Tenants: require('./tenants')
 };

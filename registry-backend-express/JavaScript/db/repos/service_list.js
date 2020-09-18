@@ -7,12 +7,12 @@ class ServiceListRepository {
       this.pgp = pgp;
       // set-up all ColumnSet objects, if needed:
   }
-  async getOwn(sub){
-    return this.db.any(sql.getOwnList,{sub:sub});
+  async getOwn(sub,tenant_name){
+    return this.db.any(sql.getOwnList,{sub:sub,tenant_name:tenant_name});
   }
 
-  async getAll(sub){
-    return this.db.any(sql.getAllList,{sub:sub})
+  async getAll(sub,tenant_name){
+    return this.db.any(sql.getAllList,{sub:sub,tenant_name:tenant_name});
   }
 
   async get(sub,admin){

@@ -15,9 +15,10 @@ class ServiceRepository {
 
   }
 
-  async get(id){
+  async get(id,tenant){
       return this.db.oneOrNone(sql.getService,{
-          id:+id
+          id:+id,
+          tenant:tenant
         }).then(result => {
           if(result){
             let data = {};
@@ -30,6 +31,8 @@ class ServiceRepository {
           }
         });
   }
+
+
 
   async add(service,requester,group_id) {
       try{

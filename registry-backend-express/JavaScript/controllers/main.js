@@ -15,7 +15,7 @@ const findConnections = (req, res, db) => {
 
 const rejectPetition = (req,res,next,db) => {
   db.task('reject-petition',async t =>{
-    await t.service_petition_details.review(req.params.id,req.user.sub,'reject',req.body.comment).then(async results=>{
+    await t.service_petition_details.review(req.params.id,req.user.sub,'reject',req.body.comment,req.params.name).then(async results=>{
       if (results){
         await t.user.getPetitionOwners(req.params.id).then(data=>{
           if(data){
@@ -35,7 +35,7 @@ const rejectPetition = (req,res,next,db) => {
 
 const changesPetition = (req,res,next,db) => {
   db.tx('approve-with-changes-petition',async t =>{
-        await t.petition.get(req.params.id).then(async petition =>{
+        await t.petition.get(req.params.id,req.params.name).then(async petition =>{
           if(petition){
             petition.service_data.type = petition.meta_data.type;
             petition.service_data.service_id = petition.meta_data.service_id;
@@ -43,9 +43,10 @@ const changesPetition = (req,res,next,db) => {
             petition = petition.service_data;
             petition.comment = req.body.comment;
             petition.status = 'pending';
+            petition.tenant = req.params.name;
             await t.petition.add(petition,petition.requester).then(async id=>{
               if(id){
-                await t.service_petition_details.review(req.params.id,req.user.sub,'approved_with_changes',req.body.comment).then(async result=>{
+                await t.service_petition_details.review(req.params.id,req.user.sub,'approved_with_changes',req.body.comment,req.params.name).then(async result=>{
                   if(result){
                     res.status(200).json({id});
                     await t.user.getPetitionOwners(req.params.id).then(data=>{
@@ -71,13 +72,14 @@ const changesPetition = (req,res,next,db) => {
 const approvePetition = (req,res,next,db) => {
   db.tx('approve-petition',async t =>{
     let service_id;
-    await t.petition.get(req.params.id).then(async petition =>{
+    await t.petition.get(req.params.id,req.params.name).then(async petition =>{
       if(petition){
+        petition.service_data.tenant = req.params.name;
         if(petition.meta_data.type==='delete'){
           service_id = petition.meta_data.service_id;
           await t.batch([
             t.service_details.delete(petition.meta_data.service_id),
-            t.service_petition_details.review(req.params.id,req.user.sub,'approved',req.body.comment)
+            t.service_petition_details.review(req.params.id,req.user.sub,'approved',req.body.comment,req.params.name)
           ]);
         }
         else if(petition.meta_data.type==='edit'){
@@ -85,14 +87,15 @@ const approvePetition = (req,res,next,db) => {
           service_id = petition.meta_data.service_id;
           await t.batch([
             t.service.update(petition.service_data,petition.meta_data.service_id),
-            t.service_petition_details.review(req.params.id,req.user.sub,'approved',req.body.comment)
+            t.service_petition_details.review(req.params.id,req.user.sub,'approved',req.body.comment,req.params.name)
           ]);
         }
         else if(petition.meta_data.type==='create'){
+
           await t.service.add(petition.service_data,petition.meta_data.requester,petition.meta_data.group_id).then(async id=>{
             if(id){
               service_id = id;
-              await t.service_petition_details.approveCreation(req.params.id,req.user.sub,'approved',req.body.comment,id);
+              await t.service_petition_details.approveCreation(req.params.id,req.user.sub,'approved',req.body.comment,id,req.params.name);
             }
           }).catch(err=>{next(err);});
         }
@@ -116,7 +119,7 @@ const approvePetition = (req,res,next,db) => {
 const getOpenPetition = (req,res,next,db) =>{
   db.task('find-petition-data',async t=>{
   if(req.user.role.actions.includes('get_petition')){
-    await t.petition.get(req.params.id).then(result=>{return result.service_data}).then(petition => {
+    await t.petition.get(req.params.id,req.params.name).then(result=>{return result.service_data}).then(petition => {
        if(petition){
           res.status(200).json({petition});
        }
@@ -128,7 +131,7 @@ const getOpenPetition = (req,res,next,db) =>{
      }).catch(err=>{next(err);});
    }
    else if(req.user.role.actions.includes('get_own_petition')){
-     await t.petition.getOwn(req.params.id,req.user.sub).then(result=>{return result.service_data}).then(petition => {
+     await t.petition.getOwn(req.params.id,req.user.sub,req.params.name).then(result=>{return result.service_data}).then(petition => {
        if(petition){
           res.status(200).json({petition});
        }
@@ -179,5 +182,5 @@ module.exports = {
   approvePetition,
   changesPetition,
   getOpenPetition,
-  getPetition 
+  getPetition
 }

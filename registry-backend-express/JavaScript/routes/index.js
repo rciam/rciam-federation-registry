@@ -27,29 +27,57 @@ const {rejectPetition,approvePetition,changesPetition,getPetition,getOpenPetitio
 // ----------------------------------------------------------
 
 
-router.get('/login',(req,res)=>{
-  var clients = req.app.get('clients');
-  res.redirect(clients.egi.authorizationUrl({
-    client_id:process.env.CLIENT_ID_EGI,
-    scope: 'openid email profile eduperson_entitlement',
-    redirect_uri: process.env.REDIRECT_URI_EGI
-  }));
+router.get('/tenants/:name',(req,res,next)=>{
+  try{
+    db.tenants.getTheme(req.params.name).then(tenant=>{
+      if(tenant){
+        res.status(200).json(tenant).end();
+      }
+      else{
+        res.status(204).end()
+      }
+    })
+  }
+  catch(err){
+    next(err);
+  }
 })
 
 
-// Callback Route
-router.get('/callback/:tenant',(req,res,next)=>{
+router.get('/tenants/:name/login',(req,res)=>{
   var clients = req.app.get('clients');
-  clients.egi.callback(process.env.REDIRECT_URI_EGI,{code:req.query.code}).then(async response => {
+  if(clients[req.params.name]){
+    res.redirect(clients[req.params.name].authorizationUrl({
+      client_id:clients[req.params.name].client_id,
+      scope: 'openid email profile eduperson_entitlement',
+      redirect_uri: process.env.REDIRECT_URI+req.params.name
+    }));
+  }else{
+    res.redirect(process.env.OIDC_REACT+'/404');
+  }
+
+})
+
+// Callback Route
+router.get('/callback/:name',(req,res,next)=>{
+  var clients = req.app.get('clients');
+  clients[req.params.name].callback(process.env.REDIRECT_URI+req.params.name,{code:req.query.code}).then(async response => {
     let code = await db.tokens.addToken(response.access_token);
-    clients.egi.userinfo(response.access_token).then(usr_info=>{
+    clients[req.params.name].userinfo(response.access_token).then(usr_info=>{
       saveUser(usr_info);
     }); // => Promise
-    res.redirect(process.env.OIDC_REACT+'/code/' + code.code);
+    res.redirect(process.env.OIDC_REACT+'/'+req.params.name+'/code/' + code.code);
   });
 });
 
+// Route used for verifing push subscription
+router.get('/ams_verification_hash',(req,res)=>{
+  console.log('ams verification');
+  res.setHeader('Content-type', 'plain/text');
+  res.status(200).send('67647c730ced41b9c60ad4da4c06170bf3f1d3c9');
+})
 
+// One time code to get access token during login
 router.get('/tokens/:code',(req,res,next)=>{
   try{
     db.task('deploymentResults', async t => {
@@ -69,23 +97,21 @@ router.get('/tokens/:code',(req,res,next)=>{
   }
 });
 
-
-// Check Authentication
-router.get('/auth',authenticate,(req,res,next)=>{
-  if(req.user){
-    res.status(200).end();
-  }
-  else{
-    res.status(401).end();
-  }
-});
-
+// // Check Authentication
+// router.get('/auth',authenticate,(req,res,next)=>{
+//   if(req.user){
+//     res.status(200).end();
+//   }
+//   else{
+//     res.status(401).end();
+//   }
+// });
 
 // Get User User Info
-router.get('/user',authenticate,(req,res)=>{
+router.get('/tenants/:name/user',authenticate,(req,res)=>{
   var clients = req.app.get('clients');
   TokenArray = req.headers.authorization.split(" ");
-  clients.egi.userinfo(TokenArray[1]) // => Promise
+  clients[req.params.name].userinfo(TokenArray[1]) // => Promise
   .then(function (userinfo) {
     let user = userinfo;
     if(req.user.role.actions.includes('review_own_petition')){
@@ -99,9 +125,9 @@ router.get('/user',authenticate,(req,res)=>{
 
 });
 
-
 // ams push subscription for deployment results
 // needs Authentication
+// ams/ingest
 router.post('/services/deployment',(req,res,next)=>{
   // Decode messages
   try{
@@ -133,16 +159,8 @@ router.post('/services/deployment',(req,res,next)=>{
   }
 });
 
-
-// Route used for verifing push subscription
-router.get('/ams_verification_hash',(req,res)=>{
-  console.log('ams verification');
-  res.setHeader('Content-type', 'plain/text');
-  res.status(200).send('67647c730ced41b9c60ad4da4c06170bf3f1d3c9');
-})
-
-
 // ams-agent requests to set state to waiting development
+// agent/set_services_state
 router.put('/services/state',amsAgentAuth,(req,res,next)=>{
   try{
     db.service_state.updateMultiple(req.body).then(result=>{
@@ -159,17 +177,16 @@ router.put('/services/state',amsAgentAuth,(req,res,next)=>{
   }
 });
 
-
 // Find all clients/petitions from curtain user to create preview list
-router.get('/services',authenticate,(req,res,next)=>{
+router.get('/tenants/:name/services',authenticate,(req,res,next)=>{
   try{
       if(req.user.role.actions.includes('get_services')&&req.user.role.actions.includes('get_petitions')){
-        db.service_list.getAll(req.user.sub).then(response =>{
+        db.service_list.getAll(req.user.sub,req.params.name).then(response =>{
             return res.status(200).json({services:response});
         }).catch(err=>{next(err);});
       }
       else if(req.user.role.actions.includes('get_own_services')&&req.user.role.actions.includes('get_own_petitions')){
-        db.service_list.getOwn(req.user.sub).then(response =>{
+        db.service_list.getOwn(req.user.sub,req.params.name).then(response =>{
           return res.status(200).json({services:response});
         }).catch(err=>{next(err);});
       }
@@ -183,12 +200,31 @@ router.get('/services',authenticate,(req,res,next)=>{
 });
 
 
+
+// ams-agent requests to get pending services
+//router.get('/services?state=pending',amsAgentAuth,(req,res,next)=>{
+
+router.get('/services/pending',amsAgentAuth,(req,res,next)=>{
+  try{
+    db.service.getPending().then(services=>{
+      if(services){
+        res.status(200).json({services});
+      }
+    }).catch((err)=>{
+      next(err);
+    });
+  }
+  catch(err){
+    next(err);
+  }
+})
+
 // It returns a service with form data
-router.get('/services/:id',authenticate,(req,res,next)=>{
+router.get('/tenants/:name/services/:id',authenticate,(req,res,next)=>{
   if(req.user.role.actions.includes('get_own_service')){
     try{
       if(req.user.role.actions.includes('get_service')){
-        db.service.get(req.params.id,'service').then(result=>{
+        db.service.get(req.params.id,req.params.name).then(result=>{
           if(result){
             res.status(200).json({service:result.service_data});
           }
@@ -199,9 +235,9 @@ router.get('/services/:id',authenticate,(req,res,next)=>{
       }
       else{
         return db.task('find-service-data',async t=>{
-          await t.service_details.getProtocol(req.params.id,req.user.sub).then(async exists=>{
+          await t.service_details.getProtocol(req.params.id,req.user.sub,req.params.name).then(async exists=>{
             if(exists){
-              await t.service.get(req.params.id,'service').then(result=>{
+              await t.service.get(req.params.id,req.params.name).then(result=>{
                 if(result){
                   res.status(200).json({service:result.service_data});
                 }
@@ -226,25 +262,41 @@ router.get('/services/:id',authenticate,(req,res,next)=>{
   }
 });
 
+// Get all petitions linked to a service
+router.get('/tenants/:name/services/:id/petitions',authenticate,(req,res)=>{
 
-// ams-agent requests to get pending services
-router.get('/services/pending',amsAgentAuth,(req,res,next)=>{
-  try{
-    db.service.getPending().then(services=>{
-      if(services){
-        res.status(200).json({services});
-      }
-    }).catch((err)=>{
-      next(err);
-    });
-  }
-  catch(err){
-    next(err);
-  }
-})
+    try{
+      return db.tx('get-history-for-petition', async t =>{
+        if(req.user.role.actions.includes('get_petitions')){
+          await t.service_petition_details.getHistory(req.params.id,req.params.name).then(petition_list =>{
+            return res.status(200).json({history:petition_list});
+          }).catch(err=>{next(err)});
+        }
+        else if(req.user.role.actions.includes('get_own_petitions')){
+          await t.service_details.getProtocol(req.params.id,req.params.name).then(async service=>{
+            if(service){
+              await t.service_petition_details.getHistory(req.params.id,req.params.name).then(petition_list =>{
+                return res.status(200).json({history:petition_list});
+              }).catch(err=>{next(err)});
+            }
+          }).catch(err =>{next(err)});
+        }
+        else {
+          res.status(401).json({err:'Requested action not authorised'});
+        }
+
+      });
+    }
+    catch(e){
+      next(e);
+    }
 
 
-router.get('/petitions/:id',authenticate,(req,res,next)=>{
+});
+
+
+// Get target petition
+router.get('/tenants/:name/petitions/:id',authenticate,(req,res,next)=>{
   try{
     if(req.query.type==='open'){
       getOpenPetition(req,res,next,db);
@@ -258,20 +310,19 @@ router.get('/petitions/:id',authenticate,(req,res,next)=>{
   }
 });
 
-
 // Add a new client/petition
-router.post('/petitions',clientValidationRules(),validate,authenticate,asyncPetitionValidation,(req,res,next)=>{
+router.post('/tenants/:name/petitions',clientValidationRules(),validate,authenticate,asyncPetitionValidation,(req,res,next)=>{
   res.setHeader('Content-Type', 'application/json');
   if(req.user.role.actions.includes('add_own_petition')){
     try{
       db.tx('add-service', async t => {
         if(req.body.type==='delete'){
-          await t.service.get(req.body.service_id,'service').then(async service => {
+          await t.service.get(req.body.service_id,req.params.name).then(async service => {
             if (service) {
               service = service.service_data;
               service.service_id = req.body.service_id;
               service.type = 'delete';
-
+              service.tenant = req.params.name;
               await t.petition.add(service,req.user.sub).then(id=>{
                 if(id){
                   res.status(200).json({id:id});
@@ -284,6 +335,7 @@ router.post('/petitions',clientValidationRules(),validate,authenticate,asyncPeti
           }).catch(err=>{next(err)});
         }
         else{
+          req.body.tenant = req.params.name;
           await t.petition.add(req.body,req.user.sub).then(async id=>{
             if(id){
               res.status(200).json({id:id});
@@ -307,13 +359,12 @@ router.post('/petitions',clientValidationRules(),validate,authenticate,asyncPeti
   }
 });
 
-
 // Delete Petition
-router.delete('/petitions/:id',authenticate,(req,res,next)=>{
+router.delete('/tenants/:name/petitions/:id',authenticate,(req,res,next)=>{
   if(req.user.role.actions.includes('delete_own_petition')){
     return db.tx('delete-petition',async t =>{
       try{
-        await t.service_petition_details.belongsToRequester(req.params.id,req.user.sub).then(async belongs =>{
+        await t.service_petition_details.belongsToRequester(req.params.id,req.user.sub,req.params.name).then(async belongs =>{
           if(belongs){
             const deleted = await t.service_petition_details.deletePetition(req.params.id);
             if(deleted){
@@ -339,19 +390,18 @@ router.delete('/petitions/:id',authenticate,(req,res,next)=>{
   }
 });
 
-
 // Edit Petition
-router.put('/petitions/:id',clientValidationRules(),validate,authenticate,asyncPetitionValidation,(req,res,next)=>{
+router.put('/tenants/:name/petitions/:id',clientValidationRules(),validate,authenticate,asyncPetitionValidation,(req,res,next)=>{
   if(req.user.role.actions.includes('update_own_petition')){
     return db.task('update-petition',async t =>{
       try{
         if(req.body.type==='delete'){
-          await t.service.get(req.body.service_id,'service').then(async service => {
+          await t.service.get(req.body.service_id,req.params.name).then(async service => {
             if (service) {
               service = service.service_data;
               service.service_id = req.body.service_id;
               service.type = 'delete';
-              await t.petition.update(service,req.params.id).then(resp=>{
+              await t.petition.update(service,req.params.id,req.params.name).then(resp=>{
                 if(resp.success){
                   res.status(200).json();
                 }
@@ -362,7 +412,7 @@ router.put('/petitions/:id',clientValidationRules(),validate,authenticate,asyncP
             }
           }).catch(err=>{next(err)});
         }
-        await t.petition.update(req.body,req.params.id).then(response=>{
+        await t.petition.update(req.body,req.params.id,req.params.name).then(response=>{
           if(response.success){
             res.status(200).end();
           }
@@ -383,9 +433,9 @@ router.put('/petitions/:id',clientValidationRules(),validate,authenticate,asyncP
   }
 });
 
-
 // Admin rejects petition
-router.put('/petitions/:id/review',authenticate,canReview,(req,res,next)=>{
+//router.post('/petitions/:id/review',authenticate,canReview,(req,res,next)=>{
+router.put('/tenants/:name/petitions/:id/review',authenticate,canReview,(req,res,next)=>{
   try{
     if(req.body.type==='reject'){
       rejectPetition(req,res,next,db);
@@ -405,43 +455,12 @@ router.put('/petitions/:id/review',authenticate,canReview,(req,res,next)=>{
   }
 });
 
-
-// User owned or admin
-router.get('services/:id/petitions/',authenticate,(req,res)=>{
-
-    try{
-      return db.tx('get-history-for-petition', async t =>{
-        if(req.user.role.actions.includes('get_petitions')){
-          await t.service_petition_details.getHistory(req.params.id).then(petition_list =>{
-            return res.status(200).json({history:petition_list});
-          }).catch(err=>{next(err)});
-        }
-        else if(req.user.role.actions.includes('get_own_petitions')){
-          await t.service_petition_details.getProtocol(req.params.id).then(async service=>{
-            if(service){
-              await t.service_petition_details.getHistory(req.params.id).then(petition_list =>{
-                return res.status(200).json({history:petition_list});
-              }).catch(err=>{next(err)});
-            }
-          }).catch(err =>{next(err)});
-        }
-        else {
-          res.status(401).json({err:'Requested action not authorised'});
-        }
-
-      });
-    }
-    catch(e){
-      next(e);
-    }
-
-
-});
-
-router.get('/check-availability',authenticate,(req,res,next)=>{
+// Check availability for protocol unique id
+//router.get('/check_availability',authenticate,(req,res,next)=>{
+router.get('/tenants/:name/check-availability',authenticate,(req,res,next)=>{
   db.tx('get-history-for-petition', async t =>{
     try{
-      await isAvailable(t,req.query.value,req.query.protocol,0,0).then(available =>{
+      await isAvailable(t,req.query.value,req.query.protocol,0,0,req.params.name).then(available =>{
             res.status(200).json({available:available});
       }).catch(err=>{next(err)});
     }
@@ -451,14 +470,44 @@ router.get('/check-availability',authenticate,(req,res,next)=>{
   });
 });
 
+// -------------------------------------------------------------------------
+// ----------------------Groups and Invitations-----------------------------
+// -------------------------------------------------------------------------
 
-// ----------------------------------------------------------
-// ********************** DEVELOPMENT ***********************
-// ----------------------------------------------------------
+// Get group members
+router.get('/tenants/:name/groups/:group_id/members',authenticate,view_group,(req,res,next)=>{
+  try{
+    db.group.getMembers(req.params.group_id).then(group_members =>{
+      if(group_members){
+        res.status(200).json({group_members});
+      }
+      else{
+        throw 'No group meber could be found';
+      }
+    })
+  }
+  catch(err){next(err);}
+})
 
+// Remove member from group
+router.delete('/tenants/:name/groups/:group_id/members/:sub',authenticate,is_group_manager,(req,res,next)=>{
+  try{
+    db.group.deleteSub(req.params.sub,req.params.group_id).then(response=>{
+      if(response){
+        res.status(200).end();
+      }
+      else{
+        res.status(204).end();
+      }
+    }).catch(err=>{next(err)})
+  }
+  catch(err){
+    next(err);
+  }
+})
 
-
-router.post('/groups/:group_id/invitations',authenticate,postInvitationValidation(),validate,is_group_manager, (req,res,next)=>{
+// Create invitation and send email
+router.post('/tenants/:name/groups/:group_id/invitations',authenticate,postInvitationValidation(),validate,is_group_manager, (req,res,next)=>{
   try{
     req.body.code = uuidv1();
     req.body.invited_by = req.user.email;
@@ -478,24 +527,8 @@ router.post('/groups/:group_id/invitations',authenticate,postInvitationValidatio
   }
 });
 
-
-router.delete('/groups/:group_id/members/:sub',authenticate,is_group_manager,(req,res,next)=>{
-  try{
-    db.group.deleteSub(req.params.sub,req.params.group_id).then(response=>{
-      if(response){
-        res.status(200).end();
-      }
-      else{
-        res.status(204).end();
-      }
-    }).catch(err=>{next(err)})
-  }
-  catch(err){
-    next(err);
-  }
-})
-
-router.delete('/groups/:group_id/invitations/:id',authenticate,is_group_manager,(req,res,next)=>{
+// Delete invitation
+router.delete('/tenants/:name/groups/:group_id/invitations/:id',authenticate,is_group_manager,(req,res,next)=>{
   try{
     db.invitation.delete(req.params.id).then(response=>{
       if(response){
@@ -511,7 +544,8 @@ router.delete('/groups/:group_id/invitations/:id',authenticate,is_group_manager,
   }
 });
 
-router.put('/groups/:group_id/invitations/:id',authenticate,is_group_manager,(req,res,next)=>{
+// Refresh invitation
+router.put('/tenants/:name/groups/:group_id/invitations/:id',authenticate,is_group_manager,(req,res,next)=>{
   try{
     db.invitation.refresh(req.params.id).then(response=>{
       if(response.code){
@@ -528,7 +562,9 @@ router.put('/groups/:group_id/invitations/:id',authenticate,is_group_manager,(re
   }
 });
 
-router.put('/invitations/:invite_id/:action',authenticate,(req,res,next)=>{
+// Accept/Reject invitation
+//
+router.put('/tenants/:name/invitations/:invite_id/:action',authenticate,(req,res,next)=>{
   try{
     if(req.params.action==='accept'){
       db.tx('accept-invite',async t =>{
@@ -566,7 +602,8 @@ router.put('/invitations/:invite_id/:action',authenticate,(req,res,next)=>{
   }
 })
 
-router.get('/invitations',authenticate,(req,res,next)=>{
+// Get all invitations for requesting user
+router.get('/tenants/:name/invitations',authenticate,(req,res,next)=>{
   try{
     db.invitation.getAll(req.user.sub).then((response)=>{
       if(response){
@@ -582,23 +619,9 @@ router.get('/invitations',authenticate,(req,res,next)=>{
   }
 });
 
-router.get('/groups/:group_id/members',authenticate,view_group,(req,res,next)=>{
-  try{
-    db.group.getMembers(req.params.group_id).then(group_members =>{
-      if(group_members){
-        res.status(200).json({group_members});
-      }
-      else{
-        throw 'No group meber could be found';
-      }
-    })
-  }
-  catch(err){next(err);}
-})
-
-
-
-router.put('/invitations',authenticate,(req,res,next)=>{
+// Activate invitation
+// post/invitations/activate_by_code
+router.put('/tenants/:name/invitations',authenticate,(req,res,next)=>{
   try{
     db.invitation.setUser(req.body.code,req.user.sub).then(result=>{
       if(result.success){
@@ -665,7 +688,10 @@ function view_group(req,res,next){
 
 // Authentication Middleware
 function authenticate(req,res,next){
+
   try{
+
+    var clients = req.app.get('clients');
     if(process.env.NODE_ENV==='test-docker'||process.env.NODE_ENV==='test'){
       req.user ={};
       req.user.edu_person_entitlement = ['urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu','urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=vm_operator#aai.egi.eu'];
@@ -678,14 +704,14 @@ function authenticate(req,res,next){
       }).catch(err=>{next(err)});
     }
     else{
-      const data = {'client_secret':process.env.CLIENT_SECRET_EGI}
+      const data = {'client_secret':clients[req.params.name].client_secret}
       if(req.headers.authorization){
         TokenArray = req.headers.authorization.split(" ");
         axios({
           method:'post',
-          url: 'https://aai-dev.egi.eu/oidc/introspect',
+          url: clients[req.params.name].issuer_url+'introspect',
           params: {
-            client_id:process.env.CLIENT_ID_EGI,
+            client_id:clients[req.params.name].client_id,
             token:TokenArray[1]
           },
           headers: {
@@ -710,11 +736,9 @@ function authenticate(req,res,next){
           }).catch((err)=> {
             next(err);
           });
-
-
         }, (error) =>{
           next(error)
-        })
+        }).catch(err=>{next(err);})
       }
       else{
         res.status(401).end();
@@ -749,6 +773,7 @@ function canReview(req,res,next){
   else if (true||req.user.role.actions.includes('review_own_petition')) {
     db.petition.canReviewOwn(req.params.id,req.user.sub).then(canReview=>{
       if(canReview){
+
         next();
       }
       else{
@@ -778,24 +803,25 @@ const saveUser=(userinfo)=>{
 }
 
 // Checking Availability of Client Id/Entity Id
-const isAvailable=(t,id,protocol,petition_id,service_id)=>{
+const isAvailable=(t,id,protocol,petition_id,service_id,tenant)=>{
   if(protocol==='oidc'){
-    return t.service_details_protocol.checkClientId(id,service_id,petition_id);
+    return t.service_details_protocol.checkClientId(id,service_id,petition_id,tenant);
   }
   else if (protocol==='saml'){
-    return t.service_details_protocol.checkEntityId(id,service_id,petition_id);
+    return t.service_details_protocol.checkEntityId(id,service_id,petition_id,tenant);
   }
 }
 
 // This validation is for the POST,PUT /petition
 function asyncPetitionValidation(req,res,next){
   // for all petitions we need to check for Client Id/Entity Id availability
+
   try{
     return db.tx('user-check',async t=>{
       // For the post
       if(req.route.methods.post){
         if(req.body.type==='create'){
-          await isAvailable.apply(this,(req.body.protocol==='oidc'?[t,req.body.client_id,'oidc',0,0]:[t,req.body.entity_id,'saml',0,0])).then(async available=>{
+          await isAvailable.apply(this,(req.body.protocol==='oidc'?[t,req.body.client_id,'oidc',0,0,req.params.name]:[t,req.body.entity_id,'saml',0,0,req.params.name])).then(async available=>{
             if(available){
               next();
             }
@@ -808,16 +834,16 @@ function asyncPetitionValidation(req,res,next){
         else{
           // Here we handle petitons of edit and delete type
           // First we need to make sure there aren't any open petitions for target service
-          await t.service_petition_details.openPetition(req.body.service_id).then(async open_petition_id =>{
+          await t.service_petition_details.openPetition(req.body.service_id,req.params.name).then(async open_petition_id =>{
             if(!open_petition_id){
-              await t.service_details.getProtocol(req.body.service_id,req.user.sub).then(async service =>{
+              await t.service_details.getProtocol(req.body.service_id,req.user.sub,req.params.name).then(async service =>{
                 if(service.protocol){
                   if(req.body.type==='delete'){
 
                     next();
                   }
                   else if(service.protocol===req.body.protocol){
-                    await isAvailable.apply(this,(req.body.protocol==='oidc'?[t,req.body.client_id,'oidc',0,req.body.service_id]:[t,req.body.entity_id,'saml',0,req.body.service_id])).then(async available=>{
+                    await isAvailable.apply(this,(req.body.protocol==='oidc'?[t,req.body.client_id,'oidc',0,req.body.service_id,req.params.name]:[t,req.body.entity_id,'saml',0,req.body.service_id,req.params.name])).then(async available=>{
                       if(available){
                         next();
                       }
@@ -850,7 +876,8 @@ function asyncPetitionValidation(req,res,next){
         }
       }
       else if(req.route.methods.put){
-        await t.service_petition_details.belongsToRequester(req.params.id,req.user.sub).then(async petition => {
+
+        await t.service_petition_details.belongsToRequester(req.params.id,req.user.sub,req.params.name).then(async petition => {
           if(petition){
             if(req.body.type==='delete'){
               next();
@@ -863,7 +890,7 @@ function asyncPetitionValidation(req,res,next){
             if(petition.type!==req.body.type){
               return res.json({success:false,error:'Type of request cannot be modified'});
             }
-            await isAvailable.apply(this,(req.body.protocol==='oidc'?[t,req.body.client_id,'oidc',req.params.id,0]:[t,req.body.entity_id,'saml',req.params.id,0])).then(async available=>{
+            await isAvailable.apply(this,(req.body.protocol==='oidc'?[t,req.body.client_id,'oidc',req.params.id,0,req.params.name]:[t,req.body.entity_id,'saml',req.params.id,0,req.params.name])).then(async available=>{
               if(available){
                 next();
               }

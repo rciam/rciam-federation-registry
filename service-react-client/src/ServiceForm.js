@@ -8,6 +8,7 @@ import Row from 'react-bootstrap/Row';
 import {ProcessingRequest} from './Components/LoadingBar';
 import Col from 'react-bootstrap/Col';
 import Collapse from 'react-bootstrap/Collapse';
+import {useParams } from "react-router-dom";
 import { diff } from 'deep-diff';
 //import {Debug} from './Components/Debug.js';
 import {SimpleModal,ResponseModal} from './Components/Modals.js';
@@ -28,6 +29,7 @@ const {reg} = require('./regex.js');
 const ServiceForm = (props)=> {
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
+  let {tenant_name} = useParams();
 
   useEffect(()=>{
     if(props.disabled||props.review){
@@ -56,7 +58,7 @@ const ServiceForm = (props)=> {
               {resolve(true)}
             else{
               setCheckingAvailability(true);
-              fetch(config.host+'/check-availability?value='+ value +'&protocol=oidc', {
+              fetch(config.host+'tenants/'+tenant_name+'/check-availability?value='+ value +'&protocol=oidc', {
                 method:'GET',
                 credentials:'include',
                 headers:{
@@ -162,7 +164,7 @@ const ServiceForm = (props)=> {
               {resolve(true)}
             else{
               setCheckingAvailability(true);
-              fetch(config.host+'/check-availability?value='+ value +'&protocol=saml', {
+              fetch(config.host+'tenants/'+tenant_name+'/check-availability?value='+ value +'&protocol=saml', {
                 method:'GET',
                 credentials:'include',
                 headers:{
@@ -216,7 +218,7 @@ const ServiceForm = (props)=> {
     }
     if (diff(petition,props.initialValues)){
       setAsyncResponse(true);
-      fetch(config.host+'petitions', {
+      fetch(config.host+'tenants/'+tenant_name+'/petitions', {
         method: 'POST', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
@@ -250,7 +252,7 @@ const ServiceForm = (props)=> {
     }
     if(diff(petition,props.initialValues)){
       setAsyncResponse(true);
-      fetch(config.host+'petitions/'+props.petition_id, {
+      fetch(config.host+'tenants/'+tenant_name+'/petitions/'+props.petition_id, {
         method: 'PUT', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
@@ -277,7 +279,7 @@ const ServiceForm = (props)=> {
 
   const deletePetition = ()=>{
     setAsyncResponse(true);
-    fetch(config.host+'petitions/'+props.petition_id, {
+    fetch(config.host+'tenants/'+tenant_name+'/petitions/'+props.petition_id, {
       method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -298,7 +300,7 @@ const ServiceForm = (props)=> {
   const reviewPetition = (comment,type)=>{
       setModalTitle(t('review_'+props.type+'_title'))
       setAsyncResponse(true);
-      fetch(config.host+'petitions/'+props.petition_id+'/review', {
+      fetch(config.host+'tenants/'+tenant_name+'/petitions/'+props.petition_id+'/review', {
         method: 'PUT', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {

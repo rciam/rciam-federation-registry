@@ -1,11 +1,19 @@
-export const CallbackPage = () => {
+import React,{useState, useEffect} from 'react';
+import {useParams} from "react-router-dom";
+import * as config from '../config.json';
+import useGlobalState from '../useGlobalState.js';
+import {LoadingPage} from './LoadingPage.js';
+
+export const Callback = () => {
   // eslint-disable-next-line
+  let {tenant_name} = useParams();
   let {code} = useParams();
   const [loading,setLoading] = useState(true);
   const globalState = useGlobalState();
 
   useEffect(()=>{
     getToken(code);
+    console.log(tenant_name);
     // eslint-disable-next-line
   },[]);
 
@@ -25,19 +33,18 @@ export const CallbackPage = () => {
       }
     }).then(response=>{
       if(response){
-
         localStorage.setItem('token','Bearer '+response.token);
         globalState.setLogState({
-          tenant:'EGI',
           log_state:true
         });
         setLoading(false);
+
       }
     });
   }
   return (
     <React.Fragment>
-      <LoadingPage loading={loading}/>
+      <LoadingPage loading={loading} tenant_name={tenant_name}/>
     </React.Fragment>
   )
 }

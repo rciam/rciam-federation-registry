@@ -15,20 +15,23 @@ class ServiceDetailsProtocolRepository {
         // set-up all ColumnSet objects, if needed:
 
     }
-    async checkClientId(client_id,service_id,petition_id){
+    async checkClientId(client_id,service_id,petition_id,tenant){
+      console.log(client_id + ' ' +service_id + ' ' + petition_id + ' ' + tenant);
       return this.db.any(sql.checkClientId,{
         client_id:client_id,
         service_id:service_id,
-        petition_id:petition_id
+        petition_id:petition_id,
+        tenant:tenant
       }).then(result =>{
           if(result.length>0){return false}else{return true}
       })
     }
-    async checkEntityId(entity_id,service_id,petition_id){
+    async checkEntityId(entity_id,service_id,petition_id,tenant){
       return this.db.any(sql.checkEntityId,{
         entity_id:entity_id,
         service_id:service_id,
-        petition_id:petition_id
+        petition_id:petition_id,
+        tenant:tenant
       }).then(result =>{
           if(result.length>0){return false}else{return true}
       })

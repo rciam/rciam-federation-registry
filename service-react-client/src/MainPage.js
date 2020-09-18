@@ -5,42 +5,31 @@ import {Header,Footer,NavbarTop} from './HeaderFooter.js';
 import Routes from './Router';
 import {SideNav} from './Components/SideNav.js';
 import { useTranslation } from 'react-i18next';
-import {Context} from './user-context.js';
+import {userContext,tenantContext} from './context.js';
 
  const MainPage= (props)=> {
-
-      const user = useContext(Context);
+      const tenant = useContext(tenantContext);
+      const user = useContext(userContext);
       // eslint-disable-next-line
       const { t, i18n } = useTranslation();
       const globalState = useGlobalState();
       const logged = globalState.global_state.log_state;
 
-
-
-
-
       return(
         <React.Fragment>
-        <Router>
-
-          <Header/>
-          <NavbarTop/>
-          <div className="ssp-container main">
-
-            <div className="flex-container">
-              {logged&&<SideNav/>}
-              <Routes user={user[0]} t={t} />
+          <Router>
+            <Header/>
+            <NavbarTop/>
+            <div className="ssp-container main">
+              <div className="flex-container">
+                {logged&&<SideNav tenant_name={tenant&&tenant[0]?tenant[0].name:null}/>}
+                <Routes user={user[0]} tenant={tenant[0]} t={t} />
+              </div>
             </div>
-
-          </div>
-
-        <Footer lang={props.lang} changeLanguage={props.changeLanguage}/>
-
-      </Router>
-
+            <Footer lang={props.lang} changeLanguage={props.changeLanguage}/>
+          </Router>
         </React.Fragment>
       );
-
 }
 
 

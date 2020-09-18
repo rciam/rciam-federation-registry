@@ -21,6 +21,6 @@ SELECT json_build_object('service_name', sd.service_name,'service_description',s
 							 FROM service_petition_contacts v WHERE sd.id = v.owner_id)
 							) json
     FROM (SELECT *
-	FROM (SELECT * FROM service_petition_details WHERE id=${id} AND reviewed_at IS NULL) AS foo
+	FROM (SELECT * FROM service_petition_details WHERE id=${id} AND reviewed_at IS NULL AND tenant=${tenant}) AS foo
 	LEFT JOIN service_petition_details_oidc USING (id)
 	LEFT JOIN service_petition_details_saml USING (id)) as sd

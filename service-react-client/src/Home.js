@@ -1,7 +1,7 @@
 import React,{useEffect,useState,useContext} from 'react';
 import { useTranslation } from 'react-i18next';
-import {Context} from './user-context.js';
-import { useHistory } from "react-router-dom";
+import {userContext,tenantContext} from './context.js';
+import { useHistory,useParams } from "react-router-dom";
 import useGlobalState from './useGlobalState.js';
 import {LoadingPage} from './Components/LoadingPage.js';
 import * as config from './config.json';
@@ -10,9 +10,11 @@ import * as config from './config.json';
 const Home = ()=> {
   // eslint-disable-next-line
   let history = useHistory();
-
+  let {tenant_name} = useParams();
   // eslint-disable-next-line
-  const [context, setContext] = useContext(Context);
+  const [tenant,setTenant] = useContext(tenantContext);
+  // eslint-disable-next-line
+  const [user, setUser] = useContext(userContext);
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   const globalState = useGlobalState();
@@ -27,7 +29,7 @@ const Home = ()=> {
 
        if(localStorage.getItem('token')){
          setLoading(true);
-         fetch(config.host+'user', {
+         fetch(config.host+'tenants/'+tenant_name+'/user', {
            method: 'GET', // *GET, POST, PUT, DELETE, etc.
            credentials: 'include', // include, *same-origin, omit
            headers: {
@@ -37,9 +39,10 @@ const Home = ()=> {
                if(response.status===200){return response.json();}
                else {return false}
              }).then(response=> {
-             globalState.setLogState({tenant:'EGI',log_state:response});
+             globalState.setLogState({log_state:response});
+
              if(response){
-               setContext(response.user);
+               setUser(response.user);
                if(localStorage.getItem('invitation')){
                  activateInvitation();
                }
@@ -49,14 +52,14 @@ const Home = ()=> {
              }
              else{
                setLoading(false);
-               setContext(null);
+               setUser(null);
                localStorage.removeItem('token');
              }
 
          })
        }
        else{
-         globalState.setLogState({tenant:'EGI',log_state:false});
+         globalState.setLogState({log_state:false});
        }
 
      }
@@ -64,7 +67,7 @@ const Home = ()=> {
 
 
    const activateInvitation = () => {
-     fetch(config.host+'invitations', {
+     fetch(config.host+'tenants/'+tenant_name+'/invitations', {
        method: 'PUT', // *GET, POST, PUT, DELETE, etc.
        credentials: 'include', // include, *same-origin, omit
        headers: {
@@ -78,10 +81,7 @@ const Home = ()=> {
          }).then(response=>{
            setLoading(false);
            localStorage.removeItem('invitation');
-
-           history.push('/invitation_error',{error: response.error});
-
-
+           history.push('/'+tenant_name+'/invitation_error',{error: response.error});
      })
    }
 
@@ -91,7 +91,7 @@ const Home = ()=> {
       {loading?<LoadingPage  loading={loading}/>:null}
       <div className="home-container">
         <h1>{t('main_'+test+'ing')}</h1>
-        <p>{t('main_description')}</p>
+        <p>{tenant.description}</p>
       </div>
     </React.Fragment>
   )

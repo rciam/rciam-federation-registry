@@ -8,11 +8,17 @@ create table tokens (
 );
 
 create table tenants (
-  tenant_name VARCHAR(256) PRIMARY KEY,
+  name VARCHAR(256) PRIMARY KEY,
   client_id VARCHAR(256),
   client_secret VARCHAR(1054),
-  issuer_url VARCHAR(256)
+  issuer_url VARCHAR(256),
+  logo VARCHAR(256),
+  description VARCHAR(1054),
+  main_title VARCHAR(256),
+  color VARCHAR(128)
 );
+
+
 
 
 create table user_info (
@@ -63,10 +69,6 @@ create table invitations (
   FOREIGN KEY (group_id) REFERENCES groups(id)
 );
 
-
-
-
-
 create table group_subs (
   group_id INTEGER,
   sub VARCHAR(256),
@@ -89,8 +91,10 @@ create table user_edu_person_entitlement (
   PRIMARY KEY (user_id,edu_person_entitlement),
   FOREIGN KEY (user_id) REFERENCES user_info(id)
 );
+
 create table service_details (
   id SERIAL PRIMARY KEY,
+  tenant VARCHAR(256),
   service_name  VARCHAR(256),
   group_id INTEGER,
   service_description VARCHAR(1024),
@@ -99,7 +103,8 @@ create table service_details (
   integration_environment VARCHAR(256),
   requester VARCHAR(256),
   protocol VARCHAR(256),
-  deleted BOOLEAN DEFAULT FALSE
+  deleted BOOLEAN DEFAULT FALSE,
+  FOREIGN KEY (tenant) REFERENCES tenants(name)
 );
 
 create table service_details_oidc (
@@ -129,6 +134,7 @@ create table service_details_saml (
   metadata_url VARCHAR(256),
   FOREIGN KEY (id) REFERENCES service_details(id) ON DELETE CASCADE
 );
+
 create table service_contacts (
   id SERIAL PRIMARY KEY,
   owner_id bigint,
@@ -158,10 +164,10 @@ create table service_oidc_scopes (
   FOREIGN KEY (owner_id) REFERENCES service_details(id) ON DELETE CASCADE
 );
 
-
 create table service_petition_details (
   id SERIAL PRIMARY KEY,
   service_id INTEGER DEFAULT NULL,
+  tenant VARCHAR(256),
   service_description VARCHAR(1024),
   service_name  VARCHAR(256),
   logo_uri VARCHAR(2048),
@@ -175,8 +181,10 @@ create table service_petition_details (
   reviewer VARCHAR(256) DEFAULT NULL,
   group_id INTEGER DEFAULT NULL,
   reviewed_at timestamp without time zone DEFAULT NULL,
+  FOREIGN KEY (tenant) REFERENCES tenants(name),
   FOREIGN KEY (service_id) REFERENCES service_details(id) ON DELETE SET NULL
 );
+
 create table service_petition_details_oidc (
   id bigint PRIMARY KEY,
   client_id VARCHAR(256),
@@ -191,14 +199,13 @@ create table service_petition_details_oidc (
   client_secret VARCHAR(2048),
   FOREIGN KEY (id) REFERENCES service_petition_details(id) ON DELETE CASCADE
 );
+
 create table service_petition_details_saml (
   id bigint PRIMARY KEY,
   entity_id VARCHAR(256),
   metadata_url VARCHAR(256),
   FOREIGN KEY (id) REFERENCES service_petition_details(id) ON DELETE CASCADE
 );
-
-
 
 create table service_petition_contacts (
   id SERIAL PRIMARY KEY,
@@ -229,19 +236,29 @@ create table service_petition_oidc_scopes (
   FOREIGN KEY (owner_id) REFERENCES service_petition_details(id) ON DELETE CASCADE
 );
 
+INSERT INTO tenants (name,client_id,client_secret,issuer_url,logo,main_title,color,description)
+VALUES ('egi','966c3bcf-0a24-4874-80f0-822ef8c7a5be','AO4C3x6WiORO4f5ha3WETllykfVwQfBcboCl8ETZKmm1hOAyA6ku8YxZu90MfHk7gp6LX_HBFqK_sQlVezY96L0','https://aai-dev.egi.eu/oidc/','https://aai-dev.egi.eu/proxy/module.php/themeegi/resources/images/logo.svg','EGI AAI Service Registry','#0A559C','The EGI CheckIn Service provides a secure web interface through which service operators can register their OpenID Connect and SAML based services.');
+INSERT INTO tenants (name,client_id,client_secret,issuer_url,logo,main_title,color,description)
+VALUES ('eosc','5d305fe0-d34f-44c9-98f6-e027a7cd852b','ALYg2PMDaNsJOpFt2-LrRekBHFb6Gs7M62_k5CLaDaM5ie-SmALWLxnZYKy108WwuNtRGOPc3zYRYckta91QLVQ','https://aai.eosc-portal.eu/oidc/','https://www.eosc-portal.eu/sites/all/themes/theme1/logo.png','EOSC Service Registry','#349bdc','The EOSC Service registry provides a secure web interface through which service operators can register their OpenID Connect and SAML based services.');
 
-INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol,group_id)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 1','https://cdn.vox-cdn.com/thumbor/0n6dqQfk9MuOBSiM39Pog2Bw39Y=/1400x1400/filters:format(jpeg)/cdn.vox-cdn.com/uploads/chorus_asset/file/19341372/microsoftedgenewlogo.jpg','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','oidc',1);
-INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol,group_id)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 2','https://i.pinimg.com/originals/33/b8/69/33b869f90619e81763dbf1fccc896d8d.jpg','https://policy_uri.com','production','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','oidc',2);
-INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol,group_id)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 3','https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcROY_lTxPGm6_XjUncdBfqkSbRoFoEf4BLBlQ&usqp=CAU','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','oidc',3);
-INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol,group_id)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 4','https://brandmark.io/logo-rank/random/pepsi.png','https://policy_uri.com','development','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','oidc',4);
-INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol,group_id)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 5','https://brandmark.io/logo-rank/random/pepsi.png','https://policy_uri.com','development','7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu','oidc',5);
-INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol,group_id)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Saml 6','https://cdn.auth0.com/blog/duo-saml-exploit/saml.png','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','saml',6);
+INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol,group_id,tenant)
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 1','https://cdn.vox-cdn.com/thumbor/0n6dqQfk9MuOBSiM39Pog2Bw39Y=/1400x1400/filters:format(jpeg)/cdn.vox-cdn.com/uploads/chorus_asset/file/19341372/microsoftedgenewlogo.jpg','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','oidc',1,'egi');
+INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol,group_id,tenant)
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 2','https://i.pinimg.com/originals/33/b8/69/33b869f90619e81763dbf1fccc896d8d.jpg','https://policy_uri.com','production','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','oidc',2,'egi');
+INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol,group_id,tenant)
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 3','https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcROY_lTxPGm6_XjUncdBfqkSbRoFoEf4BLBlQ&usqp=CAU','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','oidc',3,'egi');
+INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol,group_id,tenant)
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 4','https://brandmark.io/logo-rank/random/pepsi.png','https://policy_uri.com','development','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','oidc',4,'egi');
+INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol,group_id,tenant)
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 5','https://brandmark.io/logo-rank/random/pepsi.png','https://policy_uri.com','development','7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu','oidc',5,'egi');
+INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol,group_id,tenant)
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Saml 6','https://cdn.auth0.com/blog/duo-saml-exploit/saml.png','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','saml',6,'egi');
+INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol,group_id,tenant)
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','EOSC OIDC Service 1','https://nat.sakimura.org/wp-content/uploads/2012/02/openid-icon-250x250.png','https://policy_uri.com','development','4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.eosc-portal.eu','oidc',8,'eosc');
+INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol,group_id,tenant)
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','EOSC OIDC Service 2','https://nat.sakimura.org/wp-content/uploads/2012/02/openid-icon-250x250.png','https://policy_uri.com','development','4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.eosc-portal.eu','oidc',9,'eosc');
+INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol,group_id,tenant)
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','EOSC SAML Service 1','https://cdn.auth0.com/blog/duo-saml-exploit/saml.png','https://policy_uri.com','demo','4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.eosc-portal.eu','saml',10,'eosc');
 
 INSERT INTO service_state (id,state)
 VALUES (1,'deployed');
@@ -255,6 +272,12 @@ INSERT INTO service_state (id,state)
 VALUES (5,'deployed');
 INSERT INTO service_state (id,state)
 VALUES (6,'deployed');
+INSERT INTO service_state (id,state)
+VALUES (7,'deployed');
+INSERT INTO service_state (id,state)
+VALUES (8,'deployed');
+INSERT INTO service_state (id,state)
+VALUES (9,'deployed');
 
 INSERT INTO service_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_tokens,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds)
 VALUES (1,'client1',true,'secret',true,true,600,3600,28800,'plain',10000);
@@ -266,10 +289,16 @@ INSERT INTO service_details_oidc (id,client_id,allow_introspection,client_secret
 VALUES (4,'client4',true,'secret',true,true,600,3600,28800,'plain',10000);
 INSERT INTO service_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_tokens,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds)
 VALUES (5,'client5',true,'secret',true,true,600,3600,28800,'plain',10000);
+INSERT INTO service_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_tokens,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds)
+VALUES (7,'client1',true,'secret',true,true,600,3600,28800,'plain',10000);
+INSERT INTO service_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_tokens,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds)
+VALUES (8,'client2',true,'secret',true,true,600,3600,28800,'plain',10000);
 
 
 INSERT INTO service_details_saml (id,entity_id,metadata_url)
 VALUES (6,'https://saml-id-1.com','https://metadataurl.com');
+INSERT INTO service_details_saml (id,entity_id,metadata_url)
+VALUES (9,'https://saml-id-1.com','https://metadataurl.com');
 
 INSERT INTO service_contacts(owner_id,value,type)
 VALUES ('1','mymail@gmail.com','admin');
@@ -315,6 +344,22 @@ INSERT INTO service_contacts(owner_id,value,type)
 VALUES ('6','mygrail@gmail.com','admin');
 INSERT INTO service_contacts(owner_id,value,type)
 VALUES ('6','myfail@gmail.com','admin');
+INSERT INTO service_contacts(owner_id,value,type)
+VALUES ('7','mygrail@gmail.com','admin');
+INSERT INTO service_contacts(owner_id,value,type)
+VALUES ('7','myfail@gmail.com','admin');
+INSERT INTO service_contacts(owner_id,value,type)
+VALUES ('8','mymail@gmail.com','admin');
+INSERT INTO service_contacts(owner_id,value,type)
+VALUES ('8','mysnail@gmail.com','admin');
+INSERT INTO service_contacts(owner_id,value,type)
+VALUES ('8','mygrail@gmail.com','admin');
+INSERT INTO service_contacts(owner_id,value,type)
+VALUES ('8','myfail@gmail.com','admin');
+INSERT INTO service_contacts(owner_id,value,type)
+VALUES ('9','mygrail@gmail.com','admin');
+INSERT INTO service_contacts(owner_id,value,type)
+VALUES ('9','myfail@gmail.com','admin');
 
 INSERT INTO service_oidc_grant_types(owner_id,value)
 VALUES ('1','implicit');
@@ -346,6 +391,19 @@ INSERT INTO service_oidc_grant_types(owner_id,value)
 VALUES ('5','authorization_code');
 INSERT INTO service_oidc_grant_types(owner_id,value)
 VALUES ('5','refresh_token');
+INSERT INTO service_oidc_grant_types(owner_id,value)
+VALUES ('7','implicit');
+INSERT INTO service_oidc_grant_types(owner_id,value)
+VALUES ('7','authorization_code');
+INSERT INTO service_oidc_grant_types(owner_id,value)
+VALUES ('7','refresh_token');
+INSERT INTO service_oidc_grant_types(owner_id,value)
+VALUES ('8','implicit');
+INSERT INTO service_oidc_grant_types(owner_id,value)
+VALUES ('8','authorization_code');
+INSERT INTO service_oidc_grant_types(owner_id,value)
+VALUES ('8','refresh_token');
+
 
 
 
@@ -367,6 +425,12 @@ INSERT INTO service_oidc_redirect_uris(owner_id,value)
 VALUES ('4','https://redirecturi.com');
 INSERT INTO service_oidc_redirect_uris(owner_id,value)
 VALUES ('5','https://redirecturi.com');
+INSERT INTO service_oidc_redirect_uris(owner_id,value)
+VALUES ('7','https://redirecturi2.com');
+INSERT INTO service_oidc_redirect_uris(owner_id,value)
+VALUES ('7','https://redirecturi.com');
+INSERT INTO service_oidc_redirect_uris(owner_id,value)
+VALUES ('8','https://redirecturi.com');
 
 
 
@@ -380,28 +444,39 @@ INSERT INTO service_oidc_scopes(owner_id,value)
 VALUES ('4','kaleidoscope');
 INSERT INTO service_oidc_scopes(owner_id,value)
 VALUES ('5','telescope');
+INSERT INTO service_oidc_scopes(owner_id,value)
+VALUES ('7','kaleidoscope');
+INSERT INTO service_oidc_scopes(owner_id,value)
+VALUES ('8','telescope');
 
 
 
 
-INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,status,service_id,reviewed_at,protocol)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 1','https://cdn.vox-cdn.com/thumbor/0n6dqQfk9MuOBSiM39Pog2Bw39Y=/1400x1400/filters:format(jpeg)/cdn.vox-cdn.com/uploads/chorus_asset/file/19341372/microsoftedgenewlogo.jpg','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','approved',1,'2004-10-19 10:23:54','oidc');
-INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,status,service_id,reviewed_at,protocol)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 2','https://i.pinimg.com/originals/33/b8/69/33b869f90619e81763dbf1fccc896d8d.jpg','https://policy_uri.com','production','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','approved',2,'2004-10-19 10:23:54','oidc');
-INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,status,service_id,reviewed_at,protocol)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 3','https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcROY_lTxPGm6_XjUncdBfqkSbRoFoEf4BLBlQ&usqp=CAU','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','approved',3,'2004-10-19 10:23:54','oidc');
-INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,status,service_id,reviewed_at,protocol)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 4','https://brandmark.io/logo-rank/random/pepsi.png','https://policy_uri.com','development','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','approved',4,'2004-10-19 10:23:54','oidc');
-INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,status,service_id,reviewed_at,protocol)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 5','https://brandmark.io/logo-rank/random/pepsi.png','https://policy_uri.com','development','7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu','approved',5,'2004-10-19 10:23:54','oidc');
-INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,type,service_id,protocol)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 5 new','https://images.fastcompany.net/image/upload/w_596,c_limit,q_auto:best,f_auto/fc/3034007-inline-i-applelogo.jpg','https://policy_uri.com','development','7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu','edit',5,'oidc');
-INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,type,protocol,group_id)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 7','https://www.bookmarks.design/media/image/hatchful.jpg','https://policy_uri.com','development','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','create','oidc',7);
-INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,type,service_id,protocol)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 1','https://cdn.vox-cdn.com/thumbor/0n6dqQfk9MuOBSiM39Pog2Bw39Y=/1400x1400/filters:format(jpeg)/cdn.vox-cdn.com/uploads/chorus_asset/file/19341372/microsoftedgenewlogo.jpg','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','delete',1,'oidc');
-INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,status,type,service_id,reviewed_at,protocol)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Saml 6','https://cdn.auth0.com/blog/duo-saml-exploit/saml.png','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','create','approved',6,'2020-10-4 13:18:11','saml');
+INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,status,service_id,reviewed_at,protocol,tenant)
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 1','https://cdn.vox-cdn.com/thumbor/0n6dqQfk9MuOBSiM39Pog2Bw39Y=/1400x1400/filters:format(jpeg)/cdn.vox-cdn.com/uploads/chorus_asset/file/19341372/microsoftedgenewlogo.jpg','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','approved',1,'2004-10-19 10:23:54','oidc','egi');
+INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,status,service_id,reviewed_at,protocol,tenant)
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 2','https://i.pinimg.com/originals/33/b8/69/33b869f90619e81763dbf1fccc896d8d.jpg','https://policy_uri.com','production','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','approved',2,'2004-10-19 10:23:54','oidc','egi');
+INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,status,service_id,reviewed_at,protocol,tenant)
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 3','https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcROY_lTxPGm6_XjUncdBfqkSbRoFoEf4BLBlQ&usqp=CAU','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','approved',3,'2004-10-19 10:23:54','oidc','egi');
+INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,status,service_id,reviewed_at,protocol,tenant)
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 4','https://brandmark.io/logo-rank/random/pepsi.png','https://policy_uri.com','development','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','approved',4,'2004-10-19 10:23:54','oidc','egi');
+INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,status,service_id,reviewed_at,protocol,tenant)
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 5','https://brandmark.io/logo-rank/random/pepsi.png','https://policy_uri.com','development','7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu','approved',5,'2004-10-19 10:23:54','oidc','egi');
+INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,type,service_id,protocol,tenant)
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 5 new','https://images.fastcompany.net/image/upload/w_596,c_limit,q_auto:best,f_auto/fc/3034007-inline-i-applelogo.jpg','https://policy_uri.com','development','7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu','edit',5,'oidc','egi');
+INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,type,protocol,group_id,tenant)
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 7','https://www.bookmarks.design/media/image/hatchful.jpg','https://policy_uri.com','development','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','create','oidc',7,'egi');
+INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,type,service_id,protocol,tenant)
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 1','https://cdn.vox-cdn.com/thumbor/0n6dqQfk9MuOBSiM39Pog2Bw39Y=/1400x1400/filters:format(jpeg)/cdn.vox-cdn.com/uploads/chorus_asset/file/19341372/microsoftedgenewlogo.jpg','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','delete',1,'oidc','egi');
+INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,status,type,service_id,reviewed_at,protocol,tenant)
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Saml 6','https://cdn.auth0.com/blog/duo-saml-exploit/saml.png','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','approved','create',6,'2020-10-4 13:18:11','saml','egi');
+
+INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,status,service_id,reviewed_at,protocol,group_id,tenant)
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','EOSC OIDC Service 1','https://nat.sakimura.org/wp-content/uploads/2012/02/openid-icon-250x250.png','https://policy_uri.com','demo','4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.eosc-portal.eu','approved',7,'2004-10-19 10:23:54','oidc',8,'eosc');
+INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,status,service_id,reviewed_at,protocol,group_id,tenant)
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','EOSC OIDC Service 2','https://nat.sakimura.org/wp-content/uploads/2012/02/openid-icon-250x250.png','https://policy_uri.com','production','4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.eosc-portal.eu','approved',8,'2004-10-19 10:23:54','oidc',9,'eosc');
+INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,status,service_id,reviewed_at,protocol,group_id,tenant)
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','EOSC SAML Service 1','https://cdn.auth0.com/blog/duo-saml-exploit/saml.png','https://policy_uri.com','demo','4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.eosc-portal.eu','approved',9,'2004-10-19 10:23:54','saml',10,'eosc');
 
 
 
@@ -421,14 +496,23 @@ INSERT INTO service_petition_details_oidc (id,client_id,allow_introspection,clie
 VALUES (7,'client7',true,'secret',true,true,600,3600,28800,'plain',10000);
 INSERT INTO service_petition_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_tokens,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds)
 VALUES (8,'client1',true,'secret',true,true,600,3600,28800,'plain',10000);
+INSERT INTO service_petition_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_tokens,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds)
+VALUES (10,'client1',true,'secret',true,true,600,3600,28800,'plain',10000);
+INSERT INTO service_petition_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_tokens,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds)
+VALUES (11,'client2',true,'secret',true,true,600,3600,28800,'plain',10000);
 
 INSERT INTO service_petition_details_saml (id,entity_id,metadata_url)
 VALUES (9,'https://saml-id-1.com','https://metadataurl.com');
 INSERT INTO service_petition_contacts(owner_id,value,type)
 VALUES (9,'mygrail@gmail.com','admin');
 INSERT INTO service_petition_contacts(owner_id,value,type)
-VALUES (9,'myfail@gmail.com','admin');
-
+VALUES (12,'myfail@gmail.com','admin');
+INSERT INTO service_petition_details_saml (id,entity_id,metadata_url)
+VALUES (12,'https://saml-id-1.com','https://metadataurl.com');
+INSERT INTO service_petition_contacts(owner_id,value,type)
+VALUES (12,'mygrail@gmail.com','admin');
+INSERT INTO service_petition_contacts(owner_id,value,type)
+VALUES (12,'myfail@gmail.com','admin');
 
 
 INSERT INTO service_petition_contacts(owner_id,value,type)
@@ -487,7 +571,18 @@ INSERT INTO service_petition_contacts(owner_id,value,type)
 VALUES ('8','mygrail@gmail.com','admin');
 INSERT INTO service_petition_contacts(owner_id,value,type)
 VALUES ('8','myfail@gmail.com','admin');
-
+INSERT INTO service_petition_contacts(owner_id,value,type)
+VALUES ('10','mygrail@gmail.com','admin');
+INSERT INTO service_petition_contacts(owner_id,value,type)
+VALUES ('10','myfail@gmail.com','admin');
+INSERT INTO service_petition_contacts(owner_id,value,type)
+VALUES ('11','mymail@gmail.com','admin');
+INSERT INTO service_petition_contacts(owner_id,value,type)
+VALUES ('11','mysnail@gmail.com','admin');
+INSERT INTO service_petition_contacts(owner_id,value,type)
+VALUES ('11','mygrail@gmail.com','admin');
+INSERT INTO service_petition_contacts(owner_id,value,type)
+VALUES ('11','myfail@gmail.com','admin');
 
 
 INSERT INTO service_petition_oidc_grant_types(owner_id,value)
@@ -532,6 +627,17 @@ INSERT INTO service_petition_oidc_grant_types(owner_id,value)
 VALUES ('8','authorization_code');
 INSERT INTO service_petition_oidc_grant_types(owner_id,value)
 VALUES ('8','refresh_token');
+INSERT INTO service_petition_oidc_grant_types(owner_id,value)
+VALUES ('10','authorization_code');
+INSERT INTO service_petition_oidc_grant_types(owner_id,value)
+VALUES ('10','refresh_token');
+INSERT INTO service_petition_oidc_grant_types(owner_id,value)
+VALUES ('11','implicit');
+INSERT INTO service_petition_oidc_grant_types(owner_id,value)
+VALUES ('11','authorization_code');
+INSERT INTO service_petition_oidc_grant_types(owner_id,value)
+VALUES ('11','refresh_token');
+
 
 
 
@@ -561,6 +667,14 @@ INSERT INTO service_petition_oidc_redirect_uris(owner_id,value)
 VALUES ('8','https://redirecturi1.com');
 INSERT INTO service_petition_oidc_redirect_uris(owner_id,value)
 VALUES ('8','https://redirecturi2.com');
+INSERT INTO service_petition_oidc_redirect_uris(owner_id,value)
+VALUES ('10','https://redirecturi2.com');
+INSERT INTO service_petition_oidc_redirect_uris(owner_id,value)
+VALUES ('10','https://redirecturi.com');
+INSERT INTO service_petition_oidc_redirect_uris(owner_id,value)
+VALUES ('11','https://redirecturi1.com');
+INSERT INTO service_petition_oidc_redirect_uris(owner_id,value)
+VALUES ('11','https://redirecturi2.com');
 
 INSERT INTO service_petition_oidc_scopes(owner_id,value)
 VALUES ('1','electroscope');
@@ -580,6 +694,10 @@ INSERT INTO service_petition_oidc_scopes(owner_id,value)
 VALUES ('7','telescope');
 INSERT INTO service_petition_oidc_scopes(owner_id,value)
 VALUES ('8','electroscope');
+INSERT INTO service_petition_oidc_scopes(owner_id,value)
+VALUES ('10','telescope');
+INSERT INTO service_petition_oidc_scopes(owner_id,value)
+VALUES ('11','electroscope');
 
 INSERT INTO user_info(sub,preferred_username,name,given_name,family_name,email)
 VALUES ('4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621934@egi.eu','Helen Char','helen charopia','helen','charopia','testmail@mail.com');
@@ -594,6 +712,12 @@ INSERT INTO user_roles(role_name,tenant_id)
 VALUES ('Site Operations Manager',1);
 INSERT INTO user_roles(role_name,tenant_id)
 VALUES ('Administrator',1);
+INSERT INTO user_roles (role_name,tenant_id)
+VALUES ('End User',2);
+INSERT INTO user_roles(role_name,tenant_id)
+VALUES ('Site Operations Manager',2);
+INSERT INTO user_roles(role_name,tenant_id)
+VALUES ('Administrator',2);
 
 
 INSERT INTO role_actions(role_id,action)
@@ -661,6 +785,71 @@ VALUES(3,'get_services');
 INSERT INTO role_actions(role_id,action)
 VALUES(3,'view_groups');
 
+INSERT INTO role_actions(role_id,action)
+VALUES(4,'get_user');
+INSERT INTO role_actions(role_id,action)
+VALUES(4,'get_own_services');
+INSERT INTO role_actions(role_id,action)
+VALUES(4,'get_own_service');
+INSERT INTO role_actions(role_id,action)
+VALUES(4,'get_own_petitions');
+INSERT INTO role_actions(role_id,action)
+VALUES(4,'get_own_petition');
+INSERT INTO role_actions(role_id,action)
+VALUES(4,'add_own_petition');
+INSERT INTO role_actions(role_id,action)
+VALUES(4,'update_own_petition');
+INSERT INTO role_actions(role_id,action)
+VALUES(4,'delete_own_petition');
+INSERT INTO role_actions(role_id,action)
+VALUES(5,'get_user');
+INSERT INTO role_actions(role_id,action)
+VALUES(5,'get_own_services');
+INSERT INTO role_actions(role_id,action)
+VALUES(5,'get_own_service');
+INSERT INTO role_actions(role_id,action)
+VALUES(5,'get_own_petitions');
+INSERT INTO role_actions(role_id,action)
+VALUES(5,'get_own_petition');
+INSERT INTO role_actions(role_id,action)
+VALUES(5,'add_own_petition');
+INSERT INTO role_actions(role_id,action)
+VALUES(5,'update_own_petition');
+INSERT INTO role_actions(role_id,action)
+VALUES(5,'delete_own_petition');
+INSERT INTO role_actions(role_id,action)
+VALUES(5,'review_own_petition');
+INSERT INTO role_actions(role_id,action)
+VALUES(6,'get_user');
+INSERT INTO role_actions(role_id,action)
+VALUES(6,'get_own_services');
+INSERT INTO role_actions(role_id,action)
+VALUES(6,'get_own_service');
+INSERT INTO role_actions(role_id,action)
+VALUES(6,'get_service');
+INSERT INTO role_actions(role_id,action)
+VALUES(6,'get_own_petitions');
+INSERT INTO role_actions(role_id,action)
+VALUES(6,'get_own_petition');
+INSERT INTO role_actions(role_id,action)
+VALUES(6,'get_petition');
+INSERT INTO role_actions(role_id,action)
+VALUES(6,'add_own_petition');
+INSERT INTO role_actions(role_id,action)
+VALUES(6,'update_own_petition');
+INSERT INTO role_actions(role_id,action)
+VALUES(6,'delete_own_petition');
+INSERT INTO role_actions(role_id,action)
+VALUES(6,'review_own_petition');
+INSERT INTO role_actions(role_id,action)
+VALUES(6,'review_petition');
+INSERT INTO role_actions(role_id,action)
+VALUES(6,'get_petitions');
+INSERT INTO role_actions(role_id,action)
+VALUES(6,'get_services');
+INSERT INTO role_actions(role_id,action)
+VALUES(6,'view_groups');
+
 
 INSERT INTO groups (group_name)
 VALUES ('group_1');
@@ -676,6 +865,12 @@ INSERT INTO groups (group_name)
 VALUES ('group_6');
 INSERT INTO groups (group_name)
 VALUES ('group_7');
+INSERT INTO groups (group_name)
+VALUES ('group_1');
+INSERT INTO groups (group_name)
+VALUES ('group_2');
+INSERT INTO groups (group_name)
+VALUES ('group_3');
 
 INSERT INTO group_subs (group_id,sub,group_manager)
 VALUES (1,'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',true);
@@ -693,6 +888,15 @@ INSERT INTO group_subs (group_id,sub,group_manager)
 VALUES (5,'7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu',true);
 INSERT INTO group_subs (group_id,sub,group_manager)
 VALUES (7,'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',true);
+INSERT INTO group_subs (group_id,sub,group_manager)
+VALUES (8,'4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.eosc-portal.eu',true);
+INSERT INTO group_subs (group_id,sub,group_manager)
+VALUES (9,'4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.eosc-portal.eu',true);
+INSERT INTO group_subs (group_id,sub,group_manager)
+VALUES (10,'4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.eosc-portal.eu',true);
+
+
+
 
 
 

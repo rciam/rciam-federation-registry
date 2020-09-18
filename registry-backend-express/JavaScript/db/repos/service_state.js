@@ -29,7 +29,7 @@ class ServiceStateRepository {
       let decoded_message=(JSON.parse(Buffer.from(message.message.data, 'base64').toString()));
       updateState.push({id:decoded_message.id,state:decoded_message.state});
       if(decoded_message.client_id){
-        updateClientId.push({id:decoded_message.client_id,state:decoded_message.client_id})
+        updateClientId.push({id:decoded_message.client_id,client_id:decoded_message.client_id})
       }
       ids.push(decoded_message.id);
     });

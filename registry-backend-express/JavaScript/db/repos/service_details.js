@@ -25,7 +25,8 @@ class ServiceDetailsRepository {
         integration_environment: data.integration_environment,
         requester: sub,
         group_id:data.group_id,
-        protocol:data.protocol
+        protocol:data.protocol,
+        tenant:data.tenant
       })
     }
 
@@ -54,8 +55,8 @@ class ServiceDetailsRepository {
       return this.db.any(sql.getOwnList,{sub:sub});
     }
 
-    async getProtocol(service_id,sub){
-      return this.db.oneOrNone("SELECT protocol FROM (SELECT protocol,group_id FROM service_details JOIN service_state USING (id) WHERE id=$1 AND (deleted=false OR (deleted=TRUE AND state!='deployed'))) as service LEFT JOIN (SELECT id AS group_id,sub FROM groups LEFT JOIN group_subs ON groups.id=group_subs.group_id WHERE sub=$2) AS foo USING (group_id) WHERE sub IS NOT NULL",[+service_id,sub]);
+    async getProtocol(service_id,sub,tenant){
+      return this.db.oneOrNone("SELECT protocol FROM ((SELECT protocol,group_id,deleted,id FROM service_details WHERE id=$1 AND tenant=$3) as service_details LEFT JOIN service_state ON service_details.id=service_state.id AND (deleted=false OR (deleted=TRUE AND state!='deployed'))) as service LEFT JOIN (SELECT id AS group_id,sub FROM groups LEFT JOIN group_subs ON groups.id=group_subs.group_id WHERE sub=$2) AS foo USING (group_id) WHERE sub IS NOT NULL",[+service_id,sub,tenant]);
     }
 
 

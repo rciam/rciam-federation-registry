@@ -8,9 +8,9 @@ const options = {
     'Content-Type': 'application/json',
     'X-Api-Key': process.env.KEY
 }};
-const publish_url = process.env.AMS + '/projects/' + process.env.PROJECT + "/topics/tasks:publish?key=" +process.env.TOKEN;
-const fake_publish_url = process.env.AMS + '/projects/' + process.env.PROJECT + '/topics/updates:publish?key=' +process.env.TOKEN;
-const fake_consume_url = process.env.AMS + '/projects/' + process.env.PROJECT + '/subscriptions/mock:pull?key=' +process.env.TOKEN;
+const publish_url_oidc = process.env.AMS + '/projects/' + process.env.PROJECT + "/topics/egi-oidc:publish?key=" +process.env.TOKEN;
+const publish_url_saml = process.env.AMS + '/projects/' + process.env.PROJECT + "/topics/egi-saml:publish?key=" +process.env.TOKEN;
+
 var intervalID;
 
 
@@ -42,13 +42,13 @@ function run() {
         updateData.egi[service.json.protocol].push({id:service.json.id,state:'waiting-deployment'});
         messages.egi[service.json.protocol].push({"attributes":{},"data": Buffer.from(JSON.stringify(service.json)).toString("base64")});
       });
-      if(messages.egi.oidc>0){
+      if(messages.egi.oidc.length>0){
         data={"messages":messages.egi.oidc};
         axios.post(publish_url_oidc,data, options).then((res) => {
           if(res.status===200){
             axios.put(process.env.EXPRESS+'/services/state',updateData.egi.oidc,options).then((res)=>{
               if(res.status===200){
-                fakeThirdParty(updateData);
+
                 if(res.success===false){
                  console.log(res.error);
                 }
@@ -57,13 +57,12 @@ function run() {
           }
         });
       }
-      if(messages.egi.saml>0){
+      if(messages.egi.saml.length>0){
         data={"messages":messages.egi.saml};
         axios.post(publish_url_saml,data, options).then((res) => {
           if(res.status===200){
             axios.put(process.env.EXPRESS+'/services/state',updateData.egi.saml,options).then((res)=>{
               if(res.status===200){
-                fakeThirdParty(updateData);
                 if(res.success===false){
                  console.log(res.error);
                 }
@@ -83,18 +82,18 @@ function run() {
   });
 }
 
-function fakeThirdParty(data){
-  let messages = [];
-  data.forEach((message,i)=>{
-    data[i].state = 'deployed';
-    messages.push({"attributes":{},"data": Buffer.from(JSON.stringify(data[i])).toString("base64")});
-  });
-  data={"messages":messages};
-  axios.post(fake_publish_url,data, options).then((res) => {
-    if(res.status===200){
-    }
-  });
-}
+// function fakeThirdParty(data){
+//   let messages = [];
+//   data.forEach((message,i)=>{
+//     data[i].state = 'deployed';
+//     messages.push({"attributes":{},"data": Buffer.from(JSON.stringify(data[i])).toString("base64")});
+//   });
+//   data={"messages":messages};
+//   axios.post(fake_publish_url,data, options).then((res) => {
+//     if(res.status===200){
+//     }
+//   });
+// }
 // function checkConsumer(){
 //   data = {"MaxMessages":"5"};
 //   let response = [];

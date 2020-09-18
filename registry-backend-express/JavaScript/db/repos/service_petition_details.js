@@ -32,7 +32,8 @@ class ServicePetitionDetailsRepository {
         service_id:body.service_id,
         comment:body.comment,
         protocol:body.protocol,
-        group_id:body.group_id
+        group_id:body.group_id,
+        tenant:body.tenant
       })
     }
 
@@ -69,9 +70,9 @@ class ServicePetitionDetailsRepository {
     async findBySubForList(sub){
       return this.db.any('SELECT id,service_description,logo_uri,service_name,requester,type,service_id,comment,status,integration_environment FROM service_petition_details WHERE requester = $1 AND reviewed_at IS NULL', sub);
     }
-    async approveCreation(id,approved_by,status,comment,service_id){
+    async approveCreation(id,approved_by,status,comment,service_id,tenant){
        let date = new Date(Date.now());
-       return this.db.none("UPDATE service_petition_details SET status=$1, reviewed_at=$2, reviewer=$3,service_id=$6, comment=$5 WHERE id=$4",[status,date,approved_by,+id,comment,+service_id]);
+       return this.db.none("UPDATE service_petition_details SET status=$1, reviewed_at=$2, reviewer=$3,service_id=$6, comment=$5 WHERE id=$4 AND tenant=$7",[status,date,approved_by,+id,comment,+service_id,tenant]);
     }
 
     async belongsToRequesterHistory(petition_id,sub){
@@ -80,23 +81,24 @@ class ServicePetitionDetailsRepository {
       });
     }
 
-    async belongsToRequester(petition_id,sub){
+    async belongsToRequester(petition_id,sub,tenant){
         return this.db.oneOrNone(sql.belongsToRequester,{
           id:+petition_id,
-          sub:sub
+          sub:sub,
+          tenant:tenant
         })
     }
 
 
-    async review(id,approved_by,status,comment){
+    async review(id,approved_by,status,comment,tenant){
        let date = new Date(Date.now());
-       return this.db.any("UPDATE service_petition_details SET status=$1, reviewed_at=$2, reviewer=$3, comment=$5 WHERE id=$4 RETURNING *",[status,date,approved_by,+id,comment]);
+       return this.db.any("UPDATE service_petition_details SET status=$1, reviewed_at=$2, reviewer=$3, comment=$5 WHERE id=$4 AND tenant=$6 RETURNING *",[status,date,approved_by,+id,comment,tenant]);
     }
 
 
 
-     async getHistory(service_id){
-       return await this.db.any("SELECT id,type,status,reviewed_at,comment from service_petition_details where service_id=$1 ORDER BY reviewed_at ASC",+service_id)
+     async getHistory(service_id,tenant){
+       return await this.db.any("SELECT id,type,status,reviewed_at,comment from service_petition_details where service_id=$1 AND tenant=$2 ORDER BY reviewed_at ASC",[+service_id,tenant])
      }
 
      async deletePetition(petition_id){
@@ -107,8 +109,8 @@ class ServicePetitionDetailsRepository {
 
 
 
-     async openPetition(service_id){
-       return this.db.oneOrNone("SELECT id FROM service_petition_details WHERE service_id = $1 AND reviewed_at IS NULL", +service_id).then(result => {
+     async openPetition(service_id,tenant){
+       return this.db.oneOrNone("SELECT id FROM service_petition_details WHERE service_id = $1 AND reviewed_at IS NULL AND tenant=$2", [+service_id,tenant]).then(result => {
          if(result){
            return result.id;
          }

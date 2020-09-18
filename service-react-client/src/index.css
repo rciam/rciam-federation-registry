@@ -1129,3 +1129,11 @@ html:lang(gr) .home-container h1 {
 .groups-invite-table button {
   margin-right: 0.5rem;
 }
+
+.not_found_container {
+  margin-top: 5rem;
+  margin-left: 5rem;
+}
+.not_found_container span {
+  color:#7c7c7c;
+}

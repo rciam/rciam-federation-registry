@@ -41,8 +41,11 @@ Issuer.discover(process.env.ISSUER_BASE_URI).then((issuer)=>{
    clients.egi = new issuer.Client({
     client_id: process.env.CLIENT_ID_EGI,
     client_secret: process.env.CLIENT_SECRET_EGI,
-    redirect_uris: process.env.REDIRECT_URI_EGI
+    redirect_uris: process.env.REDIRECT_URI + 'egi'
   });
+  clients.egi.client_id = process.env.CLIENT_ID_EGI;
+  clients.egi.client_secret = process.env.CLIENT_SECRET_EGI;
+  clients.egi.issuer_url = process.env.ISSUER_BASE_URI;
 
   // client.callback('http://localhost:5000/callback/egi', params, { code_verifier }) // => Promise
   //   .then(function (tokenSet) {
@@ -64,8 +67,11 @@ Issuer.discover("https://aai.eosc-portal.eu/oidc/").then((issuer)=>{
   clients.eosc = new issuer.Client({
     client_id: process.env.CLIENT_ID_EOSC,
     client_secret: process.env.CLIENT_SECRET_EOSC,
-    redirect_uris: process.env.REDIRECT_URI_EOSC
+    redirect_uris: process.env.REDIRECT_URI + 'eosc'
   });
+  clients.eosc.client_id = process.env.CLIENT_ID_EOSC;
+  clients.eosc.client_secret = process.env.CLIENT_SECRET_EOSC;
+  clients.eosc.issuer_url = 'https://aai.eosc-portal.eu/oidc/';
 
 });
 

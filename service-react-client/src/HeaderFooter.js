@@ -10,15 +10,13 @@ import useGlobalState from './useGlobalState.js';
 import * as config from './config.json';
 import DropdownButton from 'react-bootstrap/DropdownButton';
 import Dropdown from 'react-bootstrap/Dropdown';
-import * as tenant_data from './tenant-config.json'
 import { useTranslation } from 'react-i18next';
 import {useHistory} from "react-router-dom";
-import {Context} from './user-context.js';
+import {userContext,tenantContext} from './context.js';
 
 export const Header= (props)=> {
 
-    const globalState = useGlobalState();
-    const tenant = tenant_data.data[globalState.global_state.tenant];
+    const tenant = useContext(tenantContext);
     return(
 
       <div className="header">
@@ -26,11 +24,11 @@ export const Header= (props)=> {
 
         <div className="text-center ssp-logo">
           <a href="https://www.egi.eu/" >
-            <Image src={tenant?tenant.logo:null} fluid />
+            <Image src={tenant[0]?tenant[0].logo:null} fluid />
           </a>
         </div>
         <h1 className="text-center">
-          {tenant?tenant.main_title:null}
+          {tenant[0]?tenant[0].main_title:null}
         </h1>
       </div>
     );
@@ -40,53 +38,59 @@ export const Header= (props)=> {
 
 export const NavbarTop = (props)=>{
   const history = useHistory();
-  const user = useContext(Context);
+  // eslint-disable-next-line
+  const [user,setUser] = useContext(userContext);
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   const globalState = useGlobalState();
   const logged = globalState.global_state.log_state;
-  const tenant = tenant_data.data[globalState.global_state.tenant];
   const [admin,setAdmin] = useState(false);
-  useEffect(()=>{
+  const tenant = useContext(tenantContext);
 
-    if(user[0]){
-      setAdmin(user[0].admin);
+  useEffect(()=>{
+    if(user){
+      setAdmin(user.admin);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[user[0]]);
+  },[user]);
   return (
-    <Navbar className="navbar-fixed-top">
-      <Navbar.Collapse className="justify-content-end">
-        {logged?
-        (<DropdownButton
-          variant="link"
-          alignRight
-          className='drop-menu drop-container-header'
-          title={<React.Fragment>
-            <span style={{color:tenant.color}}>
-            {user[0]?user[0].name:'login'}
-            <span className="user-role">{user[0]?' ('+user[0].role+')':null}</span>
-            <FontAwesomeIcon icon={admin?faUserShield:faUser}/>
-            </span>
-          </React.Fragment>}
-          id="dropdown-menu-align-right"
-        >
-          {user[0]?(
-            <Dropdown.Item>
-              {user[0].sub}
+    <React.Fragment>
+    {tenant[0]?
+      <Navbar className="navbar-fixed-top">
+        <Navbar.Collapse className="justify-content-end">
+          {logged?
+          (<DropdownButton
+            variant="link"
+            alignRight
+            className='drop-menu drop-container-header'
+            title={<React.Fragment>
+              <span style={tenant&&tenant[0]?{color:tenant[0].color}:null}>
+              {user?user.name:'login'}
+              <span className="user-role">{user?' ('+user.role+')':null}</span>
+              <FontAwesomeIcon icon={admin?faUserShield:faUser}/>
+              </span>
+            </React.Fragment>}
+            id="dropdown-menu-align-right"
+          >
+            {user?(
+              <Dropdown.Item>
+                {user.sub}
+              </Dropdown.Item>
+            ):null}
+            <Dropdown.Item onClick={()=>{localStorage.removeItem('token'); history.push('/'+(tenant&&tenant[0]?tenant[0].name:null)+'/home'); }} >
+              {t('logout')}<FontAwesomeIcon icon={faSignOutAlt}/>
             </Dropdown.Item>
-          ):null}
-          <Dropdown.Item onClick={()=>{localStorage.removeItem('token'); globalState.setLogState({tenant:'EGI',log_state:false}); history.push('/'); }} >
-            {t('logout')}<FontAwesomeIcon icon={faSignOutAlt}/>
-          </Dropdown.Item>
-        </DropdownButton>):(
-        <React.Fragment>
-          <a href={config.host+"login"}><Button className="log-button" variant="outline-primary">{t('login')}</Button></a>
-        </React.Fragment>
-        )
-      }
-      </Navbar.Collapse>
-    </Navbar>
+          </DropdownButton>):(
+          <React.Fragment>
+            <a href={config.host+"tenants/"+(tenant[0]?tenant[0].name:null)+"/login"}><Button className="log-button" variant="outline-primary">{t('login')}</Button></a>
+          </React.Fragment>
+          )
+        }
+        </Navbar.Collapse>
+      </Navbar>:null
+    }
+    </React.Fragment>
+
   )
 }
 

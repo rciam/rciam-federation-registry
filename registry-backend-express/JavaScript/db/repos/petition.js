@@ -14,9 +14,10 @@ class PetitionRepository {
   }
 
 
-  async get(id){
+  async get(id,tenant){
     return this.db.oneOrNone(sql.getPetition,{
       id:+id,
+      tenant:tenant
     }).then(result => {
       if(result){
         let data = {};
@@ -90,10 +91,11 @@ class PetitionRepository {
     })
   }
 
-  async getOwn(id,sub){
+  async getOwn(id,sub,tenant){
     return this.db.oneOrNone(sql.getOwnPetition,{
       sub:sub,
-      id:+id
+      id:+id,
+      tenant:tenant
     }).then(result => {
       if(result){
         let data = {};
@@ -159,11 +161,11 @@ class PetitionRepository {
         });
     }
 
-  async update(newState,targetId){
+  async update(newState,targetId,tenant){
     try{
       return this.db.tx('update-service',async t =>{
         let queries = [];
-        return t.petition.get(targetId).then(async oldState=>{
+        return t.petition.get(targetId,tenant).then(async oldState=>{
           if(oldState){
             let edits = calcDiff(oldState.service_data,newState);
             if(Object.keys(edits.details).length !== 0){

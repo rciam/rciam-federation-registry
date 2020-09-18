@@ -1,5 +1,6 @@
 import React,{useEffect,useState} from 'react';
 import initialValues from './initialValues';
+import {useParams} from "react-router-dom";
 import * as config from './config.json';
 import ServiceForm from "./ServiceForm.js";
 import {LoadingBar} from './Components/LoadingBar';
@@ -11,6 +12,7 @@ import Container from 'react-bootstrap/Container';
 import { diff } from 'deep-diff';
 import { useTranslation } from 'react-i18next';
 
+
 const EditService = (props) => {
     // eslint-disable-next-line
     const { t, i18n } = useTranslation();
@@ -18,6 +20,7 @@ const EditService = (props) => {
     const [service,setService] = useState();
     const [editPetition,setEditPetition] = useState();
     const [changes,setChanges] = useState();
+    const {tenant_name} = useParams();
 
     useEffect(()=>{
       getData();
@@ -71,7 +74,7 @@ const EditService = (props) => {
 
     const getData = () => {
       if(props.service_id){
-        fetch(config.host+'services/'+props.service_id, {
+        fetch(config.host+'tenants/'+tenant_name+'/services/'+props.service_id, {
           method: 'GET', // *GET, POST, PUT, DELETE, etc.
           credentials: 'include', // include, *same-origin, omit
           headers: {
@@ -92,7 +95,7 @@ const EditService = (props) => {
         });
       }
       if(props.petition_id&&props.type!=='delete'){
-        fetch(config.host+'petitions/'+props.petition_id+'?type=open', {
+        fetch(config.host+'tenants/'+tenant_name+'/petitions/'+props.petition_id+'?type=open', {
           method: 'GET', // *GET, POST, PUT, DELETE, etc.
           credentials: 'include', // include, *same-origin, omit
           headers: {
@@ -189,6 +192,7 @@ const ViewService = (props)=>{
   const { t, i18n } = useTranslation();
   const [service,setService] = useState();
   const [petition,setPetition] = useState();
+  const {tenant_name} = useParams();
 
   useEffect(()=>{
 
@@ -198,7 +202,7 @@ const ViewService = (props)=>{
 
   const getData = () => {
     if(props.service_id){
-      fetch(config.host+'services/'+props.service_id, {
+      fetch(config.host+'tenants/'+tenant_name+'/services/'+props.service_id, {
         method: 'GET', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
@@ -213,7 +217,7 @@ const ViewService = (props)=>{
       });
     }
     if(props.petition_id&&props.type!=='delete'){
-      fetch(config.host+'petitions/'+props.petition_id+'?type=open', {
+      fetch(config.host+'tenants/'+tenant_name+'/petitions/'+props.petition_id+'?type=open', {
         method: 'GET', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
