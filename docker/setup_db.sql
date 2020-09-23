@@ -1,21 +1,10 @@
 DROP TABLE IF EXISTS user_edu_person_entitlement,tokens,user_info, service_petition_contacts, service_petition_oidc_grant_types, service_petition_oidc_redirect_uris, service_petition_oidc_scopes,
 service_petition_details_oidc,service_petition_details_saml, service_petition_details, service_oidc_scopes,service_contacts,service_oidc_grant_types,service_oidc_redirect_uris,service_details_oidc,
-service_details_saml,service_details,service_state,user_roles,role_actions,role_entitlements,groups,invitations,group_subs,tenants;
+service_details_saml,service_details,service_state,user_roles,role_actions,role_entitlements,groups,invitations,group_subs;
 
 create table tokens (
   token VARCHAR(1054),
   code VARCHAR(1054) PRIMARY KEY
-);
-
-create table tenants (
-  name VARCHAR(256) PRIMARY KEY,
-  client_id VARCHAR(256),
-  client_secret VARCHAR(1054),
-  issuer_url VARCHAR(256),
-  logo VARCHAR(256),
-  description VARCHAR(1054),
-  main_title VARCHAR(256),
-  color VARCHAR(128)
 );
 
 
