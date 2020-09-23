@@ -1,6 +1,5 @@
 const sql = require('../sql').group;
 const cs = {};
-var config = require('../../config');
 const {newMemberNotificationMail} = require('../../functions/helpers.js');
 class GroupRepository {
   constructor(db, pgp) {
@@ -9,8 +8,7 @@ class GroupRepository {
   }
 
   async getMembers(group_id){
-    let date = new Date(Date.now());
-    return this.db.any(sql.getGroupMembers,{group_id: +group_id,now:date,validity_seconds:+config.invitation_validity_seconds}).then(members => {return members});
+    return this.db.any(sql.getGroupMembers,{group_id: +group_id}).then(members => {return members});
   }
 
   async newMemberNotification(invitation_data){

@@ -12,7 +12,7 @@ const bodyParser = require('body-parser')
 const {check,validationResult,body}= require('express-validator');
 const {clientValidationRules,validate} = require('./validator.js');
 const {merge_data} = require('./merge_data.js');
-const {Issuer,Strategy} = require('openid-client');
+const {Issuer,Strategy,custom} = require('openid-client');
 const routes= require('./routes/index');
 const MockStrategy = require('passport-mock-strategy');
 var cookieParser = require('cookie-parser');
@@ -23,7 +23,9 @@ const code_verifier = generators.codeVerifier();
 
 // We set Cors options so that express can handle preflight requests containing cookies
 let clients= {};
-
+custom.setHttpOptionsDefaults({
+  timeout: 20000,
+});
 var corsOptions = {
     origin:  process.env.OIDC_REACT,
     methods: "GET,HEAD,POST,PATCH,DELETE,OPTIONS,PUT",
@@ -34,135 +36,72 @@ var corsOptions = {
 }
 
 
-// Issuer and Passport Strategy initialization
-Issuer.discover(process.env.ISSUER_BASE_URI).then((issuer)=>{
-  //console.log(issuer.metadata);
+// Tenant issuer initialization
+db.tenants.getInit().then(async tenants => {
+  for (const tenant of tenants){
+    await Issuer.discover(tenant.issuer_url).then((issuer)=>{
+      //console.log(issuer.metadata);
 
-   clients.egi = new issuer.Client({
-    client_id: process.env.CLIENT_ID_EGI,
-    client_secret: process.env.CLIENT_SECRET_EGI,
-    redirect_uris: process.env.REDIRECT_URI + 'egi'
-  });
-  clients.egi.client_id = process.env.CLIENT_ID_EGI;
-  clients.egi.client_secret = process.env.CLIENT_SECRET_EGI;
-  clients.egi.issuer_url = process.env.ISSUER_BASE_URI;
+      clients[tenant.name] = new issuer.Client({
+        client_id: tenant.client_id,
+        client_secret: tenant.client_secret,
+        redirect_uris: process.env.REDIRECT_URI + tenant.name
+      });
+      clients[tenant.name].client_id = tenant.client_id;
+      clients[tenant.name].client_secret = tenant.client_secret;
+      clients[tenant.name].issuer_url = tenant.issuer_url;
+    });
+  }
+}).catch(err => {console.log('Tenant initialization failed due to following error'); console.log(err);});
 
-  // client.callback('http://localhost:5000/callback/egi', params, { code_verifier }) // => Promise
-  //   .then(function (tokenSet) {
-  //     console.log('received and validated tokens %j', tokenSet);
-  //     console.log('validated ID Token claims %j', tokenSet.claims());
-  //   });
 
-  // authUrls.egi = client.authorizationUrl({
-  //   client_id:process.env.CLIENT_ID,
-  //   scope: 'openid email profile eduperson_entitlement',
-  //   redirect_uri: 'http://localhost:5000/callback/eosc',
-  // });
-  //const passReqToCallback = false;
-
-});
-
-Issuer.discover("https://aai.eosc-portal.eu/oidc/").then((issuer)=>{
-
-  clients.eosc = new issuer.Client({
-    client_id: process.env.CLIENT_ID_EOSC,
-    client_secret: process.env.CLIENT_SECRET_EOSC,
-    redirect_uris: process.env.REDIRECT_URI + 'eosc'
-  });
-  clients.eosc.client_id = process.env.CLIENT_ID_EOSC;
-  clients.eosc.client_secret = process.env.CLIENT_SECRET_EOSC;
-  clients.eosc.issuer_url = 'https://aai.eosc-portal.eu/oidc/';
-
-});
-
-// Mock Strategy for Tests
-
-// passport.use(new MockStrategy({
-// 	name: 'my-mock',
-// 	user: {
-//     sub: '7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu',
-//     name: 'Andreas Kozadinos',
-//     preferred_username: 'akozadinos',
-//     given_name: 'Andreas',
-//     family_name: 'Kozadinos',
-//     email: 'andreaskoza@grnet.gr',
-//     acr: 'https://aai.egi.eu/LoA#Substantial',
-//     eduperson_entitlement: [
-//      'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu',
-//      'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=vm_operator#aai.egi.eu'
-//     ],
-//     edu_person_entitlements: [
-//      'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu',
-//      'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=vm_operator#aai.egi.eu'
-//     ],
-//     eduperson_assurance: [ 'https://aai.egi.eu/LoA#Substantial' ]
-//   },
-//   callback: process.env.OIDC_REACT
-// }, (user, done) => {
-//   routes.saveUser(user);
-//   done(null, user);
-// 	// Perform actions on user, call done once finished
-// }));
 
 
 
 const app = express();
 
-// var level = "";
-// if (res.statusCode >= 100) { level = "info"; }
-// if (res.statusCode >= 400) { level = "warn"; }
-// if (res.statusCode >= 500) { level = "error"; }
-// // Ops is worried about hacking attempts so make Unauthorized and Forbidden critical
-// if (res.statusCode == 401 || res.statusCode == 403) { level = "critical"; }
-// // No one should be using the old path, so always warn for those
-// if (req.path === "/v1" && level === "info") { level = "warn"; }
-// return level;
+
 
 app.use(expressWinston.logger({
-      transports: [
-        new(winston.transports.File)({filename:logPath}),
-        new (winston.transports.Console)({'timestamp':true}),
-      ],
-      format: winston.format.combine(
-        winston.format.timestamp(),
-        winston.format.json()
-      ),
-      level: function (req,res) {
-        return 'info';
-      },
-      baseMeta:null,
-      metaField:null,
-      meta: true, // optional: control whether you want to log the meta data about the request (default to true)
-      requestWhitelist: [],
-      responseWhitelist: [],
-      dynamicMeta: function(req, res) {
-        const meta={};
-        if(req.user&&req.user.sub&&req.user.role){
-          meta.user = {};
-          meta.user.sub= req.user ? req.user.sub : null;
-          meta.user.role= req.user ? req.user.role : null;
-        }
-        meta.method= req.method;
-        meta.status= res.statusCode;
-        meta.url= req.url;
-        meta.type='access_log';
-        meta.responseTime= res.responseTime;
-        return meta;
-      },
-      msg: "HTTP {{req.method}} {{req.url}}", // optional: customize the default logging message. E.g. "{{res.statusCode}} {{req.method}} {{res.responseTime}}ms {{req.url}}"
-      expressFormat: true, // Use the default Express/morgan request formatting. Enabling this will override any msg if true. Will only output colors with colorize set to true
-      colorize: false, // Color the text and status code, using the Express/morgan color palette (text: gray, status: default green, 3XX cyan, 4XX yellow, 5XX red).
-      ignoreRoute: function (req, res) { return false; } // optional: allows to skip some log messages based on request and/or response
-    }));
+    transports: [
+      new(winston.transports.File)({filename:logPath}),
+      new (winston.transports.Console)({'timestamp':true}),
+    ],
+    format: winston.format.combine(
+      winston.format.timestamp(),
+      winston.format.json()
+    ),
+    level: function (req,res) {
+      return 'info';
+    },
+    baseMeta:null,
+    metaField:null,
+    meta: true, // optional: control whether you want to log the meta data about the request (default to true)
+    requestWhitelist: [],
+    responseWhitelist: [],
+    dynamicMeta: function(req, res) {
+      const meta={};
+      if(req.user&&req.user.sub&&req.user.role){
+        meta.user = {};
+        delete req.user.role.actions;
+        meta.user.sub= req.user ? req.user.sub : null;
+        meta.user.role= req.user ? req.user.role : null;
+      }
+      meta.method= req.method;
+      meta.status= res.statusCode;
+      meta.url= req.url;
+      meta.type='access_log';
+      meta.responseTime= res.responseTime;
+      return meta;
+    },
+    msg: "HTTP {{req.method}} {{req.url}}", // optional: customize the default logging message. E.g. "{{res.statusCode}} {{req.method}} {{res.responseTime}}ms {{req.url}}"
+    expressFormat: true, // Use the default Express/morgan request formatting. Enabling this will override any msg if true. Will only output colors with colorize set to true
+    colorize: false, // Color the text and status code, using the Express/morgan color palette (text: gray, status: default green, 3XX cyan, 4XX yellow, 5XX red).
+    ignoreRoute: function (req, res) { return false; } // optional: allows to skip some log messages based on request and/or response
+  }));
 
 
 
-
-app.use(session({
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: true
-}));
 app.set('clients',clients);
 app.use(passport.initialize());
 app.use(passport.session());
@@ -202,11 +141,6 @@ app.use(function (err, req, res, next) {
    res.json({ error: err.stack })
 
 });
-
-
-
-
-
 
 
 const port = 5000;

@@ -1,3 +1,4 @@
+
 SELECT json_build_object('service_name', sd.service_name,'service_description',sd.service_description,
 						 'logo_uri',sd.logo_uri,'policy_uri',sd.policy_uri,'integration_environment',sd.integration_environment,
 						 'client_id',sd.client_id,'allow_introspection',sd.allow_introspection,'code_challenge_method',sd.code_challenge_method,

@@ -236,10 +236,6 @@ create table service_petition_oidc_scopes (
   FOREIGN KEY (owner_id) REFERENCES service_petition_details(id) ON DELETE CASCADE
 );
 
-INSERT INTO tenants (name,client_id,client_secret,issuer_url,logo,main_title,color,description)
-VALUES ('egi','966c3bcf-0a24-4874-80f0-822ef8c7a5be','AO4C3x6WiORO4f5ha3WETllykfVwQfBcboCl8ETZKmm1hOAyA6ku8YxZu90MfHk7gp6LX_HBFqK_sQlVezY96L0','https://aai-dev.egi.eu/oidc/','https://aai-dev.egi.eu/proxy/module.php/themeegi/resources/images/logo.svg','EGI AAI Service Registry','#0A559C','The EGI CheckIn Service provides a secure web interface through which service operators can register their OpenID Connect and SAML based services.');
-INSERT INTO tenants (name,client_id,client_secret,issuer_url,logo,main_title,color,description)
-VALUES ('eosc','5d305fe0-d34f-44c9-98f6-e027a7cd852b','ALYg2PMDaNsJOpFt2-LrRekBHFb6Gs7M62_k5CLaDaM5ie-SmALWLxnZYKy108WwuNtRGOPc3zYRYckta91QLVQ','https://aai.eosc-portal.eu/oidc/','https://www.eosc-portal.eu/sites/all/themes/theme1/logo.png','EOSC Service Registry','#349bdc','The EOSC Service registry provides a secure web interface through which service operators can register their OpenID Connect and SAML based services.');
 
 INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol,group_id,tenant)
 VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 1','https://cdn.vox-cdn.com/thumbor/0n6dqQfk9MuOBSiM39Pog2Bw39Y=/1400x1400/filters:format(jpeg)/cdn.vox-cdn.com/uploads/chorus_asset/file/19341372/microsoftedgenewlogo.jpg','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','oidc',1,'egi');
@@ -888,6 +884,10 @@ INSERT INTO group_subs (group_id,sub,group_manager)
 VALUES (5,'7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu',true);
 INSERT INTO group_subs (group_id,sub,group_manager)
 VALUES (7,'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',true);
+INSERT INTO group_subs (group_id,sub,group_manager)
+VALUES (7,'test1',true);
+INSERT INTO group_subs (group_id,sub,group_manager)
+VALUES (7,'test2',true);
 INSERT INTO group_subs (group_id,sub,group_manager)
 VALUES (8,'4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.eosc-portal.eu',true);
 INSERT INTO group_subs (group_id,sub,group_manager)

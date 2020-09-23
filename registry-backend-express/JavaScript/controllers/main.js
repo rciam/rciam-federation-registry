@@ -1,4 +1,5 @@
-const {sendMail} = require('../functions/helpers.js');
+const {
+} = require('../functions/helpers.js');
 
 
 const findConnections = (req, res, db) => {
@@ -20,7 +21,7 @@ const rejectPetition = (req,res,next,db) => {
         await t.user.getPetitionOwners(req.params.id).then(data=>{
           if(data){
             data.forEach(email_data=>{
-              sendMail({subject:'Service Petition Review',service_name:email_data.service_name,state:'rejected'},'review-notification.html',[{name:email_data.name,email:email_data.email}]);
+              sendMail({subject:'Service Petition Review',service_name:email_data.service_name,state:'rejected',tenant:req.params.name},'review-notification.html',[{name:email_data.name,email:email_data.email}]);
             })
           }
         }).catch(err=>{next(err)});
@@ -52,7 +53,7 @@ const changesPetition = (req,res,next,db) => {
                     await t.user.getPetitionOwners(req.params.id).then(data=>{
                       if(data){
                         data.forEach(email_data=>{
-                          sendMail({subject:'Service Petition Review',service_name:email_data.service_name,state:'approved with changes'},'review-notification.html',[{name:email_data.name,email:email_data.email}]);
+                          sendMail({subject:'Service Petition Review',service_name:email_data.service_name,state:'approved with changes',tenant:req.params.name},'review-notification.html',[{name:email_data.name,email:email_data.email}]);
                         })
                       }
 
@@ -103,7 +104,7 @@ const approvePetition = (req,res,next,db) => {
         await t.user.getPetitionOwners(req.params.id).then(data=>{
           if(data){
             data.forEach(email_data=>{
-              sendMail({subject:'Service Petition Review',service_name:email_data.service_name,state:'approved'},'review-notification.html',[{name:email_data.name,email:email_data.email}]);
+              sendMail({subject:'Service Petition Review',service_name:email_data.service_name,state:'approved',tenant:req.params.name},'review-notification.html',[{name:email_data.name,email:email_data.email}]);
             })
           }
         }).catch(err=>{next(err);})

@@ -108,21 +108,23 @@ router.get('/tokens/:code',(req,res,next)=>{
 // });
 
 // Get User User Info
-router.get('/tenants/:name/user',authenticate,(req,res)=>{
-  var clients = req.app.get('clients');
-  TokenArray = req.headers.authorization.split(" ");
-  clients[req.params.name].userinfo(TokenArray[1]) // => Promise
-  .then(function (userinfo) {
-    let user = userinfo;
-    if(req.user.role.actions.includes('review_own_petition')){
-      user.admin = true;
-    }
-    user.role = req.user.role.name;
-    res.end(JSON.stringify({
-      user
-    }));
-  });
-
+router.get('/tenants/:name/user',authenticate,(req,res,next)=>{
+  try{
+    var clients = req.app.get('clients');
+    TokenArray = req.headers.authorization.split(" ");
+    clients[req.params.name].userinfo(TokenArray[1]) // => Promise
+    .then(function (userinfo) {
+      let user = userinfo;
+      if(req.user.role.actions.includes('review_own_petition')){
+        user.admin = true;
+      }
+      user.role = req.user.role.name;
+      res.end(JSON.stringify({user}));
+    }).catch(err=>{next(err)});
+  }
+  catch(err){
+    next(err)
+  }
 });
 
 // ams push subscription for deployment results
@@ -139,7 +141,7 @@ router.post('/services/deployment',(req,res,next)=>{
           await t.user.getServiceOwners(result.ids).then(data=>{
             if(data){
               data.forEach(email_data=>{
-                sendMail({subject:'Service Deployment Result',service_name:email_data.service_name,state:email_data.state},'deployment-notification.html',[{name:email_data.name,email:email_data.email}]);
+                sendMail({subject:'Service Deployment Result',service_name:email_data.service_name,state:email_data.state,tenant:email_data.tenant},'deployment-notification.html',[{name:email_data.name,email:email_data.email}]);
               })
             }
           }).catch(err=>{
@@ -340,7 +342,7 @@ router.post('/tenants/:name/petitions',clientValidationRules(),validate,authenti
             if(id){
               res.status(200).json({id:id});
               await t.user.getReviewers().then(users=>{
-                sendMail({subject:'New Petition to Review',service_name:req.body.service_name},'reviewer-notification.html',users);
+                sendMail({subject:'New Petition to Review',service_name:req.body.service_name,tenant:req.params.name},'reviewer-notification.html',users);
               }).catch(error=>{
                 next('Could not sent email to reviewers:' + err);
               });
@@ -412,16 +414,18 @@ router.put('/tenants/:name/petitions/:id',clientValidationRules(),validate,authe
             }
           }).catch(err=>{next(err)});
         }
-        await t.petition.update(req.body,req.params.id,req.params.name).then(response=>{
-          if(response.success){
-            res.status(200).end();
-          }
-          else{
-            if(response.error){
-              next(response.error);
+        else{
+          await t.petition.update(req.body,req.params.id,req.params.name).then(response=>{
+            if(response.success){
+              res.status(200).end();
             }
-          }
-        }).catch(err=>{next(err)});
+            else{
+              if(response.error){
+                next(response.error);
+              }
+            }
+          }).catch(err=>{next(err)});
+        }
       }
       catch(err){
         next(err);
@@ -482,7 +486,7 @@ router.get('/tenants/:name/groups/:group_id/members',authenticate,view_group,(re
         res.status(200).json({group_members});
       }
       else{
-        throw 'No group meber could be found';
+        throw 'No group member could be found';
       }
     })
   }
@@ -511,6 +515,7 @@ router.post('/tenants/:name/groups/:group_id/invitations',authenticate,postInvit
   try{
     req.body.code = uuidv1();
     req.body.invited_by = req.user.email;
+    req.body.tenant = req.params.name;
     sendInvitationMail(req.body)
     db.invitation.add(req.body).then((response)=>{
 
@@ -549,6 +554,7 @@ router.put('/tenants/:name/groups/:group_id/invitations/:id',authenticate,is_gro
   try{
     db.invitation.refresh(req.params.id).then(response=>{
       if(response.code){
+        response.tenant = req.params.name;
         sendInvitationMail(response)
         res.status(200).end();
       }
@@ -568,8 +574,9 @@ router.put('/tenants/:name/invitations/:invite_id/:action',authenticate,(req,res
   try{
     if(req.params.action==='accept'){
       db.tx('accept-invite',async t =>{
-        await t.invitation.get(req.params.invite_id,req.user.sub).then(async invitation_data=>{
+        await t.invitation.getOne(req.params.invite_id,req.user.sub).then(async invitation_data=>{
           if(invitation_data){
+            invitaiton_data.tenant = req.params.name;
             let done = await t.batch([
               t.group.newMemberNotification(invitation_data),
               t.group.addMember(invitation_data),
@@ -619,6 +626,21 @@ router.get('/tenants/:name/invitations',authenticate,(req,res,next)=>{
   }
 });
 
+router.get('/tenants/:name/groups/:group_id/invitations',authenticate,(req,res,next)=>{
+  try{
+    db.invitation.get(req.params.group_id).then(invitations => {
+      if(invitations){
+        res.status(200).json({invitations});
+      }
+      else{
+        res.status(204).end();
+      }
+    })
+  }
+  catch(err){
+    next(err)
+  }
+})
 // Activate invitation
 // post/invitations/activate_by_code
 router.put('/tenants/:name/invitations',authenticate,(req,res,next)=>{
@@ -690,7 +712,6 @@ function view_group(req,res,next){
 function authenticate(req,res,next){
 
   try{
-
     var clients = req.app.get('clients');
     if(process.env.NODE_ENV==='test-docker'||process.env.NODE_ENV==='test'){
       req.user ={};
@@ -770,10 +791,9 @@ function canReview(req,res,next){
   if(req.user.role.actions.includes('review_petition')){
     next();
   }
-  else if (true||req.user.role.actions.includes('review_own_petition')) {
+  else if (req.user.role.actions.includes('review_own_petition')) {
     db.petition.canReviewOwn(req.params.id,req.user.sub).then(canReview=>{
       if(canReview){
-
         next();
       }
       else{
@@ -876,30 +896,35 @@ function asyncPetitionValidation(req,res,next){
         }
       }
       else if(req.route.methods.put){
-
         await t.service_petition_details.belongsToRequester(req.params.id,req.user.sub,req.params.name).then(async petition => {
           if(petition){
             if(req.body.type==='delete'){
               next();
             }
-            if(petition.protocol!==req.body.protocol){
-              res.status(403);
-              customLogger(req,res,'warn','Tried to edit protocol.');
-              return res.end();
-            }
-            if(petition.type!==req.body.type){
-              return res.json({success:false,error:'Type of request cannot be modified'});
-            }
-            await isAvailable.apply(this,(req.body.protocol==='oidc'?[t,req.body.client_id,'oidc',req.params.id,0,req.params.name]:[t,req.body.entity_id,'saml',req.params.id,0,req.params.name])).then(async available=>{
-              if(available){
-                next();
-              }
-              else{
-                res.status(422);
-                customLogger(req,res,'warn','Protocol id is not available');
+            else{
+              if(petition.protocol!==req.body.protocol){
+                res.status(403);
+                customLogger(req,res,'warn','Tried to edit protocol.');
                 return res.end();
               }
-            });
+              if(petition.type==='create' && req.body.type!=='create'){
+                customLogger(req,res,'warn','Tried to edit registration type');
+                return res.status(403);
+              }
+              if(!req.body.service_id){
+                req.body.service_id=0;
+              }
+              await isAvailable.apply(this,(req.body.protocol==='oidc'?[t,req.body.client_id,'oidc',req.params.id,req.body.service_id,req.params.name]:[t,req.body.entity_id,'saml',req.params.id,req.body.service_id,req.params.name])).then(async available=>{
+                if(available){
+                  next();
+                }
+                else{
+                  res.status(422);
+                  customLogger(req,res,'warn','Protocol id is not available');
+                  return res.end();
+                }
+              });
+            }
           }
           else{
             res.status(403);

@@ -38,6 +38,7 @@ class ServicePetitionDetailsRepository {
     }
 
     async update(body,id){
+      console.log(body.type);
         return this.db.none(sql.update,{
           service_description: body.service_description,
           service_name: body.service_name,

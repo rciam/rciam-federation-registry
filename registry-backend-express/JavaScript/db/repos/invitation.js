@@ -27,12 +27,11 @@ class InvitationRepository {
 
   async getAll(sub){
     let date = new Date(Date.now());
-
     return this.db.any(sql.getAll,{sub: sub});
   }
 
-  async get(id,sub){
-    return this.db.oneOrNone(sql.get,{sub: sub,id:+id});
+  async getOne(id,sub){
+    return this.db.oneOrNone(sql.getOne,{sub: sub,id:+id});
   }
 
   async reject(id,sub){
@@ -41,6 +40,11 @@ class InvitationRepository {
 
   async delete(id){
     return this.db.oneOrNone('DELETE FROM invitations WHERE id=$1 RETURNING id',+id);
+  }
+
+  async get(group_id){
+    let date = new Date(Date.now());
+    return this.db.any(sql.get,{group_id:+group_id,now:date,validity_seconds:+config.invitation_validity_seconds});
   }
 
   async setUser(code,sub){

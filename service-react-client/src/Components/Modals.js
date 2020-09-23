@@ -85,8 +85,8 @@ export const ConfirmationModal = (props) =>{
 }
 
 export function ResponseModal(props){
-  // eslint-disable-next-line
   let {tenant_name} = useParams();
+  // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   let history = useHistory();
 

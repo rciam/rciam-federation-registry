@@ -79,7 +79,7 @@ const sendInvitationMail = (data) => {
     var template = handlebars.compile(html);
     var replacements = {
       email:data.email,
-      uri:process.env.EXPRESS_BASE +'/invitation/' + data.code
+      url:process.env.EXPRESS_BASE+'/'+ data.tenant +'/invitation/' + data.code
     }
     var htmlToSend = template(replacements);
     var mailOptions = {
@@ -109,7 +109,8 @@ const newMemberNotificationMail = (data,managers) => {
     var replacements = {
       invitation_mail:data.invitation_mail,
       username:data.preferred_username,
-      email:data.email
+      email:data.email,
+      url:process.env.EXPRESS_BASE+'/'+ data.tenant
     };
     var template = handlebars.compile(html);
     managers.forEach((manager)=>{
@@ -162,7 +163,8 @@ const sendMail= (data,template_uri,users)=>{
       var replacements = {
         service_name:data.service_name,
         date:currentDate,
-        state:state
+        state:state,
+        url:process.env.EXPRESS_BASE+'/'+ data.tenant
       };
 
       users.forEach((user) => {

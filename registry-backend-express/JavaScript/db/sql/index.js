@@ -67,7 +67,9 @@ module.exports = {
     },
     invitations: {
       getAll:(sql('invitations/getAll.sql')),
-      get:(sql('invitations/get.sql'))
+      get:(sql('invitations/get.sql')),
+      getOne:(sql('invitations/getOne.sql'))
+
     }
 };
 

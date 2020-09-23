@@ -1,7 +1,5 @@
-//const sql = require('../sql').group;
 const cs = {};
-//var config = require('../../config');
-//const {newMemberNotificationMail} = require('../../functions/helpers.js');
+
 class TenantsRepository {
   constructor(db, pgp) {
       this.db = db;
@@ -12,7 +10,9 @@ class TenantsRepository {
     return this.db.oneOrNone('SELECT name,logo,main_title,color,description FROM tenants WHERE name=$1',tenant_name);
   }
 
-
+  async getInit(){
+    return this.db.any('SELECT name,client_id,client_secret,issuer_url FROM tenants');
+  }
 
 }
 
