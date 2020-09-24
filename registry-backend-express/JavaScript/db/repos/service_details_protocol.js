@@ -16,7 +16,6 @@ class ServiceDetailsProtocolRepository {
 
     }
     async checkClientId(client_id,service_id,petition_id,tenant){
-      console.log(client_id + ' ' +service_id + ' ' + petition_id + ' ' + tenant);
       return this.db.any(sql.checkClientId,{
         client_id:client_id,
         service_id:service_id,

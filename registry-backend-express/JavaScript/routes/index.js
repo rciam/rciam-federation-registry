@@ -576,7 +576,7 @@ router.put('/tenants/:name/invitations/:invite_id/:action',authenticate,(req,res
       db.tx('accept-invite',async t =>{
         await t.invitation.getOne(req.params.invite_id,req.user.sub).then(async invitation_data=>{
           if(invitation_data){
-            invitaiton_data.tenant = req.params.name;
+            invitation_data.tenant = req.params.name;
             let done = await t.batch([
               t.group.newMemberNotification(invitation_data),
               t.group.addMember(invitation_data),
@@ -585,7 +585,7 @@ router.put('/tenants/:name/invitations/:invite_id/:action',authenticate,(req,res
             res.status(200).end();
           }
           else{
-            throw 'No invitation was found';
+            res.status(204).send("No invitation was found");
           }
         }).catch(err=>{next(err)})
       })

@@ -1,5 +1,4 @@
-const {
-} = require('../functions/helpers.js');
+const {sendMail} = require('../functions/helpers.js');
 
 
 const findConnections = (req, res, db) => {
