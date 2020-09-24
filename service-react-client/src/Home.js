@@ -67,7 +67,7 @@ const Home = ()=> {
 
 
    const activateInvitation = () => {
-     fetch(config.host+'tenants/'+tenant_name+'/invitations', {
+     fetch(config.host+'tenants/'+tenant_name+'/invitations/activate_by_code', {
        method: 'PUT', // *GET, POST, PUT, DELETE, etc.
        credentials: 'include', // include, *same-origin, omit
        headers: {

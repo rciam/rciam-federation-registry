@@ -21,7 +21,7 @@ function run() {
       oidc: []
     }
   };
-  axios.get(process.env.EXPRESS+'/services/pending',options)
+  axios.get(process.env.EXPRESS+'/ams/get_new_configurations',options)
   .then(function (response) {
 	// handle success
     let data;
@@ -46,7 +46,7 @@ function run() {
         data={"messages":messages.egi.oidc};
         axios.post(publish_url_oidc,data, options).then((res) => {
           if(res.status===200){
-            axios.put(process.env.EXPRESS+'/services/state',updateData.egi.oidc,options).then((res)=>{
+            axios.put(process.env.EXPRESS+'/agent/set_services_state',updateData.egi.oidc,options).then((res)=>{
               if(res.status===200){
 
                 if(res.success===false){
@@ -61,7 +61,7 @@ function run() {
         data={"messages":messages.egi.saml};
         axios.post(publish_url_saml,data, options).then((res) => {
           if(res.status===200){
-            axios.put(process.env.EXPRESS+'/services/state',updateData.egi.saml,options).then((res)=>{
+            axios.put(process.env.EXPRESS+'/agent/set_services_state',updateData.egi.saml,options).then((res)=>{
               if(res.status===200){
                 if(res.success===false){
                  console.log(res.error);
@@ -81,36 +81,6 @@ function run() {
     // always executed
   });
 }
-
-// function fakeThirdParty(data){
-//   let messages = [];
-//   data.forEach((message,i)=>{
-//     data[i].state = 'deployed';
-//     messages.push({"attributes":{},"data": Buffer.from(JSON.stringify(data[i])).toString("base64")});
-//   });
-//   data={"messages":messages};
-//   axios.post(fake_publish_url,data, options).then((res) => {
-//     if(res.status===200){
-//     }
-//   });
-// }
-// function checkConsumer(){
-//   data = {"MaxMessages":"5"};
-//   let response = [];
-//   let ackIds = [];
-//   axios.post(fake_consume_url,data,options).then((res)=>{
-//     console.log(res);
-//     if(res.data.receivedMessages.length>0){
-//       res.data.receivedMessages.forEach(message=>{
-//         ackIds.push(message.message.ackId);
-//         response.push(JSON.parse(Buffer.from(message.message.data, 'base64').toString()));
-//       })
-//     }
-//     console.log('we have new stuff');
-//     console.log(response);
-//   })
-//
-// }
 
 
 function stopClock() {

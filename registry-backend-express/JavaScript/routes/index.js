@@ -71,7 +71,7 @@ router.get('/callback/:name',(req,res,next)=>{
 });
 
 // Route used for verifing push subscription
-router.get('/ams_verification_hash',(req,res)=>{
+router.get('/ams/ams_verification_hash',(req,res)=>{
   console.log('ams verification');
   res.setHeader('Content-type', 'plain/text');
   res.status(200).send('67647c730ced41b9c60ad4da4c06170bf3f1d3c9');
@@ -97,15 +97,6 @@ router.get('/tokens/:code',(req,res,next)=>{
   }
 });
 
-// // Check Authentication
-// router.get('/auth',authenticate,(req,res,next)=>{
-//   if(req.user){
-//     res.status(200).end();
-//   }
-//   else{
-//     res.status(401).end();
-//   }
-// });
 
 // Get User User Info
 router.get('/tenants/:name/user',authenticate,(req,res,next)=>{
@@ -130,7 +121,7 @@ router.get('/tenants/:name/user',authenticate,(req,res,next)=>{
 // ams push subscription for deployment results
 // needs Authentication
 // ams/ingest
-router.post('/services/deployment',(req,res,next)=>{
+router.post('/ams/ingest',(req,res,next)=>{
   // Decode messages
   try{
     return db.task('deploymentResults', async t => {
@@ -162,8 +153,7 @@ router.post('/services/deployment',(req,res,next)=>{
 });
 
 // ams-agent requests to set state to waiting development
-// agent/set_services_state
-router.put('/services/state',amsAgentAuth,(req,res,next)=>{
+router.put('/agent/set_services_state',amsAgentAuth,(req,res,next)=>{
   try{
     db.service_state.updateMultiple(req.body).then(result=>{
       if(result.success){
@@ -201,12 +191,8 @@ router.get('/tenants/:name/services',authenticate,(req,res,next)=>{
   }
 });
 
-
-
-// ams-agent requests to get pending services
-//router.get('/services?state=pending',amsAgentAuth,(req,res,next)=>{
-
-router.get('/services/pending',amsAgentAuth,(req,res,next)=>{
+// ams-agent requests
+router.get('/agent/get_new_configurations',amsAgentAuth,(req,res,next)=>{
   try{
     db.service.getPending().then(services=>{
       if(services){
@@ -438,7 +424,6 @@ router.put('/tenants/:name/petitions/:id',clientValidationRules(),validate,authe
 });
 
 // Admin rejects petition
-//router.post('/petitions/:id/review',authenticate,canReview,(req,res,next)=>{
 router.put('/tenants/:name/petitions/:id/review',authenticate,canReview,(req,res,next)=>{
   try{
     if(req.body.type==='reject'){
@@ -460,7 +445,6 @@ router.put('/tenants/:name/petitions/:id/review',authenticate,canReview,(req,res
 });
 
 // Check availability for protocol unique id
-//router.get('/check_availability',authenticate,(req,res,next)=>{
 router.get('/tenants/:name/check-availability',authenticate,(req,res,next)=>{
   db.tx('get-history-for-petition', async t =>{
     try{
@@ -643,14 +627,14 @@ router.get('/tenants/:name/groups/:group_id/invitations',authenticate,(req,res,n
 })
 // Activate invitation
 // post/invitations/activate_by_code
-router.put('/tenants/:name/invitations',authenticate,(req,res,next)=>{
+router.put('/tenants/:name/invitations/activate_by_code',authenticate,(req,res,next)=>{
   try{
     db.invitation.setUser(req.body.code,req.user.sub).then(result=>{
       if(result.success){
         res.status(200).send(result);
       }
       else if(result.expired){
-        res.status(200).json({expired:true});
+        res.status(204).json({expired:true});
       }
       else{
         res.status(204).end();
