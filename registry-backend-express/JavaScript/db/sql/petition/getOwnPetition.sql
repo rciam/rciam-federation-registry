@@ -1,4 +1,3 @@
-
 SELECT json_build_object('service_name', sd.service_name,'service_description',sd.service_description,
 						 'logo_uri',sd.logo_uri,'policy_uri',sd.policy_uri,'integration_environment',sd.integration_environment,
 						 'client_id',sd.client_id,'allow_introspection',sd.allow_introspection,'code_challenge_method',sd.code_challenge_method,
@@ -23,9 +22,11 @@ SELECT json_build_object('service_name', sd.service_name,'service_description',s
 							) json
     FROM (SELECT *
 	FROM ( SELECT * FROM
-		(((SELECT * FROM service_petition_details WHERE id=${id} AND reviewed_at IS NULL AND tenant=${tenant}) as petition LEFT JOIN
-			(SELECT id as srv_id,group_id FROM service_details) as service ON service.srv_id = petition.service_id) as data LEFT JOIN (
-				SELECT id as group_id,sub as my_sub FROM groups LEFT JOIN group_subs ON groups.id=group_subs.group_id WHERE sub=${sub}
-			) AS groups USING (group_id)) WHERE my_sub IS NOT NULL OR (type='create' AND requester=${sub})) AS foo
+		(SELECT * FROM
+		(SELECT petition.*,service_details.group_id as s_group_id FROM
+			(SELECT * FROM service_petition_details WHERE id=${id} AND reviewed_at IS NULL AND tenant=${tenant}) as petition
+			LEFT JOIN service_details ON petition.service_id = service_details.id) as petition
+			LEFT JOIN group_subs ON (petition.group_id=group_subs.group_id OR petition.s_group_id=group_subs.group_id) AND sub=${sub}
+		) as foo WHERE foo.sub IS NOT NULL) AS foo
 	LEFT JOIN service_petition_details_oidc USING (id)
 	LEFT JOIN service_petition_details_saml USING (id)) as sd

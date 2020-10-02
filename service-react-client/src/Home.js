@@ -76,12 +76,17 @@ const Home = ()=> {
        },
        body: JSON.stringify({code:localStorage.getItem('invitation')})
      }).then( response=>{
-           if(response.status===200){return response.json();}
+           if(response.status===406){return response.json();}
+           else if(response.status!==200){return true}
            else {return false}
          }).then(response=>{
            setLoading(false);
            localStorage.removeItem('invitation');
-           history.push('/'+tenant_name+'/invitation_error',{error: response.error});
+           if(response){
+             history.push('/'+tenant_name+'/invitation_error',{error: response.error});
+           }
+
+
      })
    }
 

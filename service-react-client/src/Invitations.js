@@ -47,6 +47,7 @@ const InvitationsPage = (props) => {
       }
     }).then(response=> {
         if(response){
+          console.log(response);
           setInvitations(response);
         }
         else{

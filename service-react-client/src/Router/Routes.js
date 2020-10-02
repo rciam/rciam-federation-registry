@@ -21,9 +21,7 @@ const Routes = (props) => {
       <Route exact path="/:tenant_name/code/:code">
         <Callback/>
       </Route>
-      <TenantRoute exact path="/:tenant_name">
-        <Home/>
-      </TenantRoute>
+
       <TenantRoute path="/:tenant_name/home">
         <Home/>
       </TenantRoute>
@@ -112,6 +110,7 @@ const Routes = (props) => {
           </div>
           <ViewService/>
       </ProtectedRoute>
+      <Redirect from="/:tenant_name" to="/:tenant_name/home"/>
       <Redirect from='*' to='/404' />
     </Switch>
   </div>

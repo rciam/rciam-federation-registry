@@ -27,7 +27,7 @@ const rejectPetition = (req,res,next,db) => {
         res.status(200).end();
       }
       else{
-        res.status(204).end();
+        res.status(403).send({error:"No petition found"});
       }
     }).catch(err=>{next(err);});
   })
@@ -63,7 +63,7 @@ const changesPetition = (req,res,next,db) => {
             }).catch(err=>{next(err);});
           }
           else{
-            res.status(204).end();
+            res.status(403).send({error:"No petition found"});
           }
         }).catch(err=>{next(err);});
       })
@@ -109,7 +109,7 @@ const approvePetition = (req,res,next,db) => {
         }).catch(err=>{next(err);})
       }
       else{
-        res.status(204).end();
+        res.status(403).send({error:"No petition found"});
       }
     }).catch(err=>{next(err);})
   })
@@ -151,7 +151,7 @@ const getOpenPetition = (req,res,next,db) =>{
 
 const getPetition = (req,res,next,db) => {
   if(req.user.role.actions.includes('get_petition')){
-    db.petition.getOld(req.params.id,req.user.sub).then(petition =>{
+    db.petition.getOld(req.params.id,req.user.sub,req.params.name).then(petition =>{
       if(petition){
         res.status(200).json({petition:petition.service_data});
       }
@@ -161,7 +161,7 @@ const getPetition = (req,res,next,db) => {
     }).catch(err=>{next(err)});
   }
   else if (req.user.role.actions.includes('get_own_petition')){
-    db.petition.getOwnOld(req.params.id,req.user.sub).then(petition =>{
+    db.petition.getOwnOld(req.params.id,req.user.sub,req.params.name).then(petition =>{
       if(petition){
         res.status(200).json({petition:petition.service_data});
       }

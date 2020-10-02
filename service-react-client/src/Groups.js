@@ -74,7 +74,6 @@ const GroupsPage = (props) => {
           }
           else {return false}
         }).then(response=> {
-          console.log(response);
         if(response){
           setInvitations(response.invitations);
         }

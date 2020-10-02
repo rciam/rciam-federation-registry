@@ -210,7 +210,6 @@ const ViewService = (props)=>{
           'Authorization': localStorage.getItem('token')
         }
       }).then(response=>response.json()).then(response=> {
-
         if(response.service){
           setService(response.service);
         }
@@ -225,7 +224,6 @@ const ViewService = (props)=>{
           'Authorization': localStorage.getItem('token')
         }
       }).then(response=>response.json()).then(response=> {
-
         if(response.petition){
           setPetition(response.petition);
         }
@@ -236,7 +234,6 @@ const ViewService = (props)=>{
     <React.Fragment>
       {service?<ServiceForm initialValues={service} disabled={true}  />:props.service_id?<LoadingBar loading={true}/>:petition?
         <React.Fragment>
-
           <Alert variant='danger' className='form-alert'>
             {t('view_create_info')}
           </Alert>

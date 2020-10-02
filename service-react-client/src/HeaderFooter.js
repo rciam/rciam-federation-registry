@@ -77,7 +77,7 @@ export const NavbarTop = (props)=>{
                 {user.sub}
               </Dropdown.Item>
             ):null}
-            <Dropdown.Item onClick={()=>{localStorage.removeItem('token'); history.push('/'+(tenant&&tenant[0]?tenant[0].name:null)+'/home'); }} >
+            <Dropdown.Item onClick={()=>{localStorage.removeItem('token'); history.push('/'+(tenant&&tenant[0]?tenant[0].name:null));}} >
               {t('logout')}<FontAwesomeIcon icon={faSignOutAlt}/>
             </Dropdown.Item>
           </DropdownButton>):(

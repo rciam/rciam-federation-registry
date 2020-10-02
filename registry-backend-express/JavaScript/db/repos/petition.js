@@ -44,10 +44,11 @@ class PetitionRepository {
       id:+petition_id
     })
   }
-  async getOwnOld(id,sub){
-    return this.db.oneOrNone(sql.getOwnOldPetition,{
+  async getOwnOld(id,sub,tenant){
+    return this.db.oneOrNone(sql.getOldOwnPetition,{
       sub:sub,
-      id:+id
+      id:+id,
+      tenant:tenant
     }).then(result => {
       if(result){
         let data = {};
@@ -67,7 +68,7 @@ class PetitionRepository {
       }
     })
   }
-  async getOld(id,sub){
+  async getOld(id,sub,tenant){
     return this.db.oneOrNone(sql.getOldPetition,{
       sub:sub,
       id:+id

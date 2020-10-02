@@ -17,7 +17,7 @@ const tables = ['service_oidc_scopes','service_oidc_grant_types','service_oidc_r
 const { generators } = require('openid-client');
 const code_verifier = generators.codeVerifier();
 const {rejectPetition,approvePetition,changesPetition,getPetition,getOpenPetition} = require('../controllers/main.js');
-
+const base64url = require('base64url');
 
 
 
@@ -42,7 +42,6 @@ router.get('/tenants/:name',(req,res,next)=>{
     next(err);
   }
 })
-
 
 router.get('/tenants/:name/login',(req,res)=>{
   var clients = req.app.get('clients');
@@ -97,7 +96,6 @@ router.get('/tokens/:code',(req,res,next)=>{
   }
 });
 
-
 // Get User User Info
 router.get('/tenants/:name/user',authenticate,(req,res,next)=>{
   try{
@@ -118,7 +116,6 @@ router.get('/tenants/:name/user',authenticate,(req,res,next)=>{
   }
 });
 
-// ams push subscription for deployment results
 // needs Authentication
 // ams/ingest
 router.post('/ams/ingest',(req,res,next)=>{
@@ -261,7 +258,7 @@ router.get('/tenants/:name/services/:id/petitions',authenticate,(req,res)=>{
           }).catch(err=>{next(err)});
         }
         else if(req.user.role.actions.includes('get_own_petitions')){
-          await t.service_details.getProtocol(req.params.id,req.params.name).then(async service=>{
+          await t.service_details.getProtocol(req.params.id,req.user.sub,req.params.name).then(async service=>{
             if(service){
               await t.service_petition_details.getHistory(req.params.id,req.params.name).then(petition_list =>{
                 return res.status(200).json({history:petition_list});
@@ -281,7 +278,6 @@ router.get('/tenants/:name/services/:id/petitions',authenticate,(req,res)=>{
 
 
 });
-
 
 // Get target petition
 router.get('/tenants/:name/petitions/:id',authenticate,(req,res,next)=>{
@@ -470,7 +466,7 @@ router.get('/tenants/:name/groups/:group_id/members',authenticate,view_group,(re
         res.status(200).json({group_members});
       }
       else{
-        throw 'No group member could be found';
+        res.status(204).end();
       }
     })
   }
@@ -504,7 +500,7 @@ router.post('/tenants/:name/groups/:group_id/invitations',authenticate,postInvit
     db.invitation.add(req.body).then((response)=>{
 
       if(response){
-        res.status(200).end();
+        res.status(200).send({code:req.body.code});
       }
       else{
         res.status(204).end();
@@ -553,7 +549,7 @@ router.put('/tenants/:name/groups/:group_id/invitations/:id',authenticate,is_gro
 });
 
 // Accept/Reject invitation
-//
+
 router.put('/tenants/:name/invitations/:invite_id/:action',authenticate,(req,res,next)=>{
   try{
     if(req.params.action==='accept'){
@@ -610,6 +606,7 @@ router.get('/tenants/:name/invitations',authenticate,(req,res,next)=>{
   }
 });
 
+// Get all invitations for a specific
 router.get('/tenants/:name/groups/:group_id/invitations',authenticate,(req,res,next)=>{
   try{
     db.invitation.get(req.params.group_id).then(invitations => {
@@ -625,18 +622,18 @@ router.get('/tenants/:name/groups/:group_id/invitations',authenticate,(req,res,n
     next(err)
   }
 })
+
 // Activate invitation
-// post/invitations/activate_by_code
 router.put('/tenants/:name/invitations/activate_by_code',authenticate,(req,res,next)=>{
   try{
     db.invitation.setUser(req.body.code,req.user.sub).then(result=>{
       if(result.success){
-        res.status(200).send(result);
+        res.status(200).json({id:result.id});
       }
-      else if(result.expired){
-        res.status(204).json({expired:true});
+      else if (result.error) {
+        res.status(406).json({error:result.error});
       }
-      else{
+      else {
         res.status(204).end();
       }
     }).catch(err=>{next(err)})
@@ -647,11 +644,10 @@ router.put('/tenants/:name/invitations/activate_by_code',authenticate,(req,res,n
 })
 
 
-
-
 // ----------------------------------------------------------
 // ******************** HELPER FUNCTIONS ********************
 // ----------------------------------------------------------
+
 
 function is_group_manager(req,res,next){
 
@@ -662,7 +658,7 @@ function is_group_manager(req,res,next){
         next();
       }
       else{
-        throw "Can't access this resource";
+        res.status(406).send({error:"Can't access this resource"});
       }
     }).catch(err=>{next(err)});
   }
@@ -670,6 +666,7 @@ function is_group_manager(req,res,next){
     next(err);
   }
 }
+
 
 function view_group(req,res,next){
   try{
@@ -692,21 +689,36 @@ function view_group(req,res,next){
   }
 }
 
+
+function decode(jwt) {
+    const [headerB64, payloadB64] = jwt.split('.');
+    const payloadStr = JSON.parse(base64url.decode(payloadB64));
+    return payloadStr.user;
+}
+
+
 // Authentication Middleware
 function authenticate(req,res,next){
 
   try{
     var clients = req.app.get('clients');
     if(process.env.NODE_ENV==='test-docker'||process.env.NODE_ENV==='test'){
-      req.user ={};
-      req.user.edu_person_entitlement = ['urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu','urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=vm_operator#aai.egi.eu'];
-      req.user.sub =  "7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu";
-      db.user_role.getRoleActions(req.user.edu_person_entitlement,1).then(role=>{
-        if(role.success){
-          req.user.role = role.role;
-          next();
-        }
-      }).catch(err=>{next(err)});
+      let token = req.headers['x-access-token'] || req.headers['authorization']; // Express headers are auto converted to lowercase
+      if (token && token.startsWith('Bearer ')) {
+        // Remove Bearer from string
+        token = token.slice(7, token.length);
+        req.user = decode(token);
+        db.user_role.getRoleActions(req.user.edu_person_entitlement,req.params.name).then(role=>{
+          if(role.success){
+
+            req.user.role = role.role;
+            next();
+          }
+        }).catch(err=>{ console.log(err); next(err)});
+      }
+      else{
+        res.status(500).send("Need userToken");
+      }
     }
     else{
       const data = {'client_secret':clients[req.params.name].client_secret}
@@ -730,7 +742,7 @@ function authenticate(req,res,next){
           req.user.edu_person_entitlement = result.data.eduperson_entitlement;
           req.user.iss = result.data.iss;
           req.user.email = result.data.email;
-          db.user_role.getRoleActions(req.user.edu_person_entitlement,1).then(role=>{
+          db.user_role.getRoleActions(req.user.edu_person_entitlement,req.params.name).then(role=>{
             if(role.success){
               req.user.role = role.role;
               next();
@@ -760,6 +772,7 @@ function authenticate(req,res,next){
 // Authenticating AmsAgent
 function amsAgentAuth(req,res,next){
   if(req.header('X-Api-Key')===process.env.AMS_AGENT_KEY){
+
     next();
   }
   else{
@@ -781,12 +794,12 @@ function canReview(req,res,next){
         next();
       }
       else{
-        res.status(401).json({err:'Requested action not authorised'});
+        res.status(401).json({error:'Requested action not authorised'});
       }
     })
   }
   else{
-    res.status(401).json({err:'Requested action not authorised'});
+    res.status(401).json({error:'Requested action not authorised'});
   }
 }
 
@@ -841,7 +854,7 @@ function asyncPetitionValidation(req,res,next){
           await t.service_petition_details.openPetition(req.body.service_id,req.params.name).then(async open_petition_id =>{
             if(!open_petition_id){
               await t.service_details.getProtocol(req.body.service_id,req.user.sub,req.params.name).then(async service =>{
-                if(service.protocol){
+                if(service&&service.protocol){
                   if(req.body.type==='delete'){
 
                     next();
@@ -852,27 +865,27 @@ function asyncPetitionValidation(req,res,next){
                         next();
                       }
                       else {
-                        res.status(422);
+                        res.status(422).send({error:'Protocol id is not available'});;
                         customLogger(req,res,'warn','Protocol id is not available');
                         return res.end();
                       }
                     });
                   }
                   else{
-                    res.status(403);
+                    res.status(403).send({error:'Tried to edit protocol'});;
                     customLogger(req,res,'warn','Tried to edit protocol.');
                     return res.end();
                   }
                 }
                 else {
-                  res.status(403);
+                  res.status(403).send({error:'Could not find petition with id: '+req.body.service_id});;
                   customLogger(req,res,'warn','Could not find service with id:'+req.body.service_id);
                   return res.end();
                 }
               });
             }
             else {
-              res.status(403);
+              res.status(403).send({error:'Cannot create new petition because there is an open petition existing for target service'});
               customLogger(req,res,'warn','Cannot create new petition because there is an open petition existing for target service');
               return res.end();
             }
@@ -887,13 +900,12 @@ function asyncPetitionValidation(req,res,next){
             }
             else{
               if(petition.protocol!==req.body.protocol){
-                res.status(403);
                 customLogger(req,res,'warn','Tried to edit protocol.');
-                return res.end();
+                return res.status(403).send({error:'Tried to edit protocol'});
               }
               if(petition.type==='create' && req.body.type!=='create'){
                 customLogger(req,res,'warn','Tried to edit registration type');
-                return res.status(403);
+                return res.status(403).send({error:'Tried to edit registration type'});
               }
               if(!req.body.service_id){
                 req.body.service_id=0;
@@ -903,16 +915,15 @@ function asyncPetitionValidation(req,res,next){
                   next();
                 }
                 else{
-                  res.status(422);
                   customLogger(req,res,'warn','Protocol id is not available');
-                  return res.end();
+                  res.status(422).send({error:'Protocol id is not available'});
                 }
               });
             }
           }
           else{
-            res.status(403);
-            customLogger(req,res,'warn','Could not find petition with id:'+req.params.id);
+            res.status(403).send({error:'Could not find petition with id: '+req.params.id});
+            customLogger(req,res,'warn','Could not find petition with id: '+req.params.id);
             return res.end();
           }
         }).catch(err=>{next(err);});;

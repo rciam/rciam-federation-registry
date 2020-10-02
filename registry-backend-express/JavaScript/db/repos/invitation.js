@@ -64,7 +64,7 @@ class InvitationRepository {
           else{
             return t.oneOrNone('UPDATE invitations SET code=NULL,sub=$1 WHERE code=$2 RETURNING id',[sub,code]).then(res=>{
               if(res){
-                return {success:true}
+                return {success:true,id:res.id}
               }
             });
           }
