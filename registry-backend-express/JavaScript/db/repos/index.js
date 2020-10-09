@@ -16,5 +16,6 @@ module.exports = {
     Tokens: require('./tokens'),
     Group: require('./group'),
     Invitation: require('./invitation'),
-    Tenants: require('./tenants')
+    Tenants: require('./tenants'),
+    DeployerAgents: require('./deployer_agent')
 };

@@ -643,6 +643,103 @@ router.put('/tenants/:name/invitations/activate_by_code',authenticate,(req,res,n
   }
 })
 
+// Tenants Deployer Agents
+
+router.get('/tenants/:name/agents',(req,res,next)=>{
+  try{
+    db.deployer_agents.getAll(req.params.name).then(result => {
+      if(result){
+        res.status(200).json({agents:result});
+      }
+      else{
+        res.status(404).send('No agents found.')
+      }
+    })
+  }
+  catch(err){
+    next(err);
+  }
+});
+
+router.get('/tenants/:name/agents/:id',(req,res,next)=>{
+  try{
+    db.deployer_agents.getById(req.params.id,req.params.name).then(async result => {
+      if(result){
+        res.status(200).send(result);
+      }
+      else{
+        res.status(404).send('No agent found.')
+      }
+    })
+  }
+  catch(err){
+    next(err);
+  }
+});
+
+router.put('/tenants/:name/agents/:id',(req,res,next)=>{
+  try{
+    db.deployer_agents.update(req.body,req.params.id,req.params.name).then(result => {
+      if(result){
+        res.status(200).end();
+      }
+      else{
+        res.status(404).send('Could not find agent.')
+      }
+    })
+  }
+  catch(err){
+    next(err);
+  }
+});
+router.post('/tenants/:name/agents',(req,res,next)=>{
+  try{
+    db.deployer_agents.add(req.body.agents,req.params.name).then(async result => {
+      if(result){
+        res.status(200).end();
+      }
+      else{
+        res.status(404).send('Could not add agents.')
+      }
+    })
+  }
+  catch(err){
+    next(err);
+  }
+});
+
+router.delete('/tenants/:name/agents',(req,res,next)=>{
+  try{
+    db.deployer_agents.deleteAll(req.params.name).then(result => {
+      if(result){
+        res.status(200).end();
+      }
+      else{
+        res.status(404).send('No agents where found.');
+      }
+    })
+  }
+  catch(err){
+    next(err);
+  }
+
+});
+router.delete('/tenants/:name/agents/:id',(req,res,next)=>{
+  try{
+    db.deployer_agents.delete(req.params.name,req.params.id).then(result => {
+      if(result){
+        res.status(200).end();
+      }
+      else{
+        res.status(404).send('No agent whas found.');
+      }
+    })
+  }
+  catch(err){
+    next(err);
+  }
+});
+
 
 // ----------------------------------------------------------
 // ******************** HELPER FUNCTIONS ********************

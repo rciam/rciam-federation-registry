@@ -43,12 +43,15 @@ function run() {
         messages.egi[service.json.protocol].push({"attributes":{},"data": Buffer.from(JSON.stringify(service.json)).toString("base64")});
       });
       if(messages.egi.oidc.length>0){
+
         data={"messages":messages.egi.oidc};
+        console.log(data);
         axios.post(publish_url_oidc,data, options).then((res) => {
           if(res.status===200){
+            console.log('success1');
             axios.put(process.env.EXPRESS+'/agent/set_services_state',updateData.egi.oidc,options).then((res)=>{
               if(res.status===200){
-
+                console.log('success2');
                 if(res.success===false){
                  console.log(res.error);
                 }
@@ -59,10 +62,13 @@ function run() {
       }
       if(messages.egi.saml.length>0){
         data={"messages":messages.egi.saml};
+        console.log(data);
         axios.post(publish_url_saml,data, options).then((res) => {
           if(res.status===200){
+            console.log('success1');
             axios.put(process.env.EXPRESS+'/agent/set_services_state',updateData.egi.saml,options).then((res)=>{
               if(res.status===200){
+                console.log('success2');
                 if(res.success===false){
                  console.log(res.error);
                 }
