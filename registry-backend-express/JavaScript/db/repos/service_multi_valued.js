@@ -9,6 +9,7 @@ class ServiceMultiValuedRepository {
      cs = new pgp.helpers.ColumnSet(['owner_id','value']);
   }
   async add(type,attribute,data,id){
+
     let values = []
     let date = new Date(Date.now());
     let name = 'service_'
@@ -24,7 +25,7 @@ class ServiceMultiValuedRepository {
         values.push({owner_id:id,value:item});
       });
       const query = this.pgp.helpers.insert(values, cs,name);
-      this.db.none(query)
+      return this.db.none(query)
       .then(data => {
           return 'success'
       })

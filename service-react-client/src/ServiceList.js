@@ -1,4 +1,4 @@
-import React,{useState,useEffect} from 'react';
+import React,{useState,useEffect,useContext} from 'react';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
 import DropdownButton from 'react-bootstrap/DropdownButton';
@@ -14,39 +14,98 @@ import Row from 'react-bootstrap/Row';
 import Table from 'react-bootstrap/Table';
 import * as config from './config.json';
 import Image from 'react-bootstrap/Image';
-import {Link} from "react-router-dom";
+import {Link,useParams} from "react-router-dom";
 import Badge from 'react-bootstrap/Badge';
-import Modal from 'react-bootstrap/Modal';
 import Pagination from 'react-bootstrap/Pagination';
 import {LoadingBar,ProcessingRequest} from './Components/LoadingBar';
 import {ListResponseModal} from './Components/Modals.js';
-
+import { useTranslation } from 'react-i18next';
+import Alert from 'react-bootstrap/Alert';
+import {ConfirmationModal} from './Components/Modals';
+import {tenantContext} from './context.js';
 
 const ServiceList= (props)=> {
+  // eslint-disable-next-line
+  const [tenant,setTeanant] = useContext(tenantContext);
+  const {tenant_name} = useParams();
+  // eslint-disable-next-line
+  const { t, i18n } = useTranslation();
   const [loadingList,setLoadingList] = useState();
   const [services,setServices] = useState([]);
-  const [confirmationId,setConfirmationId] = useState();
   const [activePage,setActivePage] = useState(1);
-  const [confirmationAction,setConfirmationAction] = useState();
-  const [cancelRequest,setCancelRequest] = useState(false);
   const [displayedServices,setDisplayedServices] = useState(0);
   const [asyncResponse,setAsyncResponse] = useState(false);
+  const [invites,setInvites] = useState();
   const [message,setMessage] = useState();
   const [responseTitle,setResponseTitle] = useState(null);
   const [searchString,setSearchString] = useState();
-
   const [expandFilters,setExpandFilters] = useState();
+  const [confirmationData,setConfirmationData] = useState({})
 
 
   let renderedConnections = 0;
   useEffect(()=>{
     setLoadingList(true);
     getServices();
+    getInvites();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
 
+  const getInvites = () => {
+    fetch(config.host+'tenants/'+tenant_name+'/invitations', {
+      method: 'GET', // *GET, POST, PUT, DELETE, etc.
+      credentials: 'include', // include, *same-origin, omit
+      headers: {
+      'Content-Type': 'application/json',
+      'Authorization': localStorage.getItem('token')
+    }}).then(response=>{
+      if(response.status===200){
+        return response.json();
+      }
+      else {
+        return false
+      }
+    }).then(response=> {
+        if(response){
+          setInvites(response);
+        }
+        else{
+          setInvites();
+        }
+      });
+  }
+
+  // Get data, to create Service List
+  const getServices = ()=> {
+    fetch(config.host+'tenants/'+tenant_name+'/services', {
+      method: 'GET', // *GET, POST, PUT, DELETE, etc.
+      credentials: 'include', // include, *same-origin, omit
+      headers: {
+      'Content-Type': 'application/json',
+      'Authorization': localStorage.getItem('token')
+    }}).then(response=>{
+      if(response.status===200){
+        return response.json();
+      }
+      else {
+        return false
+      }
+    }).then(response=> {
+      setLoadingList(false);
+      if(response){
+        console.log(response.services);
+        response.services.forEach((item,index)=>{
+            response.services[index].display = true;
+          })
+        setServices(response.services);
+
+      }
+    });
+  }
+
+
   let items = [];
-  let itemsPerPage = 10;
+  let itemsPerPage = 5;
   // issue here displaying less
   if(services){
     for (let number = 1; number <= Math.ceil(displayedServices/itemsPerPage) ; number++) {
@@ -58,121 +117,112 @@ const ServiceList= (props)=> {
     }
   }
 
-  // Get data, to create Service List
-  const getServices = ()=> {
-    fetch(config.host+'servicelist', {
-      method: 'GET', // *GET, POST, PUT, DELETE, etc.
-      credentials: 'include', // include, *same-origin, omit
-      headers: {
-      'Content-Type': 'application/json'
-    }}).then(response=>response.json()).then(response=> {
-      if(response.success){
-        setLoadingList(false);
-        if(response.services){
-          response.services.forEach((item,index)=>{
-            response.services[index].display = true;
-          })
-        }
-        setServices(response.services);
-      }
-    });
-  }
 
 
-  const deleteService = (id)=>{
+
+  const deleteService = (service_id,petition_id)=>{
     setAsyncResponse(true);
-    fetch(config.host+'service/delete/'+id, {
-      method: 'PUT', // *GET, POST, PUT, DELETE, etc.
-      credentials: 'include', // include, *same-origin, omit
-      headers: {
-      'Content-Type': 'application/json'
-    }}).then(response=>response.json()).then(response=> {
-      getServices();
-      setResponseTitle('Your deregistration request');
-      if(response.success){
+    if(petition_id){
+      fetch(config.host+'tenants/'+tenant_name+'/petitions/'+petition_id, {
+        method: 'PUT', // *GET, POST, PUT, DELETE, etc.
+        credentials: 'include', // include, *same-origin, omit
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': localStorage.getItem('token')
+        },
+        body:JSON.stringify({service_id:service_id,type:'delete'})
+      }).then(response=> {
+        getServices();
+        setResponseTitle(t('request_submit_title'));
         setAsyncResponse(false);
-        if(props.user.admin){
-            confirmPetition(response.id);
+        if(response.status===200){
+          setMessage(t('request_submit_success_msg'));
         }
         else{
-
-          setMessage('Was submited succesfully and is currently pending approval from an administrator.');
+          setMessage(t('request_submit_failled_msg') + response.status);
         }
-
-      }
-      else{
-        setMessage('Was not submited due to the following error: ' + response.error);
-      }
-    });
+      });
+    }
+    else {
+      fetch(config.host+'tenants/'+tenant_name+'/petitions', {
+        method: 'POST', // *GET, POST, PUT, DELETE, etc.
+        credentials: 'include', // include, *same-origin, omit
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': localStorage.getItem('token')
+        },
+        body:JSON.stringify({service_id:service_id,type:'delete'})
+      }).then(response=> {
+        getServices();
+        setResponseTitle(t('request_submit_title'));
+        setAsyncResponse(false);
+        if(response.status===200){
+          setMessage(t('request_submit_success_msg'));
+        }
+        else{
+          setMessage(t('request_submit_failled_msg') + response.status);
+        }
+      });
+    }
   }
   const deletePetition = (id)=>{
     setAsyncResponse(true);
-    fetch(config.host+'petition/'+id, {
+    fetch(config.host+'tenants/'+tenant_name+'/petitions/'+id, {
       method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json'
-    }}).then(response=>response.json()).then(response=> {
-      setResponseTitle('Your deregistration request was');
-      if(response){
-          setAsyncResponse(false);
-          getServices();
-          if(response.success){
-            setMessage('Was canceled succesfully.');
-          }
-          else{
-            setMessage('Could not get canceled due to the following error: '+response.error);
-          }
+      'Content-Type': 'application/json',
+      'Authorization': localStorage.getItem('token')
+    }}).then(response=> {
+      setResponseTitle(t('request_cancel_title'));
+      setAsyncResponse(false);
+      getServices();
+      if(response.status===200){
+        setMessage(t('request_cancel_success_msg'));
       }
-
-    });
-  }
-  const confirmPetition = (id) => {
-    setAsyncResponse(true);
-    fetch(config.host+'petition/approve/'+id, {
-      method: 'PUT', // *GET, POST, PUT, DELETE, etc.
-      credentials: 'include', // include, *same-origin, omit
-      headers: {
-      'Content-Type': 'application/json'
-    },
-      body:JSON.stringify({comment:null})
-    }).then(response=>response.json()).then(response=> {
-      if(response){
-        if(response.success){
-          setMessage('Was submited succesfully.');
-        }
-        else{
-          setMessage('Was not submited due to the following error: '+response.error);
-        }
-        setAsyncResponse(false);
-        getServices();
+      else{
+      setMessage(t('request_cancel_fail_msg') + response.status);
       }
     });
-  }
+ }
 
 
   return(
     <React.Fragment>
       <ListResponseModal message={message} modalTitle={responseTitle} setMessage={setMessage}/>
-      <Confirmation confirmationId={confirmationId} cancelRequest={cancelRequest} setConfirmationId={setConfirmationId} confirmationAction={confirmationAction==='petition'?deletePetition:deleteService}/>
+      <ConfirmationModal active={confirmationData.action?true:false} setActive={setConfirmationData} action={()=>{if(confirmationData.action==='delete_service'){deleteService(...confirmationData.args)}else{deletePetition(...confirmationData.args)}}} title={confirmationData.title} accept={'Yes'} decline={'No'}/>
+
       <div>
         <LoadingBar loading={loadingList}>
+        {invites&&invites.length>0?
+          <React.Fragment>
+          <Alert variant='primary' className="invitation_alert">
+            {t('invitation_alert_1')}
+            <span>{invites.length}</span>
+            {invites.length>1?t('invitation_alert_mult'):t('invitation_alert_single')}
+            <Link to={{pathname:'/'+tenant_name+"/invitations", state:{invitations:invites}}}>
+              {t('invitation_alert_link')}
+            </Link>
+            {t('invitation_alert_2')}
+          </Alert>
+          </React.Fragment>
+        :null}
           <div className="options-bar">
-          <Row >
+          <Row>
             <Col>
-              <Button variant="light" onClick={getServices} ><FontAwesomeIcon icon={faSync} />Refresh</Button>
-              <Link to="/form/new"><Button><FontAwesomeIcon icon={faPlus}/>New Service</Button></Link>
+              <Button variant="light" onClick={getServices} ><FontAwesomeIcon icon={faSync} />{t('petitions_refresh')}</Button>
+              <Link to={'/'+tenant_name+"/form/new"}><Button style={{background:tenant.color,borderColor:tenant.color}}><FontAwesomeIcon icon={faPlus}/>{t('petitions_new')}</Button></Link>
             </Col>
             <Col>
-              <Button variant="light" className='filter-button' onClick={()=>setExpandFilters(!expandFilters)}><FontAwesomeIcon icon={faFilter} />
+              <Button variant="light" className='filter-button' style={{color:tenant.color}} onClick={()=>setExpandFilters(!expandFilters)}><FontAwesomeIcon icon={faFilter} />
                 {expandFilters?
                   <React.Fragment>
-                    Hide Filters
+                    {t('filters_hide')}
                     <FontAwesomeIcon className='fa-arrow-up' icon={faSortUp}/>
                   </React.Fragment>
                   :
                   <React.Fragment>
-                    Show Filters
+                    {t('filters_show')}
                     <FontAwesomeIcon className='fa-arrow-down' icon={faSortDown}/>
                   </React.Fragment>
                 }
@@ -181,7 +231,7 @@ const ServiceList= (props)=> {
             <Col className="options-search" md={3}>
               <InputGroup className="md-12">
                 <FormControl
-                placeholder="Search"
+                placeholder={t('search')}
                 value={searchString}
                 onChange={(e)=>{setSearchString(e.target.value)}}
                 />
@@ -204,14 +254,14 @@ const ServiceList= (props)=> {
           <Table striped bordered hover className="petitions-table">
             <thead>
               <tr>
-                <td>Service</td>
-                <td>Details</td>
-                <td>Controls</td>
+                <td>{t('td_service_name')}</td>
+                <td>{t('td_service_desc')}</td>
+                <td>{t('td_service_controls')}</td>
               </tr>
             </thead>
             <tbody>
               <React.Fragment>
-                      {services?services.map((item,index)=>{
+                      {services.length>=1?services.map((item,index)=>{
                         if(item.display){
                           renderedConnections++
                         }
@@ -220,11 +270,11 @@ const ServiceList= (props)=> {
                         }
                         if(Math.ceil(renderedConnections/itemsPerPage)===activePage&&item.display){
                           return(
-                            <TableItem item={item} user={props.user} key={index} setCancelRequest={setCancelRequest}  setConfirmationAction={setConfirmationAction} setConfirmationId={setConfirmationId}/>
+                            <TableItem service={item} user={props.user} key={index} setConfirmationData={setConfirmationData} />
                           )
                         }
                         return null
-                      }):<tr><td></td><td>No services to display...</td><td></td></tr>}
+                      }):<tr><td></td><td>{t('no_services')}</td><td></td></tr>}
               </React.Fragment>
             </tbody>
           </Table>
@@ -237,43 +287,52 @@ const ServiceList= (props)=> {
   }
 
 function TableItem(props) {
+  // eslint-disable-next-line
+  const [tenant,setTenant] = useContext(tenantContext);
+  // eslint-disable-next-line
+  const {tenant_name} = useParams();
+  // eslint-disable-next-line
+  const { t, i18n } = useTranslation();
   return (
     <tr>
       <td className="petition-details">
         <div className="table-image-container">
-          <Image src={props.item.logo_uri} thumbnail/>
+          <Image src={props.service.logo_uri} thumbnail/>
         </div>
       </td>
       <td>
         <div className="flex-column">
-          <h3 className="petition-title">{props.item.service_name}</h3>
+          <h3 className="petition-title">{props.service.service_name}</h3>
           <div className="badge-container">
-            {props.item.hasOwnProperty('deployed')?<Badge className="status-badge" variant={props.item.deployed?'primary':'danger'}>{props.item.deployed?'Deployed':'Deployment in Progress'}</Badge>:null}
-            {props.item.hasOwnProperty('type')?<Badge className="status-badge" variant="warning">
-              {props.item.type==='edit'?'Reconfiguration Pending':props.item.type==='create'?'Registration Pending':'Deregistration Pending'}
+
+            {props.service.hasOwnProperty('state')&&props.service.state!==null?<Badge className="status-badge" style={props.service.state==='deployed'?{background:tenant.color}:null} variant={props.service.state==='deployed'?'primary':'danger'}>{props.service.state==='deployed'?t('badge_deployed'):props.service.state==='error'?t('badge_error'):props.service.deleted===false?t('badge_pending'):t('badge_deleting')}</Badge>:null}
+            {props.service.type?<Badge className="status-badge" variant="warning">
+              {props.service.type==='edit'?t('badge_edit_pending'):props.service.type==='create'?t('badge_create_pending'):t('badge_delete_pending')}
               </Badge>:null}
-            {props.item.comment?<Badge className="status-badge" variant="info">Changes Requested</Badge>:null}
+            {props.service.comment?<Badge className="status-badge" variant="info">{t('badge_changes_requested')}</Badge>:null}
           </div>
-          <p>{props.item.service_description}</p>
+          <p>{props.service.service_description}</p>
         </div>
       </td>
       <td>
         <div className="petition-actions">
           <Row>
             <Col className='controls-col  controls-col-buttons'>
-              <Link to={{
-                pathname:"/form/view",
+              <Link
+                className='button-link'
+                to={{
+                pathname:'/'+tenant_name+"/form/view",
                 state:{
-                  service_id:props.item.id,
-                  petition_id:props.item.petition_id,
-                  type:props.item.type
+                  service_id:props.service.service_id,
+                  petition_id:props.service.petition_id,
+                  type:props.service.type
                 }
               }}>
-                <Button variant="secondary"><FontAwesomeIcon icon={faEye}/>View</Button>
+                <Button variant="secondary"><FontAwesomeIcon icon={faEye}/>{t('button_view')}</Button>
               </Link>
-              {props.item.requester===props.user.sub?
+              {props.service.owned?
                 <React.Fragment>
-                  {props.item.comment?
+                  {props.service.comment?
                   <div className="notification">
                     <FontAwesomeIcon icon={faExclamation} className="fa-exclamation"/>
                     <FontAwesomeIcon icon={faCircle} className="fa-circle"/>
@@ -282,32 +341,38 @@ function TableItem(props) {
                     placement='top'
                     overlay={
                       <Tooltip id={`tooltip-top`}>
-                        {props.item.comment?'An admin has requested changes':'Click to Reconfigure'}
+                        {props.service.comment?t('changes_notification'):props.service.state==='deployed'?t('edit_notification'):t('pending_notification')}
                       </Tooltip>
                     }
                   >
-                  <Link to={{
-                    pathname:"/form/edit",
+
+                  <Link
+                  className='button-link'
+                  to={{
+                    pathname:'/'+tenant_name+"/form/edit",
                     state:{
-                      service_id:props.item.id,
-                      petition_id:props.item.petition_id,
-                      type:props.item.type,
-                      comment:props.item.comment
+                      service_id:props.service.service_id,
+                      petition_id:props.service.petition_id,
+                      type:props.service.type,
+                      comment:props.service.comment
                     }
-                  }}><Button variant="info"><FontAwesomeIcon icon={faEdit}/>Reconfigure</Button></Link>
+                  }}>
+                  <Button variant="info" style={{background:tenant.color}} disabled={props.service.state==='deployed'||!props.service.state?false:true}><FontAwesomeIcon icon={faEdit}/>{t('button_reconfigure')}</Button></Link>
                   </OverlayTrigger>
                 </React.Fragment>
               :null
               }
-              {props.user.admin&&props.item.petition_id&&!props.item.comment?<Link to={{
-                pathname:"/form/review",
+              {props.user.admin&&props.service.petition_id&&!props.service.comment?<Link
+                className='button-link'
+                to={{
+                pathname:'/'+tenant_name+"/form/review",
                 state:{
-                  service_id:props.item.id,
-                  petition_id:props.item.petition_id,
-                  type:props.item.type,
-                  comment:props.item.comment
+                  service_id:props.service.service_id,
+                  petition_id:props.service.petition_id,
+                  type:props.service.type,
+                  comment:props.service.comment
                 }
-              }}><Button variant="success"><FontAwesomeIcon icon={faEdit}/>Review</Button></Link>:null}
+              }}><Button variant="success"><FontAwesomeIcon icon={faEdit}/>{t('button_review')}</Button></Link>:null}
             </Col>
             <Col className='controls-col' md="auto">
             <DropdownButton
@@ -321,54 +386,61 @@ function TableItem(props) {
               </React.Fragment>}
               id="dropdown-menu-align-right"
             >
-            {props.item.requester===props.user.sub?
-              <React.Fragment>
-                {props.item.type!=='create'?
-                  <Dropdown.Item>
-                    <div onClick={()=>{
-                      if(props.item.type==='create'||props.item.type==='delete'){
-                        props.setConfirmationId(props.item.petition_id);
-                        props.setConfirmationAction('petition');
-                        if(props.item.type==='delete'){
-                          props.setCancelRequest(true);
-                        }
-                      }else{
-                        props.setConfirmationId(props.item.id);
-                        props.setConfirmationAction('service');
-                      }
-                    }}>
-                      {props.item.type==='delete'?'Cancel Deregistration':'Deregister Service'}
-                    </div>
-                  </Dropdown.Item>
-              :null}
-                {props.item.type==='edit'|| props.item.type==='create'?
+              {props.service.owned && props.service.state==='deployed' && props.service.type!=='delete'?
                 <Dropdown.Item>
-                  <div onClick={()=>{
-                      props.setConfirmationId(props.item.petition_id);
-                      props.setConfirmationAction('petition');
-                      props.setCancelRequest(true);
+                  <div
+                  onClick={()=>{
+                    props.setConfirmationData({
+                      action:'delete_service',
+                      args:[props.service.service_id,props.service.petition_id],
+                      title:t('confirmation_title')+' '+t('confirmation_delete')
+                    })
                   }}>
-                    {props.item.type==='create'?'Cancel Registration':props.item.type==='edit'?'Cancel Reconfiguration':null}
+                    {t('options_delete')}
                   </div>
                 </Dropdown.Item>
-                :null
-                }
-              </React.Fragment>
-            :null}
-            {props.item.id?
+              :null}
+              {props.service.owned && props.service.state==='deployed'?
+                <Dropdown.Item>
+                  <div
+                  onClick={()=>{
+                    props.setConfirmationData({
+                      action:'delete_petition',
+                      args:[props.service.petition_id],
+                      title:t('confirmation_title')+' '+t('confirmation_cancel_request')
+                    })
+                  }}>
+                    {props.service.type==='create'?t('options_cancel_create'):props.service.type==='edit'?t('options_cancel_edit'):t('options_cancel_delete')}
+                  </div>
+                </Dropdown.Item>
+              :null}
+
               <Dropdown.Item as='span'>
-              <div>
-                <Link to={{
-                  pathname:"/history/list",
-                  state:{
-                    service_id:props.item.id
-                  }
-                }}>View History</Link>
-              </div>
+                <div>
+                  <Link to={{
+                    pathname:'/'+tenant_name+"/group",
+                    state:{
+                      group_manager:props.service.group_manager.toString(),
+                      service_id:props.service.service_id,
+                      group_id:props.service.group_id
+                    }
+                  }}>{props.service.group_manager?t('manage_group'):t('view_group')}</Link>
+                </div>
               </Dropdown.Item>
 
-            :null
-            }
+              {props.service.service_id?
+                <Dropdown.Item as='span'>
+                <div>
+                  <Link to={{
+                    pathname:'/'+tenant_name+"/history/list",
+                    state:{
+                      service_id:props.service.service_id
+                    }
+                  }}>{t('options_history')}</Link>
+                </div>
+                </Dropdown.Item>
+              :null
+              }
 
             </DropdownButton>
             </Col>
@@ -380,33 +452,15 @@ function TableItem(props) {
 }
 
 
-function Confirmation(props){
-  const handleClose = () => props.setConfirmationId();
-  return (
-    <Modal show={props.confirmationId?true:false} onHide={handleClose}>
-        <Modal.Header closeButton>
-          <Modal.Title>
-              Are you sure sure you would like to {props.cancelRequest?'cancel the pending request for this service?':'deregister this service?'}
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Footer>
-          <Button variant="danger" onClick={handleClose}>
-            Cancel
-          </Button>
-          <Button variant="primary" onClick={()=>{props.confirmationAction(props.confirmationId); handleClose();}}>
-            OK
-          </Button>
-        </Modal.Footer>
-    </Modal>
-  )
-}
+
 
 function Filters (props) {
 
   const [showPending,setShowPending] = useState(false);
   const [showOwned,setShowOwned] = useState(false);
   const [showEnvironment,setShowEnvironment] = useState();
-
+  // eslint-disable-next-line
+  const { t, i18n } = useTranslation();
 
   useEffect(()=>{
     if(props.services.length>0){
@@ -435,23 +489,23 @@ function Filters (props) {
     return (showPending&&!item.petition_id)
   }
   const OwnedFilter = (item)=>{
-    return (showOwned&&(item.requester!==props.user.sub))
+    return (showOwned&&!item.owned)
   }
 
 
   return (
     <React.Fragment>
-      <SimpleCheckboxFilter name="Show Pending" setFilter={setShowPending} filterValue={showPending} />
-      {props.user.admin?<SimpleCheckboxFilter name="Show Owned By Me" setFilter={setShowOwned} filterValue={showOwned}/>:null}
+      <SimpleCheckboxFilter name={t('pending_filter')} setFilter={setShowPending} filterValue={showPending} />
+      {props.user.admin?<SimpleCheckboxFilter name={t('owned_filter')} setFilter={setShowOwned} filterValue={showOwned}/>:null}
 
       <div className='select-filter-container'>
           <select value={showEnvironment} onChange={(e)=>{
 
             setShowEnvironment(e.target.value);}}>
-            <option value=''>All Environments</option>
-            <option value='demo'>Demo</option>
-            <option value='production'>Production</option>
-            <option value='development'>Development</option>
+            <option value=''>{t('all_environments_filter')}</option>
+            <option value='demo'>{t('demo_filter')}</option>
+            <option value='production'>{t('production_filter')}</option>
+            <option value='development'>{t('development_filter')}</option>
           </select>
       </div>
     </React.Fragment>

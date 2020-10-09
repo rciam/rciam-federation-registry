@@ -1,1 +1,1 @@
-UPDATE service_details SET service_description=${service_description},service_name=${service_name},logo_uri=${logo_uri},integration_environment=${integration_environment},deployed=false,protocol=${protocol} WHERE id=${id}
+UPDATE service_details SET service_description=${service_description},service_name=${service_name},logo_uri=${logo_uri},integration_environment=${integration_environment},protocol=${protocol} WHERE id=${id} RETURNING id

@@ -1,29 +1,28 @@
 import React,{useEffect,useState} from 'react';
 import initialValues from './initialValues';
+import {useParams} from "react-router-dom";
 import * as config from './config.json';
-//import {useParams} from "react-router-dom";
 import ServiceForm from "./ServiceForm.js";
-//import {FormAlert} from "./Components/FormAlert.js";
 import {LoadingBar} from './Components/LoadingBar';
 import Tabs from 'react-bootstrap/Tabs';
 import Tab from 'react-bootstrap/Tab';
 import Alert from 'react-bootstrap/Alert';
-//import Form from 'react-bootstrap/Form';
 import Jumbotron from 'react-bootstrap/Jumbotron';
 import Container from 'react-bootstrap/Container';
 import { diff } from 'deep-diff';
-
+import { useTranslation } from 'react-i18next';
 
 
 const EditService = (props) => {
+    // eslint-disable-next-line
+    const { t, i18n } = useTranslation();
     const [petition,setPetition] = useState();
     const [service,setService] = useState();
     const [editPetition,setEditPetition] = useState();
     const [changes,setChanges] = useState();
+    const {tenant_name} = useParams();
 
     useEffect(()=>{
-
-
       getData();
       // eslint-disable-next-line react-hooks/exhaustive-deps
     },[]);
@@ -75,29 +74,43 @@ const EditService = (props) => {
 
     const getData = () => {
       if(props.service_id){
-        fetch(config.host+'service/'+props.service_id, {
+        fetch(config.host+'tenants/'+tenant_name+'/services/'+props.service_id, {
           method: 'GET', // *GET, POST, PUT, DELETE, etc.
           credentials: 'include', // include, *same-origin, omit
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': localStorage.getItem('token')
           }
-        }).then(response=>response.json()).then(response=> {
-
-          if(response.service){
+        }).then(response=>{
+          if(response.status===200){
+            return response.json();
+          }
+          else {
+            return false
+          }
+          }).then(response=> {
+          if(response){
             setService(response.service);
           }
         });
       }
       if(props.petition_id&&props.type!=='delete'){
-        fetch(config.host+'petition/'+props.petition_id, {
+        fetch(config.host+'tenants/'+tenant_name+'/petitions/'+props.petition_id+'?type=open', {
           method: 'GET', // *GET, POST, PUT, DELETE, etc.
           credentials: 'include', // include, *same-origin, omit
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': localStorage.getItem('token')
           }
-        }).then(response=>response.json()).then(response=> {
-
-          if(response.petition){
+        }).then(response=>{
+          if(response.status===200){
+            return response.json();
+          }
+          else {
+            return false
+          }
+        }).then(response=> {
+          if(response){
             setPetition(response.petition);
           }
         });
@@ -111,7 +124,7 @@ const EditService = (props) => {
       {props.type==='edit'?
         <React.Fragment>
           <Alert variant='warning' className='form-alert'>
-            This is a reconfiguration request, changes are highlighted bellow.
+            {t('reconfiguration_info')}
           </Alert>
           {editPetition&&changes?<ServiceForm initialValues={editPetition} changes={changes} {...props}/>:<LoadingBar loading={true}/>}
         </React.Fragment>
@@ -119,14 +132,14 @@ const EditService = (props) => {
       :props.type==='create'?
         <React.Fragment>
           <Alert variant='warning' className='form-alert'>
-            This is a registration request.
+            {t('edit_create_info')}
           </Alert>
           {petition?<ServiceForm initialValues={petition} {...props}/>:<LoadingBar loading={true}/>}
         </React.Fragment>
       :
         <React.Fragment>
           <Alert variant='warning' className='form-alert'>
-            User requested to deregister the following service.
+            {t('edit_delete_info')}
           </Alert>
           {service?<ServiceForm initialValues={service} {...props} />:<LoadingBar loading={true}/>}
         </React.Fragment>
@@ -143,7 +156,7 @@ const EditService = (props) => {
           {props.comment?
             <React.Fragment>
               <Alert variant='warning' className='form-alert'>
-                An administrator has reviewed your registration request and has requested changes.
+                {t('edit_changes_info')}
               </Alert>
               <Jumbotron fluid className="jumbotron-comment">
                 <Container>
@@ -156,7 +169,7 @@ const EditService = (props) => {
             </React.Fragment>
           :props.type?
               <Alert variant='warning' className='form-alert'>
-              This is a registration request which is currently pending approval from an administrator. You can modify or cancel it here.
+              {t('edit_create_pending_info')}
               </Alert>
           :null
           }
@@ -175,8 +188,12 @@ const EditService = (props) => {
 
 
 const ViewService = (props)=>{
+  // eslint-disable-next-line
+  const { t, i18n } = useTranslation();
   const [service,setService] = useState();
   const [petition,setPetition] = useState();
+  const {tenant_name} = useParams();
+
   useEffect(()=>{
 
     getData();
@@ -185,29 +202,28 @@ const ViewService = (props)=>{
 
   const getData = () => {
     if(props.service_id){
-      fetch(config.host+'service/'+props.service_id, {
+      fetch(config.host+'tenants/'+tenant_name+'/services/'+props.service_id, {
         method: 'GET', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': localStorage.getItem('token')
         }
       }).then(response=>response.json()).then(response=> {
-
         if(response.service){
-          console.log(response.service);
           setService(response.service);
         }
       });
     }
     if(props.petition_id&&props.type!=='delete'){
-      fetch(config.host+'petition/'+props.petition_id, {
+      fetch(config.host+'tenants/'+tenant_name+'/petitions/'+props.petition_id+'?type=open', {
         method: 'GET', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': localStorage.getItem('token')
         }
       }).then(response=>response.json()).then(response=> {
-
         if(response.petition){
           setPetition(response.petition);
         }
@@ -218,9 +234,8 @@ const ViewService = (props)=>{
     <React.Fragment>
       {service?<ServiceForm initialValues={service} disabled={true}  />:props.service_id?<LoadingBar loading={true}/>:petition?
         <React.Fragment>
-
           <Alert variant='danger' className='form-alert'>
-            This service is not registered yet, it is currently pending approval from an administrator
+            {t('view_create_info')}
           </Alert>
           <ServiceForm initialValues={petition} disabled={true}/>
         </React.Fragment>
@@ -229,7 +244,12 @@ const ViewService = (props)=>{
     </React.Fragment>
   )
 }
+
+
 const RequestedChangesAlert = (props) => {
+  // eslint-disable-next-line
+  const { t, i18n } = useTranslation();
+
   return(
     <React.Fragment>
       <Tabs className="edit-tabs" defaultActiveKey="petition" id="uncontrolled-tab-example">
@@ -237,11 +257,11 @@ const RequestedChangesAlert = (props) => {
           {props.comment?
             <React.Fragment>
               <Alert variant='warning' className='form-alert'>
-                An administrator has reviewed your {props.type} request and has requested changes.
+                {t('changes_info_1_1')}{props.type}{t('changes_info_1_2')}
               </Alert>
               <Jumbotron fluid className="jumbotron-comment">
                 <Container>
-                  <h5>Comment from admin:</h5>
+                  <h5>{t('changes_title')}</h5>
                   <p className="text-comment">
                     {props.comment}
                   </p>
@@ -250,7 +270,7 @@ const RequestedChangesAlert = (props) => {
             </React.Fragment>
           :props.type?
               <Alert variant='warning' className='form-alert'>
-              This is a {props.type==='delete'?'deregistration':props.type==='edit'?'reconfiguration':'registration'} request which is currently pending approval from an administrator. You can modify or cancel it here.
+              {t('changes_info_2_1')} {props.type==='delete'?'deregistration':props.type==='edit'?'reconfiguration':'registration'} {t('changes_info_2_2')}
               </Alert>
           :null
           }

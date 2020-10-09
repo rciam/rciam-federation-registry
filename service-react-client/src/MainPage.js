@@ -1,54 +1,39 @@
-import React,{useState,useEffect} from 'react';
+import React,{useContext} from 'react';
 import {BrowserRouter as Router} from "react-router-dom";
 import useGlobalState from './useGlobalState.js';
-import {Header,Footer} from './HeaderFooter.js';
+import {Header,Footer,NavbarTop} from './HeaderFooter.js';
 import Routes from './Router';
 import {SideNav} from './Components/SideNav.js';
-import * as config from './config.json';
+import { useTranslation } from 'react-i18next';
+import {userContext,tenantContext} from './context.js';
 
- const MainPage= ()=> {
-
-      const [user,setUser] = useState();
-
+ const MainPage= (props)=> {
+      const tenant = useContext(tenantContext);
+      const user = useContext(userContext);
+      // eslint-disable-next-line
+      const { t, i18n } = useTranslation();
       const globalState = useGlobalState();
       const logged = globalState.global_state.log_state;
 
-      useEffect(()=>{
-        if(!logged){
-          setUser(null);
-        }
-        if(logged&&!user){
-          getUser();
-        }
-    },[logged,user])
-
-      const getUser = ()=> {
-        fetch(config.host+'user', {
-          method: 'GET', // *GET, POST, PUT, DELETE, etc.
-          credentials: 'include', // include, *same-origin, omit
-          headers: {
-          'Content-Type': 'application/json'
-        }}).then(response=>response.json()).then(response=> {
-            setUser(response.user);
-        });
-      }
-
       return(
         <React.Fragment>
-        <div className="main-container">
-
-          <Header user={user}/>
-          <Router >
-            <div className="flex-container">
-              {logged&&<SideNav/>}
-              <Routes user={user} />
+          <Router>
+            <Header/>
+            <NavbarTop/>
+            <div className="ssp-container main">
+              <div className="flex-container">
+                {logged&&<SideNav tenant_name={tenant&&tenant[0]?tenant[0].name:null}/>}
+                <Routes user={user[0]} tenant={tenant[0]} t={t} />
+              </div>
             </div>
+            <Footer lang={props.lang} changeLanguage={props.changeLanguage}/>
           </Router>
-          <Footer/>
-        </div>
-
         </React.Fragment>
       );
-
 }
+
+
+
+
+
 export default MainPage;

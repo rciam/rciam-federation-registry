@@ -7,11 +7,11 @@ import Table from 'react-bootstrap/Table';
 import Button from 'react-bootstrap/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {faEye} from '@fortawesome/free-solid-svg-icons';
-import {Link} from "react-router-dom";
+import {Link,useParams} from "react-router-dom";
 import Alert from 'react-bootstrap/Alert';
 import Jumbotron from 'react-bootstrap/Jumbotron';
 import Container from 'react-bootstrap/Container';
-
+import { useTranslation } from 'react-i18next';
 
 export const HistoryList = (props) => {
   const [loadingList,setLoadingList] = useState();
@@ -19,6 +19,9 @@ export const HistoryList = (props) => {
   const [asyncResponse,setAsyncResponse] = useState(false);
   const [petition,setPetition] = useState(null);
   const [stateProps,setstateProps] = useState();
+  // eslint-disable-next-line
+  const { t, i18n } = useTranslation();
+  let {tenant_name} = useParams();
 
   useEffect(()=>{
     setLoadingList(true);
@@ -31,39 +34,33 @@ export const HistoryList = (props) => {
 
   const getPetition = (id)=> {
     setAsyncResponse(true);
-    fetch(config.host+'petition/history/'+id, {
+    fetch(config.host+'tenants/'+tenant_name+'/petitions/'+id, {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'Authorization': localStorage.getItem('token')
     }}).then(response=>response.json()).then(response=> {
-      if(response){
-        setAsyncResponse(false);
-        if(response.success){
-          setPetition(response.petition);
-        }
+      setAsyncResponse(false);
+      if(response.petition){
+        setPetition(response.petition);
       }
     });
   }
 
   const getHistory = ()=> {
-
-      fetch(config.host+'petition/history/list/'+props.service_id, {
-        method: 'GET', // *GET, POST, PUT, DELETE, etc.
-        credentials: 'include', // include, *same-origin, omit
-        headers: {
-        'Content-Type': 'application/json'
-      }}).then(response=>response.json()).then(response=> {
-        if(response.success){
-          setLoadingList(false);
-          if(response.history){
-              setHistoryList(response.history);
-          }
-        }
-      });
-
-
-
+    fetch(config.host+'tenants/'+tenant_name+'/services/'+props.service_id+'/petitions', {
+      method: 'GET', // *GET, POST, PUT, DELETE, etc.
+      credentials: 'include', // include, *same-origin, omit
+      headers: {
+      'Content-Type': 'application/json',
+      'Authorization': localStorage.getItem('token')
+    }}).then(response=>response.json()).then(response=> {
+      setLoadingList(false);
+      if(response.history){
+          setHistoryList(response.history);
+      }
+    });
   }
   return (
     <React.Fragment>
@@ -72,21 +69,21 @@ export const HistoryList = (props) => {
       {petition?
         <React.Fragment>
           <div className="links">
-            <Link to="/home">Home</Link>
+            <Link to={"/"+tenant_name+"/home"}>{t('link_home')}</Link>
             <span className="link-seperator">/</span>
-            <Link to="/petitions">Manage Services</Link>
+            <Link to={"/"+tenant_name+"/petitions"}>{t('link_petitions')}</Link>
             <span className="link-seperator">/</span>
-            <span className="fake-link" onClick={()=>{setPetition(null);}}>Service History</span>
+            <span className="fake-link" onClick={()=>{setPetition(null);}}>{t('history_title')}</span>
             <span className="link-seperator">/</span>
-            View State
+            {t('history_view_state')}
           </div>
           <Alert variant='warning' className='form-alert'>
-            The following {stateProps[0]==='create'?'Creation':stateProps[0]==='edit'?'Reconfiguration':'Deregistration'} Request {stateProps[1]==='approved'?'was Approved':stateProps[1]==='rejected'?'was Rejected':stateProps[1]==='pending'?'is Pending Review':'was Aprroved with Changes'}.
+            {t('history_info_1')} {stateProps[0]==='create'?t('registration'):stateProps[0]==='edit'?t('reconfiguration'):t('deregistration')} {t('history_info_2')}{stateProps[1]==='approved'?t('history_info_approved'):stateProps[1]==='rejected'?t('history_info_rejected'):stateProps[1]==='pending'?t('history_info_pending'):t('history_info_changes')}.
           </Alert>
           {stateProps[2]?
             <Jumbotron fluid className="jumbotron-comment">
               <Container>
-                <h5>Comment from admin:</h5>
+                <h5>{t('history_commend')}</h5>
                 <p className="text-comment">
                   {stateProps[2]}
                 </p>
@@ -99,18 +96,18 @@ export const HistoryList = (props) => {
         :!loadingList?
         <React.Fragment>
           <div className="links">
-            <Link to="/home">Home</Link>
+            <Link to={"/"+tenant_name+"/home"}>{t('link_home')}</Link>
             <span className="link-seperator">/</span>
-            <Link to="/petitions">Manage Services</Link>
+            <Link to={"/"+tenant_name+"/petitions"}>{t('history_title')}</Link>
             <span className="link-seperator">/</span>
-            Service History
+            {t('history_title')}
           </div>
           <Table striped bordered hover className="history-table">
             <thead>
               <tr>
-                <td>Date</td>
-                <td>Type of Request</td>
-                <td>Review Status</td>
+                <td>{t('history_td_date')}</td>
+                <td>{t('history_td_type')}</td>
+                <td>{t('history_td_status')}</td>
                 <td></td>
               </tr>
             </thead>
@@ -118,8 +115,8 @@ export const HistoryList = (props) => {
               {historyList?historyList.map((item,index)=>{
                 return(
                 <tr key={index}>
-                  <td>{item.reviewed_at?item.reviewed_at.slice(0,10).split('-').join('/'):'Not yet reviewed'}</td>
-                  <td><Badge className="status-badge" variant='info'>{item.type==="create"?"Creation":item.type==="edit"?"Reconfiguration":"Deregistration"} Request</Badge></td>
+                  <td>{item.reviewed_at?item.reviewed_at.slice(0,10).split('-').join('/'):t('history_not_reviewed')}</td>
+                  <td><Badge className="status-badge" variant='info'>{item.type==="create"?t('registration'):item.type==="edit"?t('reconfiguration'):t('deregistration')} {t('history_info_2')}</Badge></td>
                   <td><Badge className="status-badge" variant={item.status==="pending"?'warning':item.status==="reject"?'danger':'success'}>{item.status}</Badge></td>
                   <td>
                       <Button variant="secondary" onClick={()=>{
@@ -143,11 +140,5 @@ export const HistoryList = (props) => {
         :
       <LoadingBar/>}
     </React.Fragment>
-  )
-}
-
-export const HistoryView = (props) => {
-  return (
-    <h1>hello guys</h1>
   )
 }
