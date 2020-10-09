@@ -1,4 +1,4 @@
-import React,{useState,useEffect} from 'react';
+import React,{useState,useEffect,useContext} from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {faUser,faUserShield, faSignOutAlt} from '@fortawesome/free-solid-svg-icons';
 import Col from 'react-bootstrap/Col';
@@ -10,12 +10,13 @@ import useGlobalState from './useGlobalState.js';
 import * as config from './config.json';
 import DropdownButton from 'react-bootstrap/DropdownButton';
 import Dropdown from 'react-bootstrap/Dropdown';
-import * as tenant_data from './tenant-config.json'
 import { useTranslation } from 'react-i18next';
+import {useHistory} from "react-router-dom";
+import {userContext,tenantContext} from './context.js';
 
 export const Header= (props)=> {
-    const globalState = useGlobalState();
-    const tenant = tenant_data.data[globalState.global_state.tenant];
+
+    const tenant = useContext(tenantContext);
     return(
 
       <div className="header">
@@ -23,100 +24,76 @@ export const Header= (props)=> {
 
         <div className="text-center ssp-logo">
           <a href="https://www.egi.eu/" >
-            <Image src={tenant?tenant.logo:null} fluid />
+            <Image src={tenant[0]?tenant[0].logo:null} fluid />
           </a>
         </div>
         <h1 className="text-center">
-          {tenant?tenant.main_title:null}
+          {tenant[0]?tenant[0].main_title:null}
         </h1>
       </div>
     );
 }
 
+
+
 export const NavbarTop = (props)=>{
+  const history = useHistory();
+  // eslint-disable-next-line
+  const [user,setUser] = useContext(userContext);
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   const globalState = useGlobalState();
   const logged = globalState.global_state.log_state;
-  const tenant = tenant_data.data[globalState.global_state.tenant];
   const [admin,setAdmin] = useState(false);
-  useEffect(()=>{
-    let admin = false;
+  const tenant = useContext(tenantContext);
 
-    if(props.user&&props.user.eduperson_entitlement){
-      ["urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu"].forEach((item)=>{
-        if(props.user.eduperson_entitlement.includes(item)){
-          admin = true;
-        }
-      })
+  useEffect(()=>{
+    if(user){
+      setAdmin(user.admin);
     }
-    setAdmin(admin);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[props.user]);
+  },[user]);
   return (
-    <Navbar className="navbar-fixed-top">
-      <Navbar.Collapse className="justify-content-end">
-        {logged?
-        (<DropdownButton
-          variant="link"
-          alignRight
-          className='drop-menu drop-container-header'
-          title={<React.Fragment>
-            <span style={{color:tenant.color}}>
-            {props.user?props.user.name:'login'}
-            <FontAwesomeIcon icon={admin?faUserShield:faUser}/>
-            </span>
-          </React.Fragment>}
-          id="dropdown-menu-align-right"
-        >
-          {props.user?(
-            <Dropdown.Item>
-              {props.user.sub}
+    <React.Fragment>
+    {tenant[0]?
+      <Navbar className="navbar-fixed-top">
+        <Navbar.Collapse className="justify-content-end">
+          {logged?
+          (<DropdownButton
+            variant="link"
+            alignRight
+            className='drop-menu drop-container-header'
+            title={<React.Fragment>
+              <span style={tenant&&tenant[0]?{color:tenant[0].color}:null}>
+              {user?user.name:'login'}
+              <span className="user-role">{user?' ('+user.role+')':null}</span>
+              <FontAwesomeIcon icon={admin?faUserShield:faUser}/>
+              </span>
+            </React.Fragment>}
+            id="dropdown-menu-align-right"
+          >
+            {user?(
+              <Dropdown.Item>
+                {user.sub}
+              </Dropdown.Item>
+            ):null}
+            <Dropdown.Item onClick={()=>{localStorage.removeItem('token'); history.push('/'+(tenant&&tenant[0]?tenant[0].name:null));}} >
+              {t('logout')}<FontAwesomeIcon icon={faSignOutAlt}/>
             </Dropdown.Item>
-          ):null}
-          <Dropdown.Item href={config.host+"logout" } >
-            {t('logout')}<FontAwesomeIcon icon={faSignOutAlt}/>
-          </Dropdown.Item>
-        </DropdownButton>):(
-        <React.Fragment>
-          <a href={config.host+"login"}><Button className="log-button" variant="outline-primary">{t('login')}</Button></a>
-        </React.Fragment>
-        )
-      }
-      </Navbar.Collapse>
-    </Navbar>
+          </DropdownButton>):(
+          <React.Fragment>
+            <a href={config.host+"tenants/"+(tenant[0]?tenant[0].name:null)+"/login"}><Button className="log-button" variant="outline-primary">{t('login')}</Button></a>
+          </React.Fragment>
+          )
+        }
+        </Navbar.Collapse>
+      </Navbar>:null
+    }
+    </React.Fragment>
+
   )
 }
 
-
-// no extra css
-export const FooterOld = ()=>{
-  // eslint-disable-next-line
-  const { t, i18n } = useTranslation();
-  return(
-    <React.Fragment>
-      <div className="text-center footer">
-        <Row>
-          <Col md={4}>
-          </Col>
-          <Col md={4}>
-            <Image className="logo-grnet" src={t('footer_logo_uri')} fluid />
-            <Image className="logo-eu" src={t('footer_flag_uri')} fluid />
-          </Col>
-          <Col className="footer-links" md={4}>
-            <a href={t('terms_uri')}>Terms</a>
-            <a href={t('privacy_uri')}>Privacy</a>
-          </Col>
-        </Row>
-        <Row className='footer-description'>
-          <Col>
-          <p>Check-in is an EGI service provided by GRNET, receiving funding from the <a href='https://www.egi.eu/about/egi-foundation/'>EGI Foundation (EGI.eu)</a> and the <a href="https://eosc-hub.eu/">EOSC-hub project (Horizon 2020)</a> under Grant number 777536</p>
-          </Col>
-        </Row>
-      </div>
-    </React.Fragment>
-  );
-}
 
 
 
@@ -152,38 +129,6 @@ export const Footer =(props) =>{
         </Row>
       </div>
     </footer>
-
-  )
-}
-
-
-// oidc-base.css
-export const Footer1 =() =>{
-  // eslint-disable-next-line
-  const { t, i18n } = useTranslation();
-  return (
-    <div className="text-center" id="footer">
-      <div className="container">
-    		<Row className="row align-items-center">
-    			<Col md="4" className="ssp-footer__item"></Col>
-    			<Col md="4" className="ssp-footer__item text-center col-images">
-            <a href="https://grnet.gr/">
-              <Image className="ssp-footer__item__logo" src={t('footer_logo_uri')} alt="GRNET" fluid/>
-            </a>
-            <Image className="ssp-footer__item__logo--eu" src={t('footer_flag_uri')} alt="European Union" text=""/>
-    			</Col>
-    			<Col md="4" className="ssp-footer__item ssp-footer__item--links text-right">
-    		    <a href="https://aai.egi.eu/ToU.html">Terms</a>
-    		    <a href="https://aai.egi.eu/privacy.html">Privacy</a>
-    			</Col>
-    		</Row>
-        <Row>
-          <Col className="text-center">
-            <p> Check-in is an EGI service provided by GRNET, receiving funding from the <a href="https://www.egi.eu/about/egi-foundation/">EGI Foundation (EGI.eu)</a> and the <a href="https://eosc-hub.eu">EOSC-hub project</a> (Horizon 2020) under Grant number 777536</p>
-          </Col>
-        </Row>
-      </div>
-    </div>
 
   )
 }

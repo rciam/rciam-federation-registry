@@ -68,6 +68,79 @@ const calcDiff = (oldState,newState) => {
     return edits
 }
 
+const sendInvitationMail = (data) => {
+  if(process.env.NODE_ENV!=='test-docker'&& process.env.NODE_ENV!=='test'){
+    var currentDate = new Date();
+    readHTMLFile(path.join(__dirname, '../html/invitation.html'), function(err, html) {
+      let transporter = nodeMailer.createTransport({
+          host: 'relay.grnet.gr',
+          port: 587,
+          secure: false
+      });
+      var template = handlebars.compile(html);
+      var replacements = {
+        email:data.email,
+        url:process.env.EXPRESS_BASE+'/'+ data.tenant +'/invitation/' + data.code
+      }
+      var htmlToSend = template(replacements);
+      var mailOptions = {
+        from: "noreply@faai.grnet.gr",
+        to : 'koza-sparrow@hotmail.com',
+        subject : 'Invitation to manage service',
+        html : htmlToSend
+      };
+      transporter.sendMail(mailOptions, function (error, response) {
+        if (error) {
+          customLogger(null,null,'info',[{type:'email_log'},{message:'Email not sent'},{error:error},{user:null},{data:data.email}]);
+        }
+        else {
+          customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{user:null},{data:data.email}]);
+        }
+      });
+    });
+  }
+
+}
+const newMemberNotificationMail = (data,managers) => {
+  if(process.env.NODE_ENV!=='test-docker'&& process.env.NODE_ENV!=='test'){
+    var currentDate = new Date();
+    readHTMLFile(path.join(__dirname, '../html/new-member-notification.html'), function(err, html) {
+      let transporter = nodeMailer.createTransport({
+          host: 'relay.grnet.gr',
+          port: 587,
+          secure: false
+      });
+      var replacements = {
+        invitation_mail:data.invitation_mail,
+        username:data.preferred_username,
+        email:data.email,
+        url:process.env.EXPRESS_BASE+'/'+ data.tenant
+      };
+      var template = handlebars.compile(html);
+      managers.forEach((manager)=>{
+        replacements.target_email = manager.email;
+        replacements.username = manager.username;
+
+        var htmlToSend = template(replacements);
+        var mailOptions = {
+          from: "noreply@faai.grnet.gr",
+          to : 'koza-sparrow@hotmail.com',
+          subject : 'New member in your owners group',
+          html : htmlToSend
+        };
+        transporter.sendMail(mailOptions, function (error, response) {
+          if (error) {
+            customLogger(null,null,'info',[{type:'email_log'},{message:'Email not sent'},{error:error},{user:manager},{data:data}]);
+          }
+          else {
+            customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{user:manager},{data:data}]);
+          }
+        });
+      })
+    })
+  }
+}
+
 const sendMail= (data,template_uri,users)=>{
   var currentDate = new Date();
   var result;
@@ -95,7 +168,8 @@ const sendMail= (data,template_uri,users)=>{
       var replacements = {
         service_name:data.service_name,
         date:currentDate,
-        state:state
+        state:state,
+        url:process.env.EXPRESS_BASE+'/'+ data.tenant
       };
 
       users.forEach((user) => {
@@ -151,5 +225,7 @@ var readHTMLFile = function(path, callback) {
 module.exports = {
   calcDiff,
   addToString,
-  sendMail
+  sendMail,
+  sendInvitationMail,
+  newMemberNotificationMail
 }

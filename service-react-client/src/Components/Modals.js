@@ -1,6 +1,6 @@
 import React from 'react';
 import Modal from 'react-bootstrap/Modal';
-import {useHistory} from "react-router-dom";
+import {useHistory,useParams} from "react-router-dom";
 import Button from 'react-bootstrap/Button';
 import { useTranslation } from 'react-i18next';
 import { Translation } from 'react-i18next';
@@ -53,15 +53,47 @@ export class SimpleModal extends React.Component {
 }
 
 
+export const ConfirmationModal = (props) =>{
+  const close = () => {props.setActive({})}
+  return (
+    <Modal show={props.active} onHide={close}>
+        <Modal.Header closeButton>
+          <Modal.Title>
+              {props.title}
+          </Modal.Title>
+        </Modal.Header>
 
+          {props.message?
+              <Modal.Body>
+                {props.message}
+              </Modal.Body>
+              :null
+          }
+
+        <Modal.Footer>
+            <React.Fragment>
+              <Button variant="primary" onClick={()=>{props.action(); close();}}>
+                {props.accept}
+              </Button>
+              <Button variant="danger" onClick={close}>
+                {props.decline}
+              </Button>
+            </React.Fragment>
+        </Modal.Footer>
+    </Modal>
+  )
+}
 
 export function ResponseModal(props){
+  let {tenant_name} = useParams();
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   let history = useHistory();
 
   //const handleClose = () => props.setMessage();
-  const handleClose = () => history.push('/petitions');
+  const handleClose = () => {
+    console.log(tenant_name);
+    history.push('/'+tenant_name+'/petitions');}
   return (
     <Modal show={props.message?true:false} onHide={handleClose}>
         <Modal.Header closeButton>
@@ -87,7 +119,7 @@ export function ListResponseModal(props){
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   const handleClose = () => props.setMessage();
-  
+
   return (
     <Modal show={props.message?true:false} onHide={handleClose}>
         <Modal.Header closeButton>

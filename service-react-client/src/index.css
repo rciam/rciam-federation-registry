@@ -4,7 +4,7 @@ body {
   display: flex;
   min-height: 100vh;
   flex-direction: column;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Manrope", "Oxygen",
     "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
     sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -46,7 +46,7 @@ code {
 .home-container {
   background-color:rgb(245, 245, 245);
   font-weight: 300;
-  font-family: "Roboto";
+  font-family: "Manrope";
   text-align: left;
 }
 .home-container h1{
@@ -67,7 +67,7 @@ code {
 /* Header */
 
 .drop-menu a {
-  font:300 13px / 23px 'Roboto' !important;
+  font:300 13px / 23px 'Manrope' !important;
   padding:0.2rem 1rem!important;
 }
 
@@ -102,7 +102,7 @@ code {
 }
 .main-title {
   color:rgb(91, 91, 91);
-  font-family:"Roboto";
+  font-family:"Manrope";
   font-weight: 300;
   font-size: 1.9rem;
   margin-top:1rem;
@@ -115,7 +115,7 @@ code {
   width:90%;
   margin:auto;
   margin-top:1rem;
-  font-family:'Roboto';
+  font-family:'Manrope';
   font-weight:300;
 }
 .logo-grnet {
@@ -169,7 +169,7 @@ code {
 }
 .options-bar, .links {
   text-align: left;
-  font-family:'Roboto';
+  font-family:'Manrope';
   font-weight:300;
 }
 .options-bar button:first-child {
@@ -207,7 +207,7 @@ code {
 
 .petitions-table {
   text-align: left;
-  font-family:'Roboto';
+  font-family:'Manrope';
   font-weight:300;
   table-layout: fixed;
   width:100%;
@@ -327,14 +327,14 @@ code {
 .controls-options-container:hover {
   color:#007bff;
 }
-.fa-exclamation {
+.notification .fa-exclamation {
   margin-left: 0.5rem;
   font-size: 0.6rem;
   margin-top: 0.3rem;
   color: white;
   z-index: 10;
 }
-.fa-circle {
+.notification .fa-circle {
   font-size: 1.2rem;
   color:red;
 }
@@ -641,7 +641,7 @@ form {
   height:12rem;
   background-color:rgb(245, 245, 245);
 
-  font-family:'Roboto';
+  font-family:'Manrope';
   font-weight:300;
   border:1px solid rgb(227, 227, 227);
   margin-right:2rem;
@@ -656,11 +656,36 @@ form {
   margin-left: 1rem;
 }
 
+.nav-side-notification .fa-exclamation {
+  position:absolute;
+
+  font-size: 0.5rem;
+  color: white;
+  z-index: 10;
+}
+.nav-side-notification .fa-circle {
+  position: absolute;
+  margin-top:-0.15rem;
+  margin-left:-0.3rem;
+  font-size: 0.8rem;
+  color:red;
+}
+
+.nav-side-notification svg {
+
+}
+.nav-side-notification {
+  position: absolute;
+  margin-left:0rem!important;
+  display: inline-block;
+
+}
+
 .nav-title {
   color:#4b4b4b;
   font-size: 1rem;
   font-weight: 300;
-  font-family: "Roboto";
+  font-family: "Manrope";
   line-height: 3rem;
   margin-bottom: -0.5rem;
 }
@@ -748,11 +773,11 @@ tbody tr td:last-child {
   height:20px;
 }
 .dl-text-info {
-  font: 300 15px / 23px 'Roboto';
+  font: 300 15px / 23px 'Manrope';
   color:rgb(43, 63, 68)!important;
 }
 .text-info {
-  font: 300 15px / 23px 'Roboto';
+  font: 300 15px / 23px 'Manrope';
 }
 
 /* Form Tabs Review */
@@ -815,7 +840,7 @@ tbody tr td:last-child {
   margin-left:3.5rem;
   font-size: 1.6rem;
   font-weight: 300;
-  font-family: "Roboto";
+  font-family: "Manrope";
   width:auto;
   margin-top: 1.44rem;
   margin-bottom:  1.4rem;
@@ -861,7 +886,7 @@ tbody tr td:last-child {
   margin:auto;
 }
 .loading-container h1 {
-  font-family:'Roboto';
+  font-family:'Manrope';
   font-weight:300;
   font-size: 1.5vw;
   text-align: left;
@@ -890,7 +915,7 @@ tbody tr td:last-child {
 /* History */
 .history-container {
   font-weight: 300;
-  font-family: "Roboto";
+  font-family: "Manrope";
   text-align: left;
   margin-top:1rem;
   display:inline-block;
@@ -925,7 +950,7 @@ tbody tr td:last-child {
 
 .history-table {
   font-weight: 300;
-  font-family: "Roboto";
+  font-family: "Manrope";
   text-align: left;
   margin-top:1rem;
   width:40rem!important;
@@ -965,4 +990,153 @@ tbody tr td:last-child {
 /* Lang fix */
 html:lang(gr) .home-container h1 {
   font-size: 10rem;
+}
+
+/* Loading Page */
+.loading-page {
+  position: absolute;
+  top:0;
+  left:0;
+  width:100vw;
+  height:100vh;
+  background-color: white;
+  z-index:40;
+}
+
+.loading-page div {
+    position:absolute;
+    top:0;
+    left:0;
+    right:0;
+    bottom:0;
+    margin:auto;
+    width:10vw;
+    height:10vw;
+    border-width: 0.65em;
+    animation: spinner-border 1.5s linear infinite;
+}
+.navbar-fixed-top {
+  z-index: 30!important;
+}
+.ssp-footer {
+  z-index: 50!important;
+}
+.user-role {
+}
+
+
+/* Groups PPage */
+
+.groups-table {
+  width:auto;
+  margin-top:1rem;
+  min-width: 0;
+  max-width: 40rem;
+}
+.groups-table td,.groups-table th{
+    padding-left: 0.7rem;
+    width:auto;
+    white-space: nowrap;
+}
+.groups-table th{
+  text-align:center;
+  width:0;
+}
+.groups-table th:nth-child(3) {
+  width:9rem;
+  text-align:  center;
+}
+.groups-table th:nth-child(3) {
+  width:3rem!important;
+  text-align:  center;
+}
+.groups-table td:nth-child(3) {
+  padding:0.7;
+  color:#28A745;
+  text-align:  center;
+}
+.groups-table td{
+  line-height: 1.6rem;
+  text-align: center;
+}
+.groups-table button {
+  padding:0.1rem 0.5rem 0.1rem 0.5rem;
+}
+
+.groups-table button:nth-child(2) {
+  padding:0.1rem 0.4rem 0.1rem 0.4rem;
+}
+.group_invite_row {
+  margin:0;
+  margin-left:0.3rem;
+
+  margin-top:1rem;
+  max-width:50rem;
+}
+.group_invite_row .input-group {
+  padding: 0rem!important;
+  margin-bottom:0.2rem!important;
+}
+
+.invitation-error {
+  font-size: 0.8rem;
+  margin:0;
+  margin-left:0.5rem;
+  color:#DC3545;
+  font-weight: bold;
+}
+.invitation_alert {
+  margin-top:1rem;
+}
+.invitation_alert span {
+  font-weight: bold;
+}
+
+
+.group_title {
+  margin-top: 1rem!important;
+}
+
+
+.invitation-container {
+  margin-top:1rem;
+  padding:0.5rem;
+
+  border: 1px solid rgb(227, 227, 227);
+  background-color: rgb(245, 245, 245);
+}
+.invitation-container button{
+
+    margin-left: 1rem;
+}
+
+.invitation-container h3 {
+  margin-left:0.5rem;
+  margin-top:0.4rem;
+  height:100%;
+  display: inline-block;
+  font-size: 1.1rem;
+}
+
+
+.confirmation-table td:first-child {
+  text-align: right;
+  padding-right: 0.5rem;
+  font-weight: bold;
+}
+
+
+.groups-invite-table button {
+  margin-right: 0.5rem;
+}
+.groups-invite-table td:nth-child(2) {
+  color:#28A745;
+}
+
+.not_found_container {
+  margin-top: 5rem;
+  margin-left: 5rem;
+}
+.not_found_container span {
+  color:#7c7c7c;
 }

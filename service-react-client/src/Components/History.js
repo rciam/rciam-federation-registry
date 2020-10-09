@@ -7,7 +7,7 @@ import Table from 'react-bootstrap/Table';
 import Button from 'react-bootstrap/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {faEye} from '@fortawesome/free-solid-svg-icons';
-import {Link} from "react-router-dom";
+import {Link,useParams} from "react-router-dom";
 import Alert from 'react-bootstrap/Alert';
 import Jumbotron from 'react-bootstrap/Jumbotron';
 import Container from 'react-bootstrap/Container';
@@ -21,6 +21,7 @@ export const HistoryList = (props) => {
   const [stateProps,setstateProps] = useState();
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
+  let {tenant_name} = useParams();
 
   useEffect(()=>{
     setLoadingList(true);
@@ -33,11 +34,12 @@ export const HistoryList = (props) => {
 
   const getPetition = (id)=> {
     setAsyncResponse(true);
-    fetch(config.host+'petition/history/'+id, {
+    fetch(config.host+'tenants/'+tenant_name+'/petitions/'+id, {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'Authorization': localStorage.getItem('token')
     }}).then(response=>response.json()).then(response=> {
       setAsyncResponse(false);
       if(response.petition){
@@ -47,11 +49,12 @@ export const HistoryList = (props) => {
   }
 
   const getHistory = ()=> {
-    fetch(config.host+'service/history/list/'+props.service_id, {
+    fetch(config.host+'tenants/'+tenant_name+'/services/'+props.service_id+'/petitions', {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json'
+      'Content-Type': 'application/json',
+      'Authorization': localStorage.getItem('token')
     }}).then(response=>response.json()).then(response=> {
       setLoadingList(false);
       if(response.history){
@@ -66,9 +69,9 @@ export const HistoryList = (props) => {
       {petition?
         <React.Fragment>
           <div className="links">
-            <Link to="/home">{t('link_home')}</Link>
+            <Link to={"/"+tenant_name+"/home"}>{t('link_home')}</Link>
             <span className="link-seperator">/</span>
-            <Link to="/petitions">{t('link_petitions')}</Link>
+            <Link to={"/"+tenant_name+"/petitions"}>{t('link_petitions')}</Link>
             <span className="link-seperator">/</span>
             <span className="fake-link" onClick={()=>{setPetition(null);}}>{t('history_title')}</span>
             <span className="link-seperator">/</span>
@@ -93,9 +96,9 @@ export const HistoryList = (props) => {
         :!loadingList?
         <React.Fragment>
           <div className="links">
-            <Link to="/home">{t('link_home')}</Link>
+            <Link to={"/"+tenant_name+"/home"}>{t('link_home')}</Link>
             <span className="link-seperator">/</span>
-            <Link to="/petitions">{t('history_title')}</Link>
+            <Link to={"/"+tenant_name+"/petitions"}>{t('history_title')}</Link>
             <span className="link-seperator">/</span>
             {t('history_title')}
           </div>

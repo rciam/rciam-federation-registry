@@ -30,8 +30,6 @@ module.exports = {
       addSaml:sql('service_details_protocol/addSaml.sql')
     },
     service:{
-      getOidc:sql('service/getOidc.sql'),
-      getSaml:sql('service/getSaml.sql'),
       getService:sql('service/getService.sql'),
       getPending:sql('service/getPending.sql')
     },
@@ -41,7 +39,7 @@ module.exports = {
     service_petition_details:{
       add:sql('service_petition_details/add.sql'),
       update:sql('service_petition_details/update.sql'),
-
+      belongsToRequester:sql('service_petition_details/belongsToRequester.sql')
     },
     service_state:{
       add:sql('service_state/add.sql'),
@@ -50,10 +48,29 @@ module.exports = {
     user:{
       getReviewers:sql('user/getReviewers.sql'),
       getServiceOwners:sql('user/getServiceOwners.sql'),
-      getPetitionOwner:sql('user/getPetitionOwner.sql')
+      getPetitionOwners:sql('user/getPetitionOwners.sql')
+    },
+    petition: {
+      getPetition:sql('petition/getPetition.sql'),
+      getOwnPetition:sql('petition/getOwnPetition.sql'),
+      canReviewOwn:sql('petition/canReviewOwn.sql'),
+      getOldOwnPetition:sql('petition/getOldOwnPetition.sql'),
+      getOldPetition:sql('petition/getOldPetition.sql')
+    },
+    service_list: {
+      getOwnList:sql('service_list/getOwnList.sql'),
+      getAllList:sql('service_list/getAllList.sql')
+    },
+    group: {
+      getGroupMembers:(sql('group/getGroupMembers.sql')),
+      getGroupManagers:(sql('group/getGroupManagers.sql'))
+    },
+    invitations: {
+      getAll:(sql('invitations/getAll.sql')),
+      get:(sql('invitations/get.sql')),
+      getOne:(sql('invitations/getOne.sql'))
+
     }
-
-
 };
 
 ///////////////////////////////////////////////

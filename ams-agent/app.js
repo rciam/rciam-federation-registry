@@ -8,30 +8,67 @@ const options = {
     'Content-Type': 'application/json',
     'X-Api-Key': process.env.KEY
 }};
-const publish_url = process.env.AMS + '/projects/' + process.env.PROJECT + "/topics/tasks:publish?key=" +process.env.TOKEN;
-const fake_publish_url = process.env.AMS + '/projects/' + process.env.PROJECT + '/topics/updates:publish?key=' +process.env.TOKEN;
-const fake_consume_url = process.env.AMS + '/projects/' + process.env.PROJECT + '/subscriptions/mock:pull?key=' +process.env.TOKEN;
+const publish_url_oidc = process.env.AMS + '/projects/' + process.env.PROJECT + "/topics/egi-oidc:publish?key=" +process.env.TOKEN;
+const publish_url_saml = process.env.AMS + '/projects/' + process.env.PROJECT + "/topics/egi-saml:publish?key=" +process.env.TOKEN;
+
 var intervalID;
 
 
 function run() {
-  let messages = [];
-  axios.get(process.env.EXPRESS+'/service/pending',options)
+  let messages = {
+    egi: {
+      saml: [],
+      oidc: []
+    }
+  };
+  axios.get(process.env.EXPRESS+'/ams/get_new_configurations',options)
   .then(function (response) {
 	// handle success
-    let updateData = [];
+    let data;
+    let updateData = {
+
+      egi: {
+        saml: [],
+        oidc: []
+      }
+    };
     if(response.data.services){
       response.data.services.forEach((service) => {
-        updateData.push({id:service.json.id,state:'waiting-deployment'});
-        messages.push({"attributes":{},"data": Buffer.from(JSON.stringify(service.json)).toString("base64")});
+        for (var propName in service.json) {
+          if (service.json[propName] === null || service.json[propName] === undefined) {
+            delete service.json[propName];
+          }
+        }
+        updateData.egi[service.json.protocol].push({id:service.json.id,state:'waiting-deployment'});
+        messages.egi[service.json.protocol].push({"attributes":{},"data": Buffer.from(JSON.stringify(service.json)).toString("base64")});
       });
-      if(messages.length>0){
-        data={"messages":messages};
-        axios.post(publish_url,data, options).then((res) => {
+      if(messages.egi.oidc.length>0){
+
+        data={"messages":messages.egi.oidc};
+        console.log(data);
+        axios.post(publish_url_oidc,data, options).then((res) => {
           if(res.status===200){
-            axios.put(process.env.EXPRESS+'/service/state',updateData,options).then((res)=>{
+            console.log('success1');
+            axios.put(process.env.EXPRESS+'/agent/set_services_state',updateData.egi.oidc,options).then((res)=>{
               if(res.status===200){
-                fakeThirdParty(updateData);
+                console.log('success2');
+                if(res.success===false){
+                 console.log(res.error);
+                }
+              }
+            });
+          }
+        });
+      }
+      if(messages.egi.saml.length>0){
+        data={"messages":messages.egi.saml};
+        console.log(data);
+        axios.post(publish_url_saml,data, options).then((res) => {
+          if(res.status===200){
+            console.log('success1');
+            axios.put(process.env.EXPRESS+'/agent/set_services_state',updateData.egi.saml,options).then((res)=>{
+              if(res.status===200){
+                console.log('success2');
                 if(res.success===false){
                  console.log(res.error);
                 }
@@ -50,36 +87,6 @@ function run() {
     // always executed
   });
 }
-
-function fakeThirdParty(data){
-  let messages = [];
-  data.forEach((message,i)=>{
-    data[i].state = 'deployed';
-    messages.push({"attributes":{},"data": Buffer.from(JSON.stringify(data[i])).toString("base64")});
-  });
-  data={"messages":messages};
-  axios.post(fake_publish_url,data, options).then((res) => {
-    if(res.status===200){
-    }
-  });
-}
-// function checkConsumer(){
-//   data = {"MaxMessages":"5"};
-//   let response = [];
-//   let ackIds = [];
-//   axios.post(fake_consume_url,data,options).then((res)=>{
-//     console.log(res);
-//     if(res.data.receivedMessages.length>0){
-//       res.data.receivedMessages.forEach(message=>{
-//         ackIds.push(message.message.ackId);
-//         response.push(JSON.parse(Buffer.from(message.message.data, 'base64').toString()));
-//       })
-//     }
-//     console.log('we have new stuff');
-//     console.log(response);
-//   })
-//
-// }
 
 
 function stopClock() {

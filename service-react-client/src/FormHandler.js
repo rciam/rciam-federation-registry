@@ -1,5 +1,6 @@
 import React,{useEffect,useState} from 'react';
 import initialValues from './initialValues';
+import {useParams} from "react-router-dom";
 import * as config from './config.json';
 import ServiceForm from "./ServiceForm.js";
 import {LoadingBar} from './Components/LoadingBar';
@@ -11,6 +12,7 @@ import Container from 'react-bootstrap/Container';
 import { diff } from 'deep-diff';
 import { useTranslation } from 'react-i18next';
 
+
 const EditService = (props) => {
     // eslint-disable-next-line
     const { t, i18n } = useTranslation();
@@ -18,6 +20,7 @@ const EditService = (props) => {
     const [service,setService] = useState();
     const [editPetition,setEditPetition] = useState();
     const [changes,setChanges] = useState();
+    const {tenant_name} = useParams();
 
     useEffect(()=>{
       getData();
@@ -71,11 +74,12 @@ const EditService = (props) => {
 
     const getData = () => {
       if(props.service_id){
-        fetch(config.host+'service/'+props.service_id, {
+        fetch(config.host+'tenants/'+tenant_name+'/services/'+props.service_id, {
           method: 'GET', // *GET, POST, PUT, DELETE, etc.
           credentials: 'include', // include, *same-origin, omit
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': localStorage.getItem('token')
           }
         }).then(response=>{
           if(response.status===200){
@@ -91,11 +95,12 @@ const EditService = (props) => {
         });
       }
       if(props.petition_id&&props.type!=='delete'){
-        fetch(config.host+'petition/'+props.petition_id, {
+        fetch(config.host+'tenants/'+tenant_name+'/petitions/'+props.petition_id+'?type=open', {
           method: 'GET', // *GET, POST, PUT, DELETE, etc.
           credentials: 'include', // include, *same-origin, omit
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': localStorage.getItem('token')
           }
         }).then(response=>{
           if(response.status===200){
@@ -187,6 +192,7 @@ const ViewService = (props)=>{
   const { t, i18n } = useTranslation();
   const [service,setService] = useState();
   const [petition,setPetition] = useState();
+  const {tenant_name} = useParams();
 
   useEffect(()=>{
 
@@ -196,29 +202,28 @@ const ViewService = (props)=>{
 
   const getData = () => {
     if(props.service_id){
-      fetch(config.host+'service/'+props.service_id, {
+      fetch(config.host+'tenants/'+tenant_name+'/services/'+props.service_id, {
         method: 'GET', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': localStorage.getItem('token')
         }
       }).then(response=>response.json()).then(response=> {
-
         if(response.service){
-          console.log(response.service);
           setService(response.service);
         }
       });
     }
     if(props.petition_id&&props.type!=='delete'){
-      fetch(config.host+'petition/'+props.petition_id, {
+      fetch(config.host+'tenants/'+tenant_name+'/petitions/'+props.petition_id+'?type=open', {
         method: 'GET', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': localStorage.getItem('token')
         }
       }).then(response=>response.json()).then(response=> {
-
         if(response.petition){
           setPetition(response.petition);
         }
@@ -229,7 +234,6 @@ const ViewService = (props)=>{
     <React.Fragment>
       {service?<ServiceForm initialValues={service} disabled={true}  />:props.service_id?<LoadingBar loading={true}/>:petition?
         <React.Fragment>
-
           <Alert variant='danger' className='form-alert'>
             {t('view_create_info')}
           </Alert>
