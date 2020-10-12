@@ -17,23 +17,60 @@ const path = require('path');
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
 module.exports = {
-    client_services:{
-      add:sql('client_services/add.sql'),
-      findOne:sql('client_services/findOne.sql'),
-      update:sql('client_services/update.sql'),
-      findForEdit:sql('client_services/findForEdit.sql')
+    service_details:{
+      add:sql('service_details/add.sql'),
+      update:sql('service_details/update.sql')
+    },
+    service_details_protocol:{
+      addOidc:sql('service_details_protocol/addOidc.sql'),
+      checkClientId:sql('service_details_protocol/checkClientId.sql'),
+      updateOidc:sql('service_details_protocol/updateOidc.sql'),
+      updateSaml:sql('service_details_protocol/updateSaml.sql'),
+      checkEntityId:sql('service_details_protocol/checkEntityId.sql'),
+      addSaml:sql('service_details_protocol/addSaml.sql')
+    },
+    service:{
+      getService:sql('service/getService.sql'),
+      getPending:sql('service/getPending.sql')
     },
     user_info:{
       add:sql('user_info/add.sql')
     },
-    client_petitions:{
-      add:sql('client_petitions/add.sql'),
-      update:sql('client_petitions/update.sql'),
-      findOne:sql('client_petitions/findOne.sql'),
-      findOneHistory:sql('client_petitions/findOneHistory.sql'),
+    service_petition_details:{
+      add:sql('service_petition_details/add.sql'),
+      update:sql('service_petition_details/update.sql'),
+      belongsToRequester:sql('service_petition_details/belongsToRequester.sql')
+    },
+    service_state:{
+      add:sql('service_state/add.sql'),
+      update:sql('service_state/update.sql'),
+    },
+    user:{
+      getReviewers:sql('user/getReviewers.sql'),
+      getServiceOwners:sql('user/getServiceOwners.sql'),
+      getPetitionOwners:sql('user/getPetitionOwners.sql')
+    },
+    petition: {
+      getPetition:sql('petition/getPetition.sql'),
+      getOwnPetition:sql('petition/getOwnPetition.sql'),
+      canReviewOwn:sql('petition/canReviewOwn.sql'),
+      getOldOwnPetition:sql('petition/getOldOwnPetition.sql'),
+      getOldPetition:sql('petition/getOldPetition.sql')
+    },
+    service_list: {
+      getOwnList:sql('service_list/getOwnList.sql'),
+      getAllList:sql('service_list/getAllList.sql')
+    },
+    group: {
+      getGroupMembers:(sql('group/getGroupMembers.sql')),
+      getGroupManagers:(sql('group/getGroupManagers.sql'))
+    },
+    invitations: {
+      getAll:(sql('invitations/getAll.sql')),
+      get:(sql('invitations/get.sql')),
+      getOne:(sql('invitations/getOne.sql'))
+
     }
-
-
 };
 
 ///////////////////////////////////////////////
@@ -43,7 +80,6 @@ function sql(file) {
     const fullPath = path.join(__dirname, file); // generating full path;
 
     const options = {
-
         // minifying the SQL is always advised;
         // see also option 'compress' in the API;
         minify: true

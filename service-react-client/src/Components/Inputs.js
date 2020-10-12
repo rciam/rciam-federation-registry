@@ -9,6 +9,7 @@ import Table from 'react-bootstrap/Table';
 import Tooltip from 'react-bootstrap/Tooltip';
 import Overlay from 'react-bootstrap/Overlay';
 import * as formConfig from '../form-config.json';
+import { useTranslation } from 'react-i18next';
 /*
 const [show, setShow] = useState(false);
 const target = useRef(null);
@@ -137,10 +138,10 @@ export function Select(props){
         ref={target}
         >
       <Field
-      className={props.changed?'select-input input-edited':'select-input'}
+      className={props.changed?' input-edited':null}
       name={props.name}
       as="select"
-      
+
       onMouseOver={()=>setShow(true)}
       onMouseOut={()=>setShow(false)}
       disabled={props.disabled}
@@ -252,7 +253,8 @@ export function CheckboxList(props){
 export function RefreshToken(props){
     const [show, setShow] = useState(false);
     const target = useRef(null);
-
+    // eslint-disable-next-line
+    const { t, i18n } = useTranslation();
     return(
       <React.Fragment>
         <div
@@ -262,18 +264,18 @@ export function RefreshToken(props){
           onMouseOut={()=>setShow(false)}
           >
           <Checkbox name="scope" disabled={props.disabled} checked={props.values.scope.includes('offline_access')} value='offline_access'/>
-          Refresh tokens are issued for this client
+            {t('form_reuse_refresh_tokens_scope')}
           <MyOverLay show={props.changed&&(props.changed.scope.D.includes('offline_access')||props.changed.scope.N.includes('offline_access'))&&show} type='Edited' target={target}/>
         </div>
         <Form.Text className="text-muted text-left label-checkbox" id="uri-small-desc">
-          This will add the offline_access scope to the client's scopes.
+          {t('form_offline_acces_desc')}
         </Form.Text>
         {props.values.scope.includes('offline_access')?(
           <React.Fragment>
             <div className={"checkbox-item "+(props.changed&&props.changed.reuse_refresh_tokens?"spacing-bot":'')}>
               <SimpleCheckbox
                 name="reuse_refresh_tokens"
-                label='Refresh tokens for this client are re-used'
+                label={t('form_reuse_refresh_tokens')}
                 changed={props.changed?props.changed.reuse_refresh_tokens:null}
                 checked={props.values.reuse_refresh_tokens}
                 disabled={props.disabled}
@@ -284,7 +286,7 @@ export function RefreshToken(props){
             <div className={"checkbox-item "+(props.changed&&props.changed.reuse_refresh_tokens?"spacing-bot":'')}>
             <SimpleCheckbox
               name="clear_access_tokens_on_refresh"
-              label='Active access tokens are automatically revoked when the refresh token is used'
+              label={t('form_clear_access_tokens_on_refresh')}
               checked={props.values.clear_access_tokens_on_refresh}
               changed={props.changed?props.changed.clear_access_tokens_on_refresh:null}
               onChange={props.onChange}
@@ -303,7 +305,7 @@ export function RefreshToken(props){
               changed={props.changed?props.changed.refresh_token_validity_seconds:null}
             />
             <Form.Text className="text-muted text-left label-checkbox" id="uri-small-desc">
-              Enter this time in seconds, minutes, or hours (Max value is 34128000 seconds (13 months)).
+              {t('form_refresh_token_validity_seconds_desc')}
             </Form.Text>
           </React.Fragment>
           ):null}
@@ -323,6 +325,8 @@ onMouseOut={()=>setShow(false)}
 export function DeviceCode(props){
   const [show, setShow] = useState(false);
   const target = useRef(null);
+  // eslint-disable-next-line
+  const { t, i18n } = useTranslation();
   return(
     <React.Fragment>
       <div
@@ -332,11 +336,11 @@ export function DeviceCode(props){
         onMouseOut={()=>setShow(false)}
       >
         <Checkbox name="grant_types" disabled={props.disabled} value='device'/>
-        Device code is issued for this client
+          {t('form_device_code_desc')}
         <MyOverLay show={(props.changed&&(props.changed.grant_types.D.includes('device')||props.changed.grant_types.N.includes('device'))?'input-edited checkbox-item-edited':'')&&show} type='Edited' target={target}/>
       </div>
       <Form.Text className="text-muted text-left label-checkbox" id="uri-small-desc">
-        This will add the device grant type to your grant types.
+      {t('form_device_code_info')}
       </Form.Text>
       {props.values.grant_types.includes('device')?(
         <React.Fragment>
@@ -350,7 +354,7 @@ export function DeviceCode(props){
             changed={props.changed?props.changed.device_code_validity_seconds:null}
           />
           <Form.Text className="text-muted text-left label-checkbox" id="uri-small-desc">
-            Enter this time in seconds, minutes, or hours (Max value is 34128000 seconds (13 months)).
+           {t('form_device_code_validity_seconds_desc')}
           </Form.Text>
         </React.Fragment>
         ):null}
@@ -370,6 +374,8 @@ export function ClientSecret(props){
   const [editSecret,toggleEditSecret] = useState(true);
   const [show, setShow] = useState(false);
   const target = useRef(null);
+  // eslint-disable-next-line
+  const { t, i18n } = useTranslation();
   return(
     <React.Fragment>
       {!props.disabled?
@@ -383,7 +389,7 @@ export function ClientSecret(props){
             disabled={props.disabled}
           />
           <Form.Text className="text-muted text-left label-checkbox" id="uri-small-desc">
-            New secret will be generated when you click 'Save'
+            {t('imput_client_secret_info')}
           </Form.Text>
         </React.Fragment>
         :null}
@@ -394,12 +400,12 @@ export function ClientSecret(props){
            type="text"
            name="client_secret"
            className='col-form-label-sm'
-           value="Generate on Save"
+           value={t('input_generate')}
            disabled={true}
          />):(
          <React.Fragment>
            <Form.Check
-             label={"Display"+(!props.disabled?"/edit":"")+ " client secret:"}
+             label={t('input_display_secret')}
              checked={!editSecret}
              onChange={()=>{toggleEditSecret(!editSecret)}}
              className="checkbox col-form-label"
@@ -636,16 +642,15 @@ function ListInputArrayInput2(props){
 export  function LogoInput(props){
   const [show, setShow] = useState(false);
   const target = useRef(null);
-
+  // eslint-disable-next-line
+  const { t, i18n } = useTranslation();
   const addDefaultSrc= (ev)=>{
       props.setImageError(false);
       ev.target.src = process.env.PUBLIC_URL + '/logo_placeholder.gif';
   }
   const imageLoad = (ev)=>{
       if((!ev.target.src.includes('/logo_placeholder.gif'))){
-
         props.setImageError(true);
-
       }
   }
 
@@ -669,7 +674,7 @@ export  function LogoInput(props){
         {props.description}
       </Form.Text>
       <MyOverLay show={props.changed&&show?'string':null} type='Edited' target={target}/>
-      {props.error && props.touched ? (typeof(props.error)=='string')?(<div className="error-message">{props.error}</div>):(<div className="error-message">Image not valid</div>):null}
+      {props.error && props.touched ? (typeof(props.error)=='string')?(<div className="error-message">{props.error}</div>):(<div className="error-message">{t('input_image_error')}</div>):null}
       <FormikConsumer>
         {({ validationSchema, validate, onSubmit, ...rest }) => (
           <pre
@@ -687,7 +692,10 @@ export  function LogoInput(props){
     </React.Fragment>
   )
 }
+
 function MyOverLay(props) {
+  // eslint-disable-next-line
+  const { t, i18n } = useTranslation();
   const [show,setShow] = useState(false);
   useEffect(()=>{
     if(props.show){
@@ -701,11 +709,8 @@ function MyOverLay(props) {
   return (
     <Overlay target={props.target.current}  show={show} placement="right">
       {propsOv => (
-
-
         <Tooltip id="overlay-example" placement={propsOv.placement} arrowProps={propsOv.arrowProps} ref={propsOv.ref} style={propsOv.style} outOfBoundaries={propsOv.outOfBoundaries} >
-
-          {props.type}
+          {props.type==="Added"?t('input_added'):props.type==="Deleted"?t('input_deleted'):props.type==="Edited"?t('input_edited'):null}
         </Tooltip>
 
       )}
@@ -725,10 +730,8 @@ function ListSingleInput(props){
       }
       else if(props.changed.D.includes(props.item)){
         setType('Deleted');
-
       }
     }
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
 
@@ -758,7 +761,8 @@ function ListSingleInput(props){
 
 export function ListInput(props){
   const [newVal,setNewVal] = useState('');
-
+  // eslint-disable-next-line
+  const { t, i18n } = useTranslation();
   return (
         <FieldArray name={props.name}>
           {({push,remove,insert})=>(
@@ -770,7 +774,6 @@ export function ListInput(props){
                   onChange={(e)=>{setNewVal(e.target.value)}}
                   column="true"
                   sm="4"
-
                   onBlur={()=>{!props.touched?props.setFieldTouched(props.name,true):console.log('sdf')}}
                   type="text"
                   className='col-form-label.sm'
@@ -786,11 +789,10 @@ export function ListInput(props){
                       setNewVal('');
                     }}
                   >
-                    ADD
+                    {t('input_add_button')}
                   </Button>
                 </InputGroup.Prepend>
                 </InputGroup>:null}
-
 
               {props.values && props.values.length > 0 && props.values.map((item,index)=>(
                 <React.Fragment key={index}>
@@ -824,6 +826,8 @@ export function Contacts(props){
 
   const [newVal,setNewVal] = useState('');
   const [newVal2,setNewVal2] = useState('admin');
+  // eslint-disable-next-line
+  const { t, i18n } = useTranslation();
   return (
         <FieldArray name={props.name}>
           {({push,remove,insert})=>(
@@ -862,7 +866,7 @@ export function Contacts(props){
                           setNewVal2('admin');
                         }}
                       >
-                        ADD
+                        {t('input_add_button')}
                       </Button>
                     </InputGroup.Prepend>
                   </InputGroup>
@@ -871,10 +875,8 @@ export function Contacts(props){
 
               {props.values && props.values.length > 0 && props.values.map((item,index)=>(
                 <React.Fragment key={index} >
-
                 <InputGroup className="spacing-bot-contact" >
                   <ContactInput name={props.name} item={item} index={index} onBlur={props.handleBlur} onChange={props.onChange} error={props.error} remove={remove} changed={props.changed} disabled={props.disabled}/>
-
                 </InputGroup>
                 <div className="error-message-list-item">{Array.isArray(props.error)&&props.error[index]?props.error[index].email:''}</div>
 
@@ -896,6 +898,8 @@ function ContactInput(props){
   const [show, setShow] = useState(false);
   const target = useRef(null);
   const [type,setType] = useState();
+  // eslint-disable-next-line
+  const { t, i18n } = useTranslation();
 
   useEffect(()=>{
     if(props.changed){
@@ -953,7 +957,6 @@ function ContactInput(props){
               })
             }
           </Form.Control>
-
             </React.Fragment>
           )}
         </Field>
@@ -962,7 +965,7 @@ function ContactInput(props){
       {!props.disabled?
         <React.Fragment>
           <InputGroup.Prepend>
-            <Button disabled={props.disabled} variant="outline-danger" onClick={()=>{props.remove(props.index)}}>Remove</Button>
+            <Button disabled={props.disabled} variant="outline-danger" onClick={()=>{props.remove(props.index)}}>{t('input_remove_button')}</Button>
           </InputGroup.Prepend>
         </React.Fragment>
         :null}

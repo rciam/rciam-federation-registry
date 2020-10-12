@@ -1,0 +1,1312 @@
+swagger: "2.0"
+info:
+  description: "This is an Express server used to manage identity provider services. Users manage services by creating requests handled by administrators. You can find out more about the project on the [github page](https://github.com/rciam/rciam-service-registry) or you can try it out live  [here](http://service-registry.aai-dev.grnet.gr/egi). "
+  version: "1.0.1"
+  title: "Service Registry"
+  termsOfService: "http://swagger.io/terms/"
+  contact:
+    email: "apiteam@swagger.io"
+  license:
+    name: "Rciam"
+    url: "https://github.com/rciam"
+host: "swagger.io"
+basePath: "/v2"
+tags:
+- name: "Authentication"
+  description: "Authentication routes"
+- name: "Services"
+  description: "Manage Services"
+- name: "Petitions"
+  description: "Manage Petition Requests"
+- name: "User"
+  description: "Operations about user"
+- name: "Groups and Invitations"
+  description: "Manage owners group"
+- name: "AMS"
+  description: "Commmunication with the Argo Messenging Service"
+- name: "Agent"
+  description: "Deditated to the ams-agent"
+schemes:
+- "https"
+paths:
+  /tenants/{name}/login:
+    get:
+      tags:
+      - "Authentication"
+      summary: "Redirects Users to Proxy"
+      description: "This route redirects user to the tenants proxy authentication server where user is prompted to choose an identity provider and login."
+      operationId: "login"
+      parameters:
+        - in: path
+          name: name
+          type: string
+          description: "Tenant that the request is targeting"
+          required: true
+      responses:
+        "301":
+          description: "Redirects back to React App"
+        "500":
+          description: "Error"
+  /tokens/{code}:
+    get:
+      tags:
+      - "Authentication"
+      summary: "Exchange one time code with access token"
+      description: "Used to get access token issued from the authentication proxy on login."
+      operationId: "getToken"
+      parameters:
+        - in: "path"
+          name: "code"
+          type: "string"
+          description: "One time code returned after login"
+          required: true
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            type: "object"
+            properties:
+              token:
+                type: "string"
+                description: "Access token"
+        "500":
+          description: "Error"
+  /tenants/{name}/user:
+    get:
+      tags:
+      - "User"
+      summary: "Returns user-info with admin status"
+      description: ""
+      operationId: "getUser"
+      parameters:
+        - in: path
+          name: name
+          type: string
+          description: "Tenant that the request is targeting"
+          required: true
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/User"
+        "401":
+          description: "Unauthenticated request"
+        "500":
+          description: "Error"
+      security:
+      - access_tokenAuth: []
+  /tenants/{name}/callback:
+    get:
+      tags:
+      - "Authentication"
+      summary: "Redirects user back to react app after login"
+      description: "This route handles redirects from the authentication proxy following Authorization Code Flow, saves user to db links access_token to a one time code and then redirects to react app sending also the code."
+      operationId: "callback"
+      parameters:
+        - in: path
+          type: string
+          name: name
+          description: "Tenant that the request is targeting"
+          required: true
+      responses:
+        "301":
+          description: "Redirects back to React App"
+        "500":
+          description: "Error"
+  /tenants/{name}/petitions:
+    post:
+      tags:
+      - "Petitions"
+      summary: "Create new petition"
+      description: ""
+      operationId: "addPetition"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: path
+        type: string
+        name: name
+        description: "Tenant that the request is targeting"
+        required: true
+      - in: "body"
+        name: "body"
+        description: "Petition object that needs to be added to the regisrtry, may be empty if type is delete"
+        required: false
+        schema:
+          $ref: "#/definitions/Petition"
+      responses:
+        "200":
+          description: "OK"
+        "401":
+          description: "Unauthenticated request"
+        "400":
+          description: "Invalid Data"
+        "500":
+          description: "Internal Error"
+      security:
+      - access_tokenAuth: []
+  /tenants/{name}/petitions/{id}:
+    get:
+      tags:
+      - "Petitions"
+      summary: "Get petition"
+      description: ""
+      operationId: "getPetition"
+      consumes:
+       - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+        - in: path
+          type: string
+          name: name
+          description: "Tenant that the request is targeting"
+          required: true
+        - in: "query"
+          name: "type"
+          required: false
+          type: "string"
+          description: "Type should be 'open' when asking for a pending petition"
+        - name: "id"
+          in: "path"
+          description: "ID of petition to return"
+          required: true
+          type: "integer"
+          format: "int64"
+      responses:
+        "200":
+          description: "Succesfull"
+          schema:
+            $ref: "#/definitions/Petition"
+        "401":
+          description: "Unauthenticated request"
+        "400":
+          description: "Invalid Data"
+        "500":
+          description: "Internal Error"
+      security:
+      - access_tokenAuth: []
+    put:
+      tags:
+      - "Petitions"
+      summary: "Edit petition"
+      description: ""
+      operationId: "updatePetition"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: path
+        type: string
+        name: name
+        description: "Tenant that the request is targeting"
+        required: true
+      - name: "id"
+        in: "path"
+        description: "ID of petition to edit"
+        required: true
+        type: "integer"
+        format: "int64"
+      - in: "body"
+        name: "body"
+        description: "Petition object that needs to be added to the regisrtry may be empty if type is delete"
+        required: false
+        schema:
+          $ref: "#/definitions/Petition"
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: "Unauthenticated request"
+        "400":
+          description: "Invalid Data"
+        "500":
+          description: "Internal Error"
+      security:
+      - access_tokenAuth: []
+    delete:
+      tags:
+      - "Petitions"
+      summary: "Delete petition"
+      description: ""
+      operationId: "deletePetition"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+        - in: path
+          type: string
+          name: name
+          description: "Tenant that the request is targeting"
+          required: true
+        - name: "id"
+          in: "path"
+          description: "ID of petition to delete"
+          required: true
+          type: "integer"
+          format: "int64"
+      responses:
+        "200":
+          description: OK
+        "401":
+          description: "Unauthenticated request"
+        "500":
+          description: "Internal Error"
+      security:
+      - access_tokenAuth: []
+  /tenants/{name}/services/{id}:
+    get:
+      tags:
+      - "Services"
+      summary: "Get service by id"
+      description: "Gets service by id"
+      operationId: "getService"
+      produces:
+      - "application/json"
+      parameters:
+      - in: path
+        type: string
+        name: name
+        description: "Tenant that the request is targeting"
+        required: true
+      - name: "id"
+        in: "path"
+        description: "ID of service to return"
+        required: true
+        type: "integer"
+        format: "int64"
+      responses:
+        "200":
+          description: "successful"
+          schema:
+            $ref: "#/definitions/Service"
+        "401":
+          description: "Unauthenticated request"
+        "500":
+          description: "Internal Error"
+      security:
+      - access_tokenAuth: []
+  /tenants/{name}/petitions/{id}/review:
+    put:
+      tags:
+      - "Petitions"
+      summary: "Review Petition"
+      description: ""
+      operationId: "review"
+      produces:
+      - "application/json"
+      parameters:
+      - in: path
+        type: string
+        name: name
+        description: "Tenant that the request is targeting"
+        required: true
+      - name: "id"
+        in: "path"
+        description: "ID of petition to review"
+        required: true
+        type: "integer"
+        format: "int64"
+      responses:
+        "200":
+          description: OK
+        "204":
+          description: "Petition not found"
+        "401":
+          description: "Unauthenticated request"
+        "500":
+          description: "Internal Error"
+      security:
+      - access_tokenAuth: []
+  /tenants/{name}/services:
+    get:
+      tags:
+      - "Services"
+      summary: "Get all available services"
+      description: "Returns all available services"
+      operationId: "getServices"
+      produces:
+      - "application/json"
+      parameters:
+        - in: path
+          type: string
+          name: name
+          description: "Tenant that the request is targeting"
+          required: true
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            type: "array"
+            items:
+              type: "object"
+              additionalProperties:
+                $ref: "#/definitions/Services"
+        "401":
+          description: "Unauthenticated request"
+        "500":
+          description: "Internal Error"
+      security:
+      - access_tokenAuth: []
+  /agent/get_new_configurations:
+    get:
+      tags:
+      - "Agent"
+      summary: "Get new Congigurations"
+      description: "Route used from ams-agent to get all service configuration awaiting deployment and push them to the ams topic"
+      operationId: "getPendingServices"
+      produces:
+      - "application/json"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            $ref: "#/definitions/Pending"
+        "401":
+          description: "Unauthenticated request"
+        "500":
+          description: "Internal Error"
+      security:
+      - api_key: []
+  /ams/ingest:
+    post:
+      tags:
+      - "AMS"
+      summary: "Route that Ams posts deployment results"
+      description: ""
+      operationId: "setState"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        description: "Ams formated messages containing results for deployment requests"
+        required: true
+        schema:
+          $ref: "#/definitions/AmsPending"
+      responses:
+        "200":
+          description: "OK"
+        "401":
+          description: "Unauthenticated request"
+        "500":
+          description: "Internal Error"
+  /agent/set_services_state:
+    put:
+      tags:
+      - "Agent"
+      summary: "Edit service state"
+      description: "Route used by ams agent to update state once service changes have been push to the ams"
+      operationId: "putState"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "body"
+        name: "body"
+        required: true
+        schema:
+          $ref: "#/definitions/PutState"
+      responses:
+        "200":
+          description: "OK"
+        "401":
+          description: "Unauthenticated request"
+        "500":
+          description: "internal error"
+      security:
+      - api_key: []
+  /tenants/{name}/services/{id}/petitions:
+    get:
+      tags:
+      - "Petitions"
+      summary: "Retrieve service history"
+      description: "Get all petitions linked to service"
+      operationId: "findServiceHistory"
+      produces:
+      - "application/json"
+      parameters:
+      - in: path
+        type: string
+        name: name
+        description: "Tenant that the request is targeting"
+        required: true
+      - name: "id"
+        in: "path"
+        description: "ID of service to retrieve history"
+        required: true
+        type: "integer"
+        format: "int64"
+      responses:
+        "200":
+          description: "OK"
+          schema:
+              $ref: "#/definitions/History"
+        "204":
+          description: "Service could not be found"
+        "401":
+          description: "Unauthenticated request"
+        "500":
+          description: "internal error"
+      security:
+      - access_tokenAuth: []
+  /tenants/{name}/check_availability:
+    get:
+      tags:
+      - "Petitions"
+      summary: "Check availability of protocol id"
+      description: ""
+      operationId: "Idavailability"
+      produces:
+      - "application/json"
+      parameters:
+      - in: "path"
+        type: "string"
+        name: "name"
+        description: "Tenant that the request is targeting"
+        required: true
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            type: "object"
+            properties:
+              available:
+                type: "boolean"
+                description: ""
+        "400":
+          description: "Invalid tag value"
+        "401":
+          description: "Unauthenticated request"
+      security:
+      - access_tokenAuth: []
+  /tenants/{name}/groups/{group_id}/members:
+    get:
+      tags:
+      - "Groups and Invitations"
+      summary: "Get group member of target group"
+      description: ""
+      operationId: "Get group"
+      produces:
+      - "application/json"
+      parameters:
+        - in: "path"
+          type: "string"
+          name: "name"
+          description: "Tenant that the request is targeting"
+          required: true
+        - in: "path"
+          type: "integer"
+          name: "group_id"
+          description: "Id of target owners group"
+          required: true
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            type: "array"
+            items:
+              type: "object"
+              properties:
+                email:
+                  type: "string"
+                  format: "email"
+                  description: "Email of group member"
+                group_id:
+                  type: "integer"
+                  example: 1
+                group_manager:
+                  type: "boolean"
+                  description: "True if user is a group manager."
+                sub:
+                  type: "string"
+                  example: "7a6ae45156e678389401e3c3839127fd2a019572066d40c5d0176bd123651f934@egi.eu"
+                  description: "Unique identifier of user"
+                username:
+                  type: "string"
+                  example: "test123"
+                  description: "Username of group member"
+        "204":
+          description: "No group found"
+        "401":
+          description: "Unauthenticated request"
+        "500":
+          description: "Internal Error"
+      security:
+        - access_tokenAuth: []
+  /tenants/{name}/groups/{group_id}/members/{sub}:
+    delete:
+      tags:
+      - "Groups and Invitations"
+      summary: "Remove a member from a group"
+      description: "A group manager can request to remove a member from his group."
+      operationId: "deleteMember"
+      parameters:
+        - in: "path"
+          type: "string"
+          name: "name"
+          description: "Tenant that the request is targeting"
+          required: true
+        - in: "path"
+          type: "integer"
+          name: "group_id"
+          description: "Id of target owners group"
+          required: true
+        - in: "path"
+          type: "string"
+          name: "sub"
+          required: true
+          description: "User unique identification"
+      responses:
+        "200":
+          description: "OK"
+        "204":
+          description: "Could not find user"
+        "401":
+          description: "Unauthenticated request"
+        "500":
+          description: "Internal Error"
+      security:
+        - access_tokenAuth: []
+  /tenants/{name}/groups/{group_id}/invitations:
+    get:
+      tags:
+      - "Groups and Invitations"
+      summary: "Get invitations for a group"
+      description: "Get all invitations to target group"
+      operationId: "getGroupInvites"
+      produces:
+      - "application/json"
+      parameters:
+        - in: "path"
+          type: "string"
+          name: "name"
+          description: "Tenant that the request is targeting"
+          required: true
+        - in: "path"
+          type: "integer"
+          name: "group_id"
+          description: "Id of target owners group"
+          required: true
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            type: "array"
+            items:
+              type: "object"
+              properties:
+                invited_by:
+                  type: "string"
+                  format: "email"
+                  description: "Email of user that sent the invitation"
+                id:
+                  type: "integer"
+                  example: 1
+                  description: "Id of group the invitation is for"
+                group_manager:
+                  type: "boolean"
+                  description: "Role for invited user in the group."
+                service_name:
+                  type: "string"
+                  example: "Service Name"
+                  description: "Name of the service that the owners group linked to"
+        "204":
+          description: "No invitations found"
+        "401":
+          description: "Unauthenticated request"
+        "500":
+          description: "Internal Error"
+      security:
+        - access_tokenAuth: []
+    post:
+      tags:
+      - "Groups and Invitations"
+      summary: "Create a group invitation"
+      description: "A group manager can send an invitation via email"
+      operationId: "sendGroupInvite"
+      produces:
+      - "application/json"
+      parameters:
+        - in: "path"
+          type: "string"
+          name: "name"
+          description: "Tenant that the request is targeting"
+          required: true
+        - in: "path"
+          type: "integer"
+          name: "group_id"
+          description: "Id of target owners group"
+          required: true
+        - in: "body"
+          name: "body"
+          schema:
+            type: "object"
+            properties:
+              group_manager:
+                type: "boolean"
+                description: "If true the user is invited to be a group manager"
+              group_id:
+                type: "integer"
+                example: 1
+                description: "Id of group that the user is invited to"
+              email:
+                type: "string"
+                format: "email"
+                description: "email the invitation is sent to"
+              invited_by:
+                type: "string"
+                format: "email"
+                description: "email of the user that sends the invitation"
+      responses:
+        "200":
+          description: "OK"
+        "204":
+          description: "Could not create Invitation"
+        "401":
+          description: "Unauthenticated request"
+        "500":
+          description: "Internal Error"
+      security:
+        - access_tokenAuth: []
+  /tenants/{name}/groups/{group_id}/invitations/{id}:
+    put:
+      tags:
+      - "Groups and Invitations"
+      summary: "Refresh a group invitation"
+      description: "A group manager can refresh an invitation"
+      operationId: "refreshGroupInvite"
+      produces:
+      - "application/json"
+      parameters:
+        - in: "path"
+          type: "string"
+          name: "name"
+          description: "Tenant that the request is targeting"
+          required: true
+        - in: "path"
+          type: "integer"
+          name: "group_id"
+          description: "Id of target owners group"
+          required: true
+        - in: "path"
+          type: "integer"
+          name: "id"
+          description: "Id of target invitation"
+          required: true
+      responses:
+        "200":
+          description: "OK"
+        "204":
+          description: "Could not find Invitation"
+        "401":
+          description: "Unauthenticated request"
+        "500":
+          description: "Internal Error"
+      security:
+        - access_tokenAuth: []
+    delete:
+      tags:
+      - "Groups and Invitations"
+      summary: "Delete a group invitation"
+      description: "A group manager can delete an invitation"
+      operationId: "deleteGroupInvite"
+      produces:
+      - "application/json"
+      parameters:
+        - in: "path"
+          type: "string"
+          name: "name"
+          description: "Tenant that the request is targeting"
+          required: true
+        - in: "path"
+          type: "integer"
+          name: "group_id"
+          description: "Id of target owners group"
+          required: true
+        - in: "path"
+          type: "integer"
+          name: "id"
+          description: "Id of target invitation"
+          required: true
+      responses:
+        "200":
+          description: "OK"
+        "204":
+          description: "Could not find Invitation"
+        "401":
+          description: "Unauthenticated request"
+        "500":
+          description: "Internal Error"
+      security:
+        - access_tokenAuth: []
+  /tenants/{name}/invitations/{id}/{action}:
+    put:
+        tags:
+        - "Groups and Invitations"
+        summary: "Respond to a group invitation"
+        description: "A user can accept or reject an invitation sent to them"
+        operationId: "respondGroupInvite"
+        produces:
+        - "application/json"
+        parameters:
+          - in: "path"
+            type: "string"
+            name: "name"
+            description: "Tenant that the request is targeting"
+            required: true
+          - in: "path"
+            type: "string"
+            name: "action"
+            description: "accept/reject invitation"
+            required: true
+          - in: "path"
+            type: "integer"
+            name: "id"
+            description: "Id of target invitation"
+            required: true
+        responses:
+          "200":
+            description: "OK"
+          "204":
+            description: "Could not find Invitation"
+          "401":
+            description: "Unauthenticated request"
+          "500":
+            description: "Internal Error"
+        security:
+          - access_tokenAuth: []
+  /tenants/{name}/invitations:
+    get:
+        tags:
+        - "Groups and Invitations"
+        summary: "Get invitations"
+        description: "Get all invitations for the requesting user"
+        operationId: "getInvitesUser"
+        produces:
+        - "application/json"
+        parameters:
+          - in: "path"
+            type: "string"
+            name: "name"
+            description: "Tenant that the request is targeting"
+            required: true
+        responses:
+          "200":
+            description: "OK"
+            schema:
+              type: "array"
+              items:
+                type: "object"
+                properties:
+                  date:
+                    type: "string"
+                    format: "date"
+                  group_manager:
+                    type: "boolean"
+                  id:
+                    type: "integer"
+                    example: 1
+                    description: "id of owners group invited to"
+                  invited_by:
+                    type: "string"
+                    format: "email"
+                  service_name:
+                    type: "string"
+                    example: "service1"
+          "204":
+            description: "No invitations found"
+          "401":
+            description: "Unauthenticated request"
+          "500":
+            description: "Internal Error"
+        security:
+          - access_tokenAuth: []
+  /tenants/{name}/invitations/activate_by_code:
+    put:
+        tags:
+        - "Groups and Invitations"
+        summary: "Activate an invitation"
+        description: "Activate an invitation with the one time code sent via email"
+        operationId: "activateInvitation"
+        produces:
+        - "application/json"
+        parameters:
+          - in: "path"
+            type: "string"
+            name: "name"
+            description: "Tenant that the request is targeting"
+            required: true
+          - in: "body"
+            name: "body"
+            schema:
+              type: "object"
+              properties:
+                code:
+                  type: "string"
+                  example: "7a6ae45156e678389401e3c3839127fd2a019572066d40c5d0176bd123651f93asdasdasdwqq4123414qwd124d32f235f234"
+        responses:
+          "200":
+            description: "OK"
+          "204":
+            description: "No invitations found"
+          "401":
+            description: "Unauthenticated request"
+          "500":
+            description: "Internal Error"
+        security:
+          - access_tokenAuth: []
+securityDefinitions:
+  access_tokenAuth:
+    type: "basic"
+  api_key:
+    type: "apiKey"
+    name: "api_key"
+    in: "header"
+definitions:
+  User:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+      given_name:
+        type: "string"
+      family_name:
+        type: "string"
+      preffered_username:
+        type: "string"
+      sub:
+        type: "string"
+        description: "Unique identifier"
+      email:
+        type: "string"
+        format: "email"
+      eduperson_entitlement:
+        type: "array"
+        items:
+          type: "string"
+          description: "User entitlements"
+      eduperson_assurance:
+        type: "array"
+        items:
+          type: "string"
+          description: "User assurance"
+      acr:
+        type: "string"
+        format: "uri"
+      edu_person_entitlements:
+        type: "array"
+        items:
+          type: "string"
+          description: "User entitlements"
+      tenant_id:
+        type: "string"
+        description: "Unique tenant identification"
+  Petition:
+    type: "object"
+    properties:
+      type:
+        type: "string"
+        enum:
+        - "edit"
+        - "create"
+        - "delete"
+      service_id:
+        type: "string"
+        description: "Required on edit and delete petition requests"
+      service_name:
+        type: "string"
+        description: "Human-readable application name"
+      service_description:
+        type: "string"
+        description: "Human-readable text description"
+      logo_uri:
+        type: "string"
+        format: "uri"
+        description: "URL that points to a logo image"
+      policy_uri:
+        type: "string"
+        format: "uri"
+        description: "URL for the Policy Statement of this service"
+      integration_environment:
+        type: "string"
+        enum:
+        - "demo"
+        - "development"
+        - "production"
+      contacts:
+        type: "array"
+        items:
+          type: "object"
+          properties:
+            email:
+              type: "string"
+              format: "email"
+            type:
+              type: "string"
+              enum:
+              - "admin"
+              - "support"
+              - "technical"
+              - "security"
+      protocol:
+        type: "string"
+        enum:
+        - "oidc"
+        - "saml"
+      entity_id:
+        type: "string"
+        description: "Unique identifier for saml services"
+      metadata_uri:
+        type: "string"
+        format: "uri"
+        description: "Metadata uri for saml services"
+      client_id:
+        type: "string"
+        description: "Unique identifier for oidc services"
+      grant_types:
+        type: "array"
+        items:
+          type: "string"
+          enum:
+          - "implicit"
+          - "authorization_code"
+          - "refresh_token"
+          - "client_credentials"
+          - "password"
+          - "redelegation"
+          - "token_exchange"
+          - "device"
+        description: "oidc specific"
+      scopes:
+        type: "array"
+        items:
+          type: "string"
+          enum:
+          - "openid"
+          - "email"
+          - "profile"
+          - "offline_access"
+          - "eduperson_entitlement"
+          - "eduperson_scoped_affiliation"
+          - "eduperson_unique_id"
+          - "refeds_edu"
+        description: "oidc specific"
+      allow_introspection:
+        type: "boolean"
+        description: "Allow calls to the Introspection Endpoint. For oidc services."
+      code_challenge_method:
+        type: "string"
+        enum:
+        - "plain"
+        - "S256"
+        description: "Proof Key for Code Exchange (PKCE) Code Challenge Method. For oidc services."
+      client_secret:
+        type: string
+        format: "password"
+        description: "Client secret, oidc specific"
+      generate_client_secret:
+        type: boolean
+        description: "Prompts backend to generate value for client secret. Oidc specific"
+      reuse_refresh_tokens:
+        type: "boolean"
+        description: "Adds the offline_access scope to the client's scope, oidc specific"
+      clear_access_tokens_on_refresh:
+        type: "boolean"
+        description: "oidc specific"
+      device_code_validity_seconds:
+        type: integer
+        multipleOf: 10
+        minimum: 0
+        maximum: 1000000
+        description: "oidc specific"
+      access_token_validity_seconds:
+        type: integer
+        multipleOf: 10
+        minimum: 0
+        maximum: 1000000
+        description: "oidc specific"
+      refresh_token_validity_seconds:
+        type: integer
+        multipleOf: 10
+        minimum: 0
+        maximum: 1000000
+        description: "oidc specific"
+      id_token_timeout_seconds:
+        type: integer
+        multipleOf: 10
+        minimum: 0
+        maximum: 1000000
+        description: "oidc specific"
+  Service:
+    type: "object"
+    properties:
+      service_name:
+        type: "string"
+        description: "Human-readable application name"
+      service_description:
+        type: "string"
+        description: "Human-readable text description"
+      logo_uri:
+        type: "string"
+        format: "uri"
+        description: "URL that points to a logo image"
+      policy_uri:
+        type: "string"
+        format: "uri"
+        description: "URL for the Policy Statement of this service"
+      integration_environment:
+        type: "string"
+        enum:
+        - "demo"
+        - "development"
+        - "production"
+      contacts:
+        type: "array"
+        items:
+          type: "object"
+          properties:
+            email:
+              type: "string"
+              format: "email"
+            type:
+              type: "string"
+              enum:
+              - "admin"
+              - "support"
+              - "technical"
+              - "security"
+      protocol:
+        type: "string"
+        enum:
+        - "oidc"
+        - "saml"
+      entity_id:
+        type: "string"
+        description: "Unique identifier for saml services"
+      metadata_uri:
+        type: "string"
+        format: "uri"
+        description: "Metadata uri for saml services"
+      client_id:
+        type: "string"
+        description: "Unique identifier for oidc services"
+      grant_types:
+        type: "array"
+        items:
+          type: "string"
+          enum:
+          - "implicit"
+          - "authorization_code"
+          - "refresh_token"
+          - "client_credentials"
+          - "password"
+          - "redelegation"
+          - "token_exchange"
+          - "device"
+        description: "oidc specific"
+      scopes:
+        type: "array"
+        items:
+          type: "string"
+          enum:
+          - "openid"
+          - "email"
+          - "profile"
+          - "offline_access"
+          - "eduperson_entitlement"
+          - "eduperson_scoped_affiliation"
+          - "eduperson_unique_id"
+          - "refeds_edu"
+        description: "oidc specific"
+      allow_introspection:
+        type: "boolean"
+        description: "Allow calls to the Introspection Endpoint. For oidc services."
+      code_challenge_method:
+        type: "string"
+        enum:
+        - "plain"
+        - "S256"
+        description: "Proof Key for Code Exchange (PKCE) Code Challenge Method. For oidc services."
+      client_secret:
+        type: string
+        format: "password"
+        description: "Client secret, oidc specific"
+      generate_client_secret:
+        type: boolean
+        description: "Prompts backend to generate value for client secret. Oidc specific"
+      reuse_refresh_tokens:
+        type: "boolean"
+        description: "Adds the offline_access scope to the client's scope, oidc specific"
+      clear_access_tokens_on_refresh:
+        type: "boolean"
+        description: "oidc specific"
+      device_code_validity_seconds:
+        type: integer
+        multipleOf: 10
+        minimum: 0
+        maximum: 1000000
+        description: "oidc specific"
+      access_token_validity_seconds:
+        type: integer
+        multipleOf: 10
+        minimum: 0
+        maximum: 1000000
+        description: "oidc specific"
+      refresh_token_validity_seconds:
+        type: integer
+        multipleOf: 10
+        minimum: 0
+        maximum: 1000000
+        description: "oidc specific"
+      id_token_timeout_seconds:
+        type: integer
+        multipleOf: 10
+        minimum: 0
+        maximum: 1000000
+        description: "oidc specific"
+  Services:
+    type: "array"
+    items:
+      type: "object"
+      properties:
+        id:
+          type: "integer"
+          format: "int64"
+        comment:
+          type: "string"
+          description: "Comment from admin on pending request"
+        deleted:
+          type: "boolean"
+          description: "Service is pending deletion"
+        requester:
+          type: "string"
+          example: "7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu"
+          description: "Requesters sub"
+        state:
+          type: "string"
+          enum:
+          - "deployed"
+          - "error"
+          - "waiting-deployment"
+          - "pending"
+          description: "State of the service"
+        type:
+          type: "string"
+          enum:
+          - "edit"
+          - "create"
+          - "delete"
+          description: "Type of pending petition if exists"
+        status:
+          type: "string"
+          enum:
+          - "pending"
+          - "approved"
+          - "rejected"
+          - "aproved_changes"
+        service_name:
+          type: "string"
+          description: "Human-readable application name"
+        service_description:
+          type: "string"
+          description: "Human-readable text description"
+        logo_uri:
+          type: "string"
+          format: "uri"
+          description: "URL that points to a logo image"
+        integration_environment:
+          type: "string"
+          enum:
+          - "demo"
+          - "development"
+          - "production"
+  Pending:
+    type: "object"
+    properties:
+      services:
+        type: "array"
+        items:
+          type: "object"
+          properties:
+            additionalProperties:
+              $ref: "#/definitions/Petition"
+  AmsPending:
+    type: "object"
+    properties:
+      messages:
+        type: "array"
+        items:
+          type: "object"
+          properties:
+            message:
+              type: "object"
+              properties:
+                atributes:
+                  type: "object"
+                  properties:
+                    key:
+                      type: "string"
+                      default: "value"
+                data:
+                  type: "string"
+                  example: "SGVsbG8gQ2xvdWQgUHViL1N1YiEgSGVyZSBpcyBteSBtZXNzYWdlIQ=="
+                messageId:
+                  type: "string"
+                  example: "136969346945"
+            subscription:
+              type: "string"
+              default: "/projects/rciam-service-registry/subscriptions/express-push"
+  PutState:
+    type: "array"
+    items:
+      type: "object"
+      properties:
+        id:
+          description: "Id of service"
+          type: "integer"
+          format: "int64"
+        state:
+          description: "State of service"
+          type: "string"
+          enum:
+          - "deployed"
+          - "error"
+          - "waiting-deployment"
+          - "pending"
+  History:
+    type: "array"
+    items:
+      type: "object"
+      properties:
+        id:
+          description: "Id of petition"
+          type: "integer"
+          format: "int64"
+        comment:
+          description: "Comment from admin"
+          type: "string"
+        status:
+          type: "string"
+          description: "Review status"
+          enum:
+          - "approved"
+          - "rejected"
+          - "approved_with_changes"
+          - "pending"
+        type:
+          type: "string"
+          description: "Type of petition request"
+          enum:
+          - "create"
+          - "edit"
+          - "delete"
+        reviewed_at:
+          type: "string"
+          format: "data-time"
+externalDocs:
+  description: "Find out more about Swagger"
+  url: "http://swagger.io"

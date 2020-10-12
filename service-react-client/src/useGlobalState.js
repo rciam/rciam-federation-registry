@@ -6,7 +6,8 @@ const GlobalStateContext = createContext();
 
 const initialState = {
   global_state: {
-    log_state:false
+    log_state:false,
+    tenant:null
   },
 };
 
@@ -33,11 +34,12 @@ export const GlobalStateProvider = ({children}) => {
 };
 const useGlobalState = () => {
   const [state,dispatch] = useContext(GlobalStateContext);
-  const setLogState = ({log_state})=> {
+  const setLogState = ({log_state,tenant})=> {
     dispatch({
       type: SET_LOG_STATE,
       payload: {
-        log_state
+        log_state,
+        tenant
       }
     });
   }

@@ -1,29 +1,28 @@
 import React,{useEffect,useState} from 'react';
 import initialValues from './initialValues';
+import {useParams} from "react-router-dom";
 import * as config from './config.json';
-//import {useParams} from "react-router-dom";
-import PetitionForm from "./PetitionForm.js";
-//import {FormAlert} from "./Components/FormAlert.js";
+import ServiceForm from "./ServiceForm.js";
 import {LoadingBar} from './Components/LoadingBar';
 import Tabs from 'react-bootstrap/Tabs';
 import Tab from 'react-bootstrap/Tab';
 import Alert from 'react-bootstrap/Alert';
-//import Form from 'react-bootstrap/Form';
 import Jumbotron from 'react-bootstrap/Jumbotron';
 import Container from 'react-bootstrap/Container';
 import { diff } from 'deep-diff';
+import { useTranslation } from 'react-i18next';
 
 
-
-const EditClient = (props) => {
+const EditService = (props) => {
+    // eslint-disable-next-line
+    const { t, i18n } = useTranslation();
     const [petition,setPetition] = useState();
     const [service,setService] = useState();
     const [editPetition,setEditPetition] = useState();
     const [changes,setChanges] = useState();
+    const {tenant_name} = useParams();
 
     useEffect(()=>{
-
-
       getData();
       // eslint-disable-next-line react-hooks/exhaustive-deps
     },[]);
@@ -50,8 +49,10 @@ const EditClient = (props) => {
             N:[]
           }
         };
-        let attributes = ['grant_types','scope','contacts','redirect_uris'];
-        console.log(changes);
+        let attributes = ['contacts'];
+        if(petition.protocol==='oidc'){
+          attributes.push('grant_types','scope','redirect_uris');
+        }
         for(let i=0;i<changes.length;i++){
           if(! ['grant_types','scope','contacts','redirect_uris'].includes(changes[i].path[0])){
               helper[changes[i].path[0]]=changes[i].kind;
@@ -73,31 +74,43 @@ const EditClient = (props) => {
 
     const getData = () => {
       if(props.service_id){
-        fetch(config.host+'getservice/'+props.service_id, {
+        fetch(config.host+'tenants/'+tenant_name+'/services/'+props.service_id, {
           method: 'GET', // *GET, POST, PUT, DELETE, etc.
           credentials: 'include', // include, *same-origin, omit
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': localStorage.getItem('token')
           }
-        }).then(response=>response.json()).then(response=> {
-
-          if(response.service){
-            console.log('we have service');
+        }).then(response=>{
+          if(response.status===200){
+            return response.json();
+          }
+          else {
+            return false
+          }
+          }).then(response=> {
+          if(response){
             setService(response.service);
           }
         });
       }
       if(props.petition_id&&props.type!=='delete'){
-        fetch(config.host+'getpetition/'+props.petition_id, {
+        fetch(config.host+'tenants/'+tenant_name+'/petitions/'+props.petition_id+'?type=open', {
           method: 'GET', // *GET, POST, PUT, DELETE, etc.
           credentials: 'include', // include, *same-origin, omit
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Authorization': localStorage.getItem('token')
           }
-        }).then(response=>response.json()).then(response=> {
-
-          if(response.petition){
-            console.log('we have petition');
+        }).then(response=>{
+          if(response.status===200){
+            return response.json();
+          }
+          else {
+            return false
+          }
+        }).then(response=> {
+          if(response){
             setPetition(response.petition);
           }
         });
@@ -111,24 +124,24 @@ const EditClient = (props) => {
       {props.type==='edit'?
         <React.Fragment>
           <Alert variant='warning' className='form-alert'>
-            This is a reconfiguration request, changes are highlighted bellow.
+            {t('reconfiguration_info')}
           </Alert>
-          {editPetition&&changes?<PetitionForm initialValues={editPetition} changes={changes} {...props}/>:<LoadingBar loading={true}/>}
+          {editPetition&&changes?<ServiceForm initialValues={editPetition} changes={changes} {...props}/>:<LoadingBar loading={true}/>}
         </React.Fragment>
 
       :props.type==='create'?
         <React.Fragment>
           <Alert variant='warning' className='form-alert'>
-            This is a registration request.
+            {t('edit_create_info')}
           </Alert>
-          {petition?<PetitionForm initialValues={petition} {...props}/>:<LoadingBar loading={true}/>}
+          {petition?<ServiceForm initialValues={petition} {...props}/>:<LoadingBar loading={true}/>}
         </React.Fragment>
       :
         <React.Fragment>
           <Alert variant='warning' className='form-alert'>
-            User requested to deregister the following service.
+            {t('edit_delete_info')}
           </Alert>
-          {service?<PetitionForm initialValues={service} {...props} />:<LoadingBar loading={true}/>}
+          {service?<ServiceForm initialValues={service} {...props} />:<LoadingBar loading={true}/>}
         </React.Fragment>
       }
     </React.Fragment>
@@ -143,7 +156,7 @@ const EditClient = (props) => {
           {props.comment?
             <React.Fragment>
               <Alert variant='warning' className='form-alert'>
-                An administrator has reviewed your registration request and has requested changes.
+                {t('edit_changes_info')}
               </Alert>
               <Jumbotron fluid className="jumbotron-comment">
                 <Container>
@@ -156,11 +169,11 @@ const EditClient = (props) => {
             </React.Fragment>
           :props.type?
               <Alert variant='warning' className='form-alert'>
-              This is a registration request which is currently pending approval from an administrator. You can modify or cancel it here.
+              {t('edit_create_pending_info')}
               </Alert>
           :null
           }
-          {petition?<PetitionForm initialValues={petition} {...props}/>:<LoadingBar loading={true}/>}
+          {petition?<ServiceForm initialValues={petition} {...props}/>:<LoadingBar loading={true}/>}
         </React.Fragment>
         :
         <RequestedChangesAlert comment={props.comment} tab1={service} tab2={service} {...props}/>
@@ -174,9 +187,13 @@ const EditClient = (props) => {
 }
 
 
-const ViewClient = (props)=>{
+const ViewService = (props)=>{
+  // eslint-disable-next-line
+  const { t, i18n } = useTranslation();
   const [service,setService] = useState();
   const [petition,setPetition] = useState();
+  const {tenant_name} = useParams();
+
   useEffect(()=>{
 
     getData();
@@ -185,29 +202,28 @@ const ViewClient = (props)=>{
 
   const getData = () => {
     if(props.service_id){
-      fetch(config.host+'getservice/'+props.service_id, {
+      fetch(config.host+'tenants/'+tenant_name+'/services/'+props.service_id, {
         method: 'GET', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': localStorage.getItem('token')
         }
       }).then(response=>response.json()).then(response=> {
-
         if(response.service){
-
           setService(response.service);
         }
       });
     }
     if(props.petition_id&&props.type!=='delete'){
-      fetch(config.host+'getpetition/'+props.petition_id, {
+      fetch(config.host+'tenants/'+tenant_name+'/petitions/'+props.petition_id+'?type=open', {
         method: 'GET', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': localStorage.getItem('token')
         }
       }).then(response=>response.json()).then(response=> {
-
         if(response.petition){
           setPetition(response.petition);
         }
@@ -216,20 +232,24 @@ const ViewClient = (props)=>{
   }
   return(
     <React.Fragment>
-      {service?<PetitionForm initialValues={service} disabled={true}  />:props.service_id?<LoadingBar loading={true}/>:petition?
+      {service?<ServiceForm initialValues={service} disabled={true}  />:props.service_id?<LoadingBar loading={true}/>:petition?
         <React.Fragment>
-
           <Alert variant='danger' className='form-alert'>
-            This service is not registered yet, it is currently pending approval from an administrator
+            {t('view_create_info')}
           </Alert>
-          <PetitionForm initialValues={petition} disabled={true}/>
+          <ServiceForm initialValues={petition} disabled={true}/>
         </React.Fragment>
       :props.petition_id?<LoadingBar loading={true}/>:null
       }
     </React.Fragment>
   )
 }
+
+
 const RequestedChangesAlert = (props) => {
+  // eslint-disable-next-line
+  const { t, i18n } = useTranslation();
+
   return(
     <React.Fragment>
       <Tabs className="edit-tabs" defaultActiveKey="petition" id="uncontrolled-tab-example">
@@ -237,11 +257,11 @@ const RequestedChangesAlert = (props) => {
           {props.comment?
             <React.Fragment>
               <Alert variant='warning' className='form-alert'>
-                An administrator has reviewed your {props.type} request and has requested changes.
+                {t('changes_info_1_1')}{props.type}{t('changes_info_1_2')}
               </Alert>
               <Jumbotron fluid className="jumbotron-comment">
                 <Container>
-                  <h5>Comment from admin:</h5>
+                  <h5>{t('changes_title')}</h5>
                   <p className="text-comment">
                     {props.comment}
                   </p>
@@ -250,25 +270,25 @@ const RequestedChangesAlert = (props) => {
             </React.Fragment>
           :props.type?
               <Alert variant='warning' className='form-alert'>
-              This is a {props.type==='delete'?'deregistration':props.type==='edit'?'reconfiguration':'registration'} request which is currently pending approval from an administrator. You can modify or cancel it here.
+              {t('changes_info_2_1')} {props.type==='delete'?'deregistration':props.type==='edit'?'reconfiguration':'registration'} {t('changes_info_2_2')}
               </Alert>
           :null
           }
-          {props.tab1?<PetitionForm initialValues={props.tab1} {...props}/>:<LoadingBar loading={true}/>}
+          {props.tab1?<ServiceForm initialValues={props.tab1} {...props}/>:<LoadingBar loading={true}/>}
         </Tab>
       <Tab eventKey="service" title="View Deployed Service">
-        {props.tab2?<PetitionForm initialValues={props.tab2} disabled={true}  />:<LoadingBar loading={true}/>}
+        {props.tab2?<ServiceForm initialValues={props.tab2} disabled={true}  />:<LoadingBar loading={true}/>}
       </Tab>
     </Tabs>
     </React.Fragment>
   )
 }
 
-const NewClient = (props)=>{
+const NewService = (props)=>{
   return (
     <React.Fragment>
 
-      <PetitionForm user={props.user} initialValues={initialValues}/>
+      <ServiceForm user={props.user} initialValues={initialValues}/>
     </React.Fragment>
   )
 }
@@ -299,17 +319,19 @@ function calculateMultivalueDiff(old_values,new_values,edits){
         edits.contacts.N[index] = {email:items[0],type:items[1]};
     })
   }
-  edits.grant_types.N = new_values.grant_types.filter(x=>!old_values.grant_types.includes(x));
-  edits.grant_types.D = old_values.grant_types.filter(x=>!new_values.grant_types.includes(x));
-  edits.scope.N = new_values.scope.filter(x=>!old_values.scope.includes(x));
-  edits.scope.D = old_values.scope.filter(x=>!new_values.scope.includes(x));
-  edits.redirect_uris.N = new_values.redirect_uris.filter(x=>!old_values.redirect_uris.includes(x));
-  edits.redirect_uris.D = old_values.redirect_uris.filter(x=>!new_values.redirect_uris.includes(x));
+  if(new_values.protocol==='oidc'){
+    edits.grant_types.N = new_values.grant_types.filter(x=>!old_values.grant_types.includes(x));
+    edits.grant_types.D = old_values.grant_types.filter(x=>!new_values.grant_types.includes(x));
+    edits.scope.N = new_values.scope.filter(x=>!old_values.scope.includes(x));
+    edits.scope.D = old_values.scope.filter(x=>!new_values.scope.includes(x));
+    edits.redirect_uris.N = new_values.redirect_uris.filter(x=>!old_values.redirect_uris.includes(x));
+    edits.redirect_uris.D = old_values.redirect_uris.filter(x=>!new_values.redirect_uris.includes(x));
+  }
   return edits
 }
 
 export {
-   EditClient,
-   NewClient,
-   ViewClient
+   EditService,
+   NewService,
+   ViewService
 }
