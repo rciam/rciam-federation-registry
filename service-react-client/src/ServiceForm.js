@@ -1,4 +1,4 @@
-import React,{useState,useEffect} from 'react';
+import React,{useState,useEffect,useContext} from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {faCheckCircle,faBan,faSortDown} from '@fortawesome/free-solid-svg-icons';
 import Tabs from 'react-bootstrap/Tabs';
@@ -10,6 +10,7 @@ import Col from 'react-bootstrap/Col';
 import Collapse from 'react-bootstrap/Collapse';
 import {useParams } from "react-router-dom";
 import { diff } from 'deep-diff';
+import {tenantContext} from './context.js';
 //import {Debug} from './Components/Debug.js';
 import {SimpleModal,ResponseModal} from './Components/Modals.js';
 import Form from 'react-bootstrap/Form';
@@ -30,6 +31,8 @@ const ServiceForm = (props)=> {
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   let {tenant_name} = useParams();
+  // eslint-disable-next-line
+  const [tenant,setTenant] = useContext(tenantContext);
 
   useEffect(()=>{
     if(props.disabled||props.review){
@@ -140,7 +143,7 @@ const ServiceForm = (props)=> {
       then: yup.boolean().required()
     }),
     protocol: yup.string().test('testProtocol',t('yup_protocol'),function(value){return ['saml','oidc'].includes(value)}).required(t('yup_protocol')),
-    integration_environment:yup.string().test('testIntegrationEnv','error-integrationEnvironment',function(value){return formConfig.integration_environment.includes(value)}).required(t('yup_select_option')),
+    integration_environment:yup.string().test('testIntegrationEnv','Invalid Value',function(value){return tenant.form_config.integration_environment.includes(value)}).required(t('yup_select_option')),
     clear_access_tokens_on_refresh:yup.boolean().nullable().when('protocol',{
       is:'oidc',
       then: yup.boolean().required()
@@ -399,8 +402,8 @@ const ServiceForm = (props)=> {
                       <InputRow title={t('form_integration_environment')} extraClass='select-col' error={errors.integration_environment} touched={touched.integration_environment}>
                         <Select
                           onBlur={handleBlur}
-                          optionsTitle={capitalWords(formConfig.integration_environment)}
-                          options={formConfig.integration_environment}
+                          optionsTitle={capitalWords(tenant.form_config.integration_environment)}
+                          options={tenant.form_config.integration_environment}
                           name="integration_environment"
                           values={values}
                           isInvalid={hasSubmitted?!!errors.integration_environment:(!!errors.integration_environment&&touched.integration_environment)}

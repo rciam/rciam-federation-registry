@@ -1,7 +1,7 @@
-const { body, validationResult } = require('express-validator');
+const { body, validationResult,param } = require('express-validator');
 const {reg} = require('./regex.js');
 const customLogger = require('./loggers.js');
-var formConfig = require('./config');
+var config = require('./config');
 
 
 const postInvitationValidation = () => {
@@ -10,9 +10,28 @@ const postInvitationValidation = () => {
     body('group_manager').exists().withMessage('Required Field').bail().custom((value)=> typeof(value)==='boolean').withMessage('Must be a boolean')
   ]
 }
+
+const putAgentValidation = () => {
+  return [
+    body('type').exists().withMessage('Required Field').bail().custom((value)=>{if(config.agent.type.includes(value)){return true}else{return false}}).bail(),
+    body('entity_type').exists().withMessage('Required Field').bail().custom((value)=>{if(config.agent.entity_type.includes(value)){return true}else{return false}}).bail(),
+    body('entity_protocol').exists().withMessage('Required Field').bail().custom((value)=>{if(config.agent.entity_protocol.includes(value)){return true}else{return false}}).bail(),
+    body('hostname').exists().withMessage('Required Field').bail().isString().withMessage('Must be a string').bail().custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Must be a url').bail()
+  ]
+}
+
+const postAgentValidation = () => {
+  return [
+    body('agents').exists().withMessage('No agents found').bail().isArray({min:1}).withMessage('No agents found').bail(),
+    body('agents.*.type').exists().withMessage('Required Field').bail().custom((value)=>{if(config.agent.type.includes(value)){return true}else{return false}}).bail(),
+    body('agents.*.entity_type').exists().withMessage('Required Field').bail().custom((value)=>{if(config.agent.entity_type.includes(value)){return true}else{return false}}).bail(),
+    body('agents.*.entity_protocol').exists().withMessage('Required Field').bail().custom((value)=>{if(config.agent.entity_protocol.includes(value)){return true}else{return false}}).bail(),
+    body('agents.*.hostname').exists().withMessage('Required Field').bail().isString().withMessage('Must be a string').bail().custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Must be a url').bail()
+  ]
+}
 //body('service_id').if*body('type'==='edit'||)
 const clientValidationRules = () => {
-
+  let tenant;
 
   return [
     body('service_id').if(body('type').custom((value)=>{return (value==='edit'||values==='delete')})).exists().withMessage('Required Field').bail().custom((value)=>{if(parseInt(value)){return true}else{return false}}).bail(),
@@ -24,7 +43,7 @@ const clientValidationRules = () => {
     body('logo_uri').if(body('type').custom((value)=>{return value!=='delete'})).exists().withMessage('Required Field').bail().isString().withMessage('Must be a string').bail().custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Must be a url').bail(),
     body('policy_uri').if(body('type').custom((value)=>{return value!=='delete'})).exists().withMessage('Required Field').bail().isString().withMessage('Must be a string').bail().custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Must be a url').bail(),
     body('service_description').if(body('type').custom((value)=>{return value!=='delete'})).exists().withMessage('Required Field').bail().isString().withMessage('Must be a string').bail().isLength({min:1}).bail(),
-    body('contacts').if(body('type').custom((value)=>{return value!=='delete'})).exists().withMessage('Required Field').bail().isArray({min:1}).withMessage('Must be an array').bail().custom((value,success=true)=> {value.map((item,index)=>{if(item.email&&!item.email.match(reg.regEmail)||!formConfig.contact_types.includes(item.type)){success=false}}); return success }).withMessage('Invalid value').bail(),
+    body('contacts').if(param('name').custom((value)=> {tenant=value; return true;})).if(body('type').custom((value)=>{return value!=='delete'})).exists().withMessage('Required Field').bail().isArray({min:1}).withMessage('Must be an array').bail().custom((value,success=true)=> {value.map((item,index)=>{if(item.email&&!item.email.match(reg.regEmail)||!config.form[tenant].contact_types.includes(item.type)){success=false}}); return success }).withMessage('Invalid value').bail(),
     body('scope').if(body('type').custom((value)=>{return value!=='delete'})).if(body('protocol').custom((value)=>{return value==='oidc'})).exists().withMessage('Required Field').bail().isArray({min:1}).withMessage('Must be an array').bail().custom((value,success=true)=> {value.map((item,index)=>{if(!item.match(reg.regScope)){success=false}}); return success }).withMessage('Invalid value').bail(),
     body('grant_types').if(body('type').custom((value)=>{return value!=='delete'})).if(body('protocol').custom((value)=>{return value==='oidc'})).exists().withMessage('Required Field').bail().isArray({min:1}).withMessage('Must be an array').bail().custom((value,success=true)=> {value.map((item,index)=>{if(!['implicit','authorization_code','refresh_token','client_credentials','password','redelegation','token_exchange','device'].includes(item)){success=false}}); return success }).withMessage('Invalid value').bail(),
     body('id_token_timeout_seconds').if(body('type').custom((value)=>{return value!=='delete'})).if(body('protocol').custom((value)=>{return value==='oidc'})).exists().withMessage('Required Field').bail().custom((value)=> {if(parseInt(value)&&parseInt(value)<34128000&&parseInt(value)>0){return true}else{return false}}).withMessage('Must be an integer in specified range').bail(),
@@ -35,7 +54,7 @@ const clientValidationRules = () => {
     body('allow_introspection').if(body('type').custom((value)=>{return value!=='delete'})).if(body('protocol').custom((value)=>{return value==='oidc'})).exists().withMessage('Required Field').bail().custom((value)=> typeof(value)==='boolean').withMessage('Must be a boolean').bail(),
     body('generate_client_secret').if(body('type').custom((value)=>{return value!=='delete'})).if(body('protocol').custom((value)=>{return value==='oidc'})).exists().withMessage('Required Field').bail().custom((value)=> typeof(value)==='boolean').withMessage('Must be a boolean').bail(),
     body('reuse_refresh_tokens').if(body('type').custom((value)=>{return value!=='delete'})).if(body('protocol').custom((value)=>{return value==='oidc'})).exists().withMessage('Required Field').bail().custom((value)=> typeof(value)==='boolean').withMessage('Must be a boolean').bail(),
-    body('integration_environment').if(body('type').custom((value)=>{return value!=='delete'})).exists().withMessage('Required Field').bail().isString().withMessage('Must be a string').bail().custom((value)=> {if(formConfig.integration_environment.includes(value)){return true}else{return false}}).bail(),
+    body('integration_environment').if(param('name').custom((value)=> {tenant=value; return true;})).if(body('type').custom((value)=>{return value!=='delete'})).exists().withMessage('Required Field').bail().isString().withMessage('Must be a string').bail().custom((value)=> {if(config.form[tenant].integration_environment.includes(value)){return true}else{return false}}).bail(),
     body('clear_access_tokens_on_refresh').if(body('type').custom((value)=>{return value!=='delete'})).if(body('protocol').custom((value)=>{return value==='oidc'})).exists().withMessage('Required Field').bail().custom((value)=> typeof(value)==='boolean').withMessage('Must be a boolean').bail(),
     body('client_secret').if(body('type').custom((value)=>{return value!=='delete'})).if(body('protocol').custom((value)=>{return value==='oidc'})).if((value,req)=> req.body.data.generate_client_secret=false).bail().isString().withMessage('Must be a string').bail().isLength({min:4,max:16}).bail(),
     body('entity_id').if(body('type').custom((value)=>{return value!=='delete'})).if(body('protocol').custom((value)=>{return value==='saml'})).optional({checkFalsy:true}).isString().withMessage('Must be a string').bail().isLength({min:4, max:256}).bail().custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Must be a url').bail(),
@@ -53,7 +72,7 @@ const clientValidationRules = () => {
 //     body('add').custom((value)=> {
 //       if(value.client_contact){
 //         value.client_contact.map((item,index)=>{
-//           if(!item.email.match(reg.regEmail)||!formConfig.contact_types.includes(item.type)){
+//           if(!item.email.match(reg.regEmail)||!config.form.contact_types.includes(item.type)){
 //             console.log('add-client_contact');
 //             return false
 //           }
@@ -61,7 +80,7 @@ const clientValidationRules = () => {
 //       }
 //       if(value.client_grant_type){
 //         value.client_grant_type.map((item,index)=>{
-//           if(!formConfig.grant_types.includes(item)){
+//           if(!config.form.grant_types.includes(item)){
 //             console.log('add-client_grant');
 //             return false
 //           }
@@ -88,7 +107,7 @@ const clientValidationRules = () => {
 //     body('dlt').custom((value)=> {
 //       if(value.client_contact){
 //         value.client_contact.map((item,index)=>{
-//           if(!item.email.match(reg.regEmail)||!formConfig.contact_types.includes(item.type)){
+//           if(!item.email.match(reg.regEmail)||!config.form.contact_types.includes(item.type)){
 //             console.log('dlt-client_contact');
 //
 //
@@ -98,7 +117,7 @@ const clientValidationRules = () => {
 //       }
 //       if(value.client_grant_type){
 //         value.client_grant_type.map((item,index)=>{
-//           if(!formConfig.grant_types.includes(item)){
+//           if(!config.form.grant_types.includes(item)){
 //             console.log('dlt-client_grant');
 //             return false
 //           }
@@ -132,7 +151,7 @@ const clientValidationRules = () => {
 //     body('details.allow_introspection').optional().custom((value)=> typeof(value)==='boolean').withMessage('Must be a boolean'),
 //     body('details.generate_client_secret').optional().custom((value)=> typeof(value)==='boolean').withMessage('Must be a boolean'),
 //     body('details.reuse_refresh_tokens').optional().custom((value)=> typeof(value)==='boolean').withMessage('Must be a boolean'),
-//     body('details.integration_environment').optional().isString().custom((value)=> {if(formConfig.integration_environment.includes(value)){return true}else{return false}}),
+//     body('details.integration_environment').optional().isString().custom((value)=> {if(config.form.integration_environment.includes(value)){return true}else{return false}}),
 //     body('details.clear_access_tokens_on_refresh').optional().custom((value)=> typeof(value)==='boolean').withMessage('Must be a boolean'),
 //     body('details.client_secret').optional().if((value,req)=> req.body.data.generate_client_secret=false).isString().isLength({min:4,max:16}),
 //
@@ -161,5 +180,7 @@ const validate = (req, res, next) => {
 module.exports = {
   clientValidationRules,
   validate,
-  postInvitationValidation
+  postInvitationValidation,
+  putAgentValidation,
+  postAgentValidation
 }
