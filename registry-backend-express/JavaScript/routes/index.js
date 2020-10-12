@@ -31,10 +31,26 @@ router.get('/tenants/:name',(req,res,next)=>{
   try{
     db.tenants.getTheme(req.params.name).then(tenant=>{
       if(tenant){
+        tenant.form_config = config.form[req.params.name];
         res.status(200).json(tenant).end();
       }
       else{
         res.status(204).end()
+      }
+    })
+  }
+  catch(err){
+    next(err);
+  }
+});
+router.get('/tenants',(req,res,next)=> {
+  try{
+    db.tenants.get().then(tenants => {
+      if(tenants){
+        res.status(200).json(tenants).end();
+      }
+      else {
+        res.status(404).end()
       }
     })
   }
@@ -320,14 +336,18 @@ router.post('/tenants/:name/petitions',clientValidationRules(),validate,authenti
         }
         else{
           req.body.tenant = req.params.name;
+          console.log(req.body);
           await t.petition.add(req.body,req.user.sub).then(async id=>{
             if(id){
+              console.log(id)
               res.status(200).json({id:id});
-              await t.user.getReviewers().then(users=>{
-                sendMail({subject:'New Petition to Review',service_name:req.body.service_name,tenant:req.params.name},'reviewer-notification.html',users);
-              }).catch(error=>{
-                next('Could not sent email to reviewers:' + err);
-              });
+              if(!(process.env.NODE_ENV==='test-docker'||process.env.NODE_ENV==='test')){
+                await t.user.getReviewers().then(users=>{
+                  sendMail({subject:'New Petition to Review',service_name:req.body.service_name,tenant:req.params.name},'reviewer-notification.html',users);
+                }).catch(error=>{
+                  next('Could not sent email to reviewers:' + error);
+                });
+              }
             }
           }).catch(err=>{next(err)});
         }
@@ -442,6 +462,19 @@ router.put('/tenants/:name/petitions/:id/review',authenticate,canReview,(req,res
 
 // Check availability for protocol unique id
 router.get('/tenants/:name/check-availability',authenticate,(req,res,next)=>{
+  db.tx('get-history-for-petition', async t =>{
+    try{
+      await isAvailable(t,req.query.value,req.query.protocol,0,0,req.params.name).then(available =>{
+            res.status(200).json({available:available});
+      }).catch(err=>{next(err)});
+    }
+    catch(err){
+      next(err);
+    }
+  });
+});
+
+router.get('/tenants/:name/check-availability',(req,res,next)=>{
   db.tx('get-history-for-petition', async t =>{
     try{
       await isAvailable(t,req.query.value,req.query.protocol,0,0,req.params.name).then(available =>{
@@ -644,10 +677,25 @@ router.put('/tenants/:name/invitations/activate_by_code',authenticate,(req,res,n
 })
 
 // Tenants Deployer Agents
+router.get('/agent/get_agents',amsAgentAuth,(req,res,next)=>{
+  try{
+    db.deployer_agents.getAll().then(result => {
+      if(result){
+        res.status(200).json({agents:result});
+      }
+      else{
+        res.status(404).send('No agents found.')
+      }
+    })
+  }
+  catch(err){
+    next(err);
+  }
+});
 
 router.get('/tenants/:name/agents',(req,res,next)=>{
   try{
-    db.deployer_agents.getAll(req.params.name).then(result => {
+    db.deployer_agents.getTenant(req.params.name).then(result => {
       if(result){
         res.status(200).json({agents:result});
       }
@@ -663,7 +711,7 @@ router.get('/tenants/:name/agents',(req,res,next)=>{
 
 router.get('/tenants/:name/agents/:id',(req,res,next)=>{
   try{
-    db.deployer_agents.getById(req.params.id,req.params.name).then(async result => {
+    db.deployer_agents.getById(req.params.name,req.params.id).then(async result => {
       if(result){
         res.status(200).send(result);
       }
@@ -726,6 +774,7 @@ router.delete('/tenants/:name/agents',(req,res,next)=>{
 });
 router.delete('/tenants/:name/agents/:id',(req,res,next)=>{
   try{
+    console.log(req.params.id);
     db.deployer_agents.delete(req.params.name,req.params.id).then(result => {
       if(result){
         res.status(200).end();

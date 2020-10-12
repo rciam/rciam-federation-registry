@@ -1,0 +1,34 @@
+
+
+18:35:26 error: the database system is shutting down
+         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+
+18:35:26 error: the database system is shutting down
+         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
+
+22:24:45 error: there is no parameter $1
+         query: SELECT * FROM tenant_deployer_agents WHERE tenant=$1
+
+23:53:07 error: missing FROM-clause entry for table "v"
+         query: update "service_state" set "state"='waiting-deployment' WHERE v.id = t.id RETURNING t.id
+
+23:53:16 error: missing FROM-clause entry for table "v"
+         query: update "service_state" set "state"='waiting-deployment' WHERE v.id = t.id RETURNING t.id
+
+23:54:40 error: missing FROM-clause entry for table "v"
+         query: update "service_state" set "state"='waiting-deployment' WHERE v.id = t.id RETURNING t.id
+
+23:54:49 error: missing FROM-clause entry for table "v"
+         query: update "service_state" set "state"='waiting-deployment' WHERE v.id = t.id RETURNING t.id
+
+23:54:59 error: missing FROM-clause entry for table "v"
+         query: update "service_state" set "state"='waiting-deployment' WHERE v.id = t.id RETURNING t.id
+
+23:58:01 error: missing FROM-clause entry for table "v"
+         query: update "service_state" set "state"='waiting-deployment' WHERE v.id = t.id RETURNING t.id
+
+23:58:11 error: missing FROM-clause entry for table "v"
+         query: update "service_state" set "state"='waiting-deployment' WHERE v.id = t.id RETURNING t.id
+
+00:02:37 error: missing FROM-clause entry for table "v"
+         query: update "service_state" set "state"='waiting-deployment' WHERE v.id = t.id RETURNING t.id

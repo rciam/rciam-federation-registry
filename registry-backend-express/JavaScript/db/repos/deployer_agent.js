@@ -5,10 +5,12 @@ class DeployerAgentRepository {
     this.db = db;
     this.pgp = pgp;
     // set-up all ColumnSet objects, if needed:
-     cs = new pgp.helpers.ColumnSet(['type','entity_type','hostname','entity_protocol']);
+     cs = new pgp.helpers.ColumnSet(['type','entity_type','hostname','entity_protocol','tenant']);
   }
-
-  async getAll(tenant){
+  async getAll(){
+    return this.db.any('SELECT * FROM tenant_deployer_agents').then(async deployer_agents => {return deployer_agents});
+  }
+  async getTenant(tenant){
     return this.db.any('SELECT * FROM tenant_deployer_agents WHERE tenant=$1',tenant).then(async deployer_agents => {return deployer_agents});
   }
 
@@ -20,24 +22,17 @@ class DeployerAgentRepository {
         values.push({tenant:tenant,type:agent.type,entity_type:agent.entity_type,hostname:agent.hostname,entity_protocol:agent.entity_protocol});
       });
       const query = this.pgp.helpers.insert(values, cs,'tenant_deployer_agents');
-      this.db.none(query)
-      .then(async data => {
-        console.log('return true');
+      return this.db.none(query)
+      .then( data => {
           return true
       })
       .catch(error => {
           return false
       });
     }
-    else if(true){
-      console.log(typeof agents);
-      console.log(agents);
-      return false;
-    }
     else{
       return false;
     }
-
   }
 
 
@@ -52,7 +47,7 @@ class DeployerAgentRepository {
     });
   }
 
-  async delete(id,tenant){
+  async delete(tenant,id){
     return this.db.oneOrNone('DELETE FROM tenant_deployer_agents WHERE id=$1 AND tenant=$2 RETURNING id',[+id,tenant]).then(async id =>{
       if(id){
         return true
@@ -62,6 +57,7 @@ class DeployerAgentRepository {
       }
     });
   }
+
   async deleteAll(tenant){
     return this.db.any('DELETE FROM tenant_deployer_agents WHERE tenant=$1 RETURNING id',tenant).then(async id =>{
       if(id){
@@ -73,7 +69,7 @@ class DeployerAgentRepository {
     });
   }
 
-  async getById(id,tenant){
+  async getById(tenant,id){
     return this.db.oneOrNone('SELECT type,entity_type,hostname,entity_protocol FROM tenant_deployer_agents WHERE id=$1 AND tenant=$2',[+id,tenant]).then(async agent => {
       if(agent){
         return agent;

@@ -3,7 +3,7 @@
 var server = require('../index.js');
 var chai = require('chai');
 var request = require('supertest');
-var {create,edit,users,validationResponses,validationRequests} = require('./data.js');
+var {create,edit,users,validationResponses,validationRequests,agents} = require('./data.js');
 var expect = chai.expect;
 var should = chai.should;
 var petition,service,group,code,invitation;
@@ -212,8 +212,6 @@ describe('Service registry API Integration Tests', function() {
             done();});
       });
     })
-
-
   });
   describe('# Service lifecycle',function(){
     describe('# Create Service',function(){
@@ -693,6 +691,61 @@ describe('Service registry API Integration Tests', function() {
     });
 
   });
+  describe('# Deployer Agent',function(){
+    it('should get configured deployer agents',function(done){
+      var req = request(server).get('/tenants/egi/agents').set({Authorization: userToken});
+      req.set('Accept','application/json')
+      .expect('Content-Type',/json/)
+      .expect(200)
+      .end(function(err,res){
+        let body = JSON.parse(res.text);
+        expect(res.statusCode).to.equal(200);
+        done();
+      })
+    });
+    it('should delete an agent',function(done){
+      var req = request(server).delete('/tenants/egi/agents/1').set({Authorization: userToken});
+      req.set('Accept','application/json')
+      .expect('Content-Type',/json/)
+      .expect(200)
+      .end(function(err,res){
+        expect(res.statusCode).to.equal(200);
+        done();
+      })
+    });
+    it('should delete existing configuration',function(done){
+      var req = request(server).delete('/tenants/egi/agents').set({Authorization: userToken});
+      req.set('Accept','application/json')
+      .expect('Content-Type',/json/)
+      .expect(200)
+      .end(function(err,res){
+        expect(res.statusCode).to.equal(200);
+        done();
+      })
+    });
+    it('should create new agents for tenant',function(done){
+      var req = request(server).post('/tenants/egi/agents').send(agents.post);
+      req.set('Accept','application/json')
+      .expect('Content-Type',/json/)
+      .expect(200)
+      .end(function(err,res){
+        expect(res.statusCode).to.equal(200);
+        done();
+      })
+    });
+    it('should get configured deployer agents',function(done){
+      var req = request(server).get('/tenants/egi/agents').set({Authorization: userToken});
+      req.set('Accept','application/json')
+      .expect('Content-Type',/json/)
+      .expect(200)
+      .end(function(err,res){
+        let body = JSON.parse(res.text);
+        console.log(body);
+        expect(res.statusCode).to.equal(200);
+        done();
+      })
+    });
 
+  })
 
 });
