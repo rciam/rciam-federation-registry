@@ -696,7 +696,8 @@ describe('Service registry API Integration Tests', function() {
       var req = request(server).get('/tenants/egi/agents').set({Authorization: userToken});
       req.set('Accept','application/json')
       .expect('Content-Type',/json/)
-      .expect(200)  //describe('# Petition Validation Testing For Creation Requests', function(){
+
+      .expect(200)
 
       .end(function(err,res){
         let body = JSON.parse(res.text);

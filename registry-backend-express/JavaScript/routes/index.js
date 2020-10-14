@@ -31,9 +31,11 @@ router.get('/tenants/:name',(req,res,next)=>{
   try{
     db.tenants.getTheme(req.params.name).then(tenant=>{
       if(tenant){
+
         if(config.form[req.params.name]){
           tenant.form_config = config.form[req.params.name];
         }
+
         res.status(200).json(tenant).end();
       }
       else{
@@ -338,8 +340,10 @@ router.post('/tenants/:name/petitions',clientValidationRules(),validate,authenti
         }
         else{
           req.body.tenant = req.params.name;
+          console.log(req.body);
           await t.petition.add(req.body,req.user.sub).then(async id=>{
             if(id){
+              console.log(id)
               res.status(200).json({id:id});
               if(!(process.env.NODE_ENV==='test-docker'||process.env.NODE_ENV==='test')){
                 await t.user.getReviewers().then(users=>{
@@ -774,6 +778,7 @@ router.delete('/tenants/:name/agents',(req,res,next)=>{
 });
 router.delete('/tenants/:name/agents/:id',(req,res,next)=>{
   try{
+    console.log(req.params.id);
     db.deployer_agents.delete(req.params.name,req.params.id).then(result => {
       if(result){
         res.status(200).end();
