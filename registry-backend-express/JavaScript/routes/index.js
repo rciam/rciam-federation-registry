@@ -31,7 +31,11 @@ router.get('/tenants/:name',(req,res,next)=>{
   try{
     db.tenants.getTheme(req.params.name).then(tenant=>{
       if(tenant){
-        tenant.form_config = config.form[req.params.name];
+
+        if(config.form[req.params.name]){
+          tenant.form_config = config.form[req.params.name];
+        }
+
         res.status(200).json(tenant).end();
       }
       else{
@@ -716,7 +720,7 @@ router.get('/tenants/:name/agents/:id',(req,res,next)=>{
         res.status(200).send(result);
       }
       else{
-        res.status(404).send('No agent found.')
+        res.status(404).send('No agent found')
       }
     })
   }
@@ -732,7 +736,7 @@ router.put('/tenants/:name/agents/:id',(req,res,next)=>{
         res.status(200).end();
       }
       else{
-        res.status(404).send('Could not find agent.')
+        res.status(404).send('Could not find agent')
       }
     })
   }
@@ -747,7 +751,7 @@ router.post('/tenants/:name/agents',(req,res,next)=>{
         res.status(200).end();
       }
       else{
-        res.status(404).send('Could not add agents.')
+        res.status(404).send('Could not add agents')
       }
     })
   }
@@ -763,7 +767,7 @@ router.delete('/tenants/:name/agents',(req,res,next)=>{
         res.status(200).end();
       }
       else{
-        res.status(404).send('No agents where found.');
+        res.status(404).send('No agents where found to delete');
       }
     })
   }
@@ -780,7 +784,7 @@ router.delete('/tenants/:name/agents/:id',(req,res,next)=>{
         res.status(200).end();
       }
       else{
-        res.status(404).send('No agent whas found.');
+        res.status(404).send('No agent was found');
       }
     })
   }
@@ -856,7 +860,6 @@ function authenticate(req,res,next){
         req.user = decode(token);
         db.user_role.getRoleActions(req.user.edu_person_entitlement,req.params.name).then(role=>{
           if(role.success){
-
             req.user.role = role.role;
             next();
           }
