@@ -23,20 +23,20 @@ class ServiceStateRepository {
   }
   async deploymentUpdate(messages){
     let updateState=[];
-    let updateClientId =[];
+    let updateData =[];
     let ids=[];
     messages.forEach((message) => {
       let decoded_message=(JSON.parse(Buffer.from(message.message.data, 'base64').toString()));
       updateState.push({id:decoded_message.id,state:decoded_message.state});
-      if(decoded_message.client_id){
-        updateClientId.push({id:decoded_message.client_id,client_id:decoded_message.client_id})
+      if(decoded_message.external_id){
+        updateDate.push({id:decoded_message.id,client_id:decoded_message.external_id})
       }
       ids.push(decoded_message.id);
     });
     return await this.db.service_state.updateMultiple(updateState).then(async res=>{
       if(res.success){
-        if(updateClientId.length>0){
-          return await this.db.service_details_protocol.updateClientId(updateClientId).then(async result=>{
+        if(updateDate.length>0){
+          return await this.db.service_details_protocol.updateExternalId(setExternalId).then(async result=>{
             if(result.success){
               return {success:true,ids:ids};
             }
