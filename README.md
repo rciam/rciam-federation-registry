@@ -36,7 +36,7 @@ This project is consisted of three parts
 
 4. For the backend server connection with the database a PostgresSQL database must be created using the oidc_db.sql file located in the root folder
 
-The connection details are declared in rciam-service-registryregistry-backend-express/db-config.json and might need to be modified.
+The connection details are declared in rciam-federation-registry/registry-backend-express/db-config.json and might need to be modified.
 
  ```
  {

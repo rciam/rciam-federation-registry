@@ -1,11 +1,11 @@
 pipeline {
     agent any
     options {
-        checkoutToSubdirectory('rciam-service-registry')
+        checkoutToSubdirectory('rciam-federation-registry')
         newContainerPerStage()
     }
     environment {
-        PROJECT_DIR='rciam-service-registry'
+        PROJECT_DIR='rciam-federation-registry'
     }
     stages {
         stage('Test Backend') {

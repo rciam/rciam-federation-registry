@@ -1,6 +1,6 @@
 swagger: "2.0"
 info:
-  description: "This is an Express server used to manage identity provider services. Users manage services by creating requests handled by administrators. You can find out more about the project on the [github page](https://github.com/rciam/rciam-service-registry) or you can try it out live  [here](http://service-registry.aai-dev.grnet.gr/egi). "
+  description: "This is an Express server used to manage identity provider services. Users manage services by creating requests handled by administrators. You can find out more about the project on the [github page](https://github.com/rciam/rciam-federation-registry) or you can try it out live  [here](http://service-registry.aai-dev.grnet.gr/egi). "
   version: "1.0.1"
   title: "Service Registry"
   termsOfService: "http://swagger.io/terms/"
@@ -1490,7 +1490,7 @@ definitions:
                   example: "136969346945"
             subscription:
               type: "string"
-              default: "/projects/rciam-service-registry/subscriptions/express-push"
+              default: "/projects/rciam-federation-registry/subscriptions/express-push"
   PutState:
     type: "array"
     items:

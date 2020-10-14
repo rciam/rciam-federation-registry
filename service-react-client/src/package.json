@@ -3,10 +3,10 @@
   "version": "1.4.0",
   "description": "Express backend Api for React using pg-promise.",
   "main": "JavaScript/index.js",
-  "homepage": "https://github.com/rciam/rciam-service-registry",
+  "homepage": "https://github.com/rciam/rciam-federation-registry",
   "repository": {
     "type": "git",
-    "url": "git@github.com:rciam/rciam-service-registry.git"
+    "url": "git@github.com:rciam/rciam-federation-registry.git"
   },
   "keywords": [
     "pg-promise",

@@ -3,10 +3,10 @@
   "version": "1.4.0",
   "description": "Agent that handles communication between Express backend and Argo Messaging Service for the rciam service registry project",
   "main": "app.js",
-  "homepage": "https://github.com/rciam/rciam-service-registry",
+  "homepage": "https://github.com/rciam/rciam-federation-registry",
   "repository": {
     "type": "git",
-    "url": "git@github.com:rciam/rciam-service-registry.git"
+    "url": "git@github.com:rciam/rciam-federation-registry.git"
   },
   "keywords": [
     "Argo",
