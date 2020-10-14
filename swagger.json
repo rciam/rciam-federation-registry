@@ -25,7 +25,9 @@ tags:
 - name: "AMS"
   description: "Commmunication with the Argo Messenging Service"
 - name: "Agent"
-  description: "Deditated to the ams-agent"
+  description: "Deditated endpoints for the ams-agent"
+- name: "Deployer Agents"
+  description: "Manage Tenant Deployer Agents"
 schemes:
 - "https"
 paths:
@@ -859,6 +861,160 @@ paths:
             description: "Internal Error"
         security:
           - access_tokenAuth: []
+  /tenant/{name}/agents:
+    get:
+      tags:
+      - "Deployer Agents"
+      summary: "Get agents"
+      description: "Get all deployer agents"
+      operationId: "getAgents"
+      produces:
+      - "application/json"
+      parameters:
+        - in: "path"
+          type: "string"
+          name: "name"
+          description: "Tenant that the request is targeting"
+          required: true
+      responses:
+        "200":
+          description: "OK"
+          schema:
+              $ref: "#/definitions/getAgents"
+        "404":
+          description: "No agent found"
+        "401":
+          description: "Unauthenticated request"
+        "500":
+          description: "Internal Error"
+    post:
+      tags:
+       - "Deployer Agents"
+      summary: "Add Agents"
+      description: "Add new Deployer Agents"
+      operationId: "addAgents"
+      produces:
+      - "application/json"
+      parameters:
+         - in: "path"
+           type: "string"
+           name: "name"
+           description: "Tenant that the request is targeting"
+           required: true
+         - in: "body"
+           name: "body"
+           required: true
+           schema:
+             $ref: "#/definitions/postAgents"
+      responses:
+         "200":
+           description: "OK"
+         "404":
+           description: "Could not add agents"
+         "401":
+           description: "Unauthenticated request"
+         "500":
+           description: "Internal Error"
+    delete:
+      tags:
+      - "Deployer Agents"
+      summary: "Delete Agents"
+      description: "Delete all Deployer Agents"
+      operationId: "deleteAgents"
+      produces:
+      - "application/json"
+      parameters:
+         - in: "path"
+           type: "string"
+           name: "name"
+           description: "Tenant that the request is targeting"
+           required: true
+      responses:
+         "200":
+           description: "OK"
+         "404":
+           description: "No agents where found to delete"
+         "401":
+           description: "Unauthenticated request"
+         "500":
+           description: "Internal Error"
+  /tenant/{name}/agents/id:
+    get:
+      tags:
+      - "Deployer Agents"
+      summary: "Get agent"
+      description: "Get deployer agents by id"
+      operationId: "getAgent"
+      produces:
+      - "application/json"
+      parameters:
+       - in: "path"
+         type: "string"
+         name: "name"
+         description: "Tenant that the request is targeting"
+         required: true
+      responses:
+       "200":
+         description: "OK"
+         schema:
+             $ref: "#/definitions/Agent"
+       "404":
+         description: "No agent found"
+       "401":
+         description: "Unauthenticated request"
+       "500":
+         description: "Internal Error"
+    put:
+     tags:
+     - "Deployer Agents"
+     summary: "Update agent"
+     description: "Update deployer agent"
+     operationId: "updateAgent"
+     produces:
+     - "application/json"
+     parameters:
+       - in: "path"
+         type: "string"
+         name: "name"
+         description: "Tenant that the request is targeting"
+         required: true
+       - in: "body"
+         name: "body"
+         required: true
+         schema:
+           $ref: "#/definitions/Agent"
+     responses:
+       "200":
+         description: "OK"
+       "404":
+         description: "No agent found"
+       "401":
+         description: "Unauthenticated request"
+       "500":
+         description: "Internal Error"
+    delete:
+     tags:
+     - "Deployer Agents"
+     summary: "Delete agent"
+     description: "Delete deployer agent"
+     operationId: "deleteAgent"
+     produces:
+     - "application/json"
+     parameters:
+       - in: "path"
+         type: "string"
+         name: "name"
+         description: "Tenant that the request is targeting"
+         required: true
+     responses:
+       "200":
+         description: "OK"
+       "404":
+         description: "No agent was found"
+       "401":
+         description: "Unauthenticated request"
+       "500":
+         description: "Internal Error"
 securityDefinitions:
   access_tokenAuth:
     type: "basic"
@@ -867,6 +1023,81 @@ securityDefinitions:
     name: "api_key"
     in: "header"
 definitions:
+  Agent:
+    type: "object"
+    properties:
+      type:
+        type: "string"
+        enum:
+          - "mitreId"
+          - "ssp"
+          - "keycloak"
+          - "satosa"
+      entity_type:
+        type: "string"
+        enum:
+          - "service"
+          - "idp"
+      hostname:
+        type: "string"
+        example: "https://snf-ssp-1.grnet.gr"
+      entity_protocol:
+        type: "string"
+        enum:
+        - "oidc"
+        - "saml"
+  postAgents:
+    type: "array"
+    items:
+      type: "object"
+      properties:
+        type:
+          type: "string"
+          enum:
+          - "mitreId"
+          - "ssp"
+          - "keycloak"
+          - "satosa"
+        entity_type:
+          type: "string"
+          enum:
+          - "service"
+          - "idp"
+        hostname:
+          type: "string"
+          example: "https://snf-ssp-1.grnet.gr"
+        entity_protocol:
+          type: "string"
+          enum:
+          - "oidc"
+          - "saml"
+  getAgents:
+    type: "array"
+    items:
+      type: "object"
+      properties:
+        tenant:
+          type: "string"
+        type:
+          type: "string"
+          enum:
+          - "mitreId"
+          - "ssp"
+          - "keycloak"
+          - "satosa"
+        entity_type:
+          type: "string"
+          enum:
+          - "service"
+          - "idp"
+        hostname:
+          type: "string"
+          example: "https://snf-ssp-1.grnet.gr"
+        entity_protocol:
+          type: "string"
+          enum:
+          - "oidc"
+          - "saml"
   User:
     type: "object"
     properties:

@@ -696,7 +696,8 @@ describe('Service registry API Integration Tests', function() {
       var req = request(server).get('/tenants/egi/agents').set({Authorization: userToken});
       req.set('Accept','application/json')
       .expect('Content-Type',/json/)
-      .expect(200)
+      .expect(200)  //describe('# Petition Validation Testing For Creation Requests', function(){
+
       .end(function(err,res){
         let body = JSON.parse(res.text);
         expect(res.statusCode).to.equal(200);
@@ -710,6 +711,28 @@ describe('Service registry API Integration Tests', function() {
       .expect(200)
       .end(function(err,res){
         expect(res.statusCode).to.equal(200);
+        done();
+      })
+    });
+    it('should update an agent',function(done){
+      var req = request(server).put('/tenants/egi/agents/2').send(agents.put);
+      req.set('Accept','application/json')
+      .expect('Content-Type',/json/)
+      .expect(200)
+      .end(function(err,res){
+        expect(res.statusCode).to.equal(200);
+        done();
+      })
+    });
+    it('should get updated agent',function(done){
+      var req = request(server).get('/tenants/egi/agents/2').send(agents.put);
+      req.set('Accept','application/json')
+      .expect('Content-Type',/json/)
+      .expect(200)
+      .end(function(err,res){
+        let body = JSON.parse(res.text);
+        expect(res.statusCode).to.equal(200);
+        expect(body).to.eql(agents.put)
         done();
       })
     });
@@ -740,8 +763,9 @@ describe('Service registry API Integration Tests', function() {
       .expect(200)
       .end(function(err,res){
         let body = JSON.parse(res.text);
-        console.log(body);
+        body.agents.forEach((agent,index)=> {delete body.agents[index].id; delete body.agents[index].tenant;})
         expect(res.statusCode).to.equal(200);
+        expect(body).to.eql(agents.post);
         done();
       })
     });
