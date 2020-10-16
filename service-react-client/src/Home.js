@@ -61,7 +61,6 @@ const Home = ()=> {
        else{
          globalState.setLogState({log_state:false});
        }
-
      }
 
 
