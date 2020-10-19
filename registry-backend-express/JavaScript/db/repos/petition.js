@@ -145,6 +145,7 @@ class PetitionRepository {
           else{
             return await t.service_petition_details.add(petition,requester).then(async result=>{
               if(result){
+                console.log(result);
                 queries.push(t.service_details_protocol.add('petition',petition,result.id));
                 queries.push(t.service_contacts.add('petition',petition.contacts,result.id));
                 if(petition.protocol==='oidc'){

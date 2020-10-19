@@ -1,5 +1,4 @@
 const sql = require('../sql').user;
-var config = require('../../config');
 const cs = {}; // Reusable ColumnSet objects.
 /*
  This repository mixes hard-coded and dynamic SQL, primarily to show a diverse example of using both.
@@ -38,17 +37,26 @@ class User {
     });
   }
 
-  async getReviewers() {
-    return this.db.any(sql.getReviewers,{
-      entitlements:config.super_admin_entitlements
-    }).then(info=>{
-      if(info){
-        return info;
+  async getReviewers(tenant) {
+    let entitlements = [];
+    return this.db.any(sql.getReviewEntitlements,{tenant:'egi'}).then(result => {
+      if(result){
+        result.forEach(item=> {
+          entitlements.push(item.entitlement);
+        });
+        return this.db.any(sql.getReviewers,{
+          entitlements:entitlements
+        }).then(info=>{
+          if(info){
+            return info;
+          }
+          else{
+            return [];
+          }
+        });
       }
-      else{
-        return [];
-      }
-    });
+    })
+
 
   }
 

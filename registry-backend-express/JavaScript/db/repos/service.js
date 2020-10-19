@@ -67,11 +67,11 @@ class ServiceRepository {
       }
     }
 
-  async update(newState,targetId){
+  async update(newState,targetId,tenant){
     try{
       return this.db.tx('update-service',async t =>{
         let queries = [];
-        return t.service.get(targetId).then(async oldState=>{
+        return t.service.get(targetId,tenant).then(async oldState=>{
           if(oldState){
             let edits = calcDiff(oldState.service_data,newState);
             if(Object.keys(edits.details).length !== 0){
