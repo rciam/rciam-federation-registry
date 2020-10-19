@@ -86,7 +86,7 @@ const approvePetition = (req,res,next,db) => {
           // Edit Service
           service_id = petition.meta_data.service_id;
           await t.batch([
-            t.service.update(petition.service_data,petition.meta_data.service_id),
+            t.service.update(petition.service_data,petition.meta_data.service_id,req.params.name),
             t.service_petition_details.review(req.params.id,req.user.sub,'approved',req.body.comment,req.params.name)
           ]);
         }
@@ -100,13 +100,13 @@ const approvePetition = (req,res,next,db) => {
           }).catch(err=>{next(err);});
         }
         res.status(200).json({service_id});
-        await t.user.getPetitionOwners(req.params.id).then(data=>{
-          if(data){
-            data.forEach(email_data=>{
-              sendMail({subject:'Service Petition Review',service_name:email_data.service_name,state:'approved',tenant:req.params.name},'review-notification.html',[{name:email_data.name,email:email_data.email}]);
-            })
-          }
-        }).catch(err=>{next(err);})
+        // await t.user.getPetitionOwners(req.params.id).then(data=>{
+        //   if(data){
+        //     data.forEach(email_data=>{
+        //       sendMail({subject:'Service Petition Review',service_name:email_data.service_name,state:'approved',tenant:req.params.name},'review-notification.html',[{name:email_data.name,email:email_data.email}]);
+        //     })
+        //   }
+        // }).catch(err=>{next(err);})
       }
       else{
         res.status(403).send({error:"No petition found"});

@@ -9,20 +9,19 @@ class UserInfoRepository {
       // set-up all ColumnSet objects, if needed:
       createColumnsets(pgp);
   }
-  async findBySub(sub) {
-      return this.db.oneOrNone('SELECT * FROM user_info WHERE sub = $1', sub);
+  async findBySub(sub,tenant) {
+      return this.db.oneOrNone('SELECT * FROM user_info WHERE sub = $1 and tenant=$2', [sub,tenant]);
   }
-  async add(data){
-
+  async add(data,tenant){
     return this.db.one(sql.add,{
       sub: data.sub,
       preferred_username: data.preferred_username,
       name: data.name,
       given_name: data.given_name,
       family_name: data.family_name,
-      email: data.email,
+      email: data.email
     }).then(res=>{
-    
+
       return res
     })
   }
