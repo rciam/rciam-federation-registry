@@ -11,7 +11,8 @@ class ServiceDetailsProtocolRepository {
     constructor(db, pgp) {
         this.db = db;
         this.pgp = pgp;
-        cs = new pgp.helpers.ColumnSet(['?id','client_id'],{table:'service_details_oidc'});
+        cs.client_id = new pgp.helpers.ColumnSet(['?id','client_id'],{table:'service_details_oidc'});
+        cs.external_id = new pgp.helpers.ColumnSet(['?id','external_id'],{table:'service_details_oidc'});
         // set-up all ColumnSet objects, if needed:
 
     }
@@ -39,13 +40,27 @@ class ServiceDetailsProtocolRepository {
     // Data format
     // updateData = [{id:1,client_id:value1},{id:2,client_id:value2},{id:3,client_id:value3}]
     async updateClientId(updateData){
-      const update = this.pgp.helpers.update(updateData, cs) + ' WHERE v.id = t.id RETURNING t.id';
+      const update = this.pgp.helpers.update(updateData, cs.client_id) + ' WHERE v.id = t.id RETURNING t.id';
       return this.db.any(update).then((ids)=>{
         if(ids.length===updateData.length){
           return {success:true}
         }
         else{
-          return {success:false,error:'Could not update state'}
+          return {success:false,error:'Could not update Client Id'}
+        }
+      }).catch(error=>{
+        return {success:false,error:error}
+      });
+    }
+
+    async updateExternalId(updateData){
+      const update = this.pgp.helpers.update(updateData, cs.external_id) + ' WHERE v.id = t.id RETURNING t.id';
+      return this.db.any(update).then((ids)=>{
+        if(ids.length===updateData.length){
+          return {success:true}
+        }
+        else{
+          return {success:false,error:'Could not update Client Id'}
         }
       }).catch(error=>{
         return {success:false,error:error}

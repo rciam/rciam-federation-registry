@@ -138,7 +138,7 @@ function run() {
 
           axios.post(pubUrls[service.json.tenant].service[service.json.protocol],{"messages":messages}, options).then((res) => {
             if(res.status===200){
-              axios.put(process.env.EXPRESS+'/agent/set_services_state',[{id:service.json.id,state:'waiting-deployment'}],options).then((res)=>{
+              axios.put(process.env.EXPRESS+'/agent/set_services_state',[{id:service.json.id,state:'waiting-deployment',protocol:service.json.protocol,tenant:service.json.tenant}],options).then((res)=>{
                 if(res.status===200){
                   if(res.success===false){
                    console.log(res.error);
