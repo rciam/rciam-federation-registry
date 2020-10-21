@@ -1,4 +1,4 @@
-const { body, validationResult,param } = require('express-validator');
+const { body, validationResult,param,check } = require('express-validator');
 const {reg} = require('./regex.js');
 const customLogger = require('./loggers.js');
 var config = require('./config');
@@ -22,8 +22,8 @@ const putAgentValidation = () => {
 
 const postAgentValidation = () => {
   return [
-    body('agents').exists().withMessage('No agents found').bail().isArray({min:1}).withMessage('No agents found').bail(),
-    body('agents.*.type').exists().withMessage('Required Field').bail().custom((value)=>{if(config.agent.type.includes(value)){return true}else{return false}}).bail(),
+    body('agents').exists().withMessage('No agents found').bail().isArray({min:1}).withMessage('No agents found').bail().toArray(),
+    body('agents.*.type').exists().withMessage('Required Field').custom((value)=>{ if(config.agent.type.includes(value)){return true}else{return false}}).bail(),
     body('agents.*.entity_type').exists().withMessage('Required Field').bail().custom((value)=>{if(config.agent.entity_type.includes(value)){return true}else{return false}}).bail(),
     body('agents.*.entity_protocol').exists().withMessage('Required Field').bail().custom((value)=>{if(config.agent.entity_protocol.includes(value)){return true}else{return false}}).bail(),
     body('agents.*.hostname').exists().withMessage('Required Field').bail().isString().withMessage('Must be a string').bail().custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Must be a url').bail()
@@ -159,6 +159,7 @@ const clientValidationRules = () => {
 // }
 
 const validate = (req, res, next) => {
+  console.log(req.body);
   const errors = validationResult(req)
   if(errors.errors.length>0){
     //console.log(errors);

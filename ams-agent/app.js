@@ -27,7 +27,7 @@ axios.get(process.env.EXPRESS+'/agent/get_agents',options)
    console.log("Configuring Ams...");
    for(var i=0;i<agents.length;i++){
      let currentTopic = agents[i].tenant+'_'+agents[i].entity_type+'_'+agents[i].entity_protocol;
-     let agentSub = agents[i].tenant + '_' + agents[i].id
+     let agentSub = agents[i].tenant + '_'+agents[i].entity_type + '_' + agents[i].entity_protocol + '_' + agents[i].type + '_' + agents[i].id
      if(!topics.includes(currentTopic)){
        topics.push(currentTopic);
        const done = await setupTopic(currentTopic);
