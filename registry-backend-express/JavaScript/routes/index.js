@@ -1,5 +1,5 @@
 require('dotenv').config();
-const {clientValidationRules,validate,postInvitationValidation} = require('../validator.js');
+const {clientValidationRules,validate,postInvitationValidation,putAgentValidation,postAgentValidation} = require('../validator.js');
 const qs = require('qs');
 const {v1:uuidv1} = require('uuid');
 const axios = require('axios').default;
@@ -81,7 +81,7 @@ router.get('/callback/:name',(req,res,next)=>{
   clients[req.params.name].callback(process.env.REDIRECT_URI+req.params.name,{code:req.query.code}).then(async response => {
     let code = await db.tokens.addToken(response.access_token);
     clients[req.params.name].userinfo(response.access_token).then(usr_info=>{
-      saveUser(usr_info);
+      saveUser(usr_info,req.params.name);
     }); // => Promise
     res.redirect(process.env.OIDC_REACT+'/'+req.params.name+'/code/' + code.code);
   });
@@ -341,13 +341,11 @@ router.post('/tenants/:name/petitions',clientValidationRules(),validate,authenti
           await t.petition.add(req.body,req.user.sub).then(async id=>{
             if(id){
               res.status(200).json({id:id});
-              if(!(process.env.NODE_ENV==='test-docker'||process.env.NODE_ENV==='test')){
-                await t.user.getReviewers().then(users=>{
-                  sendMail({subject:'New Petition to Review',service_name:req.body.service_name,tenant:req.params.name},'reviewer-notification.html',users);
-                }).catch(error=>{
-                  next('Could not sent email to reviewers:' + error);
-                });
-              }
+              await t.user.getReviewers(req.params.name).then(users=>{
+                sendMail({subject:'New Petition to Review',service_name:req.body.service_name,tenant:req.params.name},'reviewer-notification.html',users);
+              }).catch(error=>{
+                next('Could not sent email to reviewers:' + error);
+              });
             }
           }).catch(err=>{next(err)});
         }
@@ -725,7 +723,7 @@ router.get('/tenants/:name/agents/:id',(req,res,next)=>{
   }
 });
 
-router.put('/tenants/:name/agents/:id',(req,res,next)=>{
+router.put('/tenants/:name/agents/:id',putAgentValidation(),validate,(req,res,next)=>{
   try{
     db.deployer_agents.update(req.body,req.params.id,req.params.name).then(result => {
       if(result){
@@ -740,7 +738,7 @@ router.put('/tenants/:name/agents/:id',(req,res,next)=>{
     next(err);
   }
 });
-router.post('/tenants/:name/agents',(req,res,next)=>{
+router.post('/tenants/:name/agents',postAgentValidation(),validate,(req,res,next)=>{
   try{
     db.deployer_agents.add(req.body.agents,req.params.name).then(async result => {
       if(result){
@@ -948,11 +946,11 @@ function canReview(req,res,next){
 }
 
 // Save new User to db. Gets called on Authentication
-const saveUser=(userinfo)=>{
+const saveUser=(userinfo,tenant)=>{
   return db.tx('user-check',async t=>{
-    return t.user_info.findBySub(userinfo.sub).then(async user=>{
+    return t.user_info.findBySub(userinfo.sub,tenant).then(async user=>{
       if(!user) {
-        return t.user_info.add(userinfo).then(async result=>{
+        return t.user_info.add(userinfo,tenant).then(async result=>{
           if(result){
               return t.user_edu_person_entitlement.add(userinfo.eduperson_entitlement,result.id);
           }

@@ -1,0 +1,1 @@
+SELECT DISTINCT entitlement from (SELECT id as role_id from (SELECT role_id as id FROM role_actions where action='review_petition')as foo LEFT JOIN user_roles USING(id) WHERE tenant=${tenant})as poo LEFT JOIN role_entitlements USING(role_id);

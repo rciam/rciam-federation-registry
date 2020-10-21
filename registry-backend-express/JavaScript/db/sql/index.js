@@ -48,7 +48,8 @@ module.exports = {
     user:{
       getReviewers:sql('user/getReviewers.sql'),
       getServiceOwners:sql('user/getServiceOwners.sql'),
-      getPetitionOwners:sql('user/getPetitionOwners.sql')
+      getPetitionOwners:sql('user/getPetitionOwners.sql'),
+      getReviewEntitlements:sql('user/getReviewEntitlements.sql')
     },
     petition: {
       getPetition:sql('petition/getPetition.sql'),
