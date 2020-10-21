@@ -1,5 +1,5 @@
 require('dotenv').config();
-const {clientValidationRules,validate,postInvitationValidation} = require('../validator.js');
+const {clientValidationRules,validate,postInvitationValidation,putAgentValidation,postAgentValidation} = require('../validator.js');
 const qs = require('qs');
 const {v1:uuidv1} = require('uuid');
 const axios = require('axios').default;
@@ -723,7 +723,7 @@ router.get('/tenants/:name/agents/:id',(req,res,next)=>{
   }
 });
 
-router.put('/tenants/:name/agents/:id',(req,res,next)=>{
+router.put('/tenants/:name/agents/:id',putAgentValidation(),validate,(req,res,next)=>{
   try{
     db.deployer_agents.update(req.body,req.params.id,req.params.name).then(result => {
       if(result){
@@ -738,7 +738,7 @@ router.put('/tenants/:name/agents/:id',(req,res,next)=>{
     next(err);
   }
 });
-router.post('/tenants/:name/agents',(req,res,next)=>{
+router.post('/tenants/:name/agents',postAgentValidation(),validate,(req,res,next)=>{
   try{
     db.deployer_agents.add(req.body.agents,req.params.name).then(async result => {
       if(result){
