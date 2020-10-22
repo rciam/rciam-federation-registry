@@ -22,6 +22,8 @@ const base64url = require('base64url');
 
 
 
+
+
 // ----------------------------------------------------------
 // ************************* Routes *************************
 // ----------------------------------------------------------
@@ -97,7 +99,7 @@ router.get('/ams/ams_verification_hash',(req,res)=>{
 // One time code to get access token during login
 router.get('/tokens/:code',(req,res,next)=>{
   try{
-    db.task('deploymentResults', async t => {
+    db.task('deploymentTasks', async t => {
       await t.tokens.getToken(req.params.code).then(async response=>{
         if(res){
           await t.tokens.deleteToken(req.params.code).then(deleted=>{
@@ -139,10 +141,10 @@ router.get('/tenants/:name/user',authenticate,(req,res,next)=>{
 router.post('/ams/ingest',(req,res,next)=>{
   // Decode messages
   try{
-    return db.task('deploymentResults', async t => {
+    return db.task('deploymentTasks', async t => {
       // update state
       await t.service_state.deploymentUpdate(req.body.messages).then(async result=>{
-        if(result.success){
+        if(result){
           res.sendStatus(200).end();
           await t.user.getServiceOwners(result.ids).then(data=>{
             if(data){
@@ -155,7 +157,7 @@ router.post('/ams/ingest',(req,res,next)=>{
           });
         }
         else{
-          next(result.error);
+          next('Deployment Failed');
         }
       }).catch(err=>{
         next(err);
@@ -167,21 +169,46 @@ router.post('/ams/ingest',(req,res,next)=>{
   }
 });
 
+
 // ams-agent requests to set state to waiting development
+// updateData = [{id:1,state:'deployed',tenant:'egi',protocol:'oidc'},{id:2,state:'deployed',tenant:'egi',protocol:'saml'},{id:3,state:'failed',tenant:'eosc',protocol:'oidc'}];
 router.put('/agent/set_services_state',amsAgentAuth,(req,res,next)=>{
   try{
-    db.service_state.updateMultiple(req.body).then(result=>{
-      if(result.success){
-        res.status(200).end();
-      }
-      else{
-        next(result.error);
-      }
+    return db.task('set_state_and_agents',async t=>{
+      let service_pending_agents = [];
+      console.log(req.body);
+      await t.service_state.updateMultiple(req.body).then(async result=>{
+        if(result){
+          await t.deployer_agents.getAll().then(async agents => {
+            if(agents){
+              req.body.forEach(service=> {
+                agents.forEach(agent => {
+                  if(agent.tenant===service.tenant && agent.entity_protocol===service.protocol  && agent.entity_type==='service' ){
+                    service_pending_agents.push({agent_id:agent.id,service_id:service.id});
+                  }
+                })
+              });
+              await t.deployment_tasks.setDeploymentTasks(service_pending_agents).then(success=> {
+                if(success){
+                  res.status(200).end();
+                }
+                else{
+                  next('Could not set pending deployers')
+                }
+              });
+            }
+            else{
+              next('Failed to get deployer agents')
+            }
+          })
+        }
+        else{
+          next('Failed to update state')
+        }
+      });
     });
   }
-  catch(err){
-    next('Could not set state sent by ams agent'+ err);
-  }
+  catch(err){next(err);}
 });
 
 // Find all clients/petitions from curtain user to create preview list
