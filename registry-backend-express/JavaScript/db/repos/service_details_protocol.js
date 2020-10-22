@@ -43,13 +43,13 @@ class ServiceDetailsProtocolRepository {
       const update = this.pgp.helpers.update(updateData, cs.client_id) + ' WHERE v.id = t.id RETURNING t.id';
       return this.db.any(update).then((ids)=>{
         if(ids.length===updateData.length){
-          return {success:true}
+          return true
         }
         else{
-          return {success:false,error:'Could not update Client Id'}
+          return false
         }
       }).catch(error=>{
-        return {success:false,error:error}
+        return false
       });
     }
 
@@ -57,13 +57,13 @@ class ServiceDetailsProtocolRepository {
       const update = this.pgp.helpers.update(updateData, cs.external_id) + ' WHERE v.id = t.id RETURNING t.id';
       return this.db.any(update).then((ids)=>{
         if(ids.length===updateData.length){
-          return {success:true}
+          return true
         }
         else{
-          return {success:false,error:'Could not update Client Id'}
+          return false
         }
       }).catch(error=>{
-        return {success:false,error:error}
+        return false
       });
     }
 

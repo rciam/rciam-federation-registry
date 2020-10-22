@@ -18,5 +18,5 @@ module.exports = {
     Invitation: require('./invitation'),
     Tenants: require('./tenants'),
     DeployerAgents: require('./deployer_agent'),
-    DeploymentResults: require('./deployment_results')
+    DeploymentTasks: require('./deployment_tasks')
 };

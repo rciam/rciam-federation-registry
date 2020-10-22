@@ -123,12 +123,16 @@ async function setupTopic(topic) {
   return await setupTopicAcl(topic);
 }
 
-function run() {
+async function run() {
+
   axios.get(process.env.EXPRESS+'/agent/get_new_configurations',options)
-  .then(function (response) {
+  .then(async function (response) {
 	// handle success
+    let setStateArray = [];
+    let service;
     if(response.data.services){
-        response.data.services.forEach((service) => {
+        for(let index=0;index<response.data.services.length;index++){
+          service = response.data.services[index];
           for (var propName in service.json) {
             if (service.json[propName] === null || service.json[propName] === undefined) {
               delete service.json[propName];
@@ -136,19 +140,22 @@ function run() {
           }
           let messages = [{"attributes":{},"data": Buffer.from(JSON.stringify(service.json)).toString("base64")}];
 
-          axios.post(pubUrls[service.json.tenant].service[service.json.protocol],{"messages":messages}, options).then((res) => {
+          let done = await axios.post(pubUrls[service.json.tenant].service[service.json.protocol],{"messages":messages}, options).then((res) => {
             if(res.status===200){
-              axios.put(process.env.EXPRESS+'/agent/set_services_state',[{id:service.json.id,state:'waiting-deployment',protocol:service.json.protocol,tenant:service.json.tenant}],options).then((res)=>{
-                if(res.status===200){
-                  if(res.success===false){
-                   console.log(res.error);
-                  }
-                }
-              }).catch(err=>{console.log(err)});
+              setStateArray.push({id:service.json.id,state:'waiting-deployment',protocol:service.json.protocol,tenant:service.json.tenant});
             }
           }).catch(err => {console.log(err)});
 
-        });
+        }
+        if(setStateArray.length>0){
+          axios.put(process.env.EXPRESS+'/agent/set_services_state',setStateArray,options).then((res)=>{
+            if(res.status===200){
+              if(res.success===false){
+                console.log(res.error);
+              }
+            }
+          }).catch(err=>{console.log(err)});
+        }
       }
   })
   .catch(function (error) {
