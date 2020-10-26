@@ -4,6 +4,16 @@ const customLogger = require('./loggers.js');
 var config = require('./config');
 
 
+const amsIngestValidation = () => {
+  return [
+    body('decoded_messages').exists().withMessage('No agents found').bail().isArray({min:1}).withMessage('No agents found').bail().toArray(),
+    body('decoded_messages.*.id').exists().withMessage('Required Field').bail().isInt({gt:0}).withMessage('Id must be a positive integer'),
+    body('decoded_messages.*.agent_id').exists().withMessage('Required Field').bail().isInt({gt:0}).withMessage('Agent id must be a positive integer'),
+    body('decoded_messages.*.external_id').optional({checkFalsy:true}).isInt({gt:0}).withMessage('External id must be a positive integer'),
+    body('decoded_messages.*.client_id').optional({checkFalsy:true}).isString().withMessage('Must be a string').bail().isLength({min:4, max:36}).bail()
+  ]
+}
+
 const postInvitationValidation = () => {
   return[
     body('email').exists().withMessage('Required Field').bail().isString().withMessage('Must be a string').bail().custom((value,success=true)=> {if(!value.match(reg.regEmail)){success=false} return success }).withMessage('Must be an email'),
@@ -32,7 +42,6 @@ const postAgentValidation = () => {
 //body('service_id').if*body('type'==='edit'||)
 const clientValidationRules = () => {
   let tenant;
-
   return [
     body('service_id').if(body('type').custom((value)=>{return (value==='edit'||values==='delete')})).exists().withMessage('Required Field').bail().custom((value)=>{if(parseInt(value)){return true}else{return false}}).bail(),
     body('protocol').if(body('type').custom((value)=>{return value!=='delete'})).exists().withMessage('Required Field').bail().custom((value)=> {if(['oidc','saml'].includes(value)){return true}else{return false}}).withMessage('Invalid value'),
@@ -61,110 +70,28 @@ const clientValidationRules = () => {
     body('metadata_url').if(body('type').custom((value)=>{return value!=='delete'})).if(body('protocol').custom((value)=>{return value==='saml'})).exists().withMessage('Required Field').bail().isString().withMessage('Must be a string').bail().custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Must be a url').bail(),
   ]
 }
-//body('redirect_uris').isArray({min:1}).withMessage('Must be an array').custom((value,success=true)=> {value.map((item,index)=>{if(!item.match(reg.regUrl)){success=false}}); return success }).withMessage('Invalid Redirect Uri value!'),
-//body('contacts').isArray({min:1}).withMessage('Must be an array').custom((value,success=true)=> {value.map((item,index)=>{if(!item.email.match(reg.regEmail)||!['admin','technical'].includes(item.type)){success=false}}); return success }).withMessage('Invalid Contacts value!'),
-//body('grant_types').isArray({min:1}).withMessage('Must be an array').custom((value,success=true)=> {value.map((item,index)=>{if(!['implicit','authorization_code','refresh_token','client_credentials','password','redelegation','token_exchange','device'].includes(item)){success=false}}); return success }).withMessage('Invalid Scope value!'),
 
-// const editClientValidationRules = () => {
-//   return [
-//     body('details.client_name').optional().isString().isLength({min:4, max:36}),
-//     body('details.client_id').optional().isString().isLength({min:4, max:36}),
-//     body('add').custom((value)=> {
-//       if(value.client_contact){
-//         value.client_contact.map((item,index)=>{
-//           if(!item.email.match(reg.regEmail)||!config.form.contact_types.includes(item.type)){
-//             console.log('add-client_contact');
-//             return false
-//           }
-//         })
-//       }
-//       if(value.client_grant_type){
-//         value.client_grant_type.map((item,index)=>{
-//           if(!config.form.grant_types.includes(item)){
-//             console.log('add-client_grant');
-//             return false
-//           }
-//         })
-//       }
-//       if(value.client_redirect_uri){
-//         value.client_redirect_uri.map((item,index)=>{
-//           if(!item.match(reg.regUrl)){
-//             console.log('add-client_redirect');
-//             return false
-//           }
-//         })
-//       }
-//       if(value.client_scope){
-//         value.client_scope.map((item,index)=>{
-//           if(!item.match(reg.regScope)){
-//             console.log('add-client_scope');
-//             return false
-//           }
-//         })
-//       }
-//       return true
-//     }).withMessage('Invalid Add Values!'),
-//     body('dlt').custom((value)=> {
-//       if(value.client_contact){
-//         value.client_contact.map((item,index)=>{
-//           if(!item.email.match(reg.regEmail)||!config.form.contact_types.includes(item.type)){
-//             console.log('dlt-client_contact');
-//
-//
-//             return false
-//           }
-//         })
-//       }
-//       if(value.client_grant_type){
-//         value.client_grant_type.map((item,index)=>{
-//           if(!config.form.grant_types.includes(item)){
-//             console.log('dlt-client_grant');
-//             return false
-//           }
-//         })
-//       }
-//       if(value.client_redirect_uri){
-//         value.client_redirect_uri.map((item,index)=>{
-//           if(!item.match(reg.regUrl)){
-//             console.log('dlt-client_redirect');
-//             return false
-//           }
-//         })
-//       }
-//       if(value.client_scope){
-//         value.client_scope.map((item,index)=>{
-//           if(!item.match(reg.regScope)){
-//             console.log('dlt-client_scope');
-//             return false
-//           }
-//         })
-//       }
-//       return true
-//     }).withMessage('Invalid Add Values!'),
-//     body('details.logo_uri').optional().isString().custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Invalid logo Uri value!'),
-//     body('details.policy_uri').optional().isString().custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Invalid logo Uri value!'),
-//     body('details.client_description').optional().isString().isLength({min:1}),
-//     body('details.access_token_validity_seconds').optional().custom((value)=> {if(parseInt(value)&&parseInt(value)<34128000&&parseInt(value)>0){return true}else{return false}}).withMessage('Must be an integer in specified range'),
-//     body('details.refresh_token_validity_seconds').optional().custom((value)=> {if(parseInt(value)&&parseInt(value)<34128000&&parseInt(value)>0){return true}else{return false}}).withMessage('Must be an integer in specified range'),
-//     body('details.device_code_validity_seconds').optional().custom((value)=> {if(parseInt(value)&&parseInt(value)<34128000&&parseInt(value)>0){return true}else{return false}}).withMessage('Must be an integer in specified range'),
-//     body('details.code_challenge_method').optional().isString().custom((value)=> value.match(reg.regCodeChalMeth)).withMessage('Invalid Code Challenge method'),
-//     body('details.allow_introspection').optional().custom((value)=> typeof(value)==='boolean').withMessage('Must be a boolean'),
-//     body('details.generate_client_secret').optional().custom((value)=> typeof(value)==='boolean').withMessage('Must be a boolean'),
-//     body('details.reuse_refresh_tokens').optional().custom((value)=> typeof(value)==='boolean').withMessage('Must be a boolean'),
-//     body('details.integration_environment').optional().isString().custom((value)=> {if(config.form.integration_environment.includes(value)){return true}else{return false}}),
-//     body('details.clear_access_tokens_on_refresh').optional().custom((value)=> typeof(value)==='boolean').withMessage('Must be a boolean'),
-//     body('details.client_secret').optional().if((value,req)=> req.body.data.generate_client_secret=false).isString().isLength({min:4,max:16}),
-//
-//   ]
-// }
+
+const decodeAms = (req,res,next) => {
+  try{
+    req.body.decoded_messages = [];
+    req.body.messages.forEach(item=> {
+
+      req.body.decoded_messages.push(JSON.parse(Buffer.from(item.message.data, 'base64').toString()));
+    });
+    next();
+  }
+  catch(err){
+    customLogger(req,res,'warn','Failed decoding messages');
+    res.status(422).send(err);
+  }
+}
 
 const validate = (req, res, next) => {
-  console.log(req.body);
   const errors = validationResult(req)
   if(errors.errors.length>0){
     //console.log(errors);
   }
-
   if (errors.isEmpty()) {
     return next()
   }
@@ -173,14 +100,14 @@ const validate = (req, res, next) => {
   var log ={};
   customLogger(req,res,'warn','Failed schema validation');
   res.status(422).send(extractedErrors);
-
-
   return res.end();
 }
 
 module.exports = {
   clientValidationRules,
   validate,
+  decodeAms,
+  amsIngestValidation,
   postInvitationValidation,
   putAgentValidation,
   postAgentValidation

@@ -24,6 +24,7 @@ class DeploymentTasksRepository {
   }
 
   async resolveTask(service_id,agent_id,state){
+    console.log('Service id: '+service_id);
     if(state!=='error'){
       return await this.db.one('DELETE FROM deployment_tasks WHERE service_id=$1 AND agent_id=$2 RETURNING *',[+service_id,+agent_id]).catch(err=>{throw 'Task not found'});
     }

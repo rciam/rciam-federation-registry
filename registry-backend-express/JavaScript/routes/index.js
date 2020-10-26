@@ -1,5 +1,5 @@
 require('dotenv').config();
-const {clientValidationRules,validate,postInvitationValidation,putAgentValidation,postAgentValidation} = require('../validator.js');
+const {clientValidationRules,validate,postInvitationValidation,putAgentValidation,postAgentValidation,decodeAms,amsIngestValidation} = require('../validator.js');
 const qs = require('qs');
 const {v1:uuidv1} = require('uuid');
 const axios = require('axios').default;
@@ -20,7 +20,88 @@ const {rejectPetition,approvePetition,changesPetition,getPetition,getOpenPetitio
 const base64url = require('base64url');
 
 
+router.put('/test/set_services_state',(req,res,next)=> {
+  try{
+    return db.task('set_state_and_agents',async t=>{
+      let service_pending_agents = [];
+      await t.service_state.updateMultiple(req.body).then(async result=>{
+        if(result){
+          await t.deployer_agents.getAll().then(async agents => {
+            if(agents){
+              req.body.forEach(service=> {
+                agents.forEach(agent => {
+                  if(agent.tenant===service.tenant && agent.entity_protocol===service.protocol  && agent.entity_type==='service' ){
+                    service_pending_agents.push({agent_id:agent.id,service_id:service.id});
+                  }
+                })
+              });
+              await t.deployment_tasks.setDeploymentTasks(service_pending_agents).then(success=> {
+                if(success){
+                  res.status(200).end();
+                }
+                else{
+                  next('Could not set pending deployers')
+                }
+              });
+            }
+            else{
+              next('Failed to get deployer agents')
+            }
+          })
+        }
+        else{
+          next('Failed to update state')
+        }
+      });
+    });
+  }
+  catch(err){next(err);}
+});
 
+router.get('/test/getPending',(req,res,next)=> {
+  try{
+    db.service.getPending().then(services=>{
+      if(services){
+        res.status(200).json({services});
+      }
+    }).catch((err)=>{
+      next(err);
+    });
+  }
+  catch(err){
+    next(err);
+  }
+});
+
+router.post('/test/ams_ingest',decodeAms,amsIngestValidation(),validate,(req,res,next)=>{
+  try{
+    return db.task('deploymentTasks', async t => {
+      // update state
+      await t.service_state.deploymentUpdate(req.body.decoded_messages).then(async result=>{
+        if(result){
+          res.sendStatus(200).end();
+          // await t.user.getServiceOwners(result.ids).then(data=>{
+          //   if(data){
+          //     data.forEach(email_data=>{
+          //       sendMail({subject:'Service Deployment Result',service_name:email_data.service_name,state:email_data.state,tenant:email_data.tenant},'deployment-notification.html',[{name:email_data.name,email:email_data.email}]);
+          //     })
+          //   }
+          // }).catch(err=>{
+          //   next('Could not sent deployment email.' + err);
+          // });
+        }
+        else{
+          next('Deployment Failed');
+        }
+      }).catch(err=>{
+        next(err);
+      });
+    });
+  }
+  catch(err){
+    next(err);
+  }
+})
 
 
 
@@ -143,7 +224,7 @@ router.post('/ams/ingest',(req,res,next)=>{
   try{
     return db.task('deploymentTasks', async t => {
       // update state
-      await t.service_state.deploymentUpdate(req.body.messages).then(async result=>{
+      await t.service_state.deploymentUpdate(req.body.decoded_messages).then(async result=>{
         if(result){
           res.sendStatus(200).end();
           await t.user.getServiceOwners(result.ids).then(data=>{
@@ -176,7 +257,6 @@ router.put('/agent/set_services_state',amsAgentAuth,(req,res,next)=>{
   try{
     return db.task('set_state_and_agents',async t=>{
       let service_pending_agents = [];
-      console.log(req.body);
       await t.service_state.updateMultiple(req.body).then(async result=>{
         if(result){
           await t.deployer_agents.getAll().then(async agents => {
