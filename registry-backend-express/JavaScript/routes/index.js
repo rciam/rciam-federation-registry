@@ -20,88 +20,6 @@ const {rejectPetition,approvePetition,changesPetition,getPetition,getOpenPetitio
 const base64url = require('base64url');
 
 
-router.put('/test/set_services_state',(req,res,next)=> {
-  try{
-    return db.task('set_state_and_agents',async t=>{
-      let service_pending_agents = [];
-      await t.service_state.updateMultiple(req.body).then(async result=>{
-        if(result){
-          await t.deployer_agents.getAll().then(async agents => {
-            if(agents){
-              req.body.forEach(service=> {
-                agents.forEach(agent => {
-                  if(agent.tenant===service.tenant && agent.entity_protocol===service.protocol  && agent.entity_type==='service' ){
-                    service_pending_agents.push({agent_id:agent.id,service_id:service.id});
-                  }
-                })
-              });
-              await t.deployment_tasks.setDeploymentTasks(service_pending_agents).then(success=> {
-                if(success){
-                  res.status(200).end();
-                }
-                else{
-                  next('Could not set pending deployers')
-                }
-              });
-            }
-            else{
-              next('Failed to get deployer agents')
-            }
-          })
-        }
-        else{
-          next('Failed to update state')
-        }
-      });
-    });
-  }
-  catch(err){next(err);}
-});
-
-router.get('/test/getPending',(req,res,next)=> {
-  try{
-    db.service.getPending().then(services=>{
-      if(services){
-        res.status(200).json({services});
-      }
-    }).catch((err)=>{
-      next(err);
-    });
-  }
-  catch(err){
-    next(err);
-  }
-});
-
-router.post('/test/ams_ingest',decodeAms,amsIngestValidation(),validate,(req,res,next)=>{
-  try{
-    return db.task('deploymentTasks', async t => {
-      // update state
-      await t.service_state.deploymentUpdate(req.body.decoded_messages).then(async result=>{
-        if(result){
-          res.sendStatus(200).end();
-          // await t.user.getServiceOwners(result.ids).then(data=>{
-          //   if(data){
-          //     data.forEach(email_data=>{
-          //       sendMail({subject:'Service Deployment Result',service_name:email_data.service_name,state:email_data.state,tenant:email_data.tenant},'deployment-notification.html',[{name:email_data.name,email:email_data.email}]);
-          //     })
-          //   }
-          // }).catch(err=>{
-          //   next('Could not sent deployment email.' + err);
-          // });
-        }
-        else{
-          next('Deployment Failed');
-        }
-      }).catch(err=>{
-        next(err);
-      });
-    });
-  }
-  catch(err){
-    next(err);
-  }
-})
 
 
 
@@ -219,7 +137,7 @@ router.get('/tenants/:name/user',authenticate,(req,res,next)=>{
 
 // needs Authentication
 // ams/ingest
-router.post('/ams/ingest',(req,res,next)=>{
+router.post('/ams/ingest',checkCertificate,decodeAms,amsIngestValidation(),validate,(req,res,next)=>{
   // Decode messages
   try{
     return db.task('deploymentTasks', async t => {
@@ -449,6 +367,7 @@ router.post('/tenants/:name/petitions',clientValidationRules(),validate,authenti
             if(id){
               res.status(200).json({id:id});
               await t.user.getReviewers(req.params.name).then(users=>{
+                console.log(users);
                 sendMail({subject:'New Petition to Review',service_name:req.body.service_name,tenant:req.params.name},'reviewer-notification.html',users);
               }).catch(error=>{
                 next('Could not sent email to reviewers:' + error);
@@ -1055,9 +974,14 @@ function canReview(req,res,next){
 // Save new User to db. Gets called on Authentication
 const saveUser=(userinfo,tenant)=>{
   return db.tx('user-check',async t=>{
+    console.log(userinfo);
+    console.log(tenant);
     return t.user_info.findBySub(userinfo.sub,tenant).then(async user=>{
+      console.log(user);
       if(!user) {
+        console.log('should register user')
         return t.user_info.add(userinfo,tenant).then(async result=>{
+          console.log(result)
           if(result){
               return t.user_edu_person_entitlement.add(userinfo.eduperson_entitlement,result.id);
           }
@@ -1066,6 +990,15 @@ const saveUser=(userinfo,tenant)=>{
     })
 
   });
+}
+
+function checkCertificate(req,res,next) {
+  if(req.headers['dn']==='/C=GR/L=Athens/O=Greek Research and Technology Network/CN=push-devel.argo.grnet.gr'){
+    next();
+  }
+  else{
+    res.status(401).send('Client Certificate Authentication Failure');
+  }
 }
 
 // Checking Availability of Client Id/Entity Id

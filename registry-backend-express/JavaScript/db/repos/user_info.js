@@ -19,7 +19,8 @@ class UserInfoRepository {
       name: data.name,
       given_name: data.given_name,
       family_name: data.family_name,
-      email: data.email
+      email: data.email,
+      tenant: tenant
     }).then(res=>{
 
       return res

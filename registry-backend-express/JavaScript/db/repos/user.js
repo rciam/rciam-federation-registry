@@ -44,6 +44,7 @@ class User {
         result.forEach(item=> {
           entitlements.push(item.entitlement);
         });
+        console.log(entitlements);
         return this.db.any(sql.getReviewers,{
           entitlements:entitlements
         }).then(info=>{
