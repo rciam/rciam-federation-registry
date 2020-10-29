@@ -208,6 +208,7 @@ const ServiceForm = (props)=> {
 
 
   const createNewPetition = (petition) => {
+    // eslint-disable-next-line
     let type;
     if(props.service_id){
       petition.type='edit';
@@ -231,7 +232,7 @@ const ServiceForm = (props)=> {
         body: JSON.stringify(petition)
       }).then(response=> {
         setAsyncResponse(false);
-        setModalTitle(t('new_petition_title_1') + type + t('new_petition_title_2') + petition.client_id + petition.entity_id);
+        setModalTitle(t('new_petition_title'));
         if(response.status===200){
           setMessage(t('petition_success_msg'));
         }
@@ -265,7 +266,7 @@ const ServiceForm = (props)=> {
         body: JSON.stringify(petition) // body data type must match "Content-Type" header
       }).then(response=> {
         setAsyncResponse(false);
-        setModalTitle(t('edit_petition_tilte') + petition.client_id);
+        setModalTitle(t('edit_petition_tilte'));
         if(response.status===200){
           setMessage(t('petition_success_msg'));
         }
