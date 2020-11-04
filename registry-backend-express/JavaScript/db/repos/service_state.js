@@ -64,7 +64,7 @@ class ServiceStateRepository {
           throw err;
         });
       }
-      return true;
+      return ids;
 
     });
   }

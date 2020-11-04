@@ -23,6 +23,9 @@ import { useTranslation } from 'react-i18next';
 import Alert from 'react-bootstrap/Alert';
 import {ConfirmationModal} from './Components/Modals';
 import {tenantContext} from './context.js';
+const {capitalWords} = require('./helpers.js');
+
+
 
 const ServiceList= (props)=> {
   // eslint-disable-next-line
@@ -400,7 +403,7 @@ function TableItem(props) {
                   </div>
                 </Dropdown.Item>
               :null}
-              {props.service.owned && props.service.state==='deployed'?
+              {props.service.owned && props.service.state==='deployed'&&props.service.type?
                 <Dropdown.Item>
                   <div
                   onClick={()=>{
@@ -461,6 +464,8 @@ function Filters (props) {
   const [showEnvironment,setShowEnvironment] = useState();
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
+  // eslint-disable-next-line
+  const [tenant,setTenant] = useContext(tenantContext);
 
   useEffect(()=>{
     if(props.services.length>0){
@@ -500,12 +505,12 @@ function Filters (props) {
 
       <div className='select-filter-container'>
           <select value={showEnvironment} onChange={(e)=>{
-
             setShowEnvironment(e.target.value);}}>
+
             <option value=''>{t('all_environments_filter')}</option>
-            <option value='demo'>{t('demo_filter')}</option>
-            <option value='production'>{t('production_filter')}</option>
-            <option value='development'>{t('development_filter')}</option>
+            {tenant.form_config.integration_environment.map((item,index)=>{
+              return <option value={item} key={index}>{capitalWords(item)}</option>
+            })}
           </select>
       </div>
     </React.Fragment>
