@@ -695,13 +695,15 @@ const ReviewComponent = (props)=>{
   const { t, i18n } = useTranslation();
 
   const handleReview = () =>{
+
       if(expand){
         if(type){
-          if(type==='changes'&&comment){
-            setError(t('review_comment_required_msg'));
+
+          if((type==='changes'&&comment)||type!=='changes'){
+            props.reviewPetition(comment,type);
           }
           else{
-            props.reviewPetition(comment,type);
+            setError(t('review_comment_required_msg'));
           }
         }
         else {

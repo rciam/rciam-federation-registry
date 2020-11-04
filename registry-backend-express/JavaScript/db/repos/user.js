@@ -17,14 +17,16 @@ class User {
   }
 
   async getServiceOwners(ids){
+    console.log(ids);
     return this.db.any(sql.getServiceOwners,{ids:ids}).then( info =>{
       if(info){
+        console.log(info);
         return info;
       }
       else{
         return [];
       }
-    })
+    });
   }
   async getPetitionOwners(id){
     return this.db.any(sql.getPetitionOwners,{id:+id}).then( data => {
@@ -44,7 +46,6 @@ class User {
         result.forEach(item=> {
           entitlements.push(item.entitlement);
         });
-        console.log(entitlements);
         return this.db.any(sql.getReviewers,{
           entitlements:entitlements
         }).then(info=>{
