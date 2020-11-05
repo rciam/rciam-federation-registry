@@ -54,7 +54,7 @@ class ServiceStateRepository {
         batch_queries.push(t.service_details_protocol.updateClientId(updateClientId));
       }
       if(updateExternalId.length>0){
-        batch_queries.push(t.service_details_protocol.updateExternalId(updateExternalId));
+        batch_queries.push(t.service_details.updateExternalId(updateExternalId));
       }
       if(updateState.length>0){
         batch_queries.push(t.service_state.updateMultiple(updateState));

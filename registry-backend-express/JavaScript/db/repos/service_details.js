@@ -89,6 +89,19 @@ class ServiceDetailsRepository {
       }
     }
 
+    async updateExternalId(updateData){
+      const update = this.pgp.helpers.update(updateData, cs.external_id) + ' WHERE v.id = t.id RETURNING t.id';
+      return this.db.any(update).then((ids)=>{
+        if(ids.length===updateData.length){
+          return true
+        }
+        else{
+          return false
+        }
+      }).catch(error=>{
+        return false
+      });
+    }
 
 
 
@@ -109,6 +122,7 @@ function createColumnsets(pgp) {
           'logo_uri','policy_uri','integration_environment','requester','protocol'],
           {table});
         cs.update = cs.insert.extend(['?id','deleted']);
+        cs.external_id = new pgp.helpers.ColumnSet(['?id','external_id'],{table:'service_details'});
     }
     return cs;
 }
