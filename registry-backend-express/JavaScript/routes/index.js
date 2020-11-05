@@ -487,7 +487,7 @@ router.put('/tenants/:name/petitions/:id/review',authenticate,canReview,(req,res
 router.get('/tenants/:name/check-availability',authenticate,(req,res,next)=>{
   db.tx('get-history-for-petition', async t =>{
     try{
-      await isAvailable(t,req.query.value,req.query.protocol,0,0,req.params.name).then(available =>{
+      await isAvailable(t,req.query.value,req.query.protocol,0,0,req.params.name,req.query.environment).then(available =>{
             res.status(200).json({available:available});
       }).catch(err=>{next(err)});
     }
@@ -497,18 +497,7 @@ router.get('/tenants/:name/check-availability',authenticate,(req,res,next)=>{
   });
 });
 
-router.get('/tenants/:name/check-availability',(req,res,next)=>{
-  db.tx('get-history-for-petition', async t =>{
-    try{
-      await isAvailable(t,req.query.value,req.query.protocol,0,0,req.params.name).then(available =>{
-            res.status(200).json({available:available});
-      }).catch(err=>{next(err)});
-    }
-    catch(err){
-      next(err);
-    }
-  });
-});
+
 
 // -------------------------------------------------------------------------
 // ----------------------Groups and Invitations-----------------------------
@@ -996,12 +985,13 @@ function checkCertificate(req,res,next) {
 }
 
 // Checking Availability of Client Id/Entity Id
-const isAvailable=(t,id,protocol,petition_id,service_id,tenant)=>{
+const isAvailable=(t,id,protocol,petition_id,service_id,tenant,environment)=>{
+  console.log(environment);
   if(protocol==='oidc'){
-    return t.service_details_protocol.checkClientId(id,service_id,petition_id,tenant);
+    return t.service_details_protocol.checkClientId(id,service_id,petition_id,tenant,environment);
   }
   else if (protocol==='saml'){
-    return t.service_details_protocol.checkEntityId(id,service_id,petition_id,tenant);
+    return t.service_details_protocol.checkEntityId(id,service_id,petition_id,tenant,environment);
   }
 }
 
@@ -1014,7 +1004,7 @@ function asyncPetitionValidation(req,res,next){
       // For the post
       if(req.route.methods.post){
         if(req.body.type==='create'){
-          await isAvailable.apply(this,(req.body.protocol==='oidc'?[t,req.body.client_id,'oidc',0,0,req.params.name]:[t,req.body.entity_id,'saml',0,0,req.params.name])).then(async available=>{
+          await isAvailable.apply(this,(req.body.protocol==='oidc'?[t,req.body.client_id,'oidc',0,0,req.params.name,req.body.integration_environment]:[t,req.body.entity_id,'saml',0,0,req.params.name,req.body.integration_environment])).then(async available=>{
             if(available){
               next();
             }
@@ -1036,7 +1026,7 @@ function asyncPetitionValidation(req,res,next){
                     next();
                   }
                   else if(service.protocol===req.body.protocol){
-                    await isAvailable.apply(this,(req.body.protocol==='oidc'?[t,req.body.client_id,'oidc',0,req.body.service_id,req.params.name]:[t,req.body.entity_id,'saml',0,req.body.service_id,req.params.name])).then(async available=>{
+                    await isAvailable.apply(this,(req.body.protocol==='oidc'?[t,req.body.client_id,'oidc',0,req.body.service_id,req.params.name,req.body.integration_environment]:[t,req.body.entity_id,'saml',0,req.body.service_id,req.params.name,req.body.integration_environment])).then(async available=>{
                       if(available){
                         next();
                       }
@@ -1086,7 +1076,7 @@ function asyncPetitionValidation(req,res,next){
               if(!req.body.service_id){
                 req.body.service_id=0;
               }
-              await isAvailable.apply(this,(req.body.protocol==='oidc'?[t,req.body.client_id,'oidc',req.params.id,req.body.service_id,req.params.name]:[t,req.body.entity_id,'saml',req.params.id,req.body.service_id,req.params.name])).then(async available=>{
+              await isAvailable.apply(this,(req.body.protocol==='oidc'?[t,req.body.client_id,'oidc',req.params.id,req.body.service_id,req.params.name,req.body.integration_environment]:[t,req.body.entity_id,'saml',req.params.id,req.body.service_id,req.params.name,req.body.integration_environment])).then(async available=>{
                 if(available){
                   next();
                 }
