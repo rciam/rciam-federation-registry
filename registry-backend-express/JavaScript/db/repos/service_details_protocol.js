@@ -17,7 +17,6 @@ class ServiceDetailsProtocolRepository {
 
     }
     async checkClientId(client_id,service_id,petition_id,tenant,environment){
-      console.log(environment);
       return this.db.any(sql.checkClientId,{
         client_id:client_id,
         service_id:service_id,
@@ -29,7 +28,6 @@ class ServiceDetailsProtocolRepository {
       })
     }
     async checkEntityId(entity_id,service_id,petition_id,tenant,environment){
-      console.log(environment);
       return this.db.any(sql.checkEntityId,{
         entity_id:entity_id,
         service_id:service_id,

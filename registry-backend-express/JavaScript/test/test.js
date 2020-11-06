@@ -1,5 +1,5 @@
 'use-strict';
-
+require('dotenv').config();
 var server = require('../index.js');
 var chai = require('chai');
 var request = require('supertest');
@@ -10,6 +10,8 @@ var petition,service,group,code,invitation;
 var diff = require('deep-diff').diff;
 const {postPetitionError,checkAvailability,setUser,putPetition} = require('./helpers.js');
 let userToken = {}
+var config = require('../config');
+
 //var petition=10;
 
 
@@ -46,7 +48,7 @@ describe('Service registry API Integration Tests', function() {
   describe('# OIDC Petition lifecycle',function(){
     describe('# Create Petition',function(){
       it('should check availability of client_id',function(done){
-        checkAvailability(create.oidc.client_id,'oidc','egi',true,done);
+        checkAvailability(create.oidc.client_id,'oidc','egi',create.oidc.integration_environment,true,done);
       })
       it('should create a new petition and return the id',function(done){
         var req = request(server).post('/tenants/egi/petitions').set({Authorization: userToken})
@@ -67,7 +69,7 @@ describe('Service registry API Integration Tests', function() {
           })
       });
       it('should check that client_id is no longer available',function(done){
-        checkAvailability(create.oidc.client_id,'oidc','egi',false,done);
+        checkAvailability(create.oidc.client_id,'oidc','egi',create.oidc.integration_environment,false,done);
       });
       it('should fetch created petition',function(done){
         var req = request(server).get('/tenants/egi/petitions/'+petition+'?type=open').set({Authorization: userToken});
@@ -148,7 +150,7 @@ describe('Service registry API Integration Tests', function() {
   describe('# SAML Petition lifecycle',function(){
     describe('# Create Petition',function(){
       it('should check availability of entity_id',function(done){
-        checkAvailability(create.saml.entity_id,'saml','egi',true,done);
+        checkAvailability(create.saml.entity_id,'saml','egi',create.saml.integration_environment,true,done);
       })
       it('should create a new petition and return the id',function(done){
         var req = request(server).post('/tenants/egi/petitions').set({Authorization: userToken}).send({
@@ -167,7 +169,7 @@ describe('Service registry API Integration Tests', function() {
           })
       });
       it('should check that entity_id is no longer available',function(done){
-        checkAvailability(create.saml.entity_id,'saml','egi',false,done);
+        checkAvailability(create.saml.entity_id,'saml','egi',create.saml.integration_environment,false,done);
       });
       it('should fetch created petition',function(done){
         var req = request(server).get('/tenants/egi/petitions/'+petition+'?type=open').set({Authorization: userToken});
@@ -275,6 +277,22 @@ describe('Service registry API Integration Tests', function() {
               done();
             })
           });
+          it('should create deployment tasks for service deployment',function(done){
+            var req = request(server).put('/agent/set_services_state').set('X-Api-Key',process.env.AMS_AGENT_KEY).send(
+            [{
+              tenant:"egi",
+              id:service,
+              protocol:"oidc",
+              state:"waiting-deployment"
+            }]);
+            req.set('Accept','application/json')
+            .expect('Content-Type',/json/)
+            .expect(200)
+            .end(function(err,res){
+              expect(res.statusCode).to.equal(200);
+              done();
+            })
+          });
           it('should mock deployment of service configuration',function(done){
             let messages = [];
             messages.push(
@@ -283,14 +301,14 @@ describe('Service registry API Integration Tests', function() {
                     "attributes":{
                        "key":"value"
                     },
-                    "data":Buffer.from(JSON.stringify({id:service,state:'deployed'})).toString("base64"),
+                    "data":Buffer.from(JSON.stringify({id:service,state:'deployed',agent_id:1})).toString("base64"),
                     "messageId":"136969346945"
                  },
                  "subscription":"projects/myproject/subscriptions/mysubscription"
               }
             );
 
-            var req = request(server).post('/ams/ingest').send({
+            var req = request(server).post('/ams/ingest').set('dn',config.ams_cert_dn).send({
               messages
             });
             req.expect(200).end(function(err,res){
@@ -506,6 +524,22 @@ describe('Service registry API Integration Tests', function() {
           done();
         })
       });
+      it('should create deployment tasks for service deployment',function(done){
+        var req = request(server).put('/agent/set_services_state').set('X-Api-Key',process.env.AMS_AGENT_KEY).send(
+        [{
+          tenant:"egi",
+          id:service,
+          protocol:"oidc",
+          state:"waiting-deployment"
+        }]);
+        req.set('Accept','application/json')
+        .expect('Content-Type',/json/)
+        .expect(200)
+        .end(function(err,res){
+          expect(res.statusCode).to.equal(200);
+          done();
+        })
+      });
       it('should mock deployment of service configuration',function(done){
         let messages = [];
         messages.push(
@@ -514,14 +548,14 @@ describe('Service registry API Integration Tests', function() {
                 "attributes":{
                    "key":"value"
                 },
-                "data":Buffer.from(JSON.stringify({id:service,state:'deployed'})).toString("base64"),
+                "data":Buffer.from(JSON.stringify({id:service,state:'deployed',agent_id:1})).toString("base64"),
                 "messageId":"136969346945"
              },
              "subscription":"projects/myproject/subscriptions/mysubscription"
           }
         );
 
-        var req = request(server).post('/ams/ingest').send({
+        var req = request(server).post('/ams/ingest').set('dn',config.ams_cert_dn).send({
           messages
         });
         req.expect(200).end(function(err,res){
@@ -570,6 +604,22 @@ describe('Service registry API Integration Tests', function() {
           expect(res.statusCode).to.equal(200);
           done();});
       });
+      it('should create deployment tasks for service deployment',function(done){
+        var req = request(server).put('/agent/set_services_state').set('X-Api-Key',process.env.AMS_AGENT_KEY).send(
+        [{
+          tenant:"egi",
+          id:service,
+          protocol:"oidc",
+          state:"waiting-deployment"
+        }]);
+        req.set('Accept','application/json')
+        .expect('Content-Type',/json/)
+        .expect(200)
+        .end(function(err,res){
+          expect(res.statusCode).to.equal(200);
+          done();
+        })
+      });
       it('should mock deployment of service configuration',function(done){
         let messages = [];
         messages.push(
@@ -578,14 +628,14 @@ describe('Service registry API Integration Tests', function() {
                 "attributes":{
                    "key":"value"
                 },
-                "data":Buffer.from(JSON.stringify({id:service,state:'deployed'})).toString("base64"),
+                "data":Buffer.from(JSON.stringify({id:service,state:'deployed',agent_id:1})).toString("base64"),
                 "messageId":"136969346945"
              },
              "subscription":"projects/myproject/subscriptions/mysubscription"
           }
         );
 
-        var req = request(server).post('/ams/ingest').send({
+        var req = request(server).post('/ams/ingest').set('dn',config.ams_cert_dn).send({
           messages
         });
         req.expect(200).end(function(err,res){

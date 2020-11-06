@@ -17,10 +17,8 @@ class User {
   }
 
   async getServiceOwners(ids){
-    console.log(ids);
     return this.db.any(sql.getServiceOwners,{ids:ids}).then( info =>{
       if(info){
-        console.log(info);
         return info;
       }
       else{

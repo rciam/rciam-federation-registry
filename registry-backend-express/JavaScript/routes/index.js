@@ -126,6 +126,7 @@ router.get('/tenants/:name/user',authenticate,(req,res,next)=>{
       if(req.user.role.actions.includes('review_own_petition')){
         user.admin = true;
       }
+      user.actions = req.user.role.actions;
       user.role = req.user.role.name;
       res.end(JSON.stringify({user}));
     }).catch(err=>{next(err)});
@@ -138,7 +139,7 @@ router.get('/tenants/:name/user',authenticate,(req,res,next)=>{
 // needs Authentication
 // ams/ingest
 router.post('/ams/ingest',checkCertificate,decodeAms,amsIngestValidation(),validate,(req,res,next)=>{
-  // Decode messages
+  // Decode messages\
   try{
     return db.task('deploymentTasks', async t => {
       // update state
@@ -536,14 +537,13 @@ router.delete('/tenants/:name/groups/:group_id/members/:sub',authenticate,is_gro
 })
 
 // Create invitation and send email
-router.post('/tenants/:name/groups/:group_id/invitations',authenticate,postInvitationValidation(),validate,is_group_manager, (req,res,next)=>{
+router.post('/tenants/:name/groups/:group_id/invitations',authenticate,postInvitationValidation(),validate,canInvite, (req,res,next)=>{
   try{
     req.body.code = uuidv1();
     req.body.invited_by = req.user.email;
     req.body.tenant = req.params.name;
     sendInvitationMail(req.body)
     db.invitation.add(req.body).then((response)=>{
-
       if(response){
         res.status(200).send({code:req.body.code});
       }
@@ -558,7 +558,7 @@ router.post('/tenants/:name/groups/:group_id/invitations',authenticate,postInvit
 });
 
 // Delete invitation
-router.delete('/tenants/:name/groups/:group_id/invitations/:id',authenticate,is_group_manager,(req,res,next)=>{
+router.delete('/tenants/:name/groups/:group_id/invitations/:id',authenticate,canInvite,(req,res,next)=>{
   try{
     db.invitation.delete(req.params.id).then(response=>{
       if(response){
@@ -575,7 +575,7 @@ router.delete('/tenants/:name/groups/:group_id/invitations/:id',authenticate,is_
 });
 
 // Refresh invitation
-router.put('/tenants/:name/groups/:group_id/invitations/:id',authenticate,is_group_manager,(req,res,next)=>{
+router.put('/tenants/:name/groups/:group_id/invitations/:id',authenticate,canInvite,(req,res,next)=>{
   try{
     db.invitation.refresh(req.params.id).then(response=>{
       if(response.code){
@@ -824,6 +824,29 @@ function is_group_manager(req,res,next){
   }
 }
 
+function canInvite(req,res,next){
+
+  try{
+    req.body.group_id=req.params.group_id;
+    if(req.user.role.actions.includes('invite_to_group')){
+      next()
+    }
+    else{
+      db.group.isGroupManager(req.user.sub,req.body.group_id).then(result=>{
+        if(result){
+          next();
+        }
+        else{
+          res.status(406).send({error:"Can't access this resource"});
+        }
+      }).catch(err=>{next(err)});
+    }
+  }
+  catch(err){
+    next(err);
+  }
+}
+
 
 function view_group(req,res,next){
   try{
@@ -986,7 +1009,6 @@ function checkCertificate(req,res,next) {
 
 // Checking Availability of Client Id/Entity Id
 const isAvailable=(t,id,protocol,petition_id,service_id,tenant,environment)=>{
-  console.log(environment);
   if(protocol==='oidc'){
     return t.service_details_protocol.checkClientId(id,service_id,petition_id,tenant,environment);
   }
