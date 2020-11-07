@@ -57,8 +57,9 @@ class InvitationRepository {
 
           }
           const diffTime = Math.abs(date2 - res.date);
-          const diffMinutes = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-          if(diffMinutes>100){
+
+          const diffSeconds = Math.ceil(diffTime / (1000));
+          if(diffSeconds>config.invitation_validity_seconds){
             return {success:false,error:'expired'}
           }
           else{

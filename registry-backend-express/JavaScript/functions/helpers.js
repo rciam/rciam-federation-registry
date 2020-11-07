@@ -173,7 +173,6 @@ const sendMail= (data,template_uri,users)=>{
       };
 
       users.forEach((user) => {
-        console.log(user.name);
           replacements.name = user.name;
           replacements.email = user.email;
           var htmlToSend = template(replacements);

@@ -32,7 +32,6 @@ class ServiceStateRepository {
     return this.db.task('deploymentTasks', async t => {
       for(let index=0;index<messages.length;index++){
         //let decoded_message= JSON.parse(Buffer.from(messages[index].message.data, 'base64').toString());
-
         let decoded_message=messages[index];
         let done = await t.deployment_tasks.resolveTask(decoded_message.id,decoded_message.agent_id,decoded_message.state);
         let deployed = await t.deployment_tasks.isDeploymentFinished(decoded_message.id);

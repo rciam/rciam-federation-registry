@@ -4,7 +4,6 @@
       "integration_environment": ["demo","production","development"],
       "grant_types":["implicit","authorization_code","refresh_token","client_credentials","password","redelegation","token_exchange","device"],
       "contact_types":["admin","technical","support","security"],
-      "super_admin_entitlements":["urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu"],
       "protocol":["oidc","saml"],
       "invitation_validity_seconds":2592000
     },
@@ -12,7 +11,6 @@
       "integration_environment": ["demo","production"],
       "grant_types":["implicit","authorization_code","refresh_token","client_credentials","password","redelegation","token_exchange","device"],
       "contact_types":["admin","technical","support","security"],
-      "super_admin_entitlements":["urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu"],
       "protocol":["oidc","saml"],
       "invitation_validity_seconds":2592000
     }
@@ -21,6 +19,7 @@
     "type" : ["mitreid","ssp","keycloak","satosa"],
     "entity_type": ["service","idp"],
     "entity_protocol": ["saml","oidc"]
-  }
-
+  },
+  "ams_cert_dn" : "/C=GR/L=Athens/O=Greek Research and Technology Network/CN=push-devel.argo.grnet.gr",
+  "invitation_validity_seconds": "604800"
 }
