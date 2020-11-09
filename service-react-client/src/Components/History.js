@@ -117,7 +117,7 @@ export const HistoryList = (props) => {
                 <tr key={index}>
                   <td>{item.reviewed_at?item.reviewed_at.slice(0,10).split('-').join('/'):t('history_not_reviewed')}</td>
                   <td><Badge className="status-badge" variant='info'>{item.type==="create"?t('registration'):item.type==="edit"?t('reconfiguration'):t('deregistration')} {t('history_info_2')}</Badge></td>
-                  <td><Badge className="status-badge" variant={item.status==="pending"?'warning':item.status==="reject"?'danger':'success'}>{item.status}</Badge></td>
+                  <td><Badge className="status-badge" variant={item.status==="pending"||item.status==="approved_with_changes"?'warning':item.status==="reject"?'danger':'success'}>{item.status}</Badge></td>
                   <td>
                       <Button variant="secondary" onClick={()=>{
                         let indx = index;

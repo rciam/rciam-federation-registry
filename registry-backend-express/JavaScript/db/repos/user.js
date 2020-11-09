@@ -24,7 +24,7 @@ class User {
       else{
         return [];
       }
-    })
+    });
   }
   async getPetitionOwners(id){
     return this.db.any(sql.getPetitionOwners,{id:+id}).then( data => {

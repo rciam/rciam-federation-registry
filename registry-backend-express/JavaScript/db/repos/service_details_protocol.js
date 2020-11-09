@@ -11,26 +11,29 @@ class ServiceDetailsProtocolRepository {
     constructor(db, pgp) {
         this.db = db;
         this.pgp = pgp;
-        cs = new pgp.helpers.ColumnSet(['?id','client_id'],{table:'service_details_oidc'});
+        cs.client_id = new pgp.helpers.ColumnSet(['?id','client_id'],{table:'service_details_oidc'});
+
         // set-up all ColumnSet objects, if needed:
 
     }
-    async checkClientId(client_id,service_id,petition_id,tenant){
+    async checkClientId(client_id,service_id,petition_id,tenant,environment){
       return this.db.any(sql.checkClientId,{
         client_id:client_id,
         service_id:service_id,
         petition_id:petition_id,
-        tenant:tenant
+        tenant:tenant,
+        environment:environment
       }).then(result =>{
           if(result.length>0){return false}else{return true}
       })
     }
-    async checkEntityId(entity_id,service_id,petition_id,tenant){
+    async checkEntityId(entity_id,service_id,petition_id,tenant,environment){
       return this.db.any(sql.checkEntityId,{
         entity_id:entity_id,
         service_id:service_id,
         petition_id:petition_id,
-        tenant:tenant
+        tenant:tenant,
+        environment:environment
       }).then(result =>{
           if(result.length>0){return false}else{return true}
       })
@@ -39,18 +42,19 @@ class ServiceDetailsProtocolRepository {
     // Data format
     // updateData = [{id:1,client_id:value1},{id:2,client_id:value2},{id:3,client_id:value3}]
     async updateClientId(updateData){
-      const update = this.pgp.helpers.update(updateData, cs) + ' WHERE v.id = t.id RETURNING t.id';
+      const update = this.pgp.helpers.update(updateData, cs.client_id) + ' WHERE v.id = t.id RETURNING t.id';
       return this.db.any(update).then((ids)=>{
         if(ids.length===updateData.length){
-          return {success:true}
+          return true
         }
         else{
-          return {success:false,error:'Could not update state'}
+          return false
         }
       }).catch(error=>{
-        return {success:false,error:error}
+        return false
       });
     }
+
 
 
     async add(type,data,id){

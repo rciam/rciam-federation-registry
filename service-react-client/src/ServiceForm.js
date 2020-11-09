@@ -1,4 +1,4 @@
-import React,{useState,useEffect,useContext} from 'react';
+import React,{useState,useEffect,useContext,useRef} from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {faCheckCircle,faBan,faSortDown} from '@fortawesome/free-solid-svg-icons';
 import Tabs from 'react-bootstrap/Tabs';
@@ -57,11 +57,14 @@ const ServiceForm = (props)=> {
       is:'oidc',
       then: yup.string().min(4,t('yup_char_min') + ' ('+4+')').max(36,t('yup_char_max') + ' ('+36+')').test('testAvailable',t('yup_client_id_available'),function(value){
           return new Promise((resolve,reject)=>{
-            if(props.initialValues.client_id===value||!value||value===checkedId)
+            if(props.initialValues.client_id===value||!value||value.length<4||value.length>36)
               {resolve(true)}
             else{
+              if(value===checkedId &&formRef.current.values.integration_environment===checkedEnvironment){
+                resolve(availabilityCheck);
+              }
               setCheckingAvailability(true);
-              fetch(config.host+'tenants/'+tenant_name+'/check-availability?value='+ value +'&protocol=oidc', {
+              fetch(config.host+'tenants/'+tenant_name+'/check-availability?value='+ value +'&protocol=oidc&environment='+formRef.current.values.integration_environment, {
                 method:'GET',
                 credentials:'include',
                 headers:{
@@ -75,10 +78,12 @@ const ServiceForm = (props)=> {
                     return false
                   }
                 }).then(response=>{
-                    setcheckedId(value);
+                    setCheckedId(value);
                     setCheckingAvailability(false);
+                    setCheckedEnvironment(formRef.current.values.integration_environment);
                     if(response){
-                      setcheckedId(value);
+                      setCheckedId(value);
+                      setAvailabilityCheck(response.available);
                       resolve(response.available)}
                     else{
                       resolve(false);
@@ -163,11 +168,14 @@ const ServiceForm = (props)=> {
       is:'saml',
       then: yup.string().min(4,t('yup_char_min') + ' ('+4+')').test('testAvailable',t('yup_entity_id'),function(value){
           return new Promise((resolve,reject)=>{
-            if(props.initialValues.entity_id===value||!value||value===checkedId)
+            if(props.initialValues.entity_id===value||!value||!reg.regUrl.test(value))
               {resolve(true)}
             else{
+              if(value===checkedId &&formRef.current.values.integration_environment===checkedEnvironment){
+                resolve(availabilityCheck);
+              }
               setCheckingAvailability(true);
-              fetch(config.host+'tenants/'+tenant_name+'/check-availability?value='+ value +'&protocol=saml', {
+              fetch(config.host+'tenants/'+tenant_name+'/check-availability?value='+ value +'&protocol=saml&environment='+ formRef.current.values.integration_environment, {
                 method:'GET',
                 credentials:'include',
                 headers:{
@@ -181,10 +189,12 @@ const ServiceForm = (props)=> {
                     return false
                   }
                 }).then(response=>{
-                    setcheckedId(value);
+                    setCheckedId(value);
+                    setCheckedEnvironment(formRef.current.values.integration_environment);
                     setCheckingAvailability(false);
                     if(response){
-                      setcheckedId(value);
+                      setCheckedId(value);
+                      setAvailabilityCheck(response.available);
                       resolve(response.available)}
                     else{
                       resolve(false);
@@ -197,17 +207,19 @@ const ServiceForm = (props)=> {
     })
   });
 
+  const [availabilityCheck,setAvailabilityCheck] = useState(true);
+  const formRef = useRef();
   const [disabled,setDisabled] = useState(false);
   const [hasSubmitted,setHasSubmitted] = useState(false);
   const [message,setMessage] = useState();
   const [modalTitle,setModalTitle] = useState(null);
   const [checkingAvailability,setCheckingAvailability] = useState(false);
   const [imageError,setImageError] = useState(false); //
-  const [checkedId,setcheckedId] = useState(); // Variable containing the last client Id checked for availability to limit check requests
+  const [checkedId,setCheckedId] = useState(); // Variable containing the last client Id checked for availability to limit check requests
+  const [checkedEnvironment,setCheckedEnvironment] = useState();
   const [asyncResponse,setAsyncResponse] = useState(false);
-
-
   const createNewPetition = (petition) => {
+    // eslint-disable-next-line
     let type;
     if(props.service_id){
       petition.type='edit';
@@ -231,7 +243,7 @@ const ServiceForm = (props)=> {
         body: JSON.stringify(petition)
       }).then(response=> {
         setAsyncResponse(false);
-        setModalTitle(t('new_petition_title_1') + type + t('new_petition_title_2') + petition.client_id + petition.entity_id);
+        setModalTitle(t('new_petition_title'));
         if(response.status===200){
           setMessage(t('petition_success_msg'));
         }
@@ -246,7 +258,6 @@ const ServiceForm = (props)=> {
       setMessage(t('petition_no_change_msg'));
     }
   }
-
   const editPetition = (petition) => {
     petition.type=props.type;
     petition.service_id=props.service_id;
@@ -265,7 +276,7 @@ const ServiceForm = (props)=> {
         body: JSON.stringify(petition) // body data type must match "Content-Type" header
       }).then(response=> {
         setAsyncResponse(false);
-        setModalTitle(t('edit_petition_tilte') + petition.client_id);
+        setModalTitle(t('edit_petition_tilte'));
         if(response.status===200){
           setMessage(t('petition_success_msg'));
         }
@@ -279,7 +290,6 @@ const ServiceForm = (props)=> {
       setMessage(t('petition_no_change_msg'));
     }
   }
-
   const deletePetition = ()=>{
     setAsyncResponse(true);
     fetch(config.host+'tenants/'+tenant_name+'/petitions/'+props.petition_id, {
@@ -299,7 +309,6 @@ const ServiceForm = (props)=> {
       }
     });
   }
-
   const reviewPetition = (comment,type)=>{
       setModalTitle(t('review_'+props.type+'_title'))
       setAsyncResponse(true);
@@ -342,6 +351,7 @@ const ServiceForm = (props)=> {
     <Formik
     initialValues={props.initialValues}
       validationSchema={schema}
+      innerRef={formRef}
       onSubmit={(values,{setSubmitting}) => {
         setHasSubmitted(true);
         postApi(values);
@@ -694,13 +704,15 @@ const ReviewComponent = (props)=>{
   const { t, i18n } = useTranslation();
 
   const handleReview = () =>{
+
       if(expand){
         if(type){
-          if(type==='changes'&&comment){
-            setError(t('review_comment_required_msg'));
+
+          if((type==='changes'&&comment)||type!=='changes'){
+            props.reviewPetition(comment,type);
           }
           else{
-            props.reviewPetition(comment,type);
+            setError(t('review_comment_required_msg'));
           }
         }
         else {

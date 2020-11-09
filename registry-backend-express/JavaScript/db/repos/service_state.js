@@ -21,35 +21,51 @@ class ServiceStateRepository {
       state:state
     })
   }
+
+
   async deploymentUpdate(messages){
     let updateState=[];
-    let updateData =[];
+    let updateClientId =[];
+    let updateExternalId = [];
     let ids=[];
-    messages.forEach((message) => {
-      let decoded_message=(JSON.parse(Buffer.from(message.message.data, 'base64').toString()));
-      updateState.push({id:decoded_message.id,state:decoded_message.state});
-      if(decoded_message.external_id){
-        updateData.push({id:decoded_message.id,client_id:decoded_message.external_id})
+    let batch_queries = [];
+    return this.db.task('deploymentTasks', async t => {
+      for(let index=0;index<messages.length;index++){
+        //let decoded_message= JSON.parse(Buffer.from(messages[index].message.data, 'base64').toString());
+        let decoded_message=messages[index];
+        let done = await t.deployment_tasks.resolveTask(decoded_message.id,decoded_message.agent_id,decoded_message.state);
+        let deployed = await t.deployment_tasks.isDeploymentFinished(decoded_message.id);
+        // If we have a an error or if the deployment has finished we have to update the service state
+        if(deployed || decoded_message.state==='error'){
+          updateState.push({id:decoded_message.id,state:decoded_message.state});
+          if(decoded_message.external_id){
+            updateExternalId.push({id:decoded_message.id,external_id:decoded_message.external_id});
+          }
+          if(decoded_message.client_id){
+            updateClientId.push({id:decoded_message.id,client_id:decoded_message.client_id});
+          }
+          if(deployed){
+            ids.push(decoded_message.id);
+          }
+        }
       }
-      ids.push(decoded_message.id);
+      if(updateClientId.length>0){
+        batch_queries.push(t.service_details_protocol.updateClientId(updateClientId));
+      }
+      if(updateExternalId.length>0){
+        batch_queries.push(t.service_details.updateExternalId(updateExternalId));
+      }
+      if(updateState.length>0){
+        batch_queries.push(t.service_state.updateMultiple(updateState));
+      }
+      if(batch_queries.length>0){
+        let batch_result = await t.batch(batch_queries).catch(err=>{
+          throw err;
+        });
+      }
+      return ids;
+
     });
-    return await this.db.service_state.updateMultiple(updateState).then(async res=>{
-      if(res.success){
-        if(updateData.length>0){
-          return await this.db.service_details_protocol.updateExternalId(setExternalId).then(async result=>{
-            if(result.success){
-              return {success:true,ids:ids};
-            }
-            else{
-              throw 'Could not update client_id'
-            }
-          })
-        }
-        else{
-          return {success:true,ids:ids};
-        }
-      }
-    })
   }
 
   async updateMultiple(updateData){
@@ -58,15 +74,13 @@ class ServiceStateRepository {
     //=> UPDATE "service_data" AS t SET "state"=v."state"
     //   FROM (VALUES(1,'deployed'),(2,'deployed'),(3,'failed'))
     //   AS v("id","state") WHERE v.id = t.id
-    return this.db.any(update).then((ids)=>{
+    return await this.db.any(update).then((ids)=>{
       if(ids.length===updateData.length){
-        return {success:true}
+        return true
       }
       else{
-        return {success:false,error:'Could not update state'}
+        throw 'Could not update service state';
       }
-    }).catch(error=>{
-      return {success:false,error:error}
     });
   }
 

@@ -369,7 +369,7 @@ const GroupsPage = (props) => {
           {invitationResult.success?t('invitation_success'):t('invitation_error')}{invitationResult.email}
         </Alert>:null
       }
-      {props.group_manager==='true'?
+      {props.group_manager==='true'||user[0].actions.includes('invite_to_group')?
         <React.Fragment>
           <h3 className="group_title">Send Invites</h3>
           <Row className="group_invite_row">

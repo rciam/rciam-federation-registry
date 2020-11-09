@@ -22,7 +22,10 @@ import {ListResponseModal} from './Components/Modals.js';
 import { useTranslation } from 'react-i18next';
 import Alert from 'react-bootstrap/Alert';
 import {ConfirmationModal} from './Components/Modals';
-import {tenantContext} from './context.js';
+import {userContext,tenantContext} from './context.js';
+const {capitalWords} = require('./helpers.js');
+
+
 
 const ServiceList= (props)=> {
   // eslint-disable-next-line
@@ -40,7 +43,8 @@ const ServiceList= (props)=> {
   const [responseTitle,setResponseTitle] = useState(null);
   const [searchString,setSearchString] = useState();
   const [expandFilters,setExpandFilters] = useState();
-  const [confirmationData,setConfirmationData] = useState({})
+  const [confirmationData,setConfirmationData] = useState({});
+
 
 
   let renderedConnections = 0;
@@ -165,6 +169,7 @@ const ServiceList= (props)=> {
       });
     }
   }
+
   const deletePetition = (id)=>{
     setAsyncResponse(true);
     fetch(config.host+'tenants/'+tenant_name+'/petitions/'+id, {
@@ -191,7 +196,6 @@ const ServiceList= (props)=> {
     <React.Fragment>
       <ListResponseModal message={message} modalTitle={responseTitle} setMessage={setMessage}/>
       <ConfirmationModal active={confirmationData.action?true:false} setActive={setConfirmationData} action={()=>{if(confirmationData.action==='delete_service'){deleteService(...confirmationData.args)}else{deletePetition(...confirmationData.args)}}} title={confirmationData.title} accept={'Yes'} decline={'No'}/>
-
       <div>
         <LoadingBar loading={loadingList}>
         {invites&&invites.length>0?
@@ -293,6 +297,8 @@ function TableItem(props) {
   const {tenant_name} = useParams();
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
+    // eslint-disable-next-line
+  const [user,setUser] = useContext(userContext);
   return (
     <tr>
       <td className="petition-details">
@@ -400,7 +406,7 @@ function TableItem(props) {
                   </div>
                 </Dropdown.Item>
               :null}
-              {props.service.owned && props.service.state==='deployed'?
+              {props.service.owned && props.service.state==='deployed'&&props.service.type?
                 <Dropdown.Item>
                   <div
                   onClick={()=>{
@@ -424,7 +430,7 @@ function TableItem(props) {
                       service_id:props.service.service_id,
                       group_id:props.service.group_id
                     }
-                  }}>{props.service.group_manager?t('manage_group'):t('view_group')}</Link>
+                  }}>{props.service.group_manager||user.actions.includes('invite_to_group')?t('manage_group'):t('view_group')}</Link>
                 </div>
               </Dropdown.Item>
 
@@ -461,6 +467,8 @@ function Filters (props) {
   const [showEnvironment,setShowEnvironment] = useState();
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
+  // eslint-disable-next-line
+  const [tenant,setTenant] = useContext(tenantContext);
 
   useEffect(()=>{
     if(props.services.length>0){
@@ -500,12 +508,12 @@ function Filters (props) {
 
       <div className='select-filter-container'>
           <select value={showEnvironment} onChange={(e)=>{
-
             setShowEnvironment(e.target.value);}}>
+
             <option value=''>{t('all_environments_filter')}</option>
-            <option value='demo'>{t('demo_filter')}</option>
-            <option value='production'>{t('production_filter')}</option>
-            <option value='development'>{t('development_filter')}</option>
+            {tenant.form_config.integration_environment.map((item,index)=>{
+              return <option value={item} key={index}>{capitalWords(item)}</option>
+            })}
           </select>
       </div>
     </React.Fragment>
