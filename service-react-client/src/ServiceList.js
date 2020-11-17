@@ -303,12 +303,12 @@ function TableItem(props) {
     <tr>
       <td className="petition-details">
         <div className="table-image-container">
-          <Image src={props.service.logo_uri} thumbnail/>
+          <Image src={props.service.logo_uri?props.service.logo_uri:process.env.PUBLIC_URL + '/placeholder.png'} thumbnail/>
         </div>
       </td>
       <td>
         <div className="flex-column">
-          <h3 className="petition-title">{props.service.service_name}</h3>
+          <h3 className="petition-title">{props.service.service_name?props.service.service_name:props.service.client_id?props.service.client_id:props.service.metadata_url}</h3>
           <div className="badge-container">
 
             {props.service.hasOwnProperty('state')&&props.service.state!==null?<Badge className="status-badge" style={props.service.state==='deployed'?{background:tenant.color}:null} variant={props.service.state==='deployed'?'primary':'danger'}>{props.service.state==='deployed'?t('badge_deployed'):props.service.state==='error'?t('badge_error'):props.service.deleted===false?t('badge_pending'):t('badge_deleting')}</Badge>:null}
