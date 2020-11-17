@@ -12,8 +12,9 @@ class ServiceRepository {
       this.pgp = pgp;
 
       // set-up all ColumnSet objects, if needed:
-
+    
   }
+
 
   async get(id,tenant){
       return this.db.oneOrNone(sql.getService,{

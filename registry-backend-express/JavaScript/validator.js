@@ -2,7 +2,7 @@ const { body, validationResult,param,check } = require('express-validator');
 const {reg} = require('./regex.js');
 const customLogger = require('./loggers.js');
 var config = require('./config');
-
+const {db} = require('./db');
 
 const amsIngestValidation = () => {
   return [
@@ -40,7 +40,56 @@ const postAgentValidation = () => {
   ]
 }
 //body('service_id').if*body('type'==='edit'||)
-const clientValidationRules = () => {
+const serviceValidationRules = () => {
+  return [
+    body().isArray({min:1}).withMessage('Body must be an array containing at least one service'),
+    body('*.external_id').optional({checkFalsy:true}).exists().withMessage('Required Field').bail().custom((value)=>{if(parseInt(value)){return true}else{return false}}).bail(),
+    body('*.protocol').exists().withMessage('Required Field').bail().custom((value)=> {if(['oidc','saml'].includes(value)){return true}else{return false}}).withMessage('Invalid value'),
+    body('*.service_name').optional({checkFalsy:true}).exists().withMessage('Required Field').bail().isString().withMessage('Must be a string').bail().isLength({min:4, max:36}).bail(),
+    body('*.client_id').if((value,{req,location,path})=>{return req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).exists().withMessage('Required Field').bail().isString().withMessage('Must be a string').bail().isLength({min:4, max:36}).withMessage('Must be between 4 and 36 characters').bail().custom((value,{req,location,path})=> {
+      return db.service_details_protocol.checkClientId(value,0,0,req.params.name,req.body[path.match(/\[(.*?)\]/)[1]].integration_environment).then(available=> {
+        if(!available){
+          return Promise.reject('Not available');
+        }
+        else{
+          return Promise.resolve();
+        }
+      });
+    }),
+    body('*.redirect_uris').optional({checkFalsy:true}).isArray({min:1}).withMessage('Must be an array').bail().custom((value,success=true)=> {value.map((item,index)=>{if(!item.match(reg.regUrl)){success=false}}); return success }).withMessage('Must be secure url').bail(),
+    body('*.logo_uri').optional({checkFalsy:true}).exists().withMessage('Required Field').bail().isString().withMessage('Must be a string').bail().custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Must be a url').bail(),
+    body('*.policy_uri').optional({checkFalsy:true}).exists().withMessage('Required Field').bail().isString().withMessage('Must be a string').bail().custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Must be a url').bail(),
+    body('*.service_description').optional({checkFalsy:true}).exists().withMessage('Required Field').bail().isString().withMessage('Must be a string').bail().isLength({min:1}).bail(),
+    body('*.contacts').optional({checkFalsy:true}).if(param('name').custom((value)=> {tenant=value; return true;})).exists().withMessage('Required Field').bail().isArray({min:1}).withMessage('Must be an array').bail().custom((value,success=true)=> {value.map((item,index)=>{if(item.email&&!item.email.match(reg.regEmail)||!config.form[tenant].contact_types.includes(item.type)){success=false}}); return success }).withMessage('Invalid value').bail(),
+    body('*.scope').optional({checkFalsy:true}).isArray({min:1}).withMessage('Must be an array').bail().custom((value,success=true)=> {value.map((item,index)=>{if(!item.match(reg.regScope)){success=false}}); return success }).withMessage('Invalid value').bail(),
+    body('*.grant_types').optional({checkFalsy:true}).isArray({min:1}).withMessage('Must be an array').bail().custom((value,success=true)=> {value.map((item,index)=>{if(!['implicit','authorization_code','refresh_token','client_credentials','password','redelegation','token_exchange','device'].includes(item)){success=false}}); return success }).withMessage('Invalid value').bail(),
+    body('*.id_token_timeout_seconds').optional({checkFalsy:true}).custom((value)=> {if(parseInt(value)&&parseInt(value)<34128000&&parseInt(value)>0){return true}else{return false}}).withMessage('Must be an integer in specified range').bail(),
+    body('*.access_token_validity_seconds').optional({checkFalsy:true}).custom((value)=> {if(parseInt(value)&&parseInt(value)<34128000&&parseInt(value)>0){return true}else{return false}}).withMessage('Must be an integer in specified range').bail(),
+    body('*.refresh_token_validity_seconds').optional({checkFalsy:true}).custom((value)=> {if(parseInt(value)&&parseInt(value)<34128000&&parseInt(value)>0){return true}else{return false}}).withMessage('Must be an integer in specified range').bail(),
+    body('*.device_code_validity_seconds').optional({checkFalsy:true}).custom((value)=> {if(parseInt(value)&&parseInt(value)<34128000&&parseInt(value)>0){return true}else{return false}}).withMessage('Must be an integer in specified range').bail(),
+    body('*.code_challenge_method').optional({checkFalsy:true}).isString().withMessage('Must be a string').bail().custom((value)=> value.match(reg.regCodeChalMeth)).withMessage('Invalid value').bail(),
+    body('*.allow_introspection').optional({checkFalsy:true}).custom((value)=> typeof(value)==='boolean').withMessage('Must be a boolean').bail(),
+    body('*.generate_client_secret').optional({checkFalsy:true}).custom((value)=> typeof(value)==='boolean').withMessage('Must be a boolean').bail(),
+    body('*.reuse_refresh_tokens').optional({checkFalsy:true}).custom((value)=> typeof(value)==='boolean').withMessage('Must be a boolean').bail(),
+    body('*.integration_environment').if(param('name').custom((value)=> {tenant=value; return true;})).exists().withMessage('Required Field').bail().isString().withMessage('Must be a string').bail().custom((value)=> {if(config.form[tenant].integration_environment.includes(value)){return true}else{return false}}).bail(),
+    body('*.clear_access_tokens_on_refresh').optional({checkFalsy:true}).custom((value)=> typeof(value)==='boolean').withMessage('Must be a boolean').bail(),
+    body('*.client_secret').optional({checkFalsy:true}).if(body('protocol').custom((value)=>{return value==='oidc'})).if((value,req)=> req.body.data.generate_client_secret=false).bail().isString().withMessage('Must be a string').bail().isLength({min:4,max:16}).bail(),
+    body('*.entity_id').optional({checkFalsy:true}).isString().withMessage('Must be a string').bail().isLength({min:4, max:256}).bail().custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Must be a url').bail(),
+    body('*.metadata_url').if((value,{req,location,path})=>{ return req.body[path.match(/\[(.*?)\]/)[1]].protocol==='saml'}).exists().withMessage('Required Field').bail().isString().withMessage('Must be a string').bail().custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Must be a url').bail().custom((value,{req,location,path})=> {
+      return db.service_details_protocol.checkClientId(value,0,0,req.params.name,req.body[path.match(/\[(.*?)\]/)[1]].integration_environment).then(available=> {
+        if(!available){
+          return Promise.reject('Not available');
+        }
+        else{
+          return Promise.resolve();
+        }
+      });
+    }),
+  ]
+}
+
+
+const petitionValitationRules = () => {
   let tenant;
   return [
     body('service_id').if(body('type').custom((value)=>{return (value==='edit'||values==='delete')})).exists().withMessage('Required Field').bail().custom((value)=>{if(parseInt(value)){return true}else{return false}}).bail(),
@@ -104,7 +153,8 @@ const validate = (req, res, next) => {
 }
 
 module.exports = {
-  clientValidationRules,
+  serviceValidationRules,
+  petitionValitationRules,
   validate,
   decodeAms,
   amsIngestValidation,

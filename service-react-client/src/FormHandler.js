@@ -211,6 +211,8 @@ const ViewService = (props)=>{
         }
       }).then(response=>response.json()).then(response=> {
         if(response.service){
+
+          console.log(response.service);
           setService(response.service);
         }
       });

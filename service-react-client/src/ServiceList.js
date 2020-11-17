@@ -44,7 +44,7 @@ const ServiceList= (props)=> {
   const [searchString,setSearchString] = useState();
   const [expandFilters,setExpandFilters] = useState();
   const [confirmationData,setConfirmationData] = useState({});
-
+  const [reset,setReset] = useState(false);
 
 
   let renderedConnections = 0;
@@ -102,7 +102,7 @@ const ServiceList= (props)=> {
             response.services[index].display = true;
           })
         setServices(response.services);
-
+        setReset(!reset);
       }
     });
   }
@@ -249,7 +249,7 @@ const ServiceList= (props)=> {
           <Row className="filters-row">
               <Col>
                 <div className="filters-col">
-                  <Filters user={props.user} services={services} setServices={setServices} setActivePage={setActivePage} searchString={searchString}/>
+                  <Filters reset={reset} user={props.user} services={services} setServices={setServices} setActivePage={setActivePage} searchString={searchString}/>
                 </div>
               </Col>
             </Row>
@@ -462,6 +462,7 @@ function TableItem(props) {
 
 function Filters (props) {
 
+
   const [showPending,setShowPending] = useState(false);
   const [showOwned,setShowOwned] = useState(false);
   const [showEnvironment,setShowEnvironment] = useState();
@@ -469,6 +470,10 @@ function Filters (props) {
   const { t, i18n } = useTranslation();
   // eslint-disable-next-line
   const [tenant,setTenant] = useContext(tenantContext);
+
+  useEffect(()=>{
+    Reset();
+  },[props.reset]);
 
   useEffect(()=>{
     if(props.services.length>0){
@@ -498,6 +503,12 @@ function Filters (props) {
   }
   const OwnedFilter = (item)=>{
     return (showOwned&&!item.owned)
+  }
+
+  const Reset = () => {
+    setShowPending(false);
+    setShowEnvironment();
+    setShowOwned(false);
   }
 
 

@@ -12,10 +12,34 @@ class ServiceDetailsProtocolRepository {
         this.db = db;
         this.pgp = pgp;
         cs.client_id = new pgp.helpers.ColumnSet(['?id','client_id'],{table:'service_details_oidc'});
-
+        cs.add_multiple_oidc = new pgp.helpers.ColumnSet(['id','client_id','allow_introspection','code_challenge_method','device_code_validity_seconds','access_token_validity_seconds','refresh_token_validity_seconds','client_secret','reuse_refresh_tokens','clear_access_tokens_on_refresh','id_token_timeout_seconds'],{table:'service_details_oidc'});
+        cs.add_multiple_saml = new pgp.helpers.ColumnSet(['id','entity_id','metadata_url'],{table:'service_details_saml'});
         // set-up all ColumnSet objects, if needed:
-
     }
+
+    async addMultiple(services){
+      let oidc = [];
+      let saml = [];
+      services.forEach((service,index)=> {
+        if(service.protocol==='oidc'){
+          oidc.push(service);
+        }
+        else{
+          saml.push(service);
+        }
+      });
+      if(oidc.length>0){
+        const query_1 = this.pgp.helpers.insert(oidc,cs.add_multiple_oidc);
+        let done = await this.db.none(query_1).then(deta => {return true}).catch(error => {throw error});
+      }
+
+      if(saml.length>0){
+        const query_2 = this.pgp.helpers.insert(saml,cs.add_multiple_saml);
+        let done = await this.db.none(query_2).then(deta => {return true}).catch(error => {throw error});
+      }
+      return true
+    }
+
     async checkClientId(client_id,service_id,petition_id,tenant,environment){
       return this.db.any(sql.checkClientId,{
         client_id:client_id,

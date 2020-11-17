@@ -1,10 +1,12 @@
 const sql = require('../sql').group;
-const cs = {};
+const {v1:uuidv1} = require('uuid');
+let cs = {};
 const {newMemberNotificationMail} = require('../../functions/helpers.js');
 class GroupRepository {
   constructor(db, pgp) {
       this.db = db;
       this.pgp = pgp;
+      cs = new pgp.helpers.ColumnSet(['group_name']);
   }
 
   async getMembers(group_id){
@@ -14,6 +16,20 @@ class GroupRepository {
   async newMemberNotification(invitation_data){
     this.db.any(sql.getGroupManagers,{group_id: +invitation_data.group_id}).then(managers => {
       newMemberNotificationMail(invitation_data,managers)
+    });
+  }
+
+  async createMultiple(services){
+    let group_names = [];
+    for(var i=0;i<services.length;i++){
+      group_names.push({group_name:uuidv1()});
+    }
+    const query = this.pgp.helpers.insert(group_names,cs,'groups')+" RETURNING id";
+    return this.db.any(query).then(data => {
+        return data
+    })
+    .catch(error => {
+        throw error
     });
   }
 

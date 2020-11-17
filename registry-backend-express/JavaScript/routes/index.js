@@ -1,5 +1,5 @@
 require('dotenv').config();
-const {clientValidationRules,validate,postInvitationValidation,putAgentValidation,postAgentValidation,decodeAms,amsIngestValidation} = require('../validator.js');
+const {petitionValitationRules,validate,postInvitationValidation,serviceValidationRules,putAgentValidation,postAgentValidation,decodeAms,amsIngestValidation} = require('../validator.js');
 const qs = require('qs');
 const {v1:uuidv1} = require('uuid');
 const axios = require('axios').default;
@@ -19,14 +19,93 @@ const code_verifier = generators.codeVerifier();
 const {rejectPetition,approvePetition,changesPetition,getPetition,getOpenPetition} = require('../controllers/main.js');
 const base64url = require('base64url');
 
-
-
+//
+// "external_id":null,
+// "service_name":null,
+// "service_description":null,
+// "logo_uri":null,
 
 
 // ----------------------------------------------------------
 // ************************* Routes *************************
 // ----------------------------------------------------------
 
+
+
+router.post('/tenants/:name/services',serviceValidationRules(),validate,(req,res,next)=> {
+  let services = req.body;
+  // Populate json objects with all necessary fields
+  services.forEach((service,index) => {
+    services[index].tenant = req.params.name
+    config.service_fields.forEach(field=>{
+      if(!service[field]){
+        services[index][field] = null;
+      }
+    })
+  })
+  try{
+    db.task('addMultipleServices', async t => {
+      await t.group.createMultiple(services).then(async ids=> {
+        if(ids){
+          services.forEach((service,index)=>{
+            services[index].group_id = ids[index].id;
+          });
+          await t.service_details.addMultiple(services).then(async services =>{
+            if(services){
+              let contacts = [];
+              let grant_types = [];
+              let redirect_uris = [];
+              let scopes = [];
+              let queries = [];
+              services.forEach((service,index)=> {
+                if(service.contacts && service.contacts.length>0){
+                  service.contacts.forEach(contact=>{
+                    contacts.push({owner_id:service.id,value:contact.email,type:contact.type});
+                  });
+                }
+                if(service.protocol==='oidc'){
+                  if(service.grant_types && service.grant_types.length>0){
+                    service.grant_types.forEach(grant_type => {
+                      grant_types.push({owner_id:service.id,value:grant_type});
+                    });
+                  }
+                  if(service.scope && service.scope.length>0){
+                    service.scope.forEach(scope => {
+                      scopes.push({owner_id:service.id,value:scope});
+                    });
+                  }
+                  if(service.redirect_uris && service.redirect_uris.length>0){
+                    service.redirect_uris.forEach(redirect_uri => {
+                      redirect_uris.push({owner_id:service.id,value:redirect_uris});
+                    });
+                  }
+                }
+              });
+              queries.push(t.service_details_protocol.addMultiple(services));
+              if(contacts.length>0){
+                queries.push(t.service_contacts.addMultiple(contacts));
+              }
+              if(grant_types.length>0){
+                queries.push(t.service_multi_valued.addMultiple(grant_types,'service_oidc_grant_types'));
+              }
+              if(scopes.length>0){
+                queries.push(t.service_multi_valued.addMultiple(scopes,'service_oidc_scopes'));
+              }
+              if(redirect_uris.length>0){
+                queries.push(t.service_multi_valued.addMultiple(redirect_uris,'service_oidc_redirect_uris'));
+              }
+              let done = await t.batch(queries).catch(err=>{throw err})
+            }
+          });
+        }
+      }).catch(err => {throw err})
+    }).catch(err => {throw err})
+    res.status(200).end();
+  }
+  catch(err){
+    next(err);
+  }
+})
 
 router.get('/tenants/:name',(req,res,next)=>{
   try{
@@ -339,7 +418,7 @@ router.get('/tenants/:name/petitions/:id',authenticate,(req,res,next)=>{
 });
 
 // Add a new client/petition
-router.post('/tenants/:name/petitions',clientValidationRules(),validate,authenticate,asyncPetitionValidation,(req,res,next)=>{
+router.post('/tenants/:name/petitions',petitionValitationRules(),validate,authenticate,asyncPetitionValidation,(req,res,next)=>{
   res.setHeader('Content-Type', 'application/json');
   if(req.user.role.actions.includes('add_own_petition')){
     try{
@@ -419,7 +498,7 @@ router.delete('/tenants/:name/petitions/:id',authenticate,(req,res,next)=>{
 });
 
 // Edit Petition
-router.put('/tenants/:name/petitions/:id',clientValidationRules(),validate,authenticate,asyncPetitionValidation,(req,res,next)=>{
+router.put('/tenants/:name/petitions/:id',petitionValitationRules(),validate,authenticate,asyncPetitionValidation,(req,res,next)=>{
   if(req.user.role.actions.includes('update_own_petition')){
     return db.task('update-petition',async t =>{
       try{
