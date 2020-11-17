@@ -10,7 +10,7 @@ var winston = require('winston');
 var expressWinston = require('express-winston');
 const bodyParser = require('body-parser')
 const {check,validationResult,body}= require('express-validator');
-const {clientValidationRules,validate} = require('./validator.js');
+const {petitionValitationRules,validate} = require('./validator.js');
 const {merge_data} = require('./merge_data.js');
 const {Issuer,Strategy,custom} = require('openid-client');
 const routes= require('./routes/index');
@@ -34,7 +34,6 @@ var corsOptions = {
     optionsSuccessStatus: 200,
     preflightContinue:true
 }
-
 
 // Tenant issuer initialization
 db.tenants.getInit().then(async tenants => {

@@ -6,12 +6,22 @@ class ServiceMultiValuedRepository {
     this.db = db;
     this.pgp = pgp;
     // set-up all ColumnSet objects, if needed:
-     cs = new pgp.helpers.ColumnSet(['owner_id','value']);
+    cs = new pgp.helpers.ColumnSet(['owner_id','value']);
   }
+
+  async addMultiple(data,table){
+    const query = this.pgp.helpers.insert(data,cs,table);
+    return this.db.none(query).then(data => {
+        return true
+    })
+    .catch(error => {
+        throw error
+    });
+  }
+
   async add(type,attribute,data,id){
 
     let values = []
-    let date = new Date(Date.now());
     let name = 'service_'
     if(type==='petition'){
       name = name + type + '_' + attribute;
