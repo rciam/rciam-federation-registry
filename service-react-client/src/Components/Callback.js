@@ -13,7 +13,6 @@ export const Callback = () => {
 
   useEffect(()=>{
     getToken(code);
-    console.log(tenant_name);
     // eslint-disable-next-line
   },[]);
 

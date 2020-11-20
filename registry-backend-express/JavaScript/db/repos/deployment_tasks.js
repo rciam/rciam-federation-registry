@@ -14,7 +14,6 @@ class DeploymentTasksRepository {
     //=> UPDATE "service_data" AS t SET "state"=v."state"
     //   FROM (VALUES(1,'deployed'),(2,'deployed'),(3,'failed'))
     //   AS v("id","state") WHERE v.id = t.id
-    console.log(query);
     return await this.db.none(query)
     .then( data => {
         return true

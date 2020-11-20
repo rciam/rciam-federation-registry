@@ -1,3 +1,4 @@
+
 function capitalWords(item) {
    var splitStr = item.toLowerCase().split(' ');
       for (var i = 0; i < splitStr.length; i++) {
@@ -9,5 +10,5 @@ function capitalWords(item) {
 }
 
 module.exports = {
-  capitalWords
+  capitalWords,
 }

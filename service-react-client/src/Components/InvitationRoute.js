@@ -29,9 +29,6 @@ export const InvitationRoute = () => {
 
 
 export const InvitationNotFound = (props) => {
-  useEffect(()=>{
-    console.log(props);
-  },[props])
   return (
     <div className="home-container">
       <h1>Invitation {props.error==='expired'?'has expired':props.error==='member'?'invalid':'not found...'}</h1>

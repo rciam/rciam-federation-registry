@@ -1,6 +1,7 @@
 var diff = require('deep-diff').diff;
 require('dotenv').config();
-var path = require("path")
+var path = require("path");
+
 var fs = require('fs');
 var handlebars = require('handlebars');
 nodeMailer = require('nodemailer');
@@ -68,37 +69,48 @@ const calcDiff = (oldState,newState) => {
     return edits
 }
 
-const sendInvitationMail = (data) => {
-  if(process.env.NODE_ENV!=='test-docker'&& process.env.NODE_ENV!=='test'){
-    var currentDate = new Date();
-    readHTMLFile(path.join(__dirname, '../html/invitation.html'), function(err, html) {
-      let transporter = nodeMailer.createTransport({
-          host: 'relay.grnet.gr',
-          port: 587,
-          secure: false
-      });
-      var template = handlebars.compile(html);
-      var replacements = {
-        email:data.email,
-        url:process.env.EXPRESS_BASE+'/'+ data.tenant +'/invitation/' + data.code
-      }
-      var htmlToSend = template(replacements);
-      var mailOptions = {
-        from: "noreply@faai.grnet.gr",
-        to : 'koza-sparrow@hotmail.com',
-        subject : 'Invitation to manage service',
-        html : htmlToSend
-      };
-      transporter.sendMail(mailOptions, function (error, response) {
-        if (error) {
-          customLogger(null,null,'info',[{type:'email_log'},{message:'Email not sent'},{error:error},{user:null},{data:data.email}]);
+const sendInvitationMail = async (data) => {
+  return new Promise(resolve=>{
+    if(process.env.NODE_ENV!=='test-docker'&& process.env.NODE_ENV!=='test'){
+      var currentDate = new Date();
+      readHTMLFile(path.join(__dirname, '../html/invitation.hbs'), function(err, html) {
+        let transporter = nodeMailer.createTransport({
+            host: 'relay.grnet.gr',
+            port: 587,
+            secure: false
+        });
+        var template = handlebars.compile(html);
+        var replacements = {
+          invited_by:data.invited_by,
+          group_manager:data.group_manager,
+          email:data.email,
+          registry_url: process.env.EXPRESS_BASE+'/'+ data.tenant,
+          url:process.env.EXPRESS_BASE+'/'+ data.tenant +'/invitation/' + data.code
         }
-        else {
-          customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{user:null},{data:data.email}]);
-        }
+        var htmlToSend = template(replacements);
+        var mailOptions = {
+          from: "noreply@faai.grnet.gr",
+          to : 'koza-sparrow@hotmail.com',
+          subject : 'Invitation to manage service',
+          html : htmlToSend
+        };
+        return transporter.sendMail(mailOptions, function (error, response) {
+          if (error) {
+            resolve(false);
+            customLogger(null,null,'info',[{type:'email_log'},{message:'Email not sent'},{error:error},{user:null},{data:data.email}]);
+          }
+          else {
+            resolve(true);
+            customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{user:null},{data:data.email}]);
+          }
+        });
       });
-    });
-  }
+    }
+    else{
+      resolve(true);
+    }
+
+  });
 
 }
 const newMemberNotificationMail = (data,managers) => {

@@ -3,6 +3,7 @@ import {useParams} from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import * as config from './config.json';
 import Button from 'react-bootstrap/Button';
+import {Logout} from './Components/Modals';
 import {ProcessingRequest,LoadingBar} from './Components/LoadingBar';
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
@@ -22,6 +23,7 @@ const InvitationsPage = (props) => {
   },[]);
 
   let {tenant_name} = useParams();
+  const [logout,setLogout] = useState(false);
   const [sending,setSending] = useState();
   const [invitations,setInvitations] = useState([]);
   const [loading,setLoading] = useState(false);
@@ -32,7 +34,7 @@ const InvitationsPage = (props) => {
 
   const getInvitations = () => {
     setLoading(true)
-    fetch(config.host+'tenants/'+tenant_name+'/invitations', {
+    setLogout(true);(config.host+'tenants/'+tenant_name+'/invitations', {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -42,12 +44,14 @@ const InvitationsPage = (props) => {
       if(response.status===200){
         return response.json();
       }
+      else if(response.status===401){
+        props.logout();
+      }
       else {
         return false
       }
     }).then(response=> {
         if(response){
-          console.log(response);
           setInvitations(response);
         }
         else{
@@ -59,15 +63,28 @@ const InvitationsPage = (props) => {
 
   const invitationResponse =  (id,action) => {
     setSending(true);
-    fetch(config.host+'tenants/'+tenant_name+'/invitations/'+id+'/'+action, {
+    setLogout(true);(config.host+'tenants/'+tenant_name+'/invitations/'+id+'/'+action, {
       method: 'PUT', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
         'Content-Type': 'application/json',
         'Authorization': localStorage.getItem('token')
       }
-    }).then(response=> {
-      if(response.status===200){
+    }).then(
+      response =>
+      {
+        if(response.status===200){
+          return true
+        }
+        else if(response.status===401){
+          props.logout();
+        }
+        else {
+          return false
+        }
+      }
+    ).then(response=> {
+      if(response){
         let new_invitations = [];
         invitations.forEach((invitation,index)=>{
           if(invitation.id!==id){
@@ -84,6 +101,7 @@ const InvitationsPage = (props) => {
 
   return(
     <React.Fragment>
+      <Logout logout={logout}/>
       <LoadingBar loading={loading}>
         <ProcessingRequest active={sending}/>
         {invitations.length>0?
