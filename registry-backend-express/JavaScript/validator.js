@@ -89,7 +89,7 @@ const serviceValidationRules = () => {
 }
 
 
-const petitionValitationRules = () => {
+const petitionValidationRules = () => {
   let tenant;
   return [
     body('service_id').if(body('type').custom((value)=>{return (value==='edit'||values==='delete')})).exists().withMessage('Required Field').bail().custom((value)=>{if(parseInt(value)){return true}else{return false}}).bail(),
@@ -147,14 +147,14 @@ const validate = (req, res, next) => {
   const extractedErrors = []
   errors.array().map(err => extractedErrors.push({ [err.param]: err.msg }));
   var log ={};
-  customLogger(req,res,'warn','Failed schema validation');
+  customLogger(req,res,'warn','Failed schema validation',extractedErrors);
   res.status(422).send(extractedErrors);
   return res.end();
 }
 
 module.exports = {
   serviceValidationRules,
-  petitionValitationRules,
+  petitionValidationRules,
   validate,
   decodeAms,
   amsIngestValidation,

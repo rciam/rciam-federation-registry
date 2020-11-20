@@ -3,7 +3,7 @@ var logPath = __dirname + "/logs/logs.log";
 
 
 
-const customLogger = (req,res,level,message)=>{
+const customLogger = (req,res,level,message,data)=>{
 
     var log ={};
     log.level =level;
@@ -21,6 +21,9 @@ const customLogger = (req,res,level,message)=>{
     }
     if(Array.isArray(message)){
       Object.assign(log, ...message);
+    }
+    if(data){
+      log.data = data;
     }
     else{
       log.message=message;

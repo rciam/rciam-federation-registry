@@ -1,5 +1,5 @@
 require('dotenv').config();
-const {petitionValitationRules,validate,postInvitationValidation,serviceValidationRules,putAgentValidation,postAgentValidation,decodeAms,amsIngestValidation} = require('../validator.js');
+const {petitionValidationRules,validate,postInvitationValidation,serviceValidationRules,putAgentValidation,postAgentValidation,decodeAms,amsIngestValidation} = require('../validator.js');
 const qs = require('qs');
 const {v1:uuidv1} = require('uuid');
 const axios = require('axios').default;
@@ -119,12 +119,14 @@ router.get('/tenants/:name',(req,res,next)=>{
       else{
         res.status(204).end()
       }
-    })
+    }).catch(err=>{throw err})
   }
   catch(err){
     next(err);
   }
 });
+
+
 router.get('/tenants',(req,res,next)=> {
   try{
     db.tenants.get().then(tenants => {
@@ -152,7 +154,6 @@ router.get('/tenants/:name/login',(req,res)=>{
   }else{
     res.redirect(process.env.OIDC_REACT+'/404');
   }
-
 })
 
 // Callback Route
@@ -218,7 +219,7 @@ router.get('/tenants/:name/user',authenticate,(req,res,next)=>{
 // needs Authentication
 // ams/ingest
 router.post('/ams/ingest',checkCertificate,decodeAms,amsIngestValidation(),validate,(req,res,next)=>{
-  // Decode messages\
+  // Decode messages
   try{
     return db.task('deploymentTasks', async t => {
       // update state
@@ -418,7 +419,7 @@ router.get('/tenants/:name/petitions/:id',authenticate,(req,res,next)=>{
 });
 
 // Add a new client/petition
-router.post('/tenants/:name/petitions',petitionValitationRules(),validate,authenticate,asyncPetitionValidation,(req,res,next)=>{
+router.post('/tenants/:name/petitions',petitionValidationRules(),validate,authenticate,asyncPetitionValidation,(req,res,next)=>{
   res.setHeader('Content-Type', 'application/json');
   if(req.user.role.actions.includes('add_own_petition')){
     try{
@@ -498,7 +499,7 @@ router.delete('/tenants/:name/petitions/:id',authenticate,(req,res,next)=>{
 });
 
 // Edit Petition
-router.put('/tenants/:name/petitions/:id',petitionValitationRules(),validate,authenticate,asyncPetitionValidation,(req,res,next)=>{
+router.put('/tenants/:name/petitions/:id',petitionValidationRules(),validate,authenticate,asyncPetitionValidation,(req,res,next)=>{
   if(req.user.role.actions.includes('update_own_petition')){
     return db.task('update-petition',async t =>{
       try{
@@ -618,18 +619,27 @@ router.delete('/tenants/:name/groups/:group_id/members/:sub',authenticate,is_gro
 // Create invitation and send email
 router.post('/tenants/:name/groups/:group_id/invitations',authenticate,postInvitationValidation(),validate,canInvite, (req,res,next)=>{
   try{
+
+
     req.body.code = uuidv1();
     req.body.invited_by = req.user.email;
     req.body.tenant = req.params.name;
-    sendInvitationMail(req.body)
-    db.invitation.add(req.body).then((response)=>{
-      if(response){
-        res.status(200).send({code:req.body.code});
+    sendInvitationMail(req.body).then(async email_sent=>{
+      if(email_sent){
+        await db.invitation.add(req.body).then((response)=>{
+          if(response){
+            res.status(200).send({code:req.body.code});
+          }
+          else{
+            res.status(204).end();
+          }
+        }).catch(err=>{next(err)})
       }
       else{
-        res.status(204).end();
+        throw 'could not send invitation message'
       }
-    }).catch(err=>{next(err)})
+    }).catch(err => {next(err)});
+
   }
   catch(err){
     next(err);
@@ -972,13 +982,16 @@ function authenticate(req,res,next){
             req.user.role = role.role;
             next();
           }
-        }).catch(err=>{ console.log(err); next(err)});
+        }).catch(err=>{next(err)});
       }
       else{
         res.status(500).send("Need userToken");
       }
     }
     else{
+      if(req.url==='/tenantsasdad/egi/services'){
+        res.status(401).end();
+      }
       const data = {'client_secret':clients[req.params.name].client_secret}
       if(req.headers.authorization){
         TokenArray = req.headers.authorization.split(" ");
@@ -1006,14 +1019,14 @@ function authenticate(req,res,next){
               next();
             }
             else{
-              next(role.err);
+              res.status(401).end();
             }
           }).catch((err)=> {
-            next(err);
+            res.status(401).end();
           });
         }, (error) =>{
-          next(error)
-        }).catch(err=>{next(err);})
+          res.status(401).end();
+        }).catch(err=>{res.status(401).end();})
       }
       else{
         res.status(401).end();
@@ -1078,7 +1091,7 @@ const saveUser=(userinfo,tenant)=>{
 }
 
 function checkCertificate(req,res,next) {
-  if(req.headers['dn']===config.ams_cert_dn){
+  if(req.headers['dn']===config.ams_cert_dn&&req.headers['authorization']===process.env.AMS_AUTH_KEY){
     next();
   }
   else{

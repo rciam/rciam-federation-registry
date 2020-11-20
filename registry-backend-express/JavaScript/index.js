@@ -59,8 +59,6 @@ db.tenants.getInit().then(async tenants => {
 
 const app = express();
 
-
-
 app.use(expressWinston.logger({
     transports: [
       new(winston.transports.File)({filename:logPath}),

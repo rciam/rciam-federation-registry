@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Invitation</title>
+  </head>
+  <body>
+    <div style="width:100%;text-align:center;margin-top:0.5;margin-bottom:0.5;">
+      <img src="https://aai-dev.egi.eu/proxy/module.php/themeegi/resources/images/logo.svg" style="width:150px;">
+    </div>
+    <h5>Hello,<h5>
+
+    <p>You have been invited to be a {{#if group_manager}}manager{{else}}member{{/if}} of an owners group by {{invited_by}}. Joining a owners group at the EGI Service Registry Portal allows you to create petitions for all services
+    managed by that group <a href={{registry_url}}>Find out more...</a>
+    </p>
+    <b> Things that a group {{#if group_manager}}manager{{else}}member{{/if}} can do:</b>
+    <ul>
+      <li>View the configuration of services that the group manages</li>
+      <li>Sumbit petitions to reconfigure or deregister service managed by that group</li>
+      <li>View service history since it's registration in the registry</li>
+      {{#if group_manager}}<li>Manage users in the owners group</li>{{/if}}
+    </ul>
+    <div style="width:100%;text-align:center;margin-top:0.5;margin-bottom:0.5;">
+    <a href={{url}} style="text-decoration:none;color:white;background-color:#207ABA;padding:0.5rem;">View invitation</a>
+    </div>
+    <ul>
+      <li>Your email: {{email}}</li>
+    </ul>
+    <h5>Big Thank you from the development team</h5>
+  </body>
+</html>

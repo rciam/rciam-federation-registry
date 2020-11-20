@@ -12,6 +12,7 @@ import Alert from 'react-bootstrap/Alert';
 import Jumbotron from 'react-bootstrap/Jumbotron';
 import Container from 'react-bootstrap/Container';
 import { useTranslation } from 'react-i18next';
+import {Logout} from './Modals'
 
 export const HistoryList = (props) => {
   const [loadingList,setLoadingList] = useState();
@@ -19,6 +20,7 @@ export const HistoryList = (props) => {
   const [asyncResponse,setAsyncResponse] = useState(false);
   const [petition,setPetition] = useState(null);
   const [stateProps,setstateProps] = useState();
+  const [logout,setLogout] = useState();
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   let {tenant_name} = useParams();
@@ -40,7 +42,17 @@ export const HistoryList = (props) => {
       headers: {
       'Content-Type': 'application/json',
       'Authorization': localStorage.getItem('token')
-    }}).then(response=>response.json()).then(response=> {
+    }}).then(response=>{
+        if(response.status===200){
+          return response.json();
+        }
+        else if(response.status===401){
+          props.logout();
+        }
+        else {
+          return false
+        }
+      }).then(response=> {
       setAsyncResponse(false);
       if(response.petition){
         setPetition(response.petition);
@@ -55,7 +67,17 @@ export const HistoryList = (props) => {
       headers: {
       'Content-Type': 'application/json',
       'Authorization': localStorage.getItem('token')
-    }}).then(response=>response.json()).then(response=> {
+    }}).then(response=>{
+      if(response.status===200){
+        return response.json();
+      }
+      else if(response.status===401){
+        setLogout(true);
+      }
+      else {
+        return false
+      }
+    }).then(response=> {
       setLoadingList(false);
       if(response.history){
           setHistoryList(response.history);
@@ -64,6 +86,7 @@ export const HistoryList = (props) => {
   }
   return (
     <React.Fragment>
+      <Logout logout={logout}/>
       <ProcessingRequest active={asyncResponse}/>
 
       {petition?

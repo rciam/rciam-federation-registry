@@ -14,6 +14,7 @@ import Row from 'react-bootstrap/Row';
 import {LoadingBar,ProcessingRequest} from './Components/LoadingBar';
 import * as yup from 'yup';
 import Alert from 'react-bootstrap/Alert';
+import {Logout} from './Components/Modals';
 import {userContext} from './context.js';
 import {ConfirmationModal} from './Components/Modals';
 
@@ -21,7 +22,7 @@ import {ConfirmationModal} from './Components/Modals';
 
 const GroupsPage = (props) => {
   let {tenant_name} = useParams();
-
+  const [logout,setLogout] = useState(false);
   useEffect(()=>{
     getData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -41,11 +42,16 @@ const GroupsPage = (props) => {
       'Content-Type': 'application/json',
       'Authorization': localStorage.getItem('token')
       }}).then(response=>{
-          if(response.status===200){
-            return response.json();
-          }
-          else {return false}
-        }).then(response=> {
+        if(response.status===200){
+          return response.json();
+        }
+        else if(response.status===401){
+          setLogout(true);
+        }
+        else {
+          return false
+        }
+      }).then(response=> {
         if(response){
           let count = 0;
           response.group_members.forEach((member, i) => {
@@ -69,11 +75,16 @@ const GroupsPage = (props) => {
       'Content-Type': 'application/json',
       'Authorization': localStorage.getItem('token')
       }}).then(response=>{
-          if(response.status===200){
-            return response.json();
-          }
-          else {return false}
-        }).then(response=> {
+        if(response.status===200){
+          return response.json();
+        }
+        else if(response.status===401){
+          setLogout(true);
+        }
+        else {
+          return false
+        }
+      }).then(response=> {
         if(response){
           setInvitations(response.invitations);
         }
@@ -105,9 +116,19 @@ const GroupsPage = (props) => {
         'Content-Type': 'application/json',
         'Authorization': localStorage.getItem('token')
       }
+    }).then(response=>{
+      if(response.status===200){
+        return true;
+      }
+      else if(response.status===401){
+        setLogout(true);
+      }
+      else {
+        return false
+      }
     }).then(response=> {
       setSending(false);
-      setInvitationResult({success:(response.status===200)?true:false,email:email});
+      setInvitationResult({success:response,email:email});
       getData()
     });
   }
@@ -122,10 +143,19 @@ const GroupsPage = (props) => {
         'Authorization': localStorage.getItem('token')
       },
       body:JSON.stringify(invitation)
+    }).then(response=>{
+      if(response.status===200){
+        return true;
+      }
+      else if(response.status===401){
+        setLogout(true);
+      }
+      else {
+        return false
+      }
     }).then(response=> {
       setSending(false);
-
-      setInvitationResult({success:(response.status===200)?true:false,email:invitation.email});
+      setInvitationResult({success:response,email:invitation.email});
       getData();
     });
   }
@@ -169,8 +199,8 @@ const GroupsPage = (props) => {
     setError('');
     return await schema.validate({email:email,role:role}).then(()=>{
       let valid = true;
-      group.forEach(member=>{
-        if(member.email===email&&member.pending){
+      invitations.forEach(invitation=>{
+        if(invitation.invitation_email===email){
           setError('Invite already send to this email');
           valid = false;
         }
@@ -194,6 +224,7 @@ const GroupsPage = (props) => {
 
   return(
     <React.Fragment>
+    <Logout logout={logout}/>
     <ConfirmationModal active={confirmationData.action?true:false} setActive={setConfirmationData} action={()=>{if(confirmationData.action==='cancel'){cancelInvitation(...confirmationData.args)}else{removeMember(...confirmationData.args)}}} title={confirmationData.title} message={confirmationData.message} accept={'Yes'} decline={'No'}/>
 
       <ProcessingRequest active={sending}/>
@@ -352,7 +383,7 @@ const GroupsPage = (props) => {
                             </Tooltip>
                           }
                           >
-                          <Button disabled={member.sub?true:false} variant="primary" onClick={()=>{resendInvitation(member.invitation_id,member.group_id,member.email)}}><FontAwesomeIcon icon={faSync}/></Button>
+                          <Button disabled={member.sub?true:false} variant="primary" onClick={()=>{resendInvitation(member.invitation_id,member.group_id,member.invitation_email)}}><FontAwesomeIcon icon={faSync}/></Button>
                           </OverlayTrigger>
                         </td>
                       </tr>
