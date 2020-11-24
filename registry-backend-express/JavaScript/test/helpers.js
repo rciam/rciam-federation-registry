@@ -21,7 +21,7 @@ const setUser = (user) => {
   return token
 }
 
-const postPetitionError = async (data,tenant,result,done) => {
+const postPetitionError = (data,tenant,result,done) => {
   var req = request(server).post('/tenants/'+tenant+'/petitions').set({Authorization: token}).send({...data});
   req.set('Accept','application/json')
   .expect('Content-Type',/json/)
