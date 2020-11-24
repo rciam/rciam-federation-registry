@@ -49,7 +49,7 @@ const putPetition = async (data,result,done) => {
 
 
 
-const checkAvailability = async (value,protocol,tenant,environment,result,done) => {
+const checkAvailability = (value,protocol,tenant,environment,result,done) => {
   var req = request(server).get('/tenants/'+tenant+'/check-availability?value=' + value+ '&protocol='+ protocol+'&environment='+environment).set({Authorization: token});
   req.set('Accept','application/json')
   .expect('Content-Type',/json/)
