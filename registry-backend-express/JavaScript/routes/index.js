@@ -106,7 +106,7 @@ router.post('/tenants/:name/services',serviceValidationRules(),validate,(req,res
     next(err);
   }
 })
-
+// Get available tenats
 router.get('/tenants/:name',(req,res,next)=>{
   try{
     db.tenants.getTheme(req.params.name).then(tenant=>{
