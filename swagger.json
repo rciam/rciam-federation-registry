@@ -2,7 +2,7 @@ swagger: "2.0"
 info:
   description: "This is an Express server used to manage identity provider services. Users manage services by creating requests handled by administrators. You can find out more about the project on the [github page](https://github.com/rciam/rciam-federation-registry) or you can try it out live  [here](http://service-registry.aai-dev.grnet.gr/egi). "
   version: "1.0.1"
-  title: "Service Registry"
+  title: "Federation Registry"
   termsOfService: "http://swagger.io/terms/"
   contact:
     email: "apiteam@swagger.io"
