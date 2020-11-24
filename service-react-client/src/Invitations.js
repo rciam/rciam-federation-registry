@@ -34,7 +34,7 @@ const InvitationsPage = (props) => {
 
   const getInvitations = () => {
     setLoading(true)
-    setLogout(true);(config.host+'tenants/'+tenant_name+'/invitations', {
+    fetch(config.host+'tenants/'+tenant_name+'/invitations', {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -45,7 +45,7 @@ const InvitationsPage = (props) => {
         return response.json();
       }
       else if(response.status===401){
-        props.logout();
+        setLogout(true);
       }
       else {
         return false
