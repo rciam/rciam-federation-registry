@@ -33,7 +33,7 @@ const postPetitionError = (data,tenant,result,done) => {
       done();
     })
 }
-const putPetition = async (data,result,done) => {
+const putPetition = (data,result,done) => {
   var req = request(server).put('/tenants/'+data.tenant+'/petitions/'+data.petition).set({Authorization: token}).send(data.body);
   req.set('Accept','application/json')
     .expect('Content-Type',/json/)
