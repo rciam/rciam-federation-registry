@@ -223,6 +223,11 @@ const postServices = [
       "integration_environment":"development",
       "entity_id":"https://entity_id_test_asd.com",
       "metadata_url":"https://hello_this_should_be_unique.com"
+    },
+    {
+      "protocol":"saml",
+      "integration_environment":"development",
+      "metadata_url":"https://hello_this_should_be_unique_2.com"
     }
 ]
 

@@ -6,7 +6,7 @@ SELECT json_build_object('id',sd.id,'service_name', sd.service_name,'service_des
 						 'client_secret',sd.client_secret,'reuse_refresh_tokens',sd.reuse_refresh_tokens,'protocol',sd.protocol,
 						 'clear_access_tokens_on_refresh',sd.clear_access_tokens_on_refresh,'id_token_timeout_seconds',sd.id_token_timeout_seconds,'metadata_url',sd.metadata_url
 						 ,'entity_id',sd.entity_id,'deleted',sd.deleted,'tenant',sd.tenant,'external_id',sd.external_id,
-						 'grant_types',
+						 'deployment_type',sd.deployment_type,'grant_types',
 							(SELECT json_agg((v.value))
 							 FROM service_oidc_grant_types v WHERE sd.id = v.owner_id),
 						 'scope',
@@ -20,6 +20,6 @@ SELECT json_build_object('id',sd.id,'service_name', sd.service_name,'service_des
 							 FROM service_contacts v WHERE sd.id = v.owner_id)
 							) json
     FROM (SELECT *
-	FROM ((SELECT id FROM service_state WHERE state='pending') AS bar LEFT JOIN service_details USING (id)) AS foo
+	FROM ((SELECT id,deployment_type FROM service_state WHERE state='pending') AS bar LEFT JOIN service_details USING (id)) AS foo
 	LEFT JOIN service_details_oidc USING (id)
 	LEFT JOIN service_details_saml USING (id)) as sd

@@ -71,7 +71,8 @@ class PetitionRepository {
   async getOld(id,sub,tenant){
     return this.db.oneOrNone(sql.getOldPetition,{
       sub:sub,
-      id:+id
+      id:+id,
+      tenant:tenant
     }).then(result => {
       if(result){
         let data = {};
