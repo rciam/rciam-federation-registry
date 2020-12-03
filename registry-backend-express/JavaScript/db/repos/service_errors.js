@@ -13,7 +13,7 @@ class ServiceErrorsRepository {
         const table = new pgp.helpers.TableName({table: 'service_errors', schema: 'public'});
         // set-up all ColumnSet objects, if needed:
         cs.insert = new pgp.helpers.ColumnSet(['error_description','error_code','service_id','date'],{table});
-        
+
 
     }
 
@@ -21,7 +21,7 @@ class ServiceErrorsRepository {
 
       const query = this.pgp.helpers.insert(errors,cs.insert);
       let stuff = await this.db.any(query);
-      cconsole.log(stuff);
+      console.log(stuff);
       return true
     }
 

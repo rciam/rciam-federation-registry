@@ -32,7 +32,7 @@ class ServiceStateRepository {
     let ids=[];
     let errors=[];
     let batch_queries = [];
-    let date = Date.now();
+    let date = new Date(Date.now());
     return this.db.task('deploymentTasks', async t => {
       for(let index=0;index<messages.length;index++){
         //let decoded_message= JSON.parse(Buffer.from(messages[index].message.data, 'base64').toString());
@@ -52,7 +52,7 @@ class ServiceStateRepository {
             ids.push(decoded_message.id);
           }
           if(decoded_message.state==='error'){
-            errors.push({date:date,id:decoded_message.id,error_status:decoded_message.status_code,error_description:decoded_message.error_description})
+            errors.push({date:date,service_id:decoded_message.id,error_code:decoded_message.status_code,error_description:decoded_message.error_description})
           }
         }
       }
