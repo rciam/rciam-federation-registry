@@ -63,7 +63,7 @@ const InvitationsPage = (props) => {
 
   const invitationResponse =  (id,action) => {
     setSending(true);
-    setLogout(true);(config.host+'tenants/'+tenant_name+'/invitations/'+id+'/'+action, {
+    fetch(config.host+'tenants/'+tenant_name+'/invitations/'+id+'/'+action, {
       method: 'PUT', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -77,7 +77,7 @@ const InvitationsPage = (props) => {
           return true
         }
         else if(response.status===401){
-          props.logout();
+          setLogout(true);
         }
         else {
           return false

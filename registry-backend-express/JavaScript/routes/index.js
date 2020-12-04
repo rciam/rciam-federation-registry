@@ -314,6 +314,7 @@ router.get('/tenants/:name/services',authenticate,(req,res,next)=>{
 
 // ams-agent requests
 router.get('/agent/get_new_configurations',amsAgentAuth,(req,res,next)=>{
+//router.get('/agent/get_new_configurations',(req,res,next)=>{
   try{
     db.service.getPending().then(services=>{
       if(services){
@@ -419,7 +420,7 @@ router.get('/tenants/:name/petitions/:id',authenticate,(req,res,next)=>{
 });
 
 // Add a new client/petition
-router.post('/tenants/:name/petitions',petitionValidationRules(),validate,authenticate,asyncPetitionValidation,(req,res,next)=>{
+router.post('/tenants/:name/petitions',authenticate,petitionValidationRules(),validate,asyncPetitionValidation,(req,res,next)=>{
   res.setHeader('Content-Type', 'application/json');
   if(req.user.role.actions.includes('add_own_petition')){
     try{
@@ -499,7 +500,7 @@ router.delete('/tenants/:name/petitions/:id',authenticate,(req,res,next)=>{
 });
 
 // Edit Petition
-router.put('/tenants/:name/petitions/:id',petitionValidationRules(),validate,authenticate,asyncPetitionValidation,(req,res,next)=>{
+router.put('/tenants/:name/petitions/:id',authenticate,petitionValidationRules(),validate,asyncPetitionValidation,(req,res,next)=>{
   if(req.user.role.actions.includes('update_own_petition')){
     return db.task('update-petition',async t =>{
       try{
@@ -624,8 +625,12 @@ router.post('/tenants/:name/groups/:group_id/invitations',authenticate,postInvit
     req.body.code = uuidv1();
     req.body.invited_by = req.user.email;
     req.body.tenant = req.params.name;
+
+    // Send invitation to requested email
     sendInvitationMail(req.body).then(async email_sent=>{
       if(email_sent){
+        // Email is sent succesfully
+        // Save invitation to database
         await db.invitation.add(req.body).then((response)=>{
           if(response){
             res.status(200).send({code:req.body.code});
@@ -989,9 +994,6 @@ function authenticate(req,res,next){
       }
     }
     else{
-      if(req.url==='/tenantsasdad/egi/services'){
-        res.status(401).end();
-      }
       const data = {'client_secret':clients[req.params.name].client_secret}
       if(req.headers.authorization){
         TokenArray = req.headers.authorization.split(" ");
@@ -1008,6 +1010,7 @@ function authenticate(req,res,next){
           },
           data: qs.stringify(data)
         }).then(result => {
+          console.log(result);
           req.user = {};
           req.user.sub = result.data.sub;
           req.user.edu_person_entitlement = result.data.eduperson_entitlement;
@@ -1016,15 +1019,18 @@ function authenticate(req,res,next){
           db.user_role.getRoleActions(req.user.edu_person_entitlement,req.params.name).then(role=>{
             if(role.success){
               req.user.role = role.role;
+              console.log('authenticated');
               next();
             }
             else{
               res.status(401).end();
             }
           }).catch((err)=> {
+            console.log(err);
             res.status(401).end();
           });
         }, (error) =>{
+          console.log(error);
           res.status(401).end();
         }).catch(err=>{res.status(401).end();})
       }
