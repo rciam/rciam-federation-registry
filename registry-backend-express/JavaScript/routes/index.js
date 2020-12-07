@@ -172,7 +172,7 @@ router.get('/callback/:name',(req,res,next)=>{
 router.get('/ams/ams_verification_hash',(req,res)=>{
   console.log('ams verification');
   res.setHeader('Content-type', 'plain/text');
-  res.status(200).send('67647c730ced41b9c60ad4da4c06170bf3f1d3c9');
+  res.status(200).send(process.env.AMS_VER_HASH);
 })
 
 // One time code to get access token during login

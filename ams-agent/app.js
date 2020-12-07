@@ -47,6 +47,7 @@ axios.get(process.env.EXPRESS+'/agent/get_agents',options)
      pubUrls[agents[i].tenant][agents[i].entity_type][agents[i].entity_protocol] = amsBaseUrl + "/topics/"+ currentTopic +":publish" + amsKey;
    }
    console.log('Ams Configuration Completed');
+
    var intervalID = setInterval(run, 10000);
 }).catch(err=> {console.log(err)})
 
@@ -138,13 +139,14 @@ async function run() {
               delete service.json[propName];
             }
           }
+          console.log(service);
           let messages = [{"attributes":{},"data": Buffer.from(JSON.stringify(service.json)).toString("base64")}];
 
-          let done = await axios.post(pubUrls[service.json.tenant].service[service.json.protocol],{"messages":messages}, options).then((res) => {
-            if(res.status===200){
-              setStateArray.push({id:service.json.id,state:'waiting-deployment',protocol:service.json.protocol,tenant:service.json.tenant});
-            }
-          }).catch(err => {console.log(err)});
+          // let done = await axios.post(pubUrls[service.json.tenant].service[service.json.protocol],{"messages":messages}, options).then((res) => {
+          //   if(res.status===200){
+          //     setStateArray.push({id:service.json.id,state:'waiting-deployment',protocol:service.json.protocol,tenant:service.json.tenant});
+          //   }
+          // }).catch(err => {console.log(err)});
 
         }
         if(setStateArray.length>0){
