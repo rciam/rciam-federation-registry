@@ -145,6 +145,92 @@ const edit = {
    generate_client_secret:null
  }
 }
+
+const postServices = [
+    {
+      "policy_uri":"https://www.policy_uri.com",
+      "integration_environment":"demo",
+      "protocol":"oidc",
+      "client_id":"clqweient1",
+      "contacts":[ {
+          "email": "mymail@gmail.com",
+          "type": "admin"
+        }],
+      "allow_introspection":false,
+      "code_challenge_method":"plain",
+      "device_code_validity_seconds":28800,
+      "access_token_validity_seconds":3600,
+      "refresh_token_validity_seconds":28800,
+      "client_secret":"secret",
+      "reuse_refresh_tokens":true,
+      "clear_access_tokens_on_refresh":true,
+      "id_token_timeout_seconds":1000,
+      "scope": [
+        "openid",
+        "profile",
+        "email",
+        "eduperson_entitlement",
+        "eduperson_scoped_affiliation",
+        "eduperson_unique_id"
+      ],
+      "grant_types": [
+        "authorization_code"
+      ],
+      "generate_client_secret":false
+    },
+    {
+      "extra_field":"with value",
+      "external_id":3,
+      "service_name":"Oidc 2",
+      "client_id": "testtest",
+      "service_description":"Sample description",
+      "logo_uri":"https://www.freelogodesign.org/Content/img/logo-samples/flooop.png",
+      "policy_uri":"https://www.policy_uri.com",
+      "integration_environment":"demo",
+      "protocol":"oidc",
+      "reuse_refresh_tokens":true,
+      "clear_access_tokens_on_refresh":true,
+      "id_token_timeout_seconds":1000,
+      "scope": [
+        "openid",
+        "profile",
+        "email",
+        "eduperson_entitlement",
+        "eduperson_scoped_affiliation",
+        "eduperson_unique_id"
+      ],
+      "generate_client_secret":false
+    },
+    {
+      "extra_field":"with value",
+      "external_id":3,
+      "service_name":"Saml 1",
+      "service_description":"Sample description",
+      "metadata_url":"https://asdfasdf.com",
+      "logo_uri":"https://www.freelogodesign.org/Content/img/logo-samples/flooop.png",
+      "policy_uri":"https://www.policy_uri.com",
+      "integration_environment":"demo",
+      "protocol":"saml",
+      "contacts":null
+    },
+    {
+      "protocol":"oidc",
+      "integration_environment":"demo",
+      "client_id":"test_12"
+    },
+    {
+      "protocol":"saml",
+      "integration_environment":"development",
+      "entity_id":"https://entity_id_test_asd.com",
+      "metadata_url":"https://hello_this_should_be_unique.com"
+    },
+    {
+      "protocol":"saml",
+      "integration_environment":"development",
+      "metadata_url":"https://hello_this_should_be_unique_2.com"
+    }
+]
+
 const validationRequests = {
  oidc_types: {
    type:3,
@@ -425,4 +511,4 @@ const users = {
  }
 }
 
-module.exports = {create,edit,users,validationResponses,validationRequests,agents};
+module.exports = {create,edit,users,validationResponses,validationRequests,agents,postServices};

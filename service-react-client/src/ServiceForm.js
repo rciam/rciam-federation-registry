@@ -12,7 +12,7 @@ import {useParams } from "react-router-dom";
 import { diff } from 'deep-diff';
 import {tenantContext} from './context.js';
 //import {Debug} from './Components/Debug.js';
-import {SimpleModal,ResponseModal} from './Components/Modals.js';
+import {SimpleModal,ResponseModal,Logout} from './Components/Modals.js';
 import Form from 'react-bootstrap/Form';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import {Formik} from 'formik';
@@ -207,6 +207,7 @@ const ServiceForm = (props)=> {
     })
   });
 
+  const [logout,setLogout] = useState(false);
   const [availabilityCheck,setAvailabilityCheck] = useState(true);
   const formRef = useRef();
   const [disabled,setDisabled] = useState(false);
@@ -247,6 +248,9 @@ const ServiceForm = (props)=> {
         if(response.status===200){
           setMessage(t('petition_success_msg'));
         }
+        else if(response.status===401){
+          setLogout(true);
+        }
         else{
           setMessage(t('petition_error_smg') + response.status);
         }
@@ -280,6 +284,9 @@ const ServiceForm = (props)=> {
         if(response.status===200){
           setMessage(t('petition_success_msg'));
         }
+        else if(response.status===401){
+          setLogout(true);
+        }
         else{
           setMessage(t('petition_error_msg') + response.status);
         }
@@ -304,6 +311,9 @@ const ServiceForm = (props)=> {
       if(response.status===200){
         setMessage(t('request_cancel_success_msg'));
       }
+      else if(response.status===401){
+        setLogout(true);
+      }
       else{
       setMessage(t('request_cancel_fail_msg+response.status'));
       }
@@ -324,6 +334,9 @@ const ServiceForm = (props)=> {
         setAsyncResponse(false);
         if(response.status===200){
           setMessage(t('review_success'));
+        }
+        else if(response.status===401){
+          setLogout(true);
         }
         else{
           setMessage(t('review_error +response.status'));
@@ -348,6 +361,7 @@ const ServiceForm = (props)=> {
 
   return(
     <React.Fragment>
+    <Logout logout={logout}/>
     <Formik
     initialValues={props.initialValues}
       validationSchema={schema}

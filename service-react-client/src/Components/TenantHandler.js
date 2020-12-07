@@ -34,7 +34,6 @@ export const TenantHandler = () => {
     }).then(response=>{
       if(response){
         setTenant(response);
-        console.log(response);
         history.push('/'+tenant_name+'/home');
       }
       else{

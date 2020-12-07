@@ -1,6 +1,6 @@
 const sql = require('../sql').service_details;
 
-const cs = {}; // Reusable ColumnSet objects.
+let cs = {}; // Reusable ColumnSet objects.
 
 /*
  This repository mixes hard-coded and dynamic SQL, primarily to show a diverse example of using both.
@@ -12,7 +12,9 @@ class ServiceDetailsRepository {
         this.pgp = pgp;
 
         // set-up all ColumnSet objects, if needed:
+
         createColumnsets(pgp);
+
     }
 
     async add(data,sub){
@@ -28,6 +30,21 @@ class ServiceDetailsRepository {
         protocol:data.protocol,
         tenant:data.tenant
       })
+    }
+
+
+    async addMultiple(services){
+      const query = this.pgp.helpers.insert(services,cs.insert_multi,'service_details')+"RETURNING id";
+      return this.db.any(query)
+      .then(service_ids => {
+          services.forEach((service,index)=> {
+            services[index].id = service_ids[index].id;
+          });
+          return services
+      })
+      .catch(error => {
+          throw error
+      });
     }
 
     async update(data,id,sub){
@@ -73,7 +90,7 @@ class ServiceDetailsRepository {
       try {
         return this.db.tx('update-service',async t =>{
           let queries = [];
-          queries.push(t.service_state.update(id,'pending'));
+          queries.push(t.service_state.update(id,'pending','delete'));
           queries.push(t.none('UPDATE service_details SET deleted=TRUE WHERE id=$1',+id));
           var result = await t.batch(queries);
           if(result){
@@ -121,6 +138,7 @@ function createColumnsets(pgp) {
         cs.insert = new pgp.helpers.ColumnSet(['service_description','service_name',
           'logo_uri','policy_uri','integration_environment','requester','protocol'],
           {table});
+        cs.insert_multi = new pgp.helpers.ColumnSet(['external_id','tenant','service_name','group_id','service_description','logo_uri','policy_uri','integration_environment','protocol'])
         cs.update = cs.insert.extend(['?id','deleted']);
         cs.external_id = new pgp.helpers.ColumnSet(['?id','external_id'],{table:'service_details'});
     }

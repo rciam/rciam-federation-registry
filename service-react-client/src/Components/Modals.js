@@ -1,9 +1,38 @@
-import React from 'react';
+import React,{useContext} from 'react';
 import Modal from 'react-bootstrap/Modal';
 import {useHistory,useParams} from "react-router-dom";
 import Button from 'react-bootstrap/Button';
 import { useTranslation } from 'react-i18next';
 import { Translation } from 'react-i18next';
+import {tenantContext} from '../context.js';
+
+export const Logout = (props) => {
+  const history = useHistory();
+  const tenant = useContext(tenantContext);
+  const handleClose = () => {
+    localStorage.removeItem('token'); history.push('/'+(tenant&&tenant[0]?tenant[0].name:null));
+  }
+  return (
+    <Translation>
+      {t=> {
+        return(
+          <Modal show={props.logout} onHide={handleClose}>
+            <Modal.Header >
+              <Modal.Title>You have been logged out</Modal.Title>
+            </Modal.Header>
+            <Modal.Footer>
+              <Button variant="secondary" onClick={handleClose}>
+                Continue
+              </Button>
+            </Modal.Footer>
+          </Modal>
+        )
+      }}
+    </Translation>
+  )
+
+
+}
 
 export class SimpleModal extends React.Component {
 
@@ -92,7 +121,6 @@ export function ResponseModal(props){
 
   //const handleClose = () => props.setMessage();
   const handleClose = () => {
-    console.log(tenant_name);
     history.push('/'+tenant_name+'/petitions');}
   return (
     <Modal show={props.message?true:false} onHide={handleClose}>

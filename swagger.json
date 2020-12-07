@@ -2,7 +2,7 @@ swagger: "2.0"
 info:
   description: "This is an Express server used to manage identity provider services. Users manage services by creating requests handled by administrators. You can find out more about the project on the [github page](https://github.com/rciam/rciam-federation-registry) or you can try it out live  [here](http://service-registry.aai-dev.grnet.gr/egi). "
   version: "1.0.1"
-  title: "Service Registry"
+  title: "Federation Registry"
   termsOfService: "http://swagger.io/terms/"
   contact:
     email: "apiteam@swagger.io"
@@ -354,6 +354,33 @@ paths:
           description: "Internal Error"
       security:
       - access_tokenAuth: []
+    post:
+      tags:
+      - "Services"
+      summary: "Add services"
+      description: "Endpoint used to directly add services to federation registry. Should be used only when necessary and not as an alternative way to add services."
+      operationId: "addServices"
+      parameters:
+        - in: path
+          type: string
+          name: name
+          description: "Tenant that the request is targeting"
+          required: true
+        - in: "body"
+          name: "body"
+          description: "Ams formated messages containing results for deployment requests"
+          required: true
+          schema:
+            $ref: "#/definitions/PostServices"
+      responses:
+        "200":
+          description: "OK"
+        "422":
+          description: "Unprocessable Entry"
+        "401":
+          description: "Unauthenticated request"
+        "500":
+          description: "Internal Error"
   /agent/get_new_configurations:
     get:
       tags:
@@ -1023,6 +1050,138 @@ securityDefinitions:
     name: "api_key"
     in: "header"
 definitions:
+  PostServices:
+    type: "array"
+    items:
+      type: "object"
+      properties:
+        service_name:
+          type: "string"
+          description: "Human-readable application name"
+        external_id:
+          type: integer
+          description: "Unique identification of the service used by third party managing the configuration"
+        service_description:
+          type: "string"
+          description: "Human-readable text description"
+        logo_uri:
+          type: "string"
+          format: "uri"
+          description: "URL that points to a logo image"
+        policy_uri:
+          type: "string"
+          format: "uri"
+          description: "URL for the Policy Statement of this service"
+        integration_environment:
+          type: "string"
+          enum:
+          - "demo"
+          - "development"
+          - "production"
+        contacts:
+          type: "array"
+          items:
+            type: "object"
+            properties:
+              email:
+                type: "string"
+                format: "email"
+              type:
+                type: "string"
+                enum:
+                - "admin"
+                - "support"
+                - "technical"
+                - "security"
+        protocol:
+          type: "string"
+          enum:
+          - "oidc"
+          - "saml"
+        entity_id:
+          type: "string"
+          description: "Unique identifier for saml services"
+        metadata_uri:
+          type: "string"
+          format: "uri"
+          description: "Metadata uri for saml services"
+        client_id:
+          type: "string"
+          description: "Unique identifier for oidc services"
+        grant_types:
+          type: "array"
+          items:
+            type: "string"
+            enum:
+            - "implicit"
+            - "authorization_code"
+            - "refresh_token"
+            - "client_credentials"
+            - "password"
+            - "redelegation"
+            - "token_exchange"
+            - "device"
+          description: "oidc specific"
+        scopes:
+          type: "array"
+          items:
+            type: "string"
+            enum:
+            - "openid"
+            - "email"
+            - "profile"
+            - "offline_access"
+            - "eduperson_entitlement"
+            - "eduperson_scoped_affiliation"
+            - "eduperson_unique_id"
+            - "refeds_edu"
+          description: "oidc specific"
+        allow_introspection:
+          type: "boolean"
+          description: "Allow calls to the Introspection Endpoint. For oidc services."
+        code_challenge_method:
+          type: "string"
+          enum:
+          - "plain"
+          - "S256"
+          description: "Proof Key for Code Exchange (PKCE) Code Challenge Method. For oidc services."
+        client_secret:
+          type: string
+          format: "password"
+          description: "Client secret, oidc specific"
+        generate_client_secret:
+          type: boolean
+          description: "Prompts backend to generate value for client secret. Oidc specific"
+        reuse_refresh_tokens:
+          type: "boolean"
+          description: "Adds the offline_access scope to the client's scope, oidc specific"
+        clear_access_tokens_on_refresh:
+          type: "boolean"
+          description: "oidc specific"
+        device_code_validity_seconds:
+          type: integer
+          multipleOf: 10
+          minimum: 0
+          maximum: 1000000
+          description: "oidc specific"
+        access_token_validity_seconds:
+          type: integer
+          multipleOf: 10
+          minimum: 0
+          maximum: 1000000
+          description: "oidc specific"
+        refresh_token_validity_seconds:
+          type: integer
+          multipleOf: 10
+          minimum: 0
+          maximum: 1000000
+          description: "oidc specific"
+        id_token_timeout_seconds:
+          type: integer
+          multipleOf: 10
+          minimum: 0
+          maximum: 1000000
+          description: "oidc specific"
   Agent:
     type: "object"
     properties:

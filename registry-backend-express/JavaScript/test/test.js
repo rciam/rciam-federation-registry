@@ -3,7 +3,7 @@ require('dotenv').config();
 var server = require('../index.js');
 var chai = require('chai');
 var request = require('supertest');
-var {create,edit,users,validationResponses,validationRequests,agents} = require('./data.js');
+var {create,edit,users,validationResponses,validationRequests,agents,postServices} = require('./data.js');
 var expect = chai.expect;
 var should = chai.should;
 var petition,service,group,code,invitation;
@@ -20,7 +20,7 @@ describe('Service registry API Integration Tests', function() {
   after(async () => {
     require('../index.js').stop();
   });
-  beforeEach(done => setTimeout(done, 500));
+  beforeEach(done => setTimeout(done, 1500));
   userToken = setUser(users.egi.admin_user);
   describe('# Petition Validation Testing For Creation Requests', function(){
     it('should catch all null none protocol specific values',function(done){
@@ -308,7 +308,7 @@ describe('Service registry API Integration Tests', function() {
               }
             );
 
-            var req = request(server).post('/ams/ingest').set('dn',config.ams_cert_dn).send({
+            var req = request(server).post('/ams/ingest').set('dn',config.ams_cert_dn).set({Authorization: process.env.AMS_AUTH_KEY}).send({
               messages
             });
             req.expect(200).end(function(err,res){
@@ -555,7 +555,7 @@ describe('Service registry API Integration Tests', function() {
           }
         );
 
-        var req = request(server).post('/ams/ingest').set('dn',config.ams_cert_dn).send({
+        var req = request(server).post('/ams/ingest').set('dn',config.ams_cert_dn).set({Authorization: process.env.AMS_AUTH_KEY}).send({
           messages
         });
         req.expect(200).end(function(err,res){
@@ -635,7 +635,7 @@ describe('Service registry API Integration Tests', function() {
           }
         );
 
-        var req = request(server).post('/ams/ingest').set('dn',config.ams_cert_dn).send({
+        var req = request(server).post('/ams/ingest').set('dn',config.ams_cert_dn).set({Authorization: process.env.AMS_AUTH_KEY}).send({
           messages
         });
         req.expect(200).end(function(err,res){
@@ -820,7 +820,17 @@ describe('Service registry API Integration Tests', function() {
         done();
       })
     });
-
-  })
-
+  });
+  describe('# POST SERVICES',function(){
+    it('should create multiple service',function(done){
+      userToken = setUser(users.egi.admin_user);
+      var req = request(server).post('/tenants/egi/services').set({Authorization: userToken}).send(postServices);
+      req.set('Accept','application/json')
+      .expect('Content-Type',/json/)
+      .expect(200)
+      .end(function(err,res){
+        expect(res.statusCode).to.equal(200);
+        done();});
+    })
+  });
 });

@@ -9,6 +9,16 @@ class ServiceContactsRepository {
      cs = new pgp.helpers.ColumnSet(['owner_id','value','type']);
   }
 
+  async addMultiple(contacts){
+    const query = this.pgp.helpers.insert(contacts,cs,'service_contacts');
+    return this.db.none(query).then(data => {
+        return true
+    })
+    .catch(error => {
+        throw error
+    });
+  }
+
   async add(type,data,id){
     let values = []
     let date = new Date(Date.now());

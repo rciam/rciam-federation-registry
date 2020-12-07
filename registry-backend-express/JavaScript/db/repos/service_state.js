@@ -9,16 +9,18 @@ class ServiceStateRepository {
      cs = new pgp.helpers.ColumnSet(['?id','state'],{table:'service_state'});
   }
 
-  async add(id,state){
+  async add(id,state,deployment_type){
     return this.db.any(sql.add,{
       id:+id,
-      state:state
+      state:state,
+      deployment_type:deployment_type
     });
   }
-  async update(id,state){
+  async update(id,state,deployment_type){
     return this.db.any(sql.update,{
       id:+id,
-      state:state
+      state:state,
+      deployment_type:deployment_type
     })
   }
 
@@ -28,7 +30,9 @@ class ServiceStateRepository {
     let updateClientId =[];
     let updateExternalId = [];
     let ids=[];
+    let errors=[];
     let batch_queries = [];
+    let date = new Date(Date.now());
     return this.db.task('deploymentTasks', async t => {
       for(let index=0;index<messages.length;index++){
         //let decoded_message= JSON.parse(Buffer.from(messages[index].message.data, 'base64').toString());
@@ -47,7 +51,13 @@ class ServiceStateRepository {
           if(deployed){
             ids.push(decoded_message.id);
           }
+          if(decoded_message.state==='error'){
+            errors.push({date:date,service_id:decoded_message.id,error_code:decoded_message.status_code,error_description:decoded_message.error_description})
+          }
         }
+      }
+      if(errors.length>0){
+        batch_queries.push(t.service_errors.add(errors));
       }
       if(updateClientId.length>0){
         batch_queries.push(t.service_details_protocol.updateClientId(updateClientId));

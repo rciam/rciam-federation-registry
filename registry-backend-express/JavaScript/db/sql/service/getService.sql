@@ -7,16 +7,16 @@ SELECT json_build_object('service_name', sd.service_name,'service_description',s
 						 'clear_access_tokens_on_refresh',sd.clear_access_tokens_on_refresh,'id_token_timeout_seconds',sd.id_token_timeout_seconds,'metadata_url',sd.metadata_url
 						 ,'entity_id',sd.entity_id,
 						 'grant_types',
-							(SELECT json_agg((v.value))
+							(SELECT CASE WHEN array_agg((v.value)) IS NULL THEN Array[]::varchar[] ELSE array_agg((v.value)) END
 							 FROM service_oidc_grant_types v WHERE sd.id = v.owner_id),
 						 'scope',
-						 	(SELECT json_agg((v.value))
+						 	(SELECT CASE WHEN array_agg((v.value)) IS NULL THEN Array[]::varchar[] ELSE array_agg((v.value)) END
 							 FROM service_oidc_scopes v WHERE sd.id = v.owner_id),
 						 'redirect_uris',
-						 	(SELECT json_agg((v.value))
+						 	(SELECT CASE WHEN array_agg((v.value)) IS NULL THEN Array[]::varchar[] ELSE array_agg((v.value)) END
 							 FROM service_oidc_redirect_uris v WHERE sd.id = v.owner_id),
 						 'contacts',
-						 	(SELECT json_agg(json_build_object('email',v.value,'type',v.type))
+						 	(SELECT CASE WHEN array_agg(json_build_object('email',v.value,'type',v.type)) IS NULL THEN Array[]::json[] ELSE array_agg(json_build_object('email',v.value,'type',v.type)) END
 							 FROM service_contacts v WHERE sd.id = v.owner_id)
 							) json
     FROM (SELECT *

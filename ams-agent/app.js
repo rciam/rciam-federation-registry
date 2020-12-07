@@ -11,7 +11,7 @@ const options = {
 const amsBaseUrl = process.env.AMS + '/projects/' + process.env.PROJECT;
 const amsProject = 'projects/' + process.env.PROJECT;
 const amsKey = "?key=" +process.env.TOKEN;
-const publish_url_saml = process.env.AMS + '/projects/' + process.env.PROJECT + "/topics/egi-saml:publish?key=" +process.env.TOKEN;
+
 let tenants = [];
 let pubUrls = {};
 let topics = [];
@@ -26,8 +26,8 @@ axios.get(process.env.EXPRESS+'/agent/get_agents',options)
    agents = response.data.agents;
    console.log("Configuring Ams...");
    for(var i=0;i<agents.length;i++){
-     let currentTopic = agents[i].tenant+'_'+agents[i].entity_type+'_'+agents[i].entity_protocol;
-     let agentSub = agents[i].tenant + '_'+agents[i].entity_type + '_' + agents[i].entity_protocol + '_' + agents[i].type + '_' + agents[i].id
+     let currentTopic = process.env.ENV + '_' + agents[i].tenant+'_'+agents[i].entity_type+'_'+agents[i].type;
+     let agentSub = process.env.ENV + '_' + agents[i].tenant + '_'+agents[i].entity_type + '_' + agents[i].entity_protocol + '_' + agents[i].type + '_' + agents[i].id
      if(!topics.includes(currentTopic)){
        topics.push(currentTopic);
        const done = await setupTopic(currentTopic);
@@ -47,6 +47,7 @@ axios.get(process.env.EXPRESS+'/agent/get_agents',options)
      pubUrls[agents[i].tenant][agents[i].entity_type][agents[i].entity_protocol] = amsBaseUrl + "/topics/"+ currentTopic +":publish" + amsKey;
    }
    console.log('Ams Configuration Completed');
+
    var intervalID = setInterval(run, 10000);
 }).catch(err=> {console.log(err)})
 
@@ -60,7 +61,7 @@ async function setupSub(sub,topic){
           return true
         }
       }).catch(err => {
-        console.log('\t'+'\t'+"Failed to Create Subsctiption: " + sub);
+        console.log('\t'+'\t'+"Failed to Create Subscription: " + sub);
         return false
       });
     }
@@ -138,13 +139,14 @@ async function run() {
               delete service.json[propName];
             }
           }
+          console.log(service);
           let messages = [{"attributes":{},"data": Buffer.from(JSON.stringify(service.json)).toString("base64")}];
 
-          let done = await axios.post(pubUrls[service.json.tenant].service[service.json.protocol],{"messages":messages}, options).then((res) => {
-            if(res.status===200){
-              setStateArray.push({id:service.json.id,state:'waiting-deployment',protocol:service.json.protocol,tenant:service.json.tenant});
-            }
-          }).catch(err => {console.log(err)});
+          // let done = await axios.post(pubUrls[service.json.tenant].service[service.json.protocol],{"messages":messages}, options).then((res) => {
+          //   if(res.status===200){
+          //     setStateArray.push({id:service.json.id,state:'waiting-deployment',protocol:service.json.protocol,tenant:service.json.tenant});
+          //   }
+          // }).catch(err => {console.log(err)});
 
         }
         if(setStateArray.length>0){

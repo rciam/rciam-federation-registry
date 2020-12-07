@@ -14,6 +14,7 @@ import {PageNotFound,TenantHandler} from '../Components/TenantHandler.js';
 
 const Routes = (props) => {
   const tenant = useContext(tenantContext);
+
   return(
   <div className="content-container">
     <Switch>
@@ -143,6 +144,7 @@ const TenantRoute = (props) => {
 const ProtectedRoute= (props)=> {
   const user = useContext(userContext);
   const tenant = useContext(tenantContext);
+
   const childrenWithProps = React.Children.map(props.children, child =>
       React.cloneElement(child, {...props.location.state})
     );
