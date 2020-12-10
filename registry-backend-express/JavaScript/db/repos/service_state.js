@@ -56,6 +56,9 @@ class ServiceStateRepository {
           }
         }
       }
+      if(ids.length>0){
+        batch_queries.push(t.service_state.delete(ids));
+      }
       if(errors.length>0){
         batch_queries.push(t.service_errors.add(errors));
       }

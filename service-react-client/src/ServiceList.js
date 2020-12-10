@@ -46,7 +46,8 @@ const ServiceList= (props)=> {
   const [expandFilters,setExpandFilters] = useState();
   const [confirmationData,setConfirmationData] = useState({});
   const [reset,setReset] = useState(false);
-
+  // eslint-disable-next-line
+  const [user,setUser] = useContext(userContext);
 
   let renderedConnections = 0;
   useEffect(()=>{
@@ -81,6 +82,9 @@ const ServiceList= (props)=> {
         }
       });
   }
+  const getErrors = ()=> {
+
+  }
 
   // Get data, to create Service List
   const getServices = ()=> {
@@ -103,11 +107,12 @@ const ServiceList= (props)=> {
     }).then(response=> {
       setLoadingList(false);
       if(response){
-        
+
         response.services.forEach((item,index)=>{
             response.services[index].display = true;
           })
         setServices(response.services);
+        console.log(response.services);
         setReset(!reset);
       }
     });
@@ -323,7 +328,7 @@ function TableItem(props) {
         <div className="flex-column">
           <h3 className="petition-title">{props.service.service_name?props.service.service_name:props.service.client_id?props.service.client_id:props.service.metadata_url}</h3>
           <div className="badge-container">
-            {props.service.hasOwnProperty('state')&&props.service.state!==null?<Badge className="status-badge" style={props.service.state==='deployed'?{background:tenant.color}:null} variant={props.service.state==='deployed'?'primary':'danger'}>{props.service.state==='deployed'?t('badge_deployed'):props.service.state==='error'?t('badge_error'):props.service.deleted===false?t('badge_pending'):t('badge_deleting')}</Badge>:null}
+            {props.service.hasOwnProperty('state')&&props.service.state!==null?<Badge className="status-badge" style={props.service.state==='deployed'?{background:tenant.color}:null} variant={props.service.state==='deployed'?'primary':'danger'}>{props.service.state==='deployed'?t('badge_deployed'):props.service.state==='error'?t('badge_error'):props.service.deployment_type==='delete'?t('badge_pending'):t('badge_deleting')}</Badge>:null}
             {props.service.type?<Badge className="status-badge" variant="warning">
               {props.service.type==='edit'?t('badge_edit_pending'):props.service.type==='create'?t('badge_create_pending'):t('badge_delete_pending')}
               </Badge>:null}
@@ -336,18 +341,34 @@ function TableItem(props) {
         <div className="petition-actions">
           <Row>
             <Col className='controls-col  controls-col-buttons'>
-              <Link
-                className='button-link'
-                to={{
-                pathname:'/'+tenant_name+"/form/view",
-                state:{
-                  service_id:props.service.service_id,
-                  petition_id:props.service.petition_id,
-                  type:props.service.type
+            {props.service.state==='error'&&user.view_errors?
+              <div className="notification">
+                <FontAwesomeIcon icon={faExclamation} className="fa-exclamation"/>
+                <FontAwesomeIcon icon={faCircle} className="fa-circle"/>
+              </div>:null}
+              <OverlayTrigger
+                placement='top'
+                overlay={
+                  <Tooltip id={`tooltip-top`}>
+                    Deployment error click to view
+                  </Tooltip>
                 }
-              }}>
+              >
+                <Link
+                  className='button-link'
+                  to={{
+                  pathname:'/'+tenant_name+"/form/view",
+                  state:{
+                    service_id:props.service.service_id,
+                    petition_id:props.service.petition_id,
+                    type:props.service.type,
+                    get_error:props.service.state==='error'&&user.view_errors?'get_errors':undefined
+                  }
+                }}>
+
                 <Button variant="secondary"><FontAwesomeIcon icon={faEye}/>{t('button_view')}</Button>
               </Link>
+              </OverlayTrigger>
               {props.service.owned?
                 <React.Fragment>
                   {props.service.comment?

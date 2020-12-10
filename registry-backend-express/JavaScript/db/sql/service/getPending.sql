@@ -5,7 +5,7 @@ SELECT json_build_object('id',sd.id,'service_name', sd.service_name,'service_des
 						 'refresh_token_validity_seconds',sd.refresh_token_validity_seconds,'refresh_token_validity_seconds',sd.refresh_token_validity_seconds,
 						 'client_secret',sd.client_secret,'reuse_refresh_tokens',sd.reuse_refresh_tokens,'protocol',sd.protocol,
 						 'clear_access_tokens_on_refresh',sd.clear_access_tokens_on_refresh,'id_token_timeout_seconds',sd.id_token_timeout_seconds,'metadata_url',sd.metadata_url
-						 ,'entity_id',sd.entity_id,'deleted',sd.deleted,'tenant',sd.tenant,'external_id',sd.external_id,
+						 ,'entity_id',sd.entity_id,'tenant',sd.tenant,'external_id',sd.external_id,
 						 'deployment_type',sd.deployment_type,'grant_types',
 							(SELECT json_agg((v.value))
 							 FROM service_oidc_grant_types v WHERE sd.id = v.owner_id),

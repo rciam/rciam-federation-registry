@@ -31,7 +31,6 @@ const base64url = require('base64url');
 // ----------------------------------------------------------
 
 
-
 router.post('/tenants/:name/services',serviceValidationRules(),validate,(req,res,next)=> {
   let services = req.body;
   // Populate json objects with all necessary fields
@@ -195,6 +194,22 @@ router.get('/tokens/:code',(req,res,next)=>{
   }
 });
 
+router.get('/tenants/:name/services/:id/errors',authenticate,(req,res,next)=>{
+  try{
+    if(req.user.role.actions.includes('view_errors')){
+      db.service_errors.getById(req.params.id).then(response=>{
+        return res.status(200).json({errors:response});
+      });
+    }
+  }
+  catch(err){
+    next(err);
+  }
+});
+
+
+
+
 // Get User User Info
 router.get('/tenants/:name/user',authenticate,(req,res,next)=>{
   try{
@@ -205,6 +220,9 @@ router.get('/tenants/:name/user',authenticate,(req,res,next)=>{
       let user = userinfo;
       if(req.user.role.actions.includes('review_own_petition')){
         user.admin = true;
+      }
+      if(req.user.role.actions.includes('view_errors')){
+        user.view_errors = true;
       }
       user.actions = req.user.role.actions;
       user.role = req.user.role.name;
@@ -334,6 +352,7 @@ router.get('/tenants/:name/services/:id',authenticate,(req,res,next)=>{
   if(req.user.role.actions.includes('get_own_service')){
     try{
       if(req.user.role.actions.includes('get_service')){
+        console.log('should be here')
         db.service.get(req.params.id,req.params.name).then(result=>{
           if(result){
             res.status(200).json({service:result.service_data});
@@ -1010,7 +1029,7 @@ function authenticate(req,res,next){
           },
           data: qs.stringify(data)
         }).then(result => {
-          console.log(result);
+          //console.log(result);
           req.user = {};
           req.user.sub = result.data.sub;
           req.user.edu_person_entitlement = result.data.eduperson_entitlement;
@@ -1019,18 +1038,18 @@ function authenticate(req,res,next){
           db.user_role.getRoleActions(req.user.edu_person_entitlement,req.params.name).then(role=>{
             if(role.success){
               req.user.role = role.role;
-              console.log('authenticated');
+              //console.log('authenticated');
               next();
             }
             else{
               res.status(401).end();
             }
           }).catch((err)=> {
-            console.log(err);
+            //console.log(err);
             res.status(401).end();
           });
         }, (error) =>{
-          console.log(error);
+          //console.log(error);
           res.status(401).end();
         }).catch(err=>{res.status(401).end();})
       }
