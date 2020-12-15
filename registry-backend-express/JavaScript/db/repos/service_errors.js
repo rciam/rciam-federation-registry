@@ -18,11 +18,14 @@ class ServiceErrorsRepository {
     }
 
     async add(errors){
-
       const query = this.pgp.helpers.insert(errors,cs.insert);
       let stuff = await this.db.any(query);
       console.log(stuff);
       return true
+    }
+
+    async getById(id){
+      return this.db.any('SELECT * FROM service_errors WHERE service_id=$1',+id);
     }
 
 
