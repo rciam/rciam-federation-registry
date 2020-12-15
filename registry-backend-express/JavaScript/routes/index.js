@@ -1038,6 +1038,7 @@ function authenticate(req,res,next){
           db.user_role.getRoleActions(req.user.edu_person_entitlement,req.params.name).then(role=>{
             if(role.success){
               req.user.role = role.role;
+              console.log('User with email ' + result.data.email + ' is authenticated');
               //console.log('authenticated');
               next();
             }

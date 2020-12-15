@@ -142,11 +142,11 @@ async function run() {
           console.log(service);
           let messages = [{"attributes":{},"data": Buffer.from(JSON.stringify(service.json)).toString("base64")}];
 
-          // let done = await axios.post(pubUrls[service.json.tenant].service[service.json.protocol],{"messages":messages}, options).then((res) => {
-          //   if(res.status===200){
-          //     setStateArray.push({id:service.json.id,state:'waiting-deployment',protocol:service.json.protocol,tenant:service.json.tenant});
-          //   }
-          // }).catch(err => {console.log(err)});
+           let done = await axios.post(pubUrls[service.json.tenant].service[service.json.protocol],{"messages":messages}, options).then((res) => {
+             if(res.status===200){
+               setStateArray.push({id:service.json.id,state:'waiting-deployment',protocol:service.json.protocol,tenant:service.json.tenant});
+             }
+          }).catch(err => {console.log(err)});
 
         }
         if(setStateArray.length>0){
