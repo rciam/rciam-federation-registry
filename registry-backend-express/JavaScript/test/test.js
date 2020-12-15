@@ -20,7 +20,7 @@ describe('Service registry API Integration Tests', function() {
   after(async () => {
     require('../index.js').stop();
   });
-  beforeEach(done => setTimeout(done, 1500));
+  beforeEach(done => setTimeout(done, 2000));
   userToken = setUser(users.egi.admin_user);
   describe('# Petition Validation Testing For Creation Requests', function(){
     it('should catch all null none protocol specific values',function(done){

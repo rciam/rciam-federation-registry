@@ -49,6 +49,7 @@ class ServiceStateRepository {
             updateClientId.push({id:decoded_message.id,client_id:decoded_message.client_id});
           }
           if(deployed){
+
             ids.push(decoded_message.id);
           }
           if(decoded_message.state==='error'){
@@ -56,7 +57,9 @@ class ServiceStateRepository {
           }
         }
       }
+
       if(ids.length>0){
+
         batch_queries.push(t.service_state.delete(ids));
       }
       if(errors.length>0){
@@ -71,6 +74,7 @@ class ServiceStateRepository {
       if(updateState.length>0){
         batch_queries.push(t.service_state.updateMultiple(updateState));
       }
+
       if(batch_queries.length>0){
         let batch_result = await t.batch(batch_queries).catch(err=>{
           throw err;
@@ -80,6 +84,13 @@ class ServiceStateRepository {
 
     });
   }
+
+  async delete(ids){
+    return this.db.any("UPDATE service_details SET deleted=true WHERE id IN (SELECT id FROM service_state WHERE deployment_type='delete' AND id IN($1:csv))",ids)
+  }
+
+
+
 
   async updateMultiple(updateData){
     // updateData = [{id:1,state:'deployed'},{id:2,state:'deployed'},{id:3,state:'failed'}];
