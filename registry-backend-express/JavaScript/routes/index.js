@@ -352,7 +352,6 @@ router.get('/tenants/:name/services/:id',authenticate,(req,res,next)=>{
   if(req.user.role.actions.includes('get_own_service')){
     try{
       if(req.user.role.actions.includes('get_service')){
-        console.log('should be here')
         db.service.get(req.params.id,req.params.name).then(result=>{
           if(result){
             res.status(200).json({service:result.service_data});
@@ -1043,6 +1042,7 @@ function authenticate(req,res,next){
               next();
             }
             else{
+
               res.status(401).end();
             }
           }).catch((err)=> {
@@ -1117,7 +1117,7 @@ const saveUser=(userinfo,tenant)=>{
 }
 
 function checkCertificate(req,res,next) {
-  if(req.headers['dn']===config.ams_cert_dn&&req.headers['authorization']===process.env.AMS_AUTH_KEY){
+  if(req.headers['authorization']===process.env.AMS_AUTH_KEY){
     next();
   }
   else{
