@@ -241,11 +241,14 @@ router.post('/ams/ingest',checkCertificate,decodeAms,amsIngestValidation(),valid
   try{
     return db.task('deploymentTasks', async t => {
       // update state
+      console.log(req.body.decoded_messages)
       await t.service_state.deploymentUpdate(req.body.decoded_messages).then(async ids=>{
         if(ids){
           res.sendStatus(200).end();
           await t.user.getServiceOwners(ids).then(data=>{
             if(data){
+              console.log(data);
+              console.log(typeof(data))
               data.forEach(email_data=>{
                 sendMail({subject:'Service Deployment Result',service_name:email_data.service_name,state:email_data.state,tenant:email_data.tenant},'deployment-notification.html',[{name:email_data.name,email:email_data.email}]);
               });
