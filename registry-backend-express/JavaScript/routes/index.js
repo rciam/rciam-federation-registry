@@ -30,7 +30,18 @@ const base64url = require('base64url');
 // ************************* Routes *************************
 // ----------------------------------------------------------
 
-
+router.get('/test',(req,res,next)=>{
+  try{
+    db.user_role.getRoleActions(undefined,'egi').then(result=>{
+      console.log(result);
+      res.status(200).end();
+    })
+  }
+  catch(err){
+    console.log(err);
+    next(err);
+  }
+})
 router.post('/tenants/:name/services',serviceValidationRules(),validate,(req,res,next)=> {
   let services = req.body;
   // Populate json objects with all necessary fields
@@ -104,7 +115,7 @@ router.post('/tenants/:name/services',serviceValidationRules(),validate,(req,res
   catch(err){
     next(err);
   }
-})
+});
 // Get available tenats
 router.get('/tenants/:name',(req,res,next)=>{
   try{
@@ -245,17 +256,21 @@ router.post('/ams/ingest',checkCertificate,decodeAms,amsIngestValidation(),valid
       await t.service_state.deploymentUpdate(req.body.decoded_messages).then(async ids=>{
         if(ids){
           res.sendStatus(200).end();
-          await t.user.getServiceOwners(ids).then(data=>{
-            if(data){
-              console.log(data);
-              console.log(typeof(data))
-              data.forEach(email_data=>{
-                sendMail({subject:'Service Deployment Result',service_name:email_data.service_name,state:email_data.state,tenant:email_data.tenant},'deployment-notification.html',[{name:email_data.name,email:email_data.email}]);
-              });
-            }
-          }).catch(err=>{
-            next('Could not sent deployment email.' + err);
-          });
+          console.log('Deployed Service ids');
+          console.log(ids);
+          if(ids.length>0){
+            await t.user.getServiceOwners(ids).then(data=>{
+              if(data){
+                console.log('Service owners');
+                console.log(data);
+                data.forEach(email_data=>{
+                  sendMail({subject:'Service Deployment Result',service_name:email_data.service_name,state:email_data.state,tenant:email_data.tenant},'deployment-notification.html',[{name:email_data.name,email:email_data.email}]);
+                });
+              }
+            }).catch(err=>{
+              next('Could not sent deployment email.' + err);
+            });
+          }
         }
         else{
           next('Deployment Failed');
@@ -1037,21 +1052,24 @@ function authenticate(req,res,next){
           req.user.edu_person_entitlement = result.data.eduperson_entitlement;
           req.user.iss = result.data.iss;
           req.user.email = result.data.email;
-          db.user_role.getRoleActions(req.user.edu_person_entitlement,req.params.name).then(role=>{
-            if(role.success){
-              req.user.role = role.role;
-              console.log('User with email ' + result.data.email + ' is authenticated');
-              //console.log('authenticated');
-              next();
-            }
-            else{
+          if(req.user.sub){
+            db.user_role.getRoleActions(req.user.edu_person_entitlement,req.params.name).then(role=>{
+              if(role.success){
+                req.user.role = role.role;
+                console.log('User with email ' + result.data.email + ' is authenticated');
+                //console.log('authenticated');
+                next();
+              }
+              else{
 
+                res.status(401).end();
+              }
+            }).catch((err)=> {
+              //console.log(err);
               res.status(401).end();
-            }
-          }).catch((err)=> {
-            //console.log(err);
-            res.status(401).end();
-          });
+            });
+          }
+          else{res.status(401).end();}
         }, (error) =>{
           //console.log(error);
           res.status(401).end();
