@@ -11,7 +11,6 @@ import GroupsPage from '../Groups.js';
 import InvitationsPage from '../Invitations.js'
 import {tenantContext,userContext} from '../context.js';
 import {PageNotFound,TenantHandler} from '../Components/TenantHandler.js';
-
 const Routes = (props) => {
   const tenant = useContext(tenantContext);
 
@@ -22,7 +21,6 @@ const Routes = (props) => {
       <Route exact path="/:tenant_name/code/:code">
         <Callback/>
       </Route>
-
       <TenantRoute path="/:tenant_name/home">
         <Home/>
       </TenantRoute>

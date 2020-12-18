@@ -82,9 +82,7 @@ const ServiceList= (props)=> {
         }
       });
   }
-  const getErrors = ()=> {
 
-  }
 
   // Get data, to create Service List
   const getServices = ()=> {
@@ -213,6 +211,7 @@ const ServiceList= (props)=> {
     <React.Fragment>
       <Logout logout={logout}/>
       <ListResponseModal message={message} modalTitle={responseTitle} setMessage={setMessage}/>
+
       <ConfirmationModal active={confirmationData.action?true:false} setActive={setConfirmationData} action={()=>{if(confirmationData.action==='delete_service'){deleteService(...confirmationData.args)}else{deletePetition(...confirmationData.args)}}} title={confirmationData.title} accept={'Yes'} decline={'No'}/>
       <div>
         <LoadingBar loading={loadingList}>
@@ -328,7 +327,7 @@ function TableItem(props) {
         <div className="flex-column">
           <h3 className="petition-title">{props.service.service_name?props.service.service_name:props.service.client_id?props.service.client_id:props.service.metadata_url}</h3>
           <div className="badge-container">
-            {props.service.hasOwnProperty('state')&&props.service.state!==null?<Badge className="status-badge" style={props.service.state==='deployed'?{background:tenant.color}:null} variant={props.service.state==='deployed'?'primary':'danger'}>{props.service.state==='deployed'?t('badge_deployed'):props.service.state==='error'?t('badge_error'):props.service.deployment_type==='delete'?t('badge_pending'):t('badge_deleting')}</Badge>:null}
+            {props.service.hasOwnProperty('state')&&props.service.state!==null?<Badge className="status-badge" style={props.service.state==='deployed'?{background:tenant.color}:null} variant={props.service.state==='deployed'?'primary':'danger'}>{props.service.state==='deployed'?t('badge_deployed'):props.service.state==='error'?t('badge_error'):props.service.deployment_type==='delete'?t('badge_deleting'):t('badge_pending')}</Badge>:null}
             {props.service.type?<Badge className="status-badge" variant="warning">
               {props.service.type==='edit'?t('badge_edit_pending'):props.service.type==='create'?t('badge_create_pending'):t('badge_delete_pending')}
               </Badge>:null}
