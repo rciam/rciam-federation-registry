@@ -30,18 +30,6 @@ const base64url = require('base64url');
 // ************************* Routes *************************
 // ----------------------------------------------------------
 
-router.get('/test',(req,res,next)=>{
-  try{
-    db.user_role.getRoleActions(undefined,'egi').then(result=>{
-      console.log(result);
-      res.status(200).end();
-    })
-  }
-  catch(err){
-    console.log(err);
-    next(err);
-  }
-})
 router.post('/tenants/:name/services',serviceValidationRules(),validate,(req,res,next)=> {
   let services = req.body;
   // Populate json objects with all necessary fields
@@ -205,11 +193,14 @@ router.get('/tokens/:code',(req,res,next)=>{
   }
 });
 
-router.get('/tenants/:name/services/:id/errors',authenticate,(req,res,next)=>{
+router.get('/tenants/:name/services/:id/error',authenticate,(req,res,next)=>{
   try{
     if(req.user.role.actions.includes('view_errors')){
-      db.service_errors.getById(req.params.id).then(response=>{
-        return res.status(200).json({errors:response});
+
+      db.service_errors.getErrorByServiceId(req.params.id).then(response=>{
+        console.log('Response');
+        console.log(response);
+        return res.status(200).json({error:response});
       });
     }
   }
@@ -217,6 +208,25 @@ router.get('/tenants/:name/services/:id/errors',authenticate,(req,res,next)=>{
     next(err);
   }
 });
+
+router.put('/tenants/:name/services/:id/error',authenticate,(req,res,next)=> {
+  try{
+    if(req.user.role.actions.includes('view_errors')){
+      if(req.query.action==='resend'){
+        db.tx('accept-invite',async t =>{
+              let done = await t.batch([
+                t.service_state.resend(req.params.id),
+                t.service_errors.archive(req.params.id),
+              ]).catch(err=>{next(err)});
+              res.status(200).end();
+        }).catch(err=>{next(err)})
+      }
+    }
+  }
+  catch(err){
+    next(err);
+  }
+})
 
 
 

@@ -3,6 +3,7 @@ import initialValues from './initialValues';
 import {useParams} from "react-router-dom";
 import * as config from './config.json';
 import ServiceForm from "./ServiceForm.js";
+import ErrorComponent from "./Components/Error.js"
 import {LoadingBar} from './Components/LoadingBar';
 import Tabs from 'react-bootstrap/Tabs';
 import Tab from 'react-bootstrap/Tab';
@@ -198,6 +199,7 @@ const ViewService = (props)=>{
   const { t, i18n } = useTranslation();
   const [service,setService] = useState();
   const [petition,setPetition] = useState();
+  const [deploymentError,setDeploymentError] = useState();
   const {tenant_name} = useParams();
   const {logout,setLogout} = useState(false);
   useEffect(()=>{
@@ -207,30 +209,34 @@ const ViewService = (props)=>{
   },[]);
 
   const getData = () => {
-    if(props.get_error){
-      fetch(config.host+'tenants/'+tenant_name+'/services/'+props.service_id+'/errors', {
-        method: 'GET', // *GET, POST, PUT, DELETE, etc.
-        credentials: 'include', // include, *same-origin, omit
-        headers: {
-        'Content-Type': 'application/json',
-        'Authorization': localStorage.getItem('token')
-      }}).then(response=>{
-        if(response.status===200){
-          return response.json();
-        }
-        else if(response.status===401){
-          setLogout(true);
-        }
-        else {
-          return false
-        }
-      }).then(response=> {
-        if(response){
-          console.log(response)
-        }
-      });
-    }
     if(props.service_id){
+      if(props.get_error){
+          fetch(config.host+'tenants/'+tenant_name+'/services/'+props.service_id +'/error', {
+            method: 'GET', // *GET, POST, PUT, DELETE, etc.
+            credentials: 'include', // include, *same-origin, omit
+            headers: {
+            'Content-Type': 'application/json',
+            'Authorization': localStorage.getItem('token')
+            }
+        }).then(response=> {
+          if(response.status===200){
+            return response.json();
+          }else if(response.status===401){
+            setLogout(true);
+          }
+          else {
+            return false
+          }
+        }).then(response=> {
+          if(response){
+            console.log(response)
+            setDeploymentError(response.error)
+          }
+          else{
+            setLogout(true)
+          }
+        });
+      }
       fetch(config.host+'tenants/'+tenant_name+'/services/'+props.service_id, {
         method: 'GET', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
@@ -282,6 +288,7 @@ const ViewService = (props)=>{
   return(
     <React.Fragment>
     <Logout logout={logout}/>
+    <ErrorComponent deploymentError={deploymentError} setDeploymentError={setDeploymentError} service_id={props.service_id} setLogout={setLogout}/>
       {service?<ServiceForm initialValues={service} disabled={true} {...props} />:props.service_id?<LoadingBar loading={true}/>:petition?
         <React.Fragment>
           <Alert variant='danger' className='form-alert'>

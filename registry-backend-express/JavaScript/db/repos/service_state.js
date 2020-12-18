@@ -24,6 +24,10 @@ class ServiceStateRepository {
     })
   }
 
+  async resend(id){
+    return this.db.one("UPDATE service_state SET state='pending' WHERE id=$1 RETURNING id",+id)
+  }
+
 
   async deploymentUpdate(messages){
     let updateState=[];
