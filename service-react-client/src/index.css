@@ -1151,3 +1151,12 @@ html:lang(gr) .home-container h1 {
   height: 1.5rem;
   animation: spin 2s linear infinite;
 }
+.error-action-alert {
+  border-color:     #f5c6cb!important;
+  border-width: thin!important;
+}
+.error-action-alert-hidden {
+  border:none!important;
+  background-color: #F8D7DA!important;
+  margin-bottom:0rem!important;
+}

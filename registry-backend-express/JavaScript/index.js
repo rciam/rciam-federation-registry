@@ -35,7 +35,7 @@ var corsOptions = {
     preflightContinue:true
 }
 
-// Tenant issuer initialization
+
 db.tenants.getInit().then(async tenants => {
   for (const tenant of tenants){
     await Issuer.discover(tenant.issuer_url).then((issuer)=>{
@@ -52,6 +52,7 @@ db.tenants.getInit().then(async tenants => {
     });
   }
 }).catch(err => {console.log('Tenant initialization failed due to following error'); console.log(err);});
+
 
 
 

@@ -202,6 +202,7 @@ const ViewService = (props)=>{
   const [deploymentError,setDeploymentError] = useState();
   const {tenant_name} = useParams();
   const {logout,setLogout} = useState(false);
+  
   useEffect(()=>{
 
     getData();
