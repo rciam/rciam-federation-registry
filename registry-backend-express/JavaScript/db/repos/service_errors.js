@@ -24,7 +24,7 @@ class ServiceErrorsRepository {
     }
 
     async getErrorByServiceId(id){
-      return this.db.any('SELECT date as error_date,error_code,error_description FROM service_errors WHERE service_id=$1 AND archived=false',+id);
+      return this.db.oneOrNone('SELECT date as error_date,error_code,error_description FROM service_errors WHERE service_id=$1 AND archived=false',+id);
     }
 
     async archive(id){

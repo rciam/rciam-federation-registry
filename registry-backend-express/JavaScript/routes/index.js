@@ -283,7 +283,7 @@ router.post('/ams/ingest',checkCertificate,decodeAms,amsIngestValidation(),valid
           next('Deployment Failed');
         }
       }).catch(err=>{
-        next(err);
+        res.status(200).send("Invalid Message");
       });
     });
   }
