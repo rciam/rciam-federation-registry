@@ -308,7 +308,7 @@ describe('Service registry API Integration Tests', function() {
               }
             );
 
-            var req = request(server).post('/ams/ingest').set('dn',config.ams_cert_dn).set({Authorization: process.env.AMS_AUTH_KEY}).send({
+            var req = request(server).post('/ams/ingest').set({Authorization: process.env.AMS_AUTH_KEY}).send({
               messages
             });
             req.expect(200).end(function(err,res){
@@ -555,7 +555,7 @@ describe('Service registry API Integration Tests', function() {
           }
         );
 
-        var req = request(server).post('/ams/ingest').set('dn',config.ams_cert_dn).set({Authorization: process.env.AMS_AUTH_KEY}).send({
+        var req = request(server).post('/ams/ingest').set({Authorization: process.env.AMS_AUTH_KEY}).send({
           messages
         });
         req.expect(200).end(function(err,res){
@@ -635,7 +635,7 @@ describe('Service registry API Integration Tests', function() {
           }
         );
 
-        var req = request(server).post('/ams/ingest').set('dn',config.ams_cert_dn).set({Authorization: process.env.AMS_AUTH_KEY}).send({
+        var req = request(server).post('/ams/ingest').set({Authorization: process.env.AMS_AUTH_KEY}).send({
           messages
         });
         req.expect(200).end(function(err,res){
