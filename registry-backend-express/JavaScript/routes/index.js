@@ -11,9 +11,6 @@ var router = require('express').Router();
 var passport = require('passport');
 var config = require('../config');
 const customLogger = require('../loggers.js');
-const petitionTables = ['service_petition_oidc_scopes','service_petition_oidc_grant_types','service_petition_oidc_redirect_uris'];
-const serviceTables = ['service_oidc_scopes','service_oidc_grant_types','service_oidc_redirect_uris'];
-const tables = ['service_oidc_scopes','service_oidc_grant_types','service_oidc_redirect_uris','service_contacts'];
 const { generators } = require('openid-client');
 const code_verifier = generators.codeVerifier();
 const {rejectPetition,approvePetition,changesPetition,getPetition,getOpenPetition} = require('../controllers/main.js');
@@ -286,7 +283,7 @@ router.post('/ams/ingest',checkCertificate,decodeAms,amsIngestValidation(),valid
           next('Deployment Failed');
         }
       }).catch(err=>{
-        next(err);
+        res.status(200).send("Invalid Message");
       });
     });
   }

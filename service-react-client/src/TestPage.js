@@ -1,7 +1,7 @@
-import React,{useState,useContext} from 'react';
+import React,{useState,useEffect} from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {faSortDown,faSortUp} from '@fortawesome/free-solid-svg-icons';
-import * as config from '../config.json';
+import * as config from './config.json';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Alert from 'react-bootstrap/Alert';
 import Row from 'react-bootstrap/Row';
@@ -11,16 +11,71 @@ import Form from 'react-bootstrap/Form';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import Button from 'react-bootstrap/Button';
 //import { useTranslation } from 'react-i18next';
+import {Logout} from './Components/Modals.js';
 import {useParams } from "react-router-dom";
-import {tenantContext} from '../context.js';
 
+const TestRoute = (props)=> {
+  // eslint-disable-next-line
+  const [logout,setLogout] = useState(false);
+  const [deploymentError,setDeploymentError] = useState();
+  // eslint-disable-next-line
+  let {tenant_name} = useParams();
+  useEffect(()=>{
+    getError();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[]);
+
+  const getError = () => {
+    fetch(config.host+'tenants/'+tenant_name+'/services/'+props.service_id +'/error', {
+      method: 'GET', // *GET, POST, PUT, DELETE, etc.
+      credentials: 'include', // include, *same-origin, omit
+      headers: {
+      'Content-Type': 'application/json',
+      'Authorization': localStorage.getItem('token')
+      }
+  }).then(response=> {
+    if(response.status===200){
+      return response.json();
+    }else if(response.status===401){
+      setLogout(true);
+    }
+    else {
+      return false
+    }
+  }).then(response=> {
+    if(response){
+      console.log(response)
+      setDeploymentError(response.error)
+    }
+    else{
+      setLogout(true)
+    }
+  });
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+  return(
+    <React.Fragment>
+      <Logout logout={logout}/>
+      <ErrorComponent deploymentError={deploymentError} setDeploymentError={setDeploymentError} service_id={props.service_id} setLogout={setLogout}/>
+    </React.Fragment>
+  )
+}
 const ErrorComponent = (props) => {
   const [action,setAction] = useState();
   const [expand,setExpand] = useState(false);
-  // eslint-disable-next-line
-  const [tenant,setTeanant] = useContext(tenantContext);
   const [loading,setLoading] = useState(false);
-
+  // eslint-disable-next-line
   const [response,setResponse] = useState(false);
   //const { t, i18n } = useTranslation();
   let {tenant_name} = useParams();
@@ -35,7 +90,6 @@ const ErrorComponent = (props) => {
       'Authorization': localStorage.getItem('token')
       }
     }).then(res=> {
-
       if(res.status===200){
         setResponse('success')
         props.setDeploymentError();
@@ -47,9 +101,8 @@ const ErrorComponent = (props) => {
       else{
         setResponse('failed');
       }
-      setLoading(false);
     });
-
+    setLoading(false);
   }
 
   const buttonAction = () =>{
@@ -83,23 +136,21 @@ const ErrorComponent = (props) => {
           </p>
 
           <hr/>
-          <Alert show={true} variant="light" style={{color:tenant.color}} className={expand?"error-action-alert":"error-action-alert-hidden"}>
           <div className="d-flex justify-content-end">
           {error&&expand?
             <div className="review-error" style={{marginRight:'0.5rem',color:'#721c24'}}>
               <b>{error}</b>
             </div>
             :null}
-
           <ButtonGroup>
-            <Button className="review-button" variant="secondary" onClick={()=> buttonAction()}>{expand?'Submit Action':
+            <Button className="review-button" variant="outline-danger" onClick={()=> buttonAction()}>{expand?'Submit Action':
               <React.Fragment>
                 Take Action
                 <FontAwesomeIcon icon={faSortDown}/>
               </React.Fragment>
               }</Button>
               {expand?
-                <Button variant="secondary" style={{padding:'0.4rem'}} className="review-button-expand" onClick={()=>setExpand(!expand)}>
+                <Button variant="outline-danger" style={{padding:'0.4rem'}} className="review-button-expand" onClick={()=>setExpand(!expand)}>
                   <FontAwesomeIcon style={{marginTop:'0.5rem'}} icon={faSortUp}/>
                 </Button>:null}
 
@@ -145,7 +196,7 @@ const ErrorComponent = (props) => {
                   />
                 </Col>
                 <Col onClick={()=>{
-                    //setAction('revert');
+                    setAction('revert');
                 }}>
                   <Row>
                     <strong>
@@ -159,7 +210,6 @@ const ErrorComponent = (props) => {
               </Row>
             </Form.Group>
           </Collapse>
-          </Alert>
         </Alert>
       </React.Fragment>:null
     }
@@ -171,4 +221,12 @@ const ErrorComponent = (props) => {
     </React.Fragment>
   )
 }
-export default ErrorComponent
+
+
+
+
+
+
+
+
+export default TestRoute

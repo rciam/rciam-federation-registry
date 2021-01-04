@@ -1,6 +1,6 @@
 {
   "integration_environment": ["demo","production","development"],
-  "grant_types":["implicit","authorization_code","refresh_token","client_credentials","password","redelegation","token_exchange","device"],
+  "grant_types":["implicit","authorization_code","refresh_token","client_credentials","urn:ietf:params:oauth:grant_type:redelegate","urn:ietf:params:oauth:grant-type:token-exchange","urn:ietf:params:oauth:grant-type:device_code","urn:ietf:params:oauth:grant-type:jwt-bearer"],
   "scope":["openid","email","profile","offline_access","eduperson_entitlement","eduperson_scoped_affiliation","eduperson_unique_id","refeds_edu"],
   "contact_types":["admin","technical","support","security"]
 }

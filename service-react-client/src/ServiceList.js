@@ -341,33 +341,54 @@ function TableItem(props) {
           <Row>
             <Col className='controls-col  controls-col-buttons'>
             {props.service.state==='error'&&user.view_errors?
-              <div className="notification">
-                <FontAwesomeIcon icon={faExclamation} className="fa-exclamation"/>
-                <FontAwesomeIcon icon={faCircle} className="fa-circle"/>
-              </div>:null}
-              <OverlayTrigger
-                placement='top'
-                overlay={
-                  <Tooltip id={`tooltip-top`}>
-                    Deployment error click to view
-                  </Tooltip>
-                }
-              >
-                <Link
-                  className='button-link'
-                  to={{
-                  pathname:'/'+tenant_name+"/form/view",
-                  state:{
-                    service_id:props.service.service_id,
-                    petition_id:props.service.petition_id,
-                    type:props.service.type,
-                    get_error:props.service.state==='error'&&user.view_errors?'get_errors':undefined
+              <React.Fragment>
+                <div className="notification">
+                  <FontAwesomeIcon icon={faExclamation} className="fa-exclamation"/>
+                  <FontAwesomeIcon icon={faCircle} className="fa-circle"/>
+                </div>
+                <OverlayTrigger
+                  placement='top'
+                  show={false}
+                  overlay={
+                    <Tooltip id={`tooltip-top`}>
+                      Deployment error click to view
+                    </Tooltip>
                   }
-                }}>
+                >
+                  <Link
+                    className='button-link'
+                    to={{
+                    pathname:'/'+tenant_name+"/form/view",
+                    state:{
+                      service_id:props.service.service_id,
+                      petition_id:props.service.petition_id,
+                      type:props.service.type,
+                      get_error:props.service.state==='error'&&user.view_errors?'get_errors':undefined
+                    }
+                  }}>
 
-                <Button variant="secondary"><FontAwesomeIcon icon={faEye}/>{t('button_view')}</Button>
-              </Link>
-              </OverlayTrigger>
+                  <Button variant="secondary"><FontAwesomeIcon icon={faEye}/>{t('button_view')}</Button>
+                </Link>
+                </OverlayTrigger>
+              </React.Fragment>
+              :
+              <Link
+                className='button-link'
+                to={{
+                pathname:'/'+tenant_name+"/form/view",
+                state:{
+                  service_id:props.service.service_id,
+                  petition_id:props.service.petition_id,
+                  type:props.service.type,
+                  get_error:props.service.state==='error'&&user.view_errors?'get_errors':undefined
+                }
+              }}>
+
+              <Button variant="secondary"><FontAwesomeIcon icon={faEye}/>{t('button_view')}</Button>
+            </Link>
+            }
+
+
               {props.service.owned?
                 <React.Fragment>
                   {props.service.comment?
