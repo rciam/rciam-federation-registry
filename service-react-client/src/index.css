@@ -1140,3 +1140,23 @@ html:lang(gr) .home-container h1 {
 .not_found_container span {
   color:#7c7c7c;
 }
+
+.error-loader {
+  border: 0.3rem solid #f3f3f3; /* Light grey */
+  margin-top: 0.4rem;
+  margin-left:0.3rem;
+  border-top: 0.3rem solid #B1737A; /* Blue */
+  border-radius: 50%;
+  width: 1.5rem;
+  height: 1.5rem;
+  animation: spin 2s linear infinite;
+}
+.error-action-alert {
+  border-color:     #f5c6cb!important;
+  border-width: thin!important;
+}
+.error-action-alert-hidden {
+  border:none!important;
+  background-color: #F8D7DA!important;
+  margin-bottom:0rem!important;
+}

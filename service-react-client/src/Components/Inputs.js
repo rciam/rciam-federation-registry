@@ -240,7 +240,7 @@ export function CheckboxList(props){
             {props.listItems.map((item,index)=>(
               <div className="checkboxList" key={index}>
                 <Checkbox name={props.name} disabled={props.disabled} value={item}/>
-                {item.replace("_"," ")}
+                {item.length>33&&(item.substr(0,33)==="urn:ietf:params:oauth:grant-type:"||item.substr(0,33)==="urn:ietf:params:oauth:grant_type:")?item.substr(33).replace("_"," "):item.replace("_"," ")}
               </div>
             ))}
           </React.Fragment>

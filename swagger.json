@@ -368,7 +368,7 @@ paths:
           required: true
         - in: "body"
           name: "body"
-          description: "Ams formated messages containing results for deployment requests"
+          description: "Service details to add to the registry"
           required: true
           schema:
             $ref: "#/definitions/PostServices"
@@ -1054,6 +1054,11 @@ definitions:
     type: "array"
     items:
       type: "object"
+      required:
+        - integration_environment
+        - protocol
+        - client_id
+        - metadata_url
       properties:
         service_name:
           type: "string"
@@ -1104,10 +1109,10 @@ definitions:
         metadata_uri:
           type: "string"
           format: "uri"
-          description: "Metadata uri for saml services"
+          description: "Metadata uri required only for saml services"
         client_id:
           type: "string"
-          description: "Unique identifier for oidc services"
+          description: "Unique identifier rewuired only for oidc services"
         grant_types:
           type: "array"
           items:

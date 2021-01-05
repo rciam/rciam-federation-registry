@@ -15,11 +15,12 @@ const amsKey = "?key=" +process.env.TOKEN;
 let tenants = [];
 let pubUrls = {};
 let topics = [];
+let setStateArray = [];
 let subscriptions = {};
 let agents;
 let acl = {"authorized_users": ["andreas-koz"]};
 var intervalID;
-
+var setStateTask;
 
 axios.get(process.env.EXPRESS+'/agent/get_agents',options)
 .then(async function (response) {
@@ -28,7 +29,9 @@ axios.get(process.env.EXPRESS+'/agent/get_agents',options)
    for(var i=0;i<agents.length;i++){
      let currentTopic = process.env.ENV + '_' + agents[i].tenant+'_'+agents[i].entity_type+'_'+agents[i].type;
      let agentSub = process.env.ENV + '_' + agents[i].tenant + '_'+agents[i].entity_type + '_' + agents[i].entity_protocol + '_' + agents[i].type + '_' + agents[i].id
+     //console.log(agentSub);
      if(!topics.includes(currentTopic)){
+       //console.log(currentTopic);
        topics.push(currentTopic);
        const done = await setupTopic(currentTopic);
      }
@@ -125,13 +128,14 @@ async function setupTopic(topic) {
 }
 
 async function run() {
+  if(setStateArray.length === 0){
+    axios.get(process.env.EXPRESS+'/agent/get_new_configurations',options)
+    .then(async function (response) {
+      // handle success
 
-  axios.get(process.env.EXPRESS+'/agent/get_new_configurations',options)
-  .then(async function (response) {
-	// handle success
-    let setStateArray = [];
-    let service;
-    if(response.data.services){
+      let service;
+      if(response.data.services){
+        // fix format of the data
         for(let index=0;index<response.data.services.length;index++){
           service = response.data.services[index];
           for (var propName in service.json) {
@@ -142,31 +146,38 @@ async function run() {
           console.log(service);
           let messages = [{"attributes":{},"data": Buffer.from(JSON.stringify(service.json)).toString("base64")}];
 
-          // let done = await axios.post(pubUrls[service.json.tenant].service[service.json.protocol],{"messages":messages}, options).then((res) => {
-          //   if(res.status===200){
-          //     setStateArray.push({id:service.json.id,state:'waiting-deployment',protocol:service.json.protocol,tenant:service.json.tenant});
-          //   }
-          // }).catch(err => {console.log(err)});
+          let done = await axios.post(pubUrls[service.json.tenant].service[service.json.protocol],{"messages":messages}, options).then((res) => {
+            if(res.status===200){
+              setStateArray.push({id:service.json.id,state:'waiting-deployment',protocol:service.json.protocol,tenant:service.json.tenant});
+            }
+          }).catch(err => {console.log(err)});
 
         }
         if(setStateArray.length>0){
-          axios.put(process.env.EXPRESS+'/agent/set_services_state',setStateArray,options).then((res)=>{
-            if(res.status===200){
-              if(res.success===false){
-                console.log(res.error);
-              }
-            }
-          }).catch(err=>{console.log(err)});
+          setStateTask = setInterval(function() {setServiceState(setStateArray)}, 1500);
         }
       }
-  })
-  .catch(function (error) {
-    // handle error
-    console.log(error);
-  })
-  .finally(function () {
-    // always executed
-  });
+    })
+    .catch(function (error) {
+      // handle error
+      console.log(error);
+    })
+  }
+}
+
+
+
+async function setServiceState(){
+    axios.put(process.env.EXPRESS+'/agent/set_services_state',setStateArray,options).then((res)=>{
+      if(res.status!=200){
+        console.log('Could not set state trying again...')
+
+      }
+      else{
+        setStateArray = [];
+        clearInterval(setStateTask);
+      }
+    }).catch(err=>{console.log('Could not set state trying again...');});
 }
 
 

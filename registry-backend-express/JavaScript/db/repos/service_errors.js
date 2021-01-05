@@ -18,15 +18,18 @@ class ServiceErrorsRepository {
     }
 
     async add(errors){
-
       const query = this.pgp.helpers.insert(errors,cs.insert);
       let stuff = await this.db.any(query);
-      console.log(stuff);
       return true
     }
 
+    async getErrorByServiceId(id){
+      return this.db.oneOrNone('SELECT date as error_date,error_code,error_description FROM service_errors WHERE service_id=$1 AND archived=false',+id);
+    }
 
-
+    async archive(id){
+      return this.db.one('UPDATE service_errors SET archived=true WHERE service_id=$1 RETURNING service_id',+id);
+    }
 
 
 }

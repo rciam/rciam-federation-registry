@@ -706,8 +706,6 @@ const ServiceForm = (props)=> {
   );
 }
 
-
-
 const ReviewComponent = (props)=>{
 
   const [type,setType] = useState();

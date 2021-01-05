@@ -2,14 +2,14 @@
   "form" : {
     "egi" : {
       "integration_environment": ["demo","production","development"],
-      "grant_types":["implicit","authorization_code","refresh_token","client_credentials","password","redelegation","token_exchange","device"],
+      "grant_types":["implicit","authorization_code","refresh_token","client_credentials","urn:ietf:params:oauth:grant_type:redelegate","urn:ietf:params:oauth:grant-type:token-exchange","urn:ietf:params:oauth:grant-type:device_code","urn:ietf:params:oauth:grant-type:jwt-bearer"],
       "contact_types":["admin","technical","support","security"],
       "protocol":["oidc","saml"],
       "invitation_validity_seconds":2592000
     },
     "eosc" : {
       "integration_environment": ["demo","production"],
-      "grant_types":["implicit","authorization_code","refresh_token","client_credentials","password","redelegation","token_exchange","device"],
+      "grant_types":["implicit","authorization_code","refresh_token","client_credentials","urn:ietf:params:oauth:grant_type:redelegate","urn:ietf:params:oauth:grant-type:token-exchange","urn:ietf:params:oauth:grant-type:device_code","urn:ietf:params:oauth:grant-type:jwt-bearer"],
       "contact_types":["admin","technical","support","security"],
       "protocol":["oidc","saml"],
       "invitation_validity_seconds":2592000
@@ -20,7 +20,6 @@
     "entity_type": ["service","idp"],
     "entity_protocol": ["saml","oidc"]
   },
-  "ams_cert_dn" : "/C=GR/L=Athens/O=Greek Research and Technology Network/CN=push-devel.argo.grnet.gr",
   "invitation_validity_seconds": "604800",
   "service_fields":["external_id","tenant","service_name","service_description","logo_uri","policy_uri","integration_environment","protocol","client_id","allow_introspection","code_challenge_method","device_code_validity_seconds","access_token_validity_seconds","refresh_token_validity_seconds","client_secret","reuse_refresh_tokens","clear_access_tokens_on_refresh","id_token_timeout_seconds","entity_id","metadata_url","grant_types","scope","contacts","redirect_uris"]
 }

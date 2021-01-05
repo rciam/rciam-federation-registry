@@ -11,9 +11,6 @@ var router = require('express').Router();
 var passport = require('passport');
 var config = require('../config');
 const customLogger = require('../loggers.js');
-const petitionTables = ['service_petition_oidc_scopes','service_petition_oidc_grant_types','service_petition_oidc_redirect_uris'];
-const serviceTables = ['service_oidc_scopes','service_oidc_grant_types','service_oidc_redirect_uris'];
-const tables = ['service_oidc_scopes','service_oidc_grant_types','service_oidc_redirect_uris','service_contacts'];
 const { generators } = require('openid-client');
 const code_verifier = generators.codeVerifier();
 const {rejectPetition,approvePetition,changesPetition,getPetition,getOpenPetition} = require('../controllers/main.js');
@@ -29,8 +26,6 @@ const base64url = require('base64url');
 // ----------------------------------------------------------
 // ************************* Routes *************************
 // ----------------------------------------------------------
-
-
 
 router.post('/tenants/:name/services',serviceValidationRules(),validate,(req,res,next)=> {
   let services = req.body;
@@ -105,7 +100,7 @@ router.post('/tenants/:name/services',serviceValidationRules(),validate,(req,res
   catch(err){
     next(err);
   }
-})
+});
 // Get available tenats
 router.get('/tenants/:name',(req,res,next)=>{
   try{
@@ -195,6 +190,44 @@ router.get('/tokens/:code',(req,res,next)=>{
   }
 });
 
+router.get('/tenants/:name/services/:id/error',authenticate,(req,res,next)=>{
+  try{
+    if(req.user.role.actions.includes('view_errors')){
+
+      db.service_errors.getErrorByServiceId(req.params.id).then(response=>{
+        console.log('Response');
+        console.log(response);
+        return res.status(200).json({error:response});
+      });
+    }
+  }
+  catch(err){
+    next(err);
+  }
+});
+
+router.put('/tenants/:name/services/:id/error',authenticate,(req,res,next)=> {
+  try{
+    if(req.user.role.actions.includes('view_errors')){
+      if(req.query.action==='resend'){
+        db.tx('accept-invite',async t =>{
+              let done = await t.batch([
+                t.service_state.resend(req.params.id),
+                t.service_errors.archive(req.params.id),
+              ]).catch(err=>{next(err)});
+              res.status(200).end();
+        }).catch(err=>{next(err)})
+      }
+    }
+  }
+  catch(err){
+    next(err);
+  }
+})
+
+
+
+
 // Get User User Info
 router.get('/tenants/:name/user',authenticate,(req,res,next)=>{
   try{
@@ -205,6 +238,9 @@ router.get('/tenants/:name/user',authenticate,(req,res,next)=>{
       let user = userinfo;
       if(req.user.role.actions.includes('review_own_petition')){
         user.admin = true;
+      }
+      if(req.user.role.actions.includes('view_errors')){
+        user.view_errors = true;
       }
       user.actions = req.user.role.actions;
       user.role = req.user.role.name;
@@ -223,24 +259,31 @@ router.post('/ams/ingest',checkCertificate,decodeAms,amsIngestValidation(),valid
   try{
     return db.task('deploymentTasks', async t => {
       // update state
+      console.log(req.body.decoded_messages)
       await t.service_state.deploymentUpdate(req.body.decoded_messages).then(async ids=>{
         if(ids){
           res.sendStatus(200).end();
-          await t.user.getServiceOwners(ids).then(data=>{
-            if(data){
-              data.forEach(email_data=>{
-                sendMail({subject:'Service Deployment Result',service_name:email_data.service_name,state:email_data.state,tenant:email_data.tenant},'deployment-notification.html',[{name:email_data.name,email:email_data.email}]);
-              });
-            }
-          }).catch(err=>{
-            next('Could not sent deployment email.' + err);
-          });
+          console.log('Deployed Service ids');
+          console.log(ids);
+          if(ids.length>0){
+            await t.user.getServiceOwners(ids).then(data=>{
+              if(data){
+                console.log('Service owners');
+                console.log(data);
+                data.forEach(email_data=>{
+                  sendMail({subject:'Service Deployment Result',service_name:email_data.service_name,state:email_data.state,tenant:email_data.tenant},'deployment-notification.html',[{name:email_data.name,email:email_data.email}]);
+                });
+              }
+            }).catch(err=>{
+              next('Could not sent deployment email.' + err);
+            });
+          }
         }
         else{
           next('Deployment Failed');
         }
       }).catch(err=>{
-        next(err);
+        res.status(200).send("Invalid Message");
       });
     });
   }
@@ -1010,27 +1053,32 @@ function authenticate(req,res,next){
           },
           data: qs.stringify(data)
         }).then(result => {
-          console.log(result);
+          //console.log(result);
           req.user = {};
           req.user.sub = result.data.sub;
           req.user.edu_person_entitlement = result.data.eduperson_entitlement;
           req.user.iss = result.data.iss;
           req.user.email = result.data.email;
-          db.user_role.getRoleActions(req.user.edu_person_entitlement,req.params.name).then(role=>{
-            if(role.success){
-              req.user.role = role.role;
-              console.log('authenticated');
-              next();
-            }
-            else{
+          if(req.user.sub){
+            db.user_role.getRoleActions(req.user.edu_person_entitlement,req.params.name).then(role=>{
+              if(role.success){
+                req.user.role = role.role;
+                console.log('User with email ' + result.data.email + ' is authenticated');
+                //console.log('authenticated');
+                next();
+              }
+              else{
+
+                res.status(401).end();
+              }
+            }).catch((err)=> {
+              //console.log(err);
               res.status(401).end();
-            }
-          }).catch((err)=> {
-            console.log(err);
-            res.status(401).end();
-          });
+            });
+          }
+          else{res.status(401).end();}
         }, (error) =>{
-          console.log(error);
+          //console.log(error);
           res.status(401).end();
         }).catch(err=>{res.status(401).end();})
       }
@@ -1097,7 +1145,7 @@ const saveUser=(userinfo,tenant)=>{
 }
 
 function checkCertificate(req,res,next) {
-  if(req.headers['dn']===config.ams_cert_dn&&req.headers['authorization']===process.env.AMS_AUTH_KEY){
+  if(req.headers['authorization']===process.env.AMS_AUTH_KEY){
     next();
   }
   else{
