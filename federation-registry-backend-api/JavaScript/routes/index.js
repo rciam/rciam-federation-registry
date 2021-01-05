@@ -147,7 +147,7 @@ router.get('/tenants/:name/login',(req,res)=>{
       redirect_uri: process.env.REDIRECT_URI+req.params.name
     }));
   }else{
-    res.redirect(process.env.OIDC_REACT+'/404');
+    res.redirect(process.env.REACT_BASE+'/404');
   }
 })
 
@@ -159,7 +159,7 @@ router.get('/callback/:name',(req,res,next)=>{
     clients[req.params.name].userinfo(response.access_token).then(usr_info=>{
       saveUser(usr_info,req.params.name);
     }); // => Promise
-    res.redirect(process.env.OIDC_REACT+'/'+req.params.name+'/code/' + code.code);
+    res.redirect(process.env.REACT_BASE+'/'+req.params.name+'/code/' + code.code);
   });
 });
 

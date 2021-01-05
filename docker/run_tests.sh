@@ -1,5 +1,5 @@
 #!/bin/bash
 
-cd /home/registry-backend-express
+cd /home/federation-registry-backend-api
 npm install
 npm run test-docker

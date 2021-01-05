@@ -6,11 +6,11 @@ require('dotenv').config({path:envPath});
 const options = {
   headers:{
     'Content-Type': 'application/json',
-    'X-Api-Key': process.env.KEY
+    'X-Api-Key': process.env.EXPRESS_KEY
 }};
-const amsBaseUrl = process.env.AMS + '/projects/' + process.env.PROJECT;
-const amsProject = 'projects/' + process.env.PROJECT;
-const amsKey = "?key=" +process.env.TOKEN;
+const amsBaseUrl = process.env.AMS_BASE_URL + '/projects/' + process.env.AMS_PROJECT;
+const amsProject = 'projects/' + process.env.AMS_PROJECT;
+const amsKey = "?key=" +process.env.AMS_USER_TOKEN;
 
 let tenants = [];
 let pubUrls = {};
@@ -22,7 +22,7 @@ let acl = {"authorized_users": ["andreas-koz"]};
 var intervalID;
 var setStateTask;
 
-axios.get(process.env.EXPRESS+'/agent/get_agents',options)
+axios.get(process.env.EXPRESS_URL+'/agent/get_agents',options)
 .then(async function (response) {
    agents = response.data.agents;
    console.log("Configuring Ams...");
@@ -129,7 +129,7 @@ async function setupTopic(topic) {
 
 async function run() {
   if(setStateArray.length === 0){
-    axios.get(process.env.EXPRESS+'/agent/get_new_configurations',options)
+    axios.get(process.env.EXPRESS_URL+'/agent/get_new_configurations',options)
     .then(async function (response) {
       // handle success
 
@@ -168,7 +168,7 @@ async function run() {
 
 
 async function setServiceState(){
-    axios.put(process.env.EXPRESS+'/agent/set_services_state',setStateArray,options).then((res)=>{
+    axios.put(process.env.EXPRESS_URL+'/agent/set_services_state',setStateArray,options).then((res)=>{
       if(res.status!=200){
         console.log('Could not set state trying again...')
 
