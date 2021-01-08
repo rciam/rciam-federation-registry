@@ -65,8 +65,8 @@ const ServiceForm = (props)=> {
                 resolve(availabilityCheck);
               }
               setCheckingAvailability(true);
-              availabilityCheckTimeout = setTimeout(function(formRef) {
-                fetch(config.host+'tenants/'+tenant_name+'/check-availability?value='+ value +'&protocol=oidc&environment='+formRef.current.values.integration_environment, {
+              availabilityCheckTimeout = setTimeout(()=> {
+                fetch(config.host+'tenants/'+tenant_name+'/check-availability?value='+ value +'&protocol=oidc&environment='+ this.parent.integration_environment, {
                   method:'GET',
                   credentials:'include',
                   headers:{
@@ -82,7 +82,7 @@ const ServiceForm = (props)=> {
                   }).then(response=>{
                       setCheckedId(value);
                       setCheckingAvailability(false);
-                      setCheckedEnvironment(formRef.current.values.integration_environment);
+                      setCheckedEnvironment(this.parent.integration_environment);
                       if(response){
                         setCheckedId(value);
                         setAvailabilityCheck(response.available);
@@ -179,8 +179,8 @@ const ServiceForm = (props)=> {
                 resolve(availabilityCheck);
               }
               setCheckingAvailability(true);
-              availabilityCheckTimeout = setTimeout(function() {
-                fetch(config.host+'tenants/'+tenant_name+'/check-availability?value='+ value +'&protocol=saml&environment='+ formRef.current.values.integration_environment, {
+              availabilityCheckTimeout = setTimeout(()=> {
+                fetch(config.host+'tenants/'+tenant_name+'/check-availability?value='+ value +'&protocol=saml&environment='+ this.parent.integration_environment.integration_environment, {
                   method:'GET',
                   credentials:'include',
                   headers:{
@@ -195,7 +195,7 @@ const ServiceForm = (props)=> {
                     }
                   }).then(response=>{
                       setCheckedId(value);
-                      setCheckedEnvironment(formRef.current.values.integration_environment);
+                      setCheckedEnvironment(this.parent.integration_environment);
                       setCheckingAvailability(false);
                       if(response){
                         setCheckedId(value);
@@ -822,7 +822,7 @@ const ReviewComponent = (props)=>{
                 name="formHorizontalRadios"
                 id="formHorizontalRadios3"
                 onChange={(e)=>{if(e.target.checked){setType(e.target.value)}}}
-                value="request-changes"
+                value="changes"
                 checked={type==='changes'}
               />
             </Col>

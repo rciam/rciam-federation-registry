@@ -1,6 +1,6 @@
 {
-  "name": "service_registry",
-  "version": "0.1.0",
+  "name": "federation_registry_frontend",
+  "version": "1.0.0",
   "private": true,
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^1.2.25",
@@ -13,8 +13,6 @@
     "i18next-browser-languagedetector": "^5.0.0",
     "i18next-xhr-backend": "^3.2.2",
     "json-loader": "^0.5.7",
-    "oidc-client": "^1.9.1",
-    "openid-client": "^3.8.4",
     "react": "^16.11.0",
     "react-bootstrap": "^1.0.0-beta.14",
     "react-dom": "^16.11.0",
