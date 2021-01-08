@@ -27,7 +27,7 @@ custom.setHttpOptionsDefaults({
   timeout: 20000,
 });
 var corsOptions = {
-    origin:  process.env.OIDC_REACT,
+    origin:  process.env.REACT_BASE,
     methods: "GET,HEAD,POST,PATCH,DELETE,OPTIONS,PUT",
     allowedHeaders: ['Origin','X-Requested-With','contentType','Content-Type','Accept','Authorization'],
     credentials: true,

@@ -991,7 +991,7 @@ function view_group(req,res,next){
       next();
     }
     else{
-      db.group.isGroupManager(req.user.sub,req.params.group_id).then(result=>{
+      db.group.isGroupMember(req.user.sub,req.params.group_id).then(result=>{
         if(result){
           next();
         }
