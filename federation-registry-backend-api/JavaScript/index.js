@@ -17,7 +17,6 @@ const routes= require('./routes/index');
 const MockStrategy = require('passport-mock-strategy');
 var cookieParser = require('cookie-parser');
 var passport = require('passport');
-var session = require("express-session");
 const { generators } = require('openid-client');
 const code_verifier = generators.codeVerifier();
 
@@ -102,7 +101,6 @@ app.use(expressWinston.logger({
 
 app.set('clients',clients);
 app.use(passport.initialize());
-app.use(passport.session());
 app.use(bodyParser.json());
 app.use(cors(corsOptions));
 app.use(cookieParser());
