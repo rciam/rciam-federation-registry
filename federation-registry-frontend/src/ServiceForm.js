@@ -11,7 +11,7 @@ import Collapse from 'react-bootstrap/Collapse';
 import {useParams } from "react-router-dom";
 import { diff } from 'deep-diff';
 import {tenantContext} from './context.js';
-import {Debug} from './Components/Debug.js';
+//import {Debug} from './Components/Debug.js';
 import {SimpleModal,ResponseModal,Logout} from './Components/Modals.js';
 import Form from 'react-bootstrap/Form';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -699,7 +699,7 @@ const ServiceForm = (props)=> {
                   }
                   <ResponseModal message={message} modalTitle={modalTitle}/>
                   <SimpleModal isSubmitting={isSubmitting} isValid={isValid}/>
-                  <Debug/>
+                  //<Debug/>
                 </Form>
 
 

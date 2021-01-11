@@ -46,14 +46,13 @@ class ServiceStateRepository {
         // If we have a an error or if the deployment has finished we have to update the service state
         if(deployed || decoded_message.state==='error'){
           updateState.push({id:decoded_message.id,state:decoded_message.state});
-          if(decoded_message.external_id){
-            updateExternalId.push({id:decoded_message.id,external_id:decoded_message.external_id});
-          }
-          if(decoded_message.client_id){
-            updateClientId.push({id:decoded_message.id,client_id:decoded_message.client_id});
-          }
           if(deployed){
-
+            if(decoded_message.external_id){
+              updateExternalId.push({id:decoded_message.id,external_id:decoded_message.external_id});
+            }
+            if(decoded_message.client_id){
+              updateClientId.push({id:decoded_message.id,client_id:decoded_message.client_id});
+            }
             ids.push(decoded_message.id);
           }
           if(decoded_message.state==='error'){
@@ -61,9 +60,7 @@ class ServiceStateRepository {
           }
         }
       }
-
-      if(ids.length>0){
-
+	    if(ids.length>0){
         batch_queries.push(t.service_state.delete(ids));
       }
       if(errors.length>0){
