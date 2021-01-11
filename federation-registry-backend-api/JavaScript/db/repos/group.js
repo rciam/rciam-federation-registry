@@ -65,6 +65,10 @@ class GroupRepository {
     return this.db.one('INSERT INTO group_subs (sub,group_manager,group_id) VALUES($1,$2,$3) RETURNING sub',[data.sub,data.group_manager,+data.group_id]);
   }
 
+  async isGroupMember(sub,group_id){
+    return this.db.oneOrNone('SELECT EXISTS(SELECT 1 FROM group_subs WHERE sub=$1 AND group_id=$2)',[sub,+group_id]);
+  }
+
   async isGroupManager(sub,group_id){
     return this.db.oneOrNone('SELECT group_manager FROM group_subs WHERE sub=$1 AND group_id=$2',[sub,+group_id]).then(res=>{if(res&&res.group_manager){return true}else{return false} });
   }

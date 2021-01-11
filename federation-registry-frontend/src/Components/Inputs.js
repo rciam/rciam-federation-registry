@@ -330,19 +330,19 @@ export function DeviceCode(props){
   return(
     <React.Fragment>
       <div
-        className={"checkbox-item " + (props.changed&&(props.changed.grant_types.D.includes('device')||props.changed.grant_types.N.includes('device'))?'input-edited checkbox-item-edited':'')}
+        className={"checkbox-item " + (props.changed&&(props.changed.grant_types.D.includes('urn:ietf:params:oauth:grant-type:device_code')||props.changed.grant_types.N.includes('urn:ietf:params:oauth:grant-type:device_code'))?'input-edited checkbox-item-edited':'')}
         ref={target}
         onMouseOver={()=>setShow(true)}
         onMouseOut={()=>setShow(false)}
       >
-        <Checkbox name="grant_types" disabled={props.disabled} value='device'/>
+        <Checkbox name="grant_types" disabled={props.disabled} value='urn:ietf:params:oauth:grant-type:device_code'/>
           {t('form_device_code_desc')}
-        <MyOverLay show={(props.changed&&(props.changed.grant_types.D.includes('device')||props.changed.grant_types.N.includes('device'))?'input-edited checkbox-item-edited':'')&&show} type='Edited' target={target}/>
+        <MyOverLay show={(props.changed&&(props.changed.grant_types.D.includes('urn:ietf:params:oauth:grant-type:device_code')||props.changed.grant_types.N.includes('urn:ietf:params:oauth:grant-type:device_code'))?'input-edited checkbox-item-edited':'')&&show} type='Edited' target={target}/>
       </div>
       <Form.Text className="text-muted text-left label-checkbox" id="uri-small-desc">
       {t('form_device_code_info')}
       </Form.Text>
-      {props.values.grant_types.includes('device')?(
+      {props.values.grant_types.includes('urn:ietf:params:oauth:grant-type:device_code')?(
         <React.Fragment>
           <TimeInput
             name='device_code_validity_seconds'
