@@ -24,6 +24,7 @@ import * as yup from 'yup';
 import { useTranslation } from 'react-i18next';
 import {SimpleInput,DeviceCode,Select,ListInput,LogoInput,TextAria,ListInputArray,CheckboxList,SimpleCheckbox,ClientSecret,TimeInput,RefreshToken,Contacts} from './Components/Inputs.js'// eslint-disable-next-line
 const {reg} = require('./regex.js');
+var availabilityCheckTimeout;
 
 
 
@@ -31,6 +32,7 @@ const ServiceForm = (props)=> {
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   let {tenant_name} = useParams();
+
   // eslint-disable-next-line
   const [tenant,setTenant] = useContext(tenantContext);
 
@@ -48,8 +50,6 @@ const ServiceForm = (props)=> {
           return list.length  === new Set(list.map(mapper)).size;
       });
   });
-
-
   const schema = yup.object({
     service_name:yup.string().min(4,t('yup_char_min') + ' ('+4+')').max(36,t('yup_char_max') + ' ('+36+')').required(t('yup_required')),
     // Everytime client_id changes we make a fetch request to see if it is available.
@@ -57,6 +57,7 @@ const ServiceForm = (props)=> {
       is:'oidc',
       then: yup.string().min(4,t('yup_char_min') + ' ('+4+')').max(36,t('yup_char_max') + ' ('+36+')').test('testAvailable',t('yup_client_id_available'),function(value){
           return new Promise((resolve,reject)=>{
+            clearTimeout(availabilityCheckTimeout);
             if(props.initialValues.client_id===value||!value||value.length<4||value.length>36)
               {resolve(true)}
             else{
@@ -64,32 +65,34 @@ const ServiceForm = (props)=> {
                 resolve(availabilityCheck);
               }
               setCheckingAvailability(true);
-              fetch(config.host+'tenants/'+tenant_name+'/check-availability?value='+ value +'&protocol=oidc&environment='+formRef.current.values.integration_environment, {
-                method:'GET',
-                credentials:'include',
-                headers:{
-                  'Content-Type':'application/json',
-                  'Authorization': localStorage.getItem('token')
-                }}).then(response=>{
-                  if(response.status===200){
-                    return response.json();
-                  }
-                  else {
-                    return false
-                  }
-                }).then(response=>{
-                    setCheckedId(value);
-                    setCheckingAvailability(false);
-                    setCheckedEnvironment(formRef.current.values.integration_environment);
-                    if(response){
-                      setCheckedId(value);
-                      setAvailabilityCheck(response.available);
-                      resolve(response.available)}
-                    else{
-                      resolve(false);
+              availabilityCheckTimeout = setTimeout(()=> {
+                fetch(config.host+'tenants/'+tenant_name+'/check-availability?value='+ value +'&protocol=oidc&environment='+ this.parent.integration_environment, {
+                  method:'GET',
+                  credentials:'include',
+                  headers:{
+                    'Content-Type':'application/json',
+                    'Authorization': localStorage.getItem('token')
+                  }}).then(response=>{
+                    if(response.status===200){
+                      return response.json();
                     }
-                  }
-                ).catch(()=>{resolve(true)});
+                    else {
+                      return false
+                    }
+                  }).then(response=>{
+                      setCheckedId(value);
+                      setCheckingAvailability(false);
+                      setCheckedEnvironment(this.parent.integration_environment);
+                      if(response){
+                        setCheckedId(value);
+                        setAvailabilityCheck(response.available);
+                        resolve(response.available)}
+                      else{
+                        resolve(false);
+                      }
+                    }
+                  ).catch(()=>{resolve(true)});
+              },2000);
             }
           })
       })
@@ -168,6 +171,7 @@ const ServiceForm = (props)=> {
       is:'saml',
       then: yup.string().min(4,t('yup_char_min') + ' ('+4+')').test('testAvailable',t('yup_entity_id'),function(value){
           return new Promise((resolve,reject)=>{
+            clearTimeout(availabilityCheckTimeout);
             if(props.initialValues.entity_id===value||!value||!reg.regUrl.test(value))
               {resolve(true)}
             else{
@@ -175,32 +179,34 @@ const ServiceForm = (props)=> {
                 resolve(availabilityCheck);
               }
               setCheckingAvailability(true);
-              fetch(config.host+'tenants/'+tenant_name+'/check-availability?value='+ value +'&protocol=saml&environment='+ formRef.current.values.integration_environment, {
-                method:'GET',
-                credentials:'include',
-                headers:{
-                  'Content-Type':'application/json',
-                  'Authorization': localStorage.getItem('token')
-                }}).then(response=>{
-                  if(response.status===200){
-                    return response.json();
-                  }
-                  else {
-                    return false
-                  }
-                }).then(response=>{
-                    setCheckedId(value);
-                    setCheckedEnvironment(formRef.current.values.integration_environment);
-                    setCheckingAvailability(false);
-                    if(response){
-                      setCheckedId(value);
-                      setAvailabilityCheck(response.available);
-                      resolve(response.available)}
-                    else{
-                      resolve(false);
+              availabilityCheckTimeout = setTimeout(()=> {
+                fetch(config.host+'tenants/'+tenant_name+'/check-availability?value='+ value +'&protocol=saml&environment='+ this.parent.integration_environment.integration_environment, {
+                  method:'GET',
+                  credentials:'include',
+                  headers:{
+                    'Content-Type':'application/json',
+                    'Authorization': localStorage.getItem('token')
+                  }}).then(response=>{
+                    if(response.status===200){
+                      return response.json();
                     }
-                  }
-                  ).catch(()=>{resolve(true)})
+                    else {
+                      return false
+                    }
+                  }).then(response=>{
+                      setCheckedId(value);
+                      setCheckedEnvironment(this.parent.integration_environment);
+                      setCheckingAvailability(false);
+                      if(response){
+                        setCheckedId(value);
+                        setAvailabilityCheck(response.available);
+                        resolve(response.available)}
+                      else{
+                        resolve(false);
+                      }
+                    }
+                    ).catch(()=>{resolve(true)})
+                  },2000);
             }
           })
       })
@@ -509,7 +515,7 @@ const ServiceForm = (props)=> {
                       </InputRow>
                       {values.protocol==='oidc'?
                         <React.Fragment>
-                          <InputRow title={t('form_client_id')} description={t('form_client_id_desc')} error={errors.client_id} touched={touched.client_id}>
+                          <InputRow title={t('form_client_id')} description={t('form_client_id_desc')} error={checkingAvailability?null:errors.client_id} touched={touched.client_id}>
                             <SimpleInput
                               name='client_id'
                               placeholder={t('form_type_prompt')}
@@ -518,7 +524,7 @@ const ServiceForm = (props)=> {
                                 handleChange(e);
                               }}
                               value={values.client_id}
-                              isInvalid={hasSubmitted?!!errors.client_id:(!!errors.client_id&&touched.client_id)}
+                              isInvalid={hasSubmitted?(!!errors.client_id&&!checkingAvailability):(!!errors.client_id&&touched.client_id&&!checkingAvailability)}
                               onBlur={handleBlur}
                               disabled={disabled}
                               isloading={values.client_id&&values.client_id!==checkedId&&checkingAvailability?1:0}
@@ -645,7 +651,7 @@ const ServiceForm = (props)=> {
                     :null}
                     {values.protocol==='saml'?
                       <React.Fragment>
-                        <InputRow title={t('form_entity_id')} description={t('form_entity_id_desc')} error={errors.entity_id} touched={touched.entity_id}>
+                        <InputRow title={t('form_entity_id')} description={t('form_entity_id_desc')} error={checkingAvailability?null:errors.entity_id} touched={touched.entity_id}>
                           <SimpleInput
                             name='entity_id'
                             placeholder={t('form_type_prompt')}
@@ -654,7 +660,7 @@ const ServiceForm = (props)=> {
                               handleChange(e);
                             }}
                             value={values.entity_id}
-                            isInvalid={hasSubmitted?!!errors.entity_id:(!!errors.entity_id&&touched.entity_id)}
+                            isInvalid={hasSubmitted?!!(errors.entity_id&&!checkingAvailability):(!!errors.entity_id&&touched.entity_id&&!checkingAvailability)}
                             onBlur={handleBlur}
                             disabled={disabled}
                             isloading={values.entity_id&&values.entity_id!==checkedId&&checkingAvailability?1:0}
@@ -693,7 +699,7 @@ const ServiceForm = (props)=> {
                   }
                   <ResponseModal message={message} modalTitle={modalTitle}/>
                   <SimpleModal isSubmitting={isSubmitting} isValid={isValid}/>
-
+                  //<Debug/>
                 </Form>
 
 
@@ -816,7 +822,7 @@ const ReviewComponent = (props)=>{
                 name="formHorizontalRadios"
                 id="formHorizontalRadios3"
                 onChange={(e)=>{if(e.target.checked){setType(e.target.value)}}}
-                value="request-changes"
+                value="changes"
                 checked={type==='changes'}
               />
             </Col>

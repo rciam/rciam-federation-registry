@@ -147,7 +147,7 @@ router.get('/tenants/:name/login',(req,res)=>{
       redirect_uri: process.env.REDIRECT_URI+req.params.name
     }));
   }else{
-    res.redirect(process.env.OIDC_REACT+'/404');
+    res.redirect(process.env.REACT_BASE+'/404');
   }
 })
 
@@ -159,7 +159,7 @@ router.get('/callback/:name',(req,res,next)=>{
     clients[req.params.name].userinfo(response.access_token).then(usr_info=>{
       saveUser(usr_info,req.params.name);
     }); // => Promise
-    res.redirect(process.env.OIDC_REACT+'/'+req.params.name+'/code/' + code.code);
+    res.redirect(process.env.REACT_BASE+'/'+req.params.name+'/code/' + code.code);
   });
 });
 
@@ -262,14 +262,10 @@ router.post('/ams/ingest',checkCertificate,decodeAms,amsIngestValidation(),valid
       console.log(req.body.decoded_messages)
       await t.service_state.deploymentUpdate(req.body.decoded_messages).then(async ids=>{
         if(ids){
-          res.sendStatus(200).end();
-          console.log('Deployed Service ids');
-          console.log(ids);
+          res.stats(200).end();
           if(ids.length>0){
             await t.user.getServiceOwners(ids).then(data=>{
               if(data){
-                console.log('Service owners');
-                console.log(data);
                 data.forEach(email_data=>{
                   sendMail({subject:'Service Deployment Result',service_name:email_data.service_name,state:email_data.state,tenant:email_data.tenant},'deployment-notification.html',[{name:email_data.name,email:email_data.email}]);
                 });
@@ -991,7 +987,7 @@ function view_group(req,res,next){
       next();
     }
     else{
-      db.group.isGroupManager(req.user.sub,req.params.group_id).then(result=>{
+      db.group.isGroupMember(req.user.sub,req.params.group_id).then(result=>{
         if(result){
           next();
         }
@@ -1027,6 +1023,7 @@ function authenticate(req,res,next){
         req.user = decode(token);
         db.user_role.getRoleActions(req.user.edu_person_entitlement,req.params.name).then(role=>{
           if(role.success){
+
             req.user.role = role.role;
             next();
           }

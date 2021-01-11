@@ -348,7 +348,6 @@ function TableItem(props) {
                 </div>
                 <OverlayTrigger
                   placement='top'
-                  show={false}
                   overlay={
                     <Tooltip id={`tooltip-top`}>
                       Deployment error click to view

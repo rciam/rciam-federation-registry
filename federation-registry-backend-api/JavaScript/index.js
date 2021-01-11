@@ -17,7 +17,6 @@ const routes= require('./routes/index');
 const MockStrategy = require('passport-mock-strategy');
 var cookieParser = require('cookie-parser');
 var passport = require('passport');
-var session = require("express-session");
 const { generators } = require('openid-client');
 const code_verifier = generators.codeVerifier();
 
@@ -27,7 +26,7 @@ custom.setHttpOptionsDefaults({
   timeout: 20000,
 });
 var corsOptions = {
-    origin:  process.env.OIDC_REACT,
+    origin:  process.env.REACT_BASE,
     methods: "GET,HEAD,POST,PATCH,DELETE,OPTIONS,PUT",
     allowedHeaders: ['Origin','X-Requested-With','contentType','Content-Type','Accept','Authorization'],
     credentials: true,
@@ -102,7 +101,6 @@ app.use(expressWinston.logger({
 
 app.set('clients',clients);
 app.use(passport.initialize());
-app.use(passport.session());
 app.use(bodyParser.json());
 app.use(cors(corsOptions));
 app.use(cookieParser());
