@@ -262,14 +262,10 @@ router.post('/ams/ingest',checkCertificate,decodeAms,amsIngestValidation(),valid
       console.log(req.body.decoded_messages)
       await t.service_state.deploymentUpdate(req.body.decoded_messages).then(async ids=>{
         if(ids){
-          
-          console.log('Deployed Service ids');
-          console.log(ids);
+          res.stats(200).end();
           if(ids.length>0){
             await t.user.getServiceOwners(ids).then(data=>{
               if(data){
-                console.log('Service owners');
-                console.log(data);
                 data.forEach(email_data=>{
                   sendMail({subject:'Service Deployment Result',service_name:email_data.service_name,state:email_data.state,tenant:email_data.tenant},'deployment-notification.html',[{name:email_data.name,email:email_data.email}]);
                 });
@@ -1027,6 +1023,7 @@ function authenticate(req,res,next){
         req.user = decode(token);
         db.user_role.getRoleActions(req.user.edu_person_entitlement,req.params.name).then(role=>{
           if(role.success){
+
             req.user.role = role.role;
             next();
           }
