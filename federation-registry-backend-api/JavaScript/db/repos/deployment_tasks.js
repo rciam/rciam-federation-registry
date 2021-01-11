@@ -24,13 +24,9 @@ class DeploymentTasksRepository {
   }
 
   async resolveTask(service_id,agent_id,state){
-    if(state!=='error'){
-      return await this.db.one('DELETE FROM deployment_tasks WHERE service_id=$1 AND agent_id=$2 RETURNING *',[+service_id,+agent_id]).catch(err=>{throw 'Task not found'});
+    return await this.db.one('DELETE FROM deployment_tasks WHERE service_id=$1 AND agent_id=$2 RETURNING *',[+service_id,+agent_id]).catch(err=>{throw 'Task not found'});
     }
-    else{
-      return await this.db.one('UPDATE deployment_tasks SET error=true WHERE service_id=$1 AND agent_id=$2 RETURNING service_id',[+service_id,+agent_id]).catch(err=>{throw 'Task not found'});
-    }
-  }
+
 
   async isDeploymentFinished(id){
     return await this.db.any('SELECT * from deployment_tasks WHERE service_id=$1',+id).then(res =>{
@@ -42,7 +38,7 @@ class DeploymentTasksRepository {
           return true;
         }
       }
-      throw 'db error'
+      else{throw 'db-error'}
     })
   }
 

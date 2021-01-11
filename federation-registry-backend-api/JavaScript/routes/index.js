@@ -262,7 +262,7 @@ router.post('/ams/ingest',checkCertificate,decodeAms,amsIngestValidation(),valid
       console.log(req.body.decoded_messages)
       await t.service_state.deploymentUpdate(req.body.decoded_messages).then(async ids=>{
         if(ids){
-          res.sendStatus(200).end();
+          
           console.log('Deployed Service ids');
           console.log(ids);
           if(ids.length>0){
