@@ -92,7 +92,7 @@ const ServiceForm = (props)=> {
                       }
                     }
                   ).catch(()=>{resolve(true)});
-              },2000);
+              },1000);
             }
           })
       })
@@ -171,6 +171,7 @@ const ServiceForm = (props)=> {
       is:'saml',
       then: yup.string().min(4,t('yup_char_min') + ' ('+4+')').test('testAvailable',t('yup_entity_id'),function(value){
           return new Promise((resolve,reject)=>{
+            const { path, createError } = this;
             clearTimeout(availabilityCheckTimeout);
             if(props.initialValues.entity_id===value||!value||!reg.regUrl.test(value))
               {resolve(true)}
@@ -180,7 +181,7 @@ const ServiceForm = (props)=> {
               }
               setCheckingAvailability(true);
               availabilityCheckTimeout = setTimeout(()=> {
-                fetch(config.host+'tenants/'+tenant_name+'/check-availability?value='+ value +'&protocol=saml&environment='+ this.parent.integration_environment.integration_environment, {
+                fetch(config.host+'tenants/'+tenant_name+'/check-availability?value='+ value +'&protocol=saml&environment='+ this.parent.integration_environment, {
                   method:'GET',
                   credentials:'include',
                   headers:{
@@ -206,7 +207,7 @@ const ServiceForm = (props)=> {
                       }
                     }
                     ).catch(()=>{resolve(true)})
-                  },2000);
+                  },1000);
             }
           })
       })
@@ -527,6 +528,7 @@ const ServiceForm = (props)=> {
                               isInvalid={hasSubmitted?(!!errors.client_id&&!checkingAvailability):(!!errors.client_id&&touched.client_id&&!checkingAvailability)}
                               onBlur={handleBlur}
                               disabled={disabled}
+                              changed={props.changes?props.changes.client_id:null}
                               isloading={values.client_id&&values.client_id!==checkedId&&checkingAvailability?1:0}
                              />
                            </InputRow>
@@ -663,6 +665,7 @@ const ServiceForm = (props)=> {
                             isInvalid={hasSubmitted?!!(errors.entity_id&&!checkingAvailability):(!!errors.entity_id&&touched.entity_id&&!checkingAvailability)}
                             onBlur={handleBlur}
                             disabled={disabled}
+                            changed={props.changes?props.changes.entity_id:null}
                             isloading={values.entity_id&&values.entity_id!==checkedId&&checkingAvailability?1:0}
                            />
                          </InputRow>

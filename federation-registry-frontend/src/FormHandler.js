@@ -202,7 +202,7 @@ const ViewService = (props)=>{
   const [deploymentError,setDeploymentError] = useState();
   const {tenant_name} = useParams();
   const {logout,setLogout} = useState(false);
-  
+
   useEffect(()=>{
 
     getData();
@@ -355,7 +355,6 @@ function calculateMultivalueDiff(old_values,new_values,edits){
   let new_cont = [];
   let old_cont = [];
   let items;
-
 
   new_values.contacts.forEach(item=>{
     new_cont.push(item.email+' '+item.type);

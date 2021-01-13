@@ -605,7 +605,7 @@ router.put('/tenants/:name/petitions/:id/review',authenticate,canReview,(req,res
 });
 
 // Check availability for protocol unique id
-router.get('/tenants/:name/check-availability',authenticate,(req,res,next)=>{
+router.get('/tenants/:name/check-availability',(req,res,next)=>{
   db.tx('get-history-for-petition', async t =>{
     try{
       await isAvailable(t,req.query.value,req.query.protocol,0,0,req.params.name,req.query.environment).then(available =>{
