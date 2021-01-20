@@ -242,11 +242,11 @@ describe('Service registry API Integration Tests', function() {
             var req = request(server).put('/tenants/eosc/petitions/'+petition+'/review').set({Authorization: userToken}).send({type:'approve'});
             req.set('Accept','application/json')
             .expect('Content-Type',/json/)
-            .expect(403)
+            .expect(404)
             .end(function(err,res){
               let body = JSON.parse(res.text);
               expect(body.error).to.equal("No petition found");
-              expect(res.statusCode).to.equal(403);
+              expect(res.statusCode).to.equal(404);
               done();
             })
           });
@@ -428,9 +428,9 @@ describe('Service registry API Integration Tests', function() {
           var req = request(server).put('/tenants/egi/invitations/activate_by_code').set({Authorization: userToken}).send({code});
           req.set('Accept','application/json')
           .expect('Content-Type',/json/)
-          .expect(204)
+          .expect(404)
           .end(function(err,res){
-              expect(res.statusCode).to.equal(204);
+              expect(res.statusCode).to.equal(404);
             done();
           });
         })
@@ -650,7 +650,7 @@ describe('Service registry API Integration Tests', function() {
         .expect('Content-Type',/json/)
         .expect(200)
         .end(function(err,res){
-          expect(res.statusCode).to.equal(204);
+          expect(res.statusCode).to.equal(404);
           done();
         })
       });
