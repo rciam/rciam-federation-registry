@@ -1,6 +1,6 @@
 import React,{useState,useEffect,useContext} from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {faCheckSquare,faTimes,faSync} from '@fortawesome/free-solid-svg-icons';
+import {faCheckSquare,faTimes,faSync,faSignOutAlt} from '@fortawesome/free-solid-svg-icons';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
 import { useTranslation } from 'react-i18next';
@@ -14,7 +14,7 @@ import Row from 'react-bootstrap/Row';
 import {LoadingBar,ProcessingRequest} from './Components/LoadingBar';
 import * as yup from 'yup';
 import Alert from 'react-bootstrap/Alert';
-import {Logout} from './Components/Modals';
+import {Logout,NotFound} from './Components/Modals';
 import {userContext} from './context.js';
 import {ConfirmationModal} from './Components/Modals';
 
@@ -23,6 +23,7 @@ import {ConfirmationModal} from './Components/Modals';
 const GroupsPage = (props) => {
   let {tenant_name} = useParams();
   const [logout,setLogout] = useState(false);
+  const [notFound,setNotFound] = useState(false);
   useEffect(()=>{
     getData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -47,6 +48,11 @@ const GroupsPage = (props) => {
         }
         else if(response.status===401){
           setLogout(true);
+          return false;
+        }
+        else if(response.status===404){
+          setNotFound(true);
+          return false;
         }
         else {
           return false
@@ -80,6 +86,11 @@ const GroupsPage = (props) => {
         }
         else if(response.status===401){
           setLogout(true);
+          return false;
+        }
+        else if(response.status===404){
+          setNotFound(true);
+          return false;
         }
         else {
           return false
@@ -122,6 +133,11 @@ const GroupsPage = (props) => {
       }
       else if(response.status===401){
         setLogout(true);
+        return false;
+      }
+      else if(response.status===404){
+        setNotFound(true);
+        return false;
       }
       else {
         return false
@@ -149,6 +165,11 @@ const GroupsPage = (props) => {
       }
       else if(response.status===401){
         setLogout(true);
+        return false;
+      }
+      else if(response.status===404){
+        setNotFound(true);
+        return false;
       }
       else {
         return false
@@ -224,6 +245,7 @@ const GroupsPage = (props) => {
 
   return(
     <React.Fragment>
+    <NotFound notFound={notFound}/>
     <Logout logout={logout}/>
     <ConfirmationModal active={confirmationData.action?true:false} setActive={setConfirmationData} action={()=>{if(confirmationData.action==='cancel'){cancelInvitation(...confirmationData.args)}else{removeMember(...confirmationData.args)}}} title={confirmationData.title} message={confirmationData.message} accept={'Yes'} decline={'No'}/>
 
@@ -258,6 +280,7 @@ const GroupsPage = (props) => {
               >
               <Button
               variant="danger"
+              className={user[0].sub===member.sub?'leave-group-button':''}
               onClick={()=>{
                 setConfirmationData({
                   action:'remove',
@@ -265,6 +288,7 @@ const GroupsPage = (props) => {
                   message:(member.sub!==user[0].sub?
                     <React.Fragment>
                       <table style={{border:'none'}} className="confirmation-table">
+                      <tbody>
                       <tr>
                       <td>username:</td>
                       <td>{member.username}</td>
@@ -277,6 +301,7 @@ const GroupsPage = (props) => {
                       <td>role:</td>
                       <td>{member.group_manager?'group_manager':'group_member'}</td>
                       </tr>
+                      </tbody>
                       </table>
                     </React.Fragment>
                     :null
@@ -286,7 +311,7 @@ const GroupsPage = (props) => {
               }}
               disabled={group.length<1||(group_managers<2&&member.group_manager)}
               >
-              <FontAwesomeIcon icon={faTimes} />
+              <FontAwesomeIcon icon={user[0].sub===member.sub?faSignOutAlt:faTimes} />
               </Button>
               </OverlayTrigger>
               </td>:null}
@@ -358,7 +383,7 @@ const GroupsPage = (props) => {
                                       :null}
                                       <tr>
                                         <td>email:</td>
-                                        <td><a href={'mailto:'+member.email}>{member.email}</a></td>
+                                        <td><a href={'mailto:'+(member.email?member.email:member.invitation_email)}>{member.email?member.email:member.invitation_email}</a></td>
                                       </tr>
 
                                       <tr>

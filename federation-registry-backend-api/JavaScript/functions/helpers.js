@@ -83,14 +83,13 @@ const sendInvitationMail = async (data) => {
         var replacements = {
           invited_by:data.invited_by,
           group_manager:data.group_manager,
-          email:data.email,
           registry_url: process.env.EXPRESS_BASE+'/'+ data.tenant,
           url:process.env.EXPRESS_BASE+'/'+ data.tenant +'/invitation/' + data.code
         }
         var htmlToSend = template(replacements);
         var mailOptions = {
           from: "noreply@faai.grnet.gr",
-          to : 'koza-sparrow@hotmail.com',
+          to : data.email,
           subject : 'Invitation to manage service',
           html : htmlToSend
         };
@@ -136,7 +135,7 @@ const newMemberNotificationMail = (data,managers) => {
         var htmlToSend = template(replacements);
         var mailOptions = {
           from: "noreply@faai.grnet.gr",
-          to : 'koza-sparrow@hotmail.com',
+          to : manager.email,
           subject : 'New member in your owners group',
           html : htmlToSend
         };
@@ -156,7 +155,7 @@ const newMemberNotificationMail = (data,managers) => {
 const sendMail= (data,template_uri,users)=>{
   var currentDate = new Date();
   var result;
-  if(!(process.env.NODE_ENV==='test')&&!(process.env.NODE_ENV==='test-docker')){
+  if(process.env.NODE_ENV!=='test'&&process.env.NODE_ENV!=='test-docker'){
   readHTMLFile(path.join(__dirname, '../html/', template_uri), function(err, html) {
       let transporter = nodeMailer.createTransport({
           host: 'relay.grnet.gr',
@@ -186,11 +185,10 @@ const sendMail= (data,template_uri,users)=>{
 
       users.forEach((user) => {
           replacements.name = user.name;
-          replacements.email = user.email;
           var htmlToSend = template(replacements);
           var mailOptions = {
             from: "noreply@faai.grnet.gr",
-            to : 'koza-sparrow@hotmail.com',
+            to : user.email,
             subject : data.subject,
             html : htmlToSend
           };

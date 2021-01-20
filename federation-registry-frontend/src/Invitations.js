@@ -3,7 +3,7 @@ import {useParams} from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import * as config from './config.json';
 import Button from 'react-bootstrap/Button';
-import {Logout} from './Components/Modals';
+import {Logout,NotFound} from './Components/Modals';
 import {ProcessingRequest,LoadingBar} from './Components/LoadingBar';
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
@@ -27,7 +27,7 @@ const InvitationsPage = (props) => {
   const [sending,setSending] = useState();
   const [invitations,setInvitations] = useState([]);
   const [loading,setLoading] = useState(false);
-
+  const [notFound,setNotFound] = useState(false);
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
 
@@ -46,6 +46,11 @@ const InvitationsPage = (props) => {
       }
       else if(response.status===401){
         setLogout(true);
+        return false;
+      }
+      else if(response.status===404){
+        setNotFound(true);
+        return false;
       }
       else {
         return false
@@ -78,6 +83,11 @@ const InvitationsPage = (props) => {
         }
         else if(response.status===401){
           setLogout(true);
+          return false;
+        }
+        else if(response.status===404){
+          setNotFound(true);
+          return false;
         }
         else {
           return false
@@ -101,6 +111,7 @@ const InvitationsPage = (props) => {
 
   return(
     <React.Fragment>
+      <NotFound notFound={notFound}/>
       <Logout logout={logout}/>
       <LoadingBar loading={loading}>
         <ProcessingRequest active={sending}/>
