@@ -18,7 +18,7 @@ import {Link,useParams} from "react-router-dom";
 import Badge from 'react-bootstrap/Badge';
 import Pagination from 'react-bootstrap/Pagination';
 import {LoadingBar,ProcessingRequest} from './Components/LoadingBar';
-import {ListResponseModal,Logout} from './Components/Modals.js';
+import {ListResponseModal,Logout,NotFound} from './Components/Modals.js';
 import { useTranslation } from 'react-i18next';
 import Alert from 'react-bootstrap/Alert';
 import {ConfirmationModal} from './Components/Modals';
@@ -32,6 +32,7 @@ const ServiceList= (props)=> {
   const [tenant,setTeanant] = useContext(tenantContext);
   const {tenant_name} = useParams();
   const [logout,setLogout] = useState(false);
+  const [notFound,setNotFound] = useState(false);
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   const [loadingList,setLoadingList] = useState();
@@ -69,6 +70,11 @@ const ServiceList= (props)=> {
         return response.json();
       }else if(response.status===401){
         setLogout(true);
+        return false;
+      }
+      else if(response.status===404){
+        setNotFound(true);
+        return false;
       }
       else {
         return false
@@ -98,6 +104,11 @@ const ServiceList= (props)=> {
       }
       else if(response.status===401){
         setLogout(true);
+        return false;
+      }
+      else if(response.status===404){
+        setNotFound(true);
+        return false;
       }
       else {
         return false
@@ -152,6 +163,11 @@ const ServiceList= (props)=> {
           setMessage(t('request_submit_success_msg'));
         }else if(response.status===401){
           setLogout(true);
+          return false;
+        }
+        else if(response.status===404){
+          setNotFound(true);
+          return false;
         }
         else{
           setMessage(t('request_submit_failled_msg') + response.status);
@@ -175,6 +191,11 @@ const ServiceList= (props)=> {
           setMessage(t('request_submit_success_msg'));
         }else if(response.status===401){
           setLogout(true);
+          return false;
+        }
+        else if(response.status===404){
+          setNotFound(true);
+          return false;
         }
         else{
           setMessage(t('request_submit_failled_msg') + response.status);
@@ -199,6 +220,11 @@ const ServiceList= (props)=> {
         setMessage(t('request_cancel_success_msg'));
       }else if(response.status===401){
         setLogout(true);
+        return false;
+      }
+      else if(response.status===404){
+        setNotFound(true);
+        return false;
       }
       else{
       setMessage(t('request_cancel_fail_msg') + response.status);
@@ -210,6 +236,7 @@ const ServiceList= (props)=> {
   return(
     <React.Fragment>
       <Logout logout={logout}/>
+      <NotFound notFound={notFound}/>
       <ListResponseModal message={message} modalTitle={responseTitle} setMessage={setMessage}/>
 
       <ConfirmationModal active={confirmationData.action?true:false} setActive={setConfirmationData} action={()=>{if(confirmationData.action==='delete_service'){deleteService(...confirmationData.args)}else{deletePetition(...confirmationData.args)}}} title={confirmationData.title} accept={'Yes'} decline={'No'}/>

@@ -27,7 +27,7 @@ const rejectPetition = (req,res,next,db) => {
         res.status(200).end();
       }
       else{
-        res.status(403).send({error:"No petition found"});
+        res.status(404).send({error:"No petition found"});
       }
     }).catch(err=>{next(err);});
   })
@@ -63,7 +63,7 @@ const changesPetition = (req,res,next,db) => {
             }).catch(err=>{next(err);});
           }
           else{
-            res.status(403).send({error:"No petition found"});
+            res.status(404).send({error:"No petition found"});
           }
         }).catch(err=>{next(err);});
       })
@@ -109,7 +109,7 @@ const approvePetition = (req,res,next,db) => {
         }).catch(err=>{next(err);})
       }
       else{
-        res.status(403).send({error:"No petition found"});
+        res.status(404).send({error:"No petition found"});
       }
     }).catch(err=>{next(err);})
   })
@@ -124,7 +124,7 @@ const getOpenPetition = (req,res,next,db) =>{
           res.status(200).json({petition});
        }
        else {
-         res.status(204);
+         res.status(404);
          customLogger(req,res,'warn','Petition not found');
          res.end();
        }
@@ -136,7 +136,7 @@ const getOpenPetition = (req,res,next,db) =>{
           res.status(200).json({petition});
        }
        else {
-         res.status(204);
+         res.status(404);
          customLogger(req,res,'warn','Petition not found');
          res.end();
        }
@@ -156,7 +156,7 @@ const getPetition = (req,res,next,db) => {
         res.status(200).json({petition:petition.service_data});
       }
       else{
-        return res.status(204).end();
+        return res.status(404).end();
       }
     }).catch(err=>{next(err)});
   }
@@ -166,7 +166,7 @@ const getPetition = (req,res,next,db) => {
         res.status(200).json({petition:petition.service_data});
       }
       else{
-        return res.status(204).end();
+        return res.status(404).end();
       }
     }).catch(err=>{next(err)});
   }

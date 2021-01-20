@@ -112,7 +112,7 @@ router.get('/tenants/:name',(req,res,next)=>{
         res.status(200).json(tenant).end();
       }
       else{
-        res.status(204).end()
+        res.status(404).end()
       }
     }).catch(err=>{throw err})
   }
@@ -195,9 +195,12 @@ router.get('/tenants/:name/services/:id/error',authenticate,(req,res,next)=>{
     if(req.user.role.actions.includes('view_errors')){
 
       db.service_errors.getErrorByServiceId(req.params.id).then(response=>{
-        console.log('Response');
-        console.log(response);
-        return res.status(200).json({error:response});
+        if(response){
+          return res.status(200).json({error:response});
+        }
+        else{
+          return res.status(404).end();
+        }
       });
     }
   }
@@ -378,7 +381,7 @@ router.get('/tenants/:name/services/:id',authenticate,(req,res,next)=>{
             res.status(200).json({service:result.service_data});
           }
           else {
-            res.status(204).end();
+            res.status(404).end();
           }
         }).catch(err=>{next(err);})
       }
@@ -391,12 +394,12 @@ router.get('/tenants/:name/services/:id',authenticate,(req,res,next)=>{
                   res.status(200).json({service:result.service_data});
                 }
                 else {
-                  res.status(204).end();
+                  res.status(404).end();
                 }
               }).catch(err=>{next(err);})
             }
             else{
-              res.status(204).end();
+              res.status(404).end();
             }
           }).catch(err=>{next(err);});;
         });
@@ -632,7 +635,7 @@ router.get('/tenants/:name/groups/:group_id/members',authenticate,view_group,(re
         res.status(200).json({group_members});
       }
       else{
-        res.status(204).end();
+        res.status(404).end();
       }
     })
   }
@@ -775,7 +778,7 @@ router.get('/tenants/:name/invitations',authenticate,(req,res,next)=>{
         res.status(200).json(response);
       }
       else{
-        res.status(204).end()
+        res.status(404).end()
       }
     }).catch(err=>{next(err)})
   }
@@ -792,7 +795,7 @@ router.get('/tenants/:name/groups/:group_id/invitations',authenticate,(req,res,n
         res.status(200).json({invitations});
       }
       else{
-        res.status(204).end();
+        res.status(404).end();
       }
     })
   }
@@ -812,7 +815,7 @@ router.put('/tenants/:name/invitations/activate_by_code',authenticate,(req,res,n
         res.status(406).json({error:result.error});
       }
       else {
-        res.status(204).end();
+        res.status(404).end();
       }
     }).catch(err=>{next(err)})
   }
@@ -1023,7 +1026,6 @@ function authenticate(req,res,next){
         req.user = decode(token);
         db.user_role.getRoleActions(req.user.edu_person_entitlement,req.params.name).then(role=>{
           if(role.success){
-
             req.user.role = role.role;
             next();
           }
@@ -1069,13 +1071,14 @@ function authenticate(req,res,next){
                 res.status(401).end();
               }
             }).catch((err)=> {
-              //console.log(err);
+              customLogger(req,res,'warn','Unauthenticated request'+err);
+
               res.status(401).end();
             });
           }
           else{res.status(401).end();}
         }, (error) =>{
-          //console.log(error);
+          customLogger(req,res,'warn','Unauthenticated request'+ error);
           res.status(401).end();
         }).catch(err=>{res.status(401).end();})
       }
@@ -1086,6 +1089,7 @@ function authenticate(req,res,next){
 
   }
   catch(err){
+    customLogger(req,res,'warn','Unauthenticated request'+err);
     next(err);
   }
 
@@ -1094,7 +1098,6 @@ function authenticate(req,res,next){
 // Authenticating AmsAgent
 function amsAgentAuth(req,res,next){
   if(req.header('X-Api-Key')===process.env.AMS_AGENT_KEY){
-
     next();
   }
   else{

@@ -10,7 +10,7 @@ import Tab from 'react-bootstrap/Tab';
 import Alert from 'react-bootstrap/Alert';
 import Jumbotron from 'react-bootstrap/Jumbotron';
 import Container from 'react-bootstrap/Container';
-import {Logout} from './Components/Modals';
+import {Logout,NotFound} from './Components/Modals';
 import { diff } from 'deep-diff';
 import { useTranslation } from 'react-i18next';
 
@@ -23,7 +23,8 @@ const EditService = (props) => {
     const [editPetition,setEditPetition] = useState();
     const [changes,setChanges] = useState();
     const {tenant_name} = useParams();
-    const {logout,setLogout} = useState(false);
+    const [logout,setLogout] = useState(false);
+    const [notFound,setNotFound] = useState(false);
     useEffect(()=>{
       getData();
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -88,6 +89,11 @@ const EditService = (props) => {
             return response.json();
           }else if(response.status===401){
             setLogout(true);
+            return false
+          }
+          if(response.status===404){
+            setNotFound(true);
+            return false;
           }
           else {
             return false
@@ -111,6 +117,11 @@ const EditService = (props) => {
             return response.json();
           }else if(response.status===401){
             setLogout(true);
+            return false;
+          }
+          else if(response.status===404){
+            setNotFound(true);
+            return false;
           }
           else {
             return false
@@ -128,6 +139,7 @@ const EditService = (props) => {
     {props.review?
       <React.Fragment>
       <Logout logout={logout}/>
+      <NotFound notFound={notFound}/>
       {props.type==='edit'?
         <React.Fragment>
           <Alert variant='warning' className='form-alert'>
@@ -201,8 +213,8 @@ const ViewService = (props)=>{
   const [petition,setPetition] = useState();
   const [deploymentError,setDeploymentError] = useState();
   const {tenant_name} = useParams();
-  const {logout,setLogout} = useState(false);
-
+  const [logout,setLogout] = useState(false);
+  const [notFound,setNotFound] = useState(false);
   useEffect(()=>{
 
     getData();
@@ -224,6 +236,11 @@ const ViewService = (props)=>{
             return response.json();
           }else if(response.status===401){
             setLogout(true);
+            return false;
+          }
+          else if(response.status===404){
+            setNotFound(true);
+            return false;
           }
           else {
             return false
@@ -251,9 +268,14 @@ const ViewService = (props)=>{
         }
         else if(response.status===401){
           setLogout(true);
+          return false;
+        }
+        else if(response.status===404){
+          setNotFound(true);
+          return false;
         }
         else {
-          return false
+          return false;
         }
       }).then(response=> {
         if(response.service){
@@ -270,11 +292,17 @@ const ViewService = (props)=>{
           'Authorization': localStorage.getItem('token')
         }
       }).then(response=>{
+
         if(response.status===200){
           return response.json();
         }
         else if(response.status===401){
           setLogout(true);
+          return false;
+        }
+        else if(response.status===404){
+          setNotFound(true);
+          return false;
         }
         else {
           return false
@@ -288,6 +316,7 @@ const ViewService = (props)=>{
   }
   return(
     <React.Fragment>
+    <NotFound notFound={notFound}/>
     <Logout logout={logout}/>
     <ErrorComponent deploymentError={deploymentError} setDeploymentError={setDeploymentError} service_id={props.service_id} setLogout={setLogout}/>
       {service?<ServiceForm initialValues={service} disabled={true} {...props} />:props.service_id?<LoadingBar loading={true}/>:petition?

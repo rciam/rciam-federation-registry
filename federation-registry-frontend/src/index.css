@@ -1160,3 +1160,6 @@ html:lang(gr) .home-container h1 {
   background-color: #F8D7DA!important;
   margin-bottom:0rem!important;
 }
+.leave-group-button{
+  padding: 0.1rem 0.35rem 0.1rem 0.35rem!important
+}
