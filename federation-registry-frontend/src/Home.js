@@ -26,7 +26,6 @@ const Home = ()=> {
    },[]);
 
    const login = () => {
-
        if(localStorage.getItem('token')){
          setLoading(true);
          fetch(config.host+'tenants/'+tenant_name+'/user', {
@@ -87,18 +86,16 @@ const Home = ()=> {
            else {
              history.push('/'+tenant.name+'/invitations');
            }
-
-
      })
    }
 
-   const test = "greet";
+
   return (
     <React.Fragment>
       {loading?<LoadingPage  loading={loading}/>:null}
       <div className="home-container">
-        <h1>{t('main_'+test+'ing')}</h1>
-        <p>{tenant.description}</p>
+        <h1>{t('main_greeting')}</h1>
+        <p>{localStorage.getItem('invitation')?t('invitation_landing_page_message'):tenant.description}</p>
       </div>
     </React.Fragment>
   )

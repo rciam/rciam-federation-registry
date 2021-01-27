@@ -458,6 +458,25 @@ textarea {
   margin-left:0.4rem;
   margin-top:0.4rem;
 }
+.form_radio_item {
+  margin-bottom:0.5rem!important;
+}
+
+.form_radio_item input {
+  margin-right:0.5rem!important;
+}
+
+.public_key_radio {
+  display:inline-block;
+  margin-right:0.5rem;
+}
+.public_key_radio input {
+  margin-right:0.3rem;
+}
+.public_key_input {
+  margin-top:0.5rem;
+}
+
 
 /* Inputs */
 
@@ -467,6 +486,10 @@ textarea {
   border-radius: 0.3rem;
   box-shadow: 0 0 0 .2rem
   rgba(255, 193, 7,.25);
+}
+.input_radio_edited {
+  color:#FFC107!important;
+  font-weight:bold;
 }
 
 .checkbox-edited {

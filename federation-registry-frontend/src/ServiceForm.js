@@ -11,7 +11,7 @@ import Collapse from 'react-bootstrap/Collapse';
 import {useParams } from "react-router-dom";
 import { diff } from 'deep-diff';
 import {tenantContext} from './context.js';
-//import {Debug} from './Components/Debug.js';
+import {Debug} from './Components/Debug.js';
 import {SimpleModal,ResponseModal,Logout,NotFound} from './Components/Modals.js';
 import Form from 'react-bootstrap/Form';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -22,10 +22,11 @@ import InputRow from './Components/InputRow.js';
 import Button from 'react-bootstrap/Button';
 import * as yup from 'yup';
 import { useTranslation } from 'react-i18next';
-import {SimpleInput,DeviceCode,Select,ListInput,LogoInput,TextAria,ListInputArray,CheckboxList,SimpleCheckbox,ClientSecret,TimeInput,RefreshToken,Contacts} from './Components/Inputs.js'// eslint-disable-next-line
+import countryData from 'country-region-data';
+import {SimpleInput,CountrySelect,RadioList,DeviceCode,Select,PublicKey,ListInput,LogoInput,TextAria,ListInputArray,CheckboxList,SimpleCheckbox,ClientSecret,TimeInput,RefreshToken,Contacts} from './Components/Inputs.js'// eslint-disable-next-line
 const {reg} = require('./regex.js');
 var availabilityCheckTimeout;
-
+var countries;
 
 
 const ServiceForm = (props)=> {
@@ -37,7 +38,11 @@ const ServiceForm = (props)=> {
   const [tenant,setTenant] = useContext(tenantContext);
 
   useEffect(()=>{
-    if(props.disabled||props.review){
+    countries = [];
+    countryData.forEach((item,index)=>{
+      countries.push(item.countryName);
+    });
+        if(props.disabled||props.review){
       setDisabled(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -103,6 +108,7 @@ const ServiceForm = (props)=> {
     }),
     logo_uri:yup.string().required(t('yup_required')).test('testImage',t('yup_image_url'),function(value){ return imageError}),
     policy_uri:yup.string().required(t('yup_required')).matches(reg.regSimpleUrl,t('yup_url')),
+    country:yup.string().test('testCountry','Select one of the available options',function(value){return countries.includes(value)}).required(t('yup_required')),
     service_description:yup.string().required(t('yup_required')),
     contacts:yup.array().of(yup.object().shape({
         email:yup.string().email(t('yup_email')).required(t('yup_contact_empty')),
@@ -166,6 +172,29 @@ const ServiceForm = (props)=> {
     metadata_url:yup.string().nullable().when('protocol',{
       is:'saml',
       then: yup.string().required(t('yup_required')).matches(reg.regSimpleUrl,'Enter a valid Url')
+    }),
+    token_endpoint_auth_signing_alg:yup.string().nullable().when('protocol',{
+      is:'oidc',
+      then: yup.string().required(t('yup_select_option')).test('testTokenEndpointSigningAlgorithm','Invalid Value',function(value){return tenant.form_config.token_endpoint_auth_signing_alg.includes(value)})
+    }),
+    token_endpoint_auth_method:yup.string().nullable().when('protocol',{
+      is:'oidc',
+      then: yup.string().required(t('yup_select_option')).test('testTokenEndpointAuthMethod','Invalid Value',function(value){return tenant.form_config.token_endpoint_auth_method.includes(value)})
+    }),
+    jwks_uri:yup.string().nullable().when(['protocol','token_endpoint_auth_method'],{
+      is:(protocol,token_endpoint_auth_method)=> protocol==='oidc'&&token_endpoint_auth_method==="private_key_jwt" ,
+      then:yup.string().test('testTokenEndpointAuthMethod','Invalid Value',function(value){if(this.parent.jwks||(value&&reg.regSimpleUrl.test(value))){return true}else{return false}})
+    }),
+    jwks:yup.object().nullable().when(['protocol','jwks_uri','token_endpoint_auth_method'],{
+      is:(protocol,jwks_uri,token_endpoint_auth_method)=> protocol==='oidc'&&!jwks_uri&&token_endpoint_auth_method==="private_key_jwt" ,
+      then:yup.object().required(t('yup_required')).test('testJwks','Invalid Schema',function(value){
+        if(value&&value.keys&&typeof(value.keys)==='object'&&Object.keys(value).length===1){
+          return true
+        }
+        else{
+          return false
+        }
+      })
     }),
     entity_id:yup.string().matches(reg.regUrl,t('yup_secure_url')).nullable().when('protocol',{
       is:'saml',
@@ -391,6 +420,13 @@ const ServiceForm = (props)=> {
       innerRef={formRef}
       onSubmit={(values,{setSubmitting}) => {
         setHasSubmitted(true);
+        if(!(values.token_endpoint_auth_method==="client_secret_jwt"||values.token_endpoint_auth_method==="private_key_jwt")){
+          values.token_endpoint_auth_signing_alg="client_secret_basic";
+        }
+        if(values.token_endpoint_auth_method!=="private_key_jwt"){
+          values.jwks='';
+          values.jwks_uri='';
+        }
         postApi(values);
       }}
     >
@@ -410,11 +446,8 @@ const ServiceForm = (props)=> {
       errors,
       isSubmitting})=>(
       <div className="tab-panel">
-
               <ProcessingRequest active={asyncResponse}/>
               <Form noValidate onSubmit={handleSubmit}>
-
-
                 {props.disabled?null:
                   <div className="form-controls-container">
                     {props.review?
@@ -444,8 +477,6 @@ const ServiceForm = (props)=> {
                         changed={props.changes?props.changes.service_name:null}
                        />
                      </InputRow>
-
-
                       <InputRow title={t('form_integration_environment')} extraClass='select-col' error={errors.integration_environment} touched={touched.integration_environment}>
                         <Select
                           onBlur={handleBlur}
@@ -485,6 +516,18 @@ const ServiceForm = (props)=> {
                           isInvalid={hasSubmitted?!!errors.service_description:(!!errors.service_description&&touched.service_description)}
                           disabled={disabled}
                           changed={props.changes?props.changes.service_description:null}
+                        />
+                      </InputRow>
+                      <InputRow title={'Select country'} extraClass='select-col' error={errors.country} touched={touched.country}>
+                        <CountrySelect
+                          onBlur={handleBlur}
+                          placeholder={'Select country'}
+                          name="country"
+                          values={values}
+                          isInvalid={hasSubmitted?!!errors.country:(!!errors.country&&touched.country)}
+                          onChange={handleChange}
+                          disabled={disabled}
+                          changed={props.changes?props.changes.country:null}
                         />
                       </InputRow>
                       <InputRow title={t('form_policy_uri')} description={t('form_policy_uri_desc')} error={errors.policy_uri} touched={touched.policy_uri}>
@@ -576,6 +619,7 @@ const ServiceForm = (props)=> {
                               changed={props.changes?props.changes.scope:null}
                             />
                           </InputRow>
+
                           <InputRow title={t('form_grant_types')} error={errors.grant_types} touched={true}>
                             <CheckboxList
                               name='grant_types'
@@ -586,6 +630,45 @@ const ServiceForm = (props)=> {
 
                             />
                           </InputRow>
+                          <InputRow title="Token Endpoint Authorization Method" error={errors.token_endpoint_auth_method}>
+                            <RadioList
+                              name='token_endpoint_auth_method'
+                              value={values.token_endpoint_auth_method}
+                              onChange={handleChange}
+                              radio_items={tenant.form_config.token_endpoint_auth_method}
+                              radio_items_titles={tenant.form_config.token_endpoint_auth_method_title}
+                              disabled={disabled}
+                              changed={props.changes?props.changes.token_endpoint_auth_method:null}
+                            />
+                          </InputRow>
+                          {values.token_endpoint_auth_method==='private_key_jwt'||values.token_endpoint_auth_method==='client_secret_jwt'?
+                          <InputRow title="Token Endpoint Signing Algorithm" extraClass='select-col' error={errors.token_endpoint_auth_signing_alg} touched={touched.token_endpoint_auth_signing_alg}>
+                            <Select
+                              onBlur={handleBlur}
+                              optionsTitle={tenant.form_config.token_endpoint_auth_signing_alg_title}
+                              options={tenant.form_config.token_endpoint_auth_signing_alg}
+                              name="token_endpoint_auth_signing_alg"
+                              values={values}
+                              isInvalid={hasSubmitted?!!errors.token_endpoint_auth_signing_alg_title:(!!errors.token_endpoint_auth_signing_alg&&touched.token_endpoint_auth_signing_alg)}
+                              onChange={handleChange}
+                              disabled={disabled}
+                              changed={props.changes?props.changes.token_endpoint_auth_signing_alg:null}
+                            />
+                          </InputRow>
+                        :null}
+                        {values.token_endpoint_auth_method==='private_key_jwt'?
+                          <InputRow title="Public Key Set" extraClass='select-col' description="URL for the client's JSON Web Key set (must be reachable by the server)" error={errors.jwks?errors.jwks:errors.jwks_uri} touched={touched.jwks||touched.jwks_uri}>
+                            <PublicKey
+                              onBlur={handleBlur}
+                              values={values}
+                              setvalue={(field,value,validate)=>setFieldValue(field,value,validate)}
+                              isInvalid={hasSubmitted?errors.jwks_uri||errors.jwks:((errors.jwks_uri||errors.jwks)&&(touched.jwks||touched.jwks_uri))}
+                              onChange={handleChange}
+                              disabled={disabled}
+                              changed={props.changes&&(props.changes.jwks||props.changes.jwks_uri)?true:false}
+                            />
+                          </InputRow>
+                         :null}
                           <InputRow title={t('form_refresh_token_validity_seconds')} extraClass='time-input' error={errors.refresh_token_validity_seconds} touched={touched.refresh_token_validity_seconds}>
                             <RefreshToken
                               values={values}
@@ -665,6 +748,17 @@ const ServiceForm = (props)=> {
                               changed={props.changes?props.changes.id_token_timeout_seconds:null}
                             />
                           </InputRow>
+                          <InputRow title={t('form_id_token_timeout_seconds')} extraClass='time-input' error={errors.id_token_timeout_seconds} touched={touched.id_token_timeout_seconds} description={t('form_id_token_timeout_seconds_desc')}>
+                            <TimeInput
+                              name='id_token_timeout_seconds'
+                              value={values.id_token_timeout_seconds}
+                              isInvalid={hasSubmitted?!!errors.id_token_timeout_seconds:(!!errors.id_token_timeout_seconds&&touched.id_token_timeout_seconds)}
+                              onBlur={handleBlur}
+                              onChange={handleChange}
+                              disabled={disabled}
+                              changed={props.changes?props.changes.id_token_timeout_seconds:null}
+                            />
+                          </InputRow>
                         </React.Fragment>
                     :null}
                     {values.protocol==='saml'?
@@ -718,7 +812,7 @@ const ServiceForm = (props)=> {
                   }
                   <ResponseModal message={message} modalTitle={modalTitle}/>
                   <SimpleModal isSubmitting={isSubmitting} isValid={isValid}/>
-                  {/*<Debug/>*/}
+                  {/* <Debug/> */}
                 </Form>
 
 
