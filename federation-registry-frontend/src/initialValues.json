@@ -11,11 +11,13 @@
   "entity_id":"",
   "client_id":"",
   "allow_introspection":false,
+  "token_endpoint_auth_method":"Option1",
   "code_challenge_method":"plain",
   "device_code_validity_seconds":"28800",
   "access_token_validity_seconds":"3600",
   "refresh_token_validity_seconds":"28800",
   "client_secret":"",
+  "country":"",
   "reuse_refresh_tokens":true,
   "clear_access_tokens_on_refresh":true,
   "id_token_timeout_seconds":"1000",
@@ -30,5 +32,9 @@
   "grant_types": [
     "authorization_code"
   ],
-  "generate_client_secret":true
+  "generate_client_secret":true,
+  "token_endpoint_auth_method":"",
+  "token_endpoint_auth_signing_alg":"client_secret_basic",
+  "jwks":"",
+  "jwks_uri":""
 }

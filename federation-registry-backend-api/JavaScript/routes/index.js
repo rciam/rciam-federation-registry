@@ -1055,8 +1055,10 @@ function authenticate(req,res,next){
           //console.log(result);
           req.user = {};
           req.user.sub = result.data.sub;
+
           req.user.edu_person_entitlement = result.data.eduperson_entitlement;
           req.user.iss = result.data.iss;
+          console.log(req.user.edu_person_entitlement);
           req.user.email = result.data.email;
           if(req.user.sub){
             db.user_role.getRoleActions(req.user.edu_person_entitlement,req.params.name).then(role=>{

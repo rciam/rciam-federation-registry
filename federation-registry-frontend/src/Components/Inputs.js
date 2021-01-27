@@ -10,6 +10,7 @@ import Tooltip from 'react-bootstrap/Tooltip';
 import Overlay from 'react-bootstrap/Overlay';
 import * as formConfig from '../form-config.json';
 import { useTranslation } from 'react-i18next';
+import countryData from 'country-region-data';
 /*
 const [show, setShow] = useState(false);
 const target = useRef(null);
@@ -56,7 +57,111 @@ export function TextAria(props) {
     </React.Fragment>
   )
 }
+export function PublicKey(props){
+  const [type,setType] = useState();
+  useEffect(()=>{
+    setType(props.values.jwks?'jwks':'jwks_uri')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[]);
+  const [show, setShow] = useState(false);
+  const target = useRef(null);
+  return(
+    <React.Fragment>
+      <div className="public_key_radio">
+        <input
+          type='radio'
+          name='public_key_type'
+          value='jwks_uri'
+          checked={type==='jwks_uri'}
+          disabled={props.disabled}
+          onChange={(e)=>{console.log(e);props.setvalue('jwks','',true); setType(e.target.value) }}
+        />
+        By URI
+      </div>
+      <div className="public_key_radio">
+        <input
+          type='radio'
+          name='public_key_type'
+          value='jwks'
+          checked={type==='jwks'}
+          disabled={props.disabled}
+          onChange={(e)=>{console.log(e);props.setvalue('jwks_uri','',true); setType(e.target.value) }}
+        />
+        By Value
+      </div>
+      <div className="public_key_input">
+        {type==='jwks_uri'?
+          <Form.Control
+            onBlur={props.onBlur}
+            name="jwks_uri"
+            placeholder='https://'
+            type="text"
+            ref={target}
+            value={props.values.jwks_uri}
+            onChange={props.onChange}
+            isInvalid={props.isInvalid}
+            disabled={props.disabled}
+            onMouseOver={()=>setShow(true)}
+            onMouseOut={()=>setShow(false)}
+            className={props.changed?'input-edited':null}
+          />
+          :
+          <Form.Control
+            onBlur={props.onBlur}
+            name="jwks"
+            as="textarea"
+            rows="3"
+            placeholder='{"keys":[]}'
+            value={props.values.jwks}
+            ref={target}
+            onChange={props.onChange}
+            isInvalid={props.isInvalid}
+            onMouseOver={()=>setShow(true)}
+            onMouseOut={()=>setShow(false)}
+            disabled={props.disabled}
+            className={props.changed?'input-edited':null}
+          />
+        }
+      </div>
+      <MyOverLay show={props.changed&&show?'string':null} type='Edited' target={target}/>
+    </React.Fragment>
+  )
+}
+export function RadioList(props){
+  const [show, setShow] = useState(false);
+  const target = useRef(null);
+  return(
+    <React.Fragment>
 
+        {props.radio_items.map((item,index)=>(
+          <div
+            className={"form_radio_item "+ (props.changed&&props.value===item?"input_radio_edited":null)}
+            key={index}
+            onMouseOver={()=>{props.value===item&&setShow(true)}}
+            onMouseOut={()=>{props.value===item&&setShow(false)}}
+          >
+            <Field name={props.name}>
+              {({ field, form }) => (
+                <React.Fragment>
+                  <input
+                    type="radio"
+                    name={field.name}
+                    disabled={props.disabled}
+                    {...field}
+                    value={item}
+                    ref={props.value===item?target:null}
+                    checked={props.value===item}
+                  />
+                  {props.radio_items_titles[index]}
+                </React.Fragment>
+              )}
+            </Field>
+          </div>
+        ))}
+        <MyOverLay show={props.changed&&show?'string':null} type='Edited' target={target}/>
+    </React.Fragment>
+  )
+}
 
 
 export function SimpleCheckbox(props){
@@ -126,6 +231,31 @@ export function TimeInput(props){
 }
 
 
+export function CountrySelect(props){
+  const [show, setShow] = useState(false);
+  const target = useRef(null);
+  return(
+    <React.Fragment>
+      <div
+        className={'select-container'+(props.changed?' input-edited':null)}
+        ref={target}
+        >
+      <Field
+      name={props.name}
+      as="select"
+      onMouseOver={()=>setShow(true)}
+      onMouseOut={()=>setShow(false)}
+      disabled={props.disabled}
+      placeholder="Select country...">
+        {[{"countryName":"Select your country..."}, ...countryData].map((country,index)=>(
+          <option key={index} value={index===0?null:country.countryName}>{country.countryName}</option>
+        ))}
+      </Field>
+    </div>
+      <MyOverLay show={props.changed&&show?'string':null} type='Edited' target={target}/>
+    </React.Fragment>
+  )
+}
 
 export function Select(props){
   const [show, setShow] = useState(false);
@@ -134,18 +264,17 @@ export function Select(props){
   return(
     <React.Fragment>
       <div
-        className='select-container'
+        className={'select-container'+(props.changed?' input-edited':null)}
         ref={target}
         >
       <Field
-      className={props.changed?' input-edited':null}
       name={props.name}
       as="select"
 
       onMouseOver={()=>setShow(true)}
       onMouseOut={()=>setShow(false)}
       disabled={props.disabled}
-      placeholder="Select...">
+      placeholder="Select..countryName.">
         {props.options.map((item,index)=>(
           <option key={index} value={props.options[index]}>{props.optionsTitle[index]}</option>
         ))}

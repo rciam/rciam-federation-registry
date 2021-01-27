@@ -12,6 +12,11 @@ const create = {
          "type": "admin"
        }],
      metadata_url:null,
+     country:"Greece",
+     token_endpoint_auth_method:"private_key_jwt",
+     token_endpoint_auth_signing_alg:"private_key_jwt",
+     jwks:"{\"keys\":[]}",
+     jwks_uri:"",
      entity_id:null,
      client_id:"testCreate",
      allow_introspection:false,
@@ -44,6 +49,7 @@ const create = {
      policy_uri:"https://policyuri.com",
      integration_environment:"demo",
      protocol:"saml",
+     country:"Greece",
      contacts:[ {
          "email": "mymail@gmail.com",
          "type": "admin"
@@ -85,6 +91,11 @@ const edit = {
        "type": "admin"
      }
    ],
+   country:"Greece",
+   token_endpoint_auth_method:"private_key_jwt",
+   token_endpoint_auth_signing_alg:"private_key_jwt",
+   jwks:"",
+   jwks_uri:"https://test.com",
    metadata_url:"",
    entity_id:"",
    client_id:"testCreate2",
@@ -162,6 +173,11 @@ const postServices = [
       "access_token_validity_seconds":3600,
       "refresh_token_validity_seconds":28800,
       "client_secret":"secret",
+      "country":"Greece",
+      "token_endpoint_auth_method":"private_key_jwt",
+      "token_endpoint_auth_signing_alg":"private_key_jwt",
+      "jwks":"{\"keys\":[]}",
+      "jwks_uri":"",
       "reuse_refresh_tokens":true,
       "clear_access_tokens_on_refresh":true,
       "id_token_timeout_seconds":1000,
@@ -188,6 +204,11 @@ const postServices = [
       "policy_uri":"https://www.policy_uri.com",
       "integration_environment":"demo",
       "protocol":"oidc",
+      "country":"Greece",
+      "token_endpoint_auth_method":"private_key_jwt",
+      "token_endpoint_auth_signing_alg":"private_key_jwt",
+      "jwks":"",
+      "jwks_uri":"https://test.com",
       "reuse_refresh_tokens":true,
       "clear_access_tokens_on_refresh":true,
       "id_token_timeout_seconds":1000,
@@ -241,6 +262,11 @@ const validationRequests = {
    policy_uri:"http://policyuri.com",
    integration_environment:1,
    protocol:"oidc",
+   country:"Greece",
+   token_endpoint_auth_method:"private_key_jwt",
+   token_endpoint_auth_signing_alg:"private_key_jwt",
+   jwks:"",
+   jwks_uri:"https://test.com",
    contacts:"string",
    metadata_url:null,
    entity_id:null,
@@ -267,6 +293,11 @@ const validationRequests = {
    policy_uri:"string",
    integration_environment:"string",
    protocol:"oidc",
+   country:"Greece",
+   token_endpoint_auth_method:"private_key_jwt",
+   token_endpoint_auth_signing_alg:"private_key_jwt",
+   jwks:"",
+   jwks_uri:"https://test.com",
    contacts:["string","string"],
    metadata_url:null,
    entity_id:null,
@@ -488,7 +519,7 @@ const users = {
    },
    manager_user:{
      sub: "test_egi_manager_user",
-     edu_person_entitlement:['fake_entitlement']
+     edu_person_entitlement:['urn:mace:egi.eu:group:goc.egi.eu:role=member#aai.egi.eu']
    },
    end_user: {
      sub: "test_egi_end_user",
@@ -502,7 +533,7 @@ const users = {
    },
    manager_user:{
      sub: "test_eosc_manager_user",
-     edu_person_entitlement : ['fake_entitlement']
+     edu_person_entitlement : ['urn:mace:egi.eu:group:goc.egi.eu:role=member#aai.egi.eu']
    },
    end_user: {
      sub: "test_eosc_end_user",
