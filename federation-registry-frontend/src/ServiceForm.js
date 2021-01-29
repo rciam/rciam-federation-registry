@@ -11,7 +11,7 @@ import Collapse from 'react-bootstrap/Collapse';
 import {useParams } from "react-router-dom";
 import { diff } from 'deep-diff';
 import {tenantContext} from './context.js';
-import {Debug} from './Components/Debug.js';
+//import {Debug} from './Components/Debug.js';
 import {SimpleModal,ResponseModal,Logout,NotFound} from './Components/Modals.js';
 import Form from 'react-bootstrap/Form';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -735,17 +735,6 @@ const ServiceForm = (props)=> {
                               onChange={handleChange}
                               disabled={disabled}
                               changed={props.changes?props.changes.access_token_validity_seconds:null}
-                            />
-                          </InputRow>
-                          <InputRow title={t('form_id_token_timeout_seconds')} extraClass='time-input' error={errors.id_token_timeout_seconds} touched={touched.id_token_timeout_seconds} description={t('form_id_token_timeout_seconds_desc')}>
-                            <TimeInput
-                              name='id_token_timeout_seconds'
-                              value={values.id_token_timeout_seconds}
-                              isInvalid={hasSubmitted?!!errors.id_token_timeout_seconds:(!!errors.id_token_timeout_seconds&&touched.id_token_timeout_seconds)}
-                              onBlur={handleBlur}
-                              onChange={handleChange}
-                              disabled={disabled}
-                              changed={props.changes?props.changes.id_token_timeout_seconds:null}
                             />
                           </InputRow>
                           <InputRow title={t('form_id_token_timeout_seconds')} extraClass='time-input' error={errors.id_token_timeout_seconds} touched={touched.id_token_timeout_seconds} description={t('form_id_token_timeout_seconds_desc')}>

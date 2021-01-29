@@ -8,6 +8,11 @@ const options = {
     'Content-Type': 'application/json',
     'X-Api-Key': process.env.EXPRESS_KEY
 }};
+const options_ams = {
+  headers:{
+    'Content-Type': 'application/json'
+  }
+};
 const amsBaseUrl = process.env.AMS_BASE_URL + '/projects/' + process.env.AMS_PROJECT;
 const amsProject = 'projects/' + process.env.AMS_PROJECT;
 const amsKey = "?key=" +process.env.AMS_USER_TOKEN;
@@ -146,7 +151,7 @@ async function run() {
           console.log(service);
           let messages = [{"attributes":{},"data": Buffer.from(JSON.stringify(service.json)).toString("base64")}];
 
-          let done = await axios.post(pubUrls[service.json.tenant].service[service.json.protocol],{"messages":messages}, options).then((res) => {
+          let done = await axios.post(pubUrls[service.json.tenant].service[service.json.protocol],{"messages":messages}, options_ams).then((res) => {
             if(res.status===200){
               setStateArray.push({id:service.json.id,state:'waiting-deployment',protocol:service.json.protocol,tenant:service.json.tenant});
             }
