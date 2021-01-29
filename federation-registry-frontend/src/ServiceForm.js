@@ -421,7 +421,7 @@ const ServiceForm = (props)=> {
       onSubmit={(values,{setSubmitting}) => {
         setHasSubmitted(true);
         if(!(values.token_endpoint_auth_method==="client_secret_jwt"||values.token_endpoint_auth_method==="private_key_jwt")){
-          values.token_endpoint_auth_signing_alg="client_secret_basic";
+          values.token_endpoint_auth_signing_alg="RS256";
         }
         if(values.token_endpoint_auth_method!=="private_key_jwt"){
           values.jwks='';
