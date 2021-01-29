@@ -93,6 +93,7 @@ create table service_details (
   logo_uri VARCHAR(2048),
   policy_uri VARCHAR(2048),
   integration_environment VARCHAR(256),
+  country VARCHAR(256),
   requester VARCHAR(256),
   protocol VARCHAR(256),
   deleted BOOLEAN DEFAULT FALSE,
@@ -111,6 +112,10 @@ create table service_details_oidc (
   reuse_refresh_tokens BOOLEAN,
   clear_access_tokens_on_refresh BOOLEAN,
   id_token_timeout_seconds bigint,
+  token_endpoint_auth_method VARCHAR(256),
+  token_endpoint_auth_signing_alg VARCHAR(256),
+  jwks VARCHAR(2048),
+  jwks_uri VARCHAR(256),
   FOREIGN KEY (id) REFERENCES service_details(id) ON DELETE CASCADE
 );
 
@@ -176,6 +181,7 @@ create table service_petition_details (
   logo_uri VARCHAR(2048),
   policy_uri VARCHAR(2048),
   integration_environment VARCHAR(256),
+  country VARCHAR(256),
   type VARCHAR(256) DEFAULT 'create',
   status VARCHAR(256) DEFAULT 'pending',
   comment VARCHAR(2024) DEFAULT NULL,
@@ -200,6 +206,10 @@ create table service_petition_details_oidc (
   clear_access_tokens_on_refresh BOOLEAN,
   id_token_timeout_seconds bigint,
   client_secret VARCHAR(2048),
+  token_endpoint_auth_method VARCHAR(256),
+  token_endpoint_auth_signing_alg VARCHAR(256),
+  jwks VARCHAR(2048),
+  jwks_uri VARCHAR(256),
   FOREIGN KEY (id) REFERENCES service_petition_details(id) ON DELETE CASCADE
 );
 
