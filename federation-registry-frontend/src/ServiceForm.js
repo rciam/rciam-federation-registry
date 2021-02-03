@@ -11,7 +11,7 @@ import Collapse from 'react-bootstrap/Collapse';
 import {useParams } from "react-router-dom";
 import { diff } from 'deep-diff';
 import {tenantContext} from './context.js';
-//import {Debug} from './Components/Debug.js';
+import {Debug} from './Components/Debug.js';
 import {SimpleModal,ResponseModal,Logout,NotFound} from './Components/Modals.js';
 import Form from 'react-bootstrap/Form';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -165,7 +165,7 @@ const ServiceForm = (props)=> {
     client_secret:yup.string().nullable().when('protocol',{
       is:'oidc',
       then: yup.string().when(['generate_client_secret','token_endpoint_auth_method'],{
-        is:(generate_client_secret,token_endpoint_auth_method)=> generate_client_secret===false||token_endpoint_auth_method==='private_key_jwt'||token_endpoint_auth_method==='none',
+        is:(generate_client_secret,token_endpoint_auth_method)=> generate_client_secret===false&&!(token_endpoint_auth_method==='private_key_jwt'||token_endpoint_auth_method==='none'),
         then: yup.string().required(t('yup_required')).min(4,t('yup_char_min') + ' ('+4+')').max(16,t('yup_char_min') + ' ('+16+')')
       }).nullable()
     }),
@@ -813,7 +813,7 @@ const ServiceForm = (props)=> {
                   }
                   <ResponseModal message={message} modalTitle={modalTitle}/>
                   <SimpleModal isSubmitting={isSubmitting} isValid={isValid}/>
-                  {/* <Debug/> */}
+                  <Debug/>
                 </Form>
 
 
