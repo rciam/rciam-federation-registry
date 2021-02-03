@@ -424,8 +424,8 @@ const ServiceForm = (props)=> {
           values.token_endpoint_auth_signing_alg="RS256";
         }
         if(values.token_endpoint_auth_method!=="private_key_jwt"){
-          values.jwks='';
-          values.jwks_uri='';
+          values.jwks=null;
+          values.jwks_uri=null;
         }
         if(values.token_endpoint_auth_method==="private_key_jwt"||values.token_endpoint_auth_method==="none"){
           values.client_secret = '';
