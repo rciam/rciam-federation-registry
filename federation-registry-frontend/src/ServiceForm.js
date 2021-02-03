@@ -430,8 +430,12 @@ const ServiceForm = (props)=> {
         if(values.token_endpoint_auth_method==="private_key_jwt"||values.token_endpoint_auth_method==="none"){
           values.client_secret = '';
         }
+        if(values.jwks_uri){
+          values.jwks_uri=null;
+        }
         if(values.jwks){
           values.jwks = JSON.parse(values.jwks);
+          values.jwks_uri=null;
           // let check = values.jwks.replace(/\n/g, "\\\\n").replace(/\r/g, "\\\\r").replace(/\t/g, "\\\\t");
           // values.jwks = JSON.parse(check);
         }
