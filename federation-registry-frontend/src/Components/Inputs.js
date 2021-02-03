@@ -114,6 +114,7 @@ export function PublicKey(props){
             placeholder='{"keys":[]}'
             value={props.values.jwks}
             ref={target}
+            datatype="json"
             onChange={props.onChange}
             isInvalid={props.isInvalid}
             onMouseOver={()=>setShow(true)}

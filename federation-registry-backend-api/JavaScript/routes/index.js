@@ -463,6 +463,7 @@ router.get('/tenants/:name/petitions/:id',authenticate,(req,res,next)=>{
 
 // Add a new client/petition
 router.post('/tenants/:name/petitions',authenticate,petitionValidationRules(),validate,asyncPetitionValidation,(req,res,next)=>{
+
   res.setHeader('Content-Type', 'application/json');
   if(req.user.role.actions.includes('add_own_petition')){
     try{
@@ -1058,7 +1059,6 @@ function authenticate(req,res,next){
 
           req.user.edu_person_entitlement = result.data.eduperson_entitlement;
           req.user.iss = result.data.iss;
-          console.log(req.user.edu_person_entitlement);
           req.user.email = result.data.email;
           if(req.user.sub){
             db.user_role.getRoleActions(req.user.edu_person_entitlement,req.params.name).then(role=>{

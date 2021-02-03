@@ -110,9 +110,14 @@
 }
 
 .ssp-footer__item__powered {
-    position: absolute;
-    bottom: 0;
-    right: 0;
+  margin-top: 0.5rem;
+  float:right;
+  clear:both;
+  position: relative;
+
+}
+.ssp-footer__item__feedback {
+
 }
 .ssp-footer__item__logo {
     height: 40px;
