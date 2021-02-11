@@ -114,6 +114,7 @@ export function PublicKey(props){
             placeholder='{"keys":[]}'
             value={props.values.jwks}
             ref={target}
+            datatype="json"
             onChange={props.onChange}
             isInvalid={props.isInvalid}
             onMouseOver={()=>setShow(true)}
@@ -270,7 +271,7 @@ export function Select(props){
       <Field
       name={props.name}
       as="select"
-
+      default={props.default}
       onMouseOver={()=>setShow(true)}
       onMouseOut={()=>setShow(false)}
       disabled={props.disabled}

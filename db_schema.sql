@@ -123,6 +123,7 @@ create table service_state (
   id bigint PRIMARY KEY,
   state VARCHAR(256),
   deployment_type VARCHAR(256) DEFAULT NULL,
+  last_edited timestamp without time zone DEFAULT NULL, 
   FOREIGN KEY (id) REFERENCES service_details(id) ON DELETE CASCADE
 );
 
@@ -190,6 +191,7 @@ create table service_petition_details (
   reviewer VARCHAR(256) DEFAULT NULL,
   group_id INTEGER DEFAULT NULL,
   reviewed_at timestamp without time zone DEFAULT NULL,
+  last_edited timestamp without time zone DEFAULT NULL,
   FOREIGN KEY (tenant) REFERENCES tenants(name),
   FOREIGN KEY (service_id) REFERENCES service_details(id) ON DELETE SET NULL
 );

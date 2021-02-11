@@ -39,6 +39,7 @@ export const NotFound = (props) => {
   const tenant = useContext(tenantContext);
   const handleClose = () => {
     history.push('/'+(tenant&&tenant[0]?tenant[0].name:null)+'/petitions');
+    props.setNotFound(false);
   }
   return (
     <Translation>

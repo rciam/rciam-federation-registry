@@ -11,7 +11,7 @@ import Collapse from 'react-bootstrap/Collapse';
 import {useParams } from "react-router-dom";
 import { diff } from 'deep-diff';
 import {tenantContext} from './context.js';
-//import {Debug} from './Components/Debug.js';
+import {Debug} from './Components/Debug.js';
 import {SimpleModal,ResponseModal,Logout,NotFound} from './Components/Modals.js';
 import Form from 'react-bootstrap/Form';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -164,8 +164,8 @@ const ServiceForm = (props)=> {
     }),
     client_secret:yup.string().nullable().when('protocol',{
       is:'oidc',
-      then: yup.string().when('generate_client_secret',{
-        is:false,
+      then: yup.string().when(['generate_client_secret','token_endpoint_auth_method'],{
+        is:(generate_client_secret,token_endpoint_auth_method)=> generate_client_secret===false&&!(token_endpoint_auth_method==='private_key_jwt'||token_endpoint_auth_method==='none'),
         then: yup.string().required(t('yup_required')).min(4,t('yup_char_min') + ' ('+4+')').max(16,t('yup_char_min') + ' ('+16+')')
       }).nullable()
     }),
@@ -424,8 +424,20 @@ const ServiceForm = (props)=> {
           values.token_endpoint_auth_signing_alg="RS256";
         }
         if(values.token_endpoint_auth_method!=="private_key_jwt"){
-          values.jwks='';
-          values.jwks_uri='';
+          values.jwks=null;
+          values.jwks_uri=null;
+        }
+        if(values.token_endpoint_auth_method==="private_key_jwt"||values.token_endpoint_auth_method==="none"){
+          values.client_secret = '';
+        }
+        if(values.jwks_uri){
+          values.jwks_uri=null;
+        }
+        if(values.jwks){
+          values.jwks = JSON.parse(values.jwks);
+          values.jwks_uri=null;
+          // let check = values.jwks.replace(/\n/g, "\\\\n").replace(/\r/g, "\\\\r").replace(/\t/g, "\\\\t");
+          // values.jwks = JSON.parse(check);
         }
         postApi(values);
       }}
@@ -647,6 +659,7 @@ const ServiceForm = (props)=> {
                               onBlur={handleBlur}
                               optionsTitle={tenant.form_config.token_endpoint_auth_signing_alg_title}
                               options={tenant.form_config.token_endpoint_auth_signing_alg}
+                              default='RS256'
                               name="token_endpoint_auth_signing_alg"
                               values={values}
                               isInvalid={hasSubmitted?!!errors.token_endpoint_auth_signing_alg_title:(!!errors.token_endpoint_auth_signing_alg&&touched.token_endpoint_auth_signing_alg)}
@@ -663,12 +676,29 @@ const ServiceForm = (props)=> {
                               values={values}
                               setvalue={(field,value,validate)=>setFieldValue(field,value,validate)}
                               isInvalid={hasSubmitted?errors.jwks_uri||errors.jwks:((errors.jwks_uri||errors.jwks)&&(touched.jwks||touched.jwks_uri))}
+                              datatype="json"
                               onChange={handleChange}
                               disabled={disabled}
                               changed={props.changes&&(props.changes.jwks||props.changes.jwks_uri)?true:false}
                             />
                           </InputRow>
                          :null}
+                       {!(values.token_endpoint_auth_method==='private_key_jwt'||values.token_endpoint_auth_method==='none')?
+                         <InputRow title={t('form_client_secret')}>
+                           <ClientSecret
+                             onChange={handleChange}
+                             feedback='not good'
+                             client_secret={values.client_secret}
+                             error={errors.client_secret}
+                             touched={touched.client_secret}
+                             isInvalid={hasSubmitted?!!errors.client_secret:(!!errors.client_secret&&touched.client_secret)}
+                             onBlur={handleBlur}
+                             generate_client_secret={values.generate_client_secret}
+                             disabled={disabled}
+                             changed={props.changes?props.changes.client_secret:null}
+                           />
+                         </InputRow>
+                       :null}
                           <InputRow title={t('form_refresh_token_validity_seconds')} extraClass='time-input' error={errors.refresh_token_validity_seconds} touched={touched.refresh_token_validity_seconds}>
                             <RefreshToken
                               values={values}
@@ -712,20 +742,7 @@ const ServiceForm = (props)=> {
                               changed={props.changes?props.changes.allow_introspection:null}
                             />
                           </InputRow>
-                          <InputRow title={t('form_client_secret')}>
-                            <ClientSecret
-                              onChange={handleChange}
-                              feedback='not good'
-                              client_secret={values.client_secret}
-                              error={errors.client_secret}
-                              touched={touched.client_secret}
-                              isInvalid={hasSubmitted?!!errors.client_secret:(!!errors.client_secret&&touched.client_secret)}
-                              onBlur={handleBlur}
-                              generate_client_secret={values.generate_client_secret}
-                              disabled={disabled}
-                              changed={props.changes?props.changes.client_secret:null}
-                            />
-                          </InputRow>
+
                           <InputRow title={t('form_access_token_validity_seconds')} extraClass='time-input' error={errors.access_token_validity_seconds} touched={touched.access_token_validity_seconds} description={t('form_access_token_validity_seconds_desc')}>
                             <TimeInput
                               name='access_token_validity_seconds'
@@ -801,7 +818,7 @@ const ServiceForm = (props)=> {
                   }
                   <ResponseModal message={message} modalTitle={modalTitle}/>
                   <SimpleModal isSubmitting={isSubmitting} isValid={isValid}/>
-                  {/* <Debug/> */}
+                  <Debug/>
                 </Form>
 
 

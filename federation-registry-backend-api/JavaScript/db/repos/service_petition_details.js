@@ -19,7 +19,8 @@ class ServicePetitionDetailsRepository {
 
     // Save new Petition
     async add(body,sub){
-      let date = Date.now();
+      let date = new Date(Date.now());
+
       return this.db.one(sql.add,{
         service_description: body.service_description,
         service_name: body.service_name,
@@ -34,11 +35,13 @@ class ServicePetitionDetailsRepository {
         comment:body.comment,
         protocol:body.protocol,
         group_id:body.group_id,
-        tenant:body.tenant
+        tenant:body.tenant,
+        last_edited:date
       })
     }
 
     async update(body,id){
+      let date = new Date(Date.now());
         return this.db.none(sql.update,{
           service_description: body.service_description,
           service_name: body.service_name,
@@ -48,7 +51,8 @@ class ServicePetitionDetailsRepository {
           integration_environment:body.integration_environment,
           id:id,
           type:body.type,
-          protocol:body.protocol
+          protocol:body.protocol,
+          last_edited:date
         })
     }
 
