@@ -1,4 +1,4 @@
-const { body, validationResult,param,check } = require('express-validator');
+const { body,query, validationResult,param,check } = require('express-validator');
 const {reg} = require('./regex.js');
 const customLogger = require('./loggers.js');
 var config = require('./config');
@@ -29,6 +29,20 @@ const putAgentValidation = () => {
     body('hostname').exists().withMessage('Required Field').bail().isString().withMessage('Must be a string').bail().custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Must be a url').bail()
   ]
 }
+
+const getServiceListValidation = () => {
+  return [
+
+    query('page').optional({checkFalsy:true}).isInt({gt:0}).withMessage('Page must be a positive integer').toInt(),
+    query('limit').optional({checkFalsy:true}).isInt({gt:0}).withMessage('Limit must be a positive integer').toInt(),
+    query('env').optional({checkFalsy:true}).isString().custom((value,{req,location,path})=> {   if(config.form[req.params.name].integration_environment.includes(value)){return true}else{return false}}).withMessage('Integration environment value not supported'),
+    query('protocol').optional({checkFalsy:true}).isString().custom((value,{req,location,path})=> {if(config.form[req.params.name].protocol.includes(value)){return true}else{return false}}).withMessage('Protocol not supported'),
+    query('owned').optional({checkFalsy:true}).isBoolean().toBoolean(),
+    query('pending').optional({checkFalsy:true}).isBoolean().toBoolean(),
+    query('search_string').optional({checkFalsy:true}).isString(),
+  ]
+}
+
 
 const postAgentValidation = () => {
   return [
@@ -160,5 +174,6 @@ module.exports = {
   amsIngestValidation,
   postInvitationValidation,
   putAgentValidation,
-  postAgentValidation
+  postAgentValidation,
+  getServiceListValidation
 }

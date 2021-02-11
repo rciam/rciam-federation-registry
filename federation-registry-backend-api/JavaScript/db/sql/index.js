@@ -59,8 +59,7 @@ module.exports = {
       getOldPetition:sql('petition/getOldPetition.sql')
     },
     service_list: {
-      getOwnList:sql('service_list/getOwnList.sql'),
-      getAllList:sql('service_list/getAllList.sql')
+      getList:sql('service_list/getList.sql')
     },
     group: {
       getGroupMembers:(sql('group/getGroupMembers.sql')),

@@ -271,7 +271,7 @@ export function Select(props){
       <Field
       name={props.name}
       as="select"
-
+      default={props.default}
       onMouseOver={()=>setShow(true)}
       onMouseOut={()=>setShow(false)}
       disabled={props.disabled}

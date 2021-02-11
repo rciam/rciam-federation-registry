@@ -1,5 +1,5 @@
 require('dotenv').config();
-const {petitionValidationRules,validate,postInvitationValidation,serviceValidationRules,putAgentValidation,postAgentValidation,decodeAms,amsIngestValidation} = require('../validator.js');
+const {petitionValidationRules,validate,getServiceListValidation,postInvitationValidation,serviceValidationRules,putAgentValidation,postAgentValidation,decodeAms,amsIngestValidation} = require('../validator.js');
 const qs = require('qs');
 const {v1:uuidv1} = require('uuid');
 const axios = require('axios').default;
@@ -16,16 +16,13 @@ const code_verifier = generators.codeVerifier();
 const {rejectPetition,approvePetition,changesPetition,getPetition,getOpenPetition} = require('../controllers/main.js');
 const base64url = require('base64url');
 
-//
-// "external_id":null,
-// "service_name":null,
-// "service_description":null,
-// "logo_uri":null,
 
 
 // ----------------------------------------------------------
 // ************************* Routes *************************
 // ----------------------------------------------------------
+
+
 
 router.post('/tenants/:name/services',serviceValidationRules(),validate,(req,res,next)=> {
   let services = req.body;
@@ -333,16 +330,33 @@ router.put('/agent/set_services_state',amsAgentAuth,(req,res,next)=>{
 });
 
 // Find all clients/petitions from curtain user to create preview list
-router.get('/tenants/:name/services',authenticate,(req,res,next)=>{
+router.get('/tenants/:name/services', getServiceListValidation(),validate,authenticate,(req,res,next)=>{
   try{
       if(req.user.role.actions.includes('get_services')&&req.user.role.actions.includes('get_petitions')){
-        db.service_list.getAll(req.user.sub,req.params.name).then(response =>{
-            return res.status(200).json({services:response});
-        }).catch(err=>{next(err);});
+        db.service_list.get(req).then(response =>{
+            if(response.length===0){
+              response.push({
+                list_items : [],
+                full_count : 0
+              })
+
+            }
+            return res.status(200).send(response[0]);
+        }).catch(err=>{
+          console.log(err);
+          return res.status(416).send('Out of range');
+        });
       }
       else if(req.user.role.actions.includes('get_own_services')&&req.user.role.actions.includes('get_own_petitions')){
-        db.service_list.getOwn(req.user.sub,req.params.name).then(response =>{
-          return res.status(200).json({services:response});
+        req.query.owned=true;
+        db.service_list.get(req).then(response =>{
+          if(response.length===0){
+            response.push({
+              list_items : [],
+              full_count : 0
+            })
+          }
+          return res.status(200).send(response[0]);
         }).catch(err=>{next(err);});
       }
       else{

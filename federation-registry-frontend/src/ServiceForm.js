@@ -659,6 +659,7 @@ const ServiceForm = (props)=> {
                               onBlur={handleBlur}
                               optionsTitle={tenant.form_config.token_endpoint_auth_signing_alg_title}
                               options={tenant.form_config.token_endpoint_auth_signing_alg}
+                              default='RS256'
                               name="token_endpoint_auth_signing_alg"
                               values={values}
                               isInvalid={hasSubmitted?!!errors.token_endpoint_auth_signing_alg_title:(!!errors.token_endpoint_auth_signing_alg&&touched.token_endpoint_auth_signing_alg)}

@@ -18,7 +18,6 @@ class ServiceDetailsRepository {
     }
 
     async add(data,sub){
-      let date = Date.now();
       return this.db.one(sql.add,{
         service_description: data.service_description,
         service_name: data.service_name,

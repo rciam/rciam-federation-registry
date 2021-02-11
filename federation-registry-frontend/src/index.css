@@ -207,6 +207,7 @@ code {
 
 .petitions-table {
   text-align: left;
+  position: relative;
   font-family:'Manrope';
   font-weight:300;
   table-layout: fixed;
@@ -1185,4 +1186,20 @@ html:lang(gr) .home-container h1 {
 }
 .leave-group-button{
   padding: 0.1rem 0.35rem 0.1rem 0.35rem!important
+}
+
+
+
+.table-overlay {
+  position: absolute;
+  top: 3rem;
+  width: 100%;
+  height: -webkit-calc(100% - 3rem);
+  height: calc(100% - 3rem);
+  border:none!important;
+  background-color: rgba(255, 255, 255, 0.7)!important;
+}
+
+.table-overlay td{
+  border:none!important;
 }

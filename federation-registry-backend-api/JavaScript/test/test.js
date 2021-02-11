@@ -339,7 +339,8 @@ describe('Service registry API Integration Tests', function() {
           .expect(200)
           .end(function(err,res){
             let body = JSON.parse(res.text);
-            body.services.forEach((item)=>{if(item.service_id===service){group=item.group_id}});
+
+            body.list_items.forEach((item)=>{if(item.service_id===service){group=item.group_id}});
             expect(res.statusCode).to.equal(200);
             done();
           });
