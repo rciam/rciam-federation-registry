@@ -357,7 +357,10 @@ router.get('/tenants/:name/services', getServiceListValidation(),validate,authen
             })
           }
           return res.status(200).send(response[0]);
-        }).catch(err=>{next(err);});
+        }).catch(err=>{
+          console.log(err);
+          return res.status(416).send('Out of range');
+        });
       }
       else{
         res.status(401).json({err:'Requested action not authorised'})

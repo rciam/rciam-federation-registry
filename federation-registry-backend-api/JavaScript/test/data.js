@@ -226,6 +226,7 @@ const postServices = [
       "extra_field":"with value",
       "external_id":3,
       "service_name":"Saml 1",
+      "country":"Greece",
       "service_description":"Sample description",
       "metadata_url":"https://asdfasdf.com",
       "logo_uri":"https://www.freelogodesign.org/Content/img/logo-samples/flooop.png",
@@ -234,19 +235,23 @@ const postServices = [
       "protocol":"saml",
       "contacts":null
     },
+
     {
       "protocol":"oidc",
+      "country":"Greece",
       "integration_environment":"demo",
       "client_id":"test_12"
     },
     {
       "protocol":"saml",
       "integration_environment":"development",
+      "country":"Greece",
       "entity_id":"https://entity_id_test_asd.com",
       "metadata_url":"https://hello_this_should_be_unique.com"
     },
     {
       "protocol":"saml",
+      "country":"Greece",
       "integration_environment":"development",
       "metadata_url":"https://hello_this_should_be_unique_2.com"
     }

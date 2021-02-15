@@ -148,7 +148,15 @@ async function run() {
               delete service.json[propName];
             }
           }
-          service.json.jwks = JSON.parse(service.json.jwks);
+          if(service.json.jwks){
+            try{
+
+              service.json.jwks = JSON.parse(service.json.jwks);
+            }
+            catch(err){
+              console.log(err)
+            }
+          }
           let messages = [{"attributes":{},"data": Buffer.from(JSON.stringify(service.json)).toString("base64")}];
 
           let done = await axios.post(pubUrls[service.json.tenant].service[service.json.protocol],{"messages":messages}, options_ams).then((res) => {
