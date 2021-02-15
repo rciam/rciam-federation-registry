@@ -34,7 +34,7 @@
   ],
   "generate_client_secret":true,
   "token_endpoint_auth_method":"",
-  "token_endpoint_auth_signing_alg":"client_secret_basic",
+  "token_endpoint_auth_signing_alg":"",
   "jwks":"",
   "jwks_uri":""
 }

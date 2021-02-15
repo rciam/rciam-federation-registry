@@ -11,7 +11,7 @@ import Collapse from 'react-bootstrap/Collapse';
 import {useParams } from "react-router-dom";
 import { diff } from 'deep-diff';
 import {tenantContext} from './context.js';
-import {Debug} from './Components/Debug.js';
+//import {Debug} from './Components/Debug.js';
 import {SimpleModal,ResponseModal,Logout,NotFound} from './Components/Modals.js';
 import Form from 'react-bootstrap/Form';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -173,8 +173,8 @@ const ServiceForm = (props)=> {
       is:'saml',
       then: yup.string().required(t('yup_required')).matches(reg.regSimpleUrl,'Enter a valid Url')
     }),
-    token_endpoint_auth_signing_alg:yup.string().nullable().when('protocol',{
-      is:'oidc',
+    token_endpoint_auth_signing_alg:yup.string().nullable().when(['protocol',"token_endpoint_auth_method"],{
+      is:(protocol,token_endpoint_auth_method)=> protocol==='oidc'&&(token_endpoint_auth_method==="private_key_jwt",token_endpoint_auth_method==="client_secret_jwt"),
       then: yup.string().required(t('yup_select_option')).test('testTokenEndpointSigningAlgorithm','Invalid Value',function(value){return tenant.form_config.token_endpoint_auth_signing_alg.includes(value)})
     }),
     token_endpoint_auth_method:yup.string().nullable().when('protocol',{
@@ -818,7 +818,7 @@ const ServiceForm = (props)=> {
                   }
                   <ResponseModal message={message} modalTitle={modalTitle}/>
                   <SimpleModal isSubmitting={isSubmitting} isValid={isValid}/>
-                  <Debug/>
+                  
                 </Form>
 
 

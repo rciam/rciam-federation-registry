@@ -3,7 +3,7 @@ SELECT  json_agg(json_build_object('service_id',foo.service_id,'petition_id',foo
     SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,CASE WHEN owned IS NULL THEN false ELSE owned END,status,type,state,CASE WHEN group_manager IS NULL then false ELSE group_manager END,CASE WHEN notification IS NULL THEN false ELSE notification END AS notification,comment,group_id,deployment_type,CASE WHEN petitions.last_edited IS NOT NULL THEN petitions.last_edited ELSE service_state.last_edited END
     FROM
     ${select_own_service:raw}
-      (SELECT id AS service_id,service_description,logo_uri,service_name,deleted,requester,integration_environment,group_id,last_edited
+      (SELECT id AS service_id,service_description,logo_uri,service_name,deleted,requester,integration_environment,group_id
       FROM service_details WHERE tenant=${tenant_name} ${protocol_filter:raw} ${search_filter:raw} ${integration_environment_filter:raw}) AS service_details
     ${select_all:raw}
     USING (group_id)
