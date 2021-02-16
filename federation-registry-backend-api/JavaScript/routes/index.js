@@ -49,7 +49,9 @@ router.post('/tenants/:name/services',serviceValidationRules(),validate,(req,res
               let redirect_uris = [];
               let scopes = [];
               let queries = [];
+              let service_state = [];
               services.forEach((service,index)=> {
+                service_state.push({id:service.id,state:'deployed'});
                 if(service.contacts && service.contacts.length>0){
                   service.contacts.forEach(contact=>{
                     contacts.push({owner_id:service.id,value:contact.email,type:contact.type});
@@ -73,6 +75,8 @@ router.post('/tenants/:name/services',serviceValidationRules(),validate,(req,res
                   }
                 }
               });
+
+              queries.push(t.service_state.addMultiple(service_state));
               queries.push(t.service_details_protocol.addMultiple(services));
               if(contacts.length>0){
                 queries.push(t.service_contacts.addMultiple(contacts));
@@ -86,13 +90,17 @@ router.post('/tenants/:name/services',serviceValidationRules(),validate,(req,res
               if(redirect_uris.length>0){
                 queries.push(t.service_multi_valued.addMultiple(redirect_uris,'service_oidc_redirect_uris'));
               }
+
               let done = await t.batch(queries).catch(err=>{throw err})
+              if(done){
+                res.status(200).end();
+              }
             }
           });
         }
       }).catch(err => {throw err})
     }).catch(err => {throw err})
-    res.status(200).end();
+
   }
   catch(err){
     next(err);

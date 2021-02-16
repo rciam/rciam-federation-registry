@@ -158,104 +158,115 @@ const edit = {
 }
 
 const postServices = [
-    {
-      "policy_uri":"https://www.policy_uri.com",
-      "integration_environment":"demo",
-      "protocol":"oidc",
-      "client_id":"clqweient1",
-      "contacts":[ {
-          "email": "mymail@gmail.com",
-          "type": "admin"
-        }],
-      "allow_introspection":false,
-      "code_challenge_method":"plain",
-      "device_code_validity_seconds":28800,
-      "access_token_validity_seconds":3600,
-      "refresh_token_validity_seconds":28800,
-      "client_secret":"secret",
-      "country":"Greece",
-      "token_endpoint_auth_method":"private_key_jwt",
-      "token_endpoint_auth_signing_alg":"private_key_jwt",
-      "jwks":"{\"keys\":[]}",
-      "jwks_uri":"",
-      "reuse_refresh_tokens":true,
-      "clear_access_tokens_on_refresh":true,
-      "id_token_timeout_seconds":1000,
-      "scope": [
-        "openid",
-        "profile",
-        "email",
-        "eduperson_entitlement",
-        "eduperson_scoped_affiliation",
-        "eduperson_unique_id"
-      ],
-      "grant_types": [
-        "authorization_code"
-      ],
-      "generate_client_secret":false
-    },
-    {
-      "extra_field":"with value",
-      "external_id":3,
-      "service_name":"Oidc 2",
-      "client_id": "testtest",
-      "service_description":"Sample description",
-      "logo_uri":"https://www.freelogodesign.org/Content/img/logo-samples/flooop.png",
-      "policy_uri":"https://www.policy_uri.com",
-      "integration_environment":"demo",
-      "protocol":"oidc",
-      "country":"Greece",
-      "token_endpoint_auth_method":"private_key_jwt",
-      "token_endpoint_auth_signing_alg":"private_key_jwt",
-      "jwks":"",
-      "jwks_uri":"https://test.com",
-      "reuse_refresh_tokens":true,
-      "clear_access_tokens_on_refresh":true,
-      "id_token_timeout_seconds":1000,
-      "scope": [
-        "openid",
-        "profile",
-        "email",
-        "eduperson_entitlement",
-        "eduperson_scoped_affiliation",
-        "eduperson_unique_id"
-      ],
-      "generate_client_secret":false
-    },
-    {
-      "extra_field":"with value",
-      "external_id":3,
-      "service_name":"Saml 1",
-      "country":"Greece",
-      "service_description":"Sample description",
-      "metadata_url":"https://asdfasdf.com",
-      "logo_uri":"https://www.freelogodesign.org/Content/img/logo-samples/flooop.png",
-      "policy_uri":"https://www.policy_uri.com",
-      "integration_environment":"demo",
-      "protocol":"saml",
-      "contacts":null
-    },
-
-    {
-      "protocol":"oidc",
-      "country":"Greece",
-      "integration_environment":"demo",
-      "client_id":"test_12"
-    },
-    {
-      "protocol":"saml",
-      "integration_environment":"development",
-      "country":"Greece",
-      "entity_id":"https://entity_id_test_asd.com",
-      "metadata_url":"https://hello_this_should_be_unique.com"
-    },
-    {
-      "protocol":"saml",
-      "country":"Greece",
-      "integration_environment":"development",
-      "metadata_url":"https://hello_this_should_be_unique_2.com"
-    }
+  {
+    "policy_uri": "https://www.policy_uri.com",
+    "integration_environment": "demo",
+    "protocol": "oidc",
+    "client_id": "clqweient1",
+    "contacts": [ {
+        "email": "mymail@gmail.com",
+        "type": "admin"
+      }],
+    "allow_introspection": null,
+    "code_challenge_method": "plain",
+    "device_code_validity_seconds": 28800,
+    "access_token_validity_seconds": 3600,
+    "refresh_token_validity_seconds": 28800,
+    "client_secret": "secret",
+    "country": "Greece",
+    "token_endpoint_auth_method": "private_key_jwt",
+    "token_endpoint_auth_signing_alg": "private_key_jwt",
+    "jwks": "{'keys':[]}",
+    "jwks_uri": "",
+    "reuse_refresh_tokens": true,
+    "clear_access_tokens_on_refresh": true,
+    "id_token_timeout_seconds": 1000,
+    "scope": [
+      "openid",
+      "profile",
+      "email",
+      "eduperson_entitlement",
+      "eduperson_scoped_affiliation",
+      "eduperson_unique_id"
+    ],
+    "grant_types": [ "authorization_code" ],
+    "generate_client_secret": false,
+    "tenant": "egi",
+    "external_id": null,
+    "service_name": null,
+    "service_description": null,
+    "logo_uri": null,
+    "entity_id": null,
+    "metadata_url": null,
+    "redirect_uris": null
+  },
+  {
+    "extra_field": "with value",
+    "external_id": 3,
+    "service_name": "Oidc 2",
+    "client_id": "testtest",
+    "service_description": "Sample description",
+    "logo_uri": "https://www.freelogodesign.org/Content/img/logo-samples/flooop.png",
+    "policy_uri": "https://www.policy_uri.com",
+    "integration_environment": "demo",
+    "protocol": "oidc",
+    "country": "Greece",
+    "token_endpoint_auth_method": "private_key_jwt",
+    "token_endpoint_auth_signing_alg": "private_key_jwt",
+    "jwks": "",
+    "jwks_uri": "https://test.com",
+    "reuse_refresh_tokens": true,
+    "clear_access_tokens_on_refresh": true,
+    "id_token_timeout_seconds": 1000,
+    "scope": [
+      "openid",
+      "profile",
+      "email",
+      "eduperson_entitlement",
+      "eduperson_scoped_affiliation",
+      "eduperson_unique_id"
+    ],
+    "generate_client_secret": false,
+    "tenant": "egi"
+  },
+  {
+    "extra_field": "with value",
+    "external_id": 3,
+    "service_name": "Saml 1",
+    "country": "Greece",
+    "service_description": "Sample description",
+    "metadata_url": "https://asdfasdf.com",
+    "logo_uri": "https://www.freelogodesign.org/Content/img/logo-samples/flooop.png",
+    "policy_uri": "https://www.policy_uri.com",
+    "integration_environment": "demo",
+    "protocol": "saml",
+    "contacts": null,
+    "tenant": "egi"
+  },
+  {
+    "protocol": "oidc",
+    "country": "Greece",
+    "integration_environment": "demo",
+    "client_id": "test_12",
+    "tenant": "egi"
+  },
+  {
+    "protocol": "saml",
+    "integration_environment": "development",
+    "country": "Greece",
+    "entity_id": "https://entity_id_test_asd.com",
+    "metadata_url": "https://hello_this_should_be_unique.com",
+    "tenant": "egi"
+  },
+  {
+    "protocol": "saml",
+    "country": "Greece",
+    "integration_environment": "development",
+    "metadata_url": "https://hello_this_should_be_unique_2.com",
+    "tenant": "egi"
+  }
 ]
+
 
 const validationRequests = {
  oidc_types: {
