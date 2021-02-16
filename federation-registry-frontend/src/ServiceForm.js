@@ -11,7 +11,7 @@ import Collapse from 'react-bootstrap/Collapse';
 import {useParams } from "react-router-dom";
 import { diff } from 'deep-diff';
 import {tenantContext} from './context.js';
-//import {Debug} from './Components/Debug.js';
+import {Debug} from './Components/Debug.js';
 import {SimpleModal,ResponseModal,Logout,NotFound} from './Components/Modals.js';
 import Form from 'react-bootstrap/Form';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -29,6 +29,7 @@ var availabilityCheckTimeout;
 var countries;
 
 
+
 const ServiceForm = (props)=> {
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
@@ -40,8 +41,10 @@ const ServiceForm = (props)=> {
   useEffect(()=>{
     countries = [];
     countryData.forEach((item,index)=>{
-      countries.push(item.countryName);
+      countries.push(item.countryShortCode.toLowerCase());
+
     });
+
         if(props.disabled||props.review){
       setDisabled(true);
     }
@@ -818,7 +821,8 @@ const ServiceForm = (props)=> {
                   }
                   <ResponseModal message={message} modalTitle={modalTitle}/>
                   <SimpleModal isSubmitting={isSubmitting} isValid={isValid}/>
-                  
+                  <Debug/>
+
                 </Form>
 
 
@@ -978,6 +982,7 @@ const ReviewComponent = (props)=>{
     </div>
 
   </Collapse>
+
     </React.Fragment>
   );
 }

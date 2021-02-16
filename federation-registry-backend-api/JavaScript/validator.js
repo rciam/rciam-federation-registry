@@ -63,7 +63,7 @@ const serviceValidationRules = () => {
     body('*.client_id').if((value,{req,location,path})=>{return req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).exists().withMessage('Required Field').bail().isString().withMessage('Must be a string').bail().isLength({min:4, max:36}).withMessage('Must be between 4 and 36 characters').bail().custom((value,{req,location,path})=> {
       return db.service_details_protocol.checkClientId(value,0,0,req.params.name,req.body[path.match(/\[(.*?)\]/)[1]].integration_environment).then(available=> {
         if(!available){
-          return Promise.reject('Not available');
+          return Promise.reject('Not available ('+ value +')');
         }
         else{
           return Promise.resolve();

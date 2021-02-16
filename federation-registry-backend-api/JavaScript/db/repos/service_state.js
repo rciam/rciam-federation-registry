@@ -6,7 +6,20 @@ class ServiceStateRepository {
     this.db = db;
     this.pgp = pgp;
     // set-up all ColumnSet objects, if needed:
-     cs = new pgp.helpers.ColumnSet(['?id','state',{name: 'last_edited', mod: '^', def: 'CURRENT_TIMESTAMP'}],{table:'service_state'});
+     cs.update_multi = new pgp.helpers.ColumnSet(['?id','state',{name: 'last_edited', mod: '^', def: 'CURRENT_TIMESTAMP'}],{table:'service_state'});
+     cs.insert_multi = new pgp.helpers.ColumnSet(['id','state',{name: 'last_edited', mod: '^', def: 'CURRENT_TIMESTAMP'}],{table:'service_state'});
+  }
+  async addMultiple(service_state_data){
+      const insert = this.pgp.helpers.insert(service_state_data,cs.insert_multi)+'RETURNING *';
+      return await this.db.any(insert).then((result)=>{
+        if(result.length===service_state_data.length){
+          return true
+        }
+        else{
+          throw 'Could not add service state';
+        }
+      });
+
   }
 
   async add(id,state,deployment_type){
@@ -102,7 +115,7 @@ class ServiceStateRepository {
     // updateData = [{id:1,state:'deployed'},{id:2,state:'deployed'},{id:3,state:'failed'}];
     let date = new Date(Date.now());
 
-    const update = this.pgp.helpers.update(updateData, cs) + ' WHERE v.id = t.id RETURNING t.id';
+    const update = this.pgp.helpers.update(updateData, cs.update_multi) + ' WHERE v.id = t.id RETURNING t.id';
     //=> UPDATE "service_data" AS t SET "state"=v."state"
     //   FROM (VALUES(1,'deployed'),(2,'deployed'),(3,'failed'))
     //   AS v("id","state") WHERE v.id = t.id

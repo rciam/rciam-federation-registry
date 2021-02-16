@@ -249,7 +249,7 @@ export function CountrySelect(props){
       disabled={props.disabled}
       placeholder="Select country...">
         {[{"countryName":"Select your country..."}, ...countryData].map((country,index)=>(
-          <option key={index} value={index===0?null:country.countryName}>{country.countryName}</option>
+          <option key={index} value={index===0?null:country.countryShortCode.toLowerCase()}>{country.countryName}</option>
         ))}
       </Field>
     </div>
