@@ -21,7 +21,17 @@ const base64url = require('base64url');
 // ----------------------------------------------------------
 // ************************* Routes *************************
 // ----------------------------------------------------------
+const sendMultipleInvitations =  (data)=>{
+  try{
+    db.invitation.addMultiple(data).then(res=>{data.forEach(invitation_data=>{
+      sendInvitationMail(invitation_data);
+    })}).catch(err=>{customLogger(null,null,'warn','Error when creating and sending invitations: '+err)})
+  }
+  catch(err){
+    customLogger(null,null,'warn','Error when creating and sending invitations: '+err);
+  }
 
+}
 
 
 router.post('/tenants/:name/services',serviceValidationRules(),validate,(req,res,next)=> {
@@ -29,6 +39,7 @@ router.post('/tenants/:name/services',serviceValidationRules(),validate,(req,res
   // Populate json objects with all necessary fields
   services.forEach((service,index) => {
     services[index].tenant = req.params.name
+
     config.service_fields.forEach(field=>{
       if(!service[field]){
         services[index][field] = null;
@@ -50,10 +61,15 @@ router.post('/tenants/:name/services',serviceValidationRules(),validate,(req,res
               let scopes = [];
               let queries = [];
               let service_state = [];
+              let invitations = [];
               services.forEach((service,index)=> {
                 service_state.push({id:service.id,state:'deployed'});
                 if(service.contacts && service.contacts.length>0){
+
                   service.contacts.forEach(contact=>{
+                    if(contact.type='technical'){
+                      invitations.push({tenant:req.params.name,email:contact.email,group_manager:true,code:uuidv1(),group_id:service.group_id});
+                    }
                     contacts.push({owner_id:service.id,value:contact.email,type:contact.type});
                   });
                 }
@@ -75,7 +91,6 @@ router.post('/tenants/:name/services',serviceValidationRules(),validate,(req,res
                   }
                 }
               });
-
               queries.push(t.service_state.addMultiple(service_state));
               queries.push(t.service_details_protocol.addMultiple(services));
               if(contacts.length>0){
@@ -90,7 +105,9 @@ router.post('/tenants/:name/services',serviceValidationRules(),validate,(req,res
               if(redirect_uris.length>0){
                 queries.push(t.service_multi_valued.addMultiple(redirect_uris,'service_oidc_redirect_uris'));
               }
-
+              if(invitations.length>0){
+                sendMultipleInvitations(invitations);
+              }
               let done = await t.batch(queries).catch(err=>{throw err})
               if(done){
                 res.status(200).end();
@@ -267,7 +284,6 @@ router.post('/ams/ingest',checkCertificate,decodeAms,amsIngestValidation(),valid
   try{
     return db.task('deploymentTasks', async t => {
       // update state
-      console.log(req.body.decoded_messages)
       await t.service_state.deploymentUpdate(req.body.decoded_messages).then(async ids=>{
         if(ids){
           res.stats(200).end();
@@ -1054,8 +1070,11 @@ function authenticate(req,res,next){
           if(role.success){
             req.user.role = role.role;
             next();
+          }else{
+            res.status(401).send('Unauthenticated Request');
           }
-        }).catch(err=>{next(err)});
+        }).catch(err=>{
+          next(err)});
       }
       else{
         res.status(500).send("Need userToken");
@@ -1201,6 +1220,7 @@ function asyncPetitionValidation(req,res,next){
         if(req.body.type==='create'){
           await isAvailable.apply(this,(req.body.protocol==='oidc'?[t,req.body.client_id,'oidc',0,0,req.params.name,req.body.integration_environment]:[t,req.body.entity_id,'saml',0,0,req.params.name,req.body.integration_environment])).then(async available=>{
             if(available){
+
               next();
             }
             else {

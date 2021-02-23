@@ -41,13 +41,15 @@ class ServiceDetailsProtocolRepository {
     }
 
     async checkClientId(client_id,service_id,petition_id,tenant,environment){
-      return this.db.any(sql.checkClientId,{
+      const query =  this.pgp.as.format(sql.checkClientId,{
         client_id:client_id,
         service_id:service_id,
         petition_id:petition_id,
         tenant:tenant,
         environment:environment
-      }).then(result =>{
+      });
+      return this.db.any(query
+      ).then(result =>{
           if(result.length>0){return false}else{return true}
       })
     }

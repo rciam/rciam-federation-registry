@@ -1203,3 +1203,14 @@ html:lang(gr) .home-container h1 {
 .table-overlay td{
   border:none!important;
 }
+
+.fake-link:hover {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.fake-link {
+    color: #007bff;
+    text-decoration: none;
+    background-color: transparent;
+}

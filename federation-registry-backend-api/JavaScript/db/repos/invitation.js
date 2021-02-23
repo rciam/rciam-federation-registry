@@ -3,12 +3,25 @@ const sql = require('../sql').invitations;
 var config = require('../../config');
 const {v1:uuidv1} = require('uuid');
 class InvitationRepository {
-  constructor(db, pgp) {
-      this.db = db;
-      this.pgp = pgp;
+  constructor(db,pgp){
+    this.db = db;
+    this.pgp = pgp;
+    // set-up all ColumnSet objects, if needed:
+     //cs.update_multi = new pgp.helpers.ColumnSet(['?id','state',{name: 'last_edited', mod: '^', def: 'CURRENT_TIMESTAMP'}],{table:'service_state'});
+     cs.insert_multi = new pgp.helpers.ColumnSet(['code','group_manager','group_id','email',{name:'invited_by',def:'Federation Registry'},{name: 'date', mod: '^', def: 'CURRENT_TIMESTAMP'}],{table:'invitations'});
   }
+  async addMultiple(invitation_data){
+      const insert = this.pgp.helpers.insert(invitation_data,cs.insert_multi)+'RETURNING *';
+      return await this.db.any(insert).then((result)=>{
+        if(result.length===invitation_data.length){
+          return true
+        }
+        else{
+          throw 'Could not add invitations';
+        }
+      });
 
-
+  }
   async add(data){
     let date = new Date(Date.now());
     return this.db.one('INSERT INTO invitations(code,group_manager,group_id,email,invited_by,date) VALUES($1,$2,$3,$4,$5,$6) RETURNING code',[data.code,data.group_manager,+data.group_id,data.email,data.invited_by,date]).then(async res =>{

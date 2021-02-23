@@ -3,9 +3,14 @@ require('dotenv').config();
 var path = require("path");
 
 var fs = require('fs');
-var handlebars = require('handlebars');
+var hbs = require('handlebars');
 nodeMailer = require('nodemailer');
 const customLogger = require('../loggers.js');
+
+
+hbs.registerHelper('loud', function (aString) {
+    return aString.toUpperCase()
+})
 
 const calcDiff = (oldState,newState) => {
     var new_values = Object.assign({},newState);
@@ -70,6 +75,7 @@ const calcDiff = (oldState,newState) => {
 }
 
 const sendInvitationMail = async (data) => {
+
   return new Promise(resolve=>{
     if(process.env.NODE_ENV!=='test-docker'&& process.env.NODE_ENV!=='test'){
       var currentDate = new Date();
@@ -79,12 +85,20 @@ const sendInvitationMail = async (data) => {
             port: 587,
             secure: false
         });
-        var template = handlebars.compile(html);
+        // let transporter = nodeMailer.createTransport({
+        //   service: 'gmail',
+        //   auth: {
+        //     user: 'orionaikido@gmail.com',
+        //     pass: ''
+        //   }
+        // });
+        var template = hbs.compile(html);
         var replacements = {
           invited_by:data.invited_by,
           group_manager:data.group_manager,
-          registry_url: process.env.EXPRESS_BASE+'/'+ data.tenant,
-          url:process.env.EXPRESS_BASE+'/'+ data.tenant +'/invitation/' + data.code
+          registry_url: process.env.REACT_BASE+'/'+ data.tenant,
+          tenant:data.tenant,
+          url:process.env.REACT_BASE+'/'+ data.tenant +'/invitation/' + data.code
         }
         var htmlToSend = template(replacements);
         var mailOptions = {
@@ -125,9 +139,9 @@ const newMemberNotificationMail = (data,managers) => {
         invitation_mail:data.invitation_mail,
         username:data.preferred_username,
         email:data.email,
-        url:process.env.EXPRESS_BASE+'/'+ data.tenant
+        url:process.env.REACT_BASE+'/'+ data.tenant
       };
-      var template = handlebars.compile(html);
+      var template = hbs.compile(html);
       managers.forEach((manager)=>{
         replacements.target_email = manager.email;
         replacements.username = manager.username;
@@ -162,7 +176,7 @@ const sendMail= (data,template_uri,users)=>{
           port: 587,
           secure: false
       });
-      var template = handlebars.compile(html);
+      var template = hbs.compile(html);
       //var replacements = {username: "John Doe",name:"The name"};
       var state;
       if(data.state){
@@ -180,7 +194,7 @@ const sendMail= (data,template_uri,users)=>{
         service_name:data.service_name,
         date:currentDate,
         state:state,
-        url:process.env.EXPRESS_BASE+'/'+ data.tenant
+        url:process.env.REACT_BASE+'/'+ data.tenant
       };
 
       users.forEach((user) => {

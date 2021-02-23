@@ -5,7 +5,7 @@ const create = {
      redirect_uris: ["https://redirecturi1.com"],
      logo_uri:"https://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
      policy_uri:"https://policyuri.com",
-     integration_environment:"demo",
+     integration_environment:"development",
      protocol:"oidc",
      contacts:[ {
          "email": "mymail@gmail.com",
@@ -47,7 +47,7 @@ const create = {
      redirect_uris: null,
      logo_uri:"https://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
      policy_uri:"https://policyuri.com",
-     integration_environment:"demo",
+     integration_environment:"development",
      protocol:"saml",
      country:"Greece",
      contacts:[ {
@@ -74,53 +74,57 @@ const create = {
 
 const edit = {
  oidc:{
-
-   service_name:"Test Oidc Service ",
-   service_description:"This is a test service edit",
-   redirect_uris: ["https://redirecturi1edit.com","https://redirecturi1edit.com"],
-   logo_uri:"https://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
-   policy_uri:"https://policyuriedit.com",
-   integration_environment:"demo",
-   protocol:"oidc",
-   contacts:[{
-       "email": "uricommail@gmail.com",
-       "type": "admin"
-     },
-     {
-       "email": "ctuitcommail@gmail.com",
-       "type": "admin"
-     }
+   "service_name":"Test Oidc Service",
+   "service_description":"This is a test service edit",
+   "redirect_uris":[
+      "https://redirecturi1edit.com",
+      "https://redirecturi1edit.com"
    ],
-   country:"Greece",
-   token_endpoint_auth_method:"private_key_jwt",
-   token_endpoint_auth_signing_alg:"private_key_jwt",
-   jwks:"",
-   jwks_uri:"https://test.com",
-   metadata_url:"",
-   entity_id:"",
-   client_id:"testCreate2",
-   allow_introspection:false,
-   code_challenge_method:"plain",
-   device_code_validity_seconds:"28800",
-   access_token_validity_seconds:"3600",
-   refresh_token_validity_seconds:"28800",
-   client_secret:"secret",
-   reuse_refresh_tokens:true,
-   clear_access_tokens_on_refresh:true,
-   id_token_timeout_seconds:"1000",
-   scope: [
-     "openid",
-     "profile",
-     "eduperson_entitlement",
-     "eduperson_scoped_affiliation",
-     "microscope"
+   "logo_uri":"https://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
+   "policy_uri":"https://policyuriedit.com",
+   "integration_environment":"development",
+   "protocol":"oidc",
+   "contacts":[
+      {
+         "email":"uricommail@gmail.com",
+         "type":"admin"
+      },
+      {
+         "email":"ctuitcommail@gmail.com",
+         "type":"admin"
+      }
    ],
-   grant_types: [
-     "authorization_code",
-     "refresh_token","client_credentials"
+   "country":"Gr",
+   "token_endpoint_auth_method":"private_key_jwt",
+   "token_endpoint_auth_signing_alg":"private_key_jwt",
+   "jwks":"",
+   "jwks_uri":"https://test.com",
+   "metadata_url":"",
+   "entity_id":"",
+   "client_id":"testCreate2",
+   "allow_introspection":false,
+   "code_challenge_method":"plain",
+   "device_code_validity_seconds":"28800",
+   "access_token_validity_seconds":"3600",
+   "refresh_token_validity_seconds":"28800",
+   "client_secret":"secret",
+   "reuse_refresh_tokens":true,
+   "clear_access_tokens_on_refresh":true,
+   "id_token_timeout_seconds":"1000",
+   "scope":[
+      "openid",
+      "profile",
+      "eduperson_entitlement",
+      "eduperson_scoped_affiliation",
+      "microscope"
    ],
-   generate_client_secret:false
- },
+   "grant_types":[
+      "authorization_code",
+      "refresh_token",
+      "client_credentials"
+   ],
+   "generate_client_secret":false
+},
  saml:{
 
    service_name:"Test Saml Service edit",
@@ -128,7 +132,7 @@ const edit = {
    redirect_uris:null,
    logo_uri:"https://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
    policy_uri:"https://policyuriedit.com",
-   integration_environment:"demo",
+   integration_environment:"development",
    protocol:"saml",
    contacts:[{
        "email": "uricommail@gmail.com",
@@ -160,7 +164,7 @@ const edit = {
 const postServices = [
   {
     "policy_uri": "https://www.policy_uri.com",
-    "integration_environment": "demo",
+    "integration_environment": "development",
     "protocol": "oidc",
     "client_id": "clqweient1",
     "contacts": [ {
@@ -173,7 +177,7 @@ const postServices = [
     "access_token_validity_seconds": 3600,
     "refresh_token_validity_seconds": 28800,
     "client_secret": "secret",
-    "country": "Greece",
+    "country": "GR",
     "token_endpoint_auth_method": "private_key_jwt",
     "token_endpoint_auth_signing_alg": "private_key_jwt",
     "jwks": "{'keys':[]}",
@@ -208,9 +212,9 @@ const postServices = [
     "service_description": "Sample description",
     "logo_uri": "https://www.freelogodesign.org/Content/img/logo-samples/flooop.png",
     "policy_uri": "https://www.policy_uri.com",
-    "integration_environment": "demo",
+    "integration_environment": "development",
     "protocol": "oidc",
-    "country": "Greece",
+    "country": "GR",
     "token_endpoint_auth_method": "private_key_jwt",
     "token_endpoint_auth_signing_alg": "private_key_jwt",
     "jwks": "",
@@ -233,27 +237,27 @@ const postServices = [
     "extra_field": "with value",
     "external_id": 3,
     "service_name": "Saml 1",
-    "country": "Greece",
+    "country": "GR",
     "service_description": "Sample description",
     "metadata_url": "https://asdfasdf.com",
     "logo_uri": "https://www.freelogodesign.org/Content/img/logo-samples/flooop.png",
     "policy_uri": "https://www.policy_uri.com",
-    "integration_environment": "demo",
+    "integration_environment": "development",
     "protocol": "saml",
     "contacts": null,
     "tenant": "egi"
   },
   {
     "protocol": "oidc",
-    "country": "Greece",
-    "integration_environment": "demo",
+    "country": "GR",
+    "integration_environment": "development",
     "client_id": "test_12",
     "tenant": "egi"
   },
   {
     "protocol": "saml",
     "integration_environment": "development",
-    "country": "Greece",
+    "country": "GR",
     "entity_id": "https://entity_id_test_asd.com",
     "metadata_url": "https://hello_this_should_be_unique.com",
     "tenant": "egi"
@@ -338,7 +342,7 @@ const validationRequests = {
    redirect_uris:null,
    logo_uri:"https://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
    policy_uri:"https://policyuriedit.com",
-   integration_environment:"demo",
+   integration_environment:"development",
    protocol:"saml",
    contacts:[{
        "email": "uricommail@gmail.com",
@@ -372,7 +376,7 @@ const validationRequests = {
    redirect_uris:null,
    logo_uri:"https://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
    policy_uri:"https://policyuriedit.com",
-   integration_environment:"demo",
+   integration_environment:"development",
    protocol:"saml",
    contacts:[{
        "email": "uricommail@gmail.com",

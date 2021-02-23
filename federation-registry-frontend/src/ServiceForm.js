@@ -501,7 +501,7 @@ const ServiceForm = (props)=> {
                           values={values}
                           isInvalid={hasSubmitted?!!errors.integration_environment:(!!errors.integration_environment&&touched.integration_environment)}
                           onChange={handleChange}
-                          disabled={disabled}
+                          disabled={disabled||tenant.form_config.integration_environment.length===1}
                           changed={props.changes?props.changes.integration_environment:null}
                         />
                       </InputRow>
