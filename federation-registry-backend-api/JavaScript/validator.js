@@ -151,6 +151,7 @@ const decodeAms = (req,res,next) => {
 }
 
 const validate = (req, res, next) => {
+
   const errors = validationResult(req)
   if(errors.errors.length>0){
     //console.log(errors);
@@ -161,6 +162,7 @@ const validate = (req, res, next) => {
   const extractedErrors = []
   errors.array().map(err => extractedErrors.push({ [err.param]: err.msg }));
   var log ={};
+
   customLogger(req,res,'warn','Failed schema validation',extractedErrors);
   res.status(422).send(extractedErrors);
   return res.end();

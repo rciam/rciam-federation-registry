@@ -1,7 +1,7 @@
 {
   "form" : {
     "egi" : {
-      "integration_environment": ["demo","production","development"],
+      "integration_environment": ["development"],
       "grant_types":["implicit","authorization_code","refresh_token","client_credentials","urn:ietf:params:oauth:grant_type:redelegate","urn:ietf:params:oauth:grant-type:token-exchange","urn:ietf:params:oauth:grant-type:device_code","urn:ietf:params:oauth:grant-type:jwt-bearer"],
       "contact_types":["admin","technical","support","security"],
       "protocol":["oidc","saml"],
@@ -12,7 +12,7 @@
       "token_endpoint_auth_signing_alg_title":["HMAC using SHA-256 hash algorithm","HMAC using SHA-384 hash algorithm","HMAC using SHA-512 hash algorithm","RSASSA using SHA-256 hash algorithm","RSASSA using SHA-384 hash algorithm","RSASSA using SHA-512 hash algorithm","RSASSA-PSS using SHA-256 and MGF1 with SHA-256"]
     },
     "eosc" : {
-      "integration_environment": ["demo","production"],
+      "integration_environment": ["development"],
       "grant_types":["implicit","authorization_code","refresh_token","client_credentials","urn:ietf:params:oauth:grant_type:redelegate","urn:ietf:params:oauth:grant-type:token-exchange","urn:ietf:params:oauth:grant-type:device_code","urn:ietf:params:oauth:grant-type:jwt-bearer"],
       "contact_types":["admin","technical","support","security"],
       "protocol":["oidc","saml"],
