@@ -11,7 +11,7 @@ import Collapse from 'react-bootstrap/Collapse';
 import {useParams } from "react-router-dom";
 import { diff } from 'deep-diff';
 import {tenantContext} from './context.js';
-import {Debug} from './Components/Debug.js';
+//import {Debug} from './Components/Debug.js';
 import {SimpleModal,ResponseModal,Logout,NotFound} from './Components/Modals.js';
 import Form from 'react-bootstrap/Form';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -23,7 +23,7 @@ import Button from 'react-bootstrap/Button';
 import * as yup from 'yup';
 import { useTranslation } from 'react-i18next';
 import countryData from 'country-region-data';
-import {SimpleInput,CountrySelect,RadioList,DeviceCode,Select,PublicKey,ListInput,LogoInput,TextAria,ListInputArray,CheckboxList,SimpleCheckbox,ClientSecret,TimeInput,RefreshToken,Contacts} from './Components/Inputs.js'// eslint-disable-next-line
+import {SimpleInput,CountrySelect,AuthMethRadioList,DeviceCode,Select,PublicKey,ListInput,LogoInput,TextAria,ListInputArray,CheckboxList,SimpleCheckbox,ClientSecret,TimeInput,RefreshToken,Contacts} from './Components/Inputs.js'// eslint-disable-next-line
 const {reg} = require('./regex.js');
 var availabilityCheckTimeout;
 var countries;
@@ -40,6 +40,9 @@ const ServiceForm = (props)=> {
 
   useEffect(()=>{
     countries = [];
+    if(!tenant.form_config.integration_environment.includes(props.initialValues.integration_environment)){
+      props.initialValues.integration_environment = tenant.form_config.integration_environment[0];
+    }
     countryData.forEach((item,index)=>{
       countries.push(item.countryShortCode.toLowerCase());
 
@@ -178,7 +181,7 @@ const ServiceForm = (props)=> {
     }),
     token_endpoint_auth_signing_alg:yup.string().nullable().when(['protocol',"token_endpoint_auth_method"],{
       is:(protocol,token_endpoint_auth_method)=> protocol==='oidc'&&(token_endpoint_auth_method==="private_key_jwt",token_endpoint_auth_method==="client_secret_jwt"),
-      then: yup.string().required(t('yup_select_option')).test('testTokenEndpointSigningAlgorithm','Invalid Value',function(value){return tenant.form_config.token_endpoint_auth_signing_alg.includes(value)})
+      then: yup.string().required(t('yup_select_option')).test('testTokenEndpointSigningAlgorithm','Invalid Value',function(value){console.log('Should not validate'); return tenant.form_config.token_endpoint_auth_signing_alg.includes(value)})
     }),
     token_endpoint_auth_method:yup.string().nullable().when('protocol',{
       is:'oidc',
@@ -424,7 +427,7 @@ const ServiceForm = (props)=> {
       onSubmit={(values,{setSubmitting}) => {
         setHasSubmitted(true);
         if(!(values.token_endpoint_auth_method==="client_secret_jwt"||values.token_endpoint_auth_method==="private_key_jwt")){
-          values.token_endpoint_auth_signing_alg="RS256";
+          values.token_endpoint_auth_signing_alg=null;
         }
         if(values.token_endpoint_auth_method!=="private_key_jwt"){
           values.jwks=null;
@@ -646,9 +649,10 @@ const ServiceForm = (props)=> {
                             />
                           </InputRow>
                           <InputRow title="Token Endpoint Authorization Method" error={errors.token_endpoint_auth_method}>
-                            <RadioList
+                            <AuthMethRadioList
                               name='token_endpoint_auth_method'
-                              value={values.token_endpoint_auth_method}
+                              values={values}
+                              setFieldValue={setFieldValue}
                               onChange={handleChange}
                               radio_items={tenant.form_config.token_endpoint_auth_method}
                               radio_items_titles={tenant.form_config.token_endpoint_auth_method_title}
@@ -821,7 +825,7 @@ const ServiceForm = (props)=> {
                   }
                   <ResponseModal message={message} modalTitle={modalTitle}/>
                   <SimpleModal isSubmitting={isSubmitting} isValid={isValid}/>
-                  <Debug/>
+                  {/*<Debug/>*/}
 
                 </Form>
 

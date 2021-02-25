@@ -128,18 +128,27 @@ export function PublicKey(props){
     </React.Fragment>
   )
 }
-export function RadioList(props){
+export function AuthMethRadioList(props){
   const [show, setShow] = useState(false);
+  const authMethod = props.values.token_endpoint_auth_method;
+  const signingAlg = props.values.token_endpoint_auth_signing_alg;
+  const setFieldValue = props.setFieldValue;
   const target = useRef(null);
+  useEffect(()=>{
+    if((authMethod==="client_secret_jwt"||authMethod==="private_key_jwt")&&!signingAlg){
+      setFieldValue('token_endpoint_auth_signing_alg', "RS256");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[authMethod]);
   return(
     <React.Fragment>
 
         {props.radio_items.map((item,index)=>(
           <div
-            className={"form_radio_item "+ (props.changed&&props.value===item?"input_radio_edited":null)}
+            className={"form_radio_item "+ (props.changed&&props.values.token_endpoint_auth_method===item?"input_radio_edited":null)}
             key={index}
-            onMouseOver={()=>{props.value===item&&setShow(true)}}
-            onMouseOut={()=>{props.value===item&&setShow(false)}}
+            onMouseOver={()=>{props.values.token_endpoint_auth_method===item&&setShow(true)}}
+            onMouseOut={()=>{props.values.token_endpoint_auth_method===item&&setShow(false)}}
           >
             <Field name={props.name}>
               {({ field, form }) => (
@@ -150,8 +159,8 @@ export function RadioList(props){
                     disabled={props.disabled}
                     {...field}
                     value={item}
-                    ref={props.value===item?target:null}
-                    checked={props.value===item}
+                    ref={props.values.token_endpoint_auth_method===item?target:null}
+                    checked={props.values.token_endpoint_auth_method===item}
                   />
                   {props.radio_items_titles[index]}
                 </React.Fragment>
