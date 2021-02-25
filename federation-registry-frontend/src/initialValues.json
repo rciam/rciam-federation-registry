@@ -33,7 +33,7 @@
     "authorization_code"
   ],
   "generate_client_secret":true,
-  "token_endpoint_auth_method":"",
+  "token_endpoint_auth_method":"none",
   "token_endpoint_auth_signing_alg":"",
   "jwks":"",
   "jwks_uri":""
