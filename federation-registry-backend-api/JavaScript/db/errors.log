@@ -1,7 +1,0 @@
-
-
-23:35:30 error: the database system is shutting down
-         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
-
-23:35:30 error: the database system is shutting down
-         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
