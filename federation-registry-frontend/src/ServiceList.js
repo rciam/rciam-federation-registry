@@ -158,7 +158,7 @@ const ServiceList= (props)=> {
       setLoadingList(false);
       setInitialLoading(false);
       if(response){
-
+        console.log(response);
         try{
           if(response.list_items.length===0&& activePage!==1){
               setActivePage(1);

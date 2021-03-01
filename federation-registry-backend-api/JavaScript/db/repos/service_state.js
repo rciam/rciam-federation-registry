@@ -27,23 +27,19 @@ class ServiceStateRepository {
     return this.db.any(sql.add,{
       id:+id,
       state:state,
-      deployment_type:deployment_type,
-      last_edited:date
+      deployment_type:deployment_type
     });
   }
   async update(id,state,deployment_type){
-    let date = new Date(Date.now());
     return this.db.any(sql.update,{
       id:+id,
       state:state,
-      deployment_type:deployment_type,
-      last_edited:date
+      deployment_type:deployment_type
     })
   }
 
   async resend(id){
-    let date = new Date(Date.now());
-    return this.db.one("UPDATE service_state SET state='pending',last_edited=$2 WHERE id=$1 RETURNING id",[+id,date])
+    return this.db.one("UPDATE service_state SET state='pending',last_edited=current_timestamp WHERE id=$1 RETURNING id",[+id,date])
   }
 
 
