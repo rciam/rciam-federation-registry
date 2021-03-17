@@ -1,7 +1,7 @@
 var diff = require('deep-diff').diff;
 require('dotenv').config();
 var path = require("path");
-
+const {db} = require('../db');
 var fs = require('fs');
 var hbs = require('handlebars');
 nodeMailer = require('nodemailer');
@@ -11,6 +11,18 @@ const customLogger = require('../loggers.js');
 hbs.registerHelper('loud', function (aString) {
     return aString.toUpperCase()
 })
+
+const sendMultipleInvitations = (data)=> {
+  try{
+    db.invitation.addMultiple(data).then(res=>{data.forEach(invitation_data=>{
+      sendInvitationMail(invitation_data);
+    })}).catch(err=>{customLogger(null,null,'warn','Error when creating and sending invitations: '+err)})
+  }
+  catch(err){
+    customLogger(null,null,'warn','Error when creating and sending invitations: '+err);
+  }
+
+}
 
 const calcDiff = (oldState,newState) => {
     var new_values = Object.assign({},newState);
@@ -251,5 +263,6 @@ module.exports = {
   addToString,
   sendMail,
   sendInvitationMail,
-  newMemberNotificationMail
+  newMemberNotificationMail,
+  sendMultipleInvitations
 }
