@@ -30,6 +30,7 @@ module.exports = {
       addSaml:sql('service_details_protocol/addSaml.sql')
     },
     service:{
+      getAll:(sql('service/getAll.sql')),
       getService:sql('service/getService.sql'),
       getPending:sql('service/getPending.sql')
     },

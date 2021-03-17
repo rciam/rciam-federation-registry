@@ -1,10 +1,11 @@
 require('dotenv').config();
-const {petitionValidationRules,validate,getServiceListValidation,postInvitationValidation,serviceValidationRules,putAgentValidation,postAgentValidation,decodeAms,amsIngestValidation} = require('../validator.js');
+const {petitionValidationRules,validate,tenantValidation,getServiceListValidation,postInvitationValidation,serviceValidationRules,putAgentValidation,postAgentValidation,decodeAms,amsIngestValidation} = require('../validator.js');
+const {validationResult} = require('express-validator');
 const qs = require('qs');
 const {v1:uuidv1} = require('uuid');
 const axios = require('axios').default;
 const {merge_data,merge_services_and_petitions} = require('../merge_data.js');
-const {addToString,clearPetitionData,sendMail,sendInvitationMail} = require('../functions/helpers.js');
+const {addToString,clearPetitionData,sendMail,sendInvitationMail,sendMultipleInvitations} = require('../functions/helpers.js');
 const {db} = require('../db');
 var diff = require('deep-diff').diff;
 var router = require('express').Router();
@@ -21,24 +22,28 @@ const base64url = require('base64url');
 // ----------------------------------------------------------
 // ************************* Routes *************************
 // ----------------------------------------------------------
-const sendMultipleInvitations =  (data)=>{
-  try{
-    db.invitation.addMultiple(data).then(res=>{data.forEach(invitation_data=>{
-      sendInvitationMail(invitation_data);
-    })}).catch(err=>{customLogger(null,null,'warn','Error when creating and sending invitations: '+err)})
-  }
-  catch(err){
-    customLogger(null,null,'warn','Error when creating and sending invitations: '+err);
-  }
 
+//
+// router.get('/test',getData,serviceValidationRules({optional:false,tenant_param:false,check_available:true,sanitize:true}),(req,res,next)=>{
+//
+//
+//     res.status(200).send(req.body);
+//     const errors = validationResult(req);
+//     console.log(errors);
+// });
+
+function getData(req,res,next) {
+  db.service.getAll().then(services=>{
+    req.body = services;
+    next();
+  });
 }
 
-
-router.post('/tenants/:name/services',serviceValidationRules(),validate,(req,res,next)=> {
+router.post('/tenants/:tenant_name/services',tenantValidation(),validate,serviceValidationRules({optional:true,tenant_param:true,check_available:true,sanitize:true}),validate,(req,res,next)=> {
   let services = req.body;
   // Populate json objects with all necessary fields
   services.forEach((service,index) => {
-    services[index].tenant = req.params.name
+    services[index].tenant = req.params.tenant_name
 
     config.service_fields.forEach(field=>{
       if(!service[field]){
@@ -68,7 +73,7 @@ router.post('/tenants/:name/services',serviceValidationRules(),validate,(req,res
 
                   service.contacts.forEach(contact=>{
                     if(contact.type='technical'){
-                      invitations.push({tenant:req.params.name,email:contact.email,group_manager:true,code:uuidv1(),group_id:service.group_id});
+                      invitations.push({tenant:req.params.tenant_name,email:contact.email,group_manager:true,code:uuidv1(),group_id:service.group_id});
                     }
                     contacts.push({owner_id:service.id,value:contact.email,type:contact.type});
                   });

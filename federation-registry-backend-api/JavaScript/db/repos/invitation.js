@@ -11,6 +11,7 @@ class InvitationRepository {
      cs.insert_multi = new pgp.helpers.ColumnSet(['code','group_manager','group_id','email',{name:'invited_by',def:'Federation Registry'},{name: 'date', mod: '^', def: 'CURRENT_TIMESTAMP'}],{table:'invitations'});
   }
   async addMultiple(invitation_data){
+    console.log('test');
       const insert = this.pgp.helpers.insert(invitation_data,cs.insert_multi)+'RETURNING *';
       return await this.db.any(insert).then((result)=>{
         if(result.length===invitation_data.length){

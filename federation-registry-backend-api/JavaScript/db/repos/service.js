@@ -107,6 +107,22 @@ class ServiceRepository {
     }
   }
 
+  async getAll(){
+    return this.db.any(sql.getAll).then(services=>{
+      if(services){
+
+        const res = [];
+        for (let i = 0; i < services.length; i++) {
+          res.push(services[i].json);
+        }
+        return res;
+      }
+      else{
+        return null;
+      }
+    });
+  }
+
   async getPending(){
     return this.db.any(sql.getPending).then(services=>{
       if(services){
