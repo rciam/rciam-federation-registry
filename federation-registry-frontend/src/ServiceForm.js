@@ -11,7 +11,8 @@ import Collapse from 'react-bootstrap/Collapse';
 import {useParams } from "react-router-dom";
 import { diff } from 'deep-diff';
 import {tenantContext} from './context.js';
-//import {Debug} from './Components/Debug.js';
+import Alert from 'react-bootstrap/Alert'
+import {Debug} from './Components/Debug.js';
 import {SimpleModal,ResponseModal,Logout,NotFound} from './Components/Modals.js';
 import Form from 'react-bootstrap/Form';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -37,9 +38,12 @@ const ServiceForm = (props)=> {
   const [notFound,setNotFound] = useState(false);
   // eslint-disable-next-line
   const [tenant,setTenant] = useContext(tenantContext);
-
+  const [showInitErrors,setShowInitErrors] = useState(false)
   useEffect(()=>{
     countries = [];
+    if(props.service_id||props.petition_id){
+      setShowInitErrors(true)
+    }
     if(!tenant.form_config.integration_environment.includes(props.initialValues.integration_environment)){
       props.initialValues.integration_environment = tenant.form_config.integration_environment[0];
     }
@@ -47,9 +51,8 @@ const ServiceForm = (props)=> {
       countries.push(item.countryShortCode.toLowerCase());
 
     });
-
         if(props.disabled||props.review){
-      setDisabled(true);
+        setDisabled(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
@@ -61,8 +64,14 @@ const ServiceForm = (props)=> {
           return list.length  === new Set(list.map(mapper)).size;
       });
   });
+  function imageExists(url, callback) {
+    var img = new Image();
+    img.onload = function() { callback(true); };
+    img.onerror = function() { callback(false); };
+    img.src = url;
+  }
   const schema = yup.object({
-    service_name:yup.string().min(4,t('yup_char_min') + ' ('+4+')').max(36,t('yup_char_max') + ' ('+36+')').required(t('yup_required')),
+    service_name:yup.string().nullable().min(4,t('yup_char_min') + ' ('+4+')').max(36,t('yup_char_max') + ' ('+36+')').required(t('yup_required')),
     // Everytime client_id changes we make a fetch request to see if it is available.
     client_id:yup.string().nullable().when('protocol',{
       is:'oidc',
@@ -112,11 +121,19 @@ const ServiceForm = (props)=> {
       is:'oidc',
       then: yup.array().of(yup.string().matches(reg.regUrl,t('yup_secure_url'))).unique(t('yup_redirect_uri_unique')).required(t('yup_required'))
     }),
-    logo_uri:yup.string().required(t('yup_required')).test('testImage',t('yup_image_url'),function(value){ return imageError}),
-    policy_uri:yup.string().required(t('yup_required')).matches(reg.regSimpleUrl,t('yup_url')),
-    country:yup.string().test('testCountry','Select one of the available options',function(value){return countries.includes(value)}).required(t('yup_required')),
-    service_description:yup.string().required(t('yup_required')),
-    contacts:yup.array().of(yup.object().shape({
+    logo_uri:yup.string().nullable().required(t('yup_required')).test('testImage',t('yup_image_url'),function(imageUrl){
+      return new Promise((resolve,reject)=>{
+        //var imageUrl = 'http://www.google.com/images/srpr/nav_logo14.png';
+        imageExists(imageUrl, function(exists) {
+          resolve(exists);
+          //console.log('RESULT: url=' + imageUrl + ', exists=' + exists);
+        });
+      });
+      }),
+    policy_uri:yup.string().nullable().required(t('yup_required')).matches(reg.regSimpleUrl,t('yup_url')),
+    country:yup.string().nullable().test('testCountry','Select one of the available options',function(value){return countries.includes(value)}).required(t('yup_required')),
+    service_description:yup.string().nullable().required(t('yup_required')),
+    contacts:yup.array().nullable().of(yup.object().shape({
         email:yup.string().email(t('yup_email')).required(t('yup_contact_empty')),
         type:yup.string().required(t('yup_required'))
       })).test('testContacts',t('yup_contact_unique'),function(value){
@@ -257,21 +274,18 @@ const ServiceForm = (props)=> {
   const [message,setMessage] = useState();
   const [modalTitle,setModalTitle] = useState(null);
   const [checkingAvailability,setCheckingAvailability] = useState(false);
-  const [imageError,setImageError] = useState(false); //
   const [checkedId,setCheckedId] = useState(); // Variable containing the last client Id checked for availability to limit check requests
   const [checkedEnvironment,setCheckedEnvironment] = useState();
   const [asyncResponse,setAsyncResponse] = useState(false);
   const createNewPetition = (petition) => {
     // eslint-disable-next-line
-    let type;
     if(props.service_id){
       petition.type='edit';
-      type='reconfiguration';
+
       petition.service_id=props.service_id;
     }
     else{
       petition.type='create';
-      type='registration'
       petition.service_id=null;
     }
     if (diff(petition,props.initialValues)){
@@ -414,6 +428,17 @@ const ServiceForm = (props)=> {
     }
   }
 
+  const getInitialTouched = (initVal) =>{
+    let touchedActive={};
+    if(showInitErrors){
+      return {}
+    }
+    for (const property in initVal){
+      touchedActive[property] = true;
+    }
+    return touchedActive;
+
+  }
 
 
   return(
@@ -421,7 +446,9 @@ const ServiceForm = (props)=> {
     <Logout logout={logout}/>
     <NotFound notFound={notFound}/>
     <Formik
-    initialValues={props.initialValues}
+      initialValues={props.initialValues}
+      validateOnMount={showInitErrors}
+      initialTouched={getInitialTouched(props.initialValues)}
       validationSchema={schema}
       innerRef={formRef}
       onSubmit={(values,{setSubmitting}) => {
@@ -458,6 +485,7 @@ const ServiceForm = (props)=> {
       touched,
       isValid,
       validateField,
+      validateForm,
       setValues,
       setErrors,
       submitCount,
@@ -465,11 +493,17 @@ const ServiceForm = (props)=> {
       isSubmitting})=>(
       <div className="tab-panel">
               <ProcessingRequest active={asyncResponse}/>
+              {showInitErrors&&!Object.keys(errors).length === 0?
+                <Alert variant='warning' className="invitation_alert">
+                The following Service Configuration contains some invalid values or is missing a required field. To fix this issue sumbit a valid reconfiguration request
+                </Alert>
+              :null
+              }
               <Form noValidate onSubmit={handleSubmit}>
                 {props.disabled?null:
                   <div className="form-controls-container">
                     {props.review?
-                      <ReviewComponent reviewPetition={reviewPetition}/>
+                      <ReviewComponent errors={errors} reviewPetition={reviewPetition}/>
                       :
                       <React.Fragment>
                         <Button className='submit-button' type="submit" variant="primary" ><FontAwesomeIcon icon={faCheckCircle}/>{t('button_submit')}</Button>
@@ -510,8 +544,7 @@ const ServiceForm = (props)=> {
                       </InputRow>
                       <InputRow title={t('form_logo')}>
                         <LogoInput
-                          setImageError={setImageError}
-                          value={values.logo_uri}
+                          value={values.logo_uri?values.logo_uri:''}
                           name='logo_uri'
                           description={t('form_logo_desc')}
                           onChange={handleChange}
@@ -526,7 +559,7 @@ const ServiceForm = (props)=> {
                       </InputRow>
                       <InputRow title={t('form_description')} description={t('form_description_desc')} error={errors.service_description} touched={touched.service_description}>
                         <TextAria
-                          value={values.service_description}
+                          value={values.service_description?values.service_description:''}
                           onChange={handleChange}
                           onBlur={handleBlur}
                           name='service_description'
@@ -813,7 +846,7 @@ const ServiceForm = (props)=> {
                   {props.disabled?null:
                     <div className="form-controls-container">
                       {props.review?
-                          <ReviewComponent reviewPetition={reviewPetition}/>
+                          <ReviewComponent errors={errors} reviewPetition={reviewPetition}/>
                         :
                         <React.Fragment>
                           <Button className='submit-button' type="submit" variant="primary" ><FontAwesomeIcon icon={faCheckCircle}/>Submit</Button>
@@ -825,7 +858,7 @@ const ServiceForm = (props)=> {
                   }
                   <ResponseModal message={message} modalTitle={modalTitle}/>
                   <SimpleModal isSubmitting={isSubmitting} isValid={isValid}/>
-                  {/*<Debug/>*/}
+                  <Debug/>
 
                 </Form>
 
@@ -852,7 +885,6 @@ const ReviewComponent = (props)=>{
 
       if(expand){
         if(type){
-
           if((type==='changes'&&comment)||type!=='changes'){
             props.reviewPetition(comment,type);
           }
@@ -889,6 +921,7 @@ const ReviewComponent = (props)=>{
               {error}
             </div>
             :null}
+
         </Row>
         <Collapse in={expand}>
         <div className="expand-container">
@@ -900,18 +933,24 @@ const ReviewComponent = (props)=>{
                 type="radio"
                 name="formHorizontalRadios"
                 id="formHorizontalRadios1"
+                disabled={props.errors}
                 onChange={(e)=>{if(e.target.checked){setType(e.target.value)}}}
                 value="approve"
                 checked={type==='approve'}
               />
             </Col>
             <Col onClick={()=>{
-              setType('approve');
+              if(Object.keys(props.errors).length === 0){
+                setType('approve');
+              }
             }}>
               <Row>
                 <strong>
                   {t('review_approve')}
                 </strong>
+                <div className="approve-error">
+                  Invalid Service Configuration, Approve disabled
+                </div>
               </Row>
               <Row className="review-option-desc">
                 {t('review_approve_desc')}

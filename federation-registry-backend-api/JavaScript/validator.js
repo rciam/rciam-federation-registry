@@ -71,7 +71,7 @@ const serviceValidationRules = (options) => {
   const required = (value,req,pos)=>{
     if(options.optional){
       if(!value){
-        req.body[pos].flag = true;
+        req.body[pos].outdated = true;
       }
       return true
     }
@@ -82,8 +82,8 @@ const serviceValidationRules = (options) => {
 
   const requiredOidc = (value,req,pos) => {
       if(options.optional||req.body[pos].protocol!=='oidc'){
-        if(!value){
-          req.body[pos].flag = true;
+        if(!value&&req.body[pos].protocol==='oidc'){
+          req.body[pos].outdated = true;
         }
       return true
     }
@@ -94,8 +94,8 @@ const serviceValidationRules = (options) => {
 
   const requiredSaml = (value,req,pos) => {
     if(options.optional||req.body[pos].protocol!=='saml'){
-      if(!value){
-        req.body[pos].flag = true;
+      if(!value&&req.body[pos].protocol==='saml'){
+        req.body[pos].outdated = true;
       }
       return true;
     }
@@ -279,7 +279,7 @@ const serviceValidationRules = (options) => {
       let pos = path.match(/\[(.*?)\]/)[1];
         if(!value&&req.body[pos].scope&&req.body[pos].scope.includes('offline_access')){
           if(options.optional){
-            req.body[pos].flag = true;
+            req.body[pos].outdated = true;
             return true
           }
           else{
@@ -302,7 +302,7 @@ const serviceValidationRules = (options) => {
       let pos = path.match(/\[(.*?)\]/)[1];
       if(!value&&req.body[pos].grant_types&&req.body[pos].grant_types.includes('urn:ietf:params:oauth:grant-type:device_code')){
         if(options.optional){
-          req.body[pos].flag = true;
+          req.body[pos].outdated = true;
           return true
         }else{
           throw new Error("Device Code Validity Seconds is required when 'urn:ietf:params:oauth:grant-type:device_code' is included in the grant_types")
@@ -495,7 +495,7 @@ const decodeAms = (req,res,next) => {
 
 const validate = (req, res, next) => {
   //console.log(req.body);
-  const errors = validationResult(req)
+  const errors = validationResult(req);
   // if(errors.errors.length>0){
   //   console.log(errors);
   // }

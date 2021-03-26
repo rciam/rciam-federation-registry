@@ -27,6 +27,7 @@ export function SimpleInput(props){
         <React.Fragment>
           <Form.Control
             {...props}
+            value={props.value?props.value:''}
             type="text"
             ref={target}
             onMouseOver={()=>setShow(true)}
@@ -112,7 +113,7 @@ export function PublicKey(props){
             as="textarea"
             rows="3"
             placeholder='{"keys":[]}'
-            value={props.values.jwks}
+            value={props.values.jwks?props.values.jwks:''}
             ref={target}
             datatype="json"
             onChange={props.onChange}
@@ -280,7 +281,7 @@ export function Select(props){
       <Field
       name={props.name}
       as="select"
-      default={props.default}
+      default={props.default?props.default:''}
       onMouseOver={()=>setShow(true)}
       onMouseOut={()=>setShow(false)}
       disabled={props.disabled}
@@ -784,14 +785,9 @@ export  function LogoInput(props){
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   const addDefaultSrc= (ev)=>{
-      props.setImageError(false);
       ev.target.src = process.env.PUBLIC_URL + '/logo_placeholder.gif';
   }
-  const imageLoad = (ev)=>{
-      if((!ev.target.src.includes('/logo_placeholder.gif'))){
-        props.setImageError(true);
-      }
-  }
+
 
   return (
     <React.Fragment>
@@ -823,7 +819,7 @@ export  function LogoInput(props){
               overflowX: 'scroll',
             }}
           >
-            <Image src={props.value ? props.value:process.env.PUBLIC_URL + '/logo_placeholder.gif'} onLoad={imageLoad} onError={addDefaultSrc} fluid />
+            <Image src={props.value ? props.value:process.env.PUBLIC_URL + '/logo_placeholder.gif'} onError={addDefaultSrc} fluid />
 
           </pre>
         )}
@@ -848,7 +844,7 @@ function MyOverLay(props) {
   return (
     <Overlay target={props.target.current}  show={show} placement="right">
       {propsOv => (
-        <Tooltip id="overlay-example" placement={propsOv.placement} arrowProps={propsOv.arrowProps} ref={propsOv.ref} style={propsOv.style} outOfBoundaries={propsOv.outOfBoundaries} >
+        <Tooltip id="overlay-example" placement={propsOv.placement} arrowProps={propsOv.arrowProps} ref={propsOv.ref} style={propsOv.style} outOfBoundaries={propsOv.outofboundaries} >
           {props.type==="Added"?t('input_added'):props.type==="Deleted"?t('input_deleted'):props.type==="Edited"?t('input_edited'):null}
         </Tooltip>
 

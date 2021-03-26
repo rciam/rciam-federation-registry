@@ -1,7 +1,6 @@
 var diff = require('deep-diff').diff;
 require('dotenv').config();
 var path = require("path");
-const {db} = require('../db');
 var fs = require('fs');
 var hbs = require('handlebars');
 nodeMailer = require('nodemailer');
@@ -12,7 +11,8 @@ hbs.registerHelper('loud', function (aString) {
     return aString.toUpperCase()
 })
 
-const sendMultipleInvitations = (data)=> {
+const sendMultipleInvitations = function (data,db) {
+
   try{
     db.invitation.addMultiple(data).then(res=>{data.forEach(invitation_data=>{
       sendInvitationMail(invitation_data);
@@ -147,6 +147,13 @@ const newMemberNotificationMail = (data,managers) => {
           port: 587,
           secure: false
       });
+      // let transporter = nodeMailer.createTransport({
+      //   service: 'gmail',
+      //   auth: {
+      //     user: 'orionaikido@gmail.com',
+      //     pass: ''
+      //   }
+      // });
       var replacements = {
         invitation_mail:data.invitation_mail,
         username:data.preferred_username,
@@ -218,6 +225,7 @@ const sendMail= (data,template_uri,users)=>{
             subject : data.subject,
             html : htmlToSend
           };
+
           transporter.sendMail(mailOptions, function (error, response) {
             if (error) {
               customLogger(null,null,'info',[{type:'email_log'},{message:'Email not sent'},{error:error},{user:users},{data:data}]);
@@ -264,5 +272,6 @@ module.exports = {
   sendMail,
   sendInvitationMail,
   newMemberNotificationMail,
-  sendMultipleInvitations
+  sendMultipleInvitations,
+  readHTMLFile
 }

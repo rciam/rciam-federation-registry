@@ -68,11 +68,12 @@ router.post('/tenants/:tenant_name/services',tenantValidation(),validate,service
               let service_state = [];
               let invitations = [];
               services.forEach((service,index)=> {
-                service_state.push({id:service.id,state:'deployed'});
+                service_state.push({id:service.id,state:'deployed',outdated:(service.outdated?true:false)});
+
                 if(service.contacts && service.contacts.length>0){
 
                   service.contacts.forEach(contact=>{
-                    if(contact.type='technical'){
+                    if(contact.type==='technical'){
                       invitations.push({tenant:req.params.tenant_name,email:contact.email,group_manager:true,code:uuidv1(),group_id:service.group_id});
                     }
                     contacts.push({owner_id:service.id,value:contact.email,type:contact.type});
@@ -91,7 +92,7 @@ router.post('/tenants/:tenant_name/services',tenantValidation(),validate,service
                   }
                   if(service.redirect_uris && service.redirect_uris.length>0){
                     service.redirect_uris.forEach(redirect_uri => {
-                      redirect_uris.push({owner_id:service.id,value:redirect_uris});
+                      redirect_uris.push({owner_id:service.id,value:redirect_uri});
                     });
                   }
                 }
@@ -110,18 +111,18 @@ router.post('/tenants/:tenant_name/services',tenantValidation(),validate,service
               if(redirect_uris.length>0){
                 queries.push(t.service_multi_valued.addMultiple(redirect_uris,'service_oidc_redirect_uris'));
               }
-              if(invitations.length>0){
-                sendMultipleInvitations(invitations);
-              }
               let done = await t.batch(queries).catch(err=>{throw err})
               if(done){
+                if(invitations.length>0){
+                  sendMultipleInvitations(invitations,t);
+                }
                 res.status(200).end();
               }
             }
-          });
+          }).catch(err=>{console.log(err);});
         }
-      }).catch(err => {throw err})
-    }).catch(err => {throw err})
+      }).catch(err => {console.log(err); throw err})
+    }).catch(err => {console.log(err); throw err})
 
   }
   catch(err){
@@ -1062,7 +1063,6 @@ function decode(jwt) {
 
 // Authentication Middleware
 function authenticate(req,res,next){
-
   try{
     var clients = req.app.get('clients');
     if(process.env.NODE_ENV==='test-docker'||process.env.NODE_ENV==='test'){

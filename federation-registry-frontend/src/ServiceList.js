@@ -46,35 +46,34 @@ const ServiceList= (props)=> {
   const [expandFilters,setExpandFilters] = useState();
   const [confirmationData,setConfirmationData] = useState({});
   const [reset,setReset] = useState(false);
+  const [outdatedCount,setOutdatedCount] = useState(0);
   // eslint-disable-next-line
   const [user,setUser] = useContext(userContext);
   const [showPending,setShowPending] = useState(false);
   const [showOwned,setShowOwned] = useState(false);
   const [integrationEnvironment,setIntegrationEnvironment] = useState();
-
+  const [showOutdated,setShowOutdated] = useState(false);
   const [paginationItems,setPaginationItems] = useState([]);
   const [initialLoading,setInitialLoading] = useState();
+  const [showNotification,setShowNotification] = useState(true);
 
-  const pageSize = 2;
+  const pageSize = 10;
 
   useEffect(()=>{
     setInitialLoading(true);
-    getServices();
     getInvites();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
 
   useEffect(()=>{
-
-
      getServices();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[searchString,showOwned,showPending,integrationEnvironment,activePage]);
+  },[searchString,showOwned,showPending,integrationEnvironment,activePage,showOutdated]);
 
   useEffect(()=>{
 
     setActivePage(1);
-  },[searchString,showOwned,showPending,integrationEnvironment]);
+  },[searchString,showOwned,showPending,integrationEnvironment,showOutdated]);
 
 
 
@@ -92,6 +91,9 @@ const ServiceList= (props)=> {
     }
     if(showPending){
       filterString = filterString + '&pending=' + true;
+    }
+    if(showOutdated){
+      filterString = filterString + '&outdated=' +true;
     }
     return filterString;
   }
@@ -115,7 +117,6 @@ const ServiceList= (props)=> {
         return false;
       }
       else {
-        console.log(response.body);
         return false
       }
     }).then(response=> {
@@ -164,6 +165,9 @@ const ServiceList= (props)=> {
               setActivePage(1);
           }
           setServices(response.list_items);
+          if(!showOwned&&!showPending&!showOutdated&&!searchString){
+            setOutdatedCount(response.outdated_count);
+          }
           createPaginationItems(response.full_count);
           setReset(!reset);
         }
@@ -316,6 +320,19 @@ const ServiceList= (props)=> {
       <ConfirmationModal active={confirmationData.action?true:false} setActive={setConfirmationData} action={()=>{if(confirmationData.action==='delete_service'){deleteService(...confirmationData.args)}else{deletePetition(...confirmationData.args)}}} title={confirmationData.title} accept={'Yes'} decline={'No'}/>
       <div>
         <LoadingBar loading={initialLoading}>
+
+          <Collapse in={showNotification}>
+            <div>
+              <Alert variant='warning' className="invitation_alert">
+
+                <span>{outdatedCount}</span>{' '}
+                 of the services you own are not up to date with the lastest requirements. Click{' '}
+                 <span className="alert_fake_link" onClick={()=>{setExpandFilters(!expandFilters); setShowOutdated(true); setShowNotification(false);}}>here</span>
+                  {' '}to find them using the outdated filter and reconfigure them following the instructions.
+              </Alert>
+            </div>
+          </Collapse>
+
         {invites&&invites.length>0?
           <React.Fragment>
           <Alert variant='primary' className="invitation_alert">
@@ -373,6 +390,10 @@ const ServiceList= (props)=> {
                   <div className='filter-container' onClick={()=> setShowPending(!showPending)}>
                     <span>Show Pending</span>
                     <input type='checkbox' name='filter' checked={showPending} onChange={()=>setShowPending(!showPending)}/>
+                  </div>
+                  <div className='filter-container' onClick={()=> setShowOutdated(!showOutdated)}>
+                    <span>Show Outdated</span>
+                    <input type='checkbox' name='filter' checked={showOutdated} onChange={()=>setShowOutdated(!showOutdated)}/>
                   </div>
                   {props.user.admin?
                   <div className='filter-container' onClick={()=> setShowOwned(!showOwned)}>
@@ -458,6 +479,7 @@ function TableItem(props) {
             {props.service.type?<Badge className="status-badge" variant="warning">
               {props.service.type==='edit'?t('badge_edit_pending'):props.service.type==='create'?t('badge_create_pending'):t('badge_delete_pending')}
               </Badge>:null}
+            {props.service.outdated&&!props.service.petition_id&&props.service.state==='deployed'?<Badge className="status-badge" variant="danger">Update Required</Badge>:null}
             {props.service.comment?<Badge className="status-badge" variant="info">{t('badge_changes_requested')}</Badge>:null}
           </div>
           <p>{props.service.service_description}</p>
@@ -517,7 +539,7 @@ function TableItem(props) {
 
               {props.service.owned?
                 <React.Fragment>
-                  {props.service.comment?
+                  {props.service.comment||(props.service.outdated&&!props.service.pettion_id&&props.service.state==="deployed")?
                   <div className="notification">
                     <FontAwesomeIcon icon={faExclamation} className="fa-exclamation"/>
                     <FontAwesomeIcon icon={faCircle} className="fa-circle"/>
@@ -526,7 +548,8 @@ function TableItem(props) {
                     placement='top'
                     overlay={
                       <Tooltip id={`tooltip-top`}>
-                        {props.service.comment?t('changes_notification'):props.service.state==='deployed'?t('edit_notification'):t('pending_notification')}
+
+                        {props.service.comment?t('changes_notification'):props.service.outdated&&!props.service.pettion_id&&props.service.state==="deployed"?"Service needs to be updated":props.service.state==='deployed'?t('edit_notification'):t('pending_notification')}
                       </Tooltip>
                     }
                   >

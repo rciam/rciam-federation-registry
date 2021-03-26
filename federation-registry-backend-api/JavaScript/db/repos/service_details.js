@@ -43,6 +43,7 @@ class ServiceDetailsRepository {
           return services
       })
       .catch(error => {
+           console.log('error here');
           throw error
       });
     }

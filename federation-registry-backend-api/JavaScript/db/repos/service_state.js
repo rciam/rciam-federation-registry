@@ -6,8 +6,9 @@ class ServiceStateRepository {
     this.db = db;
     this.pgp = pgp;
     // set-up all ColumnSet objects, if needed:
-     cs.update_multi = new pgp.helpers.ColumnSet(['?id','state',{name: 'last_edited', mod: '^', def: 'CURRENT_TIMESTAMP'}],{table:'service_state'});
-     cs.insert_multi = new pgp.helpers.ColumnSet(['id','state',{name: 'last_edited', mod: '^', def: 'CURRENT_TIMESTAMP'}],{table:'service_state'});
+    cs.update_multi = new pgp.helpers.ColumnSet(['?id','state',{name: 'last_edited', mod: '^', def: 'CURRENT_TIMESTAMP'}],{table:'service_state'});
+     cs.update_multi_outdated = new pgp.helpers.ColumnSet(['?id','state',{name: 'last_edited', mod: '^', def: 'CURRENT_TIMESTAMP'},'outdated'],{table:'service_state'});
+     cs.insert_multi = new pgp.helpers.ColumnSet(['id','state',{name: 'last_edited', mod: '^', def: 'CURRENT_TIMESTAMP'},'outdated'],{table:'service_state'});
   }
   async addMultiple(service_state_data){
       const insert = this.pgp.helpers.insert(service_state_data,cs.insert_multi)+'RETURNING *';
@@ -21,6 +22,12 @@ class ServiceStateRepository {
       });
 
   }
+
+  async getOutdatedOwners(){
+    return await this.db.any(sql.getOutdatedOwners);
+  }
+
+
 
   async add(id,state,deployment_type){
     let date = new Date(Date.now());
@@ -59,7 +66,7 @@ class ServiceStateRepository {
         let deployed = await t.deployment_tasks.isDeploymentFinished(decoded_message.id);
         // If we have a an error or if the deployment has finished we have to update the service state
         if(deployed || decoded_message.state==='error'){
-          updateState.push({id:decoded_message.id,state:decoded_message.state});
+          updateState.push({id:decoded_message.id,state:decoded_message.state,outdated:false});
           if(deployed){
             if(decoded_message.external_id){
               updateExternalId.push({id:decoded_message.id,external_id:decoded_message.external_id});
@@ -100,7 +107,10 @@ class ServiceStateRepository {
     });
   }
 
+
+  // Of the Services that have finished deployment (ids) delete those that were pending deletion
   async delete(ids){
+
     return this.db.any("UPDATE service_details SET deleted=true WHERE id IN (SELECT id FROM service_state WHERE deployment_type='delete' AND id IN($1:csv))",ids)
   }
 
@@ -111,7 +121,7 @@ class ServiceStateRepository {
     // updateData = [{id:1,state:'deployed'},{id:2,state:'deployed'},{id:3,state:'failed'}];
     let date = new Date(Date.now());
 
-    const update = this.pgp.helpers.update(updateData, cs.update_multi) + ' WHERE v.id = t.id RETURNING t.id';
+    const update = this.pgp.helpers.update(updateData,(updateData[0].hasOwnProperty('outdated')?cs.update_multi_outdated:cs.update_multi)) + ' WHERE v.id = t.id RETURNING t.id';
     //=> UPDATE "service_data" AS t SET "state"=v."state"
     //   FROM (VALUES(1,'deployed'),(2,'deployed'),(3,'failed'))
     //   AS v("id","state") WHERE v.id = t.id

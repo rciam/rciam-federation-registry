@@ -24,7 +24,6 @@ describe('Service registry API Integration Tests', function() {
   userToken = setUser(users.egi.admin_user);
   describe('# Petition Validation Testing For Creation Requests', function(){
     it('should catch all null none protocol specific values',function(done){
-
       postPetitionError({type:'create'},'egi',validationResponses.create.null,done);
     })
     it('should catch all null fields in a oidc service',function(done){
