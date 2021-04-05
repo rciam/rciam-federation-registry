@@ -352,6 +352,7 @@ describe('Service registry API Integration Tests', function() {
           .expect(422)
           .end(function(err,res){
             let body = JSON.parse(res.text);
+            console.log(body);
             expect(res.statusCode).to.equal(422);
             expect(body).to.eql([
               { email: 'Required Field' },

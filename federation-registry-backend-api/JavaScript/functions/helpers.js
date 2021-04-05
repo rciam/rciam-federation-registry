@@ -11,10 +11,10 @@ hbs.registerHelper('loud', function (aString) {
     return aString.toUpperCase()
 })
 
-const sendMultipleInvitations = function (data,db) {
+const sendMultipleInvitations = function (data,t) {
 
   try{
-    db.invitation.addMultiple(data).then(res=>{data.forEach(invitation_data=>{
+    t.invitation.addMultiple(data).then(res=>{data.forEach(invitation_data=>{
       sendInvitationMail(invitation_data);
     })}).catch(err=>{customLogger(null,null,'warn','Error when creating and sending invitations: '+err)})
   }

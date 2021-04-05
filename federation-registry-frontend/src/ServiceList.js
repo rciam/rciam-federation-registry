@@ -320,19 +320,17 @@ const ServiceList= (props)=> {
       <ConfirmationModal active={confirmationData.action?true:false} setActive={setConfirmationData} action={()=>{if(confirmationData.action==='delete_service'){deleteService(...confirmationData.args)}else{deletePetition(...confirmationData.args)}}} title={confirmationData.title} accept={'Yes'} decline={'No'}/>
       <div>
         <LoadingBar loading={initialLoading}>
+        {outdatedCount>0?<Collapse in={showNotification}>
+          <div>
+            <Alert variant='warning' className="invitation_alert">
 
-          <Collapse in={showNotification}>
-            <div>
-              <Alert variant='warning' className="invitation_alert">
-
-                <span>{outdatedCount}</span>{' '}
-                 of the services you own are not up to date with the lastest requirements. Click{' '}
-                 <span className="alert_fake_link" onClick={()=>{setExpandFilters(!expandFilters); setShowOutdated(true); setShowNotification(false);}}>here</span>
-                  {' '}to find them using the outdated filter and reconfigure them following the instructions.
-              </Alert>
-            </div>
-          </Collapse>
-
+              <span>{outdatedCount}</span>{' '}
+               of the services you own are not up to date with the lastest requirements. Click{' '}
+               <span className="alert_fake_link" onClick={()=>{setExpandFilters(!expandFilters); setShowOutdated(true); setShowNotification(false);}}>here</span>
+                {' '}to find them using the outdated filter and reconfigure them following the instructions.
+            </Alert>
+          </div>
+        </Collapse>:null}
         {invites&&invites.length>0?
           <React.Fragment>
           <Alert variant='primary' className="invitation_alert">

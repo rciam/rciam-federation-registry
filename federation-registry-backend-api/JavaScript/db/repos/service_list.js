@@ -55,7 +55,7 @@ class ServiceListRepository {
     if(req.query.pending){
       params.pending_filter= 'AND petition_id IS NOT NULL'
     }
-    params.tenant_name = req.params.name;
+    params.tenant_name = req.params.tenant_name;
     params.sub = req.user.sub;
     if(req.query.limit){
       params.limit= parseInt(req.query.limit);

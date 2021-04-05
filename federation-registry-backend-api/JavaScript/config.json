@@ -7,7 +7,7 @@
       "id_token_timeout_seconds":3600,
       "protocol":["oidc","saml"],
       "integration_environment": ["development","demo","production"],
-      "grant_types":["implicit","authorization_code","refresh_token","client_credentials","urn:ietf:params:oauth:grant_type:redelegate","urn:ietf:params:oauth:grant-type:token-exchange","urn:ietf:params:oauth:grant-type:device_code","urn:ietf:params:oauth:grant-type:jwt-bearer"],
+      "grant_types":["authorization_code","client_credentials","urn:ietf:params:oauth:grant-type:token-exchange","urn:ietf:params:oauth:grant-type:device_code","implicit"],
       "contact_types":["admin","technical","support","security"],
       "protocol":["oidc","saml"],
       "invitation_validity_seconds":2592000,

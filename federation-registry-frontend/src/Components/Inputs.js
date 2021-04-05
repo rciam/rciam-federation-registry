@@ -947,7 +947,7 @@ export function ListInput(props){
                   </Field>
                   <br/>
                 </InputGroup>
-                <div className="error-message-list-item">{Array.isArray(props.error)?props.error[index]:''}</div>
+                <div className="error-message-list-item">{!Array.isArray(props.error)?'':props.integrationEnvironment==='production'?'Must either be a secure (https://) or a http://localhost url':'Must be a valid url stating with http(s)://'}</div>
                 </React.Fragment>
               ))}
             </React.Fragment>

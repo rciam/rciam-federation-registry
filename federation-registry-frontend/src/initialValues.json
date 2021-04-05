@@ -11,16 +11,16 @@
   "entity_id":"",
   "client_id":"",
   "allow_introspection":false,
-  "token_endpoint_auth_method":"Option1",
+  "token_endpoint_auth_method":"client_secret_basic",
   "code_challenge_method":"plain",
-  "device_code_validity_seconds":"28800",
+  "device_code_validity_seconds":"1800",
   "access_token_validity_seconds":"3600",
   "refresh_token_validity_seconds":"28800",
   "client_secret":"",
   "country":"",
   "reuse_refresh_tokens":true,
   "clear_access_tokens_on_refresh":true,
-  "id_token_timeout_seconds":"1000",
+  "id_token_timeout_seconds":"600",
   "scope": [
     "openid",
     "profile",
@@ -33,7 +33,6 @@
     "authorization_code"
   ],
   "generate_client_secret":true,
-  "token_endpoint_auth_method":"none",
   "token_endpoint_auth_signing_alg":"",
   "jwks":"",
   "jwks_uri":""

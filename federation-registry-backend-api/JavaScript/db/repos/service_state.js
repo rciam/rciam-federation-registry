@@ -46,7 +46,7 @@ class ServiceStateRepository {
   }
 
   async resend(id){
-    return this.db.one("UPDATE service_state SET state='pending',last_edited=current_timestamp WHERE id=$1 RETURNING id",[+id,date])
+    return this.db.one("UPDATE service_state SET state='pending',last_edited=current_timestamp WHERE id=$1 RETURNING id",+id)
   }
 
 

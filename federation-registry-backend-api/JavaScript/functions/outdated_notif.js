@@ -10,7 +10,7 @@ const customLogger = require('../loggers.js');
 const {readHTMLFile} = require('./helpers');
 
 const outdatedNotificationsWorker =  async(interval_seconds) =>{
-  interval_seconds = 240;
+
   const sendNotif = () =>{
   //  console.log(db);
     db.service_state.getOutdatedOwners().then(users=>{

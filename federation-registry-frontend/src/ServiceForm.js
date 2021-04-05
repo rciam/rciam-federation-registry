@@ -28,7 +28,7 @@ import {SimpleInput,CountrySelect,AuthMethRadioList,DeviceCode,Select,PublicKey,
 const {reg} = require('./regex.js');
 var availabilityCheckTimeout;
 var countries;
-
+let integrationEnvironment;
 
 
 const ServiceForm = (props)=> {
@@ -58,6 +58,7 @@ const ServiceForm = (props)=> {
   },[]);
 
 
+
   // Returns true
   yup.addMethod(yup.array, 'unique', function(message, mapper = a => a) {
       return this.test('unique', message, function(list) {
@@ -65,10 +66,16 @@ const ServiceForm = (props)=> {
       });
   });
   function imageExists(url, callback) {
-    var img = new Image();
-    img.onload = function() { callback(true); };
-    img.onerror = function() { callback(false); };
-    img.src = url;
+    if(url){
+      var img = new Image();
+      img.onload = function() { callback(true); };
+      img.onerror = function() { callback(false); };
+      img.src = url;
+
+    }
+    else{
+      callback(true);
+    }
   }
   const schema = yup.object({
     service_name:yup.string().nullable().min(4,t('yup_char_min') + ' ('+4+')').max(36,t('yup_char_max') + ' ('+36+')').required(t('yup_required')),
@@ -119,9 +126,22 @@ const ServiceForm = (props)=> {
     }),
     redirect_uris:yup.array().nullable().when('protocol',{
       is:'oidc',
-      then: yup.array().of(yup.string().matches(reg.regUrl,t('yup_secure_url'))).unique(t('yup_redirect_uri_unique')).required(t('yup_required'))
+      then: yup.array().when('integration_environment',(integration_environment)=>{
+        integrationEnvironment = integration_environment;
+      }).of(yup.string().test('test_redirect_uri','error',function(value){
+        if(integrationEnvironment==='production'){
+          return value.match(reg.regUrl) || value.match(reg.regLocalhostUrl)
+        }
+        else{
+          return value.match(reg.regSimpleUrl) || value.match(reg.regLocalhostUrl)
+        }
+
+      })).unique(t('yup_redirect_uri_unique')).when('grant_types',{
+        is:(grant_types)=> grant_types.includes("implicit")||grant_types.includes("authorization_code"),
+        then: yup.array().required(t('yup_required'))
+      })
     }),
-    logo_uri:yup.string().nullable().required(t('yup_required')).test('testImage',t('yup_image_url'),function(imageUrl){
+    logo_uri:yup.string().nullable().test('testImage',t('yup_image_url'),function(imageUrl){
       return new Promise((resolve,reject)=>{
         //var imageUrl = 'http://www.google.com/images/srpr/nav_logo14.png';
         imageExists(imageUrl, function(exists) {
@@ -148,20 +168,20 @@ const ServiceForm = (props)=> {
     }),
     grant_types:yup.array().nullable().when('protocol',{
       is:'oidc',
-      then: yup.array().of(yup.string().test('testGrantTypes','error-granttypes',function(value){return formConfig.grant_types.includes(value)})).required(t('yup_select_option'))
+      then: yup.array().of(yup.string().test('testGrantTypes','error-granttypes',function(value){return tenant.form_config.grant_types.includes(value)})).required(t('yup_select_option'))
     }),
     id_token_timeout_seconds:yup.number().nullable().when('protocol',{
       is:'oidc',
-      then: yup.number().min(0).max(1000000,t('yup_exceeds_max'))}),
+      then: yup.number().min(0).max(tenant.form_config.id_token_timeout_seconds,t('yup_exceeds_max'))}),
     access_token_validity_seconds:yup.number().nullable().when('protocol',{
       is:'oidc',
-      then: yup.number().min(0).max(1000000,t('yup_exceeds_max'))}),
+      then: yup.number().min(0).max(tenant.form_config.access_token_validity_seconds,t('yup_exceeds_max'))}),
     refresh_token_validity_seconds:yup.number().nullable().when('protocol',{
       is:'oidc',
-      then: yup.number().min(0).max(34128000,t('yup_exceeds_max'))}),
+      then: yup.number().min(0).max(tenant.form_config.refresh_token_validity_seconds,t('yup_exceeds_max'))}),
     device_code_validity_seconds:yup.number().nullable().when('protocol',{
       is:'oidc',
-      then: yup.number().min(0).max(34128000,t('yup_exceeds_max')).required(t('yup_required'))
+      then: yup.number().min(0).max(tenant.form_config.device_code_validity_seconds,t('yup_exceeds_max')).required(t('yup_required'))
     }),
     code_challenge_method:yup.string().nullable().when('protocol',{
       is:'oidc',
@@ -430,13 +450,16 @@ const ServiceForm = (props)=> {
 
   const getInitialTouched = (initVal) =>{
     let touchedActive={};
-    if(showInitErrors){
+    if(!(props.service_id||props.petition_id)){
       return {}
     }
-    for (const property in initVal){
-      touchedActive[property] = true;
+    else{
+      for (const property in initVal){
+        touchedActive[property] = true;
+      }
+      return touchedActive;
     }
-    return touchedActive;
+
 
   }
 
@@ -447,7 +470,7 @@ const ServiceForm = (props)=> {
     <NotFound notFound={notFound}/>
     <Formik
       initialValues={props.initialValues}
-      validateOnMount={showInitErrors}
+      validateOnMount={props.service_id||props.petition_id}
       initialTouched={getInitialTouched(props.initialValues)}
       validationSchema={schema}
       innerRef={formRef}
@@ -652,6 +675,7 @@ const ServiceForm = (props)=> {
                                touched={touched.redirect_uris}
                                onBlur={handleBlur}
                                onChange={handleChange}
+                               integrationEnvironment = {values.integration_environment}
                                setFieldTouched={setFieldTouched}
                                disabled={disabled}
                                changed={props.changes?props.changes.redirect_uris:null}
@@ -675,7 +699,7 @@ const ServiceForm = (props)=> {
                             <CheckboxList
                               name='grant_types'
                               values={values.grant_types}
-                              listItems={formConfig.grant_types}
+                              listItems={tenant.form_config.grant_types}
                               disabled={disabled}
                               changed={props.changes?props.changes.grant_types:null}
 
@@ -769,6 +793,7 @@ const ServiceForm = (props)=> {
                               isInvalid={hasSubmitted?!!errors.code_challenge_method:(!!errors.code_challenge_method&&touched.code_challenge_method)}
                               onChange={handleChange}
                               disabled={disabled}
+                              default={values.code_challenge_method?values.code_challenge_method:''}
                               changed={props.changes?props.changes.code_challenge_method:null}
                             />
                           </InputRow>
@@ -878,8 +903,13 @@ const ReviewComponent = (props)=>{
   const [expand,setExpand] = useState(false);
   const [error,setError] = useState(false);
   const [comment,setComment] = useState();
+  const [invalidPetition,setInvalidPetition] = useState(false);
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
+  useEffect(()=>{
+    setInvalidPetition(Object.keys(props.errors).length !== 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[props.errors]);
 
   const handleReview = () =>{
 
@@ -933,14 +963,14 @@ const ReviewComponent = (props)=>{
                 type="radio"
                 name="formHorizontalRadios"
                 id="formHorizontalRadios1"
-                disabled={props.errors}
+                disabled={invalidPetition}
                 onChange={(e)=>{if(e.target.checked){setType(e.target.value)}}}
                 value="approve"
                 checked={type==='approve'}
               />
             </Col>
             <Col onClick={()=>{
-              if(Object.keys(props.errors).length === 0){
+              if(!invalidPetition){
                 setType('approve');
               }
             }}>
@@ -948,10 +978,13 @@ const ReviewComponent = (props)=>{
                 <strong>
                   {t('review_approve')}
                 </strong>
-                <div className="approve-error">
-                  Invalid Service Configuration, Approve disabled
-                </div>
+                {invalidPetition?
+                  <div className="approve-error">
+                    Invalid Service Configuration, Approve disabled
+                  </div>:null
+                }
               </Row>
+
               <Row className="review-option-desc">
                 {t('review_approve_desc')}
               </Row>

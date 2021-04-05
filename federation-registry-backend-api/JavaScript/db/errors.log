@@ -1,4 +1,0 @@
-
-
-01:27:00 error: terminating connection due to administrator command
-         connection: {"host":"localhost","port":5432,"database":"service_registry_db","user":"postgres","password":"########"}
