@@ -33,6 +33,7 @@ const putAgentValidation = () => {
   return [
     body('type').exists().withMessage('Required Field').bail().custom((value)=>{if(config.agent.type.includes(value)){return true}else{return false}}).bail(),
     body('entity_type').exists().withMessage('Required Field').bail().custom((value)=>{if(config.agent.entity_type.includes(value)){return true}else{return false}}).bail(),
+    body('integration_environment').exists().withMessage('Required Field').isString().custom((value,{req,location,path})=> {   if(config.form[req.params.tenant_name].integration_environment.includes(value)){return true}else{return false}}).withMessage('Integration environment value not supported'),
     body('entity_protocol').exists().withMessage('Required Field').bail().custom((value)=>{if(config.agent.entity_protocol.includes(value)){return true}else{return false}}).bail(),
     body('hostname').exists().withMessage('Required Field').bail().isString().withMessage('Must be a string').bail().custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Must be a url').bail()
   ]
@@ -54,6 +55,7 @@ const getServiceListValidation = () => {
 const postAgentValidation = () => {
   return [
     body('agents').exists().withMessage('No agents found').bail().isArray({min:1}).withMessage('No agents found').bail().toArray(),
+    body('agents.*.integration_environment').exists().withMessage('Required Field').isString().custom((value,{req,location,path})=> {   if(config.form[req.params.tenant_name].integration_environment.includes(value)){return true}else{return false}}).withMessage('Integration environment value not supported'),
     body('agents.*.type').exists().withMessage('Required Field').custom((value)=>{ if(config.agent.type.includes(value)){return true}else{return false}}).bail(),
     body('agents.*.entity_type').exists().withMessage('Required Field').bail().custom((value)=>{if(config.agent.entity_type.includes(value)){return true}else{return false}}).bail(),
     body('agents.*.entity_protocol').exists().withMessage('Required Field').bail().custom((value)=>{if(config.agent.entity_protocol.includes(value)){return true}else{return false}}).bail(),

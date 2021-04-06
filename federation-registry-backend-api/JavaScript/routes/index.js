@@ -333,13 +333,16 @@ router.put('/agent/set_services_state',amsAgentAuth,(req,res,next)=>{
         if(result){
           await t.deployer_agents.getAll().then(async agents => {
             if(agents){
+              console.log(agents);
               req.body.forEach(service=> {
+                console.log(service);
                 agents.forEach(agent => {
-                  if(agent.tenant===service.tenant && agent.entity_protocol===service.protocol  && agent.entity_type==='service' ){
+                  if(agent.tenant===service.tenant && agent.entity_protocol===service.protocol  && agent.entity_type==='service' && agent.integration_environment===service.integration_environment ){
                     service_pending_agents.push({agent_id:agent.id,service_id:service.id});
                   }
                 })
               });
+              console.log(service_pending_agents);
               await t.deployment_tasks.setDeploymentTasks(service_pending_agents).then(success=> {
                 if(success){
                   res.status(200).end();
@@ -893,7 +896,7 @@ router.get('/agent/get_agents',amsAgentAuth,(req,res,next)=>{
 
 router.get('/tenants/:tenant_name/agents',(req,res,next)=>{
   try{
-    db.deployer_agents.getTenant(req.params.tenant_name).then(result => {
+    db.deployer_agents.getTenantsAgents(req.params.tenant_name).then(result => {
       if(result){
         res.status(200).json({agents:result});
       }

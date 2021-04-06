@@ -32,8 +32,8 @@ axios.get(process.env.EXPRESS_URL+'/agent/get_agents',options)
    agents = response.data.agents;
    console.log("Configuring Ams...");
    for(var i=0;i<agents.length;i++){
-     let currentTopic = process.env.ENV + '_' + agents[i].tenant+'_'+agents[i].entity_type+'_'+agents[i].type;
-     let agentSub = process.env.ENV + '_' + agents[i].tenant + '_'+agents[i].entity_type + '_' + agents[i].entity_protocol + '_' + agents[i].type + '_' + agents[i].id
+     let currentTopic = process.env.ENV + '_' + agents[i].tenant+'_'+agents[i].entity_type+'_'+agents[i].type + '_' + agents[i].integration_environment;
+     let agentSub = process.env.ENV + '_' + agents[i].tenant + '_'+agents[i].entity_type + '_' + agents[i].entity_protocol + '_' + agents[i].type + '_' + agents[i].integration_environment + '_' + agents[i].id
      //console.log(agentSub);
      if(!topics.includes(currentTopic)){
        //console.log(currentTopic);
@@ -50,9 +50,12 @@ axios.get(process.env.EXPRESS_URL+'/agent/get_agents',options)
        pubUrls[agents[i].tenant][agents[i].entity_type] = {};
      }
      if(!pubUrls[agents[i].tenant][agents[i].entity_type][agents[i].entity_protocol]){
-       pubUrls[agents[i].tenant][agents[i].entity_type][agents[i].entity_protocol] = [];
+       pubUrls[agents[i].tenant][agents[i].entity_type][agents[i].entity_protocol] = {};
      }
-     pubUrls[agents[i].tenant][agents[i].entity_type][agents[i].entity_protocol] = amsBaseUrl + "/topics/"+ currentTopic +":publish" + amsKey;
+     if(!pubUrls[agents[i].tenant][agents[i].entity_type][agents[i].entity_protocol][agents[i].integration_environment]){
+       pubUrls[agents[i].tenant][agents[i].entity_type][agents[i].entity_protocol][agents[i].integration_environment] = [];
+     }
+     pubUrls[agents[i].tenant][agents[i].entity_type][agents[i].entity_protocol][agents[i].integration_environment] = amsBaseUrl + "/topics/"+ currentTopic +":publish" + amsKey;
    }
    console.log('Ams Configuration Completed');
 
@@ -89,10 +92,12 @@ async function setupSubAcl(sub){
         console.log(response.status===200?"\t"+"\t"+"Modified Acl for Subscription: "+sub:"\t"+"\t"+"Failed to Modify Acl for Subscription: " + topic);
         return (response.status === 200);
       }).catch(err => {
-        console.log("\t"+"\t"+"Failed to Modify Acl for Subscription: " + topic)
+        console.log("\t"+"\t"+"Failed to Modify Acl for Subscription: " + sub)
         return false})
     }
     else {return true}
+  }).catch(err=> {
+    console.log("\t"+"\t"+"Failed to Get Acl for Subscription: " + sub)
   });
 }
 
@@ -111,11 +116,11 @@ async function setupTopicAcl(topic){
       else{return true}
     }else {return false}
   }).catch(err=> {
-    console.log(err);
     console.log("\t"+ "Unable to get Acl for Topic: " + topic)
     return false;})
 }
 async function setupTopic(topic) {
+  console.log('setting ' + topic);
   const done = await axios.get(amsBaseUrl + "/topics/"+ topic + amsKey).then(async response=> {
     return(response.status===200);
   }).catch(async err => {
@@ -124,7 +129,9 @@ async function setupTopic(topic) {
       return await axios.put(amsBaseUrl + "/topics/"+ topic + amsKey).then( async response=> {
         console.log(response.status===200?"\t"+"\t"+"Created Topic: "+topic:"\t"+"\t"+"Failed to Create Topic: " + topic);
         return (response.status===200)
-      }).catch(err => {console.log("\t"+"\t"+"Failed to Create Topic: " + topic); return false})
+      }).catch(err => {
+        console.log(err);
+        console.log("\t"+"\t"+"Failed to Create Topic: " + topic); return false})
     }else{
       return false;
     }
@@ -159,9 +166,9 @@ async function run() {
           }
           let messages = [{"attributes":{},"data": Buffer.from(JSON.stringify(service.json)).toString("base64")}];
 
-          let done = await axios.post(pubUrls[service.json.tenant].service[service.json.protocol],{"messages":messages}, options_ams).then((res) => {
+          let done = await axios.post(pubUrls[service.json.tenant].service[service.json.protocol][service.json.integration_environment],{"messages":messages}, options_ams).then((res) => {
             if(res.status===200){
-              setStateArray.push({id:service.json.id,state:'waiting-deployment',protocol:service.json.protocol,tenant:service.json.tenant});
+              setStateArray.push({id:service.json.id,state:'waiting-deployment',protocol:service.json.protocol,tenant:service.json.tenant,integration_environment:service.json.integration_environment});
             }
           }).catch(err => {console.log(err)});
 

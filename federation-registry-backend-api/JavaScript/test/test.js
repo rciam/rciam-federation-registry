@@ -283,7 +283,8 @@ describe('Service registry API Integration Tests', function() {
               tenant:"egi",
               id:service,
               protocol:"oidc",
-              state:"waiting-deployment"
+              state:"waiting-deployment",
+              integration_environment:"development"
             }]);
             req.set('Accept','application/json')
             .expect('Content-Type',/json/)
@@ -532,7 +533,8 @@ describe('Service registry API Integration Tests', function() {
           tenant:"egi",
           id:service,
           protocol:"oidc",
-          state:"waiting-deployment"
+          state:"waiting-deployment",
+          integration_environment:"development"
         }]);
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
@@ -612,7 +614,8 @@ describe('Service registry API Integration Tests', function() {
           tenant:"egi",
           id:service,
           protocol:"oidc",
-          state:"waiting-deployment"
+          state:"waiting-deployment",
+          integration_environment:"development"
         }]);
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)

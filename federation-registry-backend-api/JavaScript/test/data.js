@@ -410,31 +410,37 @@ const agents = {
            "type": "ssp",
            "entity_type": "service",
            "hostname": "https://snf-ssp-2.grnet.gr",
-           "entity_protocol": "oidc"
+           "entity_protocol": "oidc",
+           "integration_environment":"demo"
        },
        {
            "type": "ssp",
            "entity_type": "idp",
            "hostname": "https://snf-ssp-1.grnet.gr",
-           "entity_protocol": "oidc"
+           "entity_protocol": "oidc",
+           "integration_environment":"demo"
+
        },
        {
            "type": "ssp",
            "entity_type": "idp",
            "hostname": "https://snf-ssp-2.grnet.gr",
-           "entity_protocol": "oidc"
+           "entity_protocol": "oidc",
+           "integration_environment":"demo"
        },
        {
            "type": "ssp",
            "entity_type": "service",
            "hostname": "https://snf-ssp-new-1.grnet.gr",
-           "entity_protocol": "oidc"
+           "entity_protocol": "oidc",
+           "integration_environment":"demo"
        },
        {
            "type": "mitreid",
            "entity_type": "service",
            "hostname": "https://snf-mitre-put-2.grnet.gr",
-           "entity_protocol": "oidc"
+           "entity_protocol": "oidc",
+           "integration_environment":"demo"
        }
    ]
  },
@@ -442,7 +448,8 @@ const agents = {
    "type": "mitreid",
    "entity_type": "service",
    "hostname": "https://snf-mitre-put-10.grnet.gr",
-   "entity_protocol": "oidc"
+   "entity_protocol": "oidc",
+   "integration_environment":"demo"
  }
 }
 const validationResponses = {
