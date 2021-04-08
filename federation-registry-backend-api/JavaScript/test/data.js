@@ -144,6 +144,7 @@ const edit = {
    metadata_url:'https://metadataedit.com',
    entity_id:"https://entity_id_edit.com",
    client_id:null,
+   country:"gr",
    allow_introspection:null,
    code_challenge_method:null,
    device_code_validity_seconds:null,

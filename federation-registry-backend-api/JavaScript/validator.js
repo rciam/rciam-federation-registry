@@ -86,6 +86,7 @@ const serviceValidationRules = (options) => {
   const requiredOidc = (value,req,pos) => {
       if(options.optional||req.body[pos].protocol!=='oidc'){
         if(!value&&req.body[pos].protocol==='oidc'){
+
           req.body[pos].outdated = true;
         }
       return true
@@ -156,7 +157,16 @@ const serviceValidationRules = (options) => {
           body('*.protocol').exists({checkFalsy:true}).withMessage('Protocol missing').if(value=>{return value}).custom((value,{req,location,path})=> {
             let tenant = options.tenant_param?req.params.tenant_name:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
             if(config.form[tenant].protocol.includes(value)){return true}else{return false}}).withMessage('Invalid Prorocol value'),
-            body('*.client_id').if((value,{req,location,path})=>{return req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).exists({checkFalsy:true}).withMessage('client_id is missing').if(value=>{return value}).isString().withMessage('client_id must be a string').if((value)=>{return(value.constructor === stringConstructor)}).isLength({min:4, max:36}).withMessage('client_id must be between 4 and 36 characters').if(()=>{return options.check_available}).custom((value,{req,location,path})=> {
+          body('*.client_id').if((value,{req,location,path})=>{
+            let skip;
+            if(options.null_client_id&&!value){
+              skip = true;
+            }
+            else{
+                skip = !(req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc')
+            }
+            return !skip
+          }).exists({checkFalsy:true}).withMessage('client_id is missing').if(value=>{return value}).isString().withMessage('client_id must be a string').if((value)=>{return(value.constructor === stringConstructor)}).isLength({min:4, max:36}).withMessage('client_id must be between 4 and 36 characters').if(()=>{return options.check_available}).custom((value,{req,location,path})=> {
               let tenant = options.tenant_param?req.params.tenant_name:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
               return db.service_details_protocol.checkClientId(value,0,0,tenant,req.body[path.match(/\[(.*?)\]/)[1]].integration_environment).then(available=> {
                 if(!available){
@@ -169,9 +179,16 @@ const serviceValidationRules = (options) => {
             }),
             body('*.redirect_uris').custom((value,{req,location,path})=>{
               let pos = path.match(/\[(.*?)\]/)[1];
-              if(req.body[pos].protocol==='oidc'&&(!req.body[pos].grant_types||req.body[pos].grant_types.includes("implicit")||req.body[pos].grant_types.includes("authorization_code"))){
+              let grant_types_bool;
+              if(Array.isArray(req.body[pos].grant_types)){
+                grant_types_bool = req.body[pos].grant_types.includes("implicit")||req.body[pos].grant_types.includes("authorization_code")
+              }
+              else{
+                grant_types_bool = false;
+              }
+              if(req.body[pos].protocol==='oidc'&&grant_types_bool){
                 // required
-                if(!value){
+                if(!value||value.length===0){
                   if(options.optional){
                     req.body[pos].outdated = true;
                     return true
@@ -191,15 +208,15 @@ const serviceValidationRules = (options) => {
               }
             }).withMessage('Service redirect_uri missing').if((value,{req,location,path})=> {
               let pos = path.match(/\[(.*?)\]/)[1];
-              return value&&req.body[pos].protocol==='oidc'&&(!req.body[pos].grant_types||!req.body[pos].grant_types.includes("implicit")||!req.body[pos].grant_types.includes("authorization_code"))
-            }).isArray({min:1}).withMessage('Service redirect_uri must be an array').custom((value,{req,location,path})=> {
+              return value&&value.length>0&&req.body[pos].protocol==='oidc'
+            }).custom((value,{req,location,path})=> {
               let pos = path.match(/\[(.*?)\]/)[1];
-
               try{
-                if(Array.isArray(value)){
+                if(Array.isArray(value)&&value.length>0){
                   value.map((item,index)=>{
                     if(req.body[pos].integration_environment==="production"){
-                      if(!(item.match(req.regLocalhostUrl)||item.match(reg.regUrl))){
+
+                      if(!(item.match(reg.regLocalhostUrl)||item.match(reg.regUrl))){
                         throw new Error("Invalid redirect url, it must be a secure or localhost url");
                       }
                     }
@@ -209,6 +226,9 @@ const serviceValidationRules = (options) => {
                       }
                     }
                   });
+                }
+                else{
+                  throw new Error("Service redirect_uri must be an array");
                 }
                 return true;
               }
@@ -343,7 +363,7 @@ const serviceValidationRules = (options) => {
                               }),
                               body('*.device_code_validity_seconds').custom((value,{req,location,path})=> {
                                 let pos = path.match(/\[(.*?)\]/)[1];
-                                if(!value&&req.body[pos].grant_types&&req.body[pos].grant_types.includes('urn:ietf:params:oauth:grant-type:device_code')){
+                                if(!value&&req.body[pos].protocol==='oidc'&&req.body[pos].grant_types&&req.body[pos].grant_types.includes('urn:ietf:params:oauth:grant-type:device_code')){
                                   if(options.optional){
                                     req.body[pos].outdated = true;
                                     return true
@@ -356,7 +376,8 @@ const serviceValidationRules = (options) => {
                                 }
                                 let tenant = options.tenant_param?req.params.tenant_name:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
                                 let max = config.form[tenant].device_code_validity_seconds;
-                                if(parseInt(value)&&parseInt(value)<max&&parseInt(value)>0){return true}else{
+                                if((parseInt(value)&&parseInt(value)<=max&&parseInt(value)>=0)||(req.body[pos].protocol!=='oidc'||!req.body[pos].grant_types||!req.body[pos].grant_types.includes('urn:ietf:params:oauth:grant-type:device_code'))){
+                                  return true}else{
                                   throw new Error("Device Code Validity Seconds must be an integer in specified range [1-"+ max +"]")
                                 }}).withMessage('Must be an integer in specified range'),
                                 body('*.code_challenge_method').custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Device Code mising').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).isString().withMessage('Device Code must be a string').custom((value)=> {

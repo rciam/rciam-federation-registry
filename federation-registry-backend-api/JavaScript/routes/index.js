@@ -39,7 +39,7 @@ function getData(req,res,next) {
   });
 }
 
-router.post('/tenants/:tenant_name/services',tenantValidation(),validate,serviceValidationRules({optional:true,tenant_param:true,check_available:true,sanitize:true}),validate,(req,res,next)=> {
+router.post('/tenants/:tenant_name/services',tenantValidation(),validate,serviceValidationRules({optional:true,tenant_param:true,check_available:true,sanitize:true,null_client_id:false}),validate,(req,res,next)=> {
   let services = req.body;
   // Populate json objects with all necessary fields
   services.forEach((service,index) => {
@@ -278,7 +278,7 @@ router.get('/tenants/:tenant_name/user',authenticate,(req,res,next)=>{
         user.view_errors = true;
       }
       user.actions = req.user.role.actions;
-      user.role = req.user.role.tenant_name;
+      user.role = req.user.role.name;
       res.end(JSON.stringify({user}));
     }).catch(err=>{next(err)});
   }
@@ -333,9 +333,7 @@ router.put('/agent/set_services_state',amsAgentAuth,(req,res,next)=>{
         if(result){
           await t.deployer_agents.getAll().then(async agents => {
             if(agents){
-              console.log(agents);
               req.body.forEach(service=> {
-                console.log(service);
                 agents.forEach(agent => {
                   if(agent.tenant===service.tenant && agent.entity_protocol===service.protocol  && agent.entity_type==='service' && agent.integration_environment===service.integration_environment ){
                     service_pending_agents.push({agent_id:agent.id,service_id:service.id});
@@ -516,7 +514,7 @@ router.get('/tenants/:tenant_name/petitions/:id',authenticate,(req,res,next)=>{
 });
 
 // Add a new client/petition
-router.post('/tenants/:tenant_name/petitions',generateClientId,authenticate,petitionValidationRules(),validate,formatPetition,serviceValidationRules({optional:false,tenant_param:true,check_available:false,sanitize:false}),validate,reFormatPetition,asyncPetitionValidation,(req,res,next)=>{
+router.post('/tenants/:tenant_name/petitions',authenticate,petitionValidationRules(),validate,formatPetition,serviceValidationRules({optional:false,tenant_param:true,check_available:false,sanitize:false,null_client_id:true}),validate,reFormatPetition,asyncPetitionValidation,(req,res,next)=>{
 
   res.setHeader('Content-Type', 'application/json');
   if(req.user.role.actions.includes('add_own_petition')){
@@ -597,7 +595,7 @@ router.delete('/tenants/:tenant_name/petitions/:id',authenticate,(req,res,next)=
 });
 
 // Edit Petition
-router.put('/tenants/:tenant_name/petitions/:id',generateClientId,authenticate,petitionValidationRules(),validate,asyncPetitionValidation,(req,res,next)=>{
+router.put('/tenants/:tenant_name/petitions/:id',authenticate,petitionValidationRules(),validate,formatPetition,serviceValidationRules({optional:false,tenant_param:true,check_available:false,sanitize:false,null_client_id:true}),validate,reFormatPetition,asyncPetitionValidation,(req,res,next)=>{
   if(req.user.role.actions.includes('update_own_petition')){
     return db.task('update-petition',async t =>{
       try{
@@ -1210,12 +1208,17 @@ function checkCertificate(req,res,next) {
 }
 
 // Checking Availability of Client Id/Entity Id
-const isAvailable=(t,id,protocol,petition_id,service_id,tenant,environment)=>{
-  if(protocol==='oidc'){
-    return t.service_details_protocol.checkClientId(id,service_id,petition_id,tenant,environment);
+const isAvailable= async (t,id,protocol,petition_id,service_id,tenant,environment)=>{
+  if(id){
+    if(protocol==='oidc'){
+      return t.service_details_protocol.checkClientId(id,service_id,petition_id,tenant,environment);
+    }
+    else if (protocol==='saml'){
+      return t.service_details_protocol.checkEntityId(id,service_id,petition_id,tenant,environment);
+    }
   }
-  else if (protocol==='saml'){
-    return t.service_details_protocol.checkEntityId(id,service_id,petition_id,tenant,environment);
+  else {
+    return true;
   }
 }
 
