@@ -49,9 +49,15 @@ class ServiceRepository {
               queries.push(t.service_contacts.add('service',service.contacts,result.id));
               queries.push(t.service_state.add(result.id,'pending','create'));
               if(service.protocol==='oidc'){
-                queries.push(t.service_multi_valued.add('service','oidc_grant_types',service.grant_types,result.id));
-                queries.push(t.service_multi_valued.add('service','oidc_scopes',service.scope,result.id));
-                queries.push(t.service_multi_valued.add('service','oidc_redirect_uris',service.redirect_uris,result.id));
+                if(service.grant_types&&service.grant_types.length>0){
+                  queries.push(t.service_multi_valued.add('service','oidc_grant_types',service.grant_types,result.id));
+                }
+                if(service.scope&&service.scope.length>0){
+                  queries.push(t.service_multi_valued.add('service','oidc_scopes',service.scope,result.id));
+                }
+                if(service.redirect_uri&&service.grant_types.length>0){
+                  queries.push(t.service_multi_valued.add('service','oidc_redirect_uris',service.redirect_uris,result.id));
+                }
               }
               return t.batch(queries);
             }
@@ -60,6 +66,7 @@ class ServiceRepository {
         }).then(data => {
           return service_id;
         }).catch(stuff=>{
+          console.log(stuff);
           throw 'error'
         });
       }

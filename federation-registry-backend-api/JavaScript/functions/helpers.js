@@ -36,7 +36,12 @@ const calcDiff = (oldState,newState) => {
       details:{}
     };
 
-
+    if(!old_values.contacts){
+      old_values.contacts = [];
+    }
+    if(!new_values.contacts){
+      new_values.contacts = [];
+    }
     new_values.contacts.forEach(item=>{
       new_cont.push(item.email+' '+item.type);
     });
@@ -58,6 +63,24 @@ const calcDiff = (oldState,newState) => {
       })
     }
     if(new_values.protocol==='oidc'){
+      if(!old_values.redirect_uris){
+        old_values.redirect_uris = [];
+      }
+      if(!new_values.redirect_uris){
+        new_values.redirect_uris = [];
+      }
+      if(!old_values.scope){
+        old_values.scope = [];
+      }
+      if(!new_values.scope){
+        new_values.scope = [];
+      }
+      if(!old_values.grant_types){
+        old_values.scope = [];
+      }
+      if(!new_values.grant_types){
+        new_values.scope = [];
+      }
       edits.add.oidc_grant_types = new_values.grant_types.filter(x=>!old_values.grant_types.includes(x));
       edits.dlt.oidc_grant_types = old_values.grant_types.filter(x=>!new_values.grant_types.includes(x));
       edits.add.oidc_scopes = new_values.scope.filter(x=>!old_values.scope.includes(x));

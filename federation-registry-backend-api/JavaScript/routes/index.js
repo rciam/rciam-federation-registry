@@ -1164,7 +1164,9 @@ function amsAgentAuth(req,res,next){
 
 // Checking Review Permitions
 function canReview(req,res,next){
+  console.log('Can review?');
   if(req.user.role.actions.includes('review_petition')){
+    console.log('action included');
     next();
   }
   else if (req.user.role.actions.includes('review_own_petition')) {

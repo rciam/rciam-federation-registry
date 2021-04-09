@@ -384,6 +384,12 @@ function calculateMultivalueDiff(old_values,new_values,edits){
   let new_cont = [];
   let old_cont = [];
   let items;
+  if(!old_values.contacts){
+    old_values.contacts = [];
+  }
+  if(!new_values.contacts){
+    new_values.contacts = [];
+  }
 
   new_values.contacts.forEach(item=>{
     new_cont.push(item.email+' '+item.type);
@@ -406,6 +412,25 @@ function calculateMultivalueDiff(old_values,new_values,edits){
     })
   }
   if(new_values.protocol==='oidc'){
+    if(!old_values.redirect_uris){
+      old_values.redirect_uris = [];
+    }
+    if(!new_values.redirect_uris){
+      new_values.redirect_uris = [];
+    }
+    if(!old_values.scope){
+      old_values.scope = [];
+    }
+    if(!new_values.scope){
+      new_values.scope = [];
+    }
+    if(!old_values.grant_types){
+      old_values.scope = [];
+    }
+    if(!new_values.grant_types){
+      new_values.scope = [];
+    }
+
     edits.grant_types.N = new_values.grant_types.filter(x=>!old_values.grant_types.includes(x));
     edits.grant_types.D = old_values.grant_types.filter(x=>!new_values.grant_types.includes(x));
     edits.scope.N = new_values.scope.filter(x=>!old_values.scope.includes(x));
