@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {faCheckCircle,faBan,faSortDown} from '@fortawesome/free-solid-svg-icons';
 import Tabs from 'react-bootstrap/Tabs';
 import Tab from 'react-bootstrap/Tab';
+import CopyDialog from './Components/CopyDialog.js'
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Row from 'react-bootstrap/Row';
 import {ProcessingRequest} from './Components/LoadingBar';
@@ -24,7 +25,7 @@ import Button from 'react-bootstrap/Button';
 import * as yup from 'yup';
 import { useTranslation } from 'react-i18next';
 import countryData from 'country-region-data';
-import {SimpleInput,CountrySelect,AuthMethRadioList,DeviceCode,Select,PublicKey,ListInput,LogoInput,TextAria,ListInputArray,CheckboxList,SimpleCheckbox,ClientSecret,TimeInput,RefreshToken,Contacts} from './Components/Inputs.js'// eslint-disable-next-line
+import {SimpleInput,CountrySelect,AuthMethRadioList,SelectEnvironment,DeviceCode,Select,PublicKey,ListInput,LogoInput,TextAria,ListInputArray,CheckboxList,SimpleCheckbox,ClientSecret,TimeInput,RefreshToken,Contacts} from './Components/Inputs.js'// eslint-disable-next-line
 const {reg} = require('./regex.js');
 var availabilityCheckTimeout;
 var countries;
@@ -302,6 +303,15 @@ const ServiceForm = (props)=> {
   const [checkedId,setCheckedId] = useState(); // Variable containing the last client Id checked for availability to limit check requests
   const [checkedEnvironment,setCheckedEnvironment] = useState();
   const [asyncResponse,setAsyncResponse] = useState(false);
+
+  const [showCopyDialog,setShowCopyDialog] = useState(false);
+  const toggleCopyDialog = () => {
+    console.log(!showCopyDialog);
+    setShowCopyDialog(!showCopyDialog);
+
+  }
+
+
   const createNewPetition = (petition) => {
     // eslint-disable-next-line
     if(props.service_id){
@@ -520,6 +530,8 @@ const ServiceForm = (props)=> {
       errors,
       isSubmitting})=>(
       <div className="tab-panel">
+              {showCopyDialog?<CopyDialog service_id={props.service_id} show={showCopyDialog} toggleCopyDialog={toggleCopyDialog} current_environment={props.initialValues.integration_environment} />:null}
+
               <ProcessingRequest active={asyncResponse}/>
               {showInitErrors&&!Object.keys(errors).length === 0?
                 <Alert variant='warning' className="invitation_alert">
@@ -558,7 +570,7 @@ const ServiceForm = (props)=> {
                        />
                      </InputRow>
                       <InputRow title={t('form_integration_environment')} extraClass='select-col' error={errors.integration_environment} touched={touched.integration_environment}>
-                        <Select
+                        <SelectEnvironment
                           onBlur={handleBlur}
                           optionsTitle={capitalWords(tenant.form_config.integration_environment)}
                           options={tenant.form_config.integration_environment}
@@ -566,8 +578,11 @@ const ServiceForm = (props)=> {
                           values={values}
                           isInvalid={hasSubmitted?!!errors.integration_environment:(!!errors.integration_environment&&touched.integration_environment)}
                           onChange={handleChange}
-                          disabled={disabled||tenant.form_config.integration_environment.length===1}
+                          disabled={disabled||tenant.form_config.integration_environment.length===1||props.copy}
                           changed={props.changes?props.changes.integration_environment:null}
+                          copyButtonActive={props.owned&&props.disabled}
+                          toggleCopyDialog={toggleCopyDialog}
+
                         />
                       </InputRow>
                       <InputRow title={t('form_logo')}>

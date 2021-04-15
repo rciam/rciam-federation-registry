@@ -1,6 +1,7 @@
 import React, {useState, useRef ,useEffect} from 'react';
 import Col from 'react-bootstrap/Col';
 import { Field, FieldArray,FormikConsumer } from 'formik';
+import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Form from 'react-bootstrap/Form';
 import InputGroup from 'react-bootstrap/InputGroup';
 import Button from 'react-bootstrap/Button';
@@ -11,6 +12,9 @@ import Overlay from 'react-bootstrap/Overlay';
 import * as formConfig from '../form-config.json';
 import { useTranslation } from 'react-i18next';
 import countryData from 'country-region-data';
+// import {tenantContext} from '../context.js';
+// import {removeA} from '../helpers.js';
+
 /*
 const [show, setShow] = useState(false);
 const target = useRef(null);
@@ -267,6 +271,52 @@ export function CountrySelect(props){
     </React.Fragment>
   )
 }
+
+
+export function SelectEnvironment(props){
+  const [show, setShow] = useState(false);
+  const target = useRef(null);
+
+
+  return(
+    <React.Fragment>
+      <div
+        className={'select-container'+(props.changed?' input-edited':null)}
+        ref={target}
+        >
+      <Field
+      name={props.name}
+      as="select"
+      default={props.default?props.default:''}
+      onMouseOver={()=>setShow(true)}
+      onMouseOut={()=>setShow(false)}
+      disabled={props.disabled}
+      placeholder="Select..countryName.">
+        {props.options.map((item,index)=>(
+          <option key={index} value={props.options[index]}>{props.optionsTitle[index]}</option>
+        ))}
+      </Field>
+
+      {props.copyButtonActive?
+            <OverlayTrigger
+              placement='right'
+              overlay={
+                <Tooltip id={`tooltip-right`}>
+                  Copy Service
+                </Tooltip>
+              }
+            >
+
+            <Button className="copy_button" variant="success" onClick={()=>props.toggleCopyDialog()}>+</Button>
+            </OverlayTrigger>
+      :null}
+    </div>
+      <MyOverLay show={props.changed&&show?'string':null} type='Edited' target={target}/>
+    </React.Fragment>
+  )
+}
+
+
 
 export function Select(props){
   const [show, setShow] = useState(false);

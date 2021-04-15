@@ -19,9 +19,9 @@ import Badge from 'react-bootstrap/Badge';
 import Pagination from 'react-bootstrap/Pagination';
 import {LoadingBar,ProcessingRequest} from './Components/LoadingBar';
 import {ListResponseModal,Logout,NotFound} from './Components/Modals.js';
+import CopyDialog from './Components/CopyDialog.js';
 import { useTranslation } from 'react-i18next';
-import Alert from 'react-bootstrap/Alert';
-import {ConfirmationModal} from './Components/Modals';
+import Alert from 'react-bootstrap/Alert';import {ConfirmationModal} from './Components/Modals';
 import {userContext,tenantContext} from './context.js';
 const {capitalWords} = require('./helpers.js');
 var filterTimeout;
@@ -55,6 +55,8 @@ const ServiceList= (props)=> {
   const [showOutdated,setShowOutdated] = useState(false);
   const [paginationItems,setPaginationItems] = useState([]);
   const [initialLoading,setInitialLoading] = useState();
+
+
   const [showNotification,setShowNotification] = useState(true);
 
   const pageSize = 10;
@@ -403,14 +405,12 @@ const ServiceList= (props)=> {
                   <div className='select-filter-container'>
                       <select value={integrationEnvironment} onChange={(e)=>{
                         setIntegrationEnvironment(e.target.value);}}>
-
                         <option value=''>{t('all_environments_filter')}</option>
                         {tenant.form_config.integration_environment.map((item,index)=>{
                           return <option value={item} key={index}>{capitalWords(item)}</option>
                         })}
                       </select>
                   </div>
-
                 </div>
               </Col>
             </Row>
@@ -431,7 +431,7 @@ const ServiceList= (props)=> {
 
                 {services.length>=1?services.map((item,index)=>{
                     return(
-                      <TableItem service={item} user={props.user} key={index} setConfirmationData={setConfirmationData} />
+                      <TableItem service={item} user={props.user} key={index}  setConfirmationData={setConfirmationData} />
                     )
                 }):<tr><td></td><td>{t('no_services')}</td><td></td></tr>}
                 {loadingList?
@@ -456,11 +456,20 @@ const ServiceList= (props)=> {
 function TableItem(props) {
   // eslint-disable-next-line
   const [tenant,setTenant] = useContext(tenantContext);
-  // eslint-disable-next-line
+
+
   const {tenant_name} = useParams();
+
+
+  const [showCopyDialog,setShowCopyDialog] = useState(false);
+  const toggleCopyDialog = () => {
+    setShowCopyDialog(!showCopyDialog);
+  }
+
+
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
-    // eslint-disable-next-line
+  // eslint-disable-next-line
   const [user,setUser] = useContext(userContext);
   return (
     <tr>
@@ -487,6 +496,7 @@ function TableItem(props) {
         <div className="petition-actions">
           <Row>
             <Col className='controls-col  controls-col-buttons'>
+            <CopyDialog service_id={props.service.service_id} show={showCopyDialog} toggleCopyDialog={toggleCopyDialog} current_environment={props.service.integration_environment} />
             {props.service.state==='error'&&user.view_errors?
               <React.Fragment>
                 <div className="notification">
@@ -509,6 +519,7 @@ function TableItem(props) {
                       service_id:props.service.service_id,
                       petition_id:props.service.petition_id,
                       type:props.service.type,
+                      owned:props.service.owned?"true":null,
                       get_error:props.service.state==='error'&&user.view_errors?'get_errors':undefined
                     }
                   }}>
@@ -526,6 +537,7 @@ function TableItem(props) {
                   service_id:props.service.service_id,
                   petition_id:props.service.petition_id,
                   type:props.service.type,
+                  owned:props.service.owned?"true":null,
                   get_error:props.service.state==='error'&&user.view_errors?'get_errors':undefined
                 }
               }}>
@@ -560,6 +572,7 @@ function TableItem(props) {
                       service_id:props.service.service_id,
                       petition_id:props.service.petition_id,
                       type:props.service.type,
+                      owned:props.service.owned?"true":null,
                       comment:props.service.comment
                     }
                   }}>
@@ -592,6 +605,15 @@ function TableItem(props) {
               </React.Fragment>}
               id="dropdown-menu-align-right"
             >
+              {props.service.service_id && props.service.state==='deployed' && props.service.owned?
+              <Dropdown.Item as='span'>
+                <div>
+                  <Link to={"#"} onClick={()=>{
+                    toggleCopyDialog();
+                  }}>Copy Service</Link>
+                </div>
+              </Dropdown.Item>
+              :null}
               {props.service.owned && props.service.state==='deployed' && props.service.type!=='delete'?
                 <Dropdown.Item>
                   <div
@@ -606,7 +628,7 @@ function TableItem(props) {
                   </div>
                 </Dropdown.Item>
               :null}
-              {props.service.owned && props.service.state==='deployed'&&props.service.type?
+              {props.service.owned &&( props.service.state==='deployed'||props.service.type==='create')&&props.service.type?
                 <Dropdown.Item>
                   <div
                   onClick={()=>{

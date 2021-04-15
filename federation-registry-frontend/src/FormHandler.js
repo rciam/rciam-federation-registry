@@ -160,7 +160,7 @@ const EditService = (props) => {
           <Alert variant='warning' className='form-alert'>
             {t('edit_delete_info')}
           </Alert>
-          {service?<ServiceForm initialValues={service} {...props} />:<LoadingBar loading={true}/>}
+          {service?<ServiceForm copy={true} initialValues={service} {...props} />:<LoadingBar loading={true}/>}
         </React.Fragment>
       }
     </React.Fragment>
@@ -216,7 +216,7 @@ const ViewService = (props)=>{
   const [logout,setLogout] = useState(false);
   const [notFound,setNotFound] = useState(false);
   useEffect(()=>{
-
+    console.log(props);
     getData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
@@ -319,12 +319,12 @@ const ViewService = (props)=>{
     <NotFound notFound={notFound}/>
     <Logout logout={logout}/>
     <ErrorComponent deploymentError={deploymentError} setDeploymentError={setDeploymentError} service_id={props.service_id} setLogout={setLogout}/>
-      {service?<ServiceForm initialValues={service} disabled={true} {...props} />:props.service_id?<LoadingBar loading={true}/>:petition?
+      {service?<ServiceForm initialValues={service} disabled={true} owned={props.owned} {...props} />:props.service_id?<LoadingBar loading={true}/>:petition?
         <React.Fragment>
           <Alert variant='danger' className='form-alert'>
             {t('view_create_info')}
           </Alert>
-          <ServiceForm initialValues={petition} disabled={true} {...props}/>
+          <ServiceForm initialValues={petition} owned={props.owned} disabled={true} {...props}/>
         </React.Fragment>
       :props.petition_id?<LoadingBar loading={true}/>:null
       }
@@ -367,6 +367,57 @@ const RequestedChangesAlert = (props) => {
         {props.tab2?<ServiceForm initialValues={props.tab2} disabled={true} {...props} />:<LoadingBar loading={true}/>}
       </Tab>
     </Tabs>
+    </React.Fragment>
+  )
+}
+
+const CopyService = (props)=> {
+
+  const [service,setService] = useState();
+  const {tenant_name} = useParams();
+  const [logout,setLogout] = useState(false);
+  const [notFound,setNotFound] = useState(false);
+  // eslint-disable-next-line
+  const { t, i18n } = useTranslation();
+
+  useEffect(()=>{
+    getData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[]);
+  const getData = () => {
+      fetch(config.host+'tenants/'+tenant_name+'/services/'+props.service_id, {
+        method: 'GET', // *GET, POST, PUT, DELETE, etc.
+        credentials: 'include', // include, *same-origin, omit
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': localStorage.getItem('token')
+        }
+      }).then(response=>{
+        if(response.status===200){
+          return response.json();
+        }else if(response.status===401){
+          setLogout(true);
+          return false
+        }
+        if(response.status===404){
+          setNotFound(true);
+          return false;
+        }
+        else {
+          return false
+        }
+        }).then(response=> {
+        if(response){
+          response.service.integration_environment=props.integration_environment;
+          setService(response.service);
+        }
+      });
+  }
+  return (
+    <React.Fragment>
+      <NotFound notFound={notFound}/>
+      <Logout logout={logout}/>
+      {service?<ServiceForm initialValues={service} copy={true} {...props} />:<LoadingBar loading={true}/>}
     </React.Fragment>
   )
 }
@@ -444,5 +495,6 @@ function calculateMultivalueDiff(old_values,new_values,edits){
 export {
    EditService,
    NewService,
-   ViewService
+   ViewService,
+   CopyService
 }

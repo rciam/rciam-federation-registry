@@ -312,8 +312,6 @@ code {
   margin-bottom:0;
 }
 .drop-container-controls .dropdown-menu {
-  margin-right:0.7rem!important;
-  margin-top:-0.5rem!important;
   padding:0rem;
 }
 
@@ -1227,4 +1225,9 @@ html:lang(gr) .home-container h1 {
 
 .alert_fake_link:hover {
   text-decoration: underline;
+}
+.copy_button {
+  margin-left:0.5rem!important;
+  margin-bottom:0.1rem;
+  padding: 0rem 0.4rem;
 }
