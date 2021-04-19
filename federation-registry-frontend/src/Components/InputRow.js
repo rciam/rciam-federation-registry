@@ -12,6 +12,7 @@ export default function InputRow(props){
           <Form.Label column="true" sm="2" className='col-form-label text-right list-input-label'>
           {props.title}
           </Form.Label>
+          {props.required?<span className="required_indicator">*</span>:null}
           <Col sm="8" className={props.extraClass?props.extraClass:''}>
           {props.children}
           {props.description?

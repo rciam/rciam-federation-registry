@@ -162,7 +162,7 @@ const ProtectedRoute= (props)=> {
       render={({ location }) =>
         !(tenant && tenant[0] && (props.computedMatch.params.tenant_name === tenant[0].name)) ?
         <TenantHandler/>:
-        localStorage.getItem('token')&& user && user[0] && !(props.admin && !user[0].admin) ? (
+        localStorage.getItem('token')&& user && user[0] && (!(props.admin && !user[0].admin)||props.location.state.integration_environment==='development') ? (
           childrenWithProps
         ) : (
           <Redirect

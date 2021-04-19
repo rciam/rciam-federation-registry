@@ -145,7 +145,7 @@ const EditService = (props) => {
           <Alert variant='warning' className='form-alert'>
             {t('reconfiguration_info')}
           </Alert>
-          {editPetition&&changes?<ServiceForm initialValues={editPetition} changes={changes} {...props}/>:<LoadingBar loading={true}/>}
+          {editPetition&&changes?<ServiceForm disableEnvironment={true} initialValues={editPetition} changes={changes} {...props}/>:<LoadingBar loading={true}/>}
         </React.Fragment>
 
       :props.type==='create'?
@@ -192,7 +192,7 @@ const EditService = (props) => {
               </Alert>
           :null
           }
-          {petition?<ServiceForm initialValues={petition} {...props}/>:<LoadingBar loading={true}/>}
+          {petition?<ServiceForm disableEnvironment={true} initialValues={petition} {...props}/>:<LoadingBar loading={true}/>}
         </React.Fragment>
         :
         <RequestedChangesAlert comment={props.comment} tab1={service} tab2={service} {...props}/>
@@ -361,7 +361,7 @@ const RequestedChangesAlert = (props) => {
               </Alert>
           :null
           }
-          {props.tab1?<ServiceForm initialValues={props.tab1} {...props}/>:<LoadingBar loading={true}/>}
+          {props.tab1?<ServiceForm disableEnvironment={true} initialValues={props.tab1} {...props}/>:<LoadingBar loading={true}/>}
         </Tab>
       <Tab eventKey="service" title="View Deployed Service">
         {props.tab2?<ServiceForm initialValues={props.tab2} disabled={true} {...props} />:<LoadingBar loading={true}/>}

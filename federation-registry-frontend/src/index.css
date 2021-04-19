@@ -1231,3 +1231,9 @@ html:lang(gr) .home-container h1 {
   margin-bottom:0.1rem;
   padding: 0rem 0.4rem;
 }
+
+.required_indicator {
+  color:red;
+  margin-left:-0.6rem;
+  margin-top:0.2rem;
+}

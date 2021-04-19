@@ -1164,24 +1164,29 @@ function amsAgentAuth(req,res,next){
 
 // Checking Review Permitions
 function canReview(req,res,next){
-  console.log('Can review?');
   if(req.user.role.actions.includes('review_petition')){
-    console.log('action included');
     next();
   }
-  else if (req.user.role.actions.includes('review_own_petition')) {
-    db.petition.canReviewOwn(req.params.id,req.user.sub).then(canReview=>{
-      if(canReview){
+  else{
+    db.petition.canReviewOwn(req.params.id,req.user.sub).then(service=>{
+      console.log(service.integration_environment);
+      if(service.integration_environment==='development'){
         next();
+      }
+      else if(environment){
+         if (req.user.role.actions.includes('review_own_petition')){
+           next();
+         }
+         else{
+            res.status(401).json({error:'Requested action not authorised'});
+         }
       }
       else{
         res.status(401).json({error:'Requested action not authorised'});
       }
     })
   }
-  else{
-    res.status(401).json({error:'Requested action not authorised'});
-  }
+
 }
 
 // Save new User to db. Gets called on Authentication

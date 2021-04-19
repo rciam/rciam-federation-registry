@@ -86,6 +86,11 @@ const ServiceForm = (props)=> {
   const schema = yup.object({
     service_name:yup.string().nullable().min(4,t('yup_char_min') + ' ('+4+')').max(36,t('yup_char_max') + ' ('+36+')').required(t('yup_required')),
     // Everytime client_id changes we make a fetch request to see if it is available.
+    policy_uri:yup.string().nullable().when('integration_environment',{
+      is:'production',
+      then: yup.string().required(t('yup_required')).matches(reg.regSimpleUrl,t('yup_url')),
+      otherwise: yup.string().matches(reg.regSimpleUrl,t('yup_url'))
+      }),
     client_id:yup.string().nullable().when('protocol',{
       is:'oidc',
       then: yup.string().min(4,t('yup_char_min') + ' ('+4+')').max(36,t('yup_char_max') + ' ('+36+')').test('testAvailable',t('yup_client_id_available'),function(value){
@@ -156,7 +161,6 @@ const ServiceForm = (props)=> {
         });
       });
       }),
-    policy_uri:yup.string().nullable().required(t('yup_required')).matches(reg.regSimpleUrl,t('yup_url')),
     country:yup.string().nullable().test('testCountry','Select one of the available options',function(value){return countries.includes(value)}).required(t('yup_required')),
     service_description:yup.string().nullable().required(t('yup_required')),
     contacts:yup.array().nullable().of(yup.object().shape({
@@ -557,7 +561,7 @@ const ServiceForm = (props)=> {
 
                   <Tab eventKey="general" title={t('form_tab_general')}>
 
-                    <InputRow title={t('form_service_name')} description={t('form_service_name_desc')} error={errors.service_name} touched={touched.service_name}>
+                    <InputRow title={t('form_service_name')} required={true} description={t('form_service_name_desc')} error={errors.service_name} touched={touched.service_name}>
                       <SimpleInput
                         name='service_name'
                         placeholder={t('form_type_prompt')}
@@ -569,7 +573,7 @@ const ServiceForm = (props)=> {
                         changed={props.changes?props.changes.service_name:null}
                        />
                      </InputRow>
-                      <InputRow title={t('form_integration_environment')} extraClass='select-col' error={errors.integration_environment} touched={touched.integration_environment}>
+                      <InputRow title={t('form_integration_environment')} required={true} extraClass='select-col' error={errors.integration_environment} touched={touched.integration_environment}>
                         <SelectEnvironment
                           onBlur={handleBlur}
                           optionsTitle={capitalWords(tenant.form_config.integration_environment)}
@@ -578,7 +582,7 @@ const ServiceForm = (props)=> {
                           values={values}
                           isInvalid={hasSubmitted?!!errors.integration_environment:(!!errors.integration_environment&&touched.integration_environment)}
                           onChange={handleChange}
-                          disabled={disabled||tenant.form_config.integration_environment.length===1||props.copy}
+                          disabled={disabled||tenant.form_config.integration_environment.length===1||props.copy||props.disableEnvironment}
                           changed={props.changes?props.changes.integration_environment:null}
                           copyButtonActive={props.owned&&props.disabled}
                           toggleCopyDialog={toggleCopyDialog}
@@ -600,7 +604,7 @@ const ServiceForm = (props)=> {
                           changed={props.changes?props.changes.logo_uri:null}
                         />
                       </InputRow>
-                      <InputRow title={t('form_description')} description={t('form_description_desc')} error={errors.service_description} touched={touched.service_description}>
+                      <InputRow title={t('form_description')} required={true} description={t('form_description_desc')} error={errors.service_description} touched={touched.service_description}>
                         <TextAria
                           value={values.service_description?values.service_description:''}
                           onChange={handleChange}
@@ -612,7 +616,7 @@ const ServiceForm = (props)=> {
                           changed={props.changes?props.changes.service_description:null}
                         />
                       </InputRow>
-                      <InputRow title={'Select country'} extraClass='select-col' error={errors.country} touched={touched.country}>
+                      <InputRow title={'Select country'} required={true} extraClass='select-col' error={errors.country} touched={touched.country}>
                         <CountrySelect
                           onBlur={handleBlur}
                           placeholder={'Select country'}
@@ -624,7 +628,7 @@ const ServiceForm = (props)=> {
                           changed={props.changes?props.changes.country:null}
                         />
                       </InputRow>
-                      <InputRow title={t('form_policy_uri')} description={t('form_policy_uri_desc')} error={errors.policy_uri} touched={touched.policy_uri}>
+                      <InputRow title={t('form_policy_uri')} required={true&&values.integration_environment==='production'} description={t('form_policy_uri_desc')} error={errors.policy_uri} touched={touched.policy_uri}>
                         <SimpleInput
                           name='policy_uri'
                           placeholder={t('form_url_placeholder')}
@@ -637,7 +641,7 @@ const ServiceForm = (props)=> {
                         />
                       </InputRow>
 
-                      <InputRow title={t('form_contacts')} error={typeof(errors.contacts)=='string'?errors.contacts:null} touched={touched.contacts} description={t('form_contacts_desc')}>
+                      <InputRow title={t('form_contacts')} required={true} error={typeof(errors.contacts)=='string'?errors.contacts:null} touched={touched.contacts} description={t('form_contacts_desc')}>
                         <Contacts
                           values={values.contacts}
                           placeholder={t('form_type_prompt')}
@@ -654,7 +658,7 @@ const ServiceForm = (props)=> {
                       </InputRow>
                     </Tab>
                     <Tab eventKey="protocol" title={t('form_tab_protocol')}>
-                      <InputRow title={t('form_protocol')} extraClass='select-col' error={errors.protocol} touched={touched.code_challenge_method}>
+                      <InputRow title={t('form_protocol')} required={true} extraClass='select-col' error={errors.protocol} touched={touched.code_challenge_method}>
                         <Select
                           onBlur={handleBlur}
                           optionsTitle={['Select one option','OIDC Service','SAML Service']}
@@ -685,7 +689,7 @@ const ServiceForm = (props)=> {
                               isloading={values.client_id&&values.client_id!==checkedId&&checkingAvailability?1:0}
                              />
                            </InputRow>
-                           <InputRow title={t('form_redirect_uris')} error={typeof(errors.redirect_uris)=='string'?errors.redirect_uris:null}  touched={touched.redirect_uris} description={t('form_redirect_uris_desc')}>
+                           <InputRow title={t('form_redirect_uris')} required={values.grant_types.includes("implicit")||values.grant_types.includes("authorization_code")} error={typeof(errors.redirect_uris)=='string'?errors.redirect_uris:null}  touched={touched.redirect_uris} description={t('form_redirect_uris_desc')}>
                              <ListInput
                                values={values.redirect_uris}
                                placeholder={t('form_type_prompt')}
@@ -701,7 +705,7 @@ const ServiceForm = (props)=> {
                                changed={props.changes?props.changes.redirect_uris:null}
                              />
                            </InputRow>
-                          <InputRow title={t('form_scope')} description={t('form_scope_desc')}>
+                          <InputRow title={t('form_scope')} required={true} description={t('form_scope_desc')}>
                             <ListInputArray
                               name='scope'
                               values={values.scope}
@@ -715,7 +719,7 @@ const ServiceForm = (props)=> {
                             />
                           </InputRow>
 
-                          <InputRow title={t('form_grant_types')} error={errors.grant_types} touched={true}>
+                          <InputRow title={t('form_grant_types')} required={true} error={errors.grant_types} touched={true}>
                             <CheckboxList
                               name='grant_types'
                               values={values.grant_types}
@@ -725,7 +729,7 @@ const ServiceForm = (props)=> {
 
                             />
                           </InputRow>
-                          <InputRow title="Token Endpoint Authorization Method" error={errors.token_endpoint_auth_method}>
+                          <InputRow title="Token Endpoint Authorization Method" required={true} error={errors.token_endpoint_auth_method}>
                             <AuthMethRadioList
                               name='token_endpoint_auth_method'
                               values={values}
@@ -738,7 +742,7 @@ const ServiceForm = (props)=> {
                             />
                           </InputRow>
                           {values.token_endpoint_auth_method==='private_key_jwt'||values.token_endpoint_auth_method==='client_secret_jwt'?
-                          <InputRow title="Token Endpoint Signing Algorithm" extraClass='select-col' error={errors.token_endpoint_auth_signing_alg} touched={touched.token_endpoint_auth_signing_alg}>
+                          <InputRow title="Token Endpoint Signing Algorithm" required={true} extraClass='select-col' error={errors.token_endpoint_auth_signing_alg} touched={touched.token_endpoint_auth_signing_alg}>
                             <Select
                               onBlur={handleBlur}
                               optionsTitle={tenant.form_config.token_endpoint_auth_signing_alg_title}
@@ -754,7 +758,7 @@ const ServiceForm = (props)=> {
                           </InputRow>
                         :null}
                         {values.token_endpoint_auth_method==='private_key_jwt'?
-                          <InputRow title="Public Key Set" extraClass='select-col' description="URL for the client's JSON Web Key set (must be reachable by the server)" error={errors.jwks?errors.jwks:errors.jwks_uri} touched={touched.jwks||touched.jwks_uri}>
+                          <InputRow title="Public Key Set" required={true} extraClass='select-col' description="URL for the client's JSON Web Key set (must be reachable by the server)" error={errors.jwks?errors.jwks:errors.jwks_uri} touched={touched.jwks||touched.jwks_uri}>
                             <PublicKey
                               onBlur={handleBlur}
                               values={values}
@@ -768,7 +772,7 @@ const ServiceForm = (props)=> {
                           </InputRow>
                          :null}
                        {!(values.token_endpoint_auth_method==='private_key_jwt'||values.token_endpoint_auth_method==='none')?
-                         <InputRow title={t('form_client_secret')}>
+                         <InputRow required={true} title={t('form_client_secret')}>
                            <ClientSecret
                              onChange={handleChange}
                              feedback='not good'
@@ -783,7 +787,7 @@ const ServiceForm = (props)=> {
                            />
                          </InputRow>
                        :null}
-                          <InputRow title={t('form_refresh_token_validity_seconds')} extraClass='time-input' error={errors.refresh_token_validity_seconds} touched={touched.refresh_token_validity_seconds}>
+                          <InputRow required={values.scope.includes('offline_access')} title={t('form_refresh_token_validity_seconds')} extraClass='time-input' error={errors.refresh_token_validity_seconds} touched={touched.refresh_token_validity_seconds}>
                             <RefreshToken
                               values={values}
                               onBlur={handleBlur}
@@ -793,7 +797,7 @@ const ServiceForm = (props)=> {
                               changed={props.changes}
                             />
                           </InputRow>
-                          <InputRow title={t('form_device_code_validity_seconds')} extraClass='time-input' error={errors.device_code_validity_seconds} touched={touched.device_code_validity_seconds}>
+                          <InputRow required={values.grant_types.includes('urn:ietf:params:oauth:grant-type:device_code')} title={t('form_device_code_validity_seconds')} extraClass='time-input' error={errors.device_code_validity_seconds} touched={touched.device_code_validity_seconds}>
                             <DeviceCode
                               onBlur={handleBlur}
                               values={values}
@@ -803,7 +807,7 @@ const ServiceForm = (props)=> {
                               changed={props.changes}
                             />
                           </InputRow>
-                          <InputRow title={t('form_code_challenge_method')} extraClass='select-col' error={errors.code_challenge_method} touched={touched.code_challenge_method}>
+                          <InputRow required={true} title={t('form_code_challenge_method')} extraClass='select-col' error={errors.code_challenge_method} touched={touched.code_challenge_method}>
                             <Select
                               onBlur={handleBlur}
                               optionsTitle={['No code challenge','Plain code challenge','SHA-256 hash algorithm']}
@@ -817,7 +821,7 @@ const ServiceForm = (props)=> {
                               changed={props.changes?props.changes.code_challenge_method:null}
                             />
                           </InputRow>
-                          <InputRow title={t('form_allow_introspection')}>
+                          <InputRow required={true} title={t('form_allow_introspection')}>
                             <SimpleCheckbox
                               name='allow_introspection'
                               label={t('form_allow_introspection_desc')}
@@ -854,7 +858,7 @@ const ServiceForm = (props)=> {
                     :null}
                     {values.protocol==='saml'?
                       <React.Fragment>
-                        <InputRow title={t('form_entity_id')} description={t('form_entity_id_desc')} error={checkingAvailability?null:errors.entity_id} touched={touched.entity_id}>
+                        <InputRow required={true} title={t('form_entity_id')} description={t('form_entity_id_desc')} error={checkingAvailability?null:errors.entity_id} touched={touched.entity_id}>
                           <SimpleInput
                             name='entity_id'
                             placeholder={t('form_type_prompt')}
@@ -870,7 +874,7 @@ const ServiceForm = (props)=> {
                             isloading={values.entity_id&&values.entity_id!==checkedId&&checkingAvailability?1:0}
                            />
                          </InputRow>
-                         <InputRow title={t('form_metadata_url')} description={t('form_metadata_url_desc')} error={errors.metadata_url} touched={touched.metadata_url}>
+                         <InputRow required={true} title={t('form_metadata_url')} description={t('form_metadata_url_desc')} error={errors.metadata_url} touched={touched.metadata_url}>
                            <SimpleInput
                              name='metadata_url'
                              placeholder='Type something'

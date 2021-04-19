@@ -581,13 +581,14 @@ function TableItem(props) {
                 </React.Fragment>
               :null
               }
-              {props.user.admin&&props.service.petition_id&&!props.service.comment?<Link
+              {(props.user.admin||(props.service.owned&&props.service.integration_environment==='development'))&&props.service.petition_id&&!props.service.comment?<Link
                 className='button-link'
                 to={{
                 pathname:'/'+tenant_name+"/form/review",
                 state:{
                   service_id:props.service.service_id,
                   petition_id:props.service.petition_id,
+                  integration_environment:props.service.integration_environment,
                   type:props.service.type,
                   comment:props.service.comment
                 }

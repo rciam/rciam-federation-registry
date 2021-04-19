@@ -107,6 +107,19 @@ const serviceValidationRules = (options) => {
       return value&&(req.body[pos].protocol==='saml');
     }
   }
+  const requiredProduction = (value,env) =>{
+    console.log(env);
+    let required = false;
+    if(env==="production"){
+       required = true;
+    }
+    if(required){
+      return value;
+    }
+    else{
+      return true;
+    }
+  }
   const checkRedirectUri = (value,env)=> {
     if(env==="production"){
       return value.match(reg.regUrl) || value.match(reg.regLocalhostUrl)
@@ -136,7 +149,7 @@ const serviceValidationRules = (options) => {
       }).withMessage('Invalid Country Code'),
       body('*.service_description').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Service Description missing').if((value)=> {return value}).isString().withMessage('Service Description must be a string').isLength({min:1}).withMessage("Service description can't be empty"),
       body('*.logo_uri').optional({checkFalsy:true}).isString().withMessage('Service Logo must be a string').custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Service Logo must be a url'),
-      body('*.policy_uri').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Service Policy Uri missing').if((value)=> {return value}).isString().withMessage('Service Policy Uri must be a string').custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Service Policy Uri must be a url'),
+      body('*.policy_uri').custom((value,{req,location,path})=>{return requiredProduction(value,req.body[path.match(/\[(.*?)\]/)[1]].integration_environment)}).withMessage('Service Policy Uri missing').if((value)=> {return value}).isString().withMessage('Service Policy Uri must be a string').custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Service Policy Uri must be a url'),
       body('*.contacts').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Service Contacts missing').if((value)=> {return value}).isArray({min:1}).withMessage('Service Contacts must be an array').custom((value,{req,location,path})=> {
 
         let tenant = options.tenant_param?req.params.tenant_name:req.body[path.match(/\[(.*?)\]/)[1]].tenant
@@ -264,7 +277,7 @@ const serviceValidationRules = (options) => {
                   }
                 }
                 return success }).withMessage('Invalid grant_type value'),
-                body('*.jwks_uri').
+              body('*.jwks_uri').
                 customSanitizer((value,{req,location,path})=>{
                   if(req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method==="private_key_jwt"){
                     return value
@@ -285,13 +298,13 @@ const serviceValidationRules = (options) => {
                   }
                   return true
                 }),
-                body('*.jwks').customSanitizer((value,{req,location,path})=>{
-                  if(req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method==="private_key_jwt"){
-                    return value
-                  }
-                  else{
-                    return null
-                  }
+              body('*.jwks').customSanitizer((value,{req,location,path})=>{
+                if(req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method==="private_key_jwt"){
+                  return value
+                }
+                else{
+                  return null
+                }
                 }).if((value,{req,location,path})=>{
                   return req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method==="private_key_jwt"&&!req.body[path.match(/\[(.*?)\]/)[1]].jwks_uri&&value}).
                   custom((value)=>{
@@ -310,124 +323,124 @@ const serviceValidationRules = (options) => {
                       return false
                     }
                   }).withMessage('Invalid Schema for private key'),
-                  body('*.token_endpoint_auth_method').custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Service token_endpoint_auth_method missing').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).custom((value,{req,location,path})=>{
-                    let tenant = options.tenant_param?req.params.tenant_name:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
-                    if(!value||config.form[tenant].token_endpoint_auth_method.includes(value)){
-                      return true;
+                body('*.token_endpoint_auth_method').custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Service token_endpoint_auth_method missing').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).custom((value,{req,location,path})=>{
+                  let tenant = options.tenant_param?req.params.tenant_name:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
+                  if(!value||config.form[tenant].token_endpoint_auth_method.includes(value)){
+                    return true;
+                  }else{
+                    return false;
+                  }}).withMessage('Invalid token_endpoint_auth_method Method'),
+                body('*.token_endpoint_auth_signing_alg').customSanitizer((value,{req,location,path}) => {
+                  if(!['private_key_jwt','client_secret_jwt'].includes(req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method)){
+                    return '';}
+                    else{return value}
+                  }).if((value,{req,location,path})=>{
+                    return (['private_key_jwt','client_secret_jwt'].includes(req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method))}).
+                    custom((value,{req,location,path})=>{
+                      return config.form[req.params.tenant_name].token_endpoint_auth_signing_alg.includes(value)}).
+                      withMessage('Invalid Token Endpoint Signing Algorithm'),
+                body('*.id_token_timeout_seconds').optional({checkFalsy:true}).custom((value,{req,location,path})=> {
+                  let tenant = options.tenant_param?req.params.tenant_name:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
+                  let max = config.form[tenant].id_token_timeout_seconds;
+                  if(!value||(parseInt(value)&&parseInt(value)<=max&&parseInt(value)>=0)){return true}else{
+                    throw new Error("id_token_timeout_seconds must be an integer in specified range [1-"+ max +"]")
+                  }}),
+                body('*.access_token_validity_seconds').optional({checkFalsy:true}).custom((value,{req,location,path})=> {
+                  let tenant = options.tenant_param?req.params.tenant_name:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
+                  let max = config.form[tenant].access_token_validity_seconds;
+                  if(parseInt(value)&&parseInt(value)<=max&&parseInt(value)>0){return true}else{
+                    throw new Error("id_token_timeout_seconds must be an integer in specified range [1-"+ max +"]")
+                  }}),
+                body('*.refresh_token_validity_seconds').custom((value,{req,location,path})=> {
+                  let pos = path.match(/\[(.*?)\]/)[1];
+                  if(!value&&req.body[pos].scope&&req.body[pos].scope.includes('offline_access')){
+                    if(options.optional){
+                      req.body[pos].outdated = true;
+                      return true
+                    }
+                    else{
+                      return false
+                    }
+                  }else{
+                    return true
+                  }
+                }).withMessage("Refresh Token Validity Seconds is required when 'offline_access' is included in the scopes").custom((value,{req,location,path})=> {
+                  if(!value){
+                    return true;
+                  }
+                  let tenant = options.tenant_param?req.params.tenant_name:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
+                  let max = config.form[tenant].refresh_token_validity_seconds;
+                  if(parseInt(value)&&parseInt(value)<=max&&parseInt(value)>0){return true}else{
+                    throw new Error("Refresh Token Validity Seconds must be an integer in specified range [1-"+ max +"]")
+                  }
+                }),
+                body('*.device_code_validity_seconds').custom((value,{req,location,path})=> {
+                  let pos = path.match(/\[(.*?)\]/)[1];
+                  if(!value&&req.body[pos].protocol==='oidc'&&req.body[pos].grant_types&&req.body[pos].grant_types.includes('urn:ietf:params:oauth:grant-type:device_code')){
+                    if(options.optional){
+                      req.body[pos].outdated = true;
+                      return true
                     }else{
-                      return false;
-                    }}).withMessage('Invalid token_endpoint_auth_method Method'),
-                    body('*.token_endpoint_auth_signing_alg').customSanitizer((value,{req,location,path}) => {
-                      if(!['private_key_jwt','client_secret_jwt'].includes(req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method)){
-                        return '';}
-                        else{return value}
-                      }).if((value,{req,location,path})=>{
-                        return (['private_key_jwt','client_secret_jwt'].includes(req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method))}).
-                        custom((value,{req,location,path})=>{
-                          return config.form[req.params.tenant_name].token_endpoint_auth_signing_alg.includes(value)}).
-                          withMessage('Invalid Token Endpoint Signing Algorithm'),
-                          body('*.id_token_timeout_seconds').optional({checkFalsy:true}).custom((value,{req,location,path})=> {
-                            let tenant = options.tenant_param?req.params.tenant_name:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
-                            let max = config.form[tenant].id_token_timeout_seconds;
-                            if(!value||(parseInt(value)&&parseInt(value)<=max&&parseInt(value)>=0)){return true}else{
-                              throw new Error("id_token_timeout_seconds must be an integer in specified range [1-"+ max +"]")
-                            }}),
-                            body('*.access_token_validity_seconds').optional({checkFalsy:true}).custom((value,{req,location,path})=> {
-                              let tenant = options.tenant_param?req.params.tenant_name:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
-                              let max = config.form[tenant].access_token_validity_seconds;
-                              if(parseInt(value)&&parseInt(value)<=max&&parseInt(value)>0){return true}else{
-                                throw new Error("id_token_timeout_seconds must be an integer in specified range [1-"+ max +"]")
-                              }}),
-                              body('*.refresh_token_validity_seconds').custom((value,{req,location,path})=> {
-                                let pos = path.match(/\[(.*?)\]/)[1];
-                                if(!value&&req.body[pos].scope&&req.body[pos].scope.includes('offline_access')){
-                                  if(options.optional){
-                                    req.body[pos].outdated = true;
-                                    return true
-                                  }
-                                  else{
-                                    return false
-                                  }
-                                }else{
-                                  return true
-                                }
-                              }).withMessage("Refresh Token Validity Seconds is required when 'offline_access' is included in the scopes").custom((value,{req,location,path})=> {
-                                if(!value){
-                                  return true;
-                                }
-                                let tenant = options.tenant_param?req.params.tenant_name:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
-                                let max = config.form[tenant].refresh_token_validity_seconds;
-                                if(parseInt(value)&&parseInt(value)<=max&&parseInt(value)>0){return true}else{
-                                  throw new Error("Refresh Token Validity Seconds must be an integer in specified range [1-"+ max +"]")
-                                }
-                              }),
-                              body('*.device_code_validity_seconds').custom((value,{req,location,path})=> {
-                                let pos = path.match(/\[(.*?)\]/)[1];
-                                if(!value&&req.body[pos].protocol==='oidc'&&req.body[pos].grant_types&&req.body[pos].grant_types.includes('urn:ietf:params:oauth:grant-type:device_code')){
-                                  if(options.optional){
-                                    req.body[pos].outdated = true;
-                                    return true
-                                  }else{
-                                    throw new Error("Device Code Validity Seconds is required when 'urn:ietf:params:oauth:grant-type:device_code' is included in the grant_types")
-                                  }
-                                }
-                                if(!value){
-                                  return true;
-                                }
-                                let tenant = options.tenant_param?req.params.tenant_name:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
-                                let max = config.form[tenant].device_code_validity_seconds;
-                                if((parseInt(value)&&parseInt(value)<=max&&parseInt(value)>=0)||(req.body[pos].protocol!=='oidc'||!req.body[pos].grant_types||!req.body[pos].grant_types.includes('urn:ietf:params:oauth:grant-type:device_code'))){
-                                  return true}else{
-                                  throw new Error("Device Code Validity Seconds must be an integer in specified range [1-"+ max +"]")
-                                }}).withMessage('Must be an integer in specified range'),
-                                body('*.code_challenge_method').custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Device Code mising').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).isString().withMessage('Device Code must be a string').custom((value)=> {
-                                  try{
-                                    return value.match(reg.regCodeChalMeth)
-                                  }
-                                  catch(err){
-                                    return true
-                                  }
-                                }
-                              ).withMessage('Device Code invalid value'),
-                              body('*.allow_introspection').custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Allow introspection mising').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).custom((value)=> typeof(value)==='boolean').withMessage('Allow introspection must be a boolean').bail(),
-                              body('*.generate_client_secret').optional({checkFalsy:true}).custom((value)=> typeof(value)==='boolean').withMessage('Generate client secret must be a boolean'),
-                              body('*.reuse_refresh_tokens').optional({checkFalsy:true}).custom((value)=> typeof(value)==='boolean').withMessage('Reuse refresh tokens must be a boolean'),
-                              body('*.integration_environment').exists({checkFalsy:true}).withMessage('Integration Environment missing').if(value=>{return value}).custom((value,{req,location,path})=> {
-                                let tenant = options.tenant_param?req.params.tenant_name:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
-                                if(config.form[tenant].integration_environment.includes(value)){return true}else{return false}}).withMessage('Invalid Integration Environment'),
-                                body('*.clear_access_tokens_on_refresh').optional({checkFalsy:true}).custom((value)=> typeof(value)==='boolean').withMessage('Clear access tokens on refresh must be a boolean').bail(),
-                                body('*.client_secret').customSanitizer((value,{req,location,path})=>{
-                                  if(options.sanitize&&req.body[path.match(/\[(.*?)\]/)[1]].protocol!=='oidc'||['none',null,'private_key_jwt'].includes(req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method)){
-                                    return null;
-                                  }else{
-                                    return value;
-                                  }
-                                }).if((value,{req,location,path})=>{return ((value||!req.body[path.match(/\[(.*?)\]/)[1]].generate_client_secret)&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'&&["client_secret_basic","client_secret_post","client_secret_jwt"].includes(req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method))}).exists({checkFalsy:true}).withMessage('Client secret is missing').if((value)=>{return value}).isString().withMessage('Client Secret must be a string').isLength({min:4,max:64}),
-                                body('*.entity_id').custom((value,{req,location,path})=>{return requiredSaml(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Entity id mising').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='saml'}).isString().withMessage('Entity id must be a string').custom((value)=> {
-                                  try{
-                                    if(value.constructor === stringConstructor){
-                                      if(value.length<4||value.length>256){
-                                        throw new Error('Entity id is not in specified character length range (4-256)')
-                                      }
-                                    }
-                                    return !value||value.match(reg.regSimpleUrl)
-                                  }
-                                  catch(err){
-                                    return true
-                                  }
-                                }).withMessage('Entity id must be a url'),
-                                body('*.metadata_url').if((value,{req,location,path})=>{return req.body[path.match(/\[(.*?)\]/)[1]].protocol==='saml'}).exists({checkFalsy:true}).withMessage('Metadata url missing').if((value)=>{ return value}).isString().withMessage('Metadata url must be a string').if((value)=>{return(value.constructor === stringConstructor)}).custom((value)=> {return value.match(reg.regSimpleUrl)}).withMessage('Metadata url must be a url').if(()=>{return options.check_available}).custom((value,{req,location,path})=> {
-                                  return db.service_details_protocol.checkClientId(value,0,0,req.params.tenant_name,req.body[path.match(/\[(.*?)\]/)[1]].integration_environment).then(available=> {
-                                    if(!available){
-                                      return Promise.reject('Metadata url is not available');
-                                    }
-                                    else{
-                                      return Promise.resolve();
-                                    }
-                                  });
-                                }),
-                                body('*.external_id').optional({checkFalsy:true}).custom((value)=>{if(parseInt(value)){return true}else{return false}}).withMessage('External id must be an integer')
-                              ]
+                      throw new Error("Device Code Validity Seconds is required when 'urn:ietf:params:oauth:grant-type:device_code' is included in the grant_types")
+                    }
+                  }
+                  if(!value){
+                    return true;
+                  }
+                  let tenant = options.tenant_param?req.params.tenant_name:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
+                  let max = config.form[tenant].device_code_validity_seconds;
+                  if((parseInt(value)&&parseInt(value)<=max&&parseInt(value)>=0)||(req.body[pos].protocol!=='oidc'||!req.body[pos].grant_types||!req.body[pos].grant_types.includes('urn:ietf:params:oauth:grant-type:device_code'))){
+                    return true}else{
+                    throw new Error("Device Code Validity Seconds must be an integer in specified range [1-"+ max +"]")
+                  }}).withMessage('Must be an integer in specified range'),
+                  body('*.code_challenge_method').custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Device Code mising').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).isString().withMessage('Device Code must be a string').custom((value)=> {
+                    try{
+                      return value.match(reg.regCodeChalMeth)
+                    }
+                    catch(err){
+                      return true
+                    }
+                  }
+                ).withMessage('Device Code invalid value'),
+                body('*.allow_introspection').custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Allow introspection mising').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).custom((value)=> typeof(value)==='boolean').withMessage('Allow introspection must be a boolean').bail(),
+                body('*.generate_client_secret').optional({checkFalsy:true}).custom((value)=> typeof(value)==='boolean').withMessage('Generate client secret must be a boolean'),
+                body('*.reuse_refresh_tokens').optional({checkFalsy:true}).custom((value)=> typeof(value)==='boolean').withMessage('Reuse refresh tokens must be a boolean'),
+                body('*.integration_environment').exists({checkFalsy:true}).withMessage('Integration Environment missing').if(value=>{return value}).custom((value,{req,location,path})=> {
+                  let tenant = options.tenant_param?req.params.tenant_name:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
+                  if(config.form[tenant].integration_environment.includes(value)){return true}else{return false}}).withMessage('Invalid Integration Environment'),
+                  body('*.clear_access_tokens_on_refresh').optional({checkFalsy:true}).custom((value)=> typeof(value)==='boolean').withMessage('Clear access tokens on refresh must be a boolean').bail(),
+                  body('*.client_secret').customSanitizer((value,{req,location,path})=>{
+                    if(options.sanitize&&req.body[path.match(/\[(.*?)\]/)[1]].protocol!=='oidc'||['none',null,'private_key_jwt'].includes(req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method)){
+                      return null;
+                    }else{
+                      return value;
+                    }
+                  }).if((value,{req,location,path})=>{return ((value||!req.body[path.match(/\[(.*?)\]/)[1]].generate_client_secret)&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'&&["client_secret_basic","client_secret_post","client_secret_jwt"].includes(req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method))}).exists({checkFalsy:true}).withMessage('Client secret is missing').if((value)=>{return value}).isString().withMessage('Client Secret must be a string').isLength({min:4,max:64}),
+                  body('*.entity_id').custom((value,{req,location,path})=>{return requiredSaml(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Entity id mising').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='saml'}).isString().withMessage('Entity id must be a string').custom((value)=> {
+                    try{
+                      if(value.constructor === stringConstructor){
+                        if(value.length<4||value.length>256){
+                          throw new Error('Entity id is not in specified character length range (4-256)')
+                        }
+                      }
+                      return !value||value.match(reg.regSimpleUrl)
+                    }
+                    catch(err){
+                      return true
+                    }
+                  }).withMessage('Entity id must be a url'),
+                  body('*.metadata_url').if((value,{req,location,path})=>{return req.body[path.match(/\[(.*?)\]/)[1]].protocol==='saml'}).exists({checkFalsy:true}).withMessage('Metadata url missing').if((value)=>{ return value}).isString().withMessage('Metadata url must be a string').if((value)=>{return(value.constructor === stringConstructor)}).custom((value)=> {return value.match(reg.regSimpleUrl)}).withMessage('Metadata url must be a url').if(()=>{return options.check_available}).custom((value,{req,location,path})=> {
+                    return db.service_details_protocol.checkClientId(value,0,0,req.params.tenant_name,req.body[path.match(/\[(.*?)\]/)[1]].integration_environment).then(available=> {
+                      if(!available){
+                        return Promise.reject('Metadata url is not available');
+                      }
+                      else{
+                        return Promise.resolve();
+                      }
+                    });
+                  }),
+                  body('*.external_id').optional({checkFalsy:true}).custom((value)=>{if(parseInt(value)){return true}else{return false}}).withMessage('External id must be an integer')
+                ]
 
 
 }
