@@ -310,9 +310,7 @@ const ServiceForm = (props)=> {
 
   const [showCopyDialog,setShowCopyDialog] = useState(false);
   const toggleCopyDialog = () => {
-    console.log(!showCopyDialog);
     setShowCopyDialog(!showCopyDialog);
-
   }
 
 
@@ -327,7 +325,7 @@ const ServiceForm = (props)=> {
       petition.type='create';
       petition.service_id=null;
     }
-    if (diff(petition,props.initialValues)){
+    if (diff(petition,props.initialValues)||props.copy){
       setAsyncResponse(true);
       fetch(config.host+'tenants/'+tenant_name+'/petitions', {
         method: 'POST', // *GET, POST, PUT, DELETE, etc.

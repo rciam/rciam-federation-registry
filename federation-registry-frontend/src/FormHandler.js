@@ -27,6 +27,7 @@ const EditService = (props) => {
     const [notFound,setNotFound] = useState(false);
     useEffect(()=>{
       getData();
+      
       // eslint-disable-next-line react-hooks/exhaustive-deps
     },[]);
 

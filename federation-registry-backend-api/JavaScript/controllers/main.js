@@ -72,10 +72,8 @@ const changesPetition = (req,res,next,db) => {
 const approvePetition = (req,res,next,db) => {
   db.tx('approve-petition',async t =>{
     let service_id;
-    console.log('Should approve');
     await t.petition.get(req.params.id,req.params.tenant_name).then(async petition =>{
       if(petition){
-        console.log('get petition ok');
         petition.service_data.tenant = req.params.tenant_name;
         if(petition.meta_data.type==='delete'){
           service_id = petition.meta_data.service_id;
@@ -93,13 +91,11 @@ const approvePetition = (req,res,next,db) => {
           ]);
         }
         else if(petition.meta_data.type==='create'){
-          console.log('should create');
+
           await t.service.add(petition.service_data,petition.meta_data.requester,petition.meta_data.group_id).then(async id=>{
             if(id){
-              console.log('created service');
               service_id = id;
               await t.service_petition_details.approveCreation(req.params.id,req.user.sub,'approved',req.body.comment,id,req.params.tenant_name);
-              console.log('approved petition');
             }
           }).catch(err=>{
             console.log('error')

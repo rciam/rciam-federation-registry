@@ -55,7 +55,7 @@ class ServiceRepository {
                 if(service.scope&&service.scope.length>0){
                   queries.push(t.service_multi_valued.add('service','oidc_scopes',service.scope,result.id));
                 }
-                if(service.redirect_uri&&service.grant_types.length>0){
+                if(service.redirect_uris&&service.redirect_uris.length>0){
                   queries.push(t.service_multi_valued.add('service','oidc_redirect_uris',service.redirect_uris,result.id));
                 }
               }
