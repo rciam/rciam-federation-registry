@@ -1,10 +1,11 @@
 require('dotenv').config();
-const {petitionValidationRules,validate,postInvitationValidation,serviceValidationRules,putAgentValidation,postAgentValidation,decodeAms,amsIngestValidation} = require('../validator.js');
+const {petitionValidationRules,validate,tenantValidation,formatPetition,getServiceListValidation,postInvitationValidation,serviceValidationRules,putAgentValidation,postAgentValidation,decodeAms,amsIngestValidation,generateClientId,reFormatPetition} = require('../validator.js');
+const {validationResult} = require('express-validator');
 const qs = require('qs');
 const {v1:uuidv1} = require('uuid');
 const axios = require('axios').default;
 const {merge_data,merge_services_and_petitions} = require('../merge_data.js');
-const {addToString,clearPetitionData,sendMail,sendInvitationMail} = require('../functions/helpers.js');
+const {addToString,clearPetitionData,sendMail,sendInvitationMail,sendMultipleInvitations} = require('../functions/helpers.js');
 const {db} = require('../db');
 var diff = require('deep-diff').diff;
 var router = require('express').Router();
@@ -16,22 +17,34 @@ const code_verifier = generators.codeVerifier();
 const {rejectPetition,approvePetition,changesPetition,getPetition,getOpenPetition} = require('../controllers/main.js');
 const base64url = require('base64url');
 
-//
-// "external_id":null,
-// "service_name":null,
-// "service_description":null,
-// "logo_uri":null,
 
 
 // ----------------------------------------------------------
 // ************************* Routes *************************
 // ----------------------------------------------------------
 
-router.post('/tenants/:name/services',serviceValidationRules(),validate,(req,res,next)=> {
+//
+// router.get('/test',getData,serviceValidationRules({optional:false,tenant_param:false,check_available:true,sanitize:true}),(req,res,next)=>{
+//
+//
+//     res.status(200).send(req.body);
+//     const errors = validationResult(req);
+//     console.log(errors);
+// });
+
+function getData(req,res,next) {
+  db.service.getAll().then(services=>{
+    req.body = services;
+    next();
+  });
+}
+
+router.post('/tenants/:tenant_name/services',tenantValidation(),validate,serviceValidationRules({optional:true,tenant_param:true,check_available:true,sanitize:true,null_client_id:false}),validate,(req,res,next)=> {
   let services = req.body;
   // Populate json objects with all necessary fields
   services.forEach((service,index) => {
-    services[index].tenant = req.params.name
+    services[index].tenant = req.params.tenant_name
+
     config.service_fields.forEach(field=>{
       if(!service[field]){
         services[index][field] = null;
@@ -39,7 +52,7 @@ router.post('/tenants/:name/services',serviceValidationRules(),validate,(req,res
     })
   })
   try{
-    db.task('addMultipleServices', async t => {
+    db.tx('addMultipleServices', async t => {
       await t.group.createMultiple(services).then(async ids=> {
         if(ids){
           services.forEach((service,index)=>{
@@ -52,9 +65,17 @@ router.post('/tenants/:name/services',serviceValidationRules(),validate,(req,res
               let redirect_uris = [];
               let scopes = [];
               let queries = [];
+              let service_state = [];
+              let invitations = [];
               services.forEach((service,index)=> {
+                service_state.push({id:service.id,state:'deployed',outdated:(service.outdated?true:false)});
+
                 if(service.contacts && service.contacts.length>0){
+
                   service.contacts.forEach(contact=>{
+                    if(contact.type==='technical'){
+                      invitations.push({tenant:req.params.tenant_name,email:contact.email,group_manager:true,code:uuidv1(),group_id:service.group_id});
+                    }
                     contacts.push({owner_id:service.id,value:contact.email,type:contact.type});
                   });
                 }
@@ -71,11 +92,12 @@ router.post('/tenants/:name/services',serviceValidationRules(),validate,(req,res
                   }
                   if(service.redirect_uris && service.redirect_uris.length>0){
                     service.redirect_uris.forEach(redirect_uri => {
-                      redirect_uris.push({owner_id:service.id,value:redirect_uris});
+                      redirect_uris.push({owner_id:service.id,value:redirect_uri});
                     });
                   }
                 }
               });
+              queries.push(t.service_state.addMultiple(service_state));
               queries.push(t.service_details_protocol.addMultiple(services));
               if(contacts.length>0){
                 queries.push(t.service_contacts.addMultiple(contacts));
@@ -89,30 +111,40 @@ router.post('/tenants/:name/services',serviceValidationRules(),validate,(req,res
               if(redirect_uris.length>0){
                 queries.push(t.service_multi_valued.addMultiple(redirect_uris,'service_oidc_redirect_uris'));
               }
-              let done = await t.batch(queries).catch(err=>{throw err})
+              await t.batch(queries).then(done=>{
+                if(done){
+                  if(invitations.length>0){
+                      sendMultipleInvitations(invitations,t);
+                    }
+                    res.status(200).end();
+                  }
+
+              }).catch(err=>{
+                res.status(422).send(err);
+              });
             }
-          });
+          }).catch(err=>{console.log(err);});
         }
-      }).catch(err => {throw err})
-    }).catch(err => {throw err})
-    res.status(200).end();
+      }).catch(err => {console.log(err); throw err})
+    }).catch(err => {console.log(err); throw err})
+
   }
   catch(err){
     next(err);
   }
 });
 // Get available tenats
-router.get('/tenants/:name',(req,res,next)=>{
+router.get('/tenants/:tenant_name',(req,res,next)=>{
   try{
-    db.tenants.getTheme(req.params.name).then(tenant=>{
+    db.tenants.getTheme(req.params.tenant_name).then(tenant=>{
       if(tenant){
-        if(config.form[req.params.name]){
-          tenant.form_config = config.form[req.params.name];
+        if(config.form[req.params.tenant_name]){
+          tenant.form_config = config.form[req.params.tenant_name];
         }
         res.status(200).json(tenant).end();
       }
       else{
-        res.status(204).end()
+        res.status(404).end()
       }
     }).catch(err=>{throw err})
   }
@@ -138,13 +170,13 @@ router.get('/tenants',(req,res,next)=> {
   }
 })
 
-router.get('/tenants/:name/login',(req,res)=>{
+router.get('/tenants/:tenant_name/login',(req,res)=>{
   var clients = req.app.get('clients');
-  if(clients[req.params.name]){
-    res.redirect(clients[req.params.name].authorizationUrl({
-      client_id:clients[req.params.name].client_id,
+  if(clients[req.params.tenant_name]){
+    res.redirect(clients[req.params.tenant_name].authorizationUrl({
+      client_id:clients[req.params.tenant_name].client_id,
       scope: 'openid email profile eduperson_entitlement',
-      redirect_uri: process.env.REDIRECT_URI+req.params.name
+      redirect_uri: process.env.REDIRECT_URI+req.params.tenant_name
     }));
   }else{
     res.redirect(process.env.REACT_BASE+'/404');
@@ -152,14 +184,14 @@ router.get('/tenants/:name/login',(req,res)=>{
 })
 
 // Callback Route
-router.get('/callback/:name',(req,res,next)=>{
+router.get('/callback/:tenant_name',(req,res,next)=>{
   var clients = req.app.get('clients');
-  clients[req.params.name].callback(process.env.REDIRECT_URI+req.params.name,{code:req.query.code}).then(async response => {
+  clients[req.params.tenant_name].callback(process.env.REDIRECT_URI+req.params.tenant_name,{code:req.query.code}).then(async response => {
     let code = await db.tokens.addToken(response.access_token);
-    clients[req.params.name].userinfo(response.access_token).then(usr_info=>{
-      saveUser(usr_info,req.params.name);
+    clients[req.params.tenant_name].userinfo(response.access_token).then(usr_info=>{
+      saveUser(usr_info,req.params.tenant_name);
     }); // => Promise
-    res.redirect(process.env.REACT_BASE+'/'+req.params.name+'/code/' + code.code);
+    res.redirect(process.env.REACT_BASE+'/'+req.params.tenant_name+'/code/' + code.code);
   });
 });
 
@@ -190,14 +222,17 @@ router.get('/tokens/:code',(req,res,next)=>{
   }
 });
 
-router.get('/tenants/:name/services/:id/error',authenticate,(req,res,next)=>{
+router.get('/tenants/:tenant_name/services/:id/error',authenticate,(req,res,next)=>{
   try{
     if(req.user.role.actions.includes('view_errors')){
 
       db.service_errors.getErrorByServiceId(req.params.id).then(response=>{
-        console.log('Response');
-        console.log(response);
-        return res.status(200).json({error:response});
+        if(response){
+          return res.status(200).json({error:response});
+        }
+        else{
+          return res.status(404).end();
+        }
       });
     }
   }
@@ -206,7 +241,7 @@ router.get('/tenants/:name/services/:id/error',authenticate,(req,res,next)=>{
   }
 });
 
-router.put('/tenants/:name/services/:id/error',authenticate,(req,res,next)=> {
+router.put('/tenants/:tenant_name/services/:id/error',authenticate,(req,res,next)=> {
   try{
     if(req.user.role.actions.includes('view_errors')){
       if(req.query.action==='resend'){
@@ -229,11 +264,11 @@ router.put('/tenants/:name/services/:id/error',authenticate,(req,res,next)=> {
 
 
 // Get User User Info
-router.get('/tenants/:name/user',authenticate,(req,res,next)=>{
+router.get('/tenants/:tenant_name/user',authenticate,(req,res,next)=>{
   try{
     var clients = req.app.get('clients');
     TokenArray = req.headers.authorization.split(" ");
-    clients[req.params.name].userinfo(TokenArray[1]) // => Promise
+    clients[req.params.tenant_name].userinfo(TokenArray[1]) // => Promise
     .then(function (userinfo) {
       let user = userinfo;
       if(req.user.role.actions.includes('review_own_petition')){
@@ -259,10 +294,9 @@ router.post('/ams/ingest',checkCertificate,decodeAms,amsIngestValidation(),valid
   try{
     return db.task('deploymentTasks', async t => {
       // update state
-      console.log(req.body.decoded_messages)
       await t.service_state.deploymentUpdate(req.body.decoded_messages).then(async ids=>{
         if(ids){
-          res.stats(200).end();
+          res.status(200).end();
           if(ids.length>0){
             await t.user.getServiceOwners(ids).then(data=>{
               if(data){
@@ -301,11 +335,12 @@ router.put('/agent/set_services_state',amsAgentAuth,(req,res,next)=>{
             if(agents){
               req.body.forEach(service=> {
                 agents.forEach(agent => {
-                  if(agent.tenant===service.tenant && agent.entity_protocol===service.protocol  && agent.entity_type==='service' ){
+                  if(agent.tenant===service.tenant && agent.entity_protocol===service.protocol  && agent.entity_type==='service' && agent.integration_environment===service.integration_environment ){
                     service_pending_agents.push({agent_id:agent.id,service_id:service.id});
                   }
                 })
               });
+              console.log(service_pending_agents);
               await t.deployment_tasks.setDeploymentTasks(service_pending_agents).then(success=> {
                 if(success){
                   res.status(200).end();
@@ -330,17 +365,37 @@ router.put('/agent/set_services_state',amsAgentAuth,(req,res,next)=>{
 });
 
 // Find all clients/petitions from curtain user to create preview list
-router.get('/tenants/:name/services',authenticate,(req,res,next)=>{
+router.get('/tenants/:tenant_name/services', getServiceListValidation(),validate,authenticate,(req,res,next)=>{
   try{
       if(req.user.role.actions.includes('get_services')&&req.user.role.actions.includes('get_petitions')){
-        db.service_list.getAll(req.user.sub,req.params.name).then(response =>{
-            return res.status(200).json({services:response});
-        }).catch(err=>{next(err);});
+        db.service_list.get(req).then(response =>{
+            if(response.length===0){
+              response.push({
+                list_items : [],
+                full_count : 0
+              })
+
+            }
+            return res.status(200).send(response[0]);
+        }).catch(err=>{
+          console.log(err);
+          return res.status(416).send('Out of range');
+        });
       }
       else if(req.user.role.actions.includes('get_own_services')&&req.user.role.actions.includes('get_own_petitions')){
-        db.service_list.getOwn(req.user.sub,req.params.name).then(response =>{
-          return res.status(200).json({services:response});
-        }).catch(err=>{next(err);});
+        req.query.owned=true;
+        db.service_list.get(req).then(response =>{
+          if(response.length===0){
+            response.push({
+              list_items : [],
+              full_count : 0
+            })
+          }
+          return res.status(200).send(response[0]);
+        }).catch(err=>{
+          console.log(err);
+          return res.status(416).send('Out of range');
+        });
       }
       else{
         res.status(401).json({err:'Requested action not authorised'})
@@ -369,34 +424,34 @@ router.get('/agent/get_new_configurations',amsAgentAuth,(req,res,next)=>{
 })
 
 // It returns a service with form data
-router.get('/tenants/:name/services/:id',authenticate,(req,res,next)=>{
+router.get('/tenants/:tenant_name/services/:id',authenticate,(req,res,next)=>{
   if(req.user.role.actions.includes('get_own_service')){
     try{
       if(req.user.role.actions.includes('get_service')){
-        db.service.get(req.params.id,req.params.name).then(result=>{
+        db.service.get(req.params.id,req.params.tenant_name).then(result=>{
           if(result){
             res.status(200).json({service:result.service_data});
           }
           else {
-            res.status(204).end();
+            res.status(404).end();
           }
         }).catch(err=>{next(err);})
       }
       else{
         return db.task('find-service-data',async t=>{
-          await t.service_details.getProtocol(req.params.id,req.user.sub,req.params.name).then(async exists=>{
+          await t.service_details.getProtocol(req.params.id,req.user.sub,req.params.tenant_name).then(async exists=>{
             if(exists){
-              await t.service.get(req.params.id,req.params.name).then(result=>{
+              await t.service.get(req.params.id,req.params.tenant_name).then(result=>{
                 if(result){
                   res.status(200).json({service:result.service_data});
                 }
                 else {
-                  res.status(204).end();
+                  res.status(404).end();
                 }
               }).catch(err=>{next(err);})
             }
             else{
-              res.status(204).end();
+              res.status(404).end();
             }
           }).catch(err=>{next(err);});;
         });
@@ -412,19 +467,19 @@ router.get('/tenants/:name/services/:id',authenticate,(req,res,next)=>{
 });
 
 // Get all petitions linked to a service
-router.get('/tenants/:name/services/:id/petitions',authenticate,(req,res)=>{
+router.get('/tenants/:tenant_name/services/:id/petitions',authenticate,(req,res)=>{
 
     try{
       return db.tx('get-history-for-petition', async t =>{
         if(req.user.role.actions.includes('get_petitions')){
-          await t.service_petition_details.getHistory(req.params.id,req.params.name).then(petition_list =>{
+          await t.service_petition_details.getHistory(req.params.id,req.params.tenant_name).then(petition_list =>{
             return res.status(200).json({history:petition_list});
           }).catch(err=>{next(err)});
         }
         else if(req.user.role.actions.includes('get_own_petitions')){
-          await t.service_details.getProtocol(req.params.id,req.user.sub,req.params.name).then(async service=>{
+          await t.service_details.getProtocol(req.params.id,req.user.sub,req.params.tenant_name).then(async service=>{
             if(service){
-              await t.service_petition_details.getHistory(req.params.id,req.params.name).then(petition_list =>{
+              await t.service_petition_details.getHistory(req.params.id,req.params.tenant_name).then(petition_list =>{
                 return res.status(200).json({history:petition_list});
               }).catch(err=>{next(err)});
             }
@@ -444,7 +499,7 @@ router.get('/tenants/:name/services/:id/petitions',authenticate,(req,res)=>{
 });
 
 // Get target petition
-router.get('/tenants/:name/petitions/:id',authenticate,(req,res,next)=>{
+router.get('/tenants/:tenant_name/petitions/:id',authenticate,(req,res,next)=>{
   try{
     if(req.query.type==='open'){
       getOpenPetition(req,res,next,db);
@@ -459,18 +514,19 @@ router.get('/tenants/:name/petitions/:id',authenticate,(req,res,next)=>{
 });
 
 // Add a new client/petition
-router.post('/tenants/:name/petitions',authenticate,petitionValidationRules(),validate,asyncPetitionValidation,(req,res,next)=>{
+router.post('/tenants/:tenant_name/petitions',authenticate,petitionValidationRules(),validate,formatPetition,serviceValidationRules({optional:false,tenant_param:true,check_available:false,sanitize:false,null_client_id:true}),validate,reFormatPetition,asyncPetitionValidation,(req,res,next)=>{
+
   res.setHeader('Content-Type', 'application/json');
   if(req.user.role.actions.includes('add_own_petition')){
     try{
       db.tx('add-service', async t => {
         if(req.body.type==='delete'){
-          await t.service.get(req.body.service_id,req.params.name).then(async service => {
+          await t.service.get(req.body.service_id,req.params.tenant_name).then(async service => {
             if (service) {
               service = service.service_data;
               service.service_id = req.body.service_id;
               service.type = 'delete';
-              service.tenant = req.params.name;
+              service.tenant = req.params.tenant_name;
               await t.petition.add(service,req.user.sub).then(id=>{
                 if(id){
                   res.status(200).json({id:id});
@@ -483,12 +539,12 @@ router.post('/tenants/:name/petitions',authenticate,petitionValidationRules(),va
           }).catch(err=>{next(err)});
         }
         else{
-          req.body.tenant = req.params.name;
+          req.body.tenant = req.params.tenant_name;
           await t.petition.add(req.body,req.user.sub).then(async id=>{
             if(id){
               res.status(200).json({id:id});
-              await t.user.getReviewers(req.params.name).then(users=>{
-                sendMail({subject:'New Petition to Review',service_name:req.body.service_name,tenant:req.params.name},'reviewer-notification.html',users);
+              await t.user.getReviewers(req.params.tenant_name).then(users=>{
+                sendMail({subject:'New Petition to Review',service_name:req.body.service_name,tenant:req.params.tenant_name},'reviewer-notification.html',users);
               }).catch(error=>{
                 next('Could not sent email to reviewers:' + error);
               });
@@ -508,11 +564,11 @@ router.post('/tenants/:name/petitions',authenticate,petitionValidationRules(),va
 });
 
 // Delete Petition
-router.delete('/tenants/:name/petitions/:id',authenticate,(req,res,next)=>{
+router.delete('/tenants/:tenant_name/petitions/:id',authenticate,(req,res,next)=>{
   if(req.user.role.actions.includes('delete_own_petition')){
     return db.tx('delete-petition',async t =>{
       try{
-        await t.service_petition_details.belongsToRequester(req.params.id,req.user.sub,req.params.name).then(async belongs =>{
+        await t.service_petition_details.belongsToRequester(req.params.id,req.user.sub,req.params.tenant_name).then(async belongs =>{
           if(belongs){
             const deleted = await t.service_petition_details.deletePetition(req.params.id);
             if(deleted){
@@ -539,17 +595,17 @@ router.delete('/tenants/:name/petitions/:id',authenticate,(req,res,next)=>{
 });
 
 // Edit Petition
-router.put('/tenants/:name/petitions/:id',authenticate,petitionValidationRules(),validate,asyncPetitionValidation,(req,res,next)=>{
+router.put('/tenants/:tenant_name/petitions/:id',authenticate,petitionValidationRules(),validate,formatPetition,serviceValidationRules({optional:false,tenant_param:true,check_available:false,sanitize:false,null_client_id:true}),validate,reFormatPetition,asyncPetitionValidation,(req,res,next)=>{
   if(req.user.role.actions.includes('update_own_petition')){
     return db.task('update-petition',async t =>{
       try{
         if(req.body.type==='delete'){
-          await t.service.get(req.body.service_id,req.params.name).then(async service => {
+          await t.service.get(req.body.service_id,req.params.tenant_name).then(async service => {
             if (service) {
               service = service.service_data;
               service.service_id = req.body.service_id;
               service.type = 'delete';
-              await t.petition.update(service,req.params.id,req.params.name).then(resp=>{
+              await t.petition.update(service,req.params.id,req.params.tenant_name).then(resp=>{
                 if(resp.success){
                   res.status(200).json();
                 }
@@ -561,7 +617,7 @@ router.put('/tenants/:name/petitions/:id',authenticate,petitionValidationRules()
           }).catch(err=>{next(err)});
         }
         else{
-          await t.petition.update(req.body,req.params.id,req.params.name).then(response=>{
+          await t.petition.update(req.body,req.params.id,req.params.tenant_name).then(response=>{
             if(response.success){
               res.status(200).end();
             }
@@ -584,7 +640,7 @@ router.put('/tenants/:name/petitions/:id',authenticate,petitionValidationRules()
 });
 
 // Admin rejects petition
-router.put('/tenants/:name/petitions/:id/review',authenticate,canReview,(req,res,next)=>{
+router.put('/tenants/:tenant_name/petitions/:id/review',authenticate,canReview,(req,res,next)=>{
   try{
     if(req.body.type==='reject'){
       rejectPetition(req,res,next,db);
@@ -605,10 +661,10 @@ router.put('/tenants/:name/petitions/:id/review',authenticate,canReview,(req,res
 });
 
 // Check availability for protocol unique id
-router.get('/tenants/:name/check-availability',authenticate,(req,res,next)=>{
+router.get('/tenants/:tenant_name/check-availability',(req,res,next)=>{
   db.tx('get-history-for-petition', async t =>{
     try{
-      await isAvailable(t,req.query.value,req.query.protocol,0,0,req.params.name,req.query.environment).then(available =>{
+      await isAvailable(t,req.query.value,req.query.protocol,0,0,req.params.tenant_name,req.query.environment).then(available =>{
             res.status(200).json({available:available});
       }).catch(err=>{next(err)});
     }
@@ -625,14 +681,14 @@ router.get('/tenants/:name/check-availability',authenticate,(req,res,next)=>{
 // -------------------------------------------------------------------------
 
 // Get group members
-router.get('/tenants/:name/groups/:group_id/members',authenticate,view_group,(req,res,next)=>{
+router.get('/tenants/:tenant_name/groups/:group_id/members',authenticate,view_group,(req,res,next)=>{
   try{
     db.group.getMembers(req.params.group_id).then(group_members =>{
       if(group_members){
         res.status(200).json({group_members});
       }
       else{
-        res.status(204).end();
+        res.status(404).end();
       }
     })
   }
@@ -640,7 +696,7 @@ router.get('/tenants/:name/groups/:group_id/members',authenticate,view_group,(re
 })
 
 // Remove member from group
-router.delete('/tenants/:name/groups/:group_id/members/:sub',authenticate,is_group_manager,(req,res,next)=>{
+router.delete('/tenants/:tenant_name/groups/:group_id/members/:sub',authenticate,is_group_manager,(req,res,next)=>{
   try{
     db.group.deleteSub(req.params.sub,req.params.group_id).then(response=>{
       if(response){
@@ -657,13 +713,11 @@ router.delete('/tenants/:name/groups/:group_id/members/:sub',authenticate,is_gro
 })
 
 // Create invitation and send email
-router.post('/tenants/:name/groups/:group_id/invitations',authenticate,postInvitationValidation(),validate,canInvite, (req,res,next)=>{
+router.post('/tenants/:tenant_name/groups/:group_id/invitations',authenticate,postInvitationValidation(),validate,canInvite, (req,res,next)=>{
   try{
-
-
     req.body.code = uuidv1();
     req.body.invited_by = req.user.email;
-    req.body.tenant = req.params.name;
+    req.body.tenant = req.params.tenant_name;
 
     // Send invitation to requested email
     sendInvitationMail(req.body).then(async email_sent=>{
@@ -691,7 +745,7 @@ router.post('/tenants/:name/groups/:group_id/invitations',authenticate,postInvit
 });
 
 // Delete invitation
-router.delete('/tenants/:name/groups/:group_id/invitations/:id',authenticate,canInvite,(req,res,next)=>{
+router.delete('/tenants/:tenant_name/groups/:group_id/invitations/:id',authenticate,canInvite,(req,res,next)=>{
   try{
     db.invitation.delete(req.params.id).then(response=>{
       if(response){
@@ -708,11 +762,11 @@ router.delete('/tenants/:name/groups/:group_id/invitations/:id',authenticate,can
 });
 
 // Refresh invitation
-router.put('/tenants/:name/groups/:group_id/invitations/:id',authenticate,canInvite,(req,res,next)=>{
+router.put('/tenants/:tenant_name/groups/:group_id/invitations/:id',authenticate,canInvite,(req,res,next)=>{
   try{
     db.invitation.refresh(req.params.id).then(response=>{
       if(response.code){
-        response.tenant = req.params.name;
+        response.tenant = req.params.tenant_name;
         sendInvitationMail(response)
         res.status(200).end();
       }
@@ -728,13 +782,13 @@ router.put('/tenants/:name/groups/:group_id/invitations/:id',authenticate,canInv
 
 // Accept/Reject invitation
 
-router.put('/tenants/:name/invitations/:invite_id/:action',authenticate,(req,res,next)=>{
+router.put('/tenants/:tenant_name/invitations/:invite_id/:action',authenticate,(req,res,next)=>{
   try{
     if(req.params.action==='accept'){
       db.tx('accept-invite',async t =>{
         await t.invitation.getOne(req.params.invite_id,req.user.sub).then(async invitation_data=>{
           if(invitation_data){
-            invitation_data.tenant = req.params.name;
+            invitation_data.tenant = req.params.tenant_name;
             let done = await t.batch([
               t.group.newMemberNotification(invitation_data),
               t.group.addMember(invitation_data),
@@ -768,14 +822,14 @@ router.put('/tenants/:name/invitations/:invite_id/:action',authenticate,(req,res
 })
 
 // Get all invitations for requesting user
-router.get('/tenants/:name/invitations',authenticate,(req,res,next)=>{
+router.get('/tenants/:tenant_name/invitations',authenticate,(req,res,next)=>{
   try{
     db.invitation.getAll(req.user.sub).then((response)=>{
       if(response){
         res.status(200).json(response);
       }
       else{
-        res.status(204).end()
+        res.status(404).end()
       }
     }).catch(err=>{next(err)})
   }
@@ -785,14 +839,14 @@ router.get('/tenants/:name/invitations',authenticate,(req,res,next)=>{
 });
 
 // Get all invitations for a specific
-router.get('/tenants/:name/groups/:group_id/invitations',authenticate,(req,res,next)=>{
+router.get('/tenants/:tenant_name/groups/:group_id/invitations',authenticate,(req,res,next)=>{
   try{
     db.invitation.get(req.params.group_id).then(invitations => {
       if(invitations){
         res.status(200).json({invitations});
       }
       else{
-        res.status(204).end();
+        res.status(404).end();
       }
     })
   }
@@ -802,7 +856,7 @@ router.get('/tenants/:name/groups/:group_id/invitations',authenticate,(req,res,n
 })
 
 // Activate invitation
-router.put('/tenants/:name/invitations/activate_by_code',authenticate,(req,res,next)=>{
+router.put('/tenants/:tenant_name/invitations/activate_by_code',authenticate,(req,res,next)=>{
   try{
     db.invitation.setUser(req.body.code,req.user.sub).then(result=>{
       if(result.success){
@@ -812,7 +866,7 @@ router.put('/tenants/:name/invitations/activate_by_code',authenticate,(req,res,n
         res.status(406).json({error:result.error});
       }
       else {
-        res.status(204).end();
+        res.status(404).end();
       }
     }).catch(err=>{next(err)})
   }
@@ -838,9 +892,9 @@ router.get('/agent/get_agents',amsAgentAuth,(req,res,next)=>{
   }
 });
 
-router.get('/tenants/:name/agents',(req,res,next)=>{
+router.get('/tenants/:tenant_name/agents',(req,res,next)=>{
   try{
-    db.deployer_agents.getTenant(req.params.name).then(result => {
+    db.deployer_agents.getTenantsAgents(req.params.tenant_name).then(result => {
       if(result){
         res.status(200).json({agents:result});
       }
@@ -854,9 +908,9 @@ router.get('/tenants/:name/agents',(req,res,next)=>{
   }
 });
 
-router.get('/tenants/:name/agents/:id',(req,res,next)=>{
+router.get('/tenants/:tenant_name/agents/:id',(req,res,next)=>{
   try{
-    db.deployer_agents.getById(req.params.name,req.params.id).then(async result => {
+    db.deployer_agents.getById(req.params.tenant_name,req.params.id).then(async result => {
       if(result){
         res.status(200).send(result);
       }
@@ -870,9 +924,9 @@ router.get('/tenants/:name/agents/:id',(req,res,next)=>{
   }
 });
 
-router.put('/tenants/:name/agents/:id',putAgentValidation(),validate,(req,res,next)=>{
+router.put('/tenants/:tenant_name/agents/:id',putAgentValidation(),validate,(req,res,next)=>{
   try{
-    db.deployer_agents.update(req.body,req.params.id,req.params.name).then(result => {
+    db.deployer_agents.update(req.body,req.params.id,req.params.tenant_name).then(result => {
       if(result){
         res.status(200).end();
       }
@@ -885,9 +939,9 @@ router.put('/tenants/:name/agents/:id',putAgentValidation(),validate,(req,res,ne
     next(err);
   }
 });
-router.post('/tenants/:name/agents',postAgentValidation(),validate,(req,res,next)=>{
+router.post('/tenants/:tenant_name/agents',postAgentValidation(),validate,(req,res,next)=>{
   try{
-    db.deployer_agents.add(req.body.agents,req.params.name).then(async result => {
+    db.deployer_agents.add(req.body.agents,req.params.tenant_name).then(async result => {
       if(result){
         res.status(200).end();
       }
@@ -901,9 +955,9 @@ router.post('/tenants/:name/agents',postAgentValidation(),validate,(req,res,next
   }
 });
 
-router.delete('/tenants/:name/agents',(req,res,next)=>{
+router.delete('/tenants/:tenant_name/agents',(req,res,next)=>{
   try{
-    db.deployer_agents.deleteAll(req.params.name).then(result => {
+    db.deployer_agents.deleteAll(req.params.tenant_name).then(result => {
       if(result){
         res.status(200).end();
       }
@@ -917,9 +971,9 @@ router.delete('/tenants/:name/agents',(req,res,next)=>{
   }
 
 });
-router.delete('/tenants/:name/agents/:id',(req,res,next)=>{
+router.delete('/tenants/:tenant_name/agents/:id',(req,res,next)=>{
   try{
-    db.deployer_agents.delete(req.params.name,req.params.id).then(result => {
+    db.deployer_agents.delete(req.params.tenant_name,req.params.id).then(result => {
       if(result){
         res.status(200).end();
       }
@@ -1012,7 +1066,6 @@ function decode(jwt) {
 
 // Authentication Middleware
 function authenticate(req,res,next){
-
   try{
     var clients = req.app.get('clients');
     if(process.env.NODE_ENV==='test-docker'||process.env.NODE_ENV==='test'){
@@ -1021,27 +1074,29 @@ function authenticate(req,res,next){
         // Remove Bearer from string
         token = token.slice(7, token.length);
         req.user = decode(token);
-        db.user_role.getRoleActions(req.user.edu_person_entitlement,req.params.name).then(role=>{
+        db.user_role.getRoleActions(req.user.edu_person_entitlement,req.params.tenant_name).then(role=>{
           if(role.success){
-
             req.user.role = role.role;
             next();
+          }else{
+            res.status(401).send('Unauthenticated Request');
           }
-        }).catch(err=>{next(err)});
+        }).catch(err=>{
+          next(err)});
       }
       else{
         res.status(500).send("Need userToken");
       }
     }
     else{
-      const data = {'client_secret':clients[req.params.name].client_secret}
+      const data = {'client_secret':clients[req.params.tenant_name].client_secret}
       if(req.headers.authorization){
         TokenArray = req.headers.authorization.split(" ");
         axios({
           method:'post',
-          url: clients[req.params.name].issuer_url+'introspect',
+          url: clients[req.params.tenant_name].issuer_url+'introspect',
           params: {
-            client_id:clients[req.params.name].client_id,
+            client_id:clients[req.params.tenant_name].client_id,
             token:TokenArray[1]
           },
           headers: {
@@ -1053,11 +1108,12 @@ function authenticate(req,res,next){
           //console.log(result);
           req.user = {};
           req.user.sub = result.data.sub;
+
           req.user.edu_person_entitlement = result.data.eduperson_entitlement;
           req.user.iss = result.data.iss;
           req.user.email = result.data.email;
           if(req.user.sub){
-            db.user_role.getRoleActions(req.user.edu_person_entitlement,req.params.name).then(role=>{
+            db.user_role.getRoleActions(req.user.edu_person_entitlement,req.params.tenant_name).then(role=>{
               if(role.success){
                 req.user.role = role.role;
                 console.log('User with email ' + result.data.email + ' is authenticated');
@@ -1069,13 +1125,14 @@ function authenticate(req,res,next){
                 res.status(401).end();
               }
             }).catch((err)=> {
-              //console.log(err);
+              customLogger(req,res,'warn','Unauthenticated request'+err);
+
               res.status(401).end();
             });
           }
           else{res.status(401).end();}
         }, (error) =>{
-          //console.log(error);
+          customLogger(req,res,'warn','Unauthenticated request'+ error);
           res.status(401).end();
         }).catch(err=>{res.status(401).end();})
       }
@@ -1086,6 +1143,7 @@ function authenticate(req,res,next){
 
   }
   catch(err){
+    customLogger(req,res,'warn','Unauthenticated request'+err);
     next(err);
   }
 
@@ -1094,7 +1152,6 @@ function authenticate(req,res,next){
 // Authenticating AmsAgent
 function amsAgentAuth(req,res,next){
   if(req.header('X-Api-Key')===process.env.AMS_AGENT_KEY){
-
     next();
   }
   else{
@@ -1110,19 +1167,26 @@ function canReview(req,res,next){
   if(req.user.role.actions.includes('review_petition')){
     next();
   }
-  else if (req.user.role.actions.includes('review_own_petition')) {
-    db.petition.canReviewOwn(req.params.id,req.user.sub).then(canReview=>{
-      if(canReview){
+  else{
+    db.petition.canReviewOwn(req.params.id,req.user.sub).then(service=>{
+
+      if(service&&service.integration_environment==='development'){
         next();
+      }
+      else if(service){
+         if (req.user.role.actions.includes('review_own_petition')){
+           next();
+         }
+         else{
+            res.status(401).json({error:'Requested action not authorised'});
+         }
       }
       else{
         res.status(401).json({error:'Requested action not authorised'});
       }
     })
   }
-  else{
-    res.status(401).json({error:'Requested action not authorised'});
-  }
+
 }
 
 // Save new User to db. Gets called on Authentication
@@ -1151,26 +1215,31 @@ function checkCertificate(req,res,next) {
 }
 
 // Checking Availability of Client Id/Entity Id
-const isAvailable=(t,id,protocol,petition_id,service_id,tenant,environment)=>{
-  if(protocol==='oidc'){
-    return t.service_details_protocol.checkClientId(id,service_id,petition_id,tenant,environment);
+const isAvailable= async (t,id,protocol,petition_id,service_id,tenant,environment)=>{
+  if(id){
+    if(protocol==='oidc'){
+      return t.service_details_protocol.checkClientId(id,service_id,petition_id,tenant,environment);
+    }
+    else if (protocol==='saml'){
+      return t.service_details_protocol.checkEntityId(id,service_id,petition_id,tenant,environment);
+    }
   }
-  else if (protocol==='saml'){
-    return t.service_details_protocol.checkEntityId(id,service_id,petition_id,tenant,environment);
+  else {
+    return true;
   }
 }
 
 // This validation is for the POST,PUT /petition
 function asyncPetitionValidation(req,res,next){
   // for all petitions we need to check for Client Id/Entity Id availability
-
   try{
     return db.tx('user-check',async t=>{
       // For the post
       if(req.route.methods.post){
         if(req.body.type==='create'){
-          await isAvailable.apply(this,(req.body.protocol==='oidc'?[t,req.body.client_id,'oidc',0,0,req.params.name,req.body.integration_environment]:[t,req.body.entity_id,'saml',0,0,req.params.name,req.body.integration_environment])).then(async available=>{
+          await isAvailable.apply(this,(req.body.protocol==='oidc'?[t,req.body.client_id,'oidc',0,0,req.params.tenant_name,req.body.integration_environment]:[t,req.body.entity_id,'saml',0,0,req.params.tenant_name,req.body.integration_environment])).then(async available=>{
             if(available){
+
               next();
             }
             else {
@@ -1182,16 +1251,16 @@ function asyncPetitionValidation(req,res,next){
         else{
           // Here we handle petitons of edit and delete type
           // First we need to make sure there aren't any open petitions for target service
-          await t.service_petition_details.openPetition(req.body.service_id,req.params.name).then(async open_petition_id =>{
+          await t.service_petition_details.openPetition(req.body.service_id,req.params.tenant_name).then(async open_petition_id =>{
             if(!open_petition_id){
-              await t.service_details.getProtocol(req.body.service_id,req.user.sub,req.params.name).then(async service =>{
+              await t.service_details.getProtocol(req.body.service_id,req.user.sub,req.params.tenant_name).then(async service =>{
                 if(service&&service.protocol){
                   if(req.body.type==='delete'){
 
                     next();
                   }
                   else if(service.protocol===req.body.protocol){
-                    await isAvailable.apply(this,(req.body.protocol==='oidc'?[t,req.body.client_id,'oidc',0,req.body.service_id,req.params.name,req.body.integration_environment]:[t,req.body.entity_id,'saml',0,req.body.service_id,req.params.name,req.body.integration_environment])).then(async available=>{
+                    await isAvailable.apply(this,(req.body.protocol==='oidc'?[t,req.body.client_id,'oidc',0,req.body.service_id,req.params.tenant_name,req.body.integration_environment]:[t,req.body.entity_id,'saml',0,req.body.service_id,req.params.tenant_name,req.body.integration_environment])).then(async available=>{
                       if(available){
                         next();
                       }
@@ -1224,7 +1293,7 @@ function asyncPetitionValidation(req,res,next){
         }
       }
       else if(req.route.methods.put){
-        await t.service_petition_details.belongsToRequester(req.params.id,req.user.sub,req.params.name).then(async petition => {
+        await t.service_petition_details.belongsToRequester(req.params.id,req.user.sub,req.params.tenant_name).then(async petition => {
           if(petition){
             if(req.body.type==='delete'){
               next();
@@ -1241,7 +1310,7 @@ function asyncPetitionValidation(req,res,next){
               if(!req.body.service_id){
                 req.body.service_id=0;
               }
-              await isAvailable.apply(this,(req.body.protocol==='oidc'?[t,req.body.client_id,'oidc',req.params.id,req.body.service_id,req.params.name,req.body.integration_environment]:[t,req.body.entity_id,'saml',req.params.id,req.body.service_id,req.params.name,req.body.integration_environment])).then(async available=>{
+              await isAvailable.apply(this,(req.body.protocol==='oidc'?[t,req.body.client_id,'oidc',req.params.id,req.body.service_id,req.params.tenant_name,req.body.integration_environment]:[t,req.body.entity_id,'saml',req.params.id,req.body.service_id,req.params.tenant_name,req.body.integration_environment])).then(async available=>{
                 if(available){
                   next();
                 }

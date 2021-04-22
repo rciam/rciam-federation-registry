@@ -1,11 +1,28 @@
 var diff = require('deep-diff').diff;
 require('dotenv').config();
 var path = require("path");
-
 var fs = require('fs');
-var handlebars = require('handlebars');
+var hbs = require('handlebars');
 nodeMailer = require('nodemailer');
 const customLogger = require('../loggers.js');
+
+
+hbs.registerHelper('loud', function (aString) {
+    return aString.toUpperCase()
+})
+
+const sendMultipleInvitations = function (data,t) {
+
+  try{
+    t.invitation.addMultiple(data).then(res=>{data.forEach(invitation_data=>{
+      sendInvitationMail(invitation_data);
+    })}).catch(err=>{customLogger(null,null,'warn','Error when creating and sending invitations: '+err)})
+  }
+  catch(err){
+    customLogger(null,null,'warn','Error when creating and sending invitations: '+err);
+  }
+
+}
 
 const calcDiff = (oldState,newState) => {
     var new_values = Object.assign({},newState);
@@ -19,7 +36,12 @@ const calcDiff = (oldState,newState) => {
       details:{}
     };
 
-
+    if(!old_values.contacts){
+      old_values.contacts = [];
+    }
+    if(!new_values.contacts){
+      new_values.contacts = [];
+    }
     new_values.contacts.forEach(item=>{
       new_cont.push(item.email+' '+item.type);
     });
@@ -41,6 +63,24 @@ const calcDiff = (oldState,newState) => {
       })
     }
     if(new_values.protocol==='oidc'){
+      if(!old_values.redirect_uris){
+        old_values.redirect_uris = [];
+      }
+      if(!new_values.redirect_uris){
+        new_values.redirect_uris = [];
+      }
+      if(!old_values.scope){
+        old_values.scope = [];
+      }
+      if(!new_values.scope){
+        new_values.scope = [];
+      }
+      if(!old_values.grant_types){
+        old_values.scope = [];
+      }
+      if(!new_values.grant_types){
+        new_values.scope = [];
+      }
       edits.add.oidc_grant_types = new_values.grant_types.filter(x=>!old_values.grant_types.includes(x));
       edits.dlt.oidc_grant_types = old_values.grant_types.filter(x=>!new_values.grant_types.includes(x));
       edits.add.oidc_scopes = new_values.scope.filter(x=>!old_values.scope.includes(x));
@@ -70,6 +110,7 @@ const calcDiff = (oldState,newState) => {
 }
 
 const sendInvitationMail = async (data) => {
+
   return new Promise(resolve=>{
     if(process.env.NODE_ENV!=='test-docker'&& process.env.NODE_ENV!=='test'){
       var currentDate = new Date();
@@ -79,18 +120,25 @@ const sendInvitationMail = async (data) => {
             port: 587,
             secure: false
         });
-        var template = handlebars.compile(html);
+        // let transporter = nodeMailer.createTransport({
+        //   service: 'gmail',
+        //   auth: {
+        //     user: 'orionaikido@gmail.com',
+        //     pass: ''
+        //   }
+        // });
+        var template = hbs.compile(html);
         var replacements = {
           invited_by:data.invited_by,
           group_manager:data.group_manager,
-          email:data.email,
-          registry_url: process.env.EXPRESS_BASE+'/'+ data.tenant,
-          url:process.env.EXPRESS_BASE+'/'+ data.tenant +'/invitation/' + data.code
+          registry_url: process.env.REACT_BASE+'/'+ data.tenant,
+          tenant:data.tenant,
+          url:process.env.REACT_BASE+'/'+ data.tenant +'/invitation/' + data.code
         }
         var htmlToSend = template(replacements);
         var mailOptions = {
           from: "noreply@faai.grnet.gr",
-          to : 'koza-sparrow@hotmail.com',
+          to : data.email,
           subject : 'Invitation to manage service',
           html : htmlToSend
         };
@@ -122,13 +170,20 @@ const newMemberNotificationMail = (data,managers) => {
           port: 587,
           secure: false
       });
+      // let transporter = nodeMailer.createTransport({
+      //   service: 'gmail',
+      //   auth: {
+      //     user: 'orionaikido@gmail.com',
+      //     pass: ''
+      //   }
+      // });
       var replacements = {
         invitation_mail:data.invitation_mail,
         username:data.preferred_username,
         email:data.email,
-        url:process.env.EXPRESS_BASE+'/'+ data.tenant
+        url:process.env.REACT_BASE+'/'+ data.tenant
       };
-      var template = handlebars.compile(html);
+      var template = hbs.compile(html);
       managers.forEach((manager)=>{
         replacements.target_email = manager.email;
         replacements.username = manager.username;
@@ -136,7 +191,7 @@ const newMemberNotificationMail = (data,managers) => {
         var htmlToSend = template(replacements);
         var mailOptions = {
           from: "noreply@faai.grnet.gr",
-          to : 'koza-sparrow@hotmail.com',
+          to : manager.email,
           subject : 'New member in your owners group',
           html : htmlToSend
         };
@@ -156,14 +211,14 @@ const newMemberNotificationMail = (data,managers) => {
 const sendMail= (data,template_uri,users)=>{
   var currentDate = new Date();
   var result;
-  if(!(process.env.NODE_ENV==='test')&&!(process.env.NODE_ENV==='test-docker')){
+  if(process.env.NODE_ENV!=='test'&&process.env.NODE_ENV!=='test-docker'){
   readHTMLFile(path.join(__dirname, '../html/', template_uri), function(err, html) {
       let transporter = nodeMailer.createTransport({
           host: 'relay.grnet.gr',
           port: 587,
           secure: false
       });
-      var template = handlebars.compile(html);
+      var template = hbs.compile(html);
       //var replacements = {username: "John Doe",name:"The name"};
       var state;
       if(data.state){
@@ -181,19 +236,19 @@ const sendMail= (data,template_uri,users)=>{
         service_name:data.service_name,
         date:currentDate,
         state:state,
-        url:process.env.EXPRESS_BASE+'/'+ data.tenant
+        url:process.env.REACT_BASE+'/'+ data.tenant
       };
 
       users.forEach((user) => {
           replacements.name = user.name;
-          replacements.email = user.email;
           var htmlToSend = template(replacements);
           var mailOptions = {
             from: "noreply@faai.grnet.gr",
-            to : 'koza-sparrow@hotmail.com',
+            to : user.email,
             subject : data.subject,
             html : htmlToSend
           };
+
           transporter.sendMail(mailOptions, function (error, response) {
             if (error) {
               customLogger(null,null,'info',[{type:'email_log'},{message:'Email not sent'},{error:error},{user:users},{data:data}]);
@@ -239,5 +294,7 @@ module.exports = {
   addToString,
   sendMail,
   sendInvitationMail,
-  newMemberNotificationMail
+  newMemberNotificationMail,
+  sendMultipleInvitations,
+  readHTMLFile
 }

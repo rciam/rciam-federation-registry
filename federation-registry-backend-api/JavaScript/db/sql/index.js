@@ -30,6 +30,7 @@ module.exports = {
       addSaml:sql('service_details_protocol/addSaml.sql')
     },
     service:{
+      getAll:(sql('service/getAll.sql')),
       getService:sql('service/getService.sql'),
       getPending:sql('service/getPending.sql')
     },
@@ -44,6 +45,7 @@ module.exports = {
     service_state:{
       add:sql('service_state/add.sql'),
       update:sql('service_state/update.sql'),
+      getOutdatedOwners:sql('service_state/getOutdatedOwners.sql')
     },
     user:{
       getReviewers:sql('user/getReviewers.sql'),
@@ -59,8 +61,7 @@ module.exports = {
       getOldPetition:sql('petition/getOldPetition.sql')
     },
     service_list: {
-      getOwnList:sql('service_list/getOwnList.sql'),
-      getAllList:sql('service_list/getAllList.sql')
+      getList:sql('service_list/getList.sql')
     },
     group: {
       getGroupMembers:(sql('group/getGroupMembers.sql')),
