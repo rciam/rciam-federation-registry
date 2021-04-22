@@ -12,7 +12,7 @@ import Alert from 'react-bootstrap/Alert';
 import Jumbotron from 'react-bootstrap/Jumbotron';
 import Container from 'react-bootstrap/Container';
 import { useTranslation } from 'react-i18next';
-import {Logout} from './Modals'
+import {Logout,NotFound} from './Modals'
 
 export const HistoryList = (props) => {
   const [loadingList,setLoadingList] = useState();
@@ -20,6 +20,7 @@ export const HistoryList = (props) => {
   const [asyncResponse,setAsyncResponse] = useState(false);
   const [petition,setPetition] = useState(null);
   const [stateProps,setstateProps] = useState();
+  const [notFound,setNotFound] = useState();
   const [logout,setLogout] = useState();
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
@@ -47,7 +48,12 @@ export const HistoryList = (props) => {
           return response.json();
         }
         else if(response.status===401){
-          props.logout();
+          setLogout(true);
+          return false;
+        }
+        else if(response.status===404){
+          setNotFound(true);
+          return false;
         }
         else {
           return false
@@ -73,6 +79,7 @@ export const HistoryList = (props) => {
       }
       else if(response.status===401){
         setLogout(true);
+        return false;
       }
       else {
         return false
@@ -86,6 +93,7 @@ export const HistoryList = (props) => {
   }
   return (
     <React.Fragment>
+      <NotFound notFound={notFound}/>
       <Logout logout={logout}/>
       <ProcessingRequest active={asyncResponse}/>
 
@@ -140,7 +148,7 @@ export const HistoryList = (props) => {
                 <tr key={index}>
                   <td>{item.reviewed_at?item.reviewed_at.slice(0,10).split('-').join('/'):t('history_not_reviewed')}</td>
                   <td><Badge className="status-badge" variant='info'>{item.type==="create"?t('registration'):item.type==="edit"?t('reconfiguration'):t('deregistration')} {t('history_info_2')}</Badge></td>
-                  <td><Badge className="status-badge" variant={item.status==="pending"||item.status==="approved_with_changes"?'warning':item.status==="reject"?'danger':'success'}>{item.status}</Badge></td>
+                  <td><Badge className="status-badge" variant={item.status==="pending"||item.status==="approved_with_changes"?'warning':item.status==="reject"?'danger':'success'}>{item.status==='reject'?'rejected':item.status}</Badge></td>
                   <td>
                       <Button variant="secondary" onClick={()=>{
                         let indx = index;

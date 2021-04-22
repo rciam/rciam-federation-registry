@@ -4,7 +4,7 @@ services:
     image: node:13-buster
     volumes:
       - ../:/home
-    depends_on: 
+    depends_on:
       - database
     command: ["/home/docker/wait-for-it.sh", "database:5432", "--", "/home/docker/run_tests.sh"]
   database:

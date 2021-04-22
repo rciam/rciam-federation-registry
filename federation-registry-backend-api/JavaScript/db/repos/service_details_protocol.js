@@ -12,7 +12,7 @@ class ServiceDetailsProtocolRepository {
         this.db = db;
         this.pgp = pgp;
         cs.client_id = new pgp.helpers.ColumnSet(['?id','client_id'],{table:'service_details_oidc'});
-        cs.add_multiple_oidc = new pgp.helpers.ColumnSet(['id','client_id','allow_introspection','code_challenge_method','device_code_validity_seconds','access_token_validity_seconds','refresh_token_validity_seconds','client_secret','reuse_refresh_tokens','clear_access_tokens_on_refresh','id_token_timeout_seconds'],{table:'service_details_oidc'});
+        cs.add_multiple_oidc = new pgp.helpers.ColumnSet(['id','client_id','allow_introspection','code_challenge_method','device_code_validity_seconds','access_token_validity_seconds','refresh_token_validity_seconds','client_secret','reuse_refresh_tokens','clear_access_tokens_on_refresh','id_token_timeout_seconds', 'token_endpoint_auth_method', 'token_endpoint_auth_signing_alg', 'jwks', 'jwks_uri'],{table:'service_details_oidc'});
         cs.add_multiple_saml = new pgp.helpers.ColumnSet(['id','entity_id','metadata_url'],{table:'service_details_saml'});
         // set-up all ColumnSet objects, if needed:
     }
@@ -41,13 +41,15 @@ class ServiceDetailsProtocolRepository {
     }
 
     async checkClientId(client_id,service_id,petition_id,tenant,environment){
-      return this.db.any(sql.checkClientId,{
+      const query =  this.pgp.as.format(sql.checkClientId,{
         client_id:client_id,
         service_id:service_id,
         petition_id:petition_id,
         tenant:tenant,
         environment:environment
-      }).then(result =>{
+      });
+      return this.db.any(query
+      ).then(result =>{
           if(result.length>0){return false}else{return true}
       })
     }
@@ -94,6 +96,10 @@ class ServiceDetailsProtocolRepository {
             allow_introspection: data.allow_introspection,
             client_id: data.client_id,
             client_secret: data.client_secret,
+            token_endpoint_auth_method:data.token_endpoint_auth_method,
+            token_endpoint_auth_signing_alg:data.token_endpoint_auth_signing_alg,
+            jwks:data.jwks,
+            jwks_uri:data.jwks_uri,
             id_token_timeout_seconds:data.id_token_timeout_seconds,
             access_token_validity_seconds: data.access_token_validity_seconds,
             refresh_token_validity_seconds: data.refresh_token_validity_seconds,
@@ -118,6 +124,7 @@ class ServiceDetailsProtocolRepository {
 
 
     async update(type,data,id){
+
       if(type==='petition'){
         type=petition;
       }
@@ -130,6 +137,10 @@ class ServiceDetailsProtocolRepository {
           allow_introspection: data.allow_introspection,
           client_id: data.client_id,
           client_secret: data.client_secret,
+          token_endpoint_auth_method:data.token_endpoint_auth_method,
+          token_endpoint_auth_signing_alg:data.token_endpoint_auth_signing_alg,
+          jwks:data.jwks,
+          jwks_uri:data.jwks_uri,
           id_token_timeout_seconds: data.id_token_timeout_seconds,
           access_token_validity_seconds: data.access_token_validity_seconds,
           refresh_token_validity_seconds: data.refresh_token_validity_seconds,

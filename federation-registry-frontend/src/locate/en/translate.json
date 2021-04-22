@@ -108,7 +108,7 @@
     "form_logo_desc":"URL that points to a logo image, will be displayed on approval page",
     "form_description":"Description",
     "form_description_desc":"Human-readable text description",
-    "form_policy_uri":"Policy Statement",
+    "form_policy_uri":"Link to Privacy Policy",
     "form_policy_uri_desc":"URL for the Policy Statement of this service, will be displayed to the user",
     "form_contacts":"Contacts",
     "form_contacts_desc":"List of contacts for administrators of this service.",
@@ -221,7 +221,8 @@
     "invitation_alert_link":"here ",
     "invitation_alert_2":"to view.",
     "invitations_accept":"Accept",
-    "invitations_decline":"Dismiss"
+    "invitations_decline":"Dismiss",
+    "invitation_landing_page_message":"You were invited to manage a service, please login to Federation Registry to view your invitation."
 
 
   }

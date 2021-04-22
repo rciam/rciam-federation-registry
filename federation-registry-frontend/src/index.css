@@ -207,6 +207,7 @@ code {
 
 .petitions-table {
   text-align: left;
+  position: relative;
   font-family:'Manrope';
   font-weight:300;
   table-layout: fixed;
@@ -311,8 +312,6 @@ code {
   margin-bottom:0;
 }
 .drop-container-controls .dropdown-menu {
-  margin-right:0.7rem!important;
-  margin-top:-0.5rem!important;
   padding:0rem;
 }
 
@@ -458,6 +457,29 @@ textarea {
   margin-left:0.4rem;
   margin-top:0.4rem;
 }
+.approve-error {
+  color:red;
+  margin-left:0.4rem;
+}
+.form_radio_item {
+  margin-bottom:0.5rem!important;
+}
+
+.form_radio_item input {
+  margin-right:0.5rem!important;
+}
+
+.public_key_radio {
+  display:inline-block;
+  margin-right:0.5rem;
+}
+.public_key_radio input {
+  margin-right:0.3rem;
+}
+.public_key_input {
+  margin-top:0.5rem;
+}
+
 
 /* Inputs */
 
@@ -467,6 +489,10 @@ textarea {
   border-radius: 0.3rem;
   box-shadow: 0 0 0 .2rem
   rgba(255, 193, 7,.25);
+}
+.input_radio_edited {
+  color:#FFC107!important;
+  font-weight:bold;
 }
 
 .checkbox-edited {
@@ -1159,4 +1185,55 @@ html:lang(gr) .home-container h1 {
   border:none!important;
   background-color: #F8D7DA!important;
   margin-bottom:0rem!important;
+}
+.leave-group-button{
+  padding: 0.1rem 0.35rem 0.1rem 0.35rem!important
+}
+
+
+
+.table-overlay {
+  position: absolute;
+  top: 3rem;
+  width: 100%;
+  height: -webkit-calc(100% - 3rem);
+  height: calc(100% - 3rem);
+  border:none!important;
+  background-color: rgba(255, 255, 255, 0.7)!important;
+}
+
+.table-overlay td{
+  border:none!important;
+}
+
+.fake-link:hover {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.fake-link {
+    color: #007bff;
+    text-decoration: none;
+    background-color: transparent;
+}
+
+.alert_fake_link {
+  color:#775a03;
+  font-weight: bold;
+  cursor:pointer;
+}
+
+.alert_fake_link:hover {
+  text-decoration: underline;
+}
+.copy_button {
+  margin-left:0.5rem!important;
+  margin-bottom:0.1rem;
+  padding: 0rem 0.4rem;
+}
+
+.required_indicator {
+  color:red;
+  margin-left:-0.6rem;
+  margin-top:0.2rem;
 }

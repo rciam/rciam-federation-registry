@@ -34,6 +34,33 @@ export const Logout = (props) => {
 
 }
 
+export const NotFound = (props) => {
+  const history = useHistory();
+  const tenant = useContext(tenantContext);
+  const handleClose = () => {
+    history.push('/'+(tenant&&tenant[0]?tenant[0].name:null)+'/petitions');
+    props.setNotFound(false);
+  }
+  return (
+    <Translation>
+      {t=> {
+        return(
+          <Modal show={props.notFound} onHide={handleClose}>
+            <Modal.Header >
+              <Modal.Title>Resourse requested was not found</Modal.Title>
+            </Modal.Header>
+            <Modal.Footer>
+              <Button variant="secondary" onClick={handleClose}>
+                Continue
+              </Button>
+            </Modal.Footer>
+          </Modal>
+        )
+      }}
+    </Translation>
+  )
+}
+
 export class SimpleModal extends React.Component {
 
   constructor(props){

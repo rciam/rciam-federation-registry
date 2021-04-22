@@ -222,7 +222,8 @@
     "invitation_alert_2":"για λεπτομέριες.",
     "invitations_accept":"Αποδοχή",
     "invitations_accept":"Απορριψη",
-    "view_group":"Εμφάνιση Ομάδας"
+    "view_group":"Εμφάνιση Ομάδας",
+    "invitation_landing_page_message":"You were invited to manage a service, please login to Federation Registry to view your invitation."
 
   }
 }

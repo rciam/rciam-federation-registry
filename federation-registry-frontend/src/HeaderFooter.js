@@ -74,9 +74,12 @@ export const NavbarTop = (props)=>{
           >
             {user?(
               <Dropdown.Item>
-                {user.sub}
+                {user.sub} <strong>(sub)</strong>
               </Dropdown.Item>
             ):null}
+            <Dropdown.Item onClick={()=>{history.push('/'+(tenant&&tenant[0]?(tenant[0].name+'/userinfo'):null));}}>
+            {t('nav_link_userinfo')}
+            </Dropdown.Item>
             <Dropdown.Item onClick={()=>{localStorage.removeItem('token'); history.push('/'+(tenant&&tenant[0]?tenant[0].name:null));}} >
               {t('logout')}<FontAwesomeIcon icon={faSignOutAlt}/>
             </Dropdown.Item>
@@ -122,6 +125,9 @@ export const Footer =(props) =>{
               Copyright ©2016-2020      </div>
           </Col>
           <Col sm="4" className="ssp-footer__item">
+            <div className="ssp-footer__item__powered">
+              Leave <a href="https://forms.gle/rnAq7bBT4bN7WiNYA">Feedback</a>
+            </div>
             <div className="ssp-footer__item__powered">
               Powered by <a href="https://github.com/rciam">RCIAM</a>
             </div>

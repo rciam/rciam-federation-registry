@@ -1,6 +1,7 @@
 import React, {useState, useRef ,useEffect} from 'react';
 import Col from 'react-bootstrap/Col';
 import { Field, FieldArray,FormikConsumer } from 'formik';
+import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Form from 'react-bootstrap/Form';
 import InputGroup from 'react-bootstrap/InputGroup';
 import Button from 'react-bootstrap/Button';
@@ -10,6 +11,10 @@ import Tooltip from 'react-bootstrap/Tooltip';
 import Overlay from 'react-bootstrap/Overlay';
 import * as formConfig from '../form-config.json';
 import { useTranslation } from 'react-i18next';
+import countryData from 'country-region-data';
+// import {tenantContext} from '../context.js';
+// import {removeA} from '../helpers.js';
+
 /*
 const [show, setShow] = useState(false);
 const target = useRef(null);
@@ -26,6 +31,7 @@ export function SimpleInput(props){
         <React.Fragment>
           <Form.Control
             {...props}
+            value={props.value?props.value:''}
             type="text"
             ref={target}
             onMouseOver={()=>setShow(true)}
@@ -56,7 +62,121 @@ export function TextAria(props) {
     </React.Fragment>
   )
 }
+export function PublicKey(props){
+  const [type,setType] = useState();
+  useEffect(()=>{
+    setType(props.values.jwks?'jwks':'jwks_uri')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[]);
+  const [show, setShow] = useState(false);
+  const target = useRef(null);
+  return(
+    <React.Fragment>
+      <div className="public_key_radio">
+        <input
+          type='radio'
+          name='public_key_type'
+          value='jwks_uri'
+          checked={type==='jwks_uri'}
+          disabled={props.disabled}
+          onChange={(e)=>{console.log(e);props.setvalue('jwks','',true); setType(e.target.value) }}
+        />
+        By URI
+      </div>
+      <div className="public_key_radio">
+        <input
+          type='radio'
+          name='public_key_type'
+          value='jwks'
+          checked={type==='jwks'}
+          disabled={props.disabled}
+          onChange={(e)=>{console.log(e);props.setvalue('jwks_uri','',true); setType(e.target.value) }}
+        />
+        By Value
+      </div>
+      <div className="public_key_input">
+        {type==='jwks_uri'?
+          <Form.Control
+            onBlur={props.onBlur}
+            name="jwks_uri"
+            placeholder='https://'
+            type="text"
+            ref={target}
+            value={props.values.jwks_uri}
+            onChange={props.onChange}
+            isInvalid={props.isInvalid}
+            disabled={props.disabled}
+            onMouseOver={()=>setShow(true)}
+            onMouseOut={()=>setShow(false)}
+            className={props.changed?'input-edited':null}
+          />
+          :
+          <Form.Control
+            onBlur={props.onBlur}
+            name="jwks"
+            as="textarea"
+            rows="3"
+            placeholder='{"keys":[]}'
+            value={props.values.jwks?props.values.jwks:''}
+            ref={target}
+            datatype="json"
+            onChange={props.onChange}
+            isInvalid={props.isInvalid}
+            onMouseOver={()=>setShow(true)}
+            onMouseOut={()=>setShow(false)}
+            disabled={props.disabled}
+            className={props.changed?'input-edited':null}
+          />
+        }
+      </div>
+      <MyOverLay show={props.changed&&show?'string':null} type='Edited' target={target}/>
+    </React.Fragment>
+  )
+}
+export function AuthMethRadioList(props){
+  const [show, setShow] = useState(false);
+  const authMethod = props.values.token_endpoint_auth_method;
+  const signingAlg = props.values.token_endpoint_auth_signing_alg;
+  const setFieldValue = props.setFieldValue;
+  const target = useRef(null);
+  useEffect(()=>{
+    if((authMethod==="client_secret_jwt"||authMethod==="private_key_jwt")&&!signingAlg){
+      setFieldValue('token_endpoint_auth_signing_alg', "RS256");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[authMethod]);
+  return(
+    <React.Fragment>
 
+        {props.radio_items.map((item,index)=>(
+          <div
+            className={"form_radio_item "+ (props.changed&&props.values.token_endpoint_auth_method===item?"input_radio_edited":null)}
+            key={index}
+            onMouseOver={()=>{props.values.token_endpoint_auth_method===item&&setShow(true)}}
+            onMouseOut={()=>{props.values.token_endpoint_auth_method===item&&setShow(false)}}
+          >
+            <Field name={props.name}>
+              {({ field, form }) => (
+                <React.Fragment>
+                  <input
+                    type="radio"
+                    name={field.name}
+                    disabled={props.disabled}
+                    {...field}
+                    value={item}
+                    ref={props.values.token_endpoint_auth_method===item?target:null}
+                    checked={props.values.token_endpoint_auth_method===item}
+                  />
+                  {props.radio_items_titles[index]}
+                </React.Fragment>
+              )}
+            </Field>
+          </div>
+        ))}
+        <MyOverLay show={props.changed&&show?'string':null} type='Edited' target={target}/>
+    </React.Fragment>
+  )
+}
 
 
 export function SimpleCheckbox(props){
@@ -126,6 +246,77 @@ export function TimeInput(props){
 }
 
 
+export function CountrySelect(props){
+  const [show, setShow] = useState(false);
+  const target = useRef(null);
+  return(
+    <React.Fragment>
+      <div
+        className={'select-container'+(props.changed?' input-edited':null)}
+        ref={target}
+        >
+      <Field
+      name={props.name}
+      as="select"
+      onMouseOver={()=>setShow(true)}
+      onMouseOut={()=>setShow(false)}
+      disabled={props.disabled}
+      placeholder="Select country...">
+        {[{"countryName":"Select your country..."}, ...countryData].map((country,index)=>(
+          <option key={index} value={index===0?null:country.countryShortCode.toLowerCase()}>{country.countryName}</option>
+        ))}
+      </Field>
+    </div>
+      <MyOverLay show={props.changed&&show?'string':null} type='Edited' target={target}/>
+    </React.Fragment>
+  )
+}
+
+
+export function SelectEnvironment(props){
+  const [show, setShow] = useState(false);
+  const target = useRef(null);
+
+
+  return(
+    <React.Fragment>
+      <div
+        className={'select-container'+(props.changed?' input-edited':null)}
+        ref={target}
+        >
+      <Field
+      name={props.name}
+      as="select"
+      default={props.default?props.default:''}
+      onMouseOver={()=>setShow(true)}
+      onMouseOut={()=>setShow(false)}
+      disabled={props.disabled}
+      placeholder="Select..countryName.">
+        {props.options.map((item,index)=>(
+          <option key={index} value={props.options[index]}>{props.optionsTitle[index]}</option>
+        ))}
+      </Field>
+
+      {props.copyButtonActive?
+            <OverlayTrigger
+              placement='right'
+              overlay={
+                <Tooltip id={`tooltip-right`}>
+                  Copy Service
+                </Tooltip>
+              }
+            >
+
+            <Button className="copy_button" variant="success" onClick={()=>props.toggleCopyDialog()}>+</Button>
+            </OverlayTrigger>
+      :null}
+    </div>
+      <MyOverLay show={props.changed&&show?'string':null} type='Edited' target={target}/>
+    </React.Fragment>
+  )
+}
+
+
 
 export function Select(props){
   const [show, setShow] = useState(false);
@@ -134,18 +325,17 @@ export function Select(props){
   return(
     <React.Fragment>
       <div
-        className='select-container'
+        className={'select-container'+(props.changed?' input-edited':null)}
         ref={target}
         >
       <Field
-      className={props.changed?' input-edited':null}
       name={props.name}
       as="select"
-
+      default={props.default?props.default:''}
       onMouseOver={()=>setShow(true)}
       onMouseOut={()=>setShow(false)}
       disabled={props.disabled}
-      placeholder="Select...">
+      placeholder="Select..countryName.">
         {props.options.map((item,index)=>(
           <option key={index} value={props.options[index]}>{props.optionsTitle[index]}</option>
         ))}
@@ -645,14 +835,9 @@ export  function LogoInput(props){
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   const addDefaultSrc= (ev)=>{
-      props.setImageError(false);
       ev.target.src = process.env.PUBLIC_URL + '/logo_placeholder.gif';
   }
-  const imageLoad = (ev)=>{
-      if((!ev.target.src.includes('/logo_placeholder.gif'))){
-        props.setImageError(true);
-      }
-  }
+
 
   return (
     <React.Fragment>
@@ -684,7 +869,7 @@ export  function LogoInput(props){
               overflowX: 'scroll',
             }}
           >
-            <Image src={props.value ? props.value:process.env.PUBLIC_URL + '/logo_placeholder.gif'} onLoad={imageLoad} onError={addDefaultSrc} fluid />
+            <Image src={props.value ? props.value:process.env.PUBLIC_URL + '/logo_placeholder.gif'} onError={addDefaultSrc} fluid />
 
           </pre>
         )}
@@ -709,7 +894,7 @@ function MyOverLay(props) {
   return (
     <Overlay target={props.target.current}  show={show} placement="right">
       {propsOv => (
-        <Tooltip id="overlay-example" placement={propsOv.placement} arrowProps={propsOv.arrowProps} ref={propsOv.ref} style={propsOv.style} outOfBoundaries={propsOv.outOfBoundaries} >
+        <Tooltip id="overlay-example" placement={propsOv.placement} arrowProps={propsOv.arrowProps} ref={propsOv.ref} style={propsOv.style} outOfBoundaries={propsOv.outofboundaries} >
           {props.type==="Added"?t('input_added'):props.type==="Deleted"?t('input_deleted'):props.type==="Edited"?t('input_edited'):null}
         </Tooltip>
 
@@ -812,7 +997,7 @@ export function ListInput(props){
                   </Field>
                   <br/>
                 </InputGroup>
-                <div className="error-message-list-item">{Array.isArray(props.error)?props.error[index]:''}</div>
+                <div className="error-message-list-item">{!Array.isArray(props.error)?'':props.integrationEnvironment==='production'?'Must either be a secure (https://) or a http://localhost url':'Must be a valid url stating with http(s)://'}</div>
                 </React.Fragment>
               ))}
             </React.Fragment>

@@ -18,13 +18,13 @@ import {Link,useParams} from "react-router-dom";
 import Badge from 'react-bootstrap/Badge';
 import Pagination from 'react-bootstrap/Pagination';
 import {LoadingBar,ProcessingRequest} from './Components/LoadingBar';
-import {ListResponseModal,Logout} from './Components/Modals.js';
+import {ListResponseModal,Logout,NotFound} from './Components/Modals.js';
+import CopyDialog from './Components/CopyDialog.js';
 import { useTranslation } from 'react-i18next';
-import Alert from 'react-bootstrap/Alert';
-import {ConfirmationModal} from './Components/Modals';
+import Alert from 'react-bootstrap/Alert';import {ConfirmationModal} from './Components/Modals';
 import {userContext,tenantContext} from './context.js';
 const {capitalWords} = require('./helpers.js');
-
+var filterTimeout;
 
 
 const ServiceList= (props)=> {
@@ -32,12 +32,12 @@ const ServiceList= (props)=> {
   const [tenant,setTeanant] = useContext(tenantContext);
   const {tenant_name} = useParams();
   const [logout,setLogout] = useState(false);
+  const [notFound,setNotFound] = useState();
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   const [loadingList,setLoadingList] = useState();
   const [services,setServices] = useState([]);
   const [activePage,setActivePage] = useState(1);
-  const [displayedServices,setDisplayedServices] = useState(0);
   const [asyncResponse,setAsyncResponse] = useState(false);
   const [invites,setInvites] = useState();
   const [message,setMessage] = useState();
@@ -46,18 +46,61 @@ const ServiceList= (props)=> {
   const [expandFilters,setExpandFilters] = useState();
   const [confirmationData,setConfirmationData] = useState({});
   const [reset,setReset] = useState(false);
+  const [outdatedCount,setOutdatedCount] = useState(0);
   // eslint-disable-next-line
   const [user,setUser] = useContext(userContext);
+  const [showPending,setShowPending] = useState(false);
+  const [showOwned,setShowOwned] = useState(false);
+  const [integrationEnvironment,setIntegrationEnvironment] = useState();
+  const [showOutdated,setShowOutdated] = useState(false);
+  const [paginationItems,setPaginationItems] = useState([]);
+  const [initialLoading,setInitialLoading] = useState();
 
-  let renderedConnections = 0;
+
+  const [showNotification,setShowNotification] = useState(true);
+
+  const pageSize = 10;
+
   useEffect(()=>{
-    setLoadingList(true);
-    getServices();
+    setInitialLoading(true);
     getInvites();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
 
+  useEffect(()=>{
+     getServices();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[searchString,showOwned,showPending,integrationEnvironment,activePage,showOutdated]);
+
+  useEffect(()=>{
+
+    setActivePage(1);
+  },[searchString,showOwned,showPending,integrationEnvironment,showOutdated]);
+
+
+
+
+  const generateFilerString = ()=> {
+    let filterString='';
+    if(searchString){
+      filterString = filterString + '&search_string=' + searchString;
+    }
+    if(showOwned){
+      filterString = filterString + '&owned=' + true;
+    }
+    if(integrationEnvironment){
+      filterString = filterString + '&env=' + integrationEnvironment;
+    }
+    if(showPending){
+      filterString = filterString + '&pending=' + true;
+    }
+    if(showOutdated){
+      filterString = filterString + '&outdated=' +true;
+    }
+    return filterString;
+  }
   const getInvites = () => {
+
     fetch(config.host+'tenants/'+tenant_name+'/invitations', {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
@@ -69,6 +112,11 @@ const ServiceList= (props)=> {
         return response.json();
       }else if(response.status===401){
         setLogout(true);
+        return false;
+      }
+      else if(response.status===404){
+        setNotFound('No invitations found');
+        return false;
       }
       else {
         return false
@@ -86,7 +134,8 @@ const ServiceList= (props)=> {
 
   // Get data, to create Service List
   const getServices = ()=> {
-    fetch(config.host+'tenants/'+tenant_name+'/services', {
+    setLoadingList(true);
+    fetch(config.host+'tenants/'+tenant_name+'/services?page='+activePage+'&limit='+pageSize+generateFilerString(), {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -98,37 +147,79 @@ const ServiceList= (props)=> {
       }
       else if(response.status===401){
         setLogout(true);
+        return false;
+      }
+      else if(response.status===416){
+        setNotFound('Out of index');
+        setActivePage(1);
+        return false;
       }
       else {
         return false
       }
     }).then(response=> {
       setLoadingList(false);
+      setInitialLoading(false);
       if(response){
-
-        response.services.forEach((item,index)=>{
-            response.services[index].display = true;
-          })
-        setServices(response.services);
-        console.log(response.services);
-        setReset(!reset);
+        console.log(response);
+        try{
+          if(response.list_items.length===0&& activePage!==1){
+              setActivePage(1);
+          }
+          setServices(response.list_items);
+          if(!showOwned&&!showPending&!showOutdated&&!searchString){
+            setOutdatedCount(response.outdated_count);
+          }
+          createPaginationItems(response.full_count);
+          setReset(!reset);
+        }
+        catch(err){
+          setActivePage(1);
+        }
       }
     });
   }
 
 
-  let items = [];
-  let itemsPerPage = 10;
-  // issue here displaying less
-  if(services){
-    for (let number = 1; number <= Math.ceil(displayedServices/itemsPerPage) ; number++) {
-      items.push(
-        <Pagination.Item key={number} onClick={()=>{setActivePage(number)}} active={number === activePage}>
-          {number}
-        </Pagination.Item>,
-      );
+
+
+  const createPaginationItems = (full_count)=>{
+    const paginationItemsDisplayed = 15;
+    let items = [];
+    let totalPages = Math.ceil(full_count/pageSize);
+    let startPage = (activePage-Math.floor(paginationItemsDisplayed/2)>=1?activePage-Math.floor(paginationItemsDisplayed/2):1);
+    let finishPage = (startPage+paginationItemsDisplayed-1>totalPages?totalPages:startPage+paginationItemsDisplayed-1);
+
+
+    if(full_count>=1){
+      if(startPage>2){
+        items.push(<Pagination.First key='first' onClick={()=>{setActivePage(1)}}/>)
+        items.push(<Pagination.Prev key='prev' onClick={()=>{setActivePage((activePage-1<1?1:activePage-1))}}/>);
+        items.push(<Pagination.Item key='prev10' onClick={()=>{setActivePage((activePage-10<1?1:activePage-10))}}>{activePage-10<1?1:activePage-10}</Pagination.Item>,<Pagination.Ellipsis key="dots_start" disabled={true}/>)
+      }
+      else{
+        items.push(<Pagination.Prev key='prev' onClick={()=>{setActivePage((activePage-1<1?1:activePage-1))}}/>);
+      }
+      for(let pageNumber=startPage;pageNumber<=finishPage;pageNumber++){
+
+        items.push(
+          <Pagination.Item key={pageNumber} onClick={()=>{setActivePage(pageNumber)}} active={pageNumber === activePage}>
+          {pageNumber}
+          </Pagination.Item>
+        )
+      }
+      if(finishPage<totalPages-2){
+        items.push(<Pagination.Ellipsis key="dots_end" disabled={true}/>,<Pagination.Item key='next10' onClick={()=>{setActivePage((activePage+10>totalPages?totalPages:activePage+10))}}>{activePage+10>totalPages?totalPages:activePage+10}</Pagination.Item>);
+        items.push(<Pagination.Next key='next' onClick={()=>{setActivePage((activePage+1>totalPages?totalPages:activePage+1))}}/>)
+        items.push(<Pagination.Last key='last' onClick={()=>{setActivePage(totalPages)}}/>)
+      }
+      else{
+        items.push(<Pagination.Next key='next' onClick={()=>{setActivePage((activePage+1>totalPages?totalPages:activePage+1))}}/>)
+      }
     }
-  }
+    setPaginationItems(items);
+  };
+
 
 
 
@@ -152,6 +243,11 @@ const ServiceList= (props)=> {
           setMessage(t('request_submit_success_msg'));
         }else if(response.status===401){
           setLogout(true);
+          return false;
+        }
+        else if(response.status===404){
+          setNotFound('Could not find service');
+          return false;
         }
         else{
           setMessage(t('request_submit_failled_msg') + response.status);
@@ -175,6 +271,11 @@ const ServiceList= (props)=> {
           setMessage(t('request_submit_success_msg'));
         }else if(response.status===401){
           setLogout(true);
+          return false;
+        }
+        else if(response.status===404){
+          setNotFound('Could not create petition');
+          return false;
         }
         else{
           setMessage(t('request_submit_failled_msg') + response.status);
@@ -199,6 +300,11 @@ const ServiceList= (props)=> {
         setMessage(t('request_cancel_success_msg'));
       }else if(response.status===401){
         setLogout(true);
+        return false;
+      }
+      else if(response.status===404){
+        setNotFound('Petition not Found');
+        return false;
       }
       else{
       setMessage(t('request_cancel_fail_msg') + response.status);
@@ -210,11 +316,23 @@ const ServiceList= (props)=> {
   return(
     <React.Fragment>
       <Logout logout={logout}/>
+      <NotFound notFound={notFound?true:false} setNotFound={setNotFound}/>
       <ListResponseModal message={message} modalTitle={responseTitle} setMessage={setMessage}/>
 
       <ConfirmationModal active={confirmationData.action?true:false} setActive={setConfirmationData} action={()=>{if(confirmationData.action==='delete_service'){deleteService(...confirmationData.args)}else{deletePetition(...confirmationData.args)}}} title={confirmationData.title} accept={'Yes'} decline={'No'}/>
       <div>
-        <LoadingBar loading={loadingList}>
+        <LoadingBar loading={initialLoading}>
+        {outdatedCount>0?<Collapse in={showNotification}>
+          <div>
+            <Alert variant='warning' className="invitation_alert">
+
+              <span>{outdatedCount}</span>{' '}
+               of the services you own are not up to date with the lastest requirements. Click{' '}
+               <span className="alert_fake_link" onClick={()=>{setExpandFilters(!expandFilters); setShowOutdated(true); setShowNotification(false);}}>here</span>
+                {' '}to find them using the outdated filter and reconfigure them following the instructions.
+            </Alert>
+          </div>
+        </Collapse>:null}
         {invites&&invites.length>0?
           <React.Fragment>
           <Alert variant='primary' className="invitation_alert">
@@ -253,8 +371,11 @@ const ServiceList= (props)=> {
               <InputGroup className="md-12">
                 <FormControl
                 placeholder={t('search')}
-                value={searchString}
-                onChange={(e)=>{setSearchString(e.target.value)}}
+                onChange={(e)=>{
+                  clearTimeout(filterTimeout);
+                  setLoadingList(true);
+                  let value = e.target.value;
+                  filterTimeout = setTimeout(function(){setSearchString(value);} ,1000)}}
                 />
                 <InputGroup.Append onClick={()=>{setSearchString('')}}>
                   <InputGroup.Text><FontAwesomeIcon icon={faTimes}/></InputGroup.Text>
@@ -266,12 +387,36 @@ const ServiceList= (props)=> {
           <Row className="filters-row">
               <Col>
                 <div className="filters-col">
-                  <Filters reset={reset} user={props.user} services={services} setServices={setServices} setActivePage={setActivePage} setSearchString={setSearchString} searchString={searchString}/>
+                  <div className='filter-container' onClick={()=> setShowPending(!showPending)}>
+                    <span>Show Pending</span>
+                    <input type='checkbox' name='filter' checked={showPending} onChange={()=>setShowPending(!showPending)}/>
+                  </div>
+                  <div className='filter-container' onClick={()=> setShowOutdated(!showOutdated)}>
+                    <span>Show Outdated</span>
+                    <input type='checkbox' name='filter' checked={showOutdated} onChange={()=>setShowOutdated(!showOutdated)}/>
+                  </div>
+                  {props.user.admin?
+                  <div className='filter-container' onClick={()=> setShowOwned(!showOwned)}>
+                    <span>Show Owned by Me</span>
+                    <input type='checkbox' name='filter' checked={showOwned} onChange={()=> setShowOwned(!showOwned)}/>
+                  </div>
+                  :null}
+
+                  <div className='select-filter-container'>
+                      <select value={integrationEnvironment} onChange={(e)=>{
+                        setIntegrationEnvironment(e.target.value);}}>
+                        <option value=''>{t('all_environments_filter')}</option>
+                        {tenant.form_config.integration_environment.map((item,index)=>{
+                          return <option value={item} key={index}>{capitalWords(item)}</option>
+                        })}
+                      </select>
+                  </div>
                 </div>
               </Col>
             </Row>
           </Collapse>
           </div>
+
           <Table striped bordered hover className="petitions-table">
             <thead>
               <tr>
@@ -281,25 +426,26 @@ const ServiceList= (props)=> {
               </tr>
             </thead>
             <tbody>
+
               <React.Fragment>
-                      {services.length>=1?services.map((item,index)=>{
-                        if(item.display){
-                          renderedConnections++
-                        }
-                        if(index===services.length-1&&renderedConnections!==displayedServices){
-                          setDisplayedServices(renderedConnections);
-                        }
-                        if(Math.ceil(renderedConnections/itemsPerPage)===activePage&&item.display){
-                          return(
-                            <TableItem service={item} user={props.user} key={index} setConfirmationData={setConfirmationData} />
-                          )
-                        }
-                        return null
-                      }):<tr><td></td><td>{t('no_services')}</td><td></td></tr>}
+
+                {services.length>=1?services.map((item,index)=>{
+                    return(
+                      <TableItem service={item} user={props.user} key={index}  setConfirmationData={setConfirmationData} />
+                    )
+                }):<tr><td></td><td>{t('no_services')}</td><td></td></tr>}
+                {loadingList?
+                  <tr className="table-overlay">
+                    <td></td>
+                  </tr>:null
+                }
+
               </React.Fragment>
+
             </tbody>
           </Table>
-          <Pagination>{items}</Pagination>
+
+          <Pagination>{paginationItems}</Pagination>
         </LoadingBar>
         <ProcessingRequest active={asyncResponse}/>
       </div>
@@ -310,11 +456,20 @@ const ServiceList= (props)=> {
 function TableItem(props) {
   // eslint-disable-next-line
   const [tenant,setTenant] = useContext(tenantContext);
-  // eslint-disable-next-line
+
+
   const {tenant_name} = useParams();
+
+
+  const [showCopyDialog,setShowCopyDialog] = useState(false);
+  const toggleCopyDialog = () => {
+    setShowCopyDialog(!showCopyDialog);
+  }
+
+
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
-    // eslint-disable-next-line
+  // eslint-disable-next-line
   const [user,setUser] = useContext(userContext);
   return (
     <tr>
@@ -331,6 +486,7 @@ function TableItem(props) {
             {props.service.type?<Badge className="status-badge" variant="warning">
               {props.service.type==='edit'?t('badge_edit_pending'):props.service.type==='create'?t('badge_create_pending'):t('badge_delete_pending')}
               </Badge>:null}
+            {props.service.outdated&&!props.service.petition_id&&props.service.state==='deployed'?<Badge className="status-badge" variant="danger">Update Required</Badge>:null}
             {props.service.comment?<Badge className="status-badge" variant="info">{t('badge_changes_requested')}</Badge>:null}
           </div>
           <p>{props.service.service_description}</p>
@@ -340,6 +496,7 @@ function TableItem(props) {
         <div className="petition-actions">
           <Row>
             <Col className='controls-col  controls-col-buttons'>
+            <CopyDialog service_id={props.service.service_id} show={showCopyDialog} toggleCopyDialog={toggleCopyDialog} current_environment={props.service.integration_environment} />
             {props.service.state==='error'&&user.view_errors?
               <React.Fragment>
                 <div className="notification">
@@ -362,6 +519,7 @@ function TableItem(props) {
                       service_id:props.service.service_id,
                       petition_id:props.service.petition_id,
                       type:props.service.type,
+                      owned:props.service.owned?"true":null,
                       get_error:props.service.state==='error'&&user.view_errors?'get_errors':undefined
                     }
                   }}>
@@ -379,6 +537,7 @@ function TableItem(props) {
                   service_id:props.service.service_id,
                   petition_id:props.service.petition_id,
                   type:props.service.type,
+                  owned:props.service.owned?"true":null,
                   get_error:props.service.state==='error'&&user.view_errors?'get_errors':undefined
                 }
               }}>
@@ -390,7 +549,7 @@ function TableItem(props) {
 
               {props.service.owned?
                 <React.Fragment>
-                  {props.service.comment?
+                  {props.service.comment||(props.service.outdated&&!props.service.pettion_id&&props.service.state==="deployed")?
                   <div className="notification">
                     <FontAwesomeIcon icon={faExclamation} className="fa-exclamation"/>
                     <FontAwesomeIcon icon={faCircle} className="fa-circle"/>
@@ -399,7 +558,8 @@ function TableItem(props) {
                     placement='top'
                     overlay={
                       <Tooltip id={`tooltip-top`}>
-                        {props.service.comment?t('changes_notification'):props.service.state==='deployed'?t('edit_notification'):t('pending_notification')}
+
+                        {props.service.comment?t('changes_notification'):props.service.outdated&&!props.service.pettion_id&&props.service.state==="deployed"?"Service needs to be updated":props.service.state==='deployed'?t('edit_notification'):t('pending_notification')}
                       </Tooltip>
                     }
                   >
@@ -412,6 +572,7 @@ function TableItem(props) {
                       service_id:props.service.service_id,
                       petition_id:props.service.petition_id,
                       type:props.service.type,
+                      owned:props.service.owned?"true":null,
                       comment:props.service.comment
                     }
                   }}>
@@ -420,13 +581,14 @@ function TableItem(props) {
                 </React.Fragment>
               :null
               }
-              {props.user.admin&&props.service.petition_id&&!props.service.comment?<Link
+              {(props.user.admin||(props.service.owned&&props.service.integration_environment==='development'))&&props.service.petition_id&&!props.service.comment?<Link
                 className='button-link'
                 to={{
                 pathname:'/'+tenant_name+"/form/review",
                 state:{
                   service_id:props.service.service_id,
                   petition_id:props.service.petition_id,
+                  integration_environment:props.service.integration_environment,
                   type:props.service.type,
                   comment:props.service.comment
                 }
@@ -444,6 +606,15 @@ function TableItem(props) {
               </React.Fragment>}
               id="dropdown-menu-align-right"
             >
+              {props.service.service_id && props.service.state==='deployed' && props.service.owned?
+              <Dropdown.Item as='span'>
+                <div>
+                  <Link to={"#"} onClick={()=>{
+                    toggleCopyDialog();
+                  }}>Copy Service</Link>
+                </div>
+              </Dropdown.Item>
+              :null}
               {props.service.owned && props.service.state==='deployed' && props.service.type!=='delete'?
                 <Dropdown.Item>
                   <div
@@ -458,7 +629,7 @@ function TableItem(props) {
                   </div>
                 </Dropdown.Item>
               :null}
-              {props.service.owned && props.service.state==='deployed'&&props.service.type?
+              {props.service.owned &&( props.service.state==='deployed'||props.service.type==='create')&&props.service.type?
                 <Dropdown.Item>
                   <div
                   onClick={()=>{
@@ -512,94 +683,8 @@ function TableItem(props) {
 
 
 
-function Filters (props) {
 
 
-  const [showPending,setShowPending] = useState(false);
-  const [showOwned,setShowOwned] = useState(false);
-  const [showEnvironment,setShowEnvironment] = useState();
-  // eslint-disable-next-line
-  const { t, i18n } = useTranslation();
-  // eslint-disable-next-line
-  const [tenant,setTenant] = useContext(tenantContext);
-
-
-  useEffect(()=>{
-    setShowPending(false);
-    setShowEnvironment();
-    setShowOwned(false);
-    props.setSearchString('');
-    // eslint-disable-next-line
-  },[props.reset]);
-
-  useEffect(()=>{
-    if(props.services.length>0){
-      props.services.forEach((item,index)=>{
-        if(OwnedFilter(item)||PendingFilter(item)||SearchFilter(item)||EnvironmentFilter(item)){
-          props.services[index].display=false;
-        }
-        else{
-          props.services[index].display=true;
-        }
-      });
-      props.setServices([...props.services])
-      props.setActivePage(1);
-    }
-
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[props.searchString,showOwned,showPending,showEnvironment]);
-  const EnvironmentFilter = (item) => {
-    return (showEnvironment&&item.integration_environment!==showEnvironment)
-  }
-  const SearchFilter = (item) => {
-    if(item.service_name||!props.searchString){
-      return (props.searchString&&!item.service_name.toLowerCase().includes(props.searchString.toLowerCase().trim()))
-    }
-    else{return true}
-  }
-  const PendingFilter = (item) =>{
-    return (showPending&&!item.petition_id)
-  }
-  const OwnedFilter = (item)=>{
-    return (showOwned&&!item.owned)
-  }
-
-
-
-
-  return (
-    <React.Fragment>
-      <SimpleCheckboxFilter name={t('pending_filter')} setFilter={setShowPending} filterValue={showPending} />
-      {props.user.admin?<SimpleCheckboxFilter name={t('owned_filter')} setFilter={setShowOwned} filterValue={showOwned}/>:null}
-
-      <div className='select-filter-container'>
-          <select value={showEnvironment} onChange={(e)=>{
-            setShowEnvironment(e.target.value);}}>
-
-            <option value=''>{t('all_environments_filter')}</option>
-            {tenant.form_config.integration_environment.map((item,index)=>{
-              return <option value={item} key={index}>{capitalWords(item)}</option>
-            })}
-          </select>
-      </div>
-    </React.Fragment>
-  )
-}
-
-function SimpleCheckboxFilter (props) {
-
-  const handleChange = () =>{
-    props.setFilter(!props.filterValue);
-  }
-
-  return (
-    <div className='filter-container' onClick={handleChange}>
-      <span>{props.name}</span>
-      <input type='checkbox' name='filter' checked={props.filterValue} onChange={handleChange}/>
-    </div>
-  )
-}
 
 
 export default ServiceList;

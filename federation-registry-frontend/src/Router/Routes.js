@@ -2,7 +2,7 @@ import React,{useContext} from 'react';
 import {Switch,Route,Redirect,Link} from 'react-router-dom';
 import Home from '../Home';
 import ServiceList from '../ServiceList.js';
-import {EditService,NewService,ViewService} from '../FormHandler.js';
+import {EditService,NewService,ViewService,CopyService} from '../FormHandler.js';
 import UserInfo from '../Components/UserInfo.js';
 import {HistoryList} from '../Components/History.js';
 import {Callback} from '../Components/Callback.js';
@@ -45,6 +45,16 @@ const Routes = (props) => {
            View User Profile
         </div>
         <UserInfo user={props.user} />
+      </ProtectedRoute>
+      <ProtectedRoute user={props.user} path="/:tenant_name/form/copy">
+        <div className="links">
+          <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/home"}>{props.t('link_home')}</Link>
+          <span className="link-seperator">/</span>
+          <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/petitions"}>{props.t('link_petitions')}</Link>
+          <span className="link-seperator">/</span>
+          New Service
+        </div>
+        <CopyService user={props.user}/>
       </ProtectedRoute>
       <ProtectedRoute user={props.user} path="/:tenant_name/form/new">
         <div className="links">
@@ -152,7 +162,7 @@ const ProtectedRoute= (props)=> {
       render={({ location }) =>
         !(tenant && tenant[0] && (props.computedMatch.params.tenant_name === tenant[0].name)) ?
         <TenantHandler/>:
-        localStorage.getItem('token')&& user && user[0] && !(props.admin && !user[0].admin) ? (
+        localStorage.getItem('token')&& user && user[0] && (!(props.admin && !user[0].admin)||props.location.state.integration_environment==='development') ? (
           childrenWithProps
         ) : (
           <Redirect

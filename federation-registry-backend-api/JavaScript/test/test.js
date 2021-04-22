@@ -110,7 +110,7 @@ describe('Service registry API Integration Tests', function() {
       });
       it('should fail to edit petition because client_id is not available',function(done){
         putPetition(
-          {petition:petition,body:{type:'create',...edit.oidc,client_id:'client1'},tenant: 'egi'},
+          {petition:petition,body:{type:'create',...edit.oidc,client_id:'client4'},tenant: 'egi'},
           {body:{error:'Protocol id is not available'},status:422},
           done
         );
@@ -242,11 +242,11 @@ describe('Service registry API Integration Tests', function() {
             var req = request(server).put('/tenants/eosc/petitions/'+petition+'/review').set({Authorization: userToken}).send({type:'approve'});
             req.set('Accept','application/json')
             .expect('Content-Type',/json/)
-            .expect(403)
+            .expect(404)
             .end(function(err,res){
               let body = JSON.parse(res.text);
               expect(body.error).to.equal("No petition found");
-              expect(res.statusCode).to.equal(403);
+              expect(res.statusCode).to.equal(404);
               done();
             })
           });
@@ -283,7 +283,8 @@ describe('Service registry API Integration Tests', function() {
               tenant:"egi",
               id:service,
               protocol:"oidc",
-              state:"waiting-deployment"
+              state:"waiting-deployment",
+              integration_environment:"development"
             }]);
             req.set('Accept','application/json')
             .expect('Content-Type',/json/)
@@ -339,7 +340,8 @@ describe('Service registry API Integration Tests', function() {
           .expect(200)
           .end(function(err,res){
             let body = JSON.parse(res.text);
-            body.services.forEach((item)=>{if(item.service_id===service){group=item.group_id}});
+
+            body.list_items.forEach((item)=>{if(item.service_id===service){group=item.group_id}});
             expect(res.statusCode).to.equal(200);
             done();
           });
@@ -428,9 +430,9 @@ describe('Service registry API Integration Tests', function() {
           var req = request(server).put('/tenants/egi/invitations/activate_by_code').set({Authorization: userToken}).send({code});
           req.set('Accept','application/json')
           .expect('Content-Type',/json/)
-          .expect(204)
+          .expect(404)
           .end(function(err,res){
-              expect(res.statusCode).to.equal(204);
+              expect(res.statusCode).to.equal(404);
             done();
           });
         })
@@ -530,7 +532,8 @@ describe('Service registry API Integration Tests', function() {
           tenant:"egi",
           id:service,
           protocol:"oidc",
-          state:"waiting-deployment"
+          state:"waiting-deployment",
+          integration_environment:"development"
         }]);
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
@@ -610,7 +613,8 @@ describe('Service registry API Integration Tests', function() {
           tenant:"egi",
           id:service,
           protocol:"oidc",
-          state:"waiting-deployment"
+          state:"waiting-deployment",
+          integration_environment:"development"
         }]);
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
@@ -650,7 +654,7 @@ describe('Service registry API Integration Tests', function() {
         .expect('Content-Type',/json/)
         .expect(200)
         .end(function(err,res){
-          expect(res.statusCode).to.equal(204);
+          expect(res.statusCode).to.equal(404);
           done();
         })
       });
@@ -660,9 +664,11 @@ describe('Service registry API Integration Tests', function() {
     describe('# Reject Petition',function(){
       it('should create a new petition and return the id',function(done){
         userToken = setUser(users.eosc.end_user);
+        let dataSend = create.oidc;
+        dataSend.integration_environment = "demo";
+        dataSend.type = "create";
         var req = request(server).post('/tenants/eosc/petitions').set({Authorization: userToken}).send({
-          type:'create',
-          ...create.oidc
+          ...dataSend
         });
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
