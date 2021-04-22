@@ -108,7 +108,6 @@ const serviceValidationRules = (options) => {
     }
   }
   const requiredProduction = (value,env) =>{
-    console.log(env);
     let required = false;
     if(env==="production"){
        required = true;

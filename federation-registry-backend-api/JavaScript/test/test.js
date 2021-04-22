@@ -664,9 +664,11 @@ describe('Service registry API Integration Tests', function() {
     describe('# Reject Petition',function(){
       it('should create a new petition and return the id',function(done){
         userToken = setUser(users.eosc.end_user);
+        let dataSend = create.oidc;
+        dataSend.integration_environment = "demo";
+        dataSend.type = "create";
         var req = request(server).post('/tenants/eosc/petitions').set({Authorization: userToken}).send({
-          type:'create',
-          ...create.oidc
+          ...dataSend
         });
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)

@@ -1169,11 +1169,11 @@ function canReview(req,res,next){
   }
   else{
     db.petition.canReviewOwn(req.params.id,req.user.sub).then(service=>{
-      console.log(service.integration_environment);
-      if(service.integration_environment==='development'){
+
+      if(service&&service.integration_environment==='development'){
         next();
       }
-      else if(environment){
+      else if(service){
          if (req.user.role.actions.includes('review_own_petition')){
            next();
          }
