@@ -312,8 +312,6 @@ code {
   margin-bottom:0;
 }
 .drop-container-controls .dropdown-menu {
-  margin-right:0.7rem!important;
-  margin-top:-0.5rem!important;
   padding:0rem;
 }
 
@@ -458,6 +456,10 @@ textarea {
   color:red;
   margin-left:0.4rem;
   margin-top:0.4rem;
+}
+.approve-error {
+  color:red;
+  margin-left:0.4rem;
 }
 .form_radio_item {
   margin-bottom:0.5rem!important;
@@ -1213,4 +1215,25 @@ html:lang(gr) .home-container h1 {
     color: #007bff;
     text-decoration: none;
     background-color: transparent;
+}
+
+.alert_fake_link {
+  color:#775a03;
+  font-weight: bold;
+  cursor:pointer;
+}
+
+.alert_fake_link:hover {
+  text-decoration: underline;
+}
+.copy_button {
+  margin-left:0.5rem!important;
+  margin-bottom:0.1rem;
+  padding: 0rem 0.4rem;
+}
+
+.required_indicator {
+  color:red;
+  margin-left:-0.6rem;
+  margin-top:0.2rem;
 }

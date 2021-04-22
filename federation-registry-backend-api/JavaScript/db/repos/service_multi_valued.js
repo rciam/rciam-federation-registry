@@ -30,7 +30,7 @@ class ServiceMultiValuedRepository {
       name = name + attribute;
     }
     // if not Empty array
-    if(data.length>0){
+    if(data&&data.length>0){
       data.forEach((item)=>{
         values.push({owner_id:id,value:item});
       });
@@ -64,7 +64,7 @@ class ServiceMultiValuedRepository {
       name = name + attribute;
     }
     const table = new this.pgp.helpers.TableName({table:name});
-    if(data.length>0){
+    if(data&&data.length>0){
 
       return this.db.result('DELETE FROM $1 WHERE owner_id=$2 AND value IN ($3:csv)',[table,+owner_id,data]).then(result =>{
         // if(result.rowCount===data.length){

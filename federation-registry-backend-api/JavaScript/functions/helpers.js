@@ -1,7 +1,6 @@
 var diff = require('deep-diff').diff;
 require('dotenv').config();
 var path = require("path");
-const {db} = require('../db');
 var fs = require('fs');
 var hbs = require('handlebars');
 nodeMailer = require('nodemailer');
@@ -12,9 +11,10 @@ hbs.registerHelper('loud', function (aString) {
     return aString.toUpperCase()
 })
 
-const sendMultipleInvitations = (data)=> {
+const sendMultipleInvitations = function (data,t) {
+
   try{
-    db.invitation.addMultiple(data).then(res=>{data.forEach(invitation_data=>{
+    t.invitation.addMultiple(data).then(res=>{data.forEach(invitation_data=>{
       sendInvitationMail(invitation_data);
     })}).catch(err=>{customLogger(null,null,'warn','Error when creating and sending invitations: '+err)})
   }
@@ -36,7 +36,12 @@ const calcDiff = (oldState,newState) => {
       details:{}
     };
 
-
+    if(!old_values.contacts){
+      old_values.contacts = [];
+    }
+    if(!new_values.contacts){
+      new_values.contacts = [];
+    }
     new_values.contacts.forEach(item=>{
       new_cont.push(item.email+' '+item.type);
     });
@@ -58,6 +63,24 @@ const calcDiff = (oldState,newState) => {
       })
     }
     if(new_values.protocol==='oidc'){
+      if(!old_values.redirect_uris){
+        old_values.redirect_uris = [];
+      }
+      if(!new_values.redirect_uris){
+        new_values.redirect_uris = [];
+      }
+      if(!old_values.scope){
+        old_values.scope = [];
+      }
+      if(!new_values.scope){
+        new_values.scope = [];
+      }
+      if(!old_values.grant_types){
+        old_values.scope = [];
+      }
+      if(!new_values.grant_types){
+        new_values.scope = [];
+      }
       edits.add.oidc_grant_types = new_values.grant_types.filter(x=>!old_values.grant_types.includes(x));
       edits.dlt.oidc_grant_types = old_values.grant_types.filter(x=>!new_values.grant_types.includes(x));
       edits.add.oidc_scopes = new_values.scope.filter(x=>!old_values.scope.includes(x));
@@ -147,6 +170,13 @@ const newMemberNotificationMail = (data,managers) => {
           port: 587,
           secure: false
       });
+      // let transporter = nodeMailer.createTransport({
+      //   service: 'gmail',
+      //   auth: {
+      //     user: 'orionaikido@gmail.com',
+      //     pass: ''
+      //   }
+      // });
       var replacements = {
         invitation_mail:data.invitation_mail,
         username:data.preferred_username,
@@ -218,6 +248,7 @@ const sendMail= (data,template_uri,users)=>{
             subject : data.subject,
             html : htmlToSend
           };
+
           transporter.sendMail(mailOptions, function (error, response) {
             if (error) {
               customLogger(null,null,'info',[{type:'email_log'},{message:'Email not sent'},{error:error},{user:users},{data:data}]);
@@ -264,5 +295,6 @@ module.exports = {
   sendMail,
   sendInvitationMail,
   newMemberNotificationMail,
-  sendMultipleInvitations
+  sendMultipleInvitations,
+  readHTMLFile
 }

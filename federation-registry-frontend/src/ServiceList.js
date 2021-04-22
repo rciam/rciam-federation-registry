@@ -19,9 +19,9 @@ import Badge from 'react-bootstrap/Badge';
 import Pagination from 'react-bootstrap/Pagination';
 import {LoadingBar,ProcessingRequest} from './Components/LoadingBar';
 import {ListResponseModal,Logout,NotFound} from './Components/Modals.js';
+import CopyDialog from './Components/CopyDialog.js';
 import { useTranslation } from 'react-i18next';
-import Alert from 'react-bootstrap/Alert';
-import {ConfirmationModal} from './Components/Modals';
+import Alert from 'react-bootstrap/Alert';import {ConfirmationModal} from './Components/Modals';
 import {userContext,tenantContext} from './context.js';
 const {capitalWords} = require('./helpers.js');
 var filterTimeout;
@@ -46,35 +46,36 @@ const ServiceList= (props)=> {
   const [expandFilters,setExpandFilters] = useState();
   const [confirmationData,setConfirmationData] = useState({});
   const [reset,setReset] = useState(false);
+  const [outdatedCount,setOutdatedCount] = useState(0);
   // eslint-disable-next-line
   const [user,setUser] = useContext(userContext);
   const [showPending,setShowPending] = useState(false);
   const [showOwned,setShowOwned] = useState(false);
   const [integrationEnvironment,setIntegrationEnvironment] = useState();
-
+  const [showOutdated,setShowOutdated] = useState(false);
   const [paginationItems,setPaginationItems] = useState([]);
   const [initialLoading,setInitialLoading] = useState();
 
-  const pageSize = 2;
+
+  const [showNotification,setShowNotification] = useState(true);
+
+  const pageSize = 10;
 
   useEffect(()=>{
     setInitialLoading(true);
-    getServices();
     getInvites();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
 
   useEffect(()=>{
-
-
      getServices();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[searchString,showOwned,showPending,integrationEnvironment,activePage]);
+  },[searchString,showOwned,showPending,integrationEnvironment,activePage,showOutdated]);
 
   useEffect(()=>{
 
     setActivePage(1);
-  },[searchString,showOwned,showPending,integrationEnvironment]);
+  },[searchString,showOwned,showPending,integrationEnvironment,showOutdated]);
 
 
 
@@ -92,6 +93,9 @@ const ServiceList= (props)=> {
     }
     if(showPending){
       filterString = filterString + '&pending=' + true;
+    }
+    if(showOutdated){
+      filterString = filterString + '&outdated=' +true;
     }
     return filterString;
   }
@@ -115,7 +119,6 @@ const ServiceList= (props)=> {
         return false;
       }
       else {
-        console.log(response.body);
         return false
       }
     }).then(response=> {
@@ -164,6 +167,9 @@ const ServiceList= (props)=> {
               setActivePage(1);
           }
           setServices(response.list_items);
+          if(!showOwned&&!showPending&!showOutdated&&!searchString){
+            setOutdatedCount(response.outdated_count);
+          }
           createPaginationItems(response.full_count);
           setReset(!reset);
         }
@@ -316,6 +322,17 @@ const ServiceList= (props)=> {
       <ConfirmationModal active={confirmationData.action?true:false} setActive={setConfirmationData} action={()=>{if(confirmationData.action==='delete_service'){deleteService(...confirmationData.args)}else{deletePetition(...confirmationData.args)}}} title={confirmationData.title} accept={'Yes'} decline={'No'}/>
       <div>
         <LoadingBar loading={initialLoading}>
+        {outdatedCount>0?<Collapse in={showNotification}>
+          <div>
+            <Alert variant='warning' className="invitation_alert">
+
+              <span>{outdatedCount}</span>{' '}
+               of the services you own are not up to date with the lastest requirements. Click{' '}
+               <span className="alert_fake_link" onClick={()=>{setExpandFilters(!expandFilters); setShowOutdated(true); setShowNotification(false);}}>here</span>
+                {' '}to find them using the outdated filter and reconfigure them following the instructions.
+            </Alert>
+          </div>
+        </Collapse>:null}
         {invites&&invites.length>0?
           <React.Fragment>
           <Alert variant='primary' className="invitation_alert">
@@ -374,6 +391,10 @@ const ServiceList= (props)=> {
                     <span>Show Pending</span>
                     <input type='checkbox' name='filter' checked={showPending} onChange={()=>setShowPending(!showPending)}/>
                   </div>
+                  <div className='filter-container' onClick={()=> setShowOutdated(!showOutdated)}>
+                    <span>Show Outdated</span>
+                    <input type='checkbox' name='filter' checked={showOutdated} onChange={()=>setShowOutdated(!showOutdated)}/>
+                  </div>
                   {props.user.admin?
                   <div className='filter-container' onClick={()=> setShowOwned(!showOwned)}>
                     <span>Show Owned by Me</span>
@@ -384,14 +405,12 @@ const ServiceList= (props)=> {
                   <div className='select-filter-container'>
                       <select value={integrationEnvironment} onChange={(e)=>{
                         setIntegrationEnvironment(e.target.value);}}>
-
                         <option value=''>{t('all_environments_filter')}</option>
                         {tenant.form_config.integration_environment.map((item,index)=>{
                           return <option value={item} key={index}>{capitalWords(item)}</option>
                         })}
                       </select>
                   </div>
-
                 </div>
               </Col>
             </Row>
@@ -412,7 +431,7 @@ const ServiceList= (props)=> {
 
                 {services.length>=1?services.map((item,index)=>{
                     return(
-                      <TableItem service={item} user={props.user} key={index} setConfirmationData={setConfirmationData} />
+                      <TableItem service={item} user={props.user} key={index}  setConfirmationData={setConfirmationData} />
                     )
                 }):<tr><td></td><td>{t('no_services')}</td><td></td></tr>}
                 {loadingList?
@@ -437,11 +456,20 @@ const ServiceList= (props)=> {
 function TableItem(props) {
   // eslint-disable-next-line
   const [tenant,setTenant] = useContext(tenantContext);
-  // eslint-disable-next-line
+
+
   const {tenant_name} = useParams();
+
+
+  const [showCopyDialog,setShowCopyDialog] = useState(false);
+  const toggleCopyDialog = () => {
+    setShowCopyDialog(!showCopyDialog);
+  }
+
+
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
-    // eslint-disable-next-line
+  // eslint-disable-next-line
   const [user,setUser] = useContext(userContext);
   return (
     <tr>
@@ -458,6 +486,7 @@ function TableItem(props) {
             {props.service.type?<Badge className="status-badge" variant="warning">
               {props.service.type==='edit'?t('badge_edit_pending'):props.service.type==='create'?t('badge_create_pending'):t('badge_delete_pending')}
               </Badge>:null}
+            {props.service.outdated&&!props.service.petition_id&&props.service.state==='deployed'?<Badge className="status-badge" variant="danger">Update Required</Badge>:null}
             {props.service.comment?<Badge className="status-badge" variant="info">{t('badge_changes_requested')}</Badge>:null}
           </div>
           <p>{props.service.service_description}</p>
@@ -467,6 +496,7 @@ function TableItem(props) {
         <div className="petition-actions">
           <Row>
             <Col className='controls-col  controls-col-buttons'>
+            <CopyDialog service_id={props.service.service_id} show={showCopyDialog} toggleCopyDialog={toggleCopyDialog} current_environment={props.service.integration_environment} />
             {props.service.state==='error'&&user.view_errors?
               <React.Fragment>
                 <div className="notification">
@@ -489,6 +519,7 @@ function TableItem(props) {
                       service_id:props.service.service_id,
                       petition_id:props.service.petition_id,
                       type:props.service.type,
+                      owned:props.service.owned?"true":null,
                       get_error:props.service.state==='error'&&user.view_errors?'get_errors':undefined
                     }
                   }}>
@@ -506,6 +537,7 @@ function TableItem(props) {
                   service_id:props.service.service_id,
                   petition_id:props.service.petition_id,
                   type:props.service.type,
+                  owned:props.service.owned?"true":null,
                   get_error:props.service.state==='error'&&user.view_errors?'get_errors':undefined
                 }
               }}>
@@ -517,7 +549,7 @@ function TableItem(props) {
 
               {props.service.owned?
                 <React.Fragment>
-                  {props.service.comment?
+                  {props.service.comment||(props.service.outdated&&!props.service.pettion_id&&props.service.state==="deployed")?
                   <div className="notification">
                     <FontAwesomeIcon icon={faExclamation} className="fa-exclamation"/>
                     <FontAwesomeIcon icon={faCircle} className="fa-circle"/>
@@ -526,7 +558,8 @@ function TableItem(props) {
                     placement='top'
                     overlay={
                       <Tooltip id={`tooltip-top`}>
-                        {props.service.comment?t('changes_notification'):props.service.state==='deployed'?t('edit_notification'):t('pending_notification')}
+
+                        {props.service.comment?t('changes_notification'):props.service.outdated&&!props.service.pettion_id&&props.service.state==="deployed"?"Service needs to be updated":props.service.state==='deployed'?t('edit_notification'):t('pending_notification')}
                       </Tooltip>
                     }
                   >
@@ -539,6 +572,7 @@ function TableItem(props) {
                       service_id:props.service.service_id,
                       petition_id:props.service.petition_id,
                       type:props.service.type,
+                      owned:props.service.owned?"true":null,
                       comment:props.service.comment
                     }
                   }}>
@@ -547,13 +581,14 @@ function TableItem(props) {
                 </React.Fragment>
               :null
               }
-              {props.user.admin&&props.service.petition_id&&!props.service.comment?<Link
+              {(props.user.admin||(props.service.owned&&props.service.integration_environment==='development'))&&props.service.petition_id&&!props.service.comment?<Link
                 className='button-link'
                 to={{
                 pathname:'/'+tenant_name+"/form/review",
                 state:{
                   service_id:props.service.service_id,
                   petition_id:props.service.petition_id,
+                  integration_environment:props.service.integration_environment,
                   type:props.service.type,
                   comment:props.service.comment
                 }
@@ -571,6 +606,15 @@ function TableItem(props) {
               </React.Fragment>}
               id="dropdown-menu-align-right"
             >
+              {props.service.service_id && props.service.state==='deployed' && props.service.owned?
+              <Dropdown.Item as='span'>
+                <div>
+                  <Link to={"#"} onClick={()=>{
+                    toggleCopyDialog();
+                  }}>Copy Service</Link>
+                </div>
+              </Dropdown.Item>
+              :null}
               {props.service.owned && props.service.state==='deployed' && props.service.type!=='delete'?
                 <Dropdown.Item>
                   <div
@@ -585,7 +629,7 @@ function TableItem(props) {
                   </div>
                 </Dropdown.Item>
               :null}
-              {props.service.owned && props.service.state==='deployed'&&props.service.type?
+              {props.service.owned &&( props.service.state==='deployed'||props.service.type==='create')&&props.service.type?
                 <Dropdown.Item>
                   <div
                   onClick={()=>{

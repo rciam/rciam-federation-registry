@@ -5,6 +5,7 @@ const express = require('express');
 const {db} = require('./db');
 var https = require('https');
 var fs = require('fs');
+var config = require('./config');
 const cors = require('cors');
 var winston = require('winston');
 var expressWinston = require('express-winston');
@@ -19,6 +20,7 @@ var cookieParser = require('cookie-parser');
 var passport = require('passport');
 const { generators } = require('openid-client');
 const code_verifier = generators.codeVerifier();
+const {outdatedNotificationsWorker} = require('./functions/outdated_notif.js');
 
 // We set Cors options so that express can handle preflight requests containing cookies
 let clients= {};
@@ -139,10 +141,12 @@ app.use(function (err, req, res, next) {
 });
 
 
+
+
 const port = 5000;
 
 
-
+outdatedNotificationsWorker(config.outdated_notifications_interval_seconds);
 
 var server = app.listen(port, () => {
     console.log('\nReady for GET requests on http://localhost:' + port);

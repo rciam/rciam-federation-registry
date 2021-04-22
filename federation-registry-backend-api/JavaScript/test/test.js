@@ -24,7 +24,6 @@ describe('Service registry API Integration Tests', function() {
   userToken = setUser(users.egi.admin_user);
   describe('# Petition Validation Testing For Creation Requests', function(){
     it('should catch all null none protocol specific values',function(done){
-
       postPetitionError({type:'create'},'egi',validationResponses.create.null,done);
     })
     it('should catch all null fields in a oidc service',function(done){
@@ -284,7 +283,8 @@ describe('Service registry API Integration Tests', function() {
               tenant:"egi",
               id:service,
               protocol:"oidc",
-              state:"waiting-deployment"
+              state:"waiting-deployment",
+              integration_environment:"development"
             }]);
             req.set('Accept','application/json')
             .expect('Content-Type',/json/)
@@ -532,7 +532,8 @@ describe('Service registry API Integration Tests', function() {
           tenant:"egi",
           id:service,
           protocol:"oidc",
-          state:"waiting-deployment"
+          state:"waiting-deployment",
+          integration_environment:"development"
         }]);
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
@@ -612,7 +613,8 @@ describe('Service registry API Integration Tests', function() {
           tenant:"egi",
           id:service,
           protocol:"oidc",
-          state:"waiting-deployment"
+          state:"waiting-deployment",
+          integration_environment:"development"
         }]);
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
@@ -662,9 +664,11 @@ describe('Service registry API Integration Tests', function() {
     describe('# Reject Petition',function(){
       it('should create a new petition and return the id',function(done){
         userToken = setUser(users.eosc.end_user);
+        let dataSend = create.oidc;
+        dataSend.integration_environment = "demo";
+        dataSend.type = "create";
         var req = request(server).post('/tenants/eosc/petitions').set({Authorization: userToken}).send({
-          type:'create',
-          ...create.oidc
+          ...dataSend
         });
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)

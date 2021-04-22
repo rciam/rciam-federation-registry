@@ -27,6 +27,7 @@ const EditService = (props) => {
     const [notFound,setNotFound] = useState(false);
     useEffect(()=>{
       getData();
+      
       // eslint-disable-next-line react-hooks/exhaustive-deps
     },[]);
 
@@ -145,7 +146,7 @@ const EditService = (props) => {
           <Alert variant='warning' className='form-alert'>
             {t('reconfiguration_info')}
           </Alert>
-          {editPetition&&changes?<ServiceForm initialValues={editPetition} changes={changes} {...props}/>:<LoadingBar loading={true}/>}
+          {editPetition&&changes?<ServiceForm disableEnvironment={true} initialValues={editPetition} changes={changes} {...props}/>:<LoadingBar loading={true}/>}
         </React.Fragment>
 
       :props.type==='create'?
@@ -160,7 +161,7 @@ const EditService = (props) => {
           <Alert variant='warning' className='form-alert'>
             {t('edit_delete_info')}
           </Alert>
-          {service?<ServiceForm initialValues={service} {...props} />:<LoadingBar loading={true}/>}
+          {service?<ServiceForm copy={true} initialValues={service} {...props} />:<LoadingBar loading={true}/>}
         </React.Fragment>
       }
     </React.Fragment>
@@ -192,7 +193,7 @@ const EditService = (props) => {
               </Alert>
           :null
           }
-          {petition?<ServiceForm initialValues={petition} {...props}/>:<LoadingBar loading={true}/>}
+          {petition?<ServiceForm disableEnvironment={true} initialValues={petition} {...props}/>:<LoadingBar loading={true}/>}
         </React.Fragment>
         :
         <RequestedChangesAlert comment={props.comment} tab1={service} tab2={service} {...props}/>
@@ -216,7 +217,7 @@ const ViewService = (props)=>{
   const [logout,setLogout] = useState(false);
   const [notFound,setNotFound] = useState(false);
   useEffect(()=>{
-
+    console.log(props);
     getData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
@@ -319,12 +320,12 @@ const ViewService = (props)=>{
     <NotFound notFound={notFound}/>
     <Logout logout={logout}/>
     <ErrorComponent deploymentError={deploymentError} setDeploymentError={setDeploymentError} service_id={props.service_id} setLogout={setLogout}/>
-      {service?<ServiceForm initialValues={service} disabled={true} {...props} />:props.service_id?<LoadingBar loading={true}/>:petition?
+      {service?<ServiceForm initialValues={service} disabled={true} owned={props.owned} {...props} />:props.service_id?<LoadingBar loading={true}/>:petition?
         <React.Fragment>
           <Alert variant='danger' className='form-alert'>
             {t('view_create_info')}
           </Alert>
-          <ServiceForm initialValues={petition} disabled={true} {...props}/>
+          <ServiceForm initialValues={petition} owned={props.owned} disabled={true} {...props}/>
         </React.Fragment>
       :props.petition_id?<LoadingBar loading={true}/>:null
       }
@@ -361,12 +362,63 @@ const RequestedChangesAlert = (props) => {
               </Alert>
           :null
           }
-          {props.tab1?<ServiceForm initialValues={props.tab1} {...props}/>:<LoadingBar loading={true}/>}
+          {props.tab1?<ServiceForm disableEnvironment={true} initialValues={props.tab1} {...props}/>:<LoadingBar loading={true}/>}
         </Tab>
       <Tab eventKey="service" title="View Deployed Service">
         {props.tab2?<ServiceForm initialValues={props.tab2} disabled={true} {...props} />:<LoadingBar loading={true}/>}
       </Tab>
     </Tabs>
+    </React.Fragment>
+  )
+}
+
+const CopyService = (props)=> {
+
+  const [service,setService] = useState();
+  const {tenant_name} = useParams();
+  const [logout,setLogout] = useState(false);
+  const [notFound,setNotFound] = useState(false);
+  // eslint-disable-next-line
+  const { t, i18n } = useTranslation();
+
+  useEffect(()=>{
+    getData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[]);
+  const getData = () => {
+      fetch(config.host+'tenants/'+tenant_name+'/services/'+props.service_id, {
+        method: 'GET', // *GET, POST, PUT, DELETE, etc.
+        credentials: 'include', // include, *same-origin, omit
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': localStorage.getItem('token')
+        }
+      }).then(response=>{
+        if(response.status===200){
+          return response.json();
+        }else if(response.status===401){
+          setLogout(true);
+          return false
+        }
+        if(response.status===404){
+          setNotFound(true);
+          return false;
+        }
+        else {
+          return false
+        }
+        }).then(response=> {
+        if(response){
+          response.service.integration_environment=props.integration_environment;
+          setService(response.service);
+        }
+      });
+  }
+  return (
+    <React.Fragment>
+      <NotFound notFound={notFound}/>
+      <Logout logout={logout}/>
+      {service?<ServiceForm initialValues={service} copy={true} {...props} />:<LoadingBar loading={true}/>}
     </React.Fragment>
   )
 }
@@ -384,6 +436,12 @@ function calculateMultivalueDiff(old_values,new_values,edits){
   let new_cont = [];
   let old_cont = [];
   let items;
+  if(!old_values.contacts){
+    old_values.contacts = [];
+  }
+  if(!new_values.contacts){
+    new_values.contacts = [];
+  }
 
   new_values.contacts.forEach(item=>{
     new_cont.push(item.email+' '+item.type);
@@ -406,6 +464,25 @@ function calculateMultivalueDiff(old_values,new_values,edits){
     })
   }
   if(new_values.protocol==='oidc'){
+    if(!old_values.redirect_uris){
+      old_values.redirect_uris = [];
+    }
+    if(!new_values.redirect_uris){
+      new_values.redirect_uris = [];
+    }
+    if(!old_values.scope){
+      old_values.scope = [];
+    }
+    if(!new_values.scope){
+      new_values.scope = [];
+    }
+    if(!old_values.grant_types){
+      old_values.scope = [];
+    }
+    if(!new_values.grant_types){
+      new_values.scope = [];
+    }
+
     edits.grant_types.N = new_values.grant_types.filter(x=>!old_values.grant_types.includes(x));
     edits.grant_types.D = old_values.grant_types.filter(x=>!new_values.grant_types.includes(x));
     edits.scope.N = new_values.scope.filter(x=>!old_values.scope.includes(x));
@@ -419,5 +496,6 @@ function calculateMultivalueDiff(old_values,new_values,edits){
 export {
    EditService,
    NewService,
-   ViewService
+   ViewService,
+   CopyService
 }
