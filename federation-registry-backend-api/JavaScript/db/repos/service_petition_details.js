@@ -19,7 +19,7 @@ class ServicePetitionDetailsRepository {
 
     // Save new Petition
     async add(body,sub){
-      let date = Date.now();
+
       return this.db.one(sql.add,{
         service_description: body.service_description,
         service_name: body.service_name,
@@ -27,6 +27,7 @@ class ServicePetitionDetailsRepository {
         policy_uri: body.policy_uri,
         integration_environment: body.integration_environment,
         requester: sub,
+        country: body.country,
         type:body.type,
         status:"pending",
         service_id:body.service_id,
@@ -42,6 +43,7 @@ class ServicePetitionDetailsRepository {
           service_description: body.service_description,
           service_name: body.service_name,
           logo_uri: body.logo_uri,
+          country: body.country,
           policy_uri: body.policy_uri,
           integration_environment:body.integration_environment,
           id:id,
@@ -134,7 +136,7 @@ function createColumnsets(pgp) {
         // otherwise you can just pass in a string for the table name.
         const table = new pgp.helpers.TableName({table: 'service_petition_details', schema: 'public'});
 
-        cs.insert = new pgp.helpers.ColumnSet(['service_description','service_name',
+        cs.insert = new pgp.helpers.ColumnSet(['service_description','service_name','country',
           'logo_uri','policy_uri','integration_environment','requester','protocol','comment'],
           {table});
         cs.update = cs.insert.extend(['?id','state','type','reviewed_at','reviewer','service_id']);

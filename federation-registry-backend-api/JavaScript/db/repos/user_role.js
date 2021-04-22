@@ -36,7 +36,8 @@ class UserRoleRepository {
     if(!entitlements ||entitlements.length===0){
       entitlements = ['no_entitlements'];
     }
-    return this.db.any('SELECT role_name,id,entitlement,ARRAY_AGG(action) actions FROM (SELECT role_name,id,entitlement FROM (user_roles LEFT JOIN role_entitlements on user_roles.id=role_entitlements.role_id) WHERE tenant=$1 AND (entitlement IN ($2:csv) OR entitlement IS NULL)) as roles LEFT JOIN role_actions ON roles.id = role_actions.role_id GROUP BY roles.role_name, roles.id, roles.entitlement', [tenant,entitlements]).then(res => {
+    const query = this.pgp.as.format('SELECT role_name,id,entitlement,ARRAY_AGG(action) actions FROM (SELECT role_name,id,entitlement FROM (user_roles LEFT JOIN role_entitlements on user_roles.id=role_entitlements.role_id) WHERE tenant=$1 AND (entitlement IN ($2:csv) OR entitlement IS NULL)) as roles LEFT JOIN role_actions ON roles.id = role_actions.role_id GROUP BY roles.role_name, roles.id, roles.entitlement', [tenant,entitlements]);
+    return this.db.any(query).then(res => {
       if(res.length>1){
         res.forEach((item)=>{
           if(item.entitlement){
@@ -53,6 +54,7 @@ class UserRoleRepository {
       }
       return {success:true,role:role}
     }).catch(err => {
+      console.log(err)
       return {success:false, err:err}
     });
   }
