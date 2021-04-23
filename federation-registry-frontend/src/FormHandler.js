@@ -27,7 +27,7 @@ const EditService = (props) => {
     const [notFound,setNotFound] = useState(false);
     useEffect(()=>{
       getData();
-      
+
       // eslint-disable-next-line react-hooks/exhaustive-deps
     },[]);
 
@@ -180,7 +180,7 @@ const EditService = (props) => {
               </Alert>
               <Jumbotron fluid className="jumbotron-comment">
                 <Container>
-                  <h5>Comment from admin:</h5>
+                  <h5>Comment from Reviewer</h5>
                   <p className="text-comment">
                     {props.comment}
                   </p>
@@ -382,6 +382,7 @@ const CopyService = (props)=> {
   const { t, i18n } = useTranslation();
 
   useEffect(()=>{
+    console.log(props);
     getData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
@@ -418,7 +419,7 @@ const CopyService = (props)=> {
     <React.Fragment>
       <NotFound notFound={notFound}/>
       <Logout logout={logout}/>
-      {service?<ServiceForm initialValues={service} copy={true} {...props} />:<LoadingBar loading={true}/>}
+      {service?<ServiceForm initialValues={service} copy={true} />:<LoadingBar loading={true}/>}
     </React.Fragment>
   )
 }

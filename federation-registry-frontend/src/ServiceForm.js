@@ -13,7 +13,7 @@ import {useParams } from "react-router-dom";
 import { diff } from 'deep-diff';
 import {tenantContext} from './context.js';
 import Alert from 'react-bootstrap/Alert'
-import {Debug} from './Components/Debug.js';
+//import {Debug} from './Components/Debug.js';
 import {SimpleModal,ResponseModal,Logout,NotFound} from './Components/Modals.js';
 import Form from 'react-bootstrap/Form';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -819,7 +819,7 @@ const ServiceForm = (props)=> {
                               changed={props.changes?props.changes.code_challenge_method:null}
                             />
                           </InputRow>
-                          <InputRow required={true} title={t('form_allow_introspection')}>
+                          <InputRow title={t('form_allow_introspection')}>
                             <SimpleCheckbox
                               name='allow_introspection'
                               label={t('form_allow_introspection_desc')}
@@ -905,7 +905,7 @@ const ServiceForm = (props)=> {
                   }
                   <ResponseModal message={message} modalTitle={modalTitle}/>
                   <SimpleModal isSubmitting={isSubmitting} isValid={isValid}/>
-                  <Debug/>
+                  {/*<Debug/>*/}
 
                 </Form>
 

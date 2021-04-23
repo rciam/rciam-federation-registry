@@ -29,6 +29,21 @@ pipeline {
                 }
             }
         }
+        stage('Build front-end') {
+            agent {
+                docker {
+                    image 'node'
+                }
+            }
+            steps {
+                echo 'Build...'
+                sh """
+                    cd ${WORKSPACE}/${PROJECT_DIR}/federation-registry-frontend
+                    npm install
+                    npm run build
+                """
+            }
+        }
     }
     post{
         success {
