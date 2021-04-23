@@ -1119,7 +1119,7 @@ function ContactInput(props){
             sm="4"
             type="text"
             className={'col-form-label.sm ' + (type==='Added'?'input-new remove-border-right':type==='Deleted'?'input-deleted remove-border-right':null)}
-            placeholder="https//"
+            placeholder="email@placeholder.com"
             disabled={props.disabled}
           />
           <InputGroup.Prepend>
