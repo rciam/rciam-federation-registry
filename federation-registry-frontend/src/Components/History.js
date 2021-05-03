@@ -109,7 +109,7 @@ export const HistoryList = (props) => {
             {t('history_view_state')}
           </div>
           <Alert variant='warning' className='form-alert'>
-            {t('history_info_1')} {stateProps[0]==='create'?t('registration'):stateProps[0]==='edit'?t('reconfiguration'):t('deregistration')} {t('history_info_2')}{stateProps[1]==='approved'?t('history_info_approved'):stateProps[1]==='rejected'?t('history_info_rejected'):stateProps[1]==='pending'?t('history_info_pending'):t('history_info_changes')}.
+            {t('history_info_1')} {stateProps[0]==='create'?t('registration'):stateProps[0]==='edit'?t('reconfiguration'):t('deregistration')} {t('history_info_2')}{stateProps[1]==='approved'?t('history_info_approved'):stateProps[1]==='reject'?t('history_info_rejected'):stateProps[1]==='pending'?t('history_info_pending'):t('history_info_changes')}.
           </Alert>
           {stateProps[2]?
             <Jumbotron fluid className="jumbotron-comment">
