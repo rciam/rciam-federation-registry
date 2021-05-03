@@ -379,11 +379,9 @@ const ServiceForm = (props)=> {
         }
         else if(response.status===401){
           setLogout(true);
-          return false;
         }
         else if(response.status===404){
           setNotFound(true);
-          return false;
         }
         else{
           setMessage(t('petition_error_msg') + response.status);
@@ -395,6 +393,7 @@ const ServiceForm = (props)=> {
       setMessage(t('petition_no_change_msg'));
     }
   }
+
   const deletePetition = ()=>{
     setAsyncResponse(true);
     fetch(config.host+'tenants/'+tenant_name+'/petitions/'+props.petition_id, {
@@ -411,11 +410,9 @@ const ServiceForm = (props)=> {
       }
       else if(response.status===401){
         setLogout(true);
-        return false;
       }
       else if(response.status===404){
         setNotFound(true);
-        return false;
       }
       else{
       setMessage(t('request_cancel_fail_msg+response.status'));
@@ -708,7 +705,7 @@ const ServiceForm = (props)=> {
                               name='scope'
                               values={values.scope}
                               placeholder={t('form_type_prompt')}
-                              defaultValues= {formConfig.scope}
+                              defaultValues= {tenant.form_config.scope}
                               error={errors.scope}
                               touched={touched.scope}
                               disabled={disabled}
