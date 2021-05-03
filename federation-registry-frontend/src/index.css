@@ -999,6 +999,7 @@ tbody tr td:last-child {
     text-decoration: underline;
 }
 .fake-link {
+  cursor: pointer;
   color: #007bff;
   text-decoration: none;
 }
@@ -1206,10 +1207,6 @@ html:lang(gr) .home-container h1 {
   border:none!important;
 }
 
-.fake-link:hover {
-  color: #007bff;
-  text-decoration: none;
-}
 
 .fake-link {
     color: #007bff;
