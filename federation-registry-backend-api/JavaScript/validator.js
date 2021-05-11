@@ -228,7 +228,7 @@ const serviceValidationRules = (options) => {
                   value.map((item,index)=>{
                     if(req.body[pos].integration_environment==="production"){
 
-                      if(!(item.match(reg.regLocalhostUrl)||item.match(reg.regUrl))){
+                      if(!(item.match(reg.regLocalhostUrlSecure)||item.match(reg.regUrl))){
                         throw new Error("Invalid redirect url, it must be a secure or localhost url");
                       }
                     }
