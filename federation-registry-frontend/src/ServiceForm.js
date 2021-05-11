@@ -138,12 +138,14 @@ const ServiceForm = (props)=> {
       is:'oidc',
       then: yup.array().when('integration_environment',(integration_environment)=>{
         integrationEnvironment = integration_environment;
-      }).of(yup.string().test('test_redirect_uri','error',function(value){
-        if(integrationEnvironment==='production'){
-          return value.match(reg.regUrl) || value.match(reg.regLocalhostUrl)
-        }
-        else{
-          return value.match(reg.regSimpleUrl) || value.match(reg.regLocalhostUrl)
+      }).of(yup.string().required().test('test_redirect_uri','error',function(value){
+        if(value){
+          if(integrationEnvironment==='production'){
+            return value.match(reg.regUrl) || value.match(reg.regLocalhostUrlSecure)
+          }
+          else{
+            return value.match(reg.regSimpleUrl) || value.match(reg.regLocalhostUrl)
+          }
         }
 
       })).unique(t('yup_redirect_uri_unique')).when('grant_types',{
