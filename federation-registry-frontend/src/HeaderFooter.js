@@ -48,6 +48,7 @@ export const NavbarTop = (props)=>{
   const tenant = useContext(tenantContext);
 
   useEffect(()=>{
+    console.log(tenant[0]);
     if(user){
       setAdmin(user.admin);
     }
@@ -80,7 +81,15 @@ export const NavbarTop = (props)=>{
             <Dropdown.Item onClick={()=>{history.push('/'+(tenant&&tenant[0]?(tenant[0].name+'/userinfo'):null));}}>
             {t('nav_link_userinfo')}
             </Dropdown.Item>
-            <Dropdown.Item onClick={()=>{localStorage.removeItem('token'); history.push('/'+(tenant&&tenant[0]?tenant[0].name:null));}} >
+            <Dropdown.Item onClick={()=>{
+              localStorage.removeItem('token');
+              if(tenant[0].name==='egi'){
+                window.location.assign('https://aai.egi.eu/oidc/saml/logout?redirect='+config.react+tenant[0].name);
+              }
+              else{
+                history.push('/'+(tenant&&tenant[0]?tenant[0].name:null));
+              }
+            }}>
               {t('logout')}<FontAwesomeIcon icon={faSignOutAlt}/>
             </Dropdown.Item>
           </DropdownButton>):(

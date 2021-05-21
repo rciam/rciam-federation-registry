@@ -10,10 +10,15 @@ const App = (props) =>{
   const [lang,setLang]= useState('en');
   const [context,setContext] = useState(null);
   const [tenant,setTenant] = useState(null);
+
+
   const onLanguageHandle = (newLang) => {
     setLang(newLang);
     props.i18n.changeLanguage(newLang);
   }
+
+
+
   return (
 
     <userContext.Provider value={[context, setContext]}>

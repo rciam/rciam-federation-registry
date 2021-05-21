@@ -144,6 +144,8 @@
     "form_reuse_refresh_tokens":"Refresh tokens for this client are re-used",
     "form_url_placeholder":"https://",
     "form_type_prompt":"Type something",
+    "form_website_url":"Συνδεσμος για την ιστοσελίδα της υπηρεσίας",
+    "form_website_url_desc":"Συνδεσμος που παρέχει περισσότερες πληροφορίες για την υπηρεσία",
     "review_submit":"Submit Review",
     "review":"Review",
     "review_approve":"Approve",

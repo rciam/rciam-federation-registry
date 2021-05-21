@@ -1,4 +1,5 @@
 import React,{useState,useEffect,useContext,useRef} from 'react';
+import mapValues from 'lodash/mapValues';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {faCheckCircle,faBan,faSortDown} from '@fortawesome/free-solid-svg-icons';
 import Tabs from 'react-bootstrap/Tabs';
@@ -13,7 +14,7 @@ import {useParams } from "react-router-dom";
 import { diff } from 'deep-diff';
 import {tenantContext} from './context.js';
 import Alert from 'react-bootstrap/Alert'
-//import {Debug} from './Components/Debug.js';
+import {Debug} from './Components/Debug.js';
 import {SimpleModal,ResponseModal,Logout,NotFound} from './Components/Modals.js';
 import Form from 'react-bootstrap/Form';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -30,7 +31,6 @@ var availabilityCheckTimeout;
 var countries;
 let integrationEnvironment;
 
-
 const ServiceForm = (props)=> {
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
@@ -38,7 +38,8 @@ const ServiceForm = (props)=> {
   const [notFound,setNotFound] = useState(false);
   // eslint-disable-next-line
   const [tenant,setTenant] = useContext(tenantContext);
-  const [showInitErrors,setShowInitErrors] = useState(false)
+
+  const [showInitErrors,setShowInitErrors] = useState(false);
   useEffect(()=>{
     countries = [];
     if(props.service_id||props.petition_id){
@@ -54,6 +55,12 @@ const ServiceForm = (props)=> {
         if(props.disabled||props.review){
         setDisabled(true);
     }
+    Object.keys(tenant.form_config.code_of_contact).forEach((name,index)=>{
+        if(!Object.keys(props.initialValues).includes(name)){
+          props.initialValues[name]=false;
+        }
+    })
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
 
@@ -82,6 +89,31 @@ const ServiceForm = (props)=> {
       callback(true);
     }
   }
+
+  const dynamicValidation = async (values,props)=>{
+    let error = {};
+    lazy_schema.validate(values,{abortEarly:false}).catch(function (err) {
+      console.log(err);
+      if(err.inner){
+        err.inner.forEach(item=>{
+          error[item.path] = item.message;
+        })
+      }
+    });
+    console.log(error);
+    return error;
+  }
+
+  const lazy_schema  = yup.lazy(obj => yup.object(
+    mapValues(obj, (v, k) => {
+      if (Object.keys((tenant.form_config.code_of_contact)).includes(k)) {
+        return yup.boolean().required(t('yup_required')).when('integration_environment',{
+          is:(integration_environment)=> { console.log(integration_environment); return tenant.form_config.code_of_contact[k].required.includes(integration_environment)},
+          then: yup.boolean().oneOf([true],tenant.form_config.code_of_contact[k].error)
+          })
+      }
+      })
+    ));
   const schema = yup.object({
     service_name:yup.string().nullable().min(4,t('yup_char_min') + ' ('+4+')').max(36,t('yup_char_max') + ' ('+36+')').required(t('yup_required')),
     // Everytime client_id changes we make a fetch request to see if it is available.
@@ -90,6 +122,7 @@ const ServiceForm = (props)=> {
       then: yup.string().required(t('yup_required')).matches(reg.regSimpleUrl,t('yup_url')),
       otherwise: yup.string().matches(reg.regSimpleUrl,t('yup_url'))
       }),
+    website_url:yup.string().matches(reg.regSimpleUrl,t('yup_url')),
     client_id:yup.string().nullable().when('protocol',{
       is:'oidc',
       then: yup.string().min(4,t('yup_char_min') + ' ('+4+')').max(36,t('yup_char_max') + ' ('+36+')').test('testAvailable',t('yup_client_id_available'),function(value){
@@ -140,8 +173,8 @@ const ServiceForm = (props)=> {
         integrationEnvironment = integration_environment;
       }).of(yup.string().required().test('test_redirect_uri','error',function(value){
         if(value){
-          if(integrationEnvironment==='production'){
-            return value.match(reg.regUrl) || value.match(reg.regLocalhostUrlSecure)
+          if(integrationEnvironment==='production'||integrationEnvironment==='demo'){
+            return value.match(reg.regUrl) || value.match(reg.regLocalhostUrl)
           }
           else{
             return value.match(reg.regSimpleUrl) || value.match(reg.regLocalhostUrl)
@@ -196,7 +229,14 @@ const ServiceForm = (props)=> {
     }),
     code_challenge_method:yup.string().nullable().when('protocol',{
       is:'oidc',
-      then: yup.string().matches(reg.regCodeChalMeth).required(t('yup_required'))
+      then: yup.string().nullable().test('test_code_challenge_method','Invalid Value',function(value){
+        if(!value){
+          return true;
+        }
+        else{
+          return tenant.form_config.code_challenge_method.includes(value)
+        }
+      })
     }),
     allow_introspection:yup.boolean().nullable().when('protocol',{
       is:'oidc',
@@ -296,6 +336,7 @@ const ServiceForm = (props)=> {
       })
     })
   });
+
 
   const [logout,setLogout] = useState(false);
   const [availabilityCheck,setAvailabilityCheck] = useState(true);
@@ -489,6 +530,7 @@ const ServiceForm = (props)=> {
       initialTouched={getInitialTouched(props.initialValues)}
       validationSchema={schema}
       innerRef={formRef}
+      validate={dynamicValidation}
       onSubmit={(values,{setSubmitting}) => {
         setHasSubmitted(true);
         if(!(values.token_endpoint_auth_method==="client_secret_jwt"||values.token_endpoint_auth_method==="private_key_jwt")){
@@ -600,6 +642,18 @@ const ServiceForm = (props)=> {
                           changed={props.changes?props.changes.logo_uri:null}
                         />
                       </InputRow>
+                      <InputRow title={t('form_website_url')} description={t('form_website_url_desc')} error={errors.website_url} touched={touched.website_url}>
+                        <SimpleInput
+                          name='website_url'
+                          placeholder={t('form_url_placeholder')}
+                          onChange={handleChange}
+                          value={values.website_url}
+                          isInvalid={hasSubmitted?!!errors.website_url:(!!errors.website_url&&touched.website_url)}
+                          onBlur={handleBlur}
+                          disabled={disabled}
+                          changed={props.changes?props.changes.website_url:null}
+                         />
+                     </InputRow>
                       <InputRow title={t('form_description')} required={true} description={t('form_description_desc')} error={errors.service_description} touched={touched.service_description}>
                         <TextAria
                           value={values.service_description?values.service_description:''}
@@ -637,6 +691,33 @@ const ServiceForm = (props)=> {
                         />
                       </InputRow>
 
+                      { Object.keys(tenant.form_config.code_of_contact).map((name,i)=>{
+                        return(
+                          <InputRow title={tenant.form_config.code_of_contact[name].title} required={
+                            tenant.form_config.code_of_contact[name].required.includes(values.integration_environment)} error={errors[name]?errors[name]:null} touched={touched[name]}>
+                            <SimpleCheckbox
+                            key={i}
+                            name= {name}
+                            label={
+                              <React.Fragment>
+                                {tenant.form_config.code_of_contact[name].desc} [<a href={tenant.form_config.code_of_contact[name].link}>{name}</a>]
+                              </React.Fragment>
+                            }
+                            onChange={handleChange}
+                            disabled={disabled}
+                            value={values[name]}
+                            touched={touched[name]}
+                            onBlur={handleBlur}
+                            setFieldTouched={setFieldTouched}
+                            changed={props.changes?props.changes[name]:null}
+                            />
+                          </InputRow>
+                        )
+                      })}
+
+
+
+
                       <InputRow title={t('form_contacts')} required={true} error={typeof(errors.contacts)=='string'?errors.contacts:null} touched={touched.contacts} description={t('form_contacts_desc')}>
                         <Contacts
                           values={values.contacts}
@@ -654,7 +735,7 @@ const ServiceForm = (props)=> {
                       </InputRow>
                     </Tab>
                     <Tab eventKey="protocol" title={t('form_tab_protocol')}>
-                      <InputRow title={t('form_protocol')} required={true} extraClass='select-col' error={errors.protocol} touched={touched.code_challenge_method}>
+                      <InputRow title={t('form_protocol')} required={true} extraClass='select-col' error={errors.protocol} touched={touched.protocol}>
                         <Select
                           onBlur={handleBlur}
                           optionsTitle={['Select one option','OIDC Service','SAML Service']}
@@ -677,6 +758,7 @@ const ServiceForm = (props)=> {
                                 setFieldTouched('client_id');
                                 handleChange(e);
                               }}
+                              copyButton={props.copyButton}
                               value={values.client_id}
                               isInvalid={hasSubmitted?(!!errors.client_id&&!checkingAvailability):(!!errors.client_id&&touched.client_id&&!checkingAvailability)}
                               onBlur={handleBlur}
@@ -775,6 +857,7 @@ const ServiceForm = (props)=> {
                              client_secret={values.client_secret}
                              error={errors.client_secret}
                              touched={touched.client_secret}
+                             copyButton={props.copyButton}
                              isInvalid={hasSubmitted?!!errors.client_secret:(!!errors.client_secret&&touched.client_secret)}
                              onBlur={handleBlur}
                              generate_client_secret={values.generate_client_secret}
@@ -806,7 +889,7 @@ const ServiceForm = (props)=> {
                           <InputRow required={true} title={t('form_code_challenge_method')} extraClass='select-col' error={errors.code_challenge_method} touched={touched.code_challenge_method}>
                             <Select
                               onBlur={handleBlur}
-                              optionsTitle={['No code challenge','Plain code challenge','SHA-256 hash algorithm']}
+                              optionsTitle={['PKCE will not be used for this service','Plain code challenge','SHA-256 hash algorithm (recomended)']}
                               options={['','plain','S256']}
                               name="code_challenge_method"
                               values={values}
@@ -827,7 +910,6 @@ const ServiceForm = (props)=> {
                               changed={props.changes?props.changes.allow_introspection:null}
                             />
                           </InputRow>
-
                           <InputRow title={t('form_access_token_validity_seconds')} extraClass='time-input' error={errors.access_token_validity_seconds} touched={touched.access_token_validity_seconds} description={t('form_access_token_validity_seconds_desc')}>
                             <TimeInput
                               name='access_token_validity_seconds'
@@ -863,6 +945,7 @@ const ServiceForm = (props)=> {
                               handleChange(e);
                             }}
                             value={values.entity_id}
+                            copyButton={props.copyButton}
                             isInvalid={hasSubmitted?!!(errors.entity_id&&!checkingAvailability):(!!errors.entity_id&&touched.entity_id&&!checkingAvailability)}
                             onBlur={handleBlur}
                             disabled={disabled}
@@ -875,6 +958,7 @@ const ServiceForm = (props)=> {
                              name='metadata_url'
                              placeholder='Type something'
                              onChange={handleChange}
+                             copyButton={props.copyButton}
                              value={values.metadata_url}
                              isInvalid={hasSubmitted?!!errors.metadata_url:(!!errors.metadata_url&&touched.metadata_url)}
                              onBlur={handleBlur}
@@ -903,7 +987,7 @@ const ServiceForm = (props)=> {
                   }
                   <ResponseModal message={message} modalTitle={modalTitle}/>
                   <SimpleModal isSubmitting={isSubmitting} isValid={isValid}/>
-                  {/*<Debug/>*/}
+                  <Debug/>
 
                 </Form>
 

@@ -4,9 +4,11 @@ SELECT json_build_object('service_name', sd.service_name,'service_description',s
 						 'device_code_validity_seconds',sd.device_code_validity_seconds,'access_token_validity_seconds',sd.access_token_validity_seconds,
 						 'refresh_token_validity_seconds',sd.refresh_token_validity_seconds,'refresh_token_validity_seconds',sd.refresh_token_validity_seconds,
 						 'client_secret',sd.client_secret,'reuse_refresh_tokens',sd.reuse_refresh_tokens,'protocol',sd.protocol,'jwks',sd.jwks,'jwks_uri',sd.jwks_uri,
-						 'country',sd.country,'token_endpoint_auth_method',sd.token_endpoint_auth_method,'token_endpoint_auth_signing_alg',sd.token_endpoint_auth_signing_alg,
+						 'country',sd.country,'website_url',sd.website_url,'token_endpoint_auth_method',sd.token_endpoint_auth_method,'token_endpoint_auth_signing_alg',sd.token_endpoint_auth_signing_alg,
 						 'clear_access_tokens_on_refresh',sd.clear_access_tokens_on_refresh,'id_token_timeout_seconds',sd.id_token_timeout_seconds,'metadata_url',sd.metadata_url
 						 ,'entity_id',sd.entity_id,
+						  'coc',(SELECT CASE WHEN json_agg(json_build_object(v.name,v.value)) IS NULL THEN NULL ELSE json_agg(json_build_object(v.name,v.value)) END
+							FROM service_coc v WHERE sd.id = v.service_id),
 						 'grant_types',
 							(SELECT CASE WHEN array_agg((v.value)) IS NULL THEN Array[]::varchar[] ELSE array_agg((v.value)) END
 							 FROM service_oidc_grant_types v WHERE sd.id = v.owner_id),
@@ -21,6 +23,6 @@ SELECT json_build_object('service_name', sd.service_name,'service_description',s
 							 FROM service_contacts v WHERE sd.id = v.owner_id)
 							) json
     FROM (SELECT *
-	FROM (SELECT * FROM service_details WHERE id=${id} AND deleted = FALSE AND tenant=${tenant}) AS foo
+	FROM (SELECT * FROM service_details WHERE id=${id} AND deleted = FALSE AND tenant='egi') AS foo
 	LEFT JOIN service_details_oidc USING (id)
 	LEFT JOIN service_details_saml USING (id)) as sd

@@ -39,6 +39,9 @@ function getData(req,res,next) {
   });
 }
 
+
+
+// Endpoint used to bootstrap a teant or generaly to import multiple services
 router.post('/tenants/:tenant_name/services',tenantValidation(),validate,serviceValidationRules({optional:true,tenant_param:true,check_available:true,sanitize:true,null_client_id:false}),validate,(req,res,next)=> {
   let services = req.body;
   // Populate json objects with all necessary fields
@@ -133,13 +136,15 @@ router.post('/tenants/:tenant_name/services',tenantValidation(),validate,service
     next(err);
   }
 });
-// Get available tenats
-router.get('/tenants/:tenant_name',(req,res,next)=>{
+
+
+// Get tenant info and configuration for form fields
+router.get('/tenants/:tenant',(req,res,next)=>{
   try{
-    db.tenants.getTheme(req.params.tenant_name).then(tenant=>{
+    db.tenants.getTheme(req.params.tenant).then(tenant=>{
       if(tenant){
-        if(config.form[req.params.tenant_name]){
-          tenant.form_config = config.form[req.params.tenant_name];
+        if(config.form[req.params.tenant]){
+          tenant.form_config = config.form[req.params.tenant];
         }
         res.status(200).json(tenant).end();
       }
@@ -153,10 +158,10 @@ router.get('/tenants/:tenant_name',(req,res,next)=>{
   }
 });
 
-
+// Get available tenants in the federation registry
 router.get('/tenants',(req,res,next)=> {
   try{
-    db.tenants.get().then(tenants => {
+    db.tenants.getInit().then(tenants => {
       if(tenants){
         res.status(200).json(tenants).end();
       }
@@ -170,18 +175,22 @@ router.get('/tenants',(req,res,next)=> {
   }
 })
 
-router.get('/tenants/:tenant_name/login',(req,res)=>{
+//   Used to redirect users to authentication proxy
+router.get('/tenants/:tenant/login',(req,res)=>{
   var clients = req.app.get('clients');
-  if(clients[req.params.tenant_name]){
-    res.redirect(clients[req.params.tenant_name].authorizationUrl({
-      client_id:clients[req.params.tenant_name].client_id,
+  if(clients[req.params.tenant]){
+    res.redirect(clients[req.params.tenant].authorizationUrl({
+      client_id:clients[req.params.tenant].client_id,
       scope: 'openid email profile eduperson_entitlement',
-      redirect_uri: process.env.REDIRECT_URI+req.params.tenant_name
+      redirect_uri: process.env.REDIRECT_URI+req.params.tenant
     }));
   }else{
     res.redirect(process.env.REACT_BASE+'/404');
   }
 })
+
+
+
 
 // Callback Route
 router.get('/callback/:tenant_name',(req,res,next)=>{
@@ -241,6 +250,8 @@ router.get('/tenants/:tenant_name/services/:id/error',authenticate,(req,res,next
   }
 });
 
+
+// Handle Deployment Error
 router.put('/tenants/:tenant_name/services/:id/error',authenticate,(req,res,next)=> {
   try{
     if(req.user.role.actions.includes('view_errors')){
@@ -287,8 +298,7 @@ router.get('/tenants/:tenant_name/user',authenticate,(req,res,next)=>{
   }
 });
 
-// needs Authentication
-// ams/ingest
+// Push endpoint for recieving deployment result messages
 router.post('/ams/ingest',checkCertificate,decodeAms,amsIngestValidation(),validate,(req,res,next)=>{
   // Decode messages
   try{
@@ -321,6 +331,7 @@ router.post('/ams/ingest',checkCertificate,decodeAms,amsIngestValidation(),valid
     next(err);
   }
 });
+
 
 
 // ams-agent requests to set state to waiting development
@@ -639,7 +650,7 @@ router.put('/tenants/:tenant_name/petitions/:id',authenticate,petitionValidation
   }
 });
 
-// Admin rejects petition
+// Admin reviews petition
 router.put('/tenants/:tenant_name/petitions/:id/review',authenticate,canReview,(req,res,next)=>{
   try{
     if(req.body.type==='reject'){

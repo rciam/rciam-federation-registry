@@ -144,7 +144,7 @@ const EditService = (props) => {
       {props.type==='edit'?
         <React.Fragment>
           <Alert variant='warning' className='form-alert'>
-            {t('reconfiguration_info')}
+            {t('reconfiguration_info')} It was submitted on {props.submitted.slice(12,19)}(GMT+3) at {props.submitted.slice(0,10).split('-').join('/')}.
           </Alert>
           {editPetition&&changes?<ServiceForm disableEnvironment={true} initialValues={editPetition} changes={changes} {...props}/>:<LoadingBar loading={true}/>}
         </React.Fragment>
@@ -152,14 +152,14 @@ const EditService = (props) => {
       :props.type==='create'?
         <React.Fragment>
           <Alert variant='warning' className='form-alert'>
-            {t('edit_create_info')}
+            {t('edit_create_info')} It was submitted on {props.submitted.slice(12,19)}(GMT+3) at {props.submitted.slice(0,10).split('-').join('/')}.
           </Alert>
           {petition?<ServiceForm initialValues={petition} {...props}/>:<LoadingBar loading={true}/>}
         </React.Fragment>
       :
         <React.Fragment>
           <Alert variant='warning' className='form-alert'>
-            {t('edit_delete_info')}
+            {t('edit_delete_info')} It was submitted on {props.submitted.slice(12,19)}(GMT+3) at {props.submitted.slice(0,10).split('-').join('/')}.
           </Alert>
           {service?<ServiceForm copy={true} initialValues={service} {...props} />:<LoadingBar loading={true}/>}
         </React.Fragment>
@@ -320,12 +320,12 @@ const ViewService = (props)=>{
     <NotFound notFound={notFound}/>
     <Logout logout={logout}/>
     <ErrorComponent deploymentError={deploymentError} setDeploymentError={setDeploymentError} service_id={props.service_id} setLogout={setLogout}/>
-      {service?<ServiceForm initialValues={service} disabled={true} owned={props.owned} {...props} />:props.service_id?<LoadingBar loading={true}/>:petition?
+      {service?<ServiceForm initialValues={service} disabled={true} copyButton={true} owned={props.owned} {...props} />:props.service_id?<LoadingBar loading={true}/>:petition?
         <React.Fragment>
           <Alert variant='danger' className='form-alert'>
             {t('view_create_info')}
           </Alert>
-          <ServiceForm initialValues={petition} owned={props.owned} disabled={true} {...props}/>
+          <ServiceForm initialValues={petition} copyButton={true} owned={props.owned} disabled={true} {...props}/>
         </React.Fragment>
       :props.petition_id?<LoadingBar loading={true}/>:null
       }
