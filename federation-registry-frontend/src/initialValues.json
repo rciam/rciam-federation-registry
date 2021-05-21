@@ -1,6 +1,7 @@
 {
   "service_name":"",
   "service_description":"",
+  "website_url": "",
   "redirect_uris": [],
   "logo_uri":"",
   "policy_uri":"",

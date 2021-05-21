@@ -40,13 +40,13 @@ var corsOptions = {
 db.tenants.getInit().then(async tenants => {
   for (const tenant of tenants){
     await Issuer.discover(tenant.issuer_url).then((issuer)=>{
-      //console.log(issuer.metadata);
 
       clients[tenant.name] = new issuer.Client({
         client_id: tenant.client_id,
         client_secret: tenant.client_secret,
         redirect_uris: process.env.REDIRECT_URI + tenant.name
       });
+
       clients[tenant.name].client_id = tenant.client_id;
       clients[tenant.name].client_secret = tenant.client_secret;
       clients[tenant.name].issuer_url = tenant.issuer_url;

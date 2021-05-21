@@ -1,5 +1,5 @@
 const sql = require('../sql').petition;
-const {calcDiff} = require('../../functions/helpers.js');
+const {calcDiff,extractCoc} = require('../../functions/helpers.js');
 const cs = {}; // Reusable ColumnSet objects.
 
 /*
@@ -30,7 +30,8 @@ class PetitionRepository {
         delete result.json.type;
         delete result.json.service_id;
         delete result.json.requester;
-        data.service_data = result.json;
+        data.service_data = extractCoc(result.json);
+
         return data
       }
       else {
@@ -60,7 +61,7 @@ class PetitionRepository {
         delete result.json.type;
         delete result.json.service_id;
         delete result.json.requester;
-        data.service_data = result.json;
+        data.service_data = extractCoc(result.json);
         return data
       }
       else {
@@ -84,7 +85,7 @@ class PetitionRepository {
         delete result.json.type;
         delete result.json.service_id;
         delete result.json.requester;
-        data.service_data = result.json;
+        data.service_data = extractCoc(result.json);
         return data
       }
       else {
@@ -109,7 +110,9 @@ class PetitionRepository {
         delete result.json.type;
         delete result.json.service_id;
         delete result.json.requester;
-        data.service_data = result.json;
+        data.service_data = extractCoc(result.json);
+
+
         return data
       }
       else {
@@ -129,6 +132,7 @@ class PetitionRepository {
                   if(result){
                     queries.push(t.service_details_protocol.add('petition',petition,result.id));
                     queries.push(t.service_contacts.add('petition',petition.contacts,result.id));
+                    queries.push(t.service_multi_valued.addCoc('petition',petition,result.id));
                     if(petition.protocol==='oidc'){
                       queries.push(t.service_multi_valued.add('petition','oidc_grant_types',petition.grant_types,result.id));
                       queries.push(t.service_multi_valued.add('petition','oidc_scopes',petition.scope,result.id));
@@ -148,6 +152,7 @@ class PetitionRepository {
               if(result){
                 queries.push(t.service_details_protocol.add('petition',petition,result.id));
                 queries.push(t.service_contacts.add('petition',petition.contacts,result.id));
+                queries.push(t.service_multi_valued.addCoc('petition',petition,result.id));
                 if(petition.protocol==='oidc'){
                   queries.push(t.service_multi_valued.add('petition','oidc_grant_types',petition.grant_types,result.id));
                   queries.push(t.service_multi_valued.add('petition','oidc_scopes',petition.scope,result.id));
@@ -170,7 +175,9 @@ class PetitionRepository {
         return t.petition.get(targetId,tenant).then(async oldState=>{
           if(oldState){
             let edits = calcDiff(oldState.service_data,newState);
+            console.log(edits);
             if(Object.keys(edits.details).length !== 0){
+               queries.push(t.service_multi_valued.updateCoc('petition',{...edits.details,tenant:tenant},targetId));
                queries.push(t.service_petition_details.update(edits.details,targetId));
                queries.push(t.service_details_protocol.update('petition',edits.details,targetId));
             }

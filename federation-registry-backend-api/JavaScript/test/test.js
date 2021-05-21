@@ -581,6 +581,7 @@ describe('Service registry API Integration Tests', function() {
     });
     describe('# Delete Service',function(){
       it('should create a new delete petition',function(done){
+        console.log('we delete '+service);
         var req = request(server).post('/tenants/egi/petitions').set({Authorization: userToken}).send({
           type:'delete',
           service_id:service
@@ -591,6 +592,7 @@ describe('Service registry API Integration Tests', function() {
         .expect(200)
         .end(function(err,res){
           let body = JSON.parse(res.text);
+
           expect(res.statusCode).to.equal(200);
           petition = body.id;
           done();

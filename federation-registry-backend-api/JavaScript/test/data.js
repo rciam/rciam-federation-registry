@@ -5,6 +5,7 @@ const create = {
      redirect_uris: ["https://redirecturi1.com"],
      logo_uri:"https://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
      policy_uri:"https://policyuri.com",
+     website_url:"",
      integration_environment:"development",
      protocol:"oidc",
      contacts:[ {
@@ -39,7 +40,9 @@ const create = {
      grant_types: [
        "client_credentials"
      ],
-     generate_client_secret:false
+     generate_client_secret:false,
+     egi_policy:true,
+     dpcoco:false
    },
    saml:{
      service_name:"Test Saml Service",
@@ -47,6 +50,7 @@ const create = {
      redirect_uris: null,
      logo_uri:"https://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
      policy_uri:"https://policyuri.com",
+     website_url:"",
      integration_environment:"development",
      protocol:"saml",
      country:"gr",
@@ -82,6 +86,7 @@ const edit = {
    ],
    "logo_uri":"https://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
    "policy_uri":"https://policyuriedit.com",
+   "website_url":"",
    "integration_environment":"development",
    "protocol":"oidc",
    "contacts":[
@@ -121,7 +126,9 @@ const edit = {
    "grant_types":[
       "client_credentials"
    ],
-   "generate_client_secret":false
+   "generate_client_secret":false,
+   "egi_policy":true,
+   "dpcoco":false
 },
  saml:{
 
@@ -130,6 +137,7 @@ const edit = {
    redirect_uris:null,
    logo_uri:"https://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
    policy_uri:"https://policyuriedit.com",
+   website_url:"",
    integration_environment:"development",
    protocol:"saml",
    contacts:[{
@@ -163,6 +171,7 @@ const edit = {
 const postServices = [
   {
     "policy_uri": "https://www.policy_uri.com",
+    "website_url":"",
     "integration_environment": "development",
     "protocol": "oidc",
     "client_id": "clqweient1",
@@ -201,7 +210,9 @@ const postServices = [
     "logo_uri": null,
     "entity_id": null,
     "metadata_url": null,
-    "redirect_uris": null
+    "redirect_uris": null,
+    "egi_policy":true,
+    "dpcoco":false
   },
   {
     "extra_field": "with value",
@@ -211,6 +222,7 @@ const postServices = [
     "service_description": "Sample description",
     "logo_uri": "https://www.freelogodesign.org/Content/img/logo-samples/flooop.png",
     "policy_uri": "https://www.policy_uri.com",
+    "website_url":"",
     "integration_environment": "development",
     "protocol": "oidc",
     "country": "GR",
@@ -227,10 +239,12 @@ const postServices = [
       "email",
       "eduperson_entitlement",
       "eduperson_scoped_affiliation",
-      "eduperson_unique_id"
+      "eduperson_unique_id",
     ],
     "generate_client_secret": false,
-    "tenant": "egi"
+    "tenant": "egi",
+    "egi_policy":true,
+    "dpcoco":false
   },
   {
     "extra_field": "with value",
@@ -241,10 +255,12 @@ const postServices = [
     "metadata_url": "https://asdfasdf.com",
     "logo_uri": "https://www.freelogodesign.org/Content/img/logo-samples/flooop.png",
     "policy_uri": "https://www.policy_uri.com",
+    "website_url":"",
     "integration_environment": "development",
     "protocol": "saml",
     "contacts": null,
-    "tenant": "egi"
+    "tenant": "egi",
+
   },
   {
     "protocol": "oidc",
@@ -279,6 +295,7 @@ const validationRequests = {
    redirect_uris: "string",
    logo_uri:"http://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
    policy_uri:"http://policyuri.com",
+   website_url:"",
    integration_environment:1,
    protocol:"oidc",
    country:"gr",
@@ -301,7 +318,9 @@ const validationRequests = {
    id_token_timeout_seconds:"string",
    scope: "string",
    grant_types:"string",
-   generate_client_secret:"string"
+   generate_client_secret:"string",
+   egi_policy:true,
+   dpcoco:false
  },
  oidc_values: {
    type:"create",
@@ -310,6 +329,7 @@ const validationRequests = {
    redirect_uris: ["string","string"],
    logo_uri:"string",
    policy_uri:"string",
+   website_url:"",
    integration_environment:"string",
    protocol:"oidc",
    country:"gr",
@@ -332,7 +352,9 @@ const validationRequests = {
    id_token_timeout_seconds:123123,
    scope: ["string","string"],
    grant_types:["string","string"],
-   generate_client_secret:false
+   generate_client_secret:false,
+   egi_policy:true,
+   dpcoco:false
  },
  saml_types: {
    type:'create',
@@ -341,6 +363,7 @@ const validationRequests = {
    redirect_uris:null,
    logo_uri:"https://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
    policy_uri:"https://policyuriedit.com",
+   website_url:"",
    integration_environment:"development",
    protocol:"saml",
    contacts:[{
@@ -375,6 +398,7 @@ const validationRequests = {
    redirect_uris:null,
    logo_uri:"https://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
    policy_uri:"https://policyuriedit.com",
+   website_url:"",
    integration_environment:"development",
    protocol:"saml",
    contacts:[{

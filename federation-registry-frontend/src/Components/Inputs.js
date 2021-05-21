@@ -12,6 +12,7 @@ import Overlay from 'react-bootstrap/Overlay';
 import * as formConfig from '../form-config.json';
 import { useTranslation } from 'react-i18next';
 import countryData from 'country-region-data';
+import CopyToClipboardComponent from './CopyToClipboard.js'
 // import {tenantContext} from '../context.js';
 // import {removeA} from '../helpers.js';
 
@@ -27,8 +28,10 @@ onMouseOut={()=>setShow(false)}
 export function SimpleInput(props){
   const [show, setShow] = useState(false);
   const target = useRef(null);
+
   return (
         <React.Fragment>
+        <InputGroup >
           <Form.Control
             {...props}
             value={props.value?props.value:''}
@@ -38,6 +41,9 @@ export function SimpleInput(props){
             onMouseOut={()=>setShow(false)}
             className={props.changed?'col-form-label-sm input-edited':'col-form-label-sm'}
           />
+          {props.copyButton?<CopyToClipboardComponent value={props.value}/>:null}
+        </InputGroup>
+
           <MyOverLay show={props.changed&&show?'string':null} type='Edited' target={target}/>
           {props.isloading?<div className="loader"></div>:null}
         </React.Fragment>
@@ -601,32 +607,40 @@ export function ClientSecret(props){
              className="checkbox col-form-label"
 
             />
-            <Form.Control
-              type="text"
-              name="client_secret"
-              className={(editSecret?'d-none col-form-label-sm':'col-form-label-sm')+(props.changed?' input-edited':'')}
-              onChange={props.onChange}
-              isInvalid={props.isInvalid}
-              onBlur={props.onBlur}
-              placeholder='Type a secret'
-              value={props.client_secret}
-              disabled={props.disabled}
-              ref={editSecret?null:target}
-              onMouseOver={()=>setShow(true)}
-              onMouseOut={()=>setShow(false)}
+            <InputGroup >
+              <Form.Control
+                type="text"
+                name="client_secret"
+                className={(editSecret?'d-none col-form-label-sm':'col-form-label-sm')+(props.changed?' input-edited':'')}
+                onChange={props.onChange}
+                isInvalid={props.isInvalid}
+                onBlur={props.onBlur}
+                placeholder='Type a secret'
+                value={props.client_secret}
+                disabled={props.disabled}
+                ref={editSecret?null:target}
+                onMouseOver={()=>setShow(true)}
+                onMouseOut={()=>setShow(false)}
+              />
+              {props.copyButton&&!editSecret?<CopyToClipboardComponent value={props.client_secret}/>:null}
+            </InputGroup>
 
-            />
-            {editSecret?<Form.Control
-              type="text"
-              name="clientSecretHelp"
-              className={'col-form-label-sm'+(props.changed?' input-edited':'')}
-              value="*************"
-              isInvalid={props.isInvalid}
-              disabled={true}
-              ref={editSecret?target:null}
-              onMouseOver={()=>setShow(true)}
-              onMouseOut={()=>setShow(false)}
-            />:null
+            {editSecret?
+              <InputGroup>
+                <Form.Control
+                  type="text"
+                  name="clientSecretHelp"
+                  className={'col-form-label-sm'+(props.changed?' input-edited':'')}
+                  value="*************"
+                  isInvalid={props.isInvalid}
+                  disabled={true}
+                  ref={editSecret?target:null}
+                  onMouseOver={()=>setShow(true)}
+                  onMouseOut={()=>setShow(false)}
+                />
+                {props.copyButton?<CopyToClipboardComponent value={props.client_secret}/>:null}
+              </InputGroup>
+            :null
            }
            <MyOverLay show={props.changed&&show} type='Edited' target={target}/>
            {props.error && props.touched ? (
@@ -998,7 +1012,7 @@ export function ListInput(props){
                   <br/>
                 </InputGroup>
                 {props.error&&props.error[index]?
-                  <div className="error-message-list-item">{!Array.isArray(props.error)?'':props.integrationEnvironment==='production'?'Must be a valid url starting with https://':'Must be a valid url stating with http(s)://'}</div>
+                  <div className="error-message-list-item">{!Array.isArray(props.error)?'':props.integrationEnvironment==='production'||props.integrationEnvironment==='demo'?'Must be a valid url starting with https:// or a http://localhost url':'Must be a valid url stating with http(s)://'}</div>
                 :null}
                 </React.Fragment>
               ))}

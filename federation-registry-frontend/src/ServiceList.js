@@ -474,9 +474,26 @@ function TableItem(props) {
   return (
     <tr>
       <td className="petition-details">
+
+        <div className="integration-environment-container">
+          <h5>
+          <OverlayTrigger
+            placement='top'
+            overlay={
+              <Tooltip id={`tooltip-top`}>
+                {'Service '+(props.service.type==='create'?'will be':'is') +' integrated in the ' +props.service.integration_environment + ' environment'}
+              </Tooltip>
+            }
+          >
+            <Badge className="status-badge" variant={props.service.integration_environment==='development'?'secondary':props.service.integration_environment==='demo'?'dark':props.service.integration_environment==='production'?'info':'warning'}>{capitalWords(props.service.integration_environment==='development'?'dev':props.service.integration_environment==='production'?'prod':props.service.integration_environment)}</Badge>
+          </OverlayTrigger>
+          </h5>
+        </div>
+
         <div className="table-image-container">
         <Image src={props.service.logo_uri?props.service.logo_uri:process.env.PUBLIC_URL + '/placeholder.png'} thumbnail/>
         </div>
+
       </td>
       <td>
         <div className="flex-column">
@@ -588,6 +605,7 @@ function TableItem(props) {
                 state:{
                   service_id:props.service.service_id,
                   petition_id:props.service.petition_id,
+                  submitted: props.service.last_edited,
                   integration_environment:props.service.integration_environment,
                   type:props.service.type,
                   comment:props.service.comment

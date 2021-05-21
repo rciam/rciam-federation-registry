@@ -226,8 +226,8 @@ code {
 .petitions-table img {
   width:100%;
 }
-.petition-details div {
-  margin-left: 1rem;
+.petition-details .table-image-container {
+  text-align: center;
 }
 .petition-details h3{
 
@@ -239,8 +239,7 @@ code {
   color:rgb(153, 153, 153);
 }
 .table-image-container {
-  height:5rem;
-  width:5rem;
+
 }
 .petition-title{
   display:inline-block!important;
@@ -590,8 +589,7 @@ textarea {
   margin-bottom: 0.3rem!important;
 }
 .uri-buttons{
-  padding-left:0!important;.petition-details div {
-  margin-left: 1rem;
+  padding-left:0!important;
 }
 .petition-details h3{
 
@@ -602,7 +600,7 @@ textarea {
   font-size:0.8rem;
   color:rgb(153, 153, 153);
 }
-}
+
 .checkbox {
   text-align:left;
 }
@@ -1233,4 +1231,12 @@ html:lang(gr) .home-container h1 {
   color:red;
   margin-left:-0.6rem;
   margin-top:0.2rem;
+}
+
+.integration-environment-container {
+  text-align: left;
+}
+
+.copy-clip-button {
+  font-size: .875rem;
 }

@@ -392,7 +392,7 @@ const serviceValidationRules = (options) => {
                     return true}else{
                     throw new Error("Device Code Validity Seconds must be an integer in specified range [1-"+ max +"]")
                   }}).withMessage('Must be an integer in specified range'),
-                  body('*.code_challenge_method').custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Device Code mising').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).isString().withMessage('Device Code must be a string').custom((value)=> {
+                  body('*.code_challenge_method').optional({checkFalsy:true}).isString().withMessage('Device Code must be a string').custom((value)=> {
                     try{
                       return value.match(reg.regCodeChalMeth)
                     }
@@ -438,7 +438,8 @@ const serviceValidationRules = (options) => {
                       }
                     });
                   }),
-                  body('*.external_id').optional({checkFalsy:true}).custom((value)=>{if(parseInt(value)){return true}else{return false}}).withMessage('External id must be an integer')
+                  body('*.external_id').optional({checkFalsy:true}).custom((value)=>{if(parseInt(value)){return true}else{return false}}).withMessage('External id must be an integer'),
+                  body('*.website_url').optional({checkFalsy:true}).isString().withMessage('Website Url must be a string').custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Website Url must be a valid url')
                 ]
 
 

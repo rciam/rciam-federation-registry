@@ -1,3 +1,4 @@
 {
-  "host": "http://localhost:5000/"
+  "host": "http://localhost:5000/",
+  "react": "http://localhost:3000/"
 }

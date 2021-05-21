@@ -106,6 +106,7 @@ const calcDiff = (oldState,newState) => {
     if(diff(old_values,new_values)){
       edits.details = new_values;
     }
+
     return edits
 }
 
@@ -288,6 +289,18 @@ var readHTMLFile = function(path, callback) {
     });
 };
 
+const extractCoc = (service) => {
+  if(service.coc){
+    service.coc.map(item=>{
+      for(const name in item){
+        service[name] = item[name];
+      }
+    });
+  }
+  delete service.coc;
+  return service;
+}
+
 
 module.exports = {
   calcDiff,
@@ -296,5 +309,6 @@ module.exports = {
   sendInvitationMail,
   newMemberNotificationMail,
   sendMultipleInvitations,
-  readHTMLFile
+  readHTMLFile,
+  extractCoc
 }
