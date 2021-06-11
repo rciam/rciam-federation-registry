@@ -19,7 +19,6 @@ class ServicePetitionDetailsRepository {
 
     // Save new Petition
     async add(body,sub){
-
       return this.db.one(sql.add,{
         service_description: body.service_description,
         service_name: body.service_name,
@@ -85,8 +84,8 @@ class ServicePetitionDetailsRepository {
       });
     }
 
-    async belongsToRequester(petition_id,sub,tenant){
-        return this.db.oneOrNone(sql.belongsToRequester,{
+    async canBeEditedByRequester(petition_id,sub,tenant){
+        return this.db.oneOrNone(sql.canBeEditedByRequester,{
           id:+petition_id,
           sub:sub,
           tenant:tenant
@@ -99,6 +98,10 @@ class ServicePetitionDetailsRepository {
        return this.db.any("UPDATE service_petition_details SET status=$1, reviewed_at=$2, reviewer=$3, comment=$5 WHERE id=$4 AND tenant=$6 RETURNING *",[status,date,approved_by,+id,comment,tenant]);
     }
 
+    async requestReview(id,comment){
+      return this.db.none("UPDATE service_petition_details SET status='request_review', comment=$1 WHERE id=$2",[comment,+id]);
+    }
+
 
 
      async getHistory(service_id,tenant){
@@ -107,6 +110,17 @@ class ServicePetitionDetailsRepository {
 
      async deletePetition(petition_id){
        return this.db.oneOrNone('DELETE FROM service_petition_details WHERE id=$1 AND reviewed_at IS NULL RETURNING id',+petition_id);
+     }
+
+     async getEnvironment(petition_id,tenant){
+       return this.db.oneOrNone('SELECT integration_environment FROM service_petition_details WHERE id=$1 and tenant=$2',[+petition_id,tenant]).then(result => {
+         if(result){
+           return result.integration_environment;
+         }
+         else{
+           return null;
+         }
+       })
      }
 
 

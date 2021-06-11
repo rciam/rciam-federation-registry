@@ -385,7 +385,7 @@ code {
   font-size: 1rem!important;
 
 }
-.form-controls-container button svg {
+.review-button-expand svg {
   margin-right: 0.5rem;
 }
 
@@ -443,7 +443,6 @@ textarea {
 }
 
 .review-button-expand {
-  padding-left:0.2rem;
   padding-right:0.2rem;
 }
 
@@ -1217,9 +1216,19 @@ html:lang(gr) .home-container h1 {
   font-weight: bold;
   cursor:pointer;
 }
+.alert_fake_link_primary {
+  color:#007bff!important;
+  font-weight: normal!important;
+  text-decoration: none!important;
+  cursor:pointer;
+}
 
 .alert_fake_link:hover {
   text-decoration: underline;
+}
+.alert_fake_link_primary:hover {
+  text-decoration: underline!important;
+  color:#0056b3;
 }
 .copy_button {
   margin-left:0.5rem!important;
@@ -1239,4 +1248,8 @@ html:lang(gr) .home-container h1 {
 
 .copy-clip-button {
   font-size: .875rem;
+}
+
+.form-submit-cancel-container button svg {
+  margin-right:0.3rem!important;
 }

@@ -50,7 +50,7 @@ export const NavbarTop = (props)=>{
   useEffect(()=>{
     console.log(tenant[0]);
     if(user){
-      setAdmin(user.admin);
+      setAdmin(user.review);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[user]);

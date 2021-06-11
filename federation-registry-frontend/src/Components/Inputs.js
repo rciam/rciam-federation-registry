@@ -1,4 +1,4 @@
-import React, {useState, useRef ,useEffect} from 'react';
+import React, {useState, useRef ,useEffect,useContext} from 'react';
 import Col from 'react-bootstrap/Col';
 import { Field, FieldArray,FormikConsumer } from 'formik';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
@@ -9,11 +9,10 @@ import Image from 'react-bootstrap/Image';
 import Table from 'react-bootstrap/Table';
 import Tooltip from 'react-bootstrap/Tooltip';
 import Overlay from 'react-bootstrap/Overlay';
-import * as formConfig from '../form-config.json';
 import { useTranslation } from 'react-i18next';
 import countryData from 'country-region-data';
 import CopyToClipboardComponent from './CopyToClipboard.js'
-// import {tenantContext} from '../context.js';
+ import {tenantContext} from '../context.js';
 // import {removeA} from '../helpers.js';
 
 /*
@@ -41,7 +40,7 @@ export function SimpleInput(props){
             onMouseOut={()=>setShow(false)}
             className={props.changed?'col-form-label-sm input-edited':'col-form-label-sm'}
           />
-          {props.copyButton?<CopyToClipboardComponent value={props.value}/>:null}
+          {props.copybutton?<CopyToClipboardComponent value={props.value}/>:null}
         </InputGroup>
 
           <MyOverLay show={props.changed&&show?'string':null} type='Edited' target={target}/>
@@ -303,7 +302,7 @@ export function SelectEnvironment(props){
         ))}
       </Field>
 
-      {props.copyButtonActive?
+      {props.copybuttonActive?
             <OverlayTrigger
               placement='right'
               overlay={
@@ -622,7 +621,7 @@ export function ClientSecret(props){
                 onMouseOver={()=>setShow(true)}
                 onMouseOut={()=>setShow(false)}
               />
-              {props.copyButton&&!editSecret?<CopyToClipboardComponent value={props.client_secret}/>:null}
+              {props.copybutton&&!editSecret?<CopyToClipboardComponent value={props.client_secret}/>:null}
             </InputGroup>
 
             {editSecret?
@@ -638,7 +637,7 @@ export function ClientSecret(props){
                   onMouseOver={()=>setShow(true)}
                   onMouseOut={()=>setShow(false)}
                 />
-                {props.copyButton?<CopyToClipboardComponent value={props.client_secret}/>:null}
+                {props.copybutton?<CopyToClipboardComponent value={props.client_secret}/>:null}
               </InputGroup>
             :null
            }
@@ -1027,6 +1026,7 @@ export function Contacts(props){
 
   const [newVal,setNewVal] = useState('');
   const [newVal2,setNewVal2] = useState('admin');
+  const tenant = useContext(tenantContext);
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   return (
@@ -1052,7 +1052,7 @@ export function Contacts(props){
                             setNewVal2(e.target.value)
                           }}>
                             <React.Fragment>
-                              {formConfig.contact_types.map((item,index) => {
+                              {tenant[0].form_config.contact_types.map((item,index) => {
                                   return <option key={index} value={item}>{capitalize(item)}</option>
                                 })
                               }
@@ -1101,6 +1101,7 @@ function ContactInput(props){
   const [type,setType] = useState();
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
+  const tenant = useContext(tenantContext);
 
   useEffect(()=>{
     if(props.changed){
@@ -1153,7 +1154,7 @@ function ContactInput(props){
             onBlur={props.handleBlur}
             onChange={props.onChange}
           >
-            {formConfig.contact_types.map((item,index) => {
+            {tenant[0].form_config.contact_types.map((item,index) => {
                 return <option key={index} value={item}>{capitalize(item)}</option>
               })
             }

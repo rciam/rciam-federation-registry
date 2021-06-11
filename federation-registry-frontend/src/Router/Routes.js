@@ -107,7 +107,7 @@ const Routes = (props) => {
             <span className="link-seperator">/</span>
             Review
           </div>
-          <EditService review={true}/>
+          <EditService review={true} user={props.user} />
       </ProtectedRoute>
       <ProtectedRoute user={props.user} path="/:tenant_name/form/view">
           <div className="links">

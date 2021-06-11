@@ -21,7 +21,7 @@ describe('Service registry API Integration Tests', function() {
     require('../index.js').stop();
   });
   beforeEach(done => setTimeout(done, 2000));
-  userToken = setUser(users.egi.admin_user);
+  userToken = setUser(users.egi.operator_user);
   describe('# Petition Validation Testing For Creation Requests', function(){
     it('should catch all null none protocol specific values',function(done){
       postPetitionError({type:'create'},'egi',validationResponses.create.null,done);
@@ -89,12 +89,12 @@ describe('Service registry API Integration Tests', function() {
         userToken = setUser(users.egi.end_user);
         putPetition(
           {petition:petition,body:{type:'create',...create.saml},tenant: 'egi'},
-          {body:{error:'Could not find petition with id: '+petition},status:403},
+          {body:{error:'Could not edit petition with id: '+petition},status:403},
           done
         );
       })
       it('should fail to edit petition because of protocol missmatch',function(done){
-        userToken = setUser(users.egi.admin_user);
+        userToken = setUser(users.egi.operator_user);
         putPetition(
           {petition:petition,body:{type:'create',...create.saml},tenant: 'egi'},
           {body:{error:'Tried to edit protocol'},status:403},
@@ -118,7 +118,7 @@ describe('Service registry API Integration Tests', function() {
       it('should fail to edit petition not petition found',function(done){
         putPetition(
           {petition:0,body:{type:'create',...edit.oidc},tenant: 'egi'},
-          {body:{error:'Could not find petition with id: 0'},status:403},
+          {body:{error:'Could not edit petition with id: 0'},status:403},
           done
         );
       });
@@ -183,7 +183,6 @@ describe('Service registry API Integration Tests', function() {
     })
     describe('# Edit Create Petition',function(){
       it('should fail to edit petition because entity_id is not available',function(done){
-
         putPetition(
           {petition:petition,body:{type:'create',...edit.saml,entity_id:'https://saml-id-1.com'},tenant: 'egi'},
           {body:{error:'Protocol id is not available'},status:422},
@@ -223,7 +222,6 @@ describe('Service registry API Integration Tests', function() {
           type:'create',
           ...create.oidc
         });
-
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
         .expect(200)
@@ -238,7 +236,7 @@ describe('Service registry API Integration Tests', function() {
       });
       describe('# Review Petition',function(){
           it('should fail to approve petition because user is from another tenant',function(done){
-            userToken = setUser(users.eosc.admin_user);
+            userToken = setUser(users.eosc.operator_user);
             var req = request(server).put('/tenants/eosc/petitions/'+petition+'/review').set({Authorization: userToken}).send({type:'approve'});
             req.set('Accept','application/json')
             .expect('Content-Type',/json/)
@@ -250,8 +248,8 @@ describe('Service registry API Integration Tests', function() {
               done();
             })
           });
-          it('should fail to approve petition because user is not an owner nor admin',function(done){
-            userToken = setUser(users.egi.manager_user);
+          it('should fail to approve petition because user is not an operator or a manager',function(done){
+            userToken = setUser(users.egi.end_user);
             var req = request(server).put('/tenants/egi/petitions/'+petition+'/review').set({Authorization: userToken}).send({type:'approve'});
             req.set('Accept','application/json')
             .expect('Content-Type',/json/)
@@ -264,7 +262,7 @@ describe('Service registry API Integration Tests', function() {
             })
           });
           it('should approve petition and create service',function(done){
-            userToken = setUser(users.egi.admin_user);
+            userToken = setUser(users.egi.operator_user);
             var req = request(server).put('/tenants/egi/petitions/'+petition+'/review').set({Authorization: userToken}).send({type:'approve'});
             req.set('Accept','application/json')
             .expect('Content-Type',/json/)
@@ -412,7 +410,7 @@ describe('Service registry API Integration Tests', function() {
           });
         });
         it('should activate invitation with different user',function(done){
-          userToken = setUser(users.egi.manager_user);
+          userToken = setUser(users.egi.end_user);
           var req = request(server).put('/tenants/egi/invitations/activate_by_code').set({Authorization: userToken}).send({code});
           req.set('Accept','application/json')
           .expect('Content-Type',/json/)
@@ -426,7 +424,7 @@ describe('Service registry API Integration Tests', function() {
           });
         });
         it('should fail to activate invitation with different user due to one time code',function(done){
-          userToken = setUser(users.egi.end_user);
+          userToken = setUser(users.egi.manager_user);
           var req = request(server).put('/tenants/egi/invitations/activate_by_code').set({Authorization: userToken}).send({code});
           req.set('Accept','application/json')
           .expect('Content-Type',/json/)
@@ -439,7 +437,7 @@ describe('Service registry API Integration Tests', function() {
       });
       describe('# Accept invitation',function(){
         it('should accept invitation to group',function(done){
-          userToken = setUser(users.egi.manager_user);
+          userToken = setUser(users.egi.end_user);
           var req = request(server).put('/tenants/egi/invitations/'+invitation+'/accept').set({Authorization: userToken});
           req.set('Accept','application/json')
           .expect('Content-Type',/json/)
@@ -513,8 +511,8 @@ describe('Service registry API Integration Tests', function() {
         })
       });
       it('should approve petition and edit service',function(done){
+        userToken = setUser(users.egi.operator_user);
         var req = request(server).put('/tenants/egi/petitions/'+petition+'/review').set({Authorization: userToken}).send({type:'approve'});
-
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
         .expect(200)
@@ -581,7 +579,6 @@ describe('Service registry API Integration Tests', function() {
     });
     describe('# Delete Service',function(){
       it('should create a new delete petition',function(done){
-        console.log('we delete '+service);
         var req = request(server).post('/tenants/egi/petitions').set({Authorization: userToken}).send({
           type:'delete',
           service_id:service
@@ -592,16 +589,13 @@ describe('Service registry API Integration Tests', function() {
         .expect(200)
         .end(function(err,res){
           let body = JSON.parse(res.text);
-
           expect(res.statusCode).to.equal(200);
           petition = body.id;
           done();
         })
       });
-
       it('should approve petition and delete service',function(done){
         var req = request(server).put('/tenants/egi/petitions/'+petition+'/review').set({Authorization: userToken}).send({type:'approve'});
-
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
         .expect(200)
@@ -640,7 +634,6 @@ describe('Service registry API Integration Tests', function() {
              "subscription":"projects/myproject/subscriptions/mysubscription"
           }
         );
-
         var req = request(server).post('/ams/ingest').set({Authorization: process.env.AMS_AUTH_KEY}).send({
           messages
         });
@@ -661,6 +654,111 @@ describe('Service registry API Integration Tests', function() {
         })
       });
     });
+  });
+  describe('# Request Review',function(){
+      describe('# Create Petition',function(){
+        it('should create a new petition and return the id',function(done){
+        let sendData = create.oidc;
+        userToken = setUser(users.egi.end_user);
+         sendData.integration_environment = 'production';
+        var req = request(server).post('/tenants/egi/petitions').set({Authorization: userToken}).send({
+          type:'create',
+          ...create.oidc
+        });
+        req.set('Accept','application/json')
+        .expect('Content-Type',/json/)
+        .expect(200)
+        .end(function(err,res){
+          let body = JSON.parse(res.text);
+          expect(body.id).to.be.a('number');
+          expect(res.statusCode).to.equal(200);
+          petition = body.id;
+          done();
+        })
+      });
+      });
+      describe('# Review Petition',function(){
+          it('should fail to approve petition because integration environment is restricted',function(done){
+            userToken = setUser(users.egi.operator_user);
+            var req = request(server).put('/tenants/egi/petitions/'+petition+'/review').set({Authorization: userToken}).send({type:'approve'});
+            req.set('Accept','application/json')
+            .expect('Content-Type',/json/)
+            .expect(401)
+            .end(function(err,res){
+              let body = JSON.parse(res.text);
+              expect(body.error).to.equal("Requested action not authorised");
+              expect(res.statusCode).to.equal(401);
+              done();
+            })
+          });
+          it('should approve petition and create service',function(done){
+            userToken = setUser(users.egi.manager_user);
+            var req = request(server).put('/tenants/egi/petitions/'+petition+'/review').set({Authorization: userToken}).send({type:'approve'});
+            req.set('Accept','application/json')
+            .expect('Content-Type',/json/)
+            .expect(200)
+            .end(function(err,res){
+              let body = JSON.parse(res.text);
+              expect(body.service_id).to.be.a('number');
+              expect(res.statusCode).to.equal(200);
+              service = body.service_id;
+              done();
+            })
+          });
+          it('should create deployment tasks for service deployment',function(done){
+            var req = request(server).put('/agent/set_services_state').set('X-Api-Key',process.env.AMS_AGENT_KEY).send(
+            [{
+              tenant:"egi",
+              id:service,
+              protocol:"oidc",
+              state:"waiting-deployment",
+              integration_environment:"development"
+            }]);
+            req.set('Accept','application/json')
+            .expect('Content-Type',/json/)
+            .expect(200)
+            .end(function(err,res){
+              expect(res.statusCode).to.equal(200);
+              done();
+            })
+          });
+          it('should mock deployment of service configuration',function(done){
+            let messages = [];
+            messages.push(
+              {
+                 "message":{
+                    "attributes":{
+                       "key":"value"
+                    },
+                    "data":Buffer.from(JSON.stringify({id:service,state:'deployed',agent_id:1})).toString("base64"),
+                    "messageId":"136969346945"
+                 },
+                 "subscription":"projects/myproject/subscriptions/mysubscription"
+              }
+            );
+
+            var req = request(server).post('/ams/ingest').set({Authorization: process.env.AMS_AUTH_KEY}).send({
+              messages
+            });
+            req.expect(200).end(function(err,res){
+              expect(res.statusCode).to.equal(200);
+              done();
+            });
+
+
+          });
+          it('should get created service',function(done){
+            var req = request(server).get('/tenants/egi/services/'+service).set({Authorization: userToken});
+            req.set('Accept','application/json')
+            .expect('Content-Type',/json/)
+            .expect(200)
+            .end(function(err,res){
+              let body = JSON.parse(res.text);
+              expect(res.statusCode).to.equal(200);
+              done();});
+          });
+      });
+
   });
   describe('# Admin Actions',function(){
     describe('# Reject Petition',function(){
@@ -695,7 +793,7 @@ describe('Service registry API Integration Tests', function() {
           done();});
       });
       it('should reject petition',function(done){
-        userToken = setUser(users.eosc.admin_user);
+        userToken = setUser(users.eosc.operator_user);
         var req = request(server).put('/tenants/eosc/petitions/'+petition+'/review').set({Authorization: userToken}).send({type:'reject'});
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
@@ -831,7 +929,7 @@ describe('Service registry API Integration Tests', function() {
   });
   describe('# POST SERVICES',function(){
     it('should create multiple service',function(done){
-      userToken = setUser(users.egi.admin_user);
+      userToken = setUser(users.egi.operator_user);
       var req = request(server).post('/tenants/egi/services').set({Authorization: userToken}).send(postServices);
       req.set('Accept','application/json')
       .expect('Content-Type',/json/)

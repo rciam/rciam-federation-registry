@@ -13,8 +13,8 @@ import Collapse from 'react-bootstrap/Collapse';
 import {useParams } from "react-router-dom";
 import { diff } from 'deep-diff';
 import {tenantContext} from './context.js';
-import Alert from 'react-bootstrap/Alert'
-import {Debug} from './Components/Debug.js';
+import Alert from 'react-bootstrap/Alert';
+//import {Debug} from './Components/Debug.js';
 import {SimpleModal,ResponseModal,Logout,NotFound} from './Components/Modals.js';
 import Form from 'react-bootstrap/Form';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -36,6 +36,7 @@ const ServiceForm = (props)=> {
   const { t, i18n } = useTranslation();
   let {tenant_name} = useParams();
   const [notFound,setNotFound] = useState(false);
+  const [restrictReview,setRestrictReview] = useState(false);
   // eslint-disable-next-line
   const [tenant,setTenant] = useContext(tenantContext);
 
@@ -60,6 +61,13 @@ const ServiceForm = (props)=> {
           props.initialValues[name]=false;
         }
     })
+
+    // Check restrictions for review
+    if(props.review){
+      if(tenant.restricted_environments.includes(props.initialValues.integration_environment)&&!props.user.review_restricted){
+        setRestrictReview(true);
+      }
+    }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
@@ -397,6 +405,8 @@ const ServiceForm = (props)=> {
       setMessage(t('petition_no_change_msg'));
     }
   }
+
+
   const editPetition = (petition) => {
     petition.type=props.type;
     petition.service_id=props.service_id;
@@ -461,6 +471,8 @@ const ServiceForm = (props)=> {
       }
     });
   }
+
+
   const reviewPetition = (comment,type)=>{
       setModalTitle(t('review_'+props.type+'_title'))
       setAsyncResponse(true);
@@ -515,8 +527,6 @@ const ServiceForm = (props)=> {
       }
       return touchedActive;
     }
-
-
   }
 
 
@@ -585,11 +595,13 @@ const ServiceForm = (props)=> {
                 {props.disabled?null:
                   <div className="form-controls-container">
                     {props.review?
-                      <ReviewComponent errors={errors} reviewPetition={reviewPetition}/>
+                      <ReviewComponent errors={errors} reviewPetition={reviewPetition} restrictReview={restrictReview}/>
                       :
                       <React.Fragment>
-                        <Button className='submit-button' type="submit" variant="primary" ><FontAwesomeIcon icon={faCheckCircle}/>{t('button_submit')}</Button>
-                        {props.petition_id?<Button variant="danger" onClick={()=>deletePetition()}><FontAwesomeIcon icon={faBan}/>{t('button_cancel_request')}</Button>:null}
+                        <div className="form-submit-cancel-container">
+                          <Button className='submit-button' type="submit" variant="primary" ><FontAwesomeIcon icon={faCheckCircle}/>{t('button_submit')}</Button>
+                          {props.petition_id?<Button variant="danger" onClick={()=>deletePetition()}><FontAwesomeIcon icon={faBan}/>{t('button_cancel_request')}</Button>:null}
+                        </div>
                       </React.Fragment>
                     }
                   </div>
@@ -622,7 +634,7 @@ const ServiceForm = (props)=> {
                           onChange={handleChange}
                           disabled={disabled||tenant.form_config.integration_environment.length===1||props.copy||props.disableEnvironment}
                           changed={props.changes?props.changes.integration_environment:null}
-                          copyButtonActive={props.owned&&props.disabled}
+                          copybuttonActive={props.owned&&props.disabled}
                           toggleCopyDialog={toggleCopyDialog}
 
                         />
@@ -691,12 +703,11 @@ const ServiceForm = (props)=> {
                         />
                       </InputRow>
 
-                      { Object.keys(tenant.form_config.code_of_contact).map((name,i)=>{
+                      { Object.keys(tenant.form_config.code_of_contact).map((name,index)=>{
                         return(
-                          <InputRow title={tenant.form_config.code_of_contact[name].title} required={
+                          <InputRow title={tenant.form_config.code_of_contact[name].title} key={index} required={
                             tenant.form_config.code_of_contact[name].required.includes(values.integration_environment)} error={errors[name]?errors[name]:null} touched={touched[name]}>
                             <SimpleCheckbox
-                            key={i}
                             name= {name}
                             label={
                               <React.Fragment>
@@ -706,9 +717,7 @@ const ServiceForm = (props)=> {
                             onChange={handleChange}
                             disabled={disabled}
                             value={values[name]}
-                            touched={touched[name]}
                             onBlur={handleBlur}
-                            setFieldTouched={setFieldTouched}
                             changed={props.changes?props.changes[name]:null}
                             />
                           </InputRow>
@@ -758,7 +767,7 @@ const ServiceForm = (props)=> {
                                 setFieldTouched('client_id');
                                 handleChange(e);
                               }}
-                              copyButton={props.copyButton}
+                              copybutton={props.copybutton}
                               value={values.client_id}
                               isInvalid={hasSubmitted?(!!errors.client_id&&!checkingAvailability):(!!errors.client_id&&touched.client_id&&!checkingAvailability)}
                               onBlur={handleBlur}
@@ -857,7 +866,7 @@ const ServiceForm = (props)=> {
                              client_secret={values.client_secret}
                              error={errors.client_secret}
                              touched={touched.client_secret}
-                             copyButton={props.copyButton}
+                             copybutton={props.copybutton}
                              isInvalid={hasSubmitted?!!errors.client_secret:(!!errors.client_secret&&touched.client_secret)}
                              onBlur={handleBlur}
                              generate_client_secret={values.generate_client_secret}
@@ -945,7 +954,7 @@ const ServiceForm = (props)=> {
                               handleChange(e);
                             }}
                             value={values.entity_id}
-                            copyButton={props.copyButton}
+                            copybutton={props.copybutton}
                             isInvalid={hasSubmitted?!!(errors.entity_id&&!checkingAvailability):(!!errors.entity_id&&touched.entity_id&&!checkingAvailability)}
                             onBlur={handleBlur}
                             disabled={disabled}
@@ -958,7 +967,7 @@ const ServiceForm = (props)=> {
                              name='metadata_url'
                              placeholder='Type something'
                              onChange={handleChange}
-                             copyButton={props.copyButton}
+                             copybutton={props.copybutton}
                              value={values.metadata_url}
                              isInvalid={hasSubmitted?!!errors.metadata_url:(!!errors.metadata_url&&touched.metadata_url)}
                              onBlur={handleBlur}
@@ -975,11 +984,13 @@ const ServiceForm = (props)=> {
                   {props.disabled?null:
                     <div className="form-controls-container">
                       {props.review?
-                          <ReviewComponent errors={errors} reviewPetition={reviewPetition}/>
+                          <ReviewComponent errors={errors} reviewPetition={reviewPetition} restrictReview={restrictReview} />
                         :
                         <React.Fragment>
+                        <div className="form-submit-cancel-container">
                           <Button className='submit-button' type="submit" variant="primary" ><FontAwesomeIcon icon={faCheckCircle}/>Submit</Button>
                           {props.type==='delete'||props.type==='edit'?<Button variant="danger" onClick={()=>deletePetition()}><FontAwesomeIcon icon={faBan}/>Cancel Request</Button>:null}
+                        </div>
                         </React.Fragment>
                       }
                     </div>
@@ -987,7 +998,7 @@ const ServiceForm = (props)=> {
                   }
                   <ResponseModal message={message} modalTitle={modalTitle}/>
                   <SimpleModal isSubmitting={isSubmitting} isValid={isValid}/>
-                  <Debug/>
+                  {/*<Debug/>*/}
 
                 </Form>
 
@@ -1061,39 +1072,72 @@ const ReviewComponent = (props)=>{
         <div className="expand-container">
         <div className="review-controls flex-column">
         <Form.Group>
-          <Row>
-            <Col md="auto" className="review-radio-col">
-              <Form.Check
+          {props.restrictReview?
+            <Row>
+              <Col md="auto" className="review-radio-col">
+                <Form.Check
                 type="radio"
                 name="formHorizontalRadios"
-                id="formHorizontalRadios1"
-                disabled={invalidPetition}
+                id="formHorizontalRadios4"
                 onChange={(e)=>{if(e.target.checked){setType(e.target.value)}}}
-                value="approve"
-                checked={type==='approve'}
-              />
-            </Col>
-            <Col onClick={()=>{
-              if(!invalidPetition){
-                setType('approve');
-              }
-            }}>
-              <Row>
+                value="request_review"
+                checked={type==='request_review'}
+                />
+              </Col>
+              <Col onClick={()=>{
+                setType('request_review');
+              }}>
+                <Row>
                 <strong>
-                  {t('review_approve')}
+                {t('review_request_review')}
                 </strong>
-                {invalidPetition?
-                  <div className="approve-error">
-                    Invalid Service Configuration, Approve disabled
-                  </div>:null
+                </Row>
+                <Row className="review-option-desc">
+                {t('review_request_review_desc')}
+                </Row>
+              </Col>
+            </Row>
+            :
+            <Row>
+              <Col md="auto" className="review-radio-col">
+              <Form.Check
+              type="radio"
+              name="formHorizontalRadios"
+              id="formHorizontalRadios1"
+              disabled={invalidPetition||props.restrictReview}
+              onChange={(e)=>{if(e.target.checked){setType(e.target.value)}}}
+              value="approve"
+              checked={type==='approve'}
+              />
+              </Col>
+              <Col onClick={()=>{
+                if(!invalidPetition&&!props.restrictReview){
+                  setType('approve');
                 }
+              }}>
+              <Row>
+              <strong>
+              {t('review_approve')}
+              </strong>
+              {invalidPetition?
+                <div className="approve-error">
+                Invalid Service Configuration, Approve disabled
+                </div>:null
+              }
+              {props.restrictReview?
+                <div className="approve-error">
+                Approval is disabled for this environment, please request review.
+                </div>:null
+              }
+
               </Row>
 
               <Row className="review-option-desc">
-                {t('review_approve_desc')}
+              {t('review_approve_desc')}
               </Row>
-            </Col>
-          </Row>
+              </Col>
+            </Row>
+          }
           <Row>
             <Col md="auto" className="review-radio-col">
               <Form.Check

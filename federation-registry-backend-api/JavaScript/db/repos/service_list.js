@@ -6,6 +6,8 @@ const select_all_1 = "LEFT JOIN (SELECT id AS group_id,true AS owned,CASE WHEN g
 const select_all_2 = "') AS group_ids";
 const outdated_diable_petitions = 'AND 0=1'
 const outdated_services = 'AND service_state.outdated = true'
+const request_review_filter = "AND status='request_review'"
+
 class ServiceListRepository {
   constructor(db, pgp) {
       this.db = db;
@@ -30,7 +32,8 @@ class ServiceListRepository {
       select_own_petition:'',
       pending_filter:'',
       outdated_diable_petitions:'',
-      outdated_services:''
+      outdated_services:'',
+      request_review_filter:''
     };
     if(req.query.outdated){
       params.outdated_diable_petitions = outdated_diable_petitions;
@@ -45,6 +48,11 @@ class ServiceListRepository {
     if(req.query.env){
       params.integration_environment_filter = "AND integration_environment='" + req.query.env + "'"
     }
+
+    if(req.query.request_review){
+      params.request_review_filter = "AND status='request_review'";
+    }
+
     if(req.query.owned){
       params.select_own_service = select_own_service_1 + req.user.sub + select_own_service_2;
       params.select_own_petition = "WHERE group_subs.sub = '"+ req.user.sub +"'";
@@ -55,7 +63,7 @@ class ServiceListRepository {
     if(req.query.pending){
       params.pending_filter= 'AND petition_id IS NOT NULL'
     }
-    params.tenant_name = req.params.tenant_name;
+    params.tenant_name = req.params.tenant;
     params.sub = req.user.sub;
     if(req.query.limit){
       params.limit= parseInt(req.query.limit);
