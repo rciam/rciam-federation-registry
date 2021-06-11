@@ -139,31 +139,31 @@ const EditService = (props) => {
     <React.Fragment>
     {props.review?
       <React.Fragment>
-      <Logout logout={logout}/>
-      <NotFound notFound={notFound}/>
-      {props.type==='edit'?
-        <React.Fragment>
-          <Alert variant='warning' className='form-alert'>
-            {t('reconfiguration_info')} It was submitted on {props.submitted.slice(12,19)}(GMT+3) at {props.submitted.slice(0,10).split('-').join('/')}.
-          </Alert>
-          {editPetition&&changes?<ServiceForm disableEnvironment={true} initialValues={editPetition} changes={changes} {...props}/>:<LoadingBar loading={true}/>}
-        </React.Fragment>
-
-      :props.type==='create'?
-        <React.Fragment>
-          <Alert variant='warning' className='form-alert'>
-            {t('edit_create_info')} It was submitted on {props.submitted.slice(12,19)}(GMT+3) at {props.submitted.slice(0,10).split('-').join('/')}.
-          </Alert>
-          {petition?<ServiceForm initialValues={petition} {...props}/>:<LoadingBar loading={true}/>}
-        </React.Fragment>
-      :
-        <React.Fragment>
-          <Alert variant='warning' className='form-alert'>
-            {t('edit_delete_info')} It was submitted on {props.submitted.slice(12,19)}(GMT+3) at {props.submitted.slice(0,10).split('-').join('/')}.
-          </Alert>
-          {service?<ServiceForm copy={true} initialValues={service} {...props} />:<LoadingBar loading={true}/>}
-        </React.Fragment>
-      }
+        <Logout logout={logout}/>
+        <NotFound notFound={notFound}/>
+        {
+          props.type==='edit'?
+            <React.Fragment>
+              <Alert variant='warning' className='form-alert'>
+                {t('reconfiguration_info')} It was submitted on {props.submitted.slice(12,19)}(GMT+3) at {props.submitted.slice(0,10).split('-').join('/')}.
+              </Alert>
+              {editPetition&&changes?<ServiceForm disableEnvironment={true} initialValues={editPetition} changes={changes} {...props}/>:<LoadingBar loading={true}/>}
+            </React.Fragment>
+          :props.type==='create'?
+            <React.Fragment>
+              <Alert variant='warning' className='form-alert'>
+                {t('edit_create_info')} It was submitted on {props.submitted.slice(12,19)}(GMT+3) at {props.submitted.slice(0,10).split('-').join('/')}.
+              </Alert>
+              {petition?<ServiceForm initialValues={petition} {...props}/>:<LoadingBar loading={true}/>}
+            </React.Fragment>
+          :
+            <React.Fragment>
+              <Alert variant='warning' className='form-alert'>
+                {t('edit_delete_info')} It was submitted on {props.submitted.slice(12,19)}(GMT+3) at {props.submitted.slice(0,10).split('-').join('/')}.
+              </Alert>
+              {service?<ServiceForm copy={true} initialValues={service} {...props} />:<LoadingBar loading={true}/>}
+            </React.Fragment>
+          }
     </React.Fragment>
     :
     <React.Fragment>
@@ -217,7 +217,6 @@ const ViewService = (props)=>{
   const [logout,setLogout] = useState(false);
   const [notFound,setNotFound] = useState(false);
   useEffect(()=>{
-    console.log(props);
     getData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);

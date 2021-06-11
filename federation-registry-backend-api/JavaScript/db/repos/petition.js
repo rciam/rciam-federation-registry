@@ -175,7 +175,6 @@ class PetitionRepository {
         return t.petition.get(targetId,tenant).then(async oldState=>{
           if(oldState){
             let edits = calcDiff(oldState.service_data,newState);
-            console.log(edits);
             if(Object.keys(edits.details).length !== 0){
                queries.push(t.service_multi_valued.updateCoc('petition',{...edits.details,tenant:tenant},targetId));
                queries.push(t.service_petition_details.update(edits.details,targetId));

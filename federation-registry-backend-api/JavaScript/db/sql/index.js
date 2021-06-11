@@ -40,7 +40,7 @@ module.exports = {
     service_petition_details:{
       add:sql('service_petition_details/add.sql'),
       update:sql('service_petition_details/update.sql'),
-      belongsToRequester:sql('service_petition_details/belongsToRequester.sql')
+      canBeEditedByRequester:sql('service_petition_details/canBeEditedByRequester.sql')
     },
     service_state:{
       add:sql('service_state/add.sql'),
@@ -51,7 +51,7 @@ module.exports = {
       getReviewers:sql('user/getReviewers.sql'),
       getServiceOwners:sql('user/getServiceOwners.sql'),
       getPetitionOwners:sql('user/getPetitionOwners.sql'),
-      getReviewEntitlements:sql('user/getReviewEntitlements.sql')
+      getActionEntitlements:sql('user/getActionEntitlements.sql')
     },
     petition: {
       getPetition:sql('petition/getPetition.sql'),

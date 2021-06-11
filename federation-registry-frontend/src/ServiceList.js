@@ -47,12 +47,14 @@ const ServiceList= (props)=> {
   const [confirmationData,setConfirmationData] = useState({});
   const [reset,setReset] = useState(false);
   const [outdatedCount,setOutdatedCount] = useState(0);
+  const [requestReviewCount,setRequestReviewCount] = useState(0);
   // eslint-disable-next-line
   const [user,setUser] = useContext(userContext);
   const [showPending,setShowPending] = useState(false);
   const [showOwned,setShowOwned] = useState(false);
   const [integrationEnvironment,setIntegrationEnvironment] = useState();
   const [showOutdated,setShowOutdated] = useState(false);
+  const [showRequestReview,setShowRequestReview] = useState(false);
   const [paginationItems,setPaginationItems] = useState([]);
   const [initialLoading,setInitialLoading] = useState();
 
@@ -70,12 +72,11 @@ const ServiceList= (props)=> {
   useEffect(()=>{
      getServices();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[searchString,showOwned,showPending,integrationEnvironment,activePage,showOutdated]);
+  },[searchString,showOwned,showPending,integrationEnvironment,activePage,showOutdated,showRequestReview]);
 
   useEffect(()=>{
-
     setActivePage(1);
-  },[searchString,showOwned,showPending,integrationEnvironment,showOutdated]);
+  },[searchString,showOwned,showPending,integrationEnvironment,showOutdated,setShowRequestReview]);
 
 
 
@@ -97,6 +98,10 @@ const ServiceList= (props)=> {
     if(showOutdated){
       filterString = filterString + '&outdated=' +true;
     }
+    if(showRequestReview){
+      filterString = filterString + '&request_review=' +true
+    }
+
     return filterString;
   }
   const getInvites = () => {
@@ -170,6 +175,7 @@ const ServiceList= (props)=> {
           if(!showOwned&&!showPending&!showOutdated&&!searchString){
             setOutdatedCount(response.outdated_count);
           }
+          setRequestReviewCount(response.request_review_count);
           createPaginationItems(response.full_count);
           setReset(!reset);
         }
@@ -322,6 +328,17 @@ const ServiceList= (props)=> {
       <ConfirmationModal active={confirmationData.action?true:false} setActive={setConfirmationData} action={()=>{if(confirmationData.action==='delete_service'){deleteService(...confirmationData.args)}else{deletePetition(...confirmationData.args)}}} title={confirmationData.title} accept={'Yes'} decline={'No'}/>
       <div>
         <LoadingBar loading={initialLoading}>
+        {requestReviewCount>0?<Collapse in={showNotification}>
+          <div>
+            <Alert variant='primary' className="invitation_alert">
+              {requestReviewCount>1?'There are ':'There is '} <span>{requestReviewCount}</span>{' '}
+              request{requestReviewCount>1?'s':''} awaiting reviewal click
+                Click{' '}
+               <span className="alert_fake_link_primary" onClick={()=>{setExpandFilters(!expandFilters); setShowRequestReview(true); setShowNotification(false);}}>here</span>
+                {' '}to find {requestReviewCount>1?'them':'it'} using the requested review filter and submit your review.
+            </Alert>
+          </div>
+        </Collapse>:null}
         {outdatedCount>0?<Collapse in={showNotification}>
           <div>
             <Alert variant='warning' className="invitation_alert">
@@ -329,7 +346,7 @@ const ServiceList= (props)=> {
               <span>{outdatedCount}</span>{' '}
                of the services you own are not up to date with the lastest requirements. Click{' '}
                <span className="alert_fake_link" onClick={()=>{setExpandFilters(!expandFilters); setShowOutdated(true); setShowNotification(false);}}>here</span>
-                {' '}to find them using the outdated filter and reconfigure them following the instructions.
+                {' '}to find {outdatedCount>1?'them':'it'} using the outdated filter and reconfigure them following the instructions.
             </Alert>
           </div>
         </Collapse>:null}
@@ -391,11 +408,15 @@ const ServiceList= (props)=> {
                     <span>Show Pending</span>
                     <input type='checkbox' name='filter' checked={showPending} onChange={()=>setShowPending(!showPending)}/>
                   </div>
-                  <div className='filter-container' onClick={()=> setShowOutdated(!showOutdated)}>
+                  <div className='filter-container' onClick={()=> setShowRequestReview(!showRequestReview)}>
                     <span>Show Outdated</span>
-                    <input type='checkbox' name='filter' checked={showOutdated} onChange={()=>setShowOutdated(!showOutdated)}/>
+                    <input type='checkbox' name='filter' checked={showRequestReview} onChange={()=>setShowRequestReview(!showRequestReview)}/>
                   </div>
-                  {props.user.admin?
+                  {props.user.review_restricted?<div className='filter-container' onClick={()=> setShowOutdated(!showOutdated)}>
+                    <span>Show Pending Review</span>
+                    <input type='checkbox' name='filter' checked={showOutdated} onChange={()=>setShowOutdated(!showOutdated)}/>
+                  </div>:null}
+                  {props.user.view_all?
                   <div className='filter-container' onClick={()=> setShowOwned(!showOwned)}>
                     <span>Show Owned by Me</span>
                     <input type='checkbox' name='filter' checked={showOwned} onChange={()=> setShowOwned(!showOwned)}/>
@@ -460,7 +481,6 @@ function TableItem(props) {
 
   const {tenant_name} = useParams();
 
-
   const [showCopyDialog,setShowCopyDialog] = useState(false);
   const toggleCopyDialog = () => {
     setShowCopyDialog(!showCopyDialog);
@@ -504,7 +524,8 @@ function TableItem(props) {
               {props.service.type==='edit'?t('badge_edit_pending'):props.service.type==='create'?t('badge_create_pending'):t('badge_delete_pending')}
               </Badge>:null}
             {props.service.outdated&&!props.service.petition_id&&props.service.state==='deployed'?<Badge className="status-badge" variant="danger">Update Required</Badge>:null}
-            {props.service.comment?<Badge className="status-badge" variant="info">{t('badge_changes_requested')}</Badge>:null}
+            {props.service.status==='changes'?<Badge className="status-badge" variant="info">{t('badge_changes_requested')}</Badge>:null}
+            {props.service.status==='request_review'?<Badge className="status-badge" variant="info">Review Requested</Badge>:null}
           </div>
           <p>{props.service.service_description}</p>
         </div>
@@ -566,7 +587,7 @@ function TableItem(props) {
 
               {props.service.owned?
                 <React.Fragment>
-                  {props.service.comment||(props.service.outdated&&!props.service.pettion_id&&props.service.state==="deployed")?
+                  {props.service.status==='changes'||(props.service.outdated&&!props.service.pettion_id&&props.service.state==="deployed")?
                   <div className="notification">
                     <FontAwesomeIcon icon={faExclamation} className="fa-exclamation"/>
                     <FontAwesomeIcon icon={faCircle} className="fa-circle"/>
@@ -575,8 +596,7 @@ function TableItem(props) {
                     placement='top'
                     overlay={
                       <Tooltip id={`tooltip-top`}>
-
-                        {props.service.comment?t('changes_notification'):props.service.outdated&&!props.service.pettion_id&&props.service.state==="deployed"?"Service needs to be updated":props.service.state==='deployed'?t('edit_notification'):t('pending_notification')}
+                        {props.service.status==='changes'?t('changes_notification'):props.service.outdated&&!props.service.pettion_id&&props.service.state==="deployed"?"Service needs to be updated":(props.service.state==='deployed'||props.service.type==='create')&&props.service.status!=='request_review'?t('edit_notification'):props.service.status==='request_review'?t('review_requested_notification'):t('pending_notification')}
                       </Tooltip>
                     }
                   >
@@ -593,12 +613,21 @@ function TableItem(props) {
                       comment:props.service.comment
                     }
                   }}>
-                  <Button variant="info" style={{background:tenant.color}} disabled={props.service.state==='deployed'||!props.service.state?false:true}><FontAwesomeIcon icon={faEdit}/>{t('button_reconfigure')}</Button></Link>
+                  <Button variant="info" style={{background:tenant.color}} disabled={props.service.status!=='request_review'&&(props.service.state==='deployed'||!props.service.state)?false:true}><FontAwesomeIcon icon={faEdit}/>{t('button_reconfigure')}</Button></Link>
                   </OverlayTrigger>
                 </React.Fragment>
               :null
               }
-              {(props.user.admin||(props.service.owned&&props.service.integration_environment==='development'))&&props.service.petition_id&&!props.service.comment?<Link
+              {(props.user.review||(props.service.owned&&props.service.integration_environment==='development'))&&props.service.petition_id&&!(props.service.status==='changes')?
+              <React.Fragment>
+              {props.service.status==='request_review'?
+                <div className="notification">
+                <FontAwesomeIcon icon={faExclamation} className="fa-exclamation"/>
+                <FontAwesomeIcon icon={faCircle} className="fa-circle"/>
+                </div>
+                :null
+              }
+              <Link
                 className='button-link'
                 to={{
                 pathname:'/'+tenant_name+"/form/review",
@@ -610,7 +639,10 @@ function TableItem(props) {
                   type:props.service.type,
                   comment:props.service.comment
                 }
-              }}><Button variant="success"><FontAwesomeIcon icon={faEdit}/>{t('button_review')}</Button></Link>:null}
+              }}><Button variant="success" disabled={props.service.status==="request_review"&&!props.user.review_restricted}><FontAwesomeIcon icon={faEdit}/>{t('button_review')}</Button></Link>
+              </React.Fragment>
+              :null}
+
             </Col>
             <Col className='controls-col' md="auto">
             <DropdownButton

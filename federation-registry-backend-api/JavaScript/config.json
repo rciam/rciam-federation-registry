@@ -37,13 +37,19 @@
       "code_of_contact": [
         {
           "name": "egi_policy",
+          "desc":"Sample Code of contact",
           "title": "Do you aggree with the egi policies",
-          "link": "https://policy_link.com"
+          "required": ["production","demo"],
+          "link": "https://policy_link.com",
+          "error": "please select"
         },
         {
           "name": "egi_policy2",
+          "desc":"Sample Code of contact",
           "title": "Do you aggree with the egi policies",
-          "link": "https:\/\/policy_link.com"
+          "required": [],
+          "link": "https:\/\/policy_link.com",
+          "error": "please select"
         }
       ],
       "device_code_validity_seconds":1800,
@@ -60,6 +66,14 @@
       "token_endpoint_auth_method_title":["Client Secret over HTTP Basic","Client Secret over HTTP POST","Client Secret via symmetrically-signed JWT assertion","Asymmetrically-signed JWT assertion","No authentication"],
       "token_endpoint_auth_signing_alg":["HS256","HS384","HS512","RS256","RS384","RS512","PS256"],
       "token_endpoint_auth_signing_alg_title":["HMAC using SHA-256 hash algorithm","HMAC using SHA-384 hash algorithm","HMAC using SHA-512 hash algorithm","RSASSA using SHA-256 hash algorithm","RSASSA using SHA-384 hash algorithm","RSASSA using SHA-512 hash algorithm","RSASSA-PSS using SHA-256 and MGF1 with SHA-256"]
+    }
+  },
+  "restricted_env" : {
+    "egi" : {
+      "env":["production","demo"]
+    },
+    "eosc": {
+      "env":[]
     }
   },
   "agent" : {

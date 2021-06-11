@@ -567,11 +567,11 @@ const validationResponses = {
 
 const users = {
  egi: {
-   admin_user:{
+   manager_user:{
      sub: "test_egi_admin_user",
      edu_person_entitlement:['urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu']
    },
-   manager_user:{
+   operator_user:{
      sub: "test_egi_manager_user",
      edu_person_entitlement:['urn:mace:egi.eu:group:goc.egi.eu:role=member#aai.egi.eu']
    },
@@ -581,13 +581,13 @@ const users = {
    }
  },
  eosc: {
-   admin_user: {
+   manager_user: {
      sub: "test_eosc_admin_user",
      edu_person_entitlement :['urn:mace:egi.eu:group:service-integration.aai.eosc.eu:role=member#aai.eosc.eu']
    },
-   manager_user:{
+   operator_user:{
      sub: "test_eosc_manager_user",
-     edu_person_entitlement : ['urn:mace:egi.eu:group:goc.egi.eu:role=member#aai.egi.eu']
+     edu_person_entitlement : ['urn:mace:egi.eu:group:goc.egi.eu:role=member#aai.eosc.eu']
    },
    end_user: {
      sub: "test_eosc_end_user",

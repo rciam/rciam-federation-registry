@@ -219,6 +219,13 @@ const sendMail= (data,template_uri,users)=>{
           port: 587,
           secure: false
       });
+      // let transporter = nodeMailer.createTransport({
+      //   service: 'gmail',
+      //   auth: {
+      //     user: 'orionaikido@gmail.com',
+      //     pass:
+      //   }
+      // });
       var template = hbs.compile(html);
       //var replacements = {username: "John Doe",name:"The name"};
       var state;
