@@ -4,6 +4,7 @@ var path = require("path");
 var fs = require('fs');
 var hbs = require('handlebars');
 nodeMailer = require('nodemailer');
+var config = require('../config');
 const customLogger = require('../loggers.js');
 
 
@@ -272,6 +273,70 @@ const sendMail= (data,template_uri,users)=>{
   return result
 }
 
+
+const createGgusTicket = (ids,t)=>{
+  if(process.env.NODE_ENV!=='test'&&process.env.NODE_ENV!=='test-docker'){
+
+
+  readHTMLFile(path.join(__dirname, '../html/ticket.html'), async function(err, html) {
+      let transporter = nodeMailer.createTransport({
+          host: 'relay.grnet.gr',
+          port: 587,
+          secure: false
+      });
+      // let transporter = nodeMailer.createTransport({
+      //   service: 'gmail',
+      //   auth: {
+      //     user: 'orionaikido@gmail.com',
+      //     pass:
+      //   }
+      // });
+      var template = hbs.compile(html);
+
+      t.service_petition_details.getTicketInfo(ids,config.restricted_env.egi.env).then(async data=>{
+        data.forEach(ticket_data=>{
+          var replacements = {
+            reviewed_at:ticket_data.reviewed_at,
+            reviewer_username:ticket_data.reviewer_username,
+            requester_email:ticket_data.requester_email,
+            requester_username:ticket_data.requester_username,
+            protocol:ticket_data.protocol,
+            service_name:ticket_data.service_name,
+            env:ticket_data.integration_environment,
+            action:(ticket_data.type==='create'?'register':ticket_data.type==='edit'?'reconfigure':'deregister'),
+            reviewer_email:ticket_data.reviewer_email
+          };
+
+          let code = makeCode(5);
+          var htmlToSend = template(replacements);
+          var mailOptions = {
+            from: "noreply@faai.grnet.gr",
+            to : config.ggus_email,
+            subject : "Federation Registry: Service integration to "+ ticket_data.integration_environment + " (" + code + ")",
+            html : htmlToSend,
+            cc:ticket_data.reviewer_email
+          };
+          transporter.sendMail(mailOptions, function (error, response) {
+            if (error) {
+              return true;
+              customLogger(null,null,'info',[{type:'email_log'},{message:'Email not sent'},{error:error},{recipient:'Ggus'},{ticket_data:ticket_data}]);
+            }
+            else {
+              return true;
+              customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{recipient:'Ggus'},{ticket_data:ticket_data}]);
+            }
+          });
+
+        })
+      }).catch(err=> {
+          customLogger(null,null,'info',[{type:'email_log'},{message:'Email not sent'},{error:err},{recipient:'Ggus'},{ticket_data:ticket_data}]);
+      })
+
+  });
+  }
+
+}
+
 const addToString = (str,value) =>{
   let sentence='';
   const words = str.split('_');
@@ -306,6 +371,17 @@ const extractCoc = (service) => {
   }
   delete service.coc;
   return service;
+}
+
+function makeCode(length) {
+    var result           = '';
+    var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var charactersLength = characters.length;
+    for ( var i = 0; i < length; i++ ) {
+      result += characters.charAt(Math.floor(Math.random() *
+ charactersLength));
+   }
+   return result;
 }
 
 

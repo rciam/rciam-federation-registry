@@ -5,7 +5,7 @@ const qs = require('qs');
 const {v1:uuidv1} = require('uuid');
 const axios = require('axios').default;
 const {merge_data,merge_services_and_petitions} = require('../merge_data.js');
-const {addToString,clearPetitionData,sendMail,sendInvitationMail,sendMultipleInvitations} = require('../functions/helpers.js');
+const {addToString,clearPetitionData,sendMail,sendInvitationMail,sendMultipleInvitations,createGgusTickets} = require('../functions/helpers.js');
 const {db} = require('../db');
 var diff = require('deep-diff').diff;
 var router = require('express').Router();
@@ -335,6 +335,7 @@ router.post('/ams/ingest',checkCertificate,decodeAms,amsIngestValidation(),valid
           if(ids.length>0){
             await t.user.getServiceOwners(ids).then(data=>{
               if(data){
+                createGgusTickets(ids,t);
                 data.forEach(email_data=>{
                   sendMail({subject:'Service Deployment Result',service_name:email_data.service_name,state:email_data.state,tenant:email_data.tenant},'deployment-notification.html',[{name:email_data.name,email:email_data.email}]);
                 });
@@ -1239,7 +1240,7 @@ function canReview(req,res,next){
 
   db.service_petition_details.getEnvironment(req.params.id,req.params.tenant).then(async environment=> {
     // Ckecking if review action is restricted for
-    if(req.body.type==='approve'&&config.restricted_env[req.params.tenant].env.includes(environment)&&!req.user.role.actions.includes('review_restricted')){
+    if(req.body.type==='approve'&&config.restricted_env[req.params.tenant].env.includes(petition_details.integration_environment)&&!req.user.role.actions.includes('review_restricted')){
         res.status(401).json({error:'Requested action not authorised'});
     }
     else if(req.user.role.actions.includes('review_petition')||req.user.role.actions.includes('review_restricted')){

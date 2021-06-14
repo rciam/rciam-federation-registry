@@ -40,6 +40,7 @@ module.exports = {
     service_petition_details:{
       add:sql('service_petition_details/add.sql'),
       update:sql('service_petition_details/update.sql'),
+      getTicketInfo:sql('service_petition_details/getTicketInfo.sql'),
       canBeEditedByRequester:sql('service_petition_details/canBeEditedByRequester.sql')
     },
     service_state:{

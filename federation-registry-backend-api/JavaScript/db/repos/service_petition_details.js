@@ -123,6 +123,14 @@ class ServicePetitionDetailsRepository {
        })
      }
 
+     async getTicketInfo(ids){
+       return this.db.oneOrNone(sql.getTicketInfo,{id:ids});
+     }
+
+     async getDetails(petition_id,tenant){
+       return this.db.oneOrNone('SELECT service_name,integration_environment,type,preferred_username as username,email FROM (SELECT service_name,integration_environment,type,requester FROM service_petition_details WHERE id=$1 AND tenant=$2)as petition LEFT JOIN user_info ON petition.requester=user_info.sub',[+petition_id,tenant])
+     }
+
 
 
 
