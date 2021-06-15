@@ -727,12 +727,12 @@ const ServiceForm = (props)=> {
 
 
 
-                      <InputRow title={t('form_contacts')} required={true} error={typeof(errors.contacts)=='string'?errors.contacts:null} touched={touched.contacts} description={t('form_contacts_desc')}>
+                      <InputRow title={t('form_contacts')} required={true} error={typeof(errors.contacts)==='string'?errors.contacts:null} touched={touched.contacts} description={t('form_contacts_desc')}>
                         <Contacts
                           values={values.contacts}
                           placeholder={t('form_type_prompt')}
                           name='contacts'
-                          empty={typeof(errors.contacts)=='string'?true:false}
+                          empty={typeof(errors.contacts)==='string'?true:false}
                           error={errors.contacts}
                           touched={touched.contacts}
                           onChange={handleChange}
@@ -776,11 +776,11 @@ const ServiceForm = (props)=> {
                               isloading={values.client_id&&values.client_id!==checkedId&&checkingAvailability?1:0}
                              />
                            </InputRow>
-                           <InputRow title={t('form_redirect_uris')} required={values.grant_types.includes("implicit")||values.grant_types.includes("authorization_code")} error={typeof(errors.redirect_uris)=='string'?errors.redirect_uris:null}  touched={touched.redirect_uris} description={t('form_redirect_uris_desc')}>
+                           <InputRow title={t('form_redirect_uris')} required={values.grant_types.includes("implicit")||values.grant_types.includes("authorization_code")} error={typeof(errors.redirect_uris)==='string'?errors.redirect_uris:null}  touched={touched.redirect_uris} description={t('form_redirect_uris_desc')}>
                              <ListInput
                                values={values.redirect_uris}
                                placeholder={t('form_type_prompt')}
-                               empty={(typeof(errors.redirect_uris)=='string')?true:false}
+                               empty={(typeof(errors.redirect_uris)==='string')?true:false}
                                name='redirect_uris'
                                error={errors.redirect_uris}
                                touched={touched.redirect_uris}

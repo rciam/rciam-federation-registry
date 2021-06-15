@@ -168,7 +168,6 @@ router.get('/tenants',(req,res,next)=> {
   try{
     db.tenants.getInit().then(tenants => {
       if(tenants){
-        console.log(tenants);
         res.status(200).json(tenants).end();
       }
       else {
@@ -1266,7 +1265,6 @@ function canReview(req,res,next){
       })
     }
   }).catch(err=> {
-    console.log(err);
     res.status(401).json({error:'Requested action not authorised'});
   })
 
