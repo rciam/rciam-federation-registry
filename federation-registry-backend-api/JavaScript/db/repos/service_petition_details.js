@@ -53,9 +53,10 @@ class ServicePetitionDetailsRepository {
         })
     }
 
-    async getServiceId(id){
-      return this.db.oneOrNone('SELECT service_id FROM service_petition_details WHERE id=$1',+id).then(res=>{
+    async getServiceId(petition_id){
+      return this.db.oneOrNone('SELECT service_id FROM service_petition_details WHERE id=$1',+petition_id).then(res=>{
         if(res){
+
           return res.service_id;
         }
         else {
