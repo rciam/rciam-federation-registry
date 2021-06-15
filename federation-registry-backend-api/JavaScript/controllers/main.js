@@ -76,7 +76,7 @@ const requestReviewPetition = (req,res,next,db) => {
         console.log('Sending mail to managers');
         await t.service_petition_details.getServiceId(req.params.id,req.params.tenant).then(async service_id => {
           await t.service.get(service_id,req.params.tenant).then(service => {
-            sendMail({subject:'Review Requested',service_name:service.service_name,tenant:req.params.tenant},'request-reviewer-notification.html',users);
+            sendMail({subject:'Review Requested',service_name:service.service_data.service_name,tenant:req.params.tenant},'request-reviewer-notification.html',users);
           });
         })
       }).catch(error=>{

@@ -54,7 +54,7 @@ class ServicePetitionDetailsRepository {
     }
 
     async getServiceId(id){
-      return this.db.oneOrNone('SELECT service_id FROM service_petition_details WHERE id=$1 and reviewed_at IS NULL',+id).then(res=>{
+      return this.db.oneOrNone('SELECT service_id FROM service_petition_details WHERE id=$1',+id).then(res=>{
         if(res){
           return res.service_id;
         }
@@ -124,8 +124,8 @@ class ServicePetitionDetailsRepository {
         });
      }
 
-     async getTicketInfo(ids){
-       return this.db.oneOrNone(sql.getTicketInfo,{id:ids});
+     async getTicketInfo(ids,envs){
+       return this.db.any(sql.getTicketInfo,{ids:ids,envs:envs});
      }
 
      async getDetails(petition_id,tenant){
