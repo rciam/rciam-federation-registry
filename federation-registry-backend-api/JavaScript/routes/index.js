@@ -149,7 +149,6 @@ router.get('/tenants/:tenant',(req,res,next)=>{
         if(config.restricted_env[req.params.tenant]){
           tenant.restricted_environments = config.restricted_env[req.params.tenant].env;
         }
-        console.log(tenant);
         res.status(200).json(tenant).end();
       }
       else{
@@ -1236,10 +1235,10 @@ function amsAgentAuth(req,res,next){
 
 // Checking Review Permitions
 function canReview(req,res,next){
-
   db.service_petition_details.getEnvironment(req.params.id,req.params.tenant).then(async environment=> {
     // Ckecking if review action is restricted for
-    if(req.body.type==='approve'&&config.restricted_env[req.params.tenant].env.includes(petition_details.integration_environment)&&!req.user.role.actions.includes('review_restricted')){
+
+    if(req.body.type==='approve'&&config.restricted_env[req.params.tenant].env.includes(environment)&&!req.user.role.actions.includes('review_restricted')){
         res.status(401).json({error:'Requested action not authorised'});
     }
     else if(req.user.role.actions.includes('review_petition')||req.user.role.actions.includes('review_restricted')){

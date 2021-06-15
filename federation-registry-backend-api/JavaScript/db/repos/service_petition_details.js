@@ -113,14 +113,15 @@ class ServicePetitionDetailsRepository {
      }
 
      async getEnvironment(petition_id,tenant){
-       return this.db.oneOrNone('SELECT integration_environment FROM service_petition_details WHERE id=$1 and tenant=$2',[+petition_id,tenant]).then(result => {
-         if(result){
-           return result.integration_environment;
-         }
-         else{
-           return null;
-         }
-       })
+       const query = this.pgp.as.format('SELECT integration_environment FROM service_petition_details WHERE id=$1 and tenant=$2',[+petition_id,tenant]);
+       await this.db.oneOrNone(query).then(result => {
+          if(result){
+            return result.integration_environment;
+          }
+          else{
+            return null;
+          }
+        });
      }
 
      async getTicketInfo(ids){

@@ -274,7 +274,7 @@ const sendMail= (data,template_uri,users)=>{
 }
 
 
-const createGgusTicket = (ids,t)=>{
+const createGgusTickets = (ids,t)=>{
   if(process.env.NODE_ENV!=='test'&&process.env.NODE_ENV!=='test-docker'){
 
 
@@ -393,5 +393,6 @@ module.exports = {
   newMemberNotificationMail,
   sendMultipleInvitations,
   readHTMLFile,
-  extractCoc
+  extractCoc,
+  createGgusTickets
 }

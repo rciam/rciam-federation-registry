@@ -75,13 +75,10 @@ const requestReviewPetition = (req,res,next,db) => {
       await t.user.getUnrestrictedReviewers(req.params.tenant).then(async users=>{
         console.log('Sending mail to managers');
         await t.service_petition_details.getServiceId(req.params.id,req.params.tenant).then(async service_id => {
-          await t.service.getService(service_id,req.params.tenant).then(service => {
-            console.log(service);
+          await t.service.get(service_id,req.params.tenant).then(service => {
             sendMail({subject:'Review Requested',service_name:service.service_name,tenant:req.params.tenant},'request-reviewer-notification.html',users);
           });
         })
-
-
       }).catch(error=>{
         next('Could not sent email to reviewers:' + error);
       });
