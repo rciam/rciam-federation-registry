@@ -10,7 +10,6 @@ class ServicePetitionDetailsRepository {
     constructor(db, pgp) {
         this.db = db;
         this.pgp = pgp;
-
         // set-up all ColumnSet objects, if needed:
         createColumnsets(pgp);
     }
@@ -126,7 +125,9 @@ class ServicePetitionDetailsRepository {
      }
 
      async getTicketInfo(ids,envs){
-       return this.db.any(sql.getTicketInfo,{ids:ids,envs:envs});
+       const query = this.pgp.as.format(sql.getTicketInfo,{ids:ids,envs:envs});
+       console.lgo(query);
+       return this.db.any(query);
      }
 
      async getDetails(petition_id,tenant){

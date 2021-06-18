@@ -14,7 +14,7 @@ export const Logout = (props) => {
   const handleClose = () => {
     localStorage.removeItem('token');
     if(tenant_name==='egi'){
-      window.location.assign('https://aai.egi.eu/oidc/saml/logout?redirect='+config.host+tenant_name);
+      window.location.assign('https://aai.egi.eu/oidc/saml/logout?redirect='+config.react+tenant_name);
     }
     else{
       history.push('/'+(tenant&&tenant[0]?tenant[0].name:null));
