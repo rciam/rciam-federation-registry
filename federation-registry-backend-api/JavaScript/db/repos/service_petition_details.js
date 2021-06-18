@@ -114,9 +114,10 @@ class ServicePetitionDetailsRepository {
 
      async getEnvironment(petition_id,tenant){
        const query = this.pgp.as.format('SELECT integration_environment FROM service_petition_details WHERE id=$1 and tenant=$2',[+petition_id,tenant]);
-       await this.db.oneOrNone(query).then(result => {
+       return await this.db.oneOrNone(query).then(result => {
           if(result){
             return result.integration_environment;
+
           }
           else{
             return null;
@@ -126,7 +127,6 @@ class ServicePetitionDetailsRepository {
 
      async getTicketInfo(ids,envs){
        const query = this.pgp.as.format(sql.getTicketInfo,{ids:ids,envs:envs});
-       console.lgo(query);
        return this.db.any(query);
      }
 

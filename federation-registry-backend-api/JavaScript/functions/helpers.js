@@ -274,12 +274,9 @@ const sendMail= (data,template_uri,users)=>{
 }
 
 
-const createGgusTickets =  function(ids,t){
+const createGgusTickets =  function(data){
   if(process.env.NODE_ENV!=='test'&&process.env.NODE_ENV!=='test-docker'){
-
     try{
-      t.service_petition_details.getTicketInfo(ids,config.restricted_env.egi.env).then(data=>{
-
         if(data){
           readHTMLFile(path.join(__dirname, '../html/ticket.html'), async function(err, html) {
             let transporter = nodeMailer.createTransport({
@@ -296,9 +293,7 @@ const createGgusTickets =  function(ids,t){
             //     });
 
                 var template = hbs.compile(html);
-                if(data){
-                  console.log(data);
-                }
+
                 data.forEach((ticket_data)=>{
 
                   let code = makeCode(5);
@@ -343,16 +338,13 @@ const createGgusTickets =  function(ids,t){
                 })
               });
             }
-          }).catch(err=> {
 
-            customLogger(null,null,'info',[{type:'email_log'},{message:'Email not sent'},{error:err},{recipient:'Ggus'},{ticket_data:''}]);
-          })
         }catch(err){
           console.log(err);
         }
 
     }
-  }
+}
 
 
 

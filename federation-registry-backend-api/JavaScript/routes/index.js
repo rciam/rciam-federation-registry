@@ -331,11 +331,13 @@ router.post('/ams/ingest',checkCertificate,decodeAms,amsIngestValidation(),valid
         if(ids){
           res.status(200).end();
           if(ids.length>0){
-            await t.user.getServiceOwners(ids).then(data=>{
+            await t.user.getServiceOwners(ids).then(async data=>{
               if(data){
-                createGgusTickets(ids,t);
-                data.forEach(email_data=>{
-                  sendMail({subject:'Service Deployment Result',service_name:email_data.service_name,state:email_data.state,tenant:email_data.tenant},'deployment-notification.html',[{name:email_data.name,email:email_data.email}]);
+                await t.service_petition_details.getTicketInfo(ids,config.restricted_env.egi.env).then(ticket_data=>{
+                  createGgusTickets(ticket_data);
+                  data.forEach(email_data=>{
+                    sendMail({subject:'Service Deployment Result',service_name:email_data.service_name,state:email_data.state,tenant:email_data.tenant},'deployment-notification.html',[{name:email_data.name,email:email_data.email}]);
+                  });
                 });
               }
             }).catch(err=>{
@@ -1237,8 +1239,8 @@ function amsAgentAuth(req,res,next){
 function canReview(req,res,next){
   db.service_petition_details.getEnvironment(req.params.id,req.params.tenant).then(async environment=> {
     // Ckecking if review action is restricted for
-
     if(req.body.type==='approve'&&config.restricted_env[req.params.tenant].env.includes(environment)&&!req.user.role.actions.includes('review_restricted')){
+
         res.status(401).json({error:'Requested action not authorised'});
     }
     else if(req.user.role.actions.includes('review_petition')||req.user.role.actions.includes('review_restricted')){
