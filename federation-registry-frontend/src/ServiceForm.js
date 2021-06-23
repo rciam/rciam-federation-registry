@@ -130,7 +130,7 @@ const ServiceForm = (props)=> {
       then: yup.string().required(t('yup_required')).matches(reg.regSimpleUrl,t('yup_url')),
       otherwise: yup.string().matches(reg.regSimpleUrl,t('yup_url'))
       }),
-    website_url:yup.string().matches(reg.regSimpleUrl,t('yup_url')),
+    website_url:yup.string().nullable().matches(reg.regSimpleUrl,t('yup_url')),
     client_id:yup.string().nullable().when('protocol',{
       is:'oidc',
       then: yup.string().min(4,t('yup_char_min') + ' ('+4+')').max(36,t('yup_char_max') + ' ('+36+')').test('testAvailable',t('yup_client_id_available'),function(value){

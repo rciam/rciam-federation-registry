@@ -23,14 +23,7 @@ const base64url = require('base64url');
 // ************************* Routes *************************
 // ----------------------------------------------------------
 
-//
-// router.get('/test',getData,serviceValidationRules({optional:false,tenant_param:false,check_available:true,sanitize:true}),(req,res,next)=>{
-//
-//
-//     res.status(200).send(req.body);
-//     const errors = validationResult(req);
-//     console.log(errors);
-// });
+
 
 function getData(req,res,next) {
   db.service.getAll().then(services=>{
@@ -38,6 +31,8 @@ function getData(req,res,next) {
     next();
   });
 }
+
+
 
 
 
