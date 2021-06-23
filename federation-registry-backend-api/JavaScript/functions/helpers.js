@@ -4,6 +4,7 @@ var path = require("path");
 var fs = require('fs');
 var hbs = require('handlebars');
 nodeMailer = require('nodemailer');
+var config = require('../config');
 const customLogger = require('../loggers.js');
 
 
@@ -272,6 +273,81 @@ const sendMail= (data,template_uri,users)=>{
   return result
 }
 
+
+const createGgusTickets =  function(data){
+  if(process.env.NODE_ENV!=='test'&&process.env.NODE_ENV!=='test-docker'){
+    try{
+        if(data){
+          readHTMLFile(path.join(__dirname, '../html/ticket.html'), async function(err, html) {
+            let transporter = nodeMailer.createTransport({
+              host: 'relay.grnet.gr',
+              port: 587,
+              secure: false
+            });
+            // let transporter = nodeMailer.createTransport({
+            //     service: 'gmail',
+            //     auth: {
+            //         user: 'orionaikido@gmail.com',
+            //         pass: "**********"
+            //       }
+            //     });
+
+                var template = hbs.compile(html);
+
+                data.forEach((ticket_data)=>{
+
+                  let code = makeCode(5);
+                  let type = ticket_data.type==='create'?'register':ticket_data.type==='edit'?'reconfigure':'deregister';
+                  let service_name = ticket_data.service_name;
+                  let requester_email = ticket_data.requester_email;
+                  let requester_username = ticket_data.requester_username;
+                  let reviewer_email = ticket_data.reviewer_email;
+                  let reviewer_username = ticket_data.reviewer_username;
+                  let protocol = ticket_data.protocol;
+                  let reviewed_at = ticket_data.reviewed_at;
+                  let env = ticket_data.integration_environment;
+
+                  var mailOptions = {
+                    from: ticket_data.reviewer_email,
+                    to : config.ggus_email,
+                    subject : "Federation Registry: Service integration to "+ ticket_data.integration_environment + " (" + code + ")",
+                    text:`A request was made to `+ type +` a service on the `+ env +` environment
+    Service Info
+      service_name: ` + service_name + `
+      service_protocol: ` + protocol + `
+    Submitted by
+      username: `+ requester_username + `
+      email: `+ requester_email + `
+    Approved by
+      username: `+ reviewer_username +`
+      email: `+ reviewer_email +`
+      date_of_approval: `+reviewed_at,
+                    cc:ticket_data.reviewer_email
+                  };
+                  transporter.sendMail(mailOptions, function (error, response) {
+                    if (error) {
+                      return true;
+                      customLogger(null,null,'info',[{type:'email_log'},{message:'Email not sent'},{error:error},{recipient:'Ggus'},{ticket_data:ticket_data}]);
+                    }
+                    else {
+                      return true;
+                      customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{recipient:'Ggus'},{ticket_data:ticket_data}]);
+                    }
+                  });
+
+                })
+              });
+            }
+
+        }catch(err){
+          console.log(err);
+        }
+
+    }
+}
+
+
+
 const addToString = (str,value) =>{
   let sentence='';
   const words = str.split('_');
@@ -308,6 +384,17 @@ const extractCoc = (service) => {
   return service;
 }
 
+function makeCode(length) {
+    var result           = '';
+    var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var charactersLength = characters.length;
+    for ( var i = 0; i < length; i++ ) {
+      result += characters.charAt(Math.floor(Math.random() *
+ charactersLength));
+   }
+   return result;
+}
+
 
 module.exports = {
   calcDiff,
@@ -317,5 +404,6 @@ module.exports = {
   newMemberNotificationMail,
   sendMultipleInvitations,
   readHTMLFile,
-  extractCoc
+  extractCoc,
+  createGgusTickets
 }

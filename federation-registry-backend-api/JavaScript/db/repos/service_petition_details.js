@@ -10,7 +10,6 @@ class ServicePetitionDetailsRepository {
     constructor(db, pgp) {
         this.db = db;
         this.pgp = pgp;
-
         // set-up all ColumnSet objects, if needed:
         createColumnsets(pgp);
     }
@@ -53,9 +52,10 @@ class ServicePetitionDetailsRepository {
         })
     }
 
-    async getServiceId(id){
-      return this.db.oneOrNone('SELECT service_id FROM service_petition_details WHERE id=$1 and reviewed_at IS NULL',+id).then(res=>{
+    async getServiceId(petition_id){
+      return this.db.oneOrNone('SELECT service_id FROM service_petition_details WHERE id=$1',+petition_id).then(res=>{
         if(res){
+
           return res.service_id;
         }
         else {
@@ -113,14 +113,25 @@ class ServicePetitionDetailsRepository {
      }
 
      async getEnvironment(petition_id,tenant){
-       return this.db.oneOrNone('SELECT integration_environment FROM service_petition_details WHERE id=$1 and tenant=$2',[+petition_id,tenant]).then(result => {
-         if(result){
-           return result.integration_environment;
-         }
-         else{
-           return null;
-         }
-       })
+       const query = this.pgp.as.format('SELECT integration_environment FROM service_petition_details WHERE id=$1 and tenant=$2',[+petition_id,tenant]);
+       return await this.db.oneOrNone(query).then(result => {
+          if(result){
+            return result.integration_environment;
+
+          }
+          else{
+            return null;
+          }
+        });
+     }
+
+     async getTicketInfo(ids,envs){
+       const query = this.pgp.as.format(sql.getTicketInfo,{ids:ids,envs:envs});
+       return this.db.any(query);
+     }
+
+     async getDetails(petition_id,tenant){
+       return this.db.oneOrNone('SELECT service_name,integration_environment,type,preferred_username as username,email FROM (SELECT service_name,integration_environment,type,requester FROM service_petition_details WHERE id=$1 AND tenant=$2)as petition LEFT JOIN user_info ON petition.requester=user_info.sub',[+petition_id,tenant])
      }
 
 

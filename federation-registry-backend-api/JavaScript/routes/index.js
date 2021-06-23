@@ -5,7 +5,7 @@ const qs = require('qs');
 const {v1:uuidv1} = require('uuid');
 const axios = require('axios').default;
 const {merge_data,merge_services_and_petitions} = require('../merge_data.js');
-const {addToString,clearPetitionData,sendMail,sendInvitationMail,sendMultipleInvitations} = require('../functions/helpers.js');
+const {addToString,clearPetitionData,sendMail,sendInvitationMail,sendMultipleInvitations,createGgusTickets} = require('../functions/helpers.js');
 const {db} = require('../db');
 var diff = require('deep-diff').diff;
 var router = require('express').Router();
@@ -23,14 +23,7 @@ const base64url = require('base64url');
 // ************************* Routes *************************
 // ----------------------------------------------------------
 
-//
-// router.get('/test',getData,serviceValidationRules({optional:false,tenant_param:false,check_available:true,sanitize:true}),(req,res,next)=>{
-//
-//
-//     res.status(200).send(req.body);
-//     const errors = validationResult(req);
-//     console.log(errors);
-// });
+
 
 function getData(req,res,next) {
   db.service.getAll().then(services=>{
@@ -38,6 +31,8 @@ function getData(req,res,next) {
     next();
   });
 }
+
+
 
 
 
@@ -149,7 +144,6 @@ router.get('/tenants/:tenant',(req,res,next)=>{
         if(config.restricted_env[req.params.tenant]){
           tenant.restricted_environments = config.restricted_env[req.params.tenant].env;
         }
-        console.log(tenant);
         res.status(200).json(tenant).end();
       }
       else{
@@ -168,7 +162,6 @@ router.get('/tenants',(req,res,next)=> {
   try{
     db.tenants.getInit().then(tenants => {
       if(tenants){
-        console.log(tenants);
         res.status(200).json(tenants).end();
       }
       else {
@@ -333,10 +326,13 @@ router.post('/ams/ingest',checkCertificate,decodeAms,amsIngestValidation(),valid
         if(ids){
           res.status(200).end();
           if(ids.length>0){
-            await t.user.getServiceOwners(ids).then(data=>{
+            await t.user.getServiceOwners(ids).then(async data=>{
               if(data){
-                data.forEach(email_data=>{
-                  sendMail({subject:'Service Deployment Result',service_name:email_data.service_name,state:email_data.state,tenant:email_data.tenant},'deployment-notification.html',[{name:email_data.name,email:email_data.email}]);
+                await t.service_petition_details.getTicketInfo(ids,config.restricted_env.egi.env).then(ticket_data=>{
+                  createGgusTickets(ticket_data);
+                  data.forEach(email_data=>{
+                    sendMail({subject:'Service Deployment Result',service_name:email_data.service_name,state:email_data.state,tenant:email_data.tenant},'deployment-notification.html',[{name:email_data.name,email:email_data.email}]);
+                  });
                 });
               }
             }).catch(err=>{
@@ -1236,10 +1232,10 @@ function amsAgentAuth(req,res,next){
 
 // Checking Review Permitions
 function canReview(req,res,next){
-
   db.service_petition_details.getEnvironment(req.params.id,req.params.tenant).then(async environment=> {
     // Ckecking if review action is restricted for
     if(req.body.type==='approve'&&config.restricted_env[req.params.tenant].env.includes(environment)&&!req.user.role.actions.includes('review_restricted')){
+
         res.status(401).json({error:'Requested action not authorised'});
     }
     else if(req.user.role.actions.includes('review_petition')||req.user.role.actions.includes('review_restricted')){
@@ -1265,7 +1261,6 @@ function canReview(req,res,next){
       })
     }
   }).catch(err=> {
-    console.log(err);
     res.status(401).json({error:'Requested action not authorised'});
   })
 

@@ -152,7 +152,6 @@ const TenantRoute = (props) => {
 const ProtectedRoute= (props)=> {
   const user = useContext(userContext);
   const tenant = useContext(tenantContext);
-
   const childrenWithProps = React.Children.map(props.children, child =>
       React.cloneElement(child, {...props.location.state})
     );
@@ -162,7 +161,7 @@ const ProtectedRoute= (props)=> {
       render={({ location }) =>
         !(tenant && tenant[0] && (props.computedMatch.params.tenant_name === tenant[0].name)) ?
         <TenantHandler/>:
-        localStorage.getItem('token')&& user && user[0] && (!(props.admin && !user[0].admin)||props.location.state.integration_environment==='development') ? (
+        localStorage.getItem('token')&& user && user[0] && (!(props.admin && !user[0].review)||props.location.state.integration_environment==='development') ? (
           childrenWithProps
         ) : (
           <Redirect

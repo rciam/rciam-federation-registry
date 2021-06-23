@@ -84,7 +84,7 @@ export function PublicKey(props){
           value='jwks_uri'
           checked={type==='jwks_uri'}
           disabled={props.disabled}
-          onChange={(e)=>{console.log(e);props.setvalue('jwks','',true); setType(e.target.value) }}
+          onChange={(e)=>{props.setvalue('jwks','',true); setType(e.target.value) }}
         />
         By URI
       </div>
@@ -95,7 +95,7 @@ export function PublicKey(props){
           value='jwks'
           checked={type==='jwks'}
           disabled={props.disabled}
-          onChange={(e)=>{console.log(e);props.setvalue('jwks_uri','',true); setType(e.target.value) }}
+          onChange={(e)=>{props.setvalue('jwks_uri','',true); setType(e.target.value) }}
         />
         By Value
       </div>
@@ -728,7 +728,7 @@ export function ListInputArray(props){
                     <React.Fragment key={index}>
 
                     <ListInputArrayInput2 error={props.error} index={index} item={item} arrayHelpers={arrayHelpers} disabled={props.disabled} changed={props.changed}/>
-                    {Array.isArray(props.error) || typeof(props.error)=='string'?<tr><td className='error-td'><div className="error-message-list-item">{props.error[index]}</div></td><td></td></tr>:null}
+                    {Array.isArray(props.error) || typeof(props.error)==='string'?<tr><td className='error-td'><div className="error-message-list-item">{props.error[index]}</div></td><td></td></tr>:null}
 
                     </React.Fragment>
                   )
@@ -815,7 +815,7 @@ function ListInputArrayInput2(props){
   },[]);
   return (
     <tr
-      className={(Array.isArray(props.error)||typeof(props.error)=='string')&&props.error[props.index]?'error-tr':null}
+      className={(Array.isArray(props.error)||typeof(props.error)==='string')&&props.error[props.index]?'error-tr':null}
       onMouseOver={()=>setShow(true)}
       onMouseOut={()=>setShow(false)}
       ref={target}
@@ -872,7 +872,7 @@ export  function LogoInput(props){
         {props.description}
       </Form.Text>
       <MyOverLay show={props.changed&&show?'string':null} type='Edited' target={target}/>
-      {props.error && props.touched ? (typeof(props.error)=='string')?(<div className="error-message">{props.error}</div>):(<div className="error-message">{t('input_image_error')}</div>):null}
+      {props.error && props.touched ? (typeof(props.error)==='string')?(<div className="error-message">{props.error}</div>):(<div className="error-message">{t('input_image_error')}</div>):null}
       <FormikConsumer>
         {({ validationSchema, validate, onSubmit, ...rest }) => (
           <pre

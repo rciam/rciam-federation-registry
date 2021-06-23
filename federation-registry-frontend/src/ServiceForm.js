@@ -130,7 +130,7 @@ const ServiceForm = (props)=> {
       then: yup.string().required(t('yup_required')).matches(reg.regSimpleUrl,t('yup_url')),
       otherwise: yup.string().matches(reg.regSimpleUrl,t('yup_url'))
       }),
-    website_url:yup.string().matches(reg.regSimpleUrl,t('yup_url')),
+    website_url:yup.string().nullable().matches(reg.regSimpleUrl,t('yup_url')),
     client_id:yup.string().nullable().when('protocol',{
       is:'oidc',
       then: yup.string().min(4,t('yup_char_min') + ' ('+4+')').max(36,t('yup_char_max') + ' ('+36+')').test('testAvailable',t('yup_client_id_available'),function(value){
@@ -727,12 +727,12 @@ const ServiceForm = (props)=> {
 
 
 
-                      <InputRow title={t('form_contacts')} required={true} error={typeof(errors.contacts)=='string'?errors.contacts:null} touched={touched.contacts} description={t('form_contacts_desc')}>
+                      <InputRow title={t('form_contacts')} required={true} error={typeof(errors.contacts)==='string'?errors.contacts:null} touched={touched.contacts} description={t('form_contacts_desc')}>
                         <Contacts
                           values={values.contacts}
                           placeholder={t('form_type_prompt')}
                           name='contacts'
-                          empty={typeof(errors.contacts)=='string'?true:false}
+                          empty={typeof(errors.contacts)==='string'?true:false}
                           error={errors.contacts}
                           touched={touched.contacts}
                           onChange={handleChange}
@@ -776,11 +776,11 @@ const ServiceForm = (props)=> {
                               isloading={values.client_id&&values.client_id!==checkedId&&checkingAvailability?1:0}
                              />
                            </InputRow>
-                           <InputRow title={t('form_redirect_uris')} required={values.grant_types.includes("implicit")||values.grant_types.includes("authorization_code")} error={typeof(errors.redirect_uris)=='string'?errors.redirect_uris:null}  touched={touched.redirect_uris} description={t('form_redirect_uris_desc')}>
+                           <InputRow title={t('form_redirect_uris')} required={values.grant_types.includes("implicit")||values.grant_types.includes("authorization_code")} error={typeof(errors.redirect_uris)==='string'?errors.redirect_uris:null}  touched={touched.redirect_uris} description={t('form_redirect_uris_desc')}>
                              <ListInput
                                values={values.redirect_uris}
                                placeholder={t('form_type_prompt')}
-                               empty={(typeof(errors.redirect_uris)=='string')?true:false}
+                               empty={(typeof(errors.redirect_uris)==='string')?true:false}
                                name='redirect_uris'
                                error={errors.redirect_uris}
                                touched={touched.redirect_uris}

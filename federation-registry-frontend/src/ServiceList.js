@@ -328,7 +328,7 @@ const ServiceList= (props)=> {
       <ConfirmationModal active={confirmationData.action?true:false} setActive={setConfirmationData} action={()=>{if(confirmationData.action==='delete_service'){deleteService(...confirmationData.args)}else{deletePetition(...confirmationData.args)}}} title={confirmationData.title} accept={'Yes'} decline={'No'}/>
       <div>
         <LoadingBar loading={initialLoading}>
-        {requestReviewCount>0?<Collapse in={showNotification}>
+        {requestReviewCount>0&&props.user.review_restricted?<Collapse in={showNotification}>
           <div>
             <Alert variant='primary' className="invitation_alert">
               {requestReviewCount>1?'There are ':'There is '} <span>{requestReviewCount}</span>{' '}
@@ -339,7 +339,7 @@ const ServiceList= (props)=> {
             </Alert>
           </div>
         </Collapse>:null}
-        {outdatedCount>0?<Collapse in={showNotification}>
+        {outdatedCount>0&&props.user.review_restricted?<Collapse in={showNotification}>
           <div>
             <Alert variant='warning' className="invitation_alert">
 
@@ -408,13 +408,13 @@ const ServiceList= (props)=> {
                     <span>Show Pending</span>
                     <input type='checkbox' name='filter' checked={showPending} onChange={()=>setShowPending(!showPending)}/>
                   </div>
-                  <div className='filter-container' onClick={()=> setShowRequestReview(!showRequestReview)}>
+                  <div className='filter-container' onClick={()=> setShowOutdated(!showOutdated)}>
                     <span>Show Outdated</span>
-                    <input type='checkbox' name='filter' checked={showRequestReview} onChange={()=>setShowRequestReview(!showRequestReview)}/>
-                  </div>
-                  {props.user.review_restricted?<div className='filter-container' onClick={()=> setShowOutdated(!showOutdated)}>
-                    <span>Show Pending Review</span>
                     <input type='checkbox' name='filter' checked={showOutdated} onChange={()=>setShowOutdated(!showOutdated)}/>
+                  </div>
+                  {props.user.review_restricted?<div className='filter-container' onClick={()=> setShowRequestReview(!showRequestReview)}>
+                    <span>Show Pending Review</span>
+                    <input type='checkbox' name='filter' checked={showRequestReview} onChange={()=>setShowRequestReview(!showRequestReview)}/>
                   </div>:null}
                   {props.user.view_all?
                   <div className='filter-container' onClick={()=> setShowOwned(!showOwned)}>
@@ -618,9 +618,9 @@ function TableItem(props) {
                 </React.Fragment>
               :null
               }
-              {(props.user.review||(props.service.owned&&props.service.integration_environment==='development'))&&props.service.petition_id&&!(props.service.status==='changes')?
+              {(props.user.review||(props.service.owned&&props.service.integration_environment==='development'))&&props.service.petition_id&&!(props.service.status==='changes')&&(props.service.status!=='request_review'||(props.service.status==='request_review'&&props.user.review_restricted))?
               <React.Fragment>
-              {props.service.status==='request_review'?
+              {props.service.status==='request_review'&&props.user.review_restricted?
                 <div className="notification">
                 <FontAwesomeIcon icon={faExclamation} className="fa-exclamation"/>
                 <FontAwesomeIcon icon={faCircle} className="fa-circle"/>
