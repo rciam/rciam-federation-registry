@@ -63,6 +63,14 @@ const postAgentValidation = () => {
   ]
 }
 
+const getServicesValidation = () => {
+  return [
+    query('integration_environment').optional({checkFalsy:true}).isString().custom((value,{req,location,path})=> { if(config.form[req.params.tenant].integration_environment.includes(value)){return true}else{return false}}).withMessage('Integration environment value not supported'),
+    param('tenant').custom((value,{req,location,path})=>{if(value in config.form){return true}else{return false}}).withMessage('Invalid Tenant in the url'),
+  ]
+}
+
+
 
 const tenantValidation = (options) => {
   return [
@@ -338,19 +346,39 @@ const serviceValidationRules = (options) => {
                     custom((value,{req,location,path})=>{
                       return config.form[req.params.tenant].token_endpoint_auth_signing_alg.includes(value)}).
                       withMessage('Invalid Token Endpoint Signing Algorithm'),
-                body('*.id_token_timeout_seconds').optional({checkFalsy:true}).custom((value,{req,location,path})=> {
+                body('*.id_token_timeout_seconds').customSanitizer(value => {
+                    if(!value){
+                      return 0;
+
+                    }else{
+                      return value;
+                    }
+                  }).optional({checkFalsy:true}).custom((value,{req,location,path})=> {
                   let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
                   let max = config.form[tenant].id_token_timeout_seconds;
                   if(!value||(parseInt(value)&&parseInt(value)<=max&&parseInt(value)>=0)){return true}else{
                     throw new Error("id_token_timeout_seconds must be an integer in specified range [1-"+ max +"]")
                   }}),
-                body('*.access_token_validity_seconds').optional({checkFalsy:true}).custom((value,{req,location,path})=> {
+                body('*.access_token_validity_seconds').customSanitizer(value => {
+                    if(!value){
+                      return 0;
+
+                    }else{
+                      return value;
+                    }
+                  }).optional({checkFalsy:true}).custom((value,{req,location,path})=> {
                   let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
                   let max = config.form[tenant].access_token_validity_seconds;
                   if(parseInt(value)&&parseInt(value)<=max&&parseInt(value)>0){return true}else{
-                    throw new Error("id_token_timeout_seconds must be an integer in specified range [1-"+ max +"]")
+                    throw new Error("access_token_timeout_seconds must be an integer in specified range [1-"+ max +"]")
                   }}),
-                body('*.refresh_token_validity_seconds').custom((value,{req,location,path})=> {
+                body('*.refresh_token_validity_seconds').customSanitizer(value => {
+                    if(!value||value===null){
+                      return 0;
+                    }else{
+                      return value;
+                    }
+                  }).custom((value,{req,location,path})=> {
                   let pos = path.match(/\[(.*?)\]/)[1];
                   if(!value&&req.body[pos].scope&&req.body[pos].scope.includes('offline_access')){
                     if(options.optional){
@@ -403,7 +431,13 @@ const serviceValidationRules = (options) => {
                 ).withMessage('Device Code invalid value'),
                 body('*.allow_introspection').custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Allow introspection mising').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).custom((value)=> typeof(value)==='boolean').withMessage('Allow introspection must be a boolean').bail(),
                 body('*.generate_client_secret').optional({checkFalsy:true}).custom((value)=> typeof(value)==='boolean').withMessage('Generate client secret must be a boolean'),
-                body('*.reuse_refresh_tokens').optional({checkFalsy:true}).custom((value)=> typeof(value)==='boolean').withMessage('Reuse refresh tokens must be a boolean'),
+                body('*.reuse_refresh_tokens').customSanitizer(value => {
+                  if(!value){
+                    return false;
+                  }else{
+                    return true;
+                  }
+                }).optional({checkFalsy:true}).custom((value)=> typeof(value)==='boolean').withMessage('Reuse refresh tokens must be a boolean'),
                 body('*.integration_environment').exists({checkFalsy:true}).withMessage('Integration Environment missing').if(value=>{return value}).custom((value,{req,location,path})=> {
                   let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
                   if(config.form[tenant].integration_environment.includes(value)){return true}else{return false}}).withMessage('Invalid Integration Environment'),
@@ -575,9 +609,9 @@ const decodeAms = (req,res,next) => {
   try{
     req.body.decoded_messages = [];
     req.body.messages.forEach(item=> {
-
       req.body.decoded_messages.push(JSON.parse(Buffer.from(item.message.data, 'base64').toString()));
     });
+    console.log(req.body.decoded_messages);
     next();
   }
   catch(err){
@@ -587,28 +621,32 @@ const decodeAms = (req,res,next) => {
 }
 
 const validate = (req, res, next) => {
+  try{
+    if(req.skipValidation){
+      return next();
+    }
+    //console.log(req.body);
 
-  if(req.skipValidation){
-    return next();
+    const errors = validationResult(req);
+
+    // console.log(errors);
+    // if(errors.errors.length>0){
+      //   console.log(errors);
+      // }
+      if (errors.isEmpty()) {
+        return next();
+      }
+      const extractedErrors = []
+      errors.array().map(err => extractedErrors.push({ [err.param]: err.msg }));
+      var log ={};
+
+      customLogger(req,res,'warn','Failed schema validation',extractedErrors);
+      res.status(422).send(extractedErrors);
+      return res.end();
+
+  }catch(err){
+    return res.status(422).send("Invalid Format")
   }
-  //console.log(req.body);
-
-  const errors = validationResult(req);
-
-  // console.log(errors);
-  // if(errors.errors.length>0){
-  //   console.log(errors);
-  // }
-  if (errors.isEmpty()) {
-    return next();
-  }
-  const extractedErrors = []
-  errors.array().map(err => extractedErrors.push({ [err.param]: err.msg }));
-  var log ={};
-
-  customLogger(req,res,'warn','Failed schema validation',extractedErrors);
-  res.status(422).send(extractedErrors);
-  return res.end();
 }
 
 module.exports = {
@@ -624,5 +662,6 @@ module.exports = {
   getServiceListValidation,
   formatPetition,
   generateClientId,
-  reFormatPetition
+  reFormatPetition,
+  getServicesValidation
 }

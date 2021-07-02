@@ -48,7 +48,6 @@ export const NavbarTop = (props)=>{
   const tenant = useContext(tenantContext);
 
   useEffect(()=>{
-    console.log(tenant[0]);
     if(user){
       setAdmin(user.review);
     }

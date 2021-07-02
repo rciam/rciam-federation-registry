@@ -27,7 +27,7 @@ class ServicePetitionDetailsRepository {
         requester: sub,
         country: body.country,
         type:body.type,
-        status:"pending",
+        status:(body.status?body.status:"pending"),
         service_id:body.service_id,
         comment:body.comment,
         protocol:body.protocol,
@@ -48,7 +48,8 @@ class ServicePetitionDetailsRepository {
           id:id,
           type:body.type,
           protocol:body.protocol,
-          website_url:body.website_url
+          website_url:body.website_url,
+          status:"pending"
         })
     }
 

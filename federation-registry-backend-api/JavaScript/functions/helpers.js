@@ -114,21 +114,21 @@ const calcDiff = (oldState,newState) => {
 const sendInvitationMail = async (data) => {
 
   return new Promise(resolve=>{
-    if(process.env.NODE_ENV!=='test-docker'&& process.env.NODE_ENV!=='test'){
+    if(process.env.NODE_ENV!=='test-docker'&& process.env.NODE_ENV!=='test'&&!config.disable_emails){
       var currentDate = new Date();
       readHTMLFile(path.join(__dirname, '../html/invitation.hbs'), function(err, html) {
-        let transporter = nodeMailer.createTransport({
-            host: 'relay.grnet.gr',
-            port: 587,
-            secure: false
-        });
         // let transporter = nodeMailer.createTransport({
-        //   service: 'gmail',
-        //   auth: {
-        //     user: 'orionaikido@gmail.com',
-        //     pass: ''
-        //   }
+        //     host: 'relay.grnet.gr',
+        //     port: 587,
+        //     secure: false
         // });
+        let transporter = nodeMailer.createTransport({
+          service: 'gmail',
+          auth: {
+            user: 'orionaikido@gmail.com',
+            pass: 'gl_nytfvfnvrb'
+          }
+        });
         var template = hbs.compile(html);
         var replacements = {
           invited_by:data.invited_by,
@@ -164,7 +164,7 @@ const sendInvitationMail = async (data) => {
 
 }
 const newMemberNotificationMail = (data,managers) => {
-  if(process.env.NODE_ENV!=='test-docker'&& process.env.NODE_ENV!=='test'){
+  if(process.env.NODE_ENV!=='test-docker'&& process.env.NODE_ENV!=='test'&&!config.disable_emails){
     var currentDate = new Date();
     readHTMLFile(path.join(__dirname, '../html/new-member-notification.html'), function(err, html) {
       let transporter = nodeMailer.createTransport({
@@ -212,21 +212,22 @@ const newMemberNotificationMail = (data,managers) => {
 
 const sendMail= (data,template_uri,users)=>{
   var currentDate = new Date();
+
   var result;
-  if(process.env.NODE_ENV!=='test'&&process.env.NODE_ENV!=='test-docker'){
+  if(process.env.NODE_ENV!=='test'&&process.env.NODE_ENV!=='test-docker'&&!config.disable_emails){
   readHTMLFile(path.join(__dirname, '../html/', template_uri), function(err, html) {
-      let transporter = nodeMailer.createTransport({
-          host: 'relay.grnet.gr',
-          port: 587,
-          secure: false
-      });
       // let transporter = nodeMailer.createTransport({
-      //   service: 'gmail',
-      //   auth: {
-      //     user: 'orionaikido@gmail.com',
-      //     pass:
-      //   }
+      //     host: 'relay.grnet.gr',
+      //     port: 587,
+      //     secure: false
       // });
+      let transporter = nodeMailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: 'orionaikido@gmail.com',
+          pass: 'gl_nytfvfnvrb'
+        }
+      });
       var template = hbs.compile(html);
       //var replacements = {username: "John Doe",name:"The name"};
       var state;
@@ -257,13 +258,12 @@ const sendMail= (data,template_uri,users)=>{
             subject : data.subject,
             html : htmlToSend
           };
-
           transporter.sendMail(mailOptions, function (error, response) {
             if (error) {
-              customLogger(null,null,'info',[{type:'email_log'},{message:'Email not sent'},{error:error},{user:users},{data:data}]);
+              customLogger(null,null,'info',[{type:'email_log'},{message:'Email not sent'},{error:error},{user:user},{data:data}]);
             }
             else {
-              customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{user:users},{data:data}]);
+              customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{user:user},{data:data}]);
             }
           });
       });
@@ -275,7 +275,7 @@ const sendMail= (data,template_uri,users)=>{
 
 
 const createGgusTickets =  function(data){
-  if(process.env.NODE_ENV!=='test'&&process.env.NODE_ENV!=='test-docker'){
+  if(process.env.NODE_ENV!=='test'&&process.env.NODE_ENV!=='test-docker'&&!config.disable_emails){
     try{
         if(data){
           readHTMLFile(path.join(__dirname, '../html/ticket.html'), async function(err, html) {
