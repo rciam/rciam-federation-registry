@@ -10,9 +10,7 @@ class ServiceRepository {
   constructor(db, pgp) {
       this.db = db;
       this.pgp = pgp;
-
       // set-up all ColumnSet objects, if needed:
-
   }
 
 
@@ -117,8 +115,24 @@ class ServiceRepository {
     }
   }
 
-  async getAll(){
-    return this.db.any(sql.getAll).then(services=>{
+
+  async getAll(tenant){
+    return this.db.any(sql.getAll,{tenant:tenant}).then(services=>{
+      if(services){
+        const res = [];
+        for (let i = 0; i < services.length; i++) {
+          res.push(services[i].json);
+        }
+        return res;
+      }
+      else{
+        return null;
+      }
+    });
+  }
+
+  async getAllPublic(tenant){
+    return this.db.any(sql.getAllPublic,{tenant:tenant}).then(services=>{
       if(services){
 
         const res = [];
@@ -131,6 +145,26 @@ class ServiceRepository {
         return null;
       }
     });
+  }
+
+  async getByProtocolIdPublic(integration_environment,protocol_id,tenant){
+    return this.db.oneOrNone(sql.getByProtocolIdPublic,{integration_environment:integration_environment,protocol_id:protocol_id,tenant:tenant}).then(service=>{
+      if(service){
+        return service.json;
+      }else{
+        return null
+      }
+    })
+  }
+
+  async getByProtocolId(integration_environment,protocol_id,tenant){
+    return this.db.oneOrNone(sql.getByProtocolId,{integration_environment:integration_environment,protocol_id:protocol_id,tenant:tenant}).then(service=>{
+      if(service){
+        return service.json;
+      }else{
+        return null
+      }
+    })
   }
 
   async getPending(){

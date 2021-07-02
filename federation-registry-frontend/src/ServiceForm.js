@@ -101,14 +101,12 @@ const ServiceForm = (props)=> {
   const dynamicValidation = async (values,props)=>{
     let error = {};
     lazy_schema.validate(values,{abortEarly:false}).catch(function (err) {
-      console.log(err);
       if(err.inner){
         err.inner.forEach(item=>{
           error[item.path] = item.message;
         })
       }
     });
-    console.log(error);
     return error;
   }
 
@@ -116,7 +114,7 @@ const ServiceForm = (props)=> {
     mapValues(obj, (v, k) => {
       if (Object.keys((tenant.form_config.code_of_contact)).includes(k)) {
         return yup.boolean().required(t('yup_required')).when('integration_environment',{
-          is:(integration_environment)=> { console.log(integration_environment); return tenant.form_config.code_of_contact[k].required.includes(integration_environment)},
+          is:(integration_environment)=> { return tenant.form_config.code_of_contact[k].required.includes(integration_environment)},
           then: yup.boolean().oneOf([true],tenant.form_config.code_of_contact[k].error)
           })
       }
@@ -127,13 +125,13 @@ const ServiceForm = (props)=> {
     // Everytime client_id changes we make a fetch request to see if it is available.
     policy_uri:yup.string().nullable().when('integration_environment',{
       is:'production',
-      then: yup.string().required(t('yup_required')).matches(reg.regSimpleUrl,t('yup_url')),
-      otherwise: yup.string().matches(reg.regSimpleUrl,t('yup_url'))
+      then: yup.string().nullable().required(t('yup_required')).matches(reg.regSimpleUrl,t('yup_url')),
+      otherwise: yup.string().nullable().matches(reg.regSimpleUrl,t('yup_url'))
       }),
     website_url:yup.string().nullable().matches(reg.regSimpleUrl,t('yup_url')),
     client_id:yup.string().nullable().when('protocol',{
       is:'oidc',
-      then: yup.string().min(4,t('yup_char_min') + ' ('+4+')').max(36,t('yup_char_max') + ' ('+36+')').test('testAvailable',t('yup_client_id_available'),function(value){
+      then: yup.string().nullable().min(4,t('yup_char_min') + ' ('+4+')').max(36,t('yup_char_max') + ' ('+36+')').test('testAvailable',t('yup_client_id_available'),function(value){
           return new Promise((resolve,reject)=>{
             clearTimeout(availabilityCheckTimeout);
             if(props.initialValues.client_id===value||!value||value.length<4||value.length>36)
@@ -277,7 +275,7 @@ const ServiceForm = (props)=> {
     }),
     token_endpoint_auth_signing_alg:yup.string().nullable().when(['protocol',"token_endpoint_auth_method"],{
       is:(protocol,token_endpoint_auth_method)=> protocol==='oidc'&&(token_endpoint_auth_method==="private_key_jwt",token_endpoint_auth_method==="client_secret_jwt"),
-      then: yup.string().required(t('yup_select_option')).test('testTokenEndpointSigningAlgorithm','Invalid Value',function(value){console.log('Should not validate'); return tenant.form_config.token_endpoint_auth_signing_alg.includes(value)})
+      then: yup.string().required(t('yup_select_option')).test('testTokenEndpointSigningAlgorithm','Invalid Value',function(value){return tenant.form_config.token_endpoint_auth_signing_alg.includes(value)})
     }),
     token_endpoint_auth_method:yup.string().nullable().when('protocol',{
       is:'oidc',
@@ -634,7 +632,7 @@ const ServiceForm = (props)=> {
                           onChange={handleChange}
                           disabled={disabled||tenant.form_config.integration_environment.length===1||props.copy||props.disableEnvironment}
                           changed={props.changes?props.changes.integration_environment:null}
-                          copybuttonActive={props.owned&&props.disabled}
+                          copybuttonActive={props.owned&&props.disabled&&props.service_id}
                           toggleCopyDialog={toggleCopyDialog}
 
                         />

@@ -1,5 +1,5 @@
 require('dotenv').config();
-const {petitionValidationRules,validate,tenantValidation,formatPetition,getServiceListValidation,postInvitationValidation,serviceValidationRules,putAgentValidation,postAgentValidation,decodeAms,amsIngestValidation,generateClientId,reFormatPetition} = require('../validator.js');
+const {petitionValidationRules,validate,tenantValidation,formatPetition,getServiceListValidation,postInvitationValidation,serviceValidationRules,putAgentValidation,postAgentValidation,decodeAms,amsIngestValidation,generateClientId,reFormatPetition,getServicesValidation} = require('../validator.js');
 const {validationResult} = require('express-validator');
 const qs = require('qs');
 const {v1:uuidv1} = require('uuid');
@@ -31,20 +31,71 @@ function getData(req,res,next) {
     next();
   });
 }
+router.get('/tenants/:tenant/services',getServicesValidation(),validate,authenticate_allow_unauthorised, (req,res,next)=>{
+  try{
+    if(req.user && req.user.role && req.user.role.actions.includes('get_services')){
+      if(req.query && Object.keys(req.query).length > 0 && req.query.constructor === Object){
+        db.service.getByProtocolId(req.query.integration_environment,req.query.protocol_id,req.params.tenant).then(result=>{
+          if(result){
+            res.status(200).send(result);
+          }
+          else{
+            res.status(404).end();
+          }
+        }).catch(err=> {
+          next(err);
+        });
+      }
+      else{
+        db.service.getAll(req.params.tenant).then(result=>{
+          res.status(200).send(result);
+        }).catch(err=> {
+          next(err);
+        });;
+      }
+    }
+    else{
+      if(req.query && Object.keys(req.query).length > 0 && req.query.constructor === Object){
+        db.service.getByProtocolIdPublic(req.query.integration_environment,req.query.protocol_id,req.params.tenant).then(result=>{
+          if(result){
+            res.status(200).send(result);
+          }
+          else{
+            res.status(404).end();
+          }
+        }).catch(err=> {
+          next(err);
+        });
+      }
+      else{
+        db.service.getAllPublic(req.params.tenant).then(result=>{
+          res.status(200).send(result);
+        }).catch(err=> {
+          next(err);
+        });;
+      }
+    }
+  }
+  catch(err){
+    next(err);
+  }
+});
+
+
 
 
 
 
 
 // Endpoint used to bootstrap a teant or generaly to import multiple services
-router.post('/tenants/:tenant/services',tenantValidation(),validate,serviceValidationRules({optional:true,tenant_param:true,check_available:true,sanitize:true,null_client_id:false}),validate,(req,res,next)=> {
+router.post('/tenants/:tenant/services',tenantValidation(),validate,authenticate,serviceValidationRules({optional:true,tenant_param:true,check_available:true,sanitize:true,null_client_id:false}),validate,(req,res,next)=> {
   let services = req.body;
   // Populate json objects with all necessary fields
   services.forEach((service,index) => {
     services[index].tenant = req.params.tenant
 
     config.service_fields.forEach(field=>{
-      if(!service[field]){
+      if(!services[index].hasOwnProperty(field)){
         services[index][field] = null;
       }
     })
@@ -67,9 +118,7 @@ router.post('/tenants/:tenant/services',tenantValidation(),validate,serviceValid
               let invitations = [];
               services.forEach((service,index)=> {
                 service_state.push({id:service.id,state:'deployed',outdated:(service.outdated?true:false)});
-
                 if(service.contacts && service.contacts.length>0){
-
                   service.contacts.forEach(contact=>{
                     if(contact.type==='technical'){
                       invitations.push({tenant:req.params.tenant,email:contact.email,group_manager:true,code:uuidv1(),group_id:service.group_id});
@@ -116,7 +165,6 @@ router.post('/tenants/:tenant/services',tenantValidation(),validate,serviceValid
                     }
                     res.status(200).end();
                   }
-
               }).catch(err=>{
                 res.status(422).send(err);
               });
@@ -125,7 +173,6 @@ router.post('/tenants/:tenant/services',tenantValidation(),validate,serviceValid
         }
       }).catch(err => {console.log(err); throw err})
     }).catch(err => {console.log(err); throw err})
-
   }
   catch(err){
     next(err);
@@ -344,6 +391,7 @@ router.post('/ams/ingest',checkCertificate,decodeAms,amsIngestValidation(),valid
           next('Deployment Failed');
         }
       }).catch(err=>{
+        console.log(err);
         res.status(200).send("Invalid Message");
       });
     });
@@ -399,7 +447,7 @@ router.put('/agent/set_services_state',amsAgentAuth,(req,res,next)=>{
 
 // GET servicelist endpoint
 // Find all clients/petitions from curtain user to create preview list
-router.get('/tenants/:tenant/services', getServiceListValidation(),validate,authenticate,(req,res,next)=>{
+router.get('/tenants/:tenant/services/list', getServiceListValidation(),validate,authenticate,(req,res,next)=>{
   try{
       if(req.user.role.actions.includes('get_services')&&req.user.role.actions.includes('get_petitions')){
         db.service_list.get(req).then(response =>{
@@ -569,9 +617,14 @@ router.post('/tenants/:tenant/petitions',authenticate,petitionValidationRules(),
               service.service_id = req.body.service_id;
               service.type = 'delete';
               service.tenant = req.params.tenant;
-              await t.petition.add(service,req.user.sub).then(id=>{
+              await t.petition.add(service,req.user.sub).then(async id=>{
                 if(id){
                   res.status(200).json({id:id});
+                  await t.user.getReviewers(req.params.tenant).then(users=>{
+                    sendMail({subject:'New Petition to Review',service_name:req.body.service_name,tenant:req.params.tenant},'reviewer-notification.html',users);
+                  }).catch(error=>{
+                    next('Could not sent email to reviewers:' + error);
+                  });
                 }
                 else{
                   //  throw warning
@@ -1130,6 +1183,63 @@ function decode(jwt) {
     return payloadStr.user;
 }
 
+function authenticate_allow_unauthorised(req,res,next){
+  try{
+    var clients = req.app.get('clients');
+    const data = {'client_secret':clients[req.params.tenant].client_secret}
+    if(req.headers.authorization){
+      TokenArray = req.headers.authorization.split(" ");
+      axios({
+        method:'post',
+        url: clients[req.params.tenant].issuer_url+'introspect',
+        params: {
+          client_id:clients[req.params.tenant].client_id,
+          token:TokenArray[1]
+        },
+        headers: {
+          'Content-Type':'application/x-www-form-urlencoded',
+          'Accept': 'application/json'
+        },
+        data: qs.stringify(data)
+      }).then(result => {
+        //console.log(result);
+        req.user = {};
+        req.user.sub = result.data.sub;
+
+        req.user.edu_person_entitlement = result.data.eduperson_entitlement;
+        req.user.iss = result.data.iss;
+        req.user.email = result.data.email;
+        if(req.user.sub){
+          db.user_role.getRoleActions(req.user.edu_person_entitlement,req.params.tenant).then(role=>{
+            if(role.success){
+              req.user.role = role.role;
+              //console.log('authenticated');
+              next();
+            }
+            else{
+
+              next();
+            }
+          }).catch((err)=> {
+            next();
+          });
+        }
+        else{
+          next();
+        }
+      }, (error) =>{
+        next();
+      }).catch(err=>{
+        next();
+      })
+    }
+    else{
+      next();
+    }
+  }catch(err){
+    next(err);
+  }
+}
 
 // Authentication Middleware
 function authenticate(req,res,next){

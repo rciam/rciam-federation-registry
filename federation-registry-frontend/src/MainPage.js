@@ -28,7 +28,6 @@ import {userContext,tenantContext} from './context.js';
           else if (tenant&&tenant[0]&&tenant[0].name==='eosc'){
             favicon.href = "/eosc.ico?v=2";
           }
-          console.log(favicon);
         };
         //run our function here
         faviconUpdate();

@@ -31,8 +31,11 @@ module.exports = {
     },
     service:{
       getAll:(sql('service/getAll.sql')),
+      getAllPublic:(sql('service/getAllPublic.sql')),
+      getByProtocolIdPublic:sql('service/getByProtocolIdPublic.sql'),
       getService:sql('service/getService.sql'),
-      getPending:sql('service/getPending.sql')
+      getPending:sql('service/getPending.sql'),
+      getByProtocolId:sql('service/getByProtocolId.sql')
     },
     user_info:{
       add:sql('user_info/add.sql')

@@ -140,7 +140,7 @@ const ServiceList= (props)=> {
   // Get data, to create Service List
   const getServices = ()=> {
     setLoadingList(true);
-    fetch(config.host+'tenants/'+tenant_name+'/services?page='+activePage+'&limit='+pageSize+generateFilerString(), {
+    fetch(config.host+'tenants/'+tenant_name+'/services/list?page='+activePage+'&limit='+pageSize+generateFilerString(), {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -166,7 +166,6 @@ const ServiceList= (props)=> {
       setLoadingList(false);
       setInitialLoading(false);
       if(response){
-        console.log(response);
         try{
           if(response.list_items.length===0&& activePage!==1){
               setActivePage(1);
@@ -618,7 +617,12 @@ function TableItem(props) {
                 </React.Fragment>
               :null
               }
-              {(props.user.review||(props.service.owned&&props.service.integration_environment==='development'))&&props.service.petition_id&&!(props.service.status==='changes')&&(props.service.status!=='request_review'||(props.service.status==='request_review'&&props.user.review_restricted))?
+              {
+                (props.user.review||
+                  (props.service.owned&&props.service.integration_environment==='development'))
+                &&props.service.petition_id
+                &&!(props.service.status==='changes')
+                &&(props.service.status!=='request_review'||(props.service.status==='request_review'&&props.user.review_restricted))?
               <React.Fragment>
               {props.service.status==='request_review'&&props.user.review_restricted?
                 <div className="notification">
