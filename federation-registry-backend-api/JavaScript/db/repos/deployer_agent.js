@@ -5,7 +5,7 @@ class DeployerAgentRepository {
     this.db = db;
     this.pgp = pgp;
     // set-up all ColumnSet objects, if needed:
-     cs = new pgp.helpers.ColumnSet(['type','entity_type','hostname','entity_protocol','tenant','integration_environment']);
+     cs = new pgp.helpers.ColumnSet(['id','type','entity_type','hostname','entity_protocol','tenant','integration_environment']);
   }
   async getAll(){
     return this.db.any('SELECT * FROM tenant_deployer_agents').then(async deployer_agents => {return deployer_agents});
@@ -19,9 +19,10 @@ class DeployerAgentRepository {
     // if not Empty array
     if(agents.length>0){
       agents.forEach((agent)=>{
-        values.push({tenant:tenant,integration_environment:agent.integration_environment,type:agent.type,entity_type:agent.entity_type,hostname:agent.hostname,entity_protocol:agent.entity_protocol});
+        values.push({id:agent.id,tenant:tenant,integration_environment:agent.integration_environment,type:agent.type,entity_type:agent.entity_type,hostname:agent.hostname,entity_protocol:agent.entity_protocol});
       });
       const query = this.pgp.helpers.insert(values, cs,'tenant_deployer_agents');
+      console.log(query);
       return this.db.none(query)
       .then( data => {
           return true

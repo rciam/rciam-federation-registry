@@ -1058,6 +1058,7 @@ router.put('/tenants/:tenant/agents/:id',putAgentValidation(),validate,(req,res,
 
 router.post('/tenants/:tenant/agents',postAgentValidation(),validate,(req,res,next)=>{
   try{
+
     db.deployer_agents.add(req.body.agents,req.params.tenant).then(async result => {
       if(result){
         res.status(200).end();
@@ -1065,7 +1066,7 @@ router.post('/tenants/:tenant/agents',postAgentValidation(),validate,(req,res,ne
       else{
         res.status(404).send('Could not add agents')
       }
-    })
+    }).catch(err=>{console.log(err); next(err);})
   }
   catch(err){
     next(err);
@@ -1345,7 +1346,6 @@ function canReview(req,res,next){
   db.service_petition_details.getEnvironment(req.params.id,req.params.tenant).then(async environment=> {
     // Ckecking if review action is restricted for
     if(req.body.type==='approve'&&config.restricted_env[req.params.tenant].env.includes(environment)&&!req.user.role.actions.includes('review_restricted')){
-
         res.status(401).json({error:'Requested action not authorised'});
     }
     else if(req.user.role.actions.includes('review_petition')||req.user.role.actions.includes('review_restricted')){

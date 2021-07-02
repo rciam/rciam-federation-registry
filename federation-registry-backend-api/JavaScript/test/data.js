@@ -432,6 +432,7 @@ const agents = {
  post: {
    "agents": [
        {
+           "id":1,
            "type": "ssp",
            "entity_type": "service",
            "hostname": "https://snf-ssp-2.grnet.gr",
@@ -439,6 +440,7 @@ const agents = {
            "integration_environment":"demo"
        },
        {
+           "id":2,
            "type": "ssp",
            "entity_type": "idp",
            "hostname": "https://snf-ssp-1.grnet.gr",
@@ -447,6 +449,7 @@ const agents = {
 
        },
        {
+           "id":3,
            "type": "ssp",
            "entity_type": "idp",
            "hostname": "https://snf-ssp-2.grnet.gr",
@@ -454,6 +457,7 @@ const agents = {
            "integration_environment":"demo"
        },
        {
+            "id":4,
            "type": "ssp",
            "entity_type": "service",
            "hostname": "https://snf-ssp-new-1.grnet.gr",
@@ -461,6 +465,7 @@ const agents = {
            "integration_environment":"demo"
        },
        {
+         "id":5,
            "type": "mitreid",
            "entity_type": "service",
            "hostname": "https://snf-mitre-put-2.grnet.gr",
@@ -568,12 +573,12 @@ const validationResponses = {
 const users = {
  egi: {
    manager_user:{
-     sub: "test_egi_admin_user",
-     edu_person_entitlement:['urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu']
+     sub: "test_egi_manager_user",
+     edu_person_entitlement:['urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=approver#aai.egi.eu']
    },
    operator_user:{
-     sub: "test_egi_manager_user",
-     edu_person_entitlement:['urn:mace:egi.eu:group:goc.egi.eu:role=member#aai.egi.eu']
+     sub: "test_egi_operator_user",
+     edu_person_entitlement:['urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu']
    },
    end_user: {
      sub: "test_egi_end_user",
@@ -582,12 +587,12 @@ const users = {
  },
  eosc: {
    manager_user: {
-     sub: "test_eosc_admin_user",
-     edu_person_entitlement :['urn:mace:egi.eu:group:service-integration.aai.eosc.eu:role=member#aai.eosc.eu']
+     sub: "test_eosc_manager_user",
+     edu_person_entitlement :['urn:mace:egi.eu:group:service-integration.aai.eosc.eu:role=approver#aai.eosc.eu']
    },
    operator_user:{
-     sub: "test_eosc_manager_user",
-     edu_person_entitlement : ['urn:mace:egi.eu:group:goc.egi.eu:role=member#aai.eosc.eu']
+     sub: "test_eosc_operator_user",
+     edu_person_entitlement : ['urn:mace:egi.eu:group:service-integration.aai.eosc.eu:role=member#aai.eosc.eu']
    },
    end_user: {
      sub: "test_eosc_end_user",
