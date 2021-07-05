@@ -117,18 +117,18 @@ const sendInvitationMail = async (data) => {
     if(process.env.NODE_ENV!=='test-docker'&& process.env.NODE_ENV!=='test'&&!config.disable_emails){
       var currentDate = new Date();
       readHTMLFile(path.join(__dirname, '../html/invitation.hbs'), function(err, html) {
-        // let transporter = nodeMailer.createTransport({
-        //     host: 'relay.grnet.gr',
-        //     port: 587,
-        //     secure: false
-        // });
         let transporter = nodeMailer.createTransport({
-          service: 'gmail',
-          auth: {
-            user: 'orionaikido@gmail.com',
-            pass: 'gl_nytfvfnvrb'
-          }
+            host: 'relay.grnet.gr',
+            port: 587,
+            secure: false
         });
+        // let transporter = nodeMailer.createTransport({
+        //   service: 'gmail',
+        //   auth: {
+        //     user: 'orionaikido@gmail.com',
+        //     pass: ''
+        //   }
+        // });
         var template = hbs.compile(html);
         var replacements = {
           invited_by:data.invited_by,
@@ -216,18 +216,18 @@ const sendMail= (data,template_uri,users)=>{
   var result;
   if(process.env.NODE_ENV!=='test'&&process.env.NODE_ENV!=='test-docker'&&!config.disable_emails){
   readHTMLFile(path.join(__dirname, '../html/', template_uri), function(err, html) {
-      // let transporter = nodeMailer.createTransport({
-      //     host: 'relay.grnet.gr',
-      //     port: 587,
-      //     secure: false
-      // });
       let transporter = nodeMailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: 'orionaikido@gmail.com',
-          pass: 'gl_nytfvfnvrb'
-        }
+          host: 'relay.grnet.gr',
+          port: 587,
+          secure: false
       });
+      // let transporter = nodeMailer.createTransport({
+      //   service: 'gmail',
+      //   auth: {
+      //     user: 'orionaikido@gmail.com',
+      //     pass: ''
+      //   }
+      // });
       var template = hbs.compile(html);
       //var replacements = {username: "John Doe",name:"The name"};
       var state;
