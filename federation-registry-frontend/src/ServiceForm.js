@@ -91,7 +91,6 @@ const ServiceForm = (props)=> {
       img.onload = function() { callback(true); };
       img.onerror = function() { callback(false); };
       img.src = url;
-
     }
     else{
       callback(true);
@@ -121,7 +120,7 @@ const ServiceForm = (props)=> {
       })
     ));
   const schema = yup.object({
-    service_name:yup.string().nullable().min(4,t('yup_char_min') + ' ('+4+')').max(36,t('yup_char_max') + ' ('+36+')').required(t('yup_required')),
+    service_name:yup.string().nullable().min(4,t('yup_char_min') + ' ('+2+')').max(256,t('yup_char_max') + ' ('+256+')').required(t('yup_required')),
     // Everytime client_id changes we make a fetch request to see if it is available.
     policy_uri:yup.string().nullable().when('integration_environment',{
       is:'production',
@@ -131,10 +130,10 @@ const ServiceForm = (props)=> {
     website_url:yup.string().nullable().matches(reg.regSimpleUrl,t('yup_url')),
     client_id:yup.string().nullable().when('protocol',{
       is:'oidc',
-      then: yup.string().nullable().min(4,t('yup_char_min') + ' ('+4+')').max(36,t('yup_char_max') + ' ('+36+')').test('testAvailable',t('yup_client_id_available'),function(value){
+      then: yup.string().nullable().min(2,t('yup_char_min') + ' ('+2+')').max(128,t('yup_char_max') + ' ('+128+')').test('testAvailable',t('yup_client_id_available'),function(value){
           return new Promise((resolve,reject)=>{
             clearTimeout(availabilityCheckTimeout);
-            if(props.initialValues.client_id===value||!value||value.length<4||value.length>36)
+            if((props.initialValues.client_id===value&&!props.copy)||!value||value.length<2||value.length>36)
               {resolve(true)}
             else{
               if(value===checkedId &&formRef.current.values.integration_environment===checkedEnvironment){

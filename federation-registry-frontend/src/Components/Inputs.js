@@ -432,12 +432,21 @@ export function CheckboxList(props){
           </Table>
           :
           <React.Fragment>
-            {props.listItems.map((item,index)=>(
-              <div className="checkboxList" key={index}>
-                <Checkbox name={props.name} disabled={props.disabled} value={item}/>
-                {item.length>33&&(item.substr(0,33)==="urn:ietf:params:oauth:grant-type:"||item.substr(0,33)==="urn:ietf:params:oauth:grant_type:")?item.substr(33).replace("_"," "):item.replace("_"," ")}
-              </div>
-            ))}
+            {props.listItems.map((item,index)=>
+                {
+                  if(item!=='refresh_token'){
+                    return(
+                      <div className="checkboxList" key={index}>
+                      <Checkbox name={props.name} disabled={props.disabled} value={item}/>
+                      {item.length>33&&(item.substr(0,33)==="urn:ietf:params:oauth:grant-type:"||item.substr(0,33)==="urn:ietf:params:oauth:grant_type:")?item.substr(33).replace("_"," "):item.replace("_"," ")}
+                      </div>
+                    );
+
+                  }else{
+                    return null;
+                  }
+                }
+              )}
           </React.Fragment>
         }
       </React.Fragment>
