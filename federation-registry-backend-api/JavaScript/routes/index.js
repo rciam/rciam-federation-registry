@@ -88,7 +88,7 @@ router.get('/tenants/:tenant/services',getServicesValidation(),validate,authenti
 
 
 // Endpoint used to bootstrap a teant or generaly to import multiple services
-router.post('/tenants/:tenant/services',tenantValidation(),validate,authenticate,serviceValidationRules({optional:true,tenant_param:true,check_available:true,sanitize:true,null_client_id:false}),validate,(req,res,next)=> {
+router.post('/tenants/:tenant/services',tenantValidation(),validate,authenticate,changeContacts,serviceValidationRules({optional:true,tenant_param:true,check_available:true,sanitize:true,null_client_id:false}),validate,(req,res,next)=> {
   let services = req.body;
   // Populate json objects with all necessary fields
   services.forEach((service,index) => {
