@@ -70,7 +70,7 @@
   },
   "restricted_env" : {
     "egi" : {
-      "env":["production","demo"]
+      "env":["production"]
     },
     "eosc": {
       "env":[]
@@ -85,5 +85,5 @@
   "invitation_validity_seconds": "604800",
   "service_fields":["external_id","tenant","service_name","service_description","logo_uri","policy_uri","integration_environment","protocol","client_id","allow_introspection","code_challenge_method","device_code_validity_seconds","access_token_validity_seconds","refresh_token_validity_seconds","client_secret","reuse_refresh_tokens","clear_access_tokens_on_refresh","id_token_timeout_seconds","entity_id","metadata_url","grant_types","scope","contacts","redirect_uris","token_endpoint_auth_method","token_endpoint_auth_signing_alg","jwks","jwks_uri","country","website_url"],
   "ggus_email":"checkin-support@mailman.egi.eu",
-  "disable_emails":true
+  "disable_emails":false
 }

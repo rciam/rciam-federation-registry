@@ -265,7 +265,7 @@ const ServiceForm = (props)=> {
       is:'oidc',
       then: yup.string().when(['generate_client_secret','token_endpoint_auth_method'],{
         is:(generate_client_secret,token_endpoint_auth_method)=> generate_client_secret===false&&!(token_endpoint_auth_method==='private_key_jwt'||token_endpoint_auth_method==='none'),
-        then: yup.string().required(t('yup_required')).min(4,t('yup_char_min') + ' ('+4+')').max(16,t('yup_char_min') + ' ('+16+')')
+        then: yup.string().required(t('yup_required')).min(4,t('yup_char_min') + ' ('+4+')').max(256,t('yup_char_max') + ' ('+256+')')
       }).nullable()
     }),
     metadata_url:yup.string().nullable().when('protocol',{

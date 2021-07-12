@@ -137,8 +137,13 @@ app.use(function (err, req, res, next) {
   if (res.headersSent) {
      return next(err)
    }
-   res.status(500)
-   res.json({ error: err.stack })
+   res.status(500);
+   if (err instanceof SyntaxError) {
+    res.json({error:err.message});
+  } else {
+    res.json({ error: err.stack });
+  }
+   
 
 });
 

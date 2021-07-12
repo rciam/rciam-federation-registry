@@ -686,6 +686,7 @@ const changeContacts = (req,res,next) => {
 }
 
 const validate = (req, res, next) => {
+  console.log('Test');
   try{
     if(req.skipValidation){
       return next();
@@ -701,68 +702,57 @@ const validate = (req, res, next) => {
     let count = 0;
     let total_count = 0;
 
-    let max_sec = {
-      id_token_timeout_seconds:0,
-      access_token_validity_seconds:0,
-      refresh_token_validity_seconds:0,
-      device_code_validity_seconds:0
-    }
-    if(Array.isArray(req.body)){
-      req.body.forEach(service=>{
-          total_count++;
-          if(service.id_token_timeout_seconds>max_sec.id_token_timeout_seconds){
-            max_sec.id_token_timeout_seconds = service.id_token_timeout_seconds;
-          }
-          if(service.device_code_validity_seconds>max_sec.device_code_validity_seconds){
-            max_sec.device_code_validity_seconds = service.device_code_validity_seconds;
-          }
-          if(service.access_token_validity_seconds>max_sec.access_token_validity_seconds){
-            max_sec.access_token_validity_seconds = service.access_token_validity_seconds;
-          }
-          if(service.refresh_token_validity_seconds>max_sec.refresh_token_validity_seconds){
-            max_sec.refresh_token_validity_seconds = service.refresh_token_validity_seconds;
-          }
-          if(!service.dynamically_registered && (!service.contacts || Object.keys(service.contacts).length===0 )){
-            count++;
-            console.log('client_id: '+service.client_id);
-            console.log('contacts: '+service.contacts);
-          }
-          if(service.client_secret&& service.client_secret.length>max){
-            max = service.client_secret.length;
-          }
-          if(service.client_secret&& service.client_secret.length<min){
-            min = service.client_secret.length;
-          }
+    // let max_sec = {
+    //   id_token_timeout_seconds:0,
+    //   access_token_validity_seconds:0,
+    //   refresh_token_validity_seconds:0,
+    //   device_code_validity_seconds:0
+    // }
+    // if(Array.isArray(req.body)){
+    //   req.body.forEach(service=>{
+    //       total_count++;
+    //       if(service.id_token_timeout_seconds>max_sec.id_token_timeout_seconds){
+    //         max_sec.id_token_timeout_seconds = service.id_token_timeout_seconds;
+    //       }
+    //       if(service.device_code_validity_seconds>max_sec.device_code_validity_seconds){
+    //         max_sec.device_code_validity_seconds = service.device_code_validity_seconds;
+    //       }
+    //       if(service.access_token_validity_seconds>max_sec.access_token_validity_seconds){
+    //         max_sec.access_token_validity_seconds = service.access_token_validity_seconds;
+    //       }
+    //       if(service.refresh_token_validity_seconds>max_sec.refresh_token_validity_seconds){
+    //         max_sec.refresh_token_validity_seconds = service.refresh_token_validity_seconds;
+    //       }
+    //       if(!service.dynamically_registered && (!service.contacts || Object.keys(service.contacts).length===0 )){
+    //         count++;
+    //         console.log('client_id: '+service.client_id);
+    //         console.log('contacts: '+service.contacts);
+    //       }
+    //       if(service.client_secret&& service.client_secret.length>max){
+    //         max = service.client_secret.length;
+    //       }
+    //       if(service.client_secret&& service.client_secret.length<min){
+    //         min = service.client_secret.length;
+    //       }
   
-          if(!service.client_id||service.client_id.length===0){
-            service_name = service_name + 1;
-          }
+    //       if(!service.client_id||service.client_id.length===0){
+    //         service_name = service_name + 1;
+    //       }
   
-      })
+    //   })
 
-    }
-    console.log('refresh_token_validity_seconds: ' + max_sec.refresh_token_validity_seconds );
-    console.log('access_token_validity_seconds: ' + max_sec.access_token_validity_seconds );
-    console.log('id_token_timeout_seconds: ' + max_sec.id_token_timeout_seconds );
-    console.log('device_code_validity_seconds: ' + max_sec.device_code_validity_seconds );
+    // }
+    // console.log('refresh_token_validity_seconds: ' + max_sec.refresh_token_validity_seconds );
+    // console.log('access_token_validity_seconds: ' + max_sec.access_token_validity_seconds );
+    // console.log('id_token_timeout_seconds: ' + max_sec.id_token_timeout_seconds );
+    // console.log('device_code_validity_seconds: ' + max_sec.device_code_validity_seconds );
 
     
-    console.log('Total count ' + total_count);
-    console.log('Count ' + count);
-    //console.log(req.body[20]);
-    //console.log('Min ' + min);
-    //console.log('Max ' + max);
-    //console.log(req.body[16].id_token_timeout_seconds);
-    //console.log(req.body[98].id_token_timeout_seconds);
-    //console.log(req.body[23].scope);
-    //console.log('We have ' +service_name + ' services with null service name')
-    // console.log(errors);
-    // if(errors.errors.length>0){
-      //   console.log(errors);
-      // }
+    // console.log('Total count ' + total_count);
+    // console.log('Count ' + count);
+
       if (errors.isEmpty()) {
-        console.log(req.body);
-        return next("Valid");
+        return next();
       }
       const extractedErrors = []
       errors.array().map(err => extractedErrors.push({ [err.param]: err.msg }));
@@ -773,6 +763,7 @@ const validate = (req, res, next) => {
       return res.end();
 
   }catch(err){
+    console.log('Test');
     console.log(err);
     return res.status(422).send("Invalid Format")
   }
@@ -792,5 +783,6 @@ module.exports = {
   formatPetition,
   generateClientId,
   reFormatPetition,
-  getServicesValidation
+  getServicesValidation,
+  changeContacts
 }
