@@ -16,6 +16,7 @@ const outdatedNotificationsWorker =  async(interval_seconds) =>{
     db.service_state.getOutdatedOwners().then(async users=>{
       if(users){
         console.log('Sending notication to the users');
+        console.log(users);
         // Save last succesfull notification
         saveLastNotif();
         for(const user of users){

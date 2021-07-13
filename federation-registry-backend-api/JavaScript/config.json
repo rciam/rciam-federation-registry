@@ -17,10 +17,10 @@
           "error": "Service must commply"
         }
       },
-      "device_code_validity_seconds":1800,
-      "refresh_token_validity_seconds":1422000,
-      "access_token_validity_seconds":11160,
-      "id_token_timeout_seconds":3600,
+      "device_code_validity_seconds":30000,
+      "refresh_token_validity_seconds":34128000,
+      "access_token_validity_seconds":1000000,
+      "id_token_timeout_seconds":86400,
       "code_challenge_method":[null,"plain","S256"],
       "protocol":["oidc","saml"],
       "integration_environment": ["development","demo","production"],

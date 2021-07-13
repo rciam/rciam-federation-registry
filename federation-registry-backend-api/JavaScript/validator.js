@@ -466,19 +466,31 @@ const serviceValidationRules = (options) => {
                     }
                   }
                 ).withMessage('Device Code invalid value'),
-                body('*.allow_introspection').custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Allow introspection mising').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).custom((value)=> typeof(value)==='boolean').withMessage('Allow introspection must be a boolean').bail(),
-                body('*.generate_client_secret').optional({checkFalsy:true}).custom((value)=> typeof(value)==='boolean').withMessage('Generate client secret must be a boolean'),
-                body('*.reuse_refresh_tokens').customSanitizer(value => {
-                  if(!value){
+                body('*.allow_introspection').customSanitizer(value => {
+                  if((typeof(value)!=="boolean")){
                     return false;
                   }else{
-                    return true;
+                    return value;
+                  }
+                }).custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Allow introspection mising').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).custom((value)=> typeof(value)==='boolean').withMessage('Allow introspection must be a boolean').bail(),
+                body('*.generate_client_secret').optional({checkFalsy:true}).custom((value)=> typeof(value)==='boolean').withMessage('Generate client secret must be a boolean'),
+                body('*.reuse_refresh_tokens').customSanitizer(value => {
+                  if((typeof(value)!=="boolean")){
+                    return false;
+                  }else{
+                    return value;
                   }
                 }).optional({checkFalsy:true}).custom((value)=> typeof(value)==='boolean').withMessage('Reuse refresh tokens must be a boolean'),
                 body('*.integration_environment').exists({checkFalsy:true}).withMessage('Integration Environment missing').if(value=>{return value}).custom((value,{req,location,path})=> {
                   let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
                   if(config.form[tenant].integration_environment.includes(value)){return true}else{return false}}).withMessage('Invalid Integration Environment'),
-                  body('*.clear_access_tokens_on_refresh').optional({checkFalsy:true}).custom((value)=> typeof(value)==='boolean').withMessage('Clear access tokens on refresh must be a boolean').bail(),
+                  body('*.clear_access_tokens_on_refresh').customSanitizer(value => {
+                    if((typeof(value)!=="boolean")){
+                      return false;
+                    }else{
+                      return value;
+                    }
+                  }).optional({checkFalsy:true}).custom((value)=> typeof(value)==='boolean').withMessage('Clear access tokens on refresh must be a boolean').bail(),
                   body('*.client_secret').customSanitizer((value,{req,location,path})=>{
                     if(options.sanitize&&req.body[path.match(/\[(.*?)\]/)[1]].protocol!=='oidc'||['none',null,'private_key_jwt'].includes(req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method)){
                       return null;
@@ -671,7 +683,7 @@ const changeContacts = (req,res,next) => {
   try{
     if(Array.isArray(req.body)){
       req.body.forEach((item,index)=>{
-        req.body.contacts = con;
+        req.body[index].contacts = contacts;
       });
       next();
     }
@@ -686,7 +698,7 @@ const changeContacts = (req,res,next) => {
 }
 
 const validate = (req, res, next) => {
-  console.log('Test');
+
   try{
     if(req.skipValidation){
       return next();
@@ -763,7 +775,6 @@ const validate = (req, res, next) => {
       return res.end();
 
   }catch(err){
-    console.log('Test');
     console.log(err);
     return res.status(422).send("Invalid Format")
   }

@@ -247,6 +247,7 @@ router.get('/callback/:tenant',(req,res,next)=>{
     let code = await db.tokens.addToken(response.access_token);
     clients[req.params.tenant].userinfo(response.access_token).then(usr_info=>{
       saveUser(usr_info,req.params.tenant);
+
     }); // => Promise
     res.redirect(process.env.REACT_BASE+'/'+req.params.tenant+'/code/' + code.code);
   });
@@ -1285,7 +1286,7 @@ function authenticate(req,res,next){
           },
           data: qs.stringify(data)
         }).then(result => {
-          //console.log(result);
+
           req.user = {};
           req.user.sub = result.data.sub;
 
