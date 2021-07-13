@@ -221,16 +221,16 @@ const ServiceForm = (props)=> {
     }),
     id_token_timeout_seconds:yup.number().nullable().when('protocol',{
       is:'oidc',
-      then: yup.number().min(0).max(tenant.form_config.id_token_timeout_seconds,t('yup_exceeds_max'))}),
+      then: yup.number().nullable().min(0).max(tenant.form_config.id_token_timeout_seconds,t('yup_exceeds_max'))}),
     access_token_validity_seconds:yup.number().nullable().when('protocol',{
       is:'oidc',
-      then: yup.number().min(0).max(tenant.form_config.access_token_validity_seconds,t('yup_exceeds_max'))}),
+      then: yup.number().nullable().min(0).max(tenant.form_config.access_token_validity_seconds,t('yup_exceeds_max'))}),
     refresh_token_validity_seconds:yup.number().nullable().when('protocol',{
       is:'oidc',
-      then: yup.number().min(0).max(tenant.form_config.refresh_token_validity_seconds,t('yup_exceeds_max'))}),
+      then: yup.number().nullable().min(0).max(tenant.form_config.refresh_token_validity_seconds,t('yup_exceeds_max'))}),
     device_code_validity_seconds:yup.number().nullable().when('protocol',{
       is:'oidc',
-      then: yup.number().min(0).max(tenant.form_config.device_code_validity_seconds,t('yup_exceeds_max')).required(t('yup_required'))
+      then: yup.number().nullable().min(0).max(tenant.form_config.device_code_validity_seconds,t('yup_exceeds_max')).required(t('yup_required'))
     }),
     code_challenge_method:yup.string().nullable().when('protocol',{
       is:'oidc',
