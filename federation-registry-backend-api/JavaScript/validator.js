@@ -179,8 +179,6 @@ const serviceValidationRules = (options) => {
         try{
           value.map((contact,index)=>{
             if(contact.email&&!contact.email.toLowerCase().match(reg.regEmail)||!config.form[tenant].contact_types.includes(contact.type)){
-              console.log(req.body[path.match(/\[(.*?)\]/)[1]].client_id);
-              console.log(contact);
               success=false}});
           }
           catch(err){
@@ -192,338 +190,328 @@ const serviceValidationRules = (options) => {
             }
           }
           return success}).withMessage('Invalid contact'),
-          body('*.protocol').exists({checkFalsy:true}).withMessage('Protocol missing').if(value=>{return value}).custom((value,{req,location,path})=> {
-            let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
-            if(config.form[tenant].protocol.includes(value)){return true}else{return false}}).withMessage('Invalid Prorocol value'),
-          body('*.client_id').if((value,{req,location,path})=>{
-            let skip;
-            if(options.null_client_id&&!value){
-              skip = true;
+      body('*.protocol').exists({checkFalsy:true}).withMessage('Protocol missing').if(value=>{return value}).custom((value,{req,location,path})=> {
+        let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
+        if(config.form[tenant].protocol.includes(value)){return true}else{return false}}).withMessage('Invalid Prorocol value'),
+      body('*.client_id').if((value,{req,location,path})=>{
+        let skip;
+        if(options.null_client_id&&!value){
+          skip = true;
+        }
+        else{
+            skip = !(req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc')
+        }
+        return !skip
+        }).exists({checkFalsy:true}).withMessage('client_id is missing').if(value=>{return value}).isString().withMessage('client_id must be a string').if((value)=>{return(value.constructor === stringConstructor)}).isLength({min:2, max:128}).withMessage('client_id must be between 2 and 128 characters').if(()=>{return options.check_available}).custom((value,{req,location,path})=> {
+          let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
+          return db.service_details_protocol.checkClientId(value,0,0,tenant,req.body[path.match(/\[(.*?)\]/)[1]].integration_environment).then(available=> {
+            if(!available){
+              return Promise.reject('Not available ('+ value +')');
             }
             else{
-                skip = !(req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc')
+              return Promise.resolve();
             }
-            return !skip
-          }).exists({checkFalsy:true}).withMessage('client_id is missing').if(value=>{return value}).isString().withMessage('client_id must be a string').if((value)=>{return(value.constructor === stringConstructor)}).isLength({min:2, max:128}).withMessage('client_id must be between 2 and 128 characters').if(()=>{return options.check_available}).custom((value,{req,location,path})=> {
-              let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
-              return db.service_details_protocol.checkClientId(value,0,0,tenant,req.body[path.match(/\[(.*?)\]/)[1]].integration_environment).then(available=> {
-                if(!available){
-                  return Promise.reject('Not available ('+ value +')');
-                }
-                else{
-                  return Promise.resolve();
-                }
-              });
-            }),
-            body('*.redirect_uris').custom((value,{req,location,path})=>{
-              let pos = path.match(/\[(.*?)\]/)[1];
-              let grant_types_bool;
-              if(Array.isArray(req.body[pos].grant_types)){
-                grant_types_bool = req.body[pos].grant_types.includes("implicit")||req.body[pos].grant_types.includes("authorization_code")
-              }
-              else{
-                grant_types_bool = false;
-              }
-              if(req.body[pos].protocol==='oidc'&&grant_types_bool){
-                // required
-                if(!value||value.length===0){
-                  if(options.optional){
-                    req.body[pos].outdated = true;
-                    return true
-                  }
-                  else{
-                    return false
-                  }
-                }
-                else{
-                  return true
-                }
+          });
+      }),
+      body('*.redirect_uris').custom((value,{req,location,path})=>{
+        let pos = path.match(/\[(.*?)\]/)[1];
+        let grant_types_bool;
+        if(Array.isArray(req.body[pos].grant_types)){
+          grant_types_bool = req.body[pos].grant_types.includes("implicit")||req.body[pos].grant_types.includes("authorization_code")
+        }
+        else{
+          grant_types_bool = false;
+        }
+        if(req.body[pos].protocol==='oidc'&&grant_types_bool){
+          // required
+          if(!value||value.length===0){
+            if(options.optional){
+              req.body[pos].outdated = true;
+              return true
+            }
+            else{
+              return false
+            }
+          }
+          else{
+            return true
+          }
 
+        }
+        else{
+          // not required
+          return true
+        }
+      }).withMessage('Service redirect_uri missing').if((value,{req,location,path})=> {
+        let pos = path.match(/\[(.*?)\]/)[1];
+        return value&&value.length>0&&req.body[pos].protocol==='oidc'
+      }).custom((value,{req,location,path})=> {
+        let pos = path.match(/\[(.*?)\]/)[1];
+        try{
+          if(Array.isArray(value)&&value.length>0){
+            value.map((item,index)=>{
+              if(req.body[pos].integration_environment==="production"){
+
+                if(!(item.match(reg.regLocalhostUrlSecure)||item.match(reg.regUrl))){
+                  //reuse_refresh_token(item);
+                  throw new Error("Invalid redirect url, it must be a secure or localhost url");
+                }
               }
               else{
-                // not required
+                if(!(item.match(reg.regLocalhostUrl)||item.match(reg.regSimpleUrl))) {
+                  throw new Error("Invalid redirect url (" + item + "), it must be a url starting with http(s):// at position ["+index+"]");
+                }
+              }
+            });
+          }
+          else{
+            throw new Error("Service redirect_uri must be an array");
+          }
+          return true;
+        }
+        catch(err){
+          throw new Error(err);
+        }
+      }),
+      body('*.scope').custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Service redirect_uri missing').if((value,{req,location,path})=> {return value&&value.length>0&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).isArray({min:1}).withMessage('Must be an array').custom((value,success=true)=> {
+        try{
+          value.map((item,index)=>{if(!item.match(reg.regScope)){
+            reuse_refresh_token('Invalid Scope Value')
+            reuse_refresh_token(item);
+            success=false}});
+        }
+        catch(err){
+          if(Array.isArray(value)){
+            success = false
+          }
+          else{
+            success = true
+          }
+        }
+        return success }).withMessage('Invalid Scope value'),
+      body('*.grant_types').custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Service grant_types missing').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).isArray({min:1}).withMessage('grant_types must be an array').custom((value,{req,location,path})=> {
+        let success=true;
+        let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
+        try{
+          value.map((item,index)=>{if(!config.form[tenant].grant_types.includes(item)){
+            //reuse_refresh_token(item);
+            success=false}});
+        }
+        catch(err){
+          if(Array.isArray(value)){
+            success = false
+          }
+          else{
+            success = true
+          }
+        }
+        return success }).withMessage('Invalid grant_type value'),
+      body('*.jwks_uri').customSanitizer((value,{req,location,path})=>{
+          if(req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method==="private_key_jwt"){
+            return value
+          }
+          else{
+            return null
+          }
+        }).if((value,{req,location,path})=>{return req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method==="private_key_jwt"}).
+        custom((value,{req,location,path}) => {
+          if(req.body[path.match(/\[(.*?)\]/)[1]].jwks&&value){
+            throw new Error("Invalid private key option, only one of the following values should exist ['jwks','jwks_uri']");
+          }
+          else if(!(req.body[path.match(/\[(.*?)\]/)[1]].jwks||value)){
+            throw new Error("Invalid private key option, one of the following values should exist ['jwks','jwks_uri']");
+          }else if (value&&!value.match(reg.regSimpleUrl)){
+            throw new Error("Private key uri must be a valid url");
+          }
+          return true
+        }),
+      body('*.jwks').customSanitizer((value,{req,location,path})=>{
+        if(req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method==="private_key_jwt"){
+          return value
+        }
+        else{
+          return null
+        }
+        }).if((value,{req,location,path})=>{
+          return req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method==="private_key_jwt"&&!req.body[path.match(/\[(.*?)\]/)[1]].jwks_uri&&value}).
+          custom((value)=>{
+            try{
+              if(value.constructor === stringConstructor){
+                value = JSON.parse(value);
+              }
+              if(value&&value.keys&&typeof(value.keys)==='object'&&Object.keys(value).length===1){
                 return true
               }
-            }).withMessage('Service redirect_uri missing').if((value,{req,location,path})=> {
-              let pos = path.match(/\[(.*?)\]/)[1];
-              return value&&value.length>0&&req.body[pos].protocol==='oidc'
-            }).custom((value,{req,location,path})=> {
-              let pos = path.match(/\[(.*?)\]/)[1];
-              try{
-                if(Array.isArray(value)&&value.length>0){
-                  value.map((item,index)=>{
-                    if(req.body[pos].integration_environment==="production"){
+              else{
+                return false
+              }
+            }
+            catch(err){
+              return false
+            }
+          }).withMessage('Invalid Schema for private key'),
+      body('*.token_endpoint_auth_method').custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Service token_endpoint_auth_method missing').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).custom((value,{req,location,path})=>{
+        let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
+        if(!value||config.form[tenant].token_endpoint_auth_method.includes(value)){
+          return true;
+        }else{
+          return false;
+        }}).withMessage('Invalid token_endpoint_auth_method Method'),
+      body('*.token_endpoint_auth_signing_alg').customSanitizer((value,{req,location,path}) => {
+        if(!['private_key_jwt','client_secret_jwt'].includes(req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method)){
+          return '';}
+          else{return value}
+        }).if((value,{req,location,path})=>{
+          return (['private_key_jwt','client_secret_jwt'].includes(req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method))}).custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Service token_endpoint_auth_method missing').if((value,{req,location,path})=> {return isNotEmpty(value)&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).
+          custom((value,{req,location,path})=>{
+            return config.form[req.params.tenant].token_endpoint_auth_signing_alg.includes(value)}).
+            withMessage('Invalid Token Endpoint Signing Algorithm'),
+      body('*.id_token_timeout_seconds').customSanitizer(value => {
+          if(typeof(value)!=='number'){
+            return 0;
+          }else{
+            return value;
+          }
+        }).optional({checkFalsy:true}).custom((value,{req,location,path})=> {
+        let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
+        let max = config.form[tenant].id_token_timeout_seconds;
+        if(!value||(parseInt(value)&&parseInt(value)<=max&&parseInt(value)>=0)){return true}else{
+          throw new Error("id_token_timeout_seconds must be an integer in specified range [1-"+ max +"]")
+        }}),
+      body('*.access_token_validity_seconds').customSanitizer(value => {
+          if(typeof(value)!=='number'){
+            return 0;
 
-                      if(!(item.match(reg.regLocalhostUrlSecure)||item.match(reg.regUrl))){
-                        if(!req.body[pos].dynamically_registered){
-                          console.log('client_id: ' + req.body[pos].client_id);
-                          console.log('redirect_uris: '+ req.body[pos].redirect_uris);
-                        }
-                        //console.log(item);
-                        throw new Error("Invalid redirect url, it must be a secure or localhost url");
-                      }
-                    }
-                    else{
-                      if(!(item.match(reg.regLocalhostUrl)||item.match(reg.regSimpleUrl))) {
-                        //console.log(item);
-                        if(!req.body[pos].dynamically_registered){
-                          //console.log('client_id: ' + req.body[pos].client_id);
-                          //console.log('redirect_uris: ' + req.body[pos].redirect_uris);
-                        }
-                        throw new Error("Invalid redirect url (" + item + "), it must be a url starting with http(s):// at position ["+index+"]");
-                      }
-                    }
-                  });
-                }
-                else{
-                  throw new Error("Service redirect_uri must be an array");
-                }
-                return true;
-              }
-              catch(err){
-                throw new Error(err);
-              }
-            }),
-            body('*.scope').custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Service redirect_uri missing').if((value,{req,location,path})=> {return value&&value.length>0&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).isArray({min:1}).withMessage('Must be an array').custom((value,success=true)=> {
-              try{
-                value.map((item,index)=>{if(!item.match(reg.regScope)){
-                  console.log('Invalid Scope Value')
-                  console.log(item);
-                  success=false}});
-              }
-              catch(err){
-                if(Array.isArray(value)){
-                  success = false
-                }
-                else{
-                  success = true
-                }
-              }
-              return success }).withMessage('Invalid Scope value'),
-              body('*.grant_types').custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Service grant_types missing').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).isArray({min:1}).withMessage('grant_types must be an array').custom((value,{req,location,path})=> {
-                let success=true;
-                let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
-                try{
-                  value.map((item,index)=>{if(!config.form[tenant].grant_types.includes(item)){
-                    //console.log(item);
-                    success=false}});
-                }
-                catch(err){
-                  if(Array.isArray(value)){
-                    success = false
-                  }
-                  else{
-                    success = true
-                  }
-                }
-                return success }).withMessage('Invalid grant_type value'),
-              body('*.jwks_uri').
-                customSanitizer((value,{req,location,path})=>{
-                  if(req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method==="private_key_jwt"){
-                    return value
-                  }
-                  else{
-                    return null
-                  }
-                }).
-                if((value,{req,location,path})=>{return req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method==="private_key_jwt"}).
-                custom((value,{req,location,path}) => {
-                  if(req.body[path.match(/\[(.*?)\]/)[1]].jwks&&value){
-                    throw new Error("Invalid private key option, only one of the following values should exist ['jwks','jwks_uri']");
-                  }
-                  else if(!(req.body[path.match(/\[(.*?)\]/)[1]].jwks||value)){
-                    throw new Error("Invalid private key option, one of the following values should exist ['jwks','jwks_uri']");
-                  }else if (value&&!value.match(reg.regSimpleUrl)){
-                    throw new Error("Private key uri must be a valid url");
-                  }
-                  return true
-                }),
-              body('*.jwks').customSanitizer((value,{req,location,path})=>{
-                if(req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method==="private_key_jwt"){
-                  return value
-                }
-                else{
-                  return null
-                }
-                }).if((value,{req,location,path})=>{
-                  return req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method==="private_key_jwt"&&!req.body[path.match(/\[(.*?)\]/)[1]].jwks_uri&&value}).
-                  custom((value)=>{
-                    try{
-                      if(value.constructor === stringConstructor){
-                        value = JSON.parse(value);
-                      }
-                      if(value&&value.keys&&typeof(value.keys)==='object'&&Object.keys(value).length===1){
-                        return true
-                      }
-                      else{
-                        return false
-                      }
-                    }
-                    catch(err){
-                      return false
-                    }
-                  }).withMessage('Invalid Schema for private key'),
-                body('*.token_endpoint_auth_method').custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Service token_endpoint_auth_method missing').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).custom((value,{req,location,path})=>{
-                  let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
-                  if(!value||config.form[tenant].token_endpoint_auth_method.includes(value)){
-                    return true;
-                  }else{
-                    return false;
-                  }}).withMessage('Invalid token_endpoint_auth_method Method'),
-                body('*.token_endpoint_auth_signing_alg').customSanitizer((value,{req,location,path}) => {
-                  if(!['private_key_jwt','client_secret_jwt'].includes(req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method)){
-                    return '';}
-                    else{return value}
-                  }).if((value,{req,location,path})=>{
-                    return (['private_key_jwt','client_secret_jwt'].includes(req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method))}).custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Service token_endpoint_auth_method missing').if((value,{req,location,path})=> {return isNotEmpty(value)&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).
-                    custom((value,{req,location,path})=>{
-                      if(!config.form[req.params.tenant].token_endpoint_auth_signing_alg.includes(value)){
-                        console.log(req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method);
-                        console.log(value);
-                      }
-                      return config.form[req.params.tenant].token_endpoint_auth_signing_alg.includes(value)}).
-                      withMessage('Invalid Token Endpoint Signing Algorithm'),
-                body('*.id_token_timeout_seconds').customSanitizer(value => {
-                    if(!value){
-                      return 0;
-
-                    }else{
-                      return value;
-                    }
-                  }).optional({checkFalsy:true}).custom((value,{req,location,path})=> {
-                  let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
-                  let max = config.form[tenant].id_token_timeout_seconds;
-                  if(!value||(parseInt(value)&&parseInt(value)<=max&&parseInt(value)>=0)){return true}else{
-                    throw new Error("id_token_timeout_seconds must be an integer in specified range [1-"+ max +"]")
-                  }}),
-                body('*.access_token_validity_seconds').customSanitizer(value => {
-                    if(!value){
-                      return 0;
-
-                    }else{
-                      return value;
-                    }
-                  }).optional({checkFalsy:true}).custom((value,{req,location,path})=> {
-                  let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
-                  let max = config.form[tenant].access_token_validity_seconds;
-                  if(parseInt(value)&&parseInt(value)<=max&&parseInt(value)>0){return true}else{
-                    throw new Error("access_token_timeout_seconds must be an integer in specified range [1-"+ max +"]")
-                  }}),
-                body('*.refresh_token_validity_seconds').customSanitizer(value => {
-                    if(!value||value===null){
-                      return 0;
-                    }else{
-                      return value;
-                    }
-                  }).custom((value,{req,location,path})=> {
-                  let pos = path.match(/\[(.*?)\]/)[1];
-                  if(!value&&req.body[pos].scope&&req.body[pos].scope.includes('offline_access')){
-                    if(options.optional){
-                      req.body[pos].outdated = true;
-                      return true
-                    }
-                    else{
-                      return false
-                    }
-                  }else{
-                    return true
-                  }
-                }).withMessage("Refresh Token Validity Seconds is required when 'offline_access' is included in the scopes").custom((value,{req,location,path})=> {
-                  if(!value){
-                    return true;
-                  }
-                  let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
-                  let max = config.form[tenant].refresh_token_validity_seconds;
-                  if(parseInt(value)&&parseInt(value)<=max&&parseInt(value)>0){return true}else{
-                    throw new Error("Refresh Token Validity Seconds must be an integer in specified range [1-"+ max +"]")
-                  }
-                }),
-                body('*.device_code_validity_seconds').custom((value,{req,location,path})=> {
-                  let pos = path.match(/\[(.*?)\]/)[1];
-                  if(!value&&req.body[pos].protocol==='oidc'&&req.body[pos].grant_types&&req.body[pos].grant_types.includes('urn:ietf:params:oauth:grant-type:device_code')){
-                    if(options.optional){
-                      req.body[pos].outdated = true;
-                      return true
-                    }else{
-                      throw new Error("Device Code Validity Seconds is required when 'urn:ietf:params:oauth:grant-type:device_code' is included in the grant_types")
-                    }
-                  }
-                  if(!value){
-                    return true;
-                  }
-                  let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
-                  let max = config.form[tenant].device_code_validity_seconds;
-                  if((parseInt(value)&&parseInt(value)<=max&&parseInt(value)>=0)||(req.body[pos].protocol!=='oidc'||!req.body[pos].grant_types||!req.body[pos].grant_types.includes('urn:ietf:params:oauth:grant-type:device_code'))){
-                    return true}else{
-                    throw new Error("Device Code Validity Seconds must be an integer in specified range [1-"+ max +"]")
-                  }}).withMessage('Must be an integer in specified range'),
-                  body('*.code_challenge_method').optional({checkFalsy:true}).isString().withMessage('Device Code must be a string').custom((value)=> {
-                    try{
-                      return value.match(reg.regCodeChalMeth)
-                    }
-                    catch(err){
-                      return true
-                    }
-                  }
-                ).withMessage('Device Code invalid value'),
-                body('*.allow_introspection').customSanitizer(value => {
-                  if((typeof(value)!=="boolean")){
-                    return false;
-                  }else{
-                    return value;
-                  }
-                }).custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Allow introspection mising').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).custom((value)=> typeof(value)==='boolean').withMessage('Allow introspection must be a boolean').bail(),
-                body('*.generate_client_secret').optional({checkFalsy:true}).custom((value)=> typeof(value)==='boolean').withMessage('Generate client secret must be a boolean'),
-                body('*.reuse_refresh_tokens').customSanitizer(value => {
-                  if((typeof(value)!=="boolean")){
-                    return false;
-                  }else{
-                    return value;
-                  }
-                }).optional({checkFalsy:true}).custom((value)=> typeof(value)==='boolean').withMessage('Reuse refresh tokens must be a boolean'),
-                body('*.integration_environment').exists({checkFalsy:true}).withMessage('Integration Environment missing').if(value=>{return value}).custom((value,{req,location,path})=> {
-                  let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
-                  if(config.form[tenant].integration_environment.includes(value)){return true}else{return false}}).withMessage('Invalid Integration Environment'),
-                  body('*.clear_access_tokens_on_refresh').customSanitizer(value => {
-                    if((typeof(value)!=="boolean")){
-                      return false;
-                    }else{
-                      return value;
-                    }
-                  }).optional({checkFalsy:true}).custom((value)=> typeof(value)==='boolean').withMessage('Clear access tokens on refresh must be a boolean').bail(),
-                  body('*.client_secret').customSanitizer((value,{req,location,path})=>{
-                    if(options.sanitize&&req.body[path.match(/\[(.*?)\]/)[1]].protocol!=='oidc'||['none',null,'private_key_jwt'].includes(req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method)){
-                      return null;
-                    }else{
-                      return value;
-                    }
-                  }).if((value,{req,location,path})=>{return ((value||!req.body[path.match(/\[(.*?)\]/)[1]].generate_client_secret)&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'&&["client_secret_basic","client_secret_post","client_secret_jwt"].includes(req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method))}).exists({checkFalsy:true}).withMessage('Client secret is missing').if((value)=>{return value}).isString().withMessage('Client Secret must be a string').isLength({min:4,max:256}).withMessage('Out of range'),
-                  body('*.entity_id').custom((value,{req,location,path})=>{return requiredSaml(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Entity id mising').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='saml'}).isString().withMessage('Entity id must be a string').custom((value)=> {
-                    try{
-                      if(value.constructor === stringConstructor){
-                        if(value.length<4||value.length>256){
-                          throw new Error('Entity id is not in specified character length range (4-256)')
-                        }
-                      }
-                      return !value||value.match(reg.regSimpleUrl)
-                    }
-                    catch(err){
-                      return true
-                    }
-                  }).withMessage('Entity id must be a url'),
-                  body('*.metadata_url').if((value,{req,location,path})=>{return req.body[path.match(/\[(.*?)\]/)[1]].protocol==='saml'}).exists({checkFalsy:true}).withMessage('Metadata url missing').if((value)=>{ return value}).isString().withMessage('Metadata url must be a string').if((value)=>{return(value.constructor === stringConstructor)}).custom((value)=> {return value.match(reg.regSimpleUrl)}).withMessage('Metadata url must be a url').if(()=>{return options.check_available}).custom((value,{req,location,path})=> {
-                    return db.service_details_protocol.checkClientId(value,0,0,req.params.tenant,req.body[path.match(/\[(.*?)\]/)[1]].integration_environment).then(available=> {
-                      if(!available){
-                        return Promise.reject('Metadata url is not available');
-                      }
-                      else{
-                        return Promise.resolve();
-                      }
-                    });
-                  }),
-                  body('*.external_id').optional({checkFalsy:true}).custom((value)=>{if(parseInt(value)){return true}else{return false}}).withMessage('External id must be an integer'),
-                  body('*.website_url').optional({checkFalsy:true}).isString().withMessage('Website Url must be a string').custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Website Url must be a valid url')
-                ]
+          }else{
+            return value;
+          }
+        }).optional({checkFalsy:true}).custom((value,{req,location,path})=> {
+        let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
+        let max = config.form[tenant].access_token_validity_seconds;
+        if(parseInt(value)&&parseInt(value)<=max&&parseInt(value)>0){return true}else{
+          throw new Error("access_token_timeout_seconds must be an integer in specified range [1-"+ max +"]")
+        }}),
+      body('*.refresh_token_validity_seconds').customSanitizer(value => {
+          if(typeof(value)!=='number'){
+            return 0;
+          }else{
+            return value;
+          }
+        }).custom((value,{req,location,path})=> {
+          let pos = path.match(/\[(.*?)\]/)[1];
+          if(!value&&req.body[pos].scope&&req.body[pos].scope.includes('offline_access')){
+            if(options.optional){
+              req.body[pos].outdated = true;
+              return true
+            }
+            else{
+              return false
+            }
+          }
+          else{
+            return true
+          }
+        }).withMessage("Refresh Token Validity Seconds is required when 'offline_access' is included in the scopes").custom((value,{req,location,path})=> {
+          if(!value){
+            return true;
+          }
+          let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
+          let max = config.form[tenant].refresh_token_validity_seconds;
+          if(parseInt(value)&&parseInt(value)<=max&&parseInt(value)>0){return true}else{
+            throw new Error("Refresh Token Validity Seconds must be an integer in specified range [1-"+ max +"]")
+          }
+        }),
+      body('*.device_code_validity_seconds').customSanitizer(value => {
+        if((typeof(value)!=="number")){
+          return 0;
+        }else{
+          return value;
+        }
+      }).custom((value,{req,location,path})=> {
+        let pos = path.match(/\[(.*?)\]/)[1];
+        if(!value&&req.body[pos].protocol==='oidc'&&req.body[pos].grant_types&&req.body[pos].grant_types.includes('urn:ietf:params:oauth:grant-type:device_code')){
+          if(options.optional){
+            req.body[pos].outdated = true;
+            return true
+          }else{
+            throw new Error("Device Code Validity Seconds is required when 'urn:ietf:params:oauth:grant-type:device_code' is included in the grant_types")
+          }
+        }
+        if(!value){
+          return true;
+        }
+        let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
+        let max = config.form[tenant].device_code_validity_seconds;
+        if((parseInt(value)&&parseInt(value)<=max&&parseInt(value)>=0)||(req.body[pos].protocol!=='oidc'||!req.body[pos].grant_types||!req.body[pos].grant_types.includes('urn:ietf:params:oauth:grant-type:device_code'))){
+          return true}else{
+          throw new Error("Device Code Validity Seconds must be an integer in specified range [1-"+ max +"]")
+        }}).withMessage('Must be an integer in specified range'),
+      body('*.code_challenge_method').optional({checkFalsy:true}).isString().withMessage('Device Code must be a string').custom((value)=> {
+        try{
+          return value.match(reg.regCodeChalMeth)
+        }
+        catch(err){
+          return true
+        }
+      }).withMessage('Device Code invalid value'),
+      body('*.allow_introspection').customSanitizer(value => {
+        if((typeof(value)!=="boolean")){
+          return false;
+        }else{
+          return value;
+        }
+      }).custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Allow introspection mising').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).custom((value)=> typeof(value)==='boolean').withMessage('Allow introspection must be a boolean').bail(),
+      body('*.generate_client_secret').optional({checkFalsy:true}).custom((value)=> typeof(value)==='boolean').withMessage('Generate client secret must be a boolean'),
+      body('*.reuse_refresh_token').customSanitizer(value => {
+        if((typeof(value)!=="boolean")){
+          return false;
+        }else{
+          return value;
+        }
+      }).optional({checkFalsy:true}).custom((value)=> typeof(value)==='boolean').withMessage('Reuse refresh tokens must be a boolean'),
+      body('*.integration_environment').exists({checkFalsy:true}).withMessage('Integration Environment missing').if(value=>{return value}).custom((value,{req,location,path})=> {
+        let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
+        if(config.form[tenant].integration_environment.includes(value)){return true}else{return false}}).withMessage('Invalid Integration Environment'),
+        body('*.clear_access_tokens_on_refresh').customSanitizer(value => {
+          if((typeof(value)!=="boolean")){
+            return false;
+          }else{
+            return value;
+          }
+        }).optional({checkFalsy:true}).custom((value)=> typeof(value)==='boolean').withMessage('Clear access tokens on refresh must be a boolean').bail(),
+      body('*.client_secret').customSanitizer((value,{req,location,path})=>{
+        if(options.sanitize&&req.body[path.match(/\[(.*?)\]/)[1]].protocol!=='oidc'||['none',null,'private_key_jwt'].includes(req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method)){
+          return null;
+        }else{
+          return value;
+        }
+      }).if((value,{req,location,path})=>{return ((value||!req.body[path.match(/\[(.*?)\]/)[1]].generate_client_secret)&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'&&["client_secret_basic","client_secret_post","client_secret_jwt"].includes(req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method))}).exists({checkFalsy:true}).withMessage('Client secret is missing').if((value)=>{return value}).isString().withMessage('Client Secret must be a string').isLength({min:4,max:256}).withMessage('Out of range'),
+      body('*.entity_id').custom((value,{req,location,path})=>{return requiredSaml(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Entity id mising').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='saml'}).isString().withMessage('Entity id must be a string').custom((value)=> {
+        try{
+          if(value.constructor === stringConstructor){
+            if(value.length<4||value.length>256){
+              throw new Error('Entity id is not in specified character length range (4-256)')
+            }
+          }
+          return !value||value.match(reg.regSimpleUrl)
+        }
+        catch(err){
+          return true
+        }
+      }).withMessage('Entity id must be a url'),
+      body('*.metadata_url').if((value,{req,location,path})=>{return req.body[path.match(/\[(.*?)\]/)[1]].protocol==='saml'}).exists({checkFalsy:true}).withMessage('Metadata url missing').if((value)=>{ return value}).isString().withMessage('Metadata url must be a string').if((value)=>{return(value.constructor === stringConstructor)}).custom((value)=> {return value.match(reg.regSimpleUrl)}).withMessage('Metadata url must be a url').if(()=>{return options.check_available}).custom((value,{req,location,path})=> {
+        return db.service_details_protocol.checkClientId(value,0,0,req.params.tenant,req.body[path.match(/\[(.*?)\]/)[1]].integration_environment).then(available=> {
+          if(!available){
+            return Promise.reject('Metadata url is not available');
+          }
+          else{
+            return Promise.resolve();
+          }
+        });
+      }),
+      body('*.external_id').optional({checkFalsy:true}).custom((value)=>{if(parseInt(value)){return true}else{return false}}).withMessage('External id must be an integer'),
+      body('*.website_url').optional({checkFalsy:true}).isString().withMessage('Website Url must be a string').custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Website Url must be a valid url')
+    ]
 
 
 }
@@ -609,7 +597,7 @@ const servicePostValidationRules = (strict) => {
     //body('*.code_challenge_method').optional({checkFalsy:true}).isString().withMessage('Must be a string').bail().custom((value)=> value.match(reg.regCodeChalMeth)).withMessage('Invalid value').bail(),
     //body('*.allow_introspection').optional({checkFalsy:true}).custom((value)=> typeof(value)==='boolean').withMessage('Must be a boolean').bail(),
     //body('*.generate_client_secret').optional({checkFalsy:true}).custom((value)=> typeof(value)==='boolean').withMessage('Must be a boolean').bail(),
-    //body('*.reuse_refresh_tokens').optional({checkFalsy:true}).custom((value)=> typeof(value)==='boolean').withMessage('Must be a boolean').bail(),
+    //body('*.reuse_refresh_token').optional({checkFalsy:true}).custom((value)=> typeof(value)==='boolean').withMessage('Must be a boolean').bail(),
     //body('*.integration_environment').if(param('name').custom((value)=> {tenant=value; return true;})).exists().withMessage('Required Field').bail().isString().withMessage('Must be a string').bail().custom((value)=> {if(config.form[tenant].integration_environment.includes(value)){return true}else{return false}}).bail(),
     //body('*.clear_access_tokens_on_refresh').optional({checkFalsy:true}).custom((value)=> typeof(value)==='boolean').withMessage('Must be a boolean').bail(),
     //body('*.client_secret').optional({checkFalsy:true}).if(body('protocol').custom((value)=>{return value==='oidc'})&&(body('token_endpoint_auth_method').custom((value)=>{return value!=='private_key_jwt'&&value!=='none'}))).if((value,req)=> req.body.data.generate_client_secret=false).bail().isString().withMessage('Must be a string').bail().isLength({min:4,max:16}).bail(),
@@ -762,6 +750,16 @@ const validate = (req, res, next) => {
     
     // console.log('Total count ' + total_count);
     // console.log('Count ' + count);
+    // if(Array.isArray(req.body)){
+    //   req.body.forEach((service,index)=>{
+    //     console.log('Service id: '+ index);
+    //     console.log('Service client_id ' + service.client_id);  
+    //     console.log(service.device_code_validity_seconds);
+    //     console.log(service.reuse_refresh_token);
+    //   });
+
+    // }
+      
 
       if (errors.isEmpty()) {
         return next();

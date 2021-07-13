@@ -19,7 +19,7 @@
   "refresh_token_validity_seconds":"28800",
   "client_secret":"",
   "country":"",
-  "reuse_refresh_tokens":true,
+  "reuse_refresh_token":true,
   "clear_access_tokens_on_refresh":true,
   "id_token_timeout_seconds":"600",
   "scope": [

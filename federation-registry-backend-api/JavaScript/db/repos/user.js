@@ -27,7 +27,6 @@ class User {
     });
   }
   async getPetitionOwners(id){
-
     const query = this.pgp.as.format(sql.getPetitionOwners,{id:+id});
     return this.db.any(query).then( data => {
       if(data){

@@ -44,7 +44,8 @@ class ServiceListRepository {
     }
     if(req.query.search_string){
       params.search_filter = "AND service_name ILIKE '%"+ req.query.search_string + "%'";
-    }
+      params.search_filter_client_id = "AND client_id ILIKE '%"+ req.query.search_string + "%'";
+     }
     if(req.query.env){
       params.integration_environment_filter = "AND integration_environment='" + req.query.env + "'"
     }

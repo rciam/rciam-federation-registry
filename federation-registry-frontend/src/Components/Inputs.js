@@ -468,7 +468,7 @@ export function RefreshToken(props){
           onMouseOut={()=>setShow(false)}
           >
           <Checkbox name="scope" disabled={props.disabled} checked={props.values.scope.includes('offline_access')} value='offline_access'/>
-            {t('form_reuse_refresh_tokens_scope')}
+            {t('form_reuse_refresh_token_scope')}
           <MyOverLay show={props.changed&&(props.changed.scope.D.includes('offline_access')||props.changed.scope.N.includes('offline_access'))&&show} type='Edited' target={target}/>
         </div>
         <Form.Text className="text-muted text-left label-checkbox" id="uri-small-desc">
@@ -476,18 +476,18 @@ export function RefreshToken(props){
         </Form.Text>
         {props.values.scope.includes('offline_access')?(
           <React.Fragment>
-            <div className={"checkbox-item "+(props.changed&&props.changed.reuse_refresh_tokens?"spacing-bot":'')}>
+            <div className={"checkbox-item "+(props.changed&&props.changed.reuse_refresh_token?"spacing-bot":'')}>
               <SimpleCheckbox
-                name="reuse_refresh_tokens"
-                label={t('form_reuse_refresh_tokens')}
-                changed={props.changed?props.changed.reuse_refresh_tokens:null}
-                checked={props.values.reuse_refresh_tokens}
+                name="reuse_refresh_token"
+                label={t('form_reuse_refresh_token')}
+                changed={props.changed?props.changed.reuse_refresh_token:null}
+                checked={props.values.reuse_refresh_token}
                 disabled={props.disabled}
                 onChange={props.onChange}
               />
 
             </div>
-            <div className={"checkbox-item "+(props.changed&&props.changed.reuse_refresh_tokens?"spacing-bot":'')}>
+            <div className={"checkbox-item "+(props.changed&&props.changed.reuse_refresh_token?"spacing-bot":'')}>
             <SimpleCheckbox
               name="clear_access_tokens_on_refresh"
               label={t('form_clear_access_tokens_on_refresh')}

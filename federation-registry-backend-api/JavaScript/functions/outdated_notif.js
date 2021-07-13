@@ -106,7 +106,7 @@ const sendOutdatedNotification = async (data) => {
         var htmlToSend = template(replacements);
         var mailOptions = {
           from: "noreply@faai.grnet.gr",
-          to : 'koza-sparrow@hotmail.com',
+          to : data.email,
           subject : 'Service Configuration Depricated',
           html : htmlToSend
         };
