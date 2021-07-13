@@ -217,7 +217,7 @@ const ServiceForm = (props)=> {
     }),
     grant_types:yup.array().nullable().when('protocol',{
       is:'oidc',
-      then: yup.array().of(yup.string().test('testGrantTypes','error-granttypes',function(value){return tenant.form_config.grant_types.includes(value)})).required(t('yup_select_option'))
+      then: yup.array().of(yup.string().test('testGrantTypes','error-grant-types',function(value){return tenant.form_config.grant_types.includes(value)})).required(t('yup_select_option'))
     }),
     id_token_timeout_seconds:yup.number().nullable().when('protocol',{
       is:'oidc',
@@ -251,7 +251,7 @@ const ServiceForm = (props)=> {
       is:'oidc',
       then: yup.boolean().required()
     }),
-    reuse_refresh_tokens:yup.boolean().nullable().when('protocol',{
+    reuse_refresh_token:yup.boolean().nullable().when('protocol',{
       is:'oidc',
       then: yup.boolean().required()
     }),
