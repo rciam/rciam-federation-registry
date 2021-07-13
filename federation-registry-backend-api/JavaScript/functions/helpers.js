@@ -12,12 +12,18 @@ hbs.registerHelper('loud', function (aString) {
     return aString.toUpperCase()
 })
 
+const delay = ms => new Promise(res => setTimeout(res, ms));
+
 const sendMultipleInvitations = function (data,t) {
 
   try{
-    t.invitation.addMultiple(data).then(res=>{data.forEach(invitation_data=>{
-      sendInvitationMail(invitation_data);
-    })}).catch(err=>{customLogger(null,null,'warn','Error when creating and sending invitations: '+err)})
+    t.invitation.addMultiple(data).then(async res=>{
+      
+      for(const invitation_data of data){
+        await delay(400);
+        sendInvitationMail(invitation_data);
+      }
+      }).catch(err=>{customLogger(null,null,'warn','Error when creating and sending invitations: '+err)})
   }
   catch(err){
     customLogger(null,null,'warn','Error when creating and sending invitations: '+err);
@@ -405,5 +411,6 @@ module.exports = {
   sendMultipleInvitations,
   readHTMLFile,
   extractCoc,
-  createGgusTickets
+  createGgusTickets,
+  delay
 }

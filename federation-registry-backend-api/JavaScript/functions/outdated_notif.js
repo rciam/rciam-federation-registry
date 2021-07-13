@@ -7,22 +7,24 @@ var fs2 = require('fs');
 var hbs = require('handlebars');
 nodeMailer = require('nodemailer');
 const customLogger = require('../loggers.js');
-const {readHTMLFile} = require('./helpers');
+const {delay,readHTMLFile} = require('./helpers');
 
 const outdatedNotificationsWorker =  async(interval_seconds) =>{
 
   const sendNotif = () =>{
   //  console.log(db);
-    db.service_state.getOutdatedOwners().then(users=>{
+    db.service_state.getOutdatedOwners().then(async users=>{
       if(users){
         console.log('Sending notication to the users');
         // Save last succesfull notification
         saveLastNotif();
-        users.forEach(user=>{
+        for(const user of users){
+          await delay(400);
           sendOutdatedNotification(user);
-        })
+        }
+
       }
-    });
+    }).catch(err=>{customLogger(null,null,'warn','Error when creating and sending invitations: '+err)})
   };
 
   const saveLastNotif = async () => {
@@ -50,7 +52,7 @@ const outdatedNotificationsWorker =  async(interval_seconds) =>{
       }
     }
     catch(err){
-      console.log()
+      console.log(err);
     }
     if(time_passed_sec>interval_seconds){
       sendNotif();

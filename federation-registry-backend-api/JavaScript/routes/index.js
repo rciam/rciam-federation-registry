@@ -1,5 +1,5 @@
 require('dotenv').config();
-const {petitionValidationRules,validate,tenantValidation,formatPetition,getServiceListValidation,postInvitationValidation,serviceValidationRules,putAgentValidation,postAgentValidation,decodeAms,amsIngestValidation,generateClientId,reFormatPetition,getServicesValidation} = require('../validator.js');
+const {petitionValidationRules,validate,tenantValidation,changeContacts,formatPetition,getServiceListValidation,postInvitationValidation,serviceValidationRules,putAgentValidation,postAgentValidation,decodeAms,amsIngestValidation,generateClientId,reFormatPetition,getServicesValidation} = require('../validator.js');
 const {validationResult} = require('express-validator');
 const qs = require('qs');
 const {v1:uuidv1} = require('uuid');
@@ -22,6 +22,7 @@ const base64url = require('base64url');
 // ----------------------------------------------------------
 // ************************* Routes *************************
 // ----------------------------------------------------------
+
 
 
 
@@ -88,6 +89,7 @@ router.get('/tenants/:tenant/services',getServicesValidation(),validate,authenti
 
 
 // Endpoint used to bootstrap a teant or generaly to import multiple services
+// Add changeContacts to alter contacts
 router.post('/tenants/:tenant/services',tenantValidation(),validate,authenticate,serviceValidationRules({optional:true,tenant_param:true,check_available:true,sanitize:true,null_client_id:false}),validate,(req,res,next)=> {
   let services = req.body;
   // Populate json objects with all necessary fields
@@ -1388,7 +1390,7 @@ const saveUser=(userinfo,tenant)=>{
         });
       }
     })
-
+    
   });
 }
 

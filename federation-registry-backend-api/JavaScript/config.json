@@ -24,7 +24,7 @@
       "code_challenge_method":[null,"plain","S256"],
       "protocol":["oidc","saml"],
       "integration_environment": ["development","demo","production"],
-      "grant_types":["authorization_code","client_credentials","urn:ietf:params:oauth:grant-type:token-exchange","urn:ietf:params:oauth:grant-type:device_code","implicit"],
+      "grant_types":["authorization_code","client_credentials","urn:ietf:params:oauth:grant-type:token-exchange","urn:ietf:params:oauth:grant-type:device_code","implicit","refresh_token"],
       "contact_types":["admin","technical","support","security"],
       "scope":["openid","email","profile","offline_access","eduperson_entitlement","eduperson_scoped_affiliation","eduperson_unique_id"],
       "invitation_validity_seconds":2592000,
@@ -52,10 +52,10 @@
           "error": "please select"
         }
       ],
-      "device_code_validity_seconds":1800,
-      "refresh_token_validity_seconds":1422000,
-      "access_token_validity_seconds":11160,
-      "id_token_timeout_seconds":3600,
+      "device_code_validity_seconds":30000,
+      "refresh_token_validity_seconds":34128000,
+      "access_token_validity_seconds":1000000,
+      "id_token_timeout_seconds":86400,
       "code_challenge_method":[null,"plain","S256"],
       "protocol":["oidc","saml"],
       "integration_environment": ["development","demo","production"],
@@ -70,7 +70,7 @@
   },
   "restricted_env" : {
     "egi" : {
-      "env":["production","demo"]
+      "env":["production"]
     },
     "eosc": {
       "env":[]
