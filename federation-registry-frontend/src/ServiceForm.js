@@ -133,7 +133,7 @@ const ServiceForm = (props)=> {
       then: yup.string().nullable().min(2,t('yup_char_min') + ' ('+2+')').max(128,t('yup_char_max') + ' ('+128+')').test('testAvailable',t('yup_client_id_available'),function(value){
           return new Promise((resolve,reject)=>{
             clearTimeout(availabilityCheckTimeout);
-            if((props.initialValues.client_id===value&&!props.copy)||!value||value.length<2||value.length>36)
+            if(!value)
               {resolve(true)}
             else{
               if(value===checkedId &&formRef.current.values.integration_environment===checkedEnvironment){
@@ -141,7 +141,7 @@ const ServiceForm = (props)=> {
               }
               setCheckingAvailability(true);
               availabilityCheckTimeout = setTimeout(()=> {
-                fetch(config.host+'tenants/'+tenant_name+'/check-availability?value='+ value +'&protocol=oidc&environment='+ this.parent.integration_environment, {
+                fetch(config.host+'tenants/'+tenant_name+'/check-availability?value='+ value +'&protocol=oidc&environment='+ this.parent.integration_environment+(props.petition_id?('&petition_id='+props.petition_id):"")+(props.service_id?('&service_id='+props.service_id):""), {
                   method:'GET',
                   credentials:'include',
                   headers:{
@@ -174,7 +174,7 @@ const ServiceForm = (props)=> {
     }),
     redirect_uris:yup.array().nullable().when('protocol',{
       is:'oidc',
-      then: yup.array().when('integration_environment',(integration_environment)=>{
+      then: yup.array().nullable().when('integration_environment',(integration_environment)=>{
         integrationEnvironment = integration_environment;
       }).of(yup.string().required().test('test_redirect_uri','error',function(value){
         if(value){
@@ -188,7 +188,7 @@ const ServiceForm = (props)=> {
 
       })).unique(t('yup_redirect_uri_unique')).when('grant_types',{
         is:(grant_types)=> grant_types.includes("implicit")||grant_types.includes("authorization_code"),
-        then: yup.array().required(t('yup_required'))
+        then: yup.array().nullable().required(t('yup_required'))
       })
     }),
     logo_uri:yup.string().nullable().test('testImage',t('yup_image_url'),function(imageUrl){
@@ -299,17 +299,18 @@ const ServiceForm = (props)=> {
       is:'saml',
       then: yup.string().min(4,t('yup_char_min') + ' ('+4+')').test('testAvailable',t('yup_entity_id'),function(value){
           return new Promise((resolve,reject)=>{
-
+            
             clearTimeout(availabilityCheckTimeout);
-            if(props.initialValues.entity_id===value||!value||!reg.regUrl.test(value))
+            if(!value||!reg.regUrl.test(value))
               {resolve(true)}
             else{
+              setCheckingAvailability(true);
               if(value===checkedId &&formRef.current.values.integration_environment===checkedEnvironment){
                 resolve(availabilityCheck);
               }
-              setCheckingAvailability(true);
+              
               availabilityCheckTimeout = setTimeout(()=> {
-                fetch(config.host+'tenants/'+tenant_name+'/check-availability?value='+ value +'&protocol=saml&environment='+ this.parent.integration_environment, {
+                fetch(config.host+'tenants/'+tenant_name+'/check-availability?value='+ value +'&protocol=saml&environment='+ this.parent.integration_environment+(props.petition_id?('&petition_id='+props.petition_id):"")+(props.service_id?('&service_id='+props.service_id):""), {
                   method:'GET',
                   credentials:'include',
                   headers:{
@@ -533,7 +534,7 @@ const ServiceForm = (props)=> {
     <NotFound notFound={notFound}/>
     <Formik
       initialValues={props.initialValues}
-      validateOnMount={props.service_id||props.petition_id}
+      validateOnMount={props.service_id||props.petition_id||props.copy}
       initialTouched={getInitialTouched(props.initialValues)}
       validationSchema={schema}
       innerRef={formRef}
