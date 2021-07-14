@@ -770,7 +770,7 @@ router.put('/tenants/:tenant/petitions/:id/review',authenticate,canReview,(req,r
 router.get('/tenants/:tenant/check-availability',(req,res,next)=>{
   db.tx('get-history-for-petition', async t =>{
     try{
-      await isAvailable(t,req.query.value,req.query.protocol,0,0,req.params.tenant,req.query.environment).then(available =>{
+      await isAvailable(t,req.query.value,req.query.protocol,(req.query.petition_id&&typeof(parseInt(req.query.petition_id))==='number'?req.query.petition_id:0),(req.query.service_id&&typeof(parseInt(req.query.service_id))==='number'?req.query.service_id:0),req.params.tenant,req.query.environment).then(available =>{
             res.status(200).json({available:available});
       }).catch(err=>{next(err)});
     }

@@ -344,7 +344,7 @@ const ServiceList= (props)=> {
 
               <span>{outdatedCount}</span>{' '}
                of the services you own are not up to date with the lastest requirements. Click{' '}
-               <span className="alert_fake_link" onClick={()=>{setExpandFilters(!expandFilters); setShowOutdated(true); setShowNotification(false);}}>here</span>
+               <span className="alert_fake_link" onClick={()=>{setExpandFilters(!expandFilters); setShowOutdated(true); setShowOwned(true); setShowNotification(false);}}>here</span>
                 {' '}to find {outdatedCount>1?'them':'it'} using the outdated filter and reconfigure them following the instructions.
             </Alert>
           </div>
