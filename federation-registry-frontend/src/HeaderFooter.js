@@ -20,8 +20,7 @@ export const Header= (props)=> {
     return(
 
       <div className="header">
-        <div className="corner-ribbon red">Devel</div>
-
+        {/*<div className="corner-ribbon red">Devel</div>*/}
         <div className="text-center ssp-logo">
           <a href="https://www.egi.eu/" >
             <Image src={tenant[0]?tenant[0].logo:null} fluid />

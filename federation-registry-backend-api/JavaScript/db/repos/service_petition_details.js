@@ -127,8 +127,13 @@ class ServicePetitionDetailsRepository {
      }
 
      async getTicketInfo(ids,envs){
-       const query = this.pgp.as.format(sql.getTicketInfo,{ids:ids,envs:envs});
-       return this.db.any(query);
+       if(envs.length>0){
+         const query = this.pgp.as.format(sql.getTicketInfo,{ids:ids,envs:envs});
+         return this.db.any(query);
+       }
+       else{
+         return null;
+       }
      }
 
      async getDetails(petition_id,tenant){

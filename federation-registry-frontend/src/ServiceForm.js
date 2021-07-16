@@ -278,7 +278,7 @@ const ServiceForm = (props)=> {
     }),
     token_endpoint_auth_method:yup.string().nullable().when('protocol',{
       is:'oidc',
-      then: yup.string().required(t('yup_select_option')).test('testTokenEndpointAuthMethod','Invalid Value',function(value){return tenant.form_config.token_endpoint_auth_method.includes(value)})
+      then: yup.string().nullable().required(t('yup_select_option')).test('testTokenEndpointAuthMethod','Invalid Value',function(value){return tenant.form_config.token_endpoint_auth_method.includes(value)})
     }),
     jwks_uri:yup.string().nullable().when(['protocol','token_endpoint_auth_method'],{
       is:(protocol,token_endpoint_auth_method)=> protocol==='oidc'&&token_endpoint_auth_method==="private_key_jwt" ,

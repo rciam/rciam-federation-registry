@@ -41,11 +41,8 @@ class User {
 
   async getUsersByAction(action,tenant){
     const query = this.pgp.as.format(sql.getUsersByAction,{action:action,tenant:tenant});
-    console.log(query);
     return this.db.any(query).then(res=>{
       if(res){
-        console.log(action);
-        console.log(res);
         return res;
       }
       else{
