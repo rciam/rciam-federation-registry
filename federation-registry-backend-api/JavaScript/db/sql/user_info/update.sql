@@ -1,0 +1,1 @@
+UPDATE user_info set preferred_username=${preferred_username},name=${name},given_name=${given_name},family_name=${family_name},email=${email},role_id=${role_id} WHERE sub=${sub} and tenant=${tenant}

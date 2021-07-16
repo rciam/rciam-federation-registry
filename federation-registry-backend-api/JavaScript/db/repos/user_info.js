@@ -20,11 +20,27 @@ class UserInfoRepository {
       given_name: data.given_name,
       family_name: data.family_name,
       email: data.email,
+      role_id: +data.role_id,
       tenant: tenant
     }).then(res=>{
-
       return res
     })
+  }
+
+  async update(data,tenant){
+    const query = this.pgp.as.format(sql.update,{
+      sub: data.sub,
+      preferred_username: data.preferred_username,
+      name: data.name,
+      given_name: data.given_name,
+      family_name: data.family_name,
+      email: data.email,
+      role_id: +data.role_id,
+      tenant: tenant
+    });
+    return this.db.none(query).then(res=>{
+      return res
+    });
   }
 }
 

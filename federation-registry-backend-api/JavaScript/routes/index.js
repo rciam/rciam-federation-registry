@@ -623,7 +623,7 @@ router.post('/tenants/:tenant/petitions',authenticate,petitionValidationRules(),
               await t.petition.add(service,req.user.sub).then(async id=>{
                 if(id){
                   res.status(200).json({id:id});
-                  await t.user.getReviewers(req.params.tenant).then(users=>{
+                  await t.user.getUsersByAction('review_notification',req.params.tenant).then(users=>{
                     sendMail({subject:'New Petition to Review',service_name:req.body.service_name,tenant:req.params.tenant},'reviewer-notification.html',users);
                   }).catch(error=>{
                     next('Could not sent email to reviewers:' + error);
@@ -641,7 +641,7 @@ router.post('/tenants/:tenant/petitions',authenticate,petitionValidationRules(),
           await t.petition.add(req.body,req.user.sub).then(async id=>{
             if(id){
               res.status(200).json({id:id});
-              await t.user.getReviewers(req.params.tenant).then(users=>{
+              await t.user.getUsersByAction('review_notification',req.params.tenant).then(users=>{
                 sendMail({subject:'New Petition to Review',service_name:req.body.service_name,tenant:req.params.tenant},'reviewer-notification.html',users);
               }).catch(error=>{
                 next('Could not sent email to reviewers:' + error);
@@ -1214,15 +1214,13 @@ function authenticate_allow_unauthorised(req,res,next){
         req.user.iss = result.data.iss;
         req.user.email = result.data.email;
         if(req.user.sub){
-          db.user_role.getRoleActions(req.user.edu_person_entitlement,req.params.tenant).then(role=>{
-            if(role.success){
-              req.user.role = role.role;
-              //console.log('authenticated');
+          db.user_role.getRoleActions(req.user.sub,req.params.tenant).then(role=>{
+            if(role){
+              req.user.role = role;
               next();
             }
             else{
-
-              next();
+              res.status(401).send('Unauthenticated Request');
             }
           }).catch((err)=> {
             next();
@@ -1255,11 +1253,13 @@ function authenticate(req,res,next){
         // Remove Bearer from string
         token = token.slice(7, token.length);
         req.user = decode(token);
-        db.user_role.getRoleActions(req.user.edu_person_entitlement,req.params.tenant).then(role=>{
-          if(role.success){
-            req.user.role = role.role;
+        db.user_role.getRoleActions(req.user.sub,req.params.tenant).then(role=>{
+          if(role){
+            req.user.role = role;
+            //console.log('authenticated');
             next();
-          }else{
+          }
+          else{
             res.status(401).send('Unauthenticated Request');
           }
         }).catch(err=>{
@@ -1294,17 +1294,14 @@ function authenticate(req,res,next){
           req.user.iss = result.data.iss;
           req.user.email = result.data.email;
           if(req.user.sub){
-            db.user_role.getRoleActions(req.user.edu_person_entitlement,req.params.tenant).then(role=>{
-              if(role.success){
-                req.user.role = role.role;
-
-                console.log('User with email ' + result.data.email + ' is authenticated');
+            db.user_role.getRoleActions(req.user.sub,req.params.tenant).then(role=>{
+              if(role){
+                req.user.role = role;
                 //console.log('authenticated');
                 next();
               }
               else{
-
-                res.status(401).end();
+                res.status(401).send('Unauthenticated Request');
               }
             }).catch((err)=> {
               customLogger(req,res,'warn','Unauthenticated request'+err);
@@ -1382,14 +1379,57 @@ function canReview(req,res,next){
 // Save new User to db. Gets called on Authentication
 const saveUser=(userinfo,tenant)=>{
   return db.tx('user-check',async t=>{
-    return t.user_info.findBySub(userinfo.sub,tenant).then(async user=>{
-      if(!user) {
-        return t.user_info.add(userinfo,tenant).then(async result=>{
-          if(result){
-              return t.user_edu_person_entitlement.add(userinfo.eduperson_entitlement,result.id);
+    return t.user.getUser(userinfo.sub,tenant).then(async user=>{
+      if(user){
+        await t.user_role.getRole(userinfo.eduperson_entitlement,tenant).then(async role=>{
+          if(role){
+            let update_userinfo = false;
+            let dlt_entitlements = [];
+            let add_entitlements = [];
+            let queries = [];
+            add_entitlements = userinfo.eduperson_entitlement.filter(x=>!user.eduperson_entitlement.includes(x));
+            dlt_entitlements = user.eduperson_entitlement.filter(x=>!userinfo.eduperson_entitlement.includes(x));
+            delete userinfo.eduperson_entitlement;
+            delete user.eduperson_entitlement;
+            userinfo.role_id = role.id.toString();
+            for (const property in userinfo) {
+              if(user.hasOwnProperty(property)&&userinfo[property]!==user[property]){
+                update_userinfo= true;
+              }
+            }
+            if(update_userinfo){
+              queries.push(t.user_info.update(userinfo,tenant));
+            }
+            if(add_entitlements.length>0){
+              queries.push(t.user_edu_person_entitlement.add(add_entitlements,user.id));
+            }
+            if(dlt_entitlements.length>0){
+              queries.push(t.user_edu_person_entitlement.dlt_values(dlt_entitlements,user.id));
+            }
+            if(queries.length>0){
+              await t.batch(queries).then(done=>{
+                if(done){
+                  customLogger(null,null,'info','Updated User');
+                }
+              });
+            }
+          }
+        }).catch(err=>{console.log(err);})
+      }else{
+        await t.user_role.getRole(userinfo.eduperson_entitlement,tenant).then(async role=>{
+          if(role){
+            userinfo.role_id = role.id;
+            return t.user_info.add(userinfo,tenant).then(async result=>{
+              if(result){
+                  return t.user_edu_person_entitlement.add(userinfo.eduperson_entitlement,result.id);
+              }
+            });
           }
         });
       }
+      
+
+
     })
     
   });

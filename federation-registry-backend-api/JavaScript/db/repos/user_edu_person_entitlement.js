@@ -22,7 +22,14 @@ class UserEduPersonEntitlementRepository {
     }
 
     // Tries to find a user from name;
-
+    async dlt_values(values,id){
+      console.log(typeof(id));
+      id = parseInt(id);
+      const query = this.pgp.as.format('DELETE FROM user_edu_person_entitlement WHERE user_id=$1 AND edu_person_entitlement IN ($2:csv)',[+id,values]);
+      console.log(query);
+      return this.db.any(query).catch(err=>{console.log(err)})
+    }
+    
     async add(data,id){
       let values = []
 
@@ -34,11 +41,13 @@ class UserEduPersonEntitlementRepository {
           });
 
           const query = this.pgp.helpers.insert(values, cs);
+          console.log(query);
           this.db.none(query)
           .then(data => {
               return 'success'
           })
           .catch(error => {
+            console.log(error);
               return 'error'
           });
         }else{

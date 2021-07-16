@@ -1,0 +1,2 @@
+SELECT id,sub,name,preferred_username,given_name,family_name,email,role_id, ARRAY_AGG(user_edu_person_entitlement.edu_person_entitlement) as eduperson_entitlement FROM                                            
+(SELECT * FROM user_info WHERE sub = ${sub} and tenant=${tenant}) AS user_info LEFT JOIN user_edu_person_entitlement ON user_info.id = user_edu_person_entitlement.user_id GROUP BY sub,name,preferred_username,given_name,family_name,email,user_info.id,role_id;
