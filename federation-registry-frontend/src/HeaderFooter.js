@@ -20,8 +20,7 @@ export const Header= (props)=> {
     return(
 
       <div className="header">
-        <div className="corner-ribbon red">Devel</div>
-
+        {/*<div className="corner-ribbon red">Devel</div>*/}
         <div className="text-center ssp-logo">
           <a href="https://www.egi.eu/" >
             <Image src={tenant[0]?tenant[0].logo:null} fluid />
@@ -126,11 +125,13 @@ export const Footer =(props) =>{
           </div>
           </Col>
     			<Col sm="3" className="ssp-footer__item">
-            <a href="https://grnet.gr/">
-              <Image className="ssp-footer__item__logo" src="https://vanilla-ui.aai-dev.grnet.gr/proxy/module.php/themevanilla/resources/images/grnet_logo_en.svg" alt="GRNET"/>
-            </a>
-            <div className="ssp-footer__item__copyright">
-              Copyright ©2016-2020      </div>
+            <div className="footer-logo-container">
+              <a href="https://grnet.gr/">
+                <Image className="ssp-footer__item__logo" src="https://vanilla-ui.aai-dev.grnet.gr/proxy/module.php/themevanilla/resources/images/grnet_logo_en.svg" alt="GRNET"/>
+              </a>
+              <div className="ssp-footer__item__copyright">
+                Copyright ©2016-2020      </div>
+            </div>
           </Col>
           <Col sm="4" className="ssp-footer__item">
             <div className="ssp-footer__item__powered">
@@ -138,6 +139,9 @@ export const Footer =(props) =>{
             </div>
             <div className="ssp-footer__item__powered">
               Powered by <a href="https://github.com/rciam">RCIAM</a>
+            </div>
+            <div className="ssp-footer__item__powered">
+               <a href={config.react+'docs'}>Documentation</a>
             </div>
           </Col>
         </Row>

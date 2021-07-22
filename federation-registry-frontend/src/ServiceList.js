@@ -279,7 +279,7 @@ const ServiceList= (props)=> {
           return false;
         }
         else if(response.status===404){
-          setNotFound('Could not create petition');
+          setNotFound('Could not create request');
           return false;
         }
         else{
@@ -308,7 +308,7 @@ const ServiceList= (props)=> {
         return false;
       }
       else if(response.status===404){
-        setNotFound('Petition not Found');
+        setNotFound('Request not Found');
         return false;
       }
       else{
@@ -338,7 +338,7 @@ const ServiceList= (props)=> {
             </Alert>
           </div>
         </Collapse>:null}
-        {outdatedCount>0&&props.user.review_restricted?<Collapse in={showNotification}>
+        {outdatedCount>0?<Collapse in={showNotification}>
           <div>
             <Alert variant='warning' className="invitation_alert">
 
@@ -412,7 +412,7 @@ const ServiceList= (props)=> {
                     <input type='checkbox' name='filter' checked={showOutdated} onChange={()=>setShowOutdated(!showOutdated)}/>
                   </div>
                   {props.user.review_restricted?<div className='filter-container' onClick={()=> setShowRequestReview(!showRequestReview)}>
-                    <span>Show Pending Review</span>
+                    <span>Review Requested</span>
                     <input type='checkbox' name='filter' checked={showRequestReview} onChange={()=>setShowRequestReview(!showRequestReview)}/>
                   </div>:null}
                   {props.user.view_all?

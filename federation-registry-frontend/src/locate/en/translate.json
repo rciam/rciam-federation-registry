@@ -87,7 +87,7 @@
     "yup_exceeds_max":"Exceeds the maximum value",
     "yup_protocol":"Select Service Protocol",
     "yup_entity_id":"Entity ID is not available",
-    "new_petition_title":"Your petition",
+    "new_petition_title":"Your request",
     "petition_success_msg":"Was submited succesfully and is currently pending approval from an administrator.",
     "petition_error_msg":"Could not be submitted, please try again. Status:",
     "petition_no_change_title":"Request could not be submitted.",

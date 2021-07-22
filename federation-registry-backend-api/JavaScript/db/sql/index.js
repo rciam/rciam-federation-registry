@@ -38,7 +38,8 @@ module.exports = {
       getByProtocolId:sql('service/getByProtocolId.sql')
     },
     user_info:{
-      add:sql('user_info/add.sql')
+      add:sql('user_info/add.sql'),
+      update:sql('user_info/update.sql')
     },
     service_petition_details:{
       add:sql('service_petition_details/add.sql'),
@@ -52,10 +53,11 @@ module.exports = {
       getOutdatedOwners:sql('service_state/getOutdatedOwners.sql')
     },
     user:{
-      getReviewers:sql('user/getReviewers.sql'),
+      getTenchicalContacts: sql('user/getTenchicalContacts.sql'),
+      getUser:sql('user/getUser.sql'),
       getServiceOwners:sql('user/getServiceOwners.sql'),
       getPetitionOwners:sql('user/getPetitionOwners.sql'),
-      getActionEntitlements:sql('user/getActionEntitlements.sql')
+      getUsersByAction:sql('user/getUsersByAction.sql')
     },
     petition: {
       getPetition:sql('petition/getPetition.sql'),

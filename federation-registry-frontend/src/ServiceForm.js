@@ -131,45 +131,52 @@ const ServiceForm = (props)=> {
     client_id:yup.string().nullable().when('protocol',{
       is:'oidc',
       then: yup.string().nullable().min(2,t('yup_char_min') + ' ('+2+')').max(128,t('yup_char_max') + ' ('+128+')').test('testAvailable',t('yup_client_id_available'),function(value){
+        if(props.initialValues.client_id===value){
+          return true
+        }
+        else{
           return new Promise((resolve,reject)=>{
-            clearTimeout(availabilityCheckTimeout);
-            if(!value)
-              {resolve(true)}
-            else{
-              if(value===checkedId &&formRef.current.values.integration_environment===checkedEnvironment){
-                resolve(availabilityCheck);
+              clearTimeout(availabilityCheckTimeout);
+              if(!value)
+                {resolve(true)}
+              else{
+                if(value===checkedId &&formRef.current.values.integration_environment===checkedEnvironment){
+                  resolve(availabilityCheck);
+                }
+                else{
+                  setCheckingAvailability(true);
+                  availabilityCheckTimeout = setTimeout(()=> {
+                    fetch(config.host+'tenants/'+tenant_name+'/check-availability?value='+ value +'&protocol=oidc&environment='+ this.parent.integration_environment+(props.petition_id?('&petition_id='+props.petition_id):"")+(props.service_id?('&service_id='+props.service_id):""), {
+                      method:'GET',
+                      credentials:'include',
+                      headers:{
+                        'Content-Type':'application/json',
+                        'Authorization': localStorage.getItem('token')
+                      }}).then(response=>{
+                        if(response.status===200||response.status===304){
+                          return response.json();
+                        }
+                        else {
+                          return false
+                        }
+                      }).then(response=>{
+                          setCheckedId(value);
+                          setCheckingAvailability(false);
+                          setCheckedEnvironment(this.parent.integration_environment);
+                          if(response){
+                            setCheckedId(value);
+                            setAvailabilityCheck(response.available);
+                            resolve(response.available)}
+                          else{
+                            resolve(false);
+                          }
+                        }
+                      ).catch(()=>{resolve(true)});
+                  },1000);
+                }
               }
-              setCheckingAvailability(true);
-              availabilityCheckTimeout = setTimeout(()=> {
-                fetch(config.host+'tenants/'+tenant_name+'/check-availability?value='+ value +'&protocol=oidc&environment='+ this.parent.integration_environment+(props.petition_id?('&petition_id='+props.petition_id):"")+(props.service_id?('&service_id='+props.service_id):""), {
-                  method:'GET',
-                  credentials:'include',
-                  headers:{
-                    'Content-Type':'application/json',
-                    'Authorization': localStorage.getItem('token')
-                  }}).then(response=>{
-                    if(response.status===200){
-                      return response.json();
-                    }
-                    else {
-                      return false
-                    }
-                  }).then(response=>{
-                      setCheckedId(value);
-                      setCheckingAvailability(false);
-                      setCheckedEnvironment(this.parent.integration_environment);
-                      if(response){
-                        setCheckedId(value);
-                        setAvailabilityCheck(response.available);
-                        resolve(response.available)}
-                      else{
-                        resolve(false);
-                      }
-                    }
-                  ).catch(()=>{resolve(true)});
-              },1000);
-            }
-          })
+            })
+        }  
       })
     }),
     redirect_uris:yup.array().nullable().when('protocol',{
@@ -185,10 +192,9 @@ const ServiceForm = (props)=> {
             return value.match(reg.regSimpleUrl) || value.match(reg.regLocalhostUrl)
           }
         }
-
       })).unique(t('yup_redirect_uri_unique')).when('grant_types',{
         is:(grant_types)=> grant_types.includes("implicit")||grant_types.includes("authorization_code"),
-        then: yup.array().nullable().required(t('yup_required'))
+        then: yup.array().min(1,t('yup_required')).nullable().required(t('yup_required'))
       })
     }),
     logo_uri:yup.string().nullable().test('testImage',t('yup_image_url'),function(imageUrl){
@@ -202,7 +208,7 @@ const ServiceForm = (props)=> {
       }),
     country:yup.string().nullable().test('testCountry','Select one of the available options',function(value){return countries.includes(value)}).required(t('yup_required')),
     service_description:yup.string().nullable().required(t('yup_required')),
-    contacts:yup.array().nullable().of(yup.object().shape({
+    contacts:yup.array().min(1,t('yup_required')).nullable().of(yup.object().shape({
         email:yup.string().email(t('yup_email')).required(t('yup_contact_empty')),
         type:yup.string().required(t('yup_required'))
       })).test('testContacts',t('yup_contact_unique'),function(value){
@@ -213,11 +219,11 @@ const ServiceForm = (props)=> {
           }).required(t('yup_required')),
     scope:yup.array().nullable().when('protocol',{
       is:'oidc',
-      then: yup.array().of(yup.string().min(1,t('yup_scope')).max(50,t('yup_char_max') + ' ('+ 50 +')').matches(reg.regScope,t('yup_scope_reg'))).unique(t('yup_scope_unique')).required(t('yup_required'))
+      then: yup.array().min(1,t('yup_select_option')).nullable().of(yup.string().min(1,t('yup_scope')).max(50,t('yup_char_max') + ' ('+ 50 +')').matches(reg.regScope,t('yup_scope_reg'))).unique(t('yup_scope_unique')).required(t('yup_required'))
     }),
     grant_types:yup.array().nullable().when('protocol',{
       is:'oidc',
-      then: yup.array().of(yup.string().test('testGrantTypes','error-grant-types',function(value){return tenant.form_config.grant_types.includes(value)})).required(t('yup_select_option'))
+      then: yup.array().min(1,t('yup_select_option')).nullable().of(yup.string().test('testGrantTypes','error-grant-types',function(value){return tenant.form_config.grant_types.includes(value)})).required(t('yup_select_option'))
     }),
     id_token_timeout_seconds:yup.number().nullable().when('protocol',{
       is:'oidc',
@@ -278,7 +284,7 @@ const ServiceForm = (props)=> {
     }),
     token_endpoint_auth_method:yup.string().nullable().when('protocol',{
       is:'oidc',
-      then: yup.string().required(t('yup_select_option')).test('testTokenEndpointAuthMethod','Invalid Value',function(value){return tenant.form_config.token_endpoint_auth_method.includes(value)})
+      then: yup.string().nullable().required(t('yup_select_option')).test('testTokenEndpointAuthMethod','Invalid Value',function(value){return tenant.form_config.token_endpoint_auth_method.includes(value)})
     }),
     jwks_uri:yup.string().nullable().when(['protocol','token_endpoint_auth_method'],{
       is:(protocol,token_endpoint_auth_method)=> protocol==='oidc'&&token_endpoint_auth_method==="private_key_jwt" ,
@@ -298,47 +304,55 @@ const ServiceForm = (props)=> {
     entity_id:yup.string().matches(reg.regUrl,t('yup_secure_url')).nullable().when('protocol',{
       is:'saml',
       then: yup.string().min(4,t('yup_char_min') + ' ('+4+')').test('testAvailable',t('yup_entity_id'),function(value){
+        if(props.initialValues.entity_id===value){
+          return true
+        }
+        else{
           return new Promise((resolve,reject)=>{
-            
-            clearTimeout(availabilityCheckTimeout);
-            if(!value||!reg.regUrl.test(value))
-              {resolve(true)}
-            else{
-              setCheckingAvailability(true);
-              if(value===checkedId &&formRef.current.values.integration_environment===checkedEnvironment){
-                resolve(availabilityCheck);
-              }
               
-              availabilityCheckTimeout = setTimeout(()=> {
-                fetch(config.host+'tenants/'+tenant_name+'/check-availability?value='+ value +'&protocol=saml&environment='+ this.parent.integration_environment+(props.petition_id?('&petition_id='+props.petition_id):"")+(props.service_id?('&service_id='+props.service_id):""), {
-                  method:'GET',
-                  credentials:'include',
-                  headers:{
-                    'Content-Type':'application/json',
-                    'Authorization': localStorage.getItem('token')
-                  }}).then(response=>{
-                    if(response.status===200){
-                      return response.json();
-                    }
-                    else {
-                      return false
-                    }
-                  }).then(response=>{
-                      setCheckedId(value);
-                      setCheckedEnvironment(this.parent.integration_environment);
-                      setCheckingAvailability(false);
-                      if(response){
-                        setCheckedId(value);
-                        setAvailabilityCheck(response.available);
-                        resolve(response.available)}
-                      else{
-                        resolve(false);
-                      }
-                    }
-                    ).catch(()=>{resolve(true)})
-                  },1000);
-            }
-          })
+              clearTimeout(availabilityCheckTimeout);
+              if(!value||!reg.regUrl.test(value))
+                {resolve(true)}
+              else{
+                setCheckingAvailability(true);
+                if(value===checkedId &&formRef.current.values.integration_environment===checkedEnvironment){
+                  resolve(availabilityCheck);
+                }
+                else{
+                  availabilityCheckTimeout = setTimeout(()=> {
+                    fetch(config.host+'tenants/'+tenant_name+'/check-availability?value='+ value +'&protocol=saml&environment='+ this.parent.integration_environment+(props.petition_id?('&petition_id='+props.petition_id):"")+(props.service_id?('&service_id='+props.service_id):""), {
+                      method:'GET',
+                      credentials:'include',
+                      headers:{
+                        'Content-Type':'application/json',
+                        'Authorization': localStorage.getItem('token')
+                      }}).then(response=>{
+                        if(response.status===200){
+                          return response.json();
+                        }
+                        else {
+                          return false
+                        }
+                      }).then(response=>{
+                          setCheckedId(value);
+                          setCheckedEnvironment(this.parent.integration_environment);
+                          setCheckingAvailability(false);
+                          if(response){
+                            setCheckedId(value);
+                            setAvailabilityCheck(response.available);
+                            resolve(response.available)}
+                          else{
+                            resolve(false);
+                          }
+                        }
+                        ).catch(()=>{resolve(true)})
+                      },1000);
+                }
+                
+              }
+            })
+
+        }  
       })
     })
   });

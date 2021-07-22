@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Invitation</title>
+  </head>
+  <body>
+    <div style="width:100%;text-align:center;margin-top:0.5;margin-bottom:0.5;">
+      <img src="https://aai-dev.egi.eu/proxy/module.php/themeegi/resources/images/logo.svg" style="width:150px;">
+    </div>
+    <h5>Hello, {{#if name}}{{name}}{{else}}Service Owner{{/if}}<h5>
+        <p>
+          We wanted to let you know that we recently updated the service integration process for EGI Check-in.
+          This update introduces the EGI Check-in Federation Registry (<a href="https://aai.egi.eu/federation">https://aai.egi.eu/federation</a>) which provides a secure web interface for registering your OpenID Connect and SAML based services. Through the portal, you can view the currently deployed service configuration and also request service configuration updates. Please note that reconfiguration requests concerning services deployed in the production or demo environment will need to be reviewed before being approved. Instead, in the development environment, you will still be able to self-approve requests for any services you have deployed.
+          We have already sent you an invitation to register as a service owner for each service you have registered in Check-in. Each invitation has been sent from "EGI Check-in Notifications" (noreply@faai.grnet.gr) with the following Subject: "Invitation to manage service"
+          For every invitation notification you have received:          
+        </p>
+        <ol>
+          <li>
+            Follow the invitation link
+          </li>
+          <li>
+            Log in via Check-in (optional - this will not be necessary if you are already logged into the Federation Registry)
+          </li>
+          <li>
+            Accept the service owner role. You should then be able to invite additional users for managing the service. Please refer to the documentation[https://federation.rciam.grnet.gr/federation-docs/build/docs/service_list#manage-ownership-of-a-service] for more information.
+          </li>
+        </ol>
+        <p>
+          Note that you need to follow this process individually for every invitation you have received. You can refer to the documentation[<a href="https://federation.rciam.grnet.gr/federation-docs/build/docs/invitations">https://federation.rciam.grnet.gr/federation-docs/build/docs/invitations</a>] for more information.
+          If you have also received notifications with the subject "Service Configuration Update Required" (or "Service Configuration Depricated") then you can follow the steps below to update the service configuration:
+        </p>
+        <ol>
+          <li>
+            Connect to the Federation Registry at <a href="https://aai.egi/eu/federation">https://aai.egi/eu/federation</a> using your Check-in identity you have registered as a service owner
+          </li>
+          <li>
+            Identify your outdated services using the "Show Outdated Filter" (Outdated Services can also be identified from the Outdated status badge and the red exclamation on the "Reconfigure" button)            
+          </li>
+          <li>
+            Click the "Reconfigure" button to create a new request to reconfigure your service with the required information.            
+          </li>
+          <li>
+            Submit your request            
+          </li>
+        </ol>
+
+<p>
+  Services flagged as outdated remain operational and you will get weekly notifications that you need to update the service configuration until you submit a request to make the required changes. For more information please refer to the documentation[<a href="https://federation.rciam.grnet.gr/federation-docs/build/docs/outdated_services">https://federation.rciam.grnet.gr/federation-docs/build/docs/outdated_services</a>].
+  For any clarifications/questions don't hesitate to contact us at check-in@egi.eu.
+</p>
+
+
+  Thanks,  <h5>EGI Check-in team</h5>
+  </body>
+</html>
