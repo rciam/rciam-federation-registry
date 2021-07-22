@@ -367,7 +367,7 @@ const serviceValidationRules = (options) => {
             return config.form[req.params.tenant].token_endpoint_auth_signing_alg.includes(value)}).
             withMessage('Invalid Token Endpoint Signing Algorithm'),
       body('*.id_token_timeout_seconds').customSanitizer(value => {
-          if(typeof(value)!=='number'){
+          if(typeof(value)!=='number'&&typeof(parseInt(value))!=='number'){
             return 0;
           }else{
             return value;
@@ -379,7 +379,7 @@ const serviceValidationRules = (options) => {
           throw new Error("id_token_timeout_seconds must be an integer in specified range [1-"+ max +"]")
         }}),
       body('*.access_token_validity_seconds').customSanitizer(value => {
-          if(typeof(value)!=='number'){
+        if(typeof(value)!=='number'&&typeof(parseInt(value))!=='number'){
             return 0;
 
           }else{
@@ -388,11 +388,11 @@ const serviceValidationRules = (options) => {
         }).optional({checkFalsy:true}).custom((value,{req,location,path})=> {
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         let max = config.form[tenant].access_token_validity_seconds;
-        if(parseInt(value)&&parseInt(value)<=max&&parseInt(value)>0){return true}else{
+        if(parseInt(value)&&parseInt(value)<=max&&parseInt(value)>=0){return true}else{
           throw new Error("access_token_timeout_seconds must be an integer in specified range [1-"+ max +"]")
         }}),
       body('*.refresh_token_validity_seconds').customSanitizer(value => {
-          if(typeof(value)!=='number'){
+        if(typeof(value)!=='number'&&typeof(parseInt(value))!=='number'){
             return 0;
           }else{
             return value;
@@ -417,12 +417,12 @@ const serviceValidationRules = (options) => {
           }
           let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
           let max = config.form[tenant].refresh_token_validity_seconds;
-          if(parseInt(value)&&parseInt(value)<=max&&parseInt(value)>0){return true}else{
+          if(parseInt(value)&&parseInt(value)<=max&&parseInt(value)>=0){return true}else{
             throw new Error("Refresh Token Validity Seconds must be an integer in specified range [1-"+ max +"]")
           }
         }),
       body('*.device_code_validity_seconds').customSanitizer(value => {
-        if((typeof(value)!=="number")){
+        if(typeof(value)!=='number'&&typeof(parseInt(value))!=='number'){
           return 0;
         }else{
           return value;
@@ -444,7 +444,7 @@ const serviceValidationRules = (options) => {
         let max = config.form[tenant].device_code_validity_seconds;
         if((parseInt(value)&&parseInt(value)<=max&&parseInt(value)>=0)||(req.body[pos].protocol!=='oidc'||!req.body[pos].grant_types||!req.body[pos].grant_types.includes('urn:ietf:params:oauth:grant-type:device_code'))){
           return true}else{
-          throw new Error("Device Code Validity Seconds must be an integer in specified range [1-"+ max +"]")
+          throw new Error("Device Code Validity Seconds must be an integer in specified range [0-"+ max +"]")
         }}).withMessage('Must be an integer in specified range'),
       body('*.code_challenge_method').optional({checkFalsy:true}).isString().withMessage('Device Code must be a string').custom((value)=> {
         try{
@@ -692,16 +692,16 @@ const validate = (req, res, next) => {
       return next();
     }
     //console.log(req.body);
-
+    
     const errors = validationResult(req);
     //console.log(req.body);
 
-    let service_name = 0;
-    let min = 1000;
-    let max = 0;
-    let count = 0;
-    let total_count = 0;
-
+    // let service_name = 0;
+    // let min = 1000;
+    // let max = 0;
+    // let count = 0;
+    // let total_count = 0;
+    //console.log(req.body);
     // let max_sec = {
     //   id_token_timeout_seconds:0,
     //   access_token_validity_seconds:0,

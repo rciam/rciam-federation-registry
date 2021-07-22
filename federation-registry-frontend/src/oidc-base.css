@@ -124,7 +124,14 @@ body .nav-list .divider {
 #footer .ssp-footer__item  {
     min-height: 40px;
     font-size: 12px;
+    display: table-cell;
+    vertical-align: bottom!important;
 }
+.ssp-footer__item {
+    display: table-cell;
+    vertical-align: bottom!important;
+}
+
 
 #footer .ssp-footer__item__logo {
     height: 40px;

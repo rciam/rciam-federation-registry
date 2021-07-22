@@ -31,6 +31,9 @@ const sendMultipleInvitations = function (data,t) {
 
 }
 
+
+
+
 const calcDiff = (oldState,newState) => {
     var new_values = Object.assign({},newState);
     var old_values = Object.assign({},oldState);
@@ -88,6 +91,7 @@ const calcDiff = (oldState,newState) => {
       if(!new_values.grant_types){
         new_values.scope = [];
       }
+
       edits.add.oidc_grant_types = new_values.grant_types.filter(x=>!old_values.grant_types.includes(x));
       edits.dlt.oidc_grant_types = old_values.grant_types.filter(x=>!new_values.grant_types.includes(x));
       edits.add.oidc_scopes = new_values.scope.filter(x=>!old_values.scope.includes(x));
@@ -115,6 +119,48 @@ const calcDiff = (oldState,newState) => {
     }
 
     return edits
+}
+
+const sendNotif= (data,template_uri,user)=>{
+  if(process.env.NODE_ENV!=='test'&&process.env.NODE_ENV!=='test-docker'&&!config.disable_emails){
+  readHTMLFile(path.join(__dirname, '../html/', template_uri), function(err, html) {
+      let transporter = nodeMailer.createTransport({
+          host: 'relay.grnet.gr',
+          port: 587,
+          secure: false
+      });
+      // let transporter = nodeMailer.createTransport({
+      //   service: 'gmail',
+      //   auth: {
+      //     user: 'orionaikido@gmail.com',
+      //     pass: ''
+      //   }
+      // });
+      var template = hbs.compile(html);
+      //var replacements = {username: "John Doe",name:"The name"};
+      var replacements = {
+        tenant:data.tenant,
+        name:user.name
+      };     
+      var htmlToSend = template(replacements);
+      var mailOptions = {
+        from: data.tenant.toUpperCase()+" Check-in Notifications",
+        to : user.email,
+        subject : data.subject,
+        html : htmlToSend
+      };
+      transporter.sendMail(mailOptions, function (error, response) {
+        if (error) {
+          customLogger(null,null,'info',[{type:'email_log'},{message:'Email not sent'},{error:error},{user:user},{data:data},{template:template_uri}]);
+        }
+        else {
+          customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{user:user},{data:data},{template:template_uri}]);
+        }
+      });
+  });
+ 
+  }
+  
 }
 
 const sendInvitationMail = async (data) => {
@@ -145,7 +191,7 @@ const sendInvitationMail = async (data) => {
         }
         var htmlToSend = template(replacements);
         var mailOptions = {
-          from: "noreply@faai.grnet.gr",
+          from: data.tenant.toUpperCase()+" Check-in Notifications",
           to : data.email,
           subject : 'Invitation to manage service',
           html : htmlToSend
@@ -198,7 +244,7 @@ const newMemberNotificationMail = (data,managers) => {
 
         var htmlToSend = template(replacements);
         var mailOptions = {
-          from: "noreply@faai.grnet.gr",
+          from: data.tenant.toUpperCase()+" Check-in Notifications",
           to : manager.email,
           subject : 'New member in your owners group',
           html : htmlToSend
@@ -259,7 +305,7 @@ const sendMail= (data,template_uri,users)=>{
           replacements.name = user.name;
           var htmlToSend = template(replacements);
           var mailOptions = {
-            from: "noreply@faai.grnet.gr",
+            from:  data.tenant+" Check-in Notifications",
             to : user.email,
             subject : data.subject,
             html : htmlToSend
@@ -412,5 +458,6 @@ module.exports = {
   readHTMLFile,
   extractCoc,
   createGgusTickets,
-  delay
+  delay,
+  sendNotif
 }

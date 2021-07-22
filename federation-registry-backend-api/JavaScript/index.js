@@ -17,6 +17,7 @@ const {Issuer,Strategy,custom} = require('openid-client');
 const routes= require('./routes/index');
 const MockStrategy = require('passport-mock-strategy');
 var cookieParser = require('cookie-parser');
+const {sendNotif,delay} = require('./functions/helpers.js');
 var passport = require('passport');
 const { generators } = require('openid-client');
 const code_verifier = generators.codeVerifier();
@@ -54,7 +55,24 @@ db.tenants.getInit().then(async tenants => {
   }
 }).catch(err => {console.log('Tenant initialization failed due to following error'); console.log(err);});
 
+if(config.send_notifications_on_startup){
+  try{
+    db.user.getTechnicalContacts('egi').then(async users=>{
+      if(users){
+        for(const user of users){
+          await delay(400);
+          sendNotif({subject:'New portal for managing services in Check-in',tenant:'egi'},'introduction-to-fed.hbs',[{name:user.name,email:user.email}]);
+        }
+      }
+    }).catch(err=>{
+      console.log('Failed to get users to push the notifications');
+    })
 
+  }
+  catch(err){
+      console.log('Error when trying to send notifications: '+ err);
+  }
+}
 
 
 

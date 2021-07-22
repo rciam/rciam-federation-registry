@@ -105,9 +105,9 @@ const sendOutdatedNotification = async (data) => {
         }
         var htmlToSend = template(replacements);
         var mailOptions = {
-          from: "noreply@faai.grnet.gr",
+          from: data.tenant.toUpperCase()+" Check-in Notifications",
           to : data.email,
-          subject : 'Service Configuration Depricated',
+          subject : 'Service Configuration Update Required',
           html : htmlToSend
         };
         return transporter.sendMail(mailOptions, function (error, response) {

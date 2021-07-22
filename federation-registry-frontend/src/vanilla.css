@@ -80,6 +80,14 @@
 .ssp-footer__item {
     font-size: 12px;
     letter-spacing: 1px;
+    display: table-cell;
+    vertical-align: bottom!important;
+}
+.footer-logo-container{
+    position:absolute;
+    bottom:0;
+    width:100%;
+    text-align:center;
 }
 
 .ssp-footer__item__lang {

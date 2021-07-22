@@ -27,6 +27,11 @@ class User {
     });
   }
 
+
+  async getTechnicalContacts(tenant){
+    return this.db.any(sql.getTenchicalContacts,{tenant:tenant});
+  }
+
   async getPetitionOwners(id){
     const query = this.pgp.as.format(sql.getPetitionOwners,{id:+id});
     return this.db.any(query).then( data => {
