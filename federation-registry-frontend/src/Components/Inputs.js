@@ -1,4 +1,4 @@
-import React, {useState, useRef ,useEffect} from 'react';
+import React, {useState, useRef ,useEffect,useContext} from 'react';
 import Col from 'react-bootstrap/Col';
 import { Field, FieldArray,FormikConsumer } from 'formik';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
@@ -9,10 +9,10 @@ import Image from 'react-bootstrap/Image';
 import Table from 'react-bootstrap/Table';
 import Tooltip from 'react-bootstrap/Tooltip';
 import Overlay from 'react-bootstrap/Overlay';
-import * as formConfig from '../form-config.json';
 import { useTranslation } from 'react-i18next';
 import countryData from 'country-region-data';
-// import {tenantContext} from '../context.js';
+import CopyToClipboardComponent from './CopyToClipboard.js'
+ import {tenantContext} from '../context.js';
 // import {removeA} from '../helpers.js';
 
 /*
@@ -27,8 +27,10 @@ onMouseOut={()=>setShow(false)}
 export function SimpleInput(props){
   const [show, setShow] = useState(false);
   const target = useRef(null);
+
   return (
         <React.Fragment>
+        <InputGroup >
           <Form.Control
             {...props}
             value={props.value?props.value:''}
@@ -38,6 +40,9 @@ export function SimpleInput(props){
             onMouseOut={()=>setShow(false)}
             className={props.changed?'col-form-label-sm input-edited':'col-form-label-sm'}
           />
+          {props.copybutton?<CopyToClipboardComponent value={props.value}/>:null}
+        </InputGroup>
+
           <MyOverLay show={props.changed&&show?'string':null} type='Edited' target={target}/>
           {props.isloading?<div className="loader"></div>:null}
         </React.Fragment>
@@ -79,7 +84,7 @@ export function PublicKey(props){
           value='jwks_uri'
           checked={type==='jwks_uri'}
           disabled={props.disabled}
-          onChange={(e)=>{console.log(e);props.setvalue('jwks','',true); setType(e.target.value) }}
+          onChange={(e)=>{props.setvalue('jwks','',true); setType(e.target.value) }}
         />
         By URI
       </div>
@@ -90,7 +95,7 @@ export function PublicKey(props){
           value='jwks'
           checked={type==='jwks'}
           disabled={props.disabled}
-          onChange={(e)=>{console.log(e);props.setvalue('jwks_uri','',true); setType(e.target.value) }}
+          onChange={(e)=>{props.setvalue('jwks_uri','',true); setType(e.target.value) }}
         />
         By Value
       </div>
@@ -297,7 +302,7 @@ export function SelectEnvironment(props){
         ))}
       </Field>
 
-      {props.copyButtonActive?
+      {props.copybuttonActive?
             <OverlayTrigger
               placement='right'
               overlay={
@@ -427,12 +432,21 @@ export function CheckboxList(props){
           </Table>
           :
           <React.Fragment>
-            {props.listItems.map((item,index)=>(
-              <div className="checkboxList" key={index}>
-                <Checkbox name={props.name} disabled={props.disabled} value={item}/>
-                {item.length>33&&(item.substr(0,33)==="urn:ietf:params:oauth:grant-type:"||item.substr(0,33)==="urn:ietf:params:oauth:grant_type:")?item.substr(33).replace("_"," "):item.replace("_"," ")}
-              </div>
-            ))}
+            {props.listItems.map((item,index)=>
+                {
+                  if(item!=='refresh_token'){
+                    return(
+                      <div className="checkboxList" key={index}>
+                      <Checkbox name={props.name} disabled={props.disabled} value={item}/>
+                      {item.length>33&&(item.substr(0,33)==="urn:ietf:params:oauth:grant-type:"||item.substr(0,33)==="urn:ietf:params:oauth:grant_type:")?item.substr(33).replace("_"," "):item.replace("_"," ")}
+                      </div>
+                    );
+
+                  }else{
+                    return null;
+                  }
+                }
+              )}
           </React.Fragment>
         }
       </React.Fragment>
@@ -454,7 +468,7 @@ export function RefreshToken(props){
           onMouseOut={()=>setShow(false)}
           >
           <Checkbox name="scope" disabled={props.disabled} checked={props.values.scope.includes('offline_access')} value='offline_access'/>
-            {t('form_reuse_refresh_tokens_scope')}
+            {t('form_reuse_refresh_token_scope')}
           <MyOverLay show={props.changed&&(props.changed.scope.D.includes('offline_access')||props.changed.scope.N.includes('offline_access'))&&show} type='Edited' target={target}/>
         </div>
         <Form.Text className="text-muted text-left label-checkbox" id="uri-small-desc">
@@ -462,18 +476,18 @@ export function RefreshToken(props){
         </Form.Text>
         {props.values.scope.includes('offline_access')?(
           <React.Fragment>
-            <div className={"checkbox-item "+(props.changed&&props.changed.reuse_refresh_tokens?"spacing-bot":'')}>
+            <div className={"checkbox-item "+(props.changed&&props.changed.reuse_refresh_token?"spacing-bot":'')}>
               <SimpleCheckbox
-                name="reuse_refresh_tokens"
-                label={t('form_reuse_refresh_tokens')}
-                changed={props.changed?props.changed.reuse_refresh_tokens:null}
-                checked={props.values.reuse_refresh_tokens}
+                name="reuse_refresh_token"
+                label={t('form_reuse_refresh_token')}
+                changed={props.changed?props.changed.reuse_refresh_token:null}
+                checked={props.values.reuse_refresh_token}
                 disabled={props.disabled}
                 onChange={props.onChange}
               />
 
             </div>
-            <div className={"checkbox-item "+(props.changed&&props.changed.reuse_refresh_tokens?"spacing-bot":'')}>
+            <div className={"checkbox-item "+(props.changed&&props.changed.reuse_refresh_token?"spacing-bot":'')}>
             <SimpleCheckbox
               name="clear_access_tokens_on_refresh"
               label={t('form_clear_access_tokens_on_refresh')}
@@ -601,32 +615,40 @@ export function ClientSecret(props){
              className="checkbox col-form-label"
 
             />
-            <Form.Control
-              type="text"
-              name="client_secret"
-              className={(editSecret?'d-none col-form-label-sm':'col-form-label-sm')+(props.changed?' input-edited':'')}
-              onChange={props.onChange}
-              isInvalid={props.isInvalid}
-              onBlur={props.onBlur}
-              placeholder='Type a secret'
-              value={props.client_secret}
-              disabled={props.disabled}
-              ref={editSecret?null:target}
-              onMouseOver={()=>setShow(true)}
-              onMouseOut={()=>setShow(false)}
+            <InputGroup >
+              <Form.Control
+                type="text"
+                name="client_secret"
+                className={(editSecret?'d-none col-form-label-sm':'col-form-label-sm')+(props.changed?' input-edited':'')}
+                onChange={props.onChange}
+                isInvalid={props.isInvalid}
+                onBlur={props.onBlur}
+                placeholder='Type a secret'
+                value={props.client_secret}
+                disabled={props.disabled}
+                ref={editSecret?null:target}
+                onMouseOver={()=>setShow(true)}
+                onMouseOut={()=>setShow(false)}
+              />
+              {props.copybutton&&!editSecret?<CopyToClipboardComponent value={props.client_secret}/>:null}
+            </InputGroup>
 
-            />
-            {editSecret?<Form.Control
-              type="text"
-              name="clientSecretHelp"
-              className={'col-form-label-sm'+(props.changed?' input-edited':'')}
-              value="*************"
-              isInvalid={props.isInvalid}
-              disabled={true}
-              ref={editSecret?target:null}
-              onMouseOver={()=>setShow(true)}
-              onMouseOut={()=>setShow(false)}
-            />:null
+            {editSecret?
+              <InputGroup>
+                <Form.Control
+                  type="text"
+                  name="clientSecretHelp"
+                  className={'col-form-label-sm'+(props.changed?' input-edited':'')}
+                  value="*************"
+                  isInvalid={props.isInvalid}
+                  disabled={true}
+                  ref={editSecret?target:null}
+                  onMouseOver={()=>setShow(true)}
+                  onMouseOut={()=>setShow(false)}
+                />
+                {props.copybutton?<CopyToClipboardComponent value={props.client_secret}/>:null}
+              </InputGroup>
+            :null
            }
            <MyOverLay show={props.changed&&show} type='Edited' target={target}/>
            {props.error && props.touched ? (
@@ -715,7 +737,7 @@ export function ListInputArray(props){
                     <React.Fragment key={index}>
 
                     <ListInputArrayInput2 error={props.error} index={index} item={item} arrayHelpers={arrayHelpers} disabled={props.disabled} changed={props.changed}/>
-                    {Array.isArray(props.error) || typeof(props.error)=='string'?<tr><td className='error-td'><div className="error-message-list-item">{props.error[index]}</div></td><td></td></tr>:null}
+                    {Array.isArray(props.error) || typeof(props.error)==='string'?<tr><td className='error-td'><div className="error-message-list-item">{props.error[index]}</div></td><td></td></tr>:null}
 
                     </React.Fragment>
                   )
@@ -802,7 +824,7 @@ function ListInputArrayInput2(props){
   },[]);
   return (
     <tr
-      className={(Array.isArray(props.error)||typeof(props.error)=='string')&&props.error[props.index]?'error-tr':null}
+      className={(Array.isArray(props.error)||typeof(props.error)==='string')&&props.error[props.index]?'error-tr':null}
       onMouseOver={()=>setShow(true)}
       onMouseOut={()=>setShow(false)}
       ref={target}
@@ -859,7 +881,7 @@ export  function LogoInput(props){
         {props.description}
       </Form.Text>
       <MyOverLay show={props.changed&&show?'string':null} type='Edited' target={target}/>
-      {props.error && props.touched ? (typeof(props.error)=='string')?(<div className="error-message">{props.error}</div>):(<div className="error-message">{t('input_image_error')}</div>):null}
+      {props.error && props.touched ? (typeof(props.error)==='string')?(<div className="error-message">{props.error}</div>):(<div className="error-message">{t('input_image_error')}</div>):null}
       <FormikConsumer>
         {({ validationSchema, validate, onSubmit, ...rest }) => (
           <pre
@@ -997,7 +1019,9 @@ export function ListInput(props){
                   </Field>
                   <br/>
                 </InputGroup>
-                <div className="error-message-list-item">{!Array.isArray(props.error)?'':props.integrationEnvironment==='production'?'Must either be a secure (https://) or a http://localhost url':'Must be a valid url stating with http(s)://'}</div>
+                {props.error&&props.error[index]?
+                  <div className="error-message-list-item">{!Array.isArray(props.error)?'':props.integrationEnvironment==='production'||props.integrationEnvironment==='demo'?'Must be a valid url starting with https:// or a http://localhost url':'Must be a valid url stating with http(s)://'}</div>
+                :null}
                 </React.Fragment>
               ))}
             </React.Fragment>
@@ -1011,6 +1035,7 @@ export function Contacts(props){
 
   const [newVal,setNewVal] = useState('');
   const [newVal2,setNewVal2] = useState('admin');
+  const tenant = useContext(tenantContext);
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   return (
@@ -1036,7 +1061,7 @@ export function Contacts(props){
                             setNewVal2(e.target.value)
                           }}>
                             <React.Fragment>
-                              {formConfig.contact_types.map((item,index) => {
+                              {tenant[0].form_config.contact_types.map((item,index) => {
                                   return <option key={index} value={item}>{capitalize(item)}</option>
                                 })
                               }
@@ -1085,6 +1110,7 @@ function ContactInput(props){
   const [type,setType] = useState();
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
+  const tenant = useContext(tenantContext);
 
   useEffect(()=>{
     if(props.changed){
@@ -1137,7 +1163,7 @@ function ContactInput(props){
             onBlur={props.handleBlur}
             onChange={props.onChange}
           >
-            {formConfig.contact_types.map((item,index) => {
+            {tenant[0].form_config.contact_types.map((item,index) => {
                 return <option key={index} value={item}>{capitalize(item)}</option>
               })
             }

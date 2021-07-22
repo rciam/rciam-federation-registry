@@ -47,12 +47,14 @@ const ServiceList= (props)=> {
   const [confirmationData,setConfirmationData] = useState({});
   const [reset,setReset] = useState(false);
   const [outdatedCount,setOutdatedCount] = useState(0);
+  const [requestReviewCount,setRequestReviewCount] = useState(0);
   // eslint-disable-next-line
   const [user,setUser] = useContext(userContext);
   const [showPending,setShowPending] = useState(false);
   const [showOwned,setShowOwned] = useState(false);
   const [integrationEnvironment,setIntegrationEnvironment] = useState();
   const [showOutdated,setShowOutdated] = useState(false);
+  const [showRequestReview,setShowRequestReview] = useState(false);
   const [paginationItems,setPaginationItems] = useState([]);
   const [initialLoading,setInitialLoading] = useState();
 
@@ -70,12 +72,11 @@ const ServiceList= (props)=> {
   useEffect(()=>{
      getServices();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[searchString,showOwned,showPending,integrationEnvironment,activePage,showOutdated]);
+  },[searchString,showOwned,showPending,integrationEnvironment,activePage,showOutdated,showRequestReview]);
 
   useEffect(()=>{
-
     setActivePage(1);
-  },[searchString,showOwned,showPending,integrationEnvironment,showOutdated]);
+  },[searchString,showOwned,showPending,integrationEnvironment,showOutdated,setShowRequestReview]);
 
 
 
@@ -97,6 +98,10 @@ const ServiceList= (props)=> {
     if(showOutdated){
       filterString = filterString + '&outdated=' +true;
     }
+    if(showRequestReview){
+      filterString = filterString + '&request_review=' +true
+    }
+
     return filterString;
   }
   const getInvites = () => {
@@ -135,7 +140,7 @@ const ServiceList= (props)=> {
   // Get data, to create Service List
   const getServices = ()=> {
     setLoadingList(true);
-    fetch(config.host+'tenants/'+tenant_name+'/services?page='+activePage+'&limit='+pageSize+generateFilerString(), {
+    fetch(config.host+'tenants/'+tenant_name+'/services/list?page='+activePage+'&limit='+pageSize+generateFilerString(), {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -161,7 +166,6 @@ const ServiceList= (props)=> {
       setLoadingList(false);
       setInitialLoading(false);
       if(response){
-        console.log(response);
         try{
           if(response.list_items.length===0&& activePage!==1){
               setActivePage(1);
@@ -170,6 +174,7 @@ const ServiceList= (props)=> {
           if(!showOwned&&!showPending&!showOutdated&&!searchString){
             setOutdatedCount(response.outdated_count);
           }
+          setRequestReviewCount(response.request_review_count);
           createPaginationItems(response.full_count);
           setReset(!reset);
         }
@@ -322,14 +327,25 @@ const ServiceList= (props)=> {
       <ConfirmationModal active={confirmationData.action?true:false} setActive={setConfirmationData} action={()=>{if(confirmationData.action==='delete_service'){deleteService(...confirmationData.args)}else{deletePetition(...confirmationData.args)}}} title={confirmationData.title} accept={'Yes'} decline={'No'}/>
       <div>
         <LoadingBar loading={initialLoading}>
-        {outdatedCount>0?<Collapse in={showNotification}>
+        {requestReviewCount>0&&props.user.review_restricted?<Collapse in={showNotification}>
+          <div>
+            <Alert variant='primary' className="invitation_alert">
+              {requestReviewCount>1?'There are ':'There is '} <span>{requestReviewCount}</span>{' '}
+              request{requestReviewCount>1?'s':''} awaiting reviewal click
+                Click{' '}
+               <span className="alert_fake_link_primary" onClick={()=>{setExpandFilters(!expandFilters); setShowRequestReview(true); setShowNotification(false);}}>here</span>
+                {' '}to find {requestReviewCount>1?'them':'it'} using the requested review filter and submit your review.
+            </Alert>
+          </div>
+        </Collapse>:null}
+        {outdatedCount>0&&props.user.review_restricted?<Collapse in={showNotification}>
           <div>
             <Alert variant='warning' className="invitation_alert">
 
               <span>{outdatedCount}</span>{' '}
                of the services you own are not up to date with the lastest requirements. Click{' '}
-               <span className="alert_fake_link" onClick={()=>{setExpandFilters(!expandFilters); setShowOutdated(true); setShowNotification(false);}}>here</span>
-                {' '}to find them using the outdated filter and reconfigure them following the instructions.
+               <span className="alert_fake_link" onClick={()=>{setExpandFilters(!expandFilters); setShowOutdated(true); setShowOwned(true); setShowNotification(false);}}>here</span>
+                {' '}to find {outdatedCount>1?'them':'it'} using the outdated filter and reconfigure them following the instructions.
             </Alert>
           </div>
         </Collapse>:null}
@@ -395,7 +411,11 @@ const ServiceList= (props)=> {
                     <span>Show Outdated</span>
                     <input type='checkbox' name='filter' checked={showOutdated} onChange={()=>setShowOutdated(!showOutdated)}/>
                   </div>
-                  {props.user.admin?
+                  {props.user.review_restricted?<div className='filter-container' onClick={()=> setShowRequestReview(!showRequestReview)}>
+                    <span>Show Pending Review</span>
+                    <input type='checkbox' name='filter' checked={showRequestReview} onChange={()=>setShowRequestReview(!showRequestReview)}/>
+                  </div>:null}
+                  {props.user.view_all?
                   <div className='filter-container' onClick={()=> setShowOwned(!showOwned)}>
                     <span>Show Owned by Me</span>
                     <input type='checkbox' name='filter' checked={showOwned} onChange={()=> setShowOwned(!showOwned)}/>
@@ -460,7 +480,6 @@ function TableItem(props) {
 
   const {tenant_name} = useParams();
 
-
   const [showCopyDialog,setShowCopyDialog] = useState(false);
   const toggleCopyDialog = () => {
     setShowCopyDialog(!showCopyDialog);
@@ -474,9 +493,26 @@ function TableItem(props) {
   return (
     <tr>
       <td className="petition-details">
+
+        <div className="integration-environment-container">
+          <h5>
+          <OverlayTrigger
+            placement='top'
+            overlay={
+              <Tooltip id={`tooltip-top`}>
+                {'Service '+(props.service.type==='create'?'will be':'is') +' integrated in the ' +props.service.integration_environment + ' environment'}
+              </Tooltip>
+            }
+          >
+            <Badge className="status-badge" variant={props.service.integration_environment==='development'?'secondary':props.service.integration_environment==='demo'?'dark':props.service.integration_environment==='production'?'info':'warning'}>{capitalWords(props.service.integration_environment==='development'?'dev':props.service.integration_environment==='production'?'prod':props.service.integration_environment)}</Badge>
+          </OverlayTrigger>
+          </h5>
+        </div>
+
         <div className="table-image-container">
         <Image src={props.service.logo_uri?props.service.logo_uri:process.env.PUBLIC_URL + '/placeholder.png'} thumbnail/>
         </div>
+
       </td>
       <td>
         <div className="flex-column">
@@ -487,7 +523,8 @@ function TableItem(props) {
               {props.service.type==='edit'?t('badge_edit_pending'):props.service.type==='create'?t('badge_create_pending'):t('badge_delete_pending')}
               </Badge>:null}
             {props.service.outdated&&!props.service.petition_id&&props.service.state==='deployed'?<Badge className="status-badge" variant="danger">Update Required</Badge>:null}
-            {props.service.comment?<Badge className="status-badge" variant="info">{t('badge_changes_requested')}</Badge>:null}
+            {props.service.status==='changes'?<Badge className="status-badge" variant="info">{t('badge_changes_requested')}</Badge>:null}
+            {props.service.status==='request_review'?<Badge className="status-badge" variant="info">Review Requested</Badge>:null}
           </div>
           <p>{props.service.service_description}</p>
         </div>
@@ -549,7 +586,7 @@ function TableItem(props) {
 
               {props.service.owned?
                 <React.Fragment>
-                  {props.service.comment||(props.service.outdated&&!props.service.pettion_id&&props.service.state==="deployed")?
+                  {props.service.status==='changes'||(props.service.outdated&&!props.service.pettion_id&&props.service.state==="deployed")?
                   <div className="notification">
                     <FontAwesomeIcon icon={faExclamation} className="fa-exclamation"/>
                     <FontAwesomeIcon icon={faCircle} className="fa-circle"/>
@@ -558,8 +595,7 @@ function TableItem(props) {
                     placement='top'
                     overlay={
                       <Tooltip id={`tooltip-top`}>
-
-                        {props.service.comment?t('changes_notification'):props.service.outdated&&!props.service.pettion_id&&props.service.state==="deployed"?"Service needs to be updated":props.service.state==='deployed'?t('edit_notification'):t('pending_notification')}
+                        {props.service.status==='changes'?t('changes_notification'):props.service.outdated&&!props.service.pettion_id&&props.service.state==="deployed"?"Service needs to be updated":(props.service.state==='deployed'||props.service.type==='create')&&props.service.status!=='request_review'?t('edit_notification'):props.service.status==='request_review'?t('review_requested_notification'):t('pending_notification')}
                       </Tooltip>
                     }
                   >
@@ -576,23 +612,41 @@ function TableItem(props) {
                       comment:props.service.comment
                     }
                   }}>
-                  <Button variant="info" style={{background:tenant.color}} disabled={props.service.state==='deployed'||!props.service.state?false:true}><FontAwesomeIcon icon={faEdit}/>{t('button_reconfigure')}</Button></Link>
+                  <Button variant="info" style={{background:tenant.color}} disabled={props.service.status!=='request_review'&&(props.service.state==='deployed'||!props.service.state)?false:true}><FontAwesomeIcon icon={faEdit}/>{t('button_reconfigure')}</Button></Link>
                   </OverlayTrigger>
                 </React.Fragment>
               :null
               }
-              {(props.user.admin||(props.service.owned&&props.service.integration_environment==='development'))&&props.service.petition_id&&!props.service.comment?<Link
+              {
+                (props.user.review||
+                  (props.service.owned&&props.service.integration_environment==='development'))
+                &&props.service.petition_id
+                &&!(props.service.status==='changes')
+                &&(props.service.status!=='request_review'||(props.service.status==='request_review'&&props.user.review_restricted))?
+              <React.Fragment>
+              {props.service.status==='request_review'&&props.user.review_restricted?
+                <div className="notification">
+                <FontAwesomeIcon icon={faExclamation} className="fa-exclamation"/>
+                <FontAwesomeIcon icon={faCircle} className="fa-circle"/>
+                </div>
+                :null
+              }
+              <Link
                 className='button-link'
                 to={{
                 pathname:'/'+tenant_name+"/form/review",
                 state:{
                   service_id:props.service.service_id,
                   petition_id:props.service.petition_id,
+                  submitted: props.service.last_edited,
                   integration_environment:props.service.integration_environment,
                   type:props.service.type,
                   comment:props.service.comment
                 }
-              }}><Button variant="success"><FontAwesomeIcon icon={faEdit}/>{t('button_review')}</Button></Link>:null}
+              }}><Button variant="success" disabled={props.service.status==="request_review"&&!props.user.review_restricted}><FontAwesomeIcon icon={faEdit}/>{t('button_review')}</Button></Link>
+              </React.Fragment>
+              :null}
+
             </Col>
             <Col className='controls-col' md="auto">
             <DropdownButton

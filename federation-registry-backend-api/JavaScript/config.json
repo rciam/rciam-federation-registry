@@ -1,16 +1,32 @@
 {
   "form" : {
     "egi" : {
-      "device_code_validity_seconds":1800,
-      "refresh_token_validity_seconds":1422000,
-      "access_token_validity_seconds":11160,
-      "id_token_timeout_seconds":3600,
+      "code_of_contact": {
+        "egi_policy":{
+          "title": "Egi Policy",
+          "desc":"Service complies with the egi policies",
+          "link": "https://wiki.egi.eu/wiki/Policies_and_Procedures",
+          "required": ["production"],
+          "error": "Service must commply"
+        },
+        "dpcoco":{
+          "title": "DPCoCo",
+          "desc": "Service complies with DPCoCo or any other code of conduct compatible with legislation and guidelines on data protection and privacy including GDPR",
+          "link": "https://wiki.refeds.org/display/CODE/Data+Protection+Code+of+Conduct+Home",
+          "required": [],
+          "error": "Service must commply"
+        }
+      },
+      "device_code_validity_seconds":30000,
+      "refresh_token_validity_seconds":34128000,
+      "access_token_validity_seconds":1000000,
+      "id_token_timeout_seconds":86400,
+      "code_challenge_method":[null,"plain","S256"],
       "protocol":["oidc","saml"],
       "integration_environment": ["development","demo","production"],
-      "grant_types":["authorization_code","client_credentials","urn:ietf:params:oauth:grant-type:token-exchange","urn:ietf:params:oauth:grant-type:device_code","implicit"],
+      "grant_types":["authorization_code","client_credentials","urn:ietf:params:oauth:grant-type:token-exchange","urn:ietf:params:oauth:grant-type:device_code","implicit","refresh_token"],
       "contact_types":["admin","technical","support","security"],
       "scope":["openid","email","profile","offline_access","eduperson_entitlement","eduperson_scoped_affiliation","eduperson_unique_id"],
-      "protocol":["oidc","saml"],
       "invitation_validity_seconds":2592000,
       "token_endpoint_auth_method":["client_secret_basic","client_secret_post","client_secret_jwt","private_key_jwt","none"],
       "token_endpoint_auth_method_title":["Client Secret over HTTP Basic","Client Secret over HTTP POST","Client Secret via symmetrically-signed JWT assertion","Asymmetrically-signed JWT assertion","No authentication"],
@@ -18,20 +34,46 @@
       "token_endpoint_auth_signing_alg_title":["HMAC using SHA-256 hash algorithm","HMAC using SHA-384 hash algorithm","HMAC using SHA-512 hash algorithm","RSASSA using SHA-256 hash algorithm","RSASSA using SHA-384 hash algorithm","RSASSA using SHA-512 hash algorithm","RSASSA-PSS using SHA-256 and MGF1 with SHA-256"]
     },
     "eosc" : {
-      "device_code_validity_seconds":1800,
-      "refresh_token_validity_seconds":1422000,
-      "access_token_validity_seconds":11160,
-      "id_token_timeout_seconds":3600,
+      "code_of_contact": [
+        {
+          "name": "egi_policy",
+          "desc":"Sample Code of contact",
+          "title": "Do you aggree with the egi policies",
+          "required": ["production","demo"],
+          "link": "https://policy_link.com",
+          "error": "please select"
+        },
+        {
+          "name": "egi_policy2",
+          "desc":"Sample Code of contact",
+          "title": "Do you aggree with the egi policies",
+          "required": [],
+          "link": "https:\/\/policy_link.com",
+          "error": "please select"
+        }
+      ],
+      "device_code_validity_seconds":30000,
+      "refresh_token_validity_seconds":34128000,
+      "access_token_validity_seconds":1000000,
+      "id_token_timeout_seconds":86400,
+      "code_challenge_method":[null,"plain","S256"],
       "protocol":["oidc","saml"],
       "integration_environment": ["development","demo","production"],
       "grant_types":["implicit","authorization_code","refresh_token","client_credentials","urn:ietf:params:oauth:grant_type:redelegate","urn:ietf:params:oauth:grant-type:token-exchange","urn:ietf:params:oauth:grant-type:device_code","urn:ietf:params:oauth:grant-type:jwt-bearer"],
       "contact_types":["admin","technical","support","security"],
-      "protocol":["oidc","saml"],
       "invitation_validity_seconds":2592000,
       "token_endpoint_auth_method":["client_secret_basic","client_secret_post","client_secret_jwt","private_key_jwt","none"],
       "token_endpoint_auth_method_title":["Client Secret over HTTP Basic","Client Secret over HTTP POST","Client Secret via symmetrically-signed JWT assertion","Asymmetrically-signed JWT assertion","No authentication"],
       "token_endpoint_auth_signing_alg":["HS256","HS384","HS512","RS256","RS384","RS512","PS256"],
       "token_endpoint_auth_signing_alg_title":["HMAC using SHA-256 hash algorithm","HMAC using SHA-384 hash algorithm","HMAC using SHA-512 hash algorithm","RSASSA using SHA-256 hash algorithm","RSASSA using SHA-384 hash algorithm","RSASSA using SHA-512 hash algorithm","RSASSA-PSS using SHA-256 and MGF1 with SHA-256"]
+    }
+  },
+  "restricted_env" : {
+    "egi" : {
+      "env":["production"]
+    },
+    "eosc": {
+      "env":[]
     }
   },
   "agent" : {
@@ -41,5 +83,7 @@
   },
   "outdated_notifications_interval_seconds":86400,
   "invitation_validity_seconds": "604800",
-  "service_fields":["external_id","tenant","service_name","service_description","logo_uri","policy_uri","integration_environment","protocol","client_id","allow_introspection","code_challenge_method","device_code_validity_seconds","access_token_validity_seconds","refresh_token_validity_seconds","client_secret","reuse_refresh_tokens","clear_access_tokens_on_refresh","id_token_timeout_seconds","entity_id","metadata_url","grant_types","scope","contacts","redirect_uris","token_endpoint_auth_method","token_endpoint_auth_signing_alg","jwks","jwks_uri","country"]
+  "service_fields":["external_id","tenant","service_name","service_description","logo_uri","policy_uri","integration_environment","protocol","client_id","allow_introspection","code_challenge_method","device_code_validity_seconds","access_token_validity_seconds","refresh_token_validity_seconds","client_secret","reuse_refresh_token","clear_access_tokens_on_refresh","id_token_timeout_seconds","entity_id","metadata_url","grant_types","scope","contacts","redirect_uris","token_endpoint_auth_method","token_endpoint_auth_signing_alg","jwks","jwks_uri","country","website_url"],
+  "ggus_email":"checkin-support@mailman.egi.eu",
+  "disable_emails":false
 }

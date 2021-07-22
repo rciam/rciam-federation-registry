@@ -27,7 +27,8 @@ class User {
     });
   }
   async getPetitionOwners(id){
-    return this.db.any(sql.getPetitionOwners,{id:+id}).then( data => {
+    const query = this.pgp.as.format(sql.getPetitionOwners,{id:+id});
+    return this.db.any(query).then( data => {
       if(data){
         return data;
       }
@@ -39,7 +40,7 @@ class User {
 
   async getReviewers(tenant) {
     let entitlements = [];
-    return this.db.any(sql.getReviewEntitlements,{tenant:'egi'}).then(result => {
+    return this.db.any(sql.getActionEntitlements,{tenant:tenant,action:"review_notification"}).then(result => {
       if(result){
         result.forEach(item=> {
           entitlements.push(item.entitlement);
@@ -56,12 +57,37 @@ class User {
         });
       }
     })
+  }
 
+
+  async getUnrestrictedReviewers(tenant){
+    let entitlements = [];
+    return this.db.any(sql.getActionEntitlements,{tenant:tenant,action:"review_restricted"}).then(result => {
+      if(result&&result.length>0){
+        result.forEach(item=> {
+          entitlements.push(item.entitlement);
+        });
+        return this.db.any(sql.getReviewers,{
+          entitlements:entitlements
+        }).then(info=>{
+          if(info){
+            return info;
+          }
+          else{
+            return [];
+          }
+        });
+      }
+    })
 
   }
 
 
+
+
+
 }
+
 
 
 

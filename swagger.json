@@ -1,7 +1,7 @@
 swagger: "2.0"
 info:
   description: "This is an Express server used to manage identity provider services. Users manage services by creating requests handled by administrators. You can find out more about the project on the [github page](https://github.com/rciam/rciam-federation-registry) or you can try it out live  [here](http://service-registry.aai-dev.grnet.gr/egi). "
-  version: "1.0.1"
+  version: "1.2.1"
   title: "Federation Registry"
   termsOfService: "http://swagger.io/terms/"
   contact:
@@ -99,7 +99,7 @@ paths:
           description: "Error"
       security:
       - access_tokenAuth: []
-  /tenants/{name}/callback:
+  /callback/{tenant_name}:
     get:
       tags:
       - "Authentication"
@@ -109,7 +109,7 @@ paths:
       parameters:
         - in: path
           type: string
-          name: name
+          name: tenant_name
           description: "Tenant that the request is targeting"
           required: true
       responses:
@@ -315,6 +315,14 @@ paths:
         required: true
         type: "integer"
         format: "int64"
+      - name: "type"
+        in: "query"
+        type: "string"
+        enum:
+        - "approve"
+        - "reject"
+        - "changes"
+        - "request_review"
       responses:
         "200":
           description: OK
@@ -360,7 +368,15 @@ paths:
         - in: query
           type: string
           name: env
-          description: "Returns only service deployed in selected integration environment"
+          description: "Returns only services deployed in selected integration environment"
+        - in: query
+          type: string
+          name: request_review
+          description: "Returns only services that are in review requested state"
+        - in: query
+          type: string
+          name: outdated
+          description: "Returns only services that have invalid configuration"
       responses:
         "200":
           description: "OK"
@@ -910,7 +926,7 @@ paths:
             description: "Internal Error"
         security:
           - access_tokenAuth: []
-  /tenant/{name}/agents:
+  /tenants/{name}/agents:
     get:
       tags:
       - "Deployer Agents"
@@ -987,7 +1003,49 @@ paths:
            description: "Unauthenticated request"
          "500":
            description: "Internal Error"
-  /tenant/{name}/agents/id:
+  /tenants/{name}:
+    get:
+      tags:
+      - "Tenants"
+      summary: "Get tenant information and configuration"
+      description: "Get tenant information and configuration about theme and form configuration"
+      operationId: "GetTenant"
+      produces:
+      - "application/json"
+      parameters:
+       - in: "path"
+         type: "string"
+         name: "name"
+         description: "Tenant that the request is targeting"
+         required: true
+      responses:
+       "200":
+         description: "OK"
+         schema:
+             $ref: "#/definitions/Tenant"
+       "404":
+         description: "Tenant not found"
+       "500":
+         description: "Internal Error"
+  /tenants:
+    get:
+      tags:
+      - "Tenants"
+      summary: "Get Tenants"
+      description: "Get all available tenants"
+      operationId: "GetTenants"
+      produces:
+      - "application/json"
+      responses:
+       "200":
+         description: "OK"
+         schema:
+             $ref: "#/definitions/Tenants"
+       "404":
+         description: "Tenant not found"
+       "500":
+         description: "Internal Error"
+  /tenants/{name}/agents/id:
     get:
       tags:
       - "Deployer Agents"
@@ -1085,16 +1143,13 @@ definitions:
         service_name:
           type: "string"
           description: "Human-readable application name"
-        external_id:
-          type: integer
-          description: "Unique identification of the service used by third party managing the configuration"
         service_description:
           type: "string"
           description: "Human-readable text description"
         logo_uri:
           type: "string"
           format: "uri"
-          description: "URL that points to a logo image"
+          description: "URL that points to an image"
         policy_uri:
           type: "string"
           format: "uri"
@@ -1131,25 +1186,22 @@ definitions:
         metadata_uri:
           type: "string"
           format: "uri"
-          description: "Metadata uri required only for saml services"
+          description: "Metadata uri for saml services"
         client_id:
           type: "string"
-          description: "Unique identifier rewuired only for oidc services"
+          description: "Unique identifier for oidc services"
         grant_types:
           type: "array"
           items:
             type: "string"
             enum:
-            - "implicit"
             - "authorization_code"
-            - "refresh_token"
             - "client_credentials"
-            - "password"
-            - "redelegation"
-            - "token_exchange"
-            - "device"
-          description: "oidc specific"
-        scopes:
+            - "urn:ietf:params:oauth:grant-type:token-exchange"
+            - "urn:ietf:params:oauth:grant-type:device_code"
+            - "implicit"
+          description: "Grant Types Values"
+        scope:
           type: "array"
           items:
             type: "string"
@@ -1171,9 +1223,10 @@ definitions:
           enum:
           - "plain"
           - "S256"
+          - null
           description: "Proof Key for Code Exchange (PKCE) Code Challenge Method. For oidc services."
         client_secret:
-          type: string
+          type: "string"
           format: "password"
           description: "Client secret, oidc specific"
         token_endpoint_auth_method:
@@ -1201,13 +1254,23 @@ definitions:
           properties:
             keys:
               type: "array"
+              items:
+                type: "string"
           description: "Public key value for the token endpoint, oidc specific"
         jwks_uri:
           type: "string"
           description: "Uri containing public key for the token endpoint, oidc specific"
         country:
           type: "string"
-          dscription: "Country of the organisation of the service"
+          description: "Country of the organisation of the service"
+        website_url:
+          type: "string"
+          description: "Website Url containing information about the service"
+        redirect_uris:
+          type: "array"
+          items:
+            type: "string"
+            description: "Allowed Redirect uris for the service"
         generate_client_secret:
           type: boolean
           description: "Prompts backend to generate value for client secret. Oidc specific"
@@ -1219,28 +1282,27 @@ definitions:
           description: "oidc specific"
         device_code_validity_seconds:
           type: integer
-          multipleOf: 10
           minimum: 0
-          maximum: 1000000
+          maximum: 1800
           description: "oidc specific"
         access_token_validity_seconds:
           type: integer
-          multipleOf: 10
           minimum: 0
-          maximum: 1000000
+          maximum: 11160
           description: "oidc specific"
         refresh_token_validity_seconds:
           type: integer
-          multipleOf: 10
           minimum: 0
-          maximum: 1000000
+          maximum: 1422000
           description: "oidc specific"
         id_token_timeout_seconds:
           type: integer
-          multipleOf: 10
           minimum: 0
-          maximum: 1000000
+          maximum: 3600
           description: "oidc specific"
+        code_of_contact_field:
+          type: "boolean"
+          description: "There could be multiple code of contact fields with different depending on the tenant some of them might be required to be true."
   Agent:
     type: "object"
     properties:
@@ -1360,6 +1422,15 @@ definitions:
       tenant_id:
         type: "string"
         description: "Unique tenant identification"
+      actions:
+        type: "array"
+        items:
+          type: "string"
+          description: "List of Available Actions"
+      role:
+        type: "string"
+        description: "Role Name"
+
   Petition:
     type: "object"
     properties:
@@ -1381,7 +1452,7 @@ definitions:
       logo_uri:
         type: "string"
         format: "uri"
-        description: "URL that points to a logo image"
+        description: "URL that points to an image"
       policy_uri:
         type: "string"
         format: "uri"
@@ -1427,16 +1498,13 @@ definitions:
         items:
           type: "string"
           enum:
-          - "implicit"
           - "authorization_code"
-          - "refresh_token"
           - "client_credentials"
-          - "password"
-          - "redelegation"
-          - "token_exchange"
-          - "device"
-        description: "oidc specific"
-      scopes:
+          - "urn:ietf:params:oauth:grant-type:token-exchange"
+          - "urn:ietf:params:oauth:grant-type:device_code"
+          - "implicit"
+        description: "Grant Types Values"
+      scope:
         type: "array"
         items:
           type: "string"
@@ -1458,9 +1526,10 @@ definitions:
         enum:
         - "plain"
         - "S256"
+        - ""
         description: "Proof Key for Code Exchange (PKCE) Code Challenge Method. For oidc services."
       client_secret:
-        type: string
+        type: "string"
         format: "password"
         description: "Client secret, oidc specific"
       token_endpoint_auth_method:
@@ -1488,13 +1557,23 @@ definitions:
         properties:
           keys:
             type: "array"
+            items:
+              type: "string"
         description: "Public key value for the token endpoint, oidc specific"
       jwks_uri:
         type: "string"
         description: "Uri containing public key for the token endpoint, oidc specific"
       country:
         type: "string"
-        dscription: "Country of the organisation of the service"
+        description: "Country of the organisation of the service"
+      website_url:
+        type: "string"
+        description: "Website Url containing information about the service"
+      redirect_uris:
+        type: "array"
+        items:
+          type: "string"
+          description: "Allowed Redirect uris for the service"
       generate_client_secret:
         type: boolean
         description: "Prompts backend to generate value for client secret. Oidc specific"
@@ -1506,28 +1585,125 @@ definitions:
         description: "oidc specific"
       device_code_validity_seconds:
         type: integer
-        multipleOf: 10
         minimum: 0
-        maximum: 1000000
+        maximum: 1800
         description: "oidc specific"
       access_token_validity_seconds:
         type: integer
-        multipleOf: 10
         minimum: 0
-        maximum: 1000000
+        maximum: 11160
         description: "oidc specific"
       refresh_token_validity_seconds:
         type: integer
-        multipleOf: 10
         minimum: 0
-        maximum: 1000000
+        maximum: 1422000
         description: "oidc specific"
       id_token_timeout_seconds:
         type: integer
-        multipleOf: 10
         minimum: 0
-        maximum: 1000000
+        maximum: 3600
         description: "oidc specific"
+      code_of_contact_field:
+        type: "boolean"
+        description: "There could be multiple code of contact fields with different depending on the tenant some of them might be required to be true."
+  Tenants:
+    type: "array"
+    items:
+      type: "object"
+      properties:
+        name:
+          type: "string"
+          description: "Name of the tenant"
+        client_id:
+          type: "string"
+        client_secret:
+          type: "string"
+        issuer_url:
+          type: "string"
+  Tenant:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+      logo:
+        type: "string"
+      main_title:
+        type: "string"
+      color:
+        type: "string"
+      description:
+        type: "string"
+      form_config:
+        type: "object"
+        properties:
+          code_of_contact:
+            type: "object"
+            properties:
+              title:
+                type: "string"
+              desc:
+                type: "string"
+              link:
+                type: "string"
+              required:
+                type: "array"
+                items:
+                  type: "string"
+                  description: "Integration Environments that are restricted"
+              erros:
+                type: "string"
+          device_code_validity_seconds:
+            type: "integer"
+          refresh_token_validity_seconds:
+            type: "integer"
+          access_token_validity_seconds:
+            type: "integer"
+          id_token_timeout_seconds:
+            type: "integer"
+          code_challenge_method:
+            type: "array"
+            items:
+              type: "string"
+          protocol:
+            type: "array"
+            items:
+              type: "string"
+          integration_environment:
+            type: "array"
+            items:
+              type: "string"
+          grant_types:
+            type: "array"
+            items:
+              type: "string"
+          contact_types:
+            type: "array"
+            items:
+              type: "string"
+          scope:
+            type: "array"
+            items:
+              type: "string"
+          invitation_validity_seconds:
+            type: "array"
+            items:
+              type: "string"
+          token_endpoint_auth_method:
+            type: "array"
+            items:
+              type: "string"
+          token_endpoint_auth_signing_alg:
+            type: "array"
+            items:
+              type: "string"
+          token_endpoint_auth_signing_alg_title:
+            type: "array"
+            items:
+              type: "string"
+          restricted_environments:
+            type: "array"
+            items:
+              type: "string"
   Service:
     type: "object"
     properties:
@@ -1540,7 +1716,7 @@ definitions:
       logo_uri:
         type: "string"
         format: "uri"
-        description: "URL that points to a logo image"
+        description: "URL that points to an image"
       policy_uri:
         type: "string"
         format: "uri"
@@ -1586,16 +1762,13 @@ definitions:
         items:
           type: "string"
           enum:
-          - "implicit"
           - "authorization_code"
-          - "refresh_token"
           - "client_credentials"
-          - "password"
-          - "redelegation"
-          - "token_exchange"
-          - "device"
-        description: "oidc specific"
-      scopes:
+          - "urn:ietf:params:oauth:grant-type:token-exchange"
+          - "urn:ietf:params:oauth:grant-type:device_code"
+          - "implicit"
+        description: "Grant Types Values"
+      scope:
         type: "array"
         items:
           type: "string"
@@ -1617,9 +1790,10 @@ definitions:
         enum:
         - "plain"
         - "S256"
+        - null
         description: "Proof Key for Code Exchange (PKCE) Code Challenge Method. For oidc services."
       client_secret:
-        type: string
+        type: "string"
         format: "password"
         description: "Client secret, oidc specific"
       token_endpoint_auth_method:
@@ -1647,13 +1821,23 @@ definitions:
         properties:
           keys:
             type: "array"
+            items:
+              type: "string"
         description: "Public key value for the token endpoint, oidc specific"
       jwks_uri:
         type: "string"
         description: "Uri containing public key for the token endpoint, oidc specific"
       country:
         type: "string"
-        dscription: "Country of the organisation of the service"
+        description: "Country of the organisation of the service"
+      website_url:
+        type: "string"
+        description: "Website Url containing information about the service"
+      redirect_uris:
+        type: "array"
+        items:
+          type: "string"
+          description: "Allowed Redirect uris for the service"
       generate_client_secret:
         type: boolean
         description: "Prompts backend to generate value for client secret. Oidc specific"
@@ -1665,31 +1849,38 @@ definitions:
         description: "oidc specific"
       device_code_validity_seconds:
         type: integer
-        multipleOf: 10
         minimum: 0
-        maximum: 1000000
+        maximum: 1800
         description: "oidc specific"
       access_token_validity_seconds:
         type: integer
-        multipleOf: 10
         minimum: 0
-        maximum: 1000000
+        maximum: 11160
         description: "oidc specific"
       refresh_token_validity_seconds:
         type: integer
-        multipleOf: 10
         minimum: 0
-        maximum: 1000000
+        maximum: 1422000
         description: "oidc specific"
       id_token_timeout_seconds:
         type: integer
-        multipleOf: 10
         minimum: 0
-        maximum: 1000000
+        maximum: 3600
         description: "oidc specific"
+      code_of_contact_field:
+        type: "boolean"
+        description: "There could be multiple code of contact fields with different depending on the tenant some of them might be required to be true."
   Services:
     type: "object"
     properties:
+      outdated_count:
+        type: "integer"
+        format: "int64"
+        description: "Total Services available to the user that have invalid configuration"
+      request_review_count:
+        type: "integer"
+        format: "int64"
+        description: "Total Services available to the user that are on the request_review state"
       full_count:
         type: "integer"
         format: "int64"
@@ -1698,19 +1889,18 @@ definitions:
         items:
           type: "object"
           properties:
-            id:
+            service_id:
+              type: "integer"
+              format: "int64"
+            petition_id:
               type: "integer"
               format: "int64"
             comment:
               type: "string"
               description: "Comment from admin on pending request"
-            deleted:
-              type: "boolean"
-              description: "Service is pending deletion"
-            requester:
+            last_edited:
               type: "string"
-              example: "7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu"
-              description: "Requesters sub"
+              description: "Timestamp of the last request that was made for this service"
             state:
               type: "string"
               enum:
@@ -1719,6 +1909,24 @@ definitions:
               - "waiting-deployment"
               - "pending"
               description: "State of the service"
+            owned:
+              type: "boolean"
+              description: "True if user is a member of the service owners group"
+            notification:
+              type: "boolean"
+              description: "True if there is a nitification for the service"
+            deployment_type:
+              type: "string"
+              description: "Type of pending deployment"
+            outdated:
+              type: "boolean"
+              description: "True if Service has invalid configuration"
+            group_manager:
+              type: "boolean"
+              description: "True if the User is a manager of the service owners group"
+            group_id:
+              type: "integer"
+              description: "Id of the service owners group"
             type:
               type: "string"
               enum:
@@ -1732,6 +1940,7 @@ definitions:
               - "pending"
               - "approved"
               - "rejected"
+              - "request_review"
               - "aproved_changes"
             service_name:
               type: "string"

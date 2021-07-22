@@ -1,5 +1,5 @@
 const sql = require('../sql').service;
-const {calcDiff} = require('../../functions/helpers.js');
+const {calcDiff,extractCoc} = require('../../functions/helpers.js');
 const cs = {}; // Reusable ColumnSet objects.
 
 /*
@@ -10,9 +10,7 @@ class ServiceRepository {
   constructor(db, pgp) {
       this.db = db;
       this.pgp = pgp;
-
       // set-up all ColumnSet objects, if needed:
-
   }
 
 
@@ -24,7 +22,8 @@ class ServiceRepository {
           if(result){
             let data = {};
             result.json.generate_client_secret = false;
-            data.service_data = result.json;
+            data.service_data = extractCoc(result.json);
+
             return data
           }
           else {
@@ -48,6 +47,7 @@ class ServiceRepository {
               queries.push(t.service_details_protocol.add('service',service,result.id));
               queries.push(t.service_contacts.add('service',service.contacts,result.id));
               queries.push(t.service_state.add(result.id,'pending','create'));
+              queries.push(t.service_multi_valued.addCoc('service',service,result.id));
               if(service.protocol==='oidc'){
                 if(service.grant_types&&service.grant_types.length>0){
                   queries.push(t.service_multi_valued.add('service','oidc_grant_types',service.grant_types,result.id));
@@ -66,7 +66,7 @@ class ServiceRepository {
         }).then(data => {
           return service_id;
         }).catch(stuff=>{
-          console.log(stuff);
+
           throw 'error'
         });
       }
@@ -85,6 +85,7 @@ class ServiceRepository {
             if(Object.keys(edits.details).length !== 0){
                queries.push(t.service_details.update(edits.details,targetId));
                queries.push(t.service_details_protocol.update('service',edits.details,targetId));
+               queries.push(t.service_multi_valued.updateCoc('service',{...edits.detals,tenant:tenant},targetId));
             }
             queries.push(t.service_state.update(targetId,'pending','edit'));
             for (var key in edits.add){
@@ -114,8 +115,24 @@ class ServiceRepository {
     }
   }
 
-  async getAll(){
-    return this.db.any(sql.getAll).then(services=>{
+
+  async getAll(tenant){
+    return this.db.any(sql.getAll,{tenant:tenant}).then(services=>{
+      if(services){
+        const res = [];
+        for (let i = 0; i < services.length; i++) {
+          res.push(services[i].json);
+        }
+        return res;
+      }
+      else{
+        return null;
+      }
+    });
+  }
+
+  async getAllPublic(tenant){
+    return this.db.any(sql.getAllPublic,{tenant:tenant}).then(services=>{
       if(services){
 
         const res = [];
@@ -128,6 +145,26 @@ class ServiceRepository {
         return null;
       }
     });
+  }
+
+  async getByProtocolIdPublic(integration_environment,protocol_id,tenant){
+    return this.db.oneOrNone(sql.getByProtocolIdPublic,{integration_environment:integration_environment,protocol_id:protocol_id,tenant:tenant}).then(service=>{
+      if(service){
+        return service.json;
+      }else{
+        return null
+      }
+    })
+  }
+
+  async getByProtocolId(integration_environment,protocol_id,tenant){
+    return this.db.oneOrNone(sql.getByProtocolId,{integration_environment:integration_environment,protocol_id:protocol_id,tenant:tenant}).then(service=>{
+      if(service){
+        return service.json;
+      }else{
+        return null
+      }
+    })
   }
 
   async getPending(){

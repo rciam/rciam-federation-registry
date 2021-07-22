@@ -1,5 +1,6 @@
 import React,{useContext} from 'react';
 import Modal from 'react-bootstrap/Modal';
+import * as config from '../config.json';
 import {useHistory,useParams} from "react-router-dom";
 import Button from 'react-bootstrap/Button';
 import { useTranslation } from 'react-i18next';
@@ -9,8 +10,16 @@ import {tenantContext} from '../context.js';
 export const Logout = (props) => {
   const history = useHistory();
   const tenant = useContext(tenantContext);
+  let {tenant_name} = useParams();
   const handleClose = () => {
-    localStorage.removeItem('token'); history.push('/'+(tenant&&tenant[0]?tenant[0].name:null));
+    localStorage.removeItem('token');
+    if(tenant_name==='egi'){
+      window.location.assign('https://aai.egi.eu/oidc/saml/logout?redirect='+config.react+tenant_name);
+    }
+    else{
+      history.push('/'+(tenant&&tenant[0]?tenant[0].name:null));
+    }
+
   }
   return (
     <Translation>

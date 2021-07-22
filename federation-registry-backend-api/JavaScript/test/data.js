@@ -5,6 +5,7 @@ const create = {
      redirect_uris: ["https://redirecturi1.com"],
      logo_uri:"https://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
      policy_uri:"https://policyuri.com",
+     website_url:"",
      integration_environment:"development",
      protocol:"oidc",
      contacts:[ {
@@ -25,7 +26,7 @@ const create = {
      access_token_validity_seconds:3600,
      refresh_token_validity_seconds:800,
      client_secret:"secret",
-     reuse_refresh_tokens:true,
+     reuse_refresh_token:true,
      clear_access_tokens_on_refresh:true,
      id_token_timeout_seconds:1000,
      scope: [
@@ -39,7 +40,9 @@ const create = {
      grant_types: [
        "client_credentials"
      ],
-     generate_client_secret:false
+     generate_client_secret:false,
+     egi_policy:true,
+     dpcoco:false
    },
    saml:{
      service_name:"Test Saml Service",
@@ -47,6 +50,7 @@ const create = {
      redirect_uris: null,
      logo_uri:"https://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
      policy_uri:"https://policyuri.com",
+     website_url:"",
      integration_environment:"development",
      protocol:"saml",
      country:"gr",
@@ -63,7 +67,7 @@ const create = {
      access_token_validity_seconds:null,
      refresh_token_validity_seconds:null,
      client_secret:null,
-     reuse_refresh_tokens:null,
+     reuse_refresh_token:null,
      clear_access_tokens_on_refresh:null,
      id_token_timeout_seconds:null,
      scope:null,
@@ -82,6 +86,7 @@ const edit = {
    ],
    "logo_uri":"https://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
    "policy_uri":"https://policyuriedit.com",
+   "website_url":"",
    "integration_environment":"development",
    "protocol":"oidc",
    "contacts":[
@@ -108,7 +113,7 @@ const edit = {
    "access_token_validity_seconds":"3600",
    "refresh_token_validity_seconds":"800",
    "client_secret":"secret",
-   "reuse_refresh_tokens":true,
+   "reuse_refresh_token":true,
    "clear_access_tokens_on_refresh":true,
    "id_token_timeout_seconds":"1000",
    "scope":[
@@ -121,7 +126,9 @@ const edit = {
    "grant_types":[
       "client_credentials"
    ],
-   "generate_client_secret":false
+   "generate_client_secret":false,
+   "egi_policy":true,
+   "dpcoco":false
 },
  saml:{
 
@@ -130,6 +137,7 @@ const edit = {
    redirect_uris:null,
    logo_uri:"https://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
    policy_uri:"https://policyuriedit.com",
+   website_url:"",
    integration_environment:"development",
    protocol:"saml",
    contacts:[{
@@ -151,7 +159,7 @@ const edit = {
    access_token_validity_seconds:null,
    refresh_token_validity_seconds:null,
    client_secret:null,
-   reuse_refresh_tokens:null,
+   reuse_refresh_token:null,
    clear_access_tokens_on_refresh:null,
    id_token_timeout_seconds:null,
    scope:null,
@@ -163,6 +171,7 @@ const edit = {
 const postServices = [
   {
     "policy_uri": "https://www.policy_uri.com",
+    "website_url":"",
     "integration_environment": "development",
     "protocol": "oidc",
     "client_id": "clqweient1",
@@ -181,7 +190,7 @@ const postServices = [
     "token_endpoint_auth_signing_alg": "HS256",
     "jwks": {"keys":[]},
     "jwks_uri": "",
-    "reuse_refresh_tokens": true,
+    "reuse_refresh_token": true,
     "clear_access_tokens_on_refresh": true,
     "id_token_timeout_seconds": 1000,
     "scope": [
@@ -201,7 +210,9 @@ const postServices = [
     "logo_uri": null,
     "entity_id": null,
     "metadata_url": null,
-    "redirect_uris": null
+    "redirect_uris": null,
+    "egi_policy":true,
+    "dpcoco":false
   },
   {
     "extra_field": "with value",
@@ -211,6 +222,7 @@ const postServices = [
     "service_description": "Sample description",
     "logo_uri": "https://www.freelogodesign.org/Content/img/logo-samples/flooop.png",
     "policy_uri": "https://www.policy_uri.com",
+    "website_url":"",
     "integration_environment": "development",
     "protocol": "oidc",
     "country": "GR",
@@ -218,7 +230,7 @@ const postServices = [
     "token_endpoint_auth_signing_alg": "HS256",
     "jwks": "",
     "jwks_uri": "https://test.com",
-    "reuse_refresh_tokens": true,
+    "reuse_refresh_token": true,
     "clear_access_tokens_on_refresh": true,
     "id_token_timeout_seconds": 1000,
     "scope": [
@@ -227,10 +239,12 @@ const postServices = [
       "email",
       "eduperson_entitlement",
       "eduperson_scoped_affiliation",
-      "eduperson_unique_id"
+      "eduperson_unique_id",
     ],
     "generate_client_secret": false,
-    "tenant": "egi"
+    "tenant": "egi",
+    "egi_policy":true,
+    "dpcoco":false
   },
   {
     "extra_field": "with value",
@@ -241,10 +255,12 @@ const postServices = [
     "metadata_url": "https://asdfasdf.com",
     "logo_uri": "https://www.freelogodesign.org/Content/img/logo-samples/flooop.png",
     "policy_uri": "https://www.policy_uri.com",
+    "website_url":"",
     "integration_environment": "development",
     "protocol": "saml",
     "contacts": null,
-    "tenant": "egi"
+    "tenant": "egi",
+
   },
   {
     "protocol": "oidc",
@@ -279,6 +295,7 @@ const validationRequests = {
    redirect_uris: "string",
    logo_uri:"http://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
    policy_uri:"http://policyuri.com",
+   website_url:"",
    integration_environment:1,
    protocol:"oidc",
    country:"gr",
@@ -296,12 +313,14 @@ const validationRequests = {
    access_token_validity_seconds:"string",
    refresh_token_validity_seconds:"string",
    client_secret:1,
-   reuse_refresh_tokens:"string",
+   reuse_refresh_token:"string",
    clear_access_tokens_on_refresh:"string",
    id_token_timeout_seconds:"string",
    scope: "string",
    grant_types:"string",
-   generate_client_secret:"string"
+   generate_client_secret:"string",
+   egi_policy:true,
+   dpcoco:false
  },
  oidc_values: {
    type:"create",
@@ -310,6 +329,7 @@ const validationRequests = {
    redirect_uris: ["string","string"],
    logo_uri:"string",
    policy_uri:"string",
+   website_url:"",
    integration_environment:"string",
    protocol:"oidc",
    country:"gr",
@@ -327,12 +347,14 @@ const validationRequests = {
    access_token_validity_seconds:123,
    refresh_token_validity_seconds:12312,
    client_secret:"str",
-   reuse_refresh_tokens:true,
+   reuse_refresh_token:true,
    clear_access_tokens_on_refresh:true,
    id_token_timeout_seconds:123123,
    scope: ["string","string"],
    grant_types:["string","string"],
-   generate_client_secret:false
+   generate_client_secret:false,
+   egi_policy:true,
+   dpcoco:false
  },
  saml_types: {
    type:'create',
@@ -341,6 +363,7 @@ const validationRequests = {
    redirect_uris:null,
    logo_uri:"https://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
    policy_uri:"https://policyuriedit.com",
+   website_url:"",
    integration_environment:"development",
    protocol:"saml",
    contacts:[{
@@ -361,7 +384,7 @@ const validationRequests = {
    access_token_validity_seconds:null,
    refresh_token_validity_seconds:null,
    client_secret:null,
-   reuse_refresh_tokens:null,
+   reuse_refresh_token:null,
    clear_access_tokens_on_refresh:null,
    id_token_timeout_seconds:null,
    scope:null,
@@ -375,6 +398,7 @@ const validationRequests = {
    redirect_uris:null,
    logo_uri:"https://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
    policy_uri:"https://policyuriedit.com",
+   website_url:"",
    integration_environment:"development",
    protocol:"saml",
    contacts:[{
@@ -395,7 +419,7 @@ const validationRequests = {
    access_token_validity_seconds:null,
    refresh_token_validity_seconds:null,
    client_secret:null,
-   reuse_refresh_tokens:null,
+   reuse_refresh_token:null,
    clear_access_tokens_on_refresh:null,
    id_token_timeout_seconds:null,
    scope:null,
@@ -408,6 +432,7 @@ const agents = {
  post: {
    "agents": [
        {
+           "id":1,
            "type": "ssp",
            "entity_type": "service",
            "hostname": "https://snf-ssp-2.grnet.gr",
@@ -415,6 +440,7 @@ const agents = {
            "integration_environment":"demo"
        },
        {
+           "id":2,
            "type": "ssp",
            "entity_type": "idp",
            "hostname": "https://snf-ssp-1.grnet.gr",
@@ -423,6 +449,7 @@ const agents = {
 
        },
        {
+           "id":3,
            "type": "ssp",
            "entity_type": "idp",
            "hostname": "https://snf-ssp-2.grnet.gr",
@@ -430,6 +457,7 @@ const agents = {
            "integration_environment":"demo"
        },
        {
+            "id":4,
            "type": "ssp",
            "entity_type": "service",
            "hostname": "https://snf-ssp-new-1.grnet.gr",
@@ -437,6 +465,7 @@ const agents = {
            "integration_environment":"demo"
        },
        {
+         "id":5,
            "type": "mitreid",
            "entity_type": "service",
            "hostname": "https://snf-mitre-put-2.grnet.gr",
@@ -507,7 +536,7 @@ const validationResponses = {
     {'[0].code_challenge_method': 'Device Code must be a string' },
     {'[0].allow_introspection': 'Allow introspection must be a boolean'},
     {'[0].generate_client_secret': 'Generate client secret must be a boolean'},
-    {'[0].reuse_refresh_tokens': 'Reuse refresh tokens must be a boolean'},
+    {'[0].reuse_refresh_token': 'Reuse refresh tokens must be a boolean'},
     {'[0].integration_environment': 'Invalid Integration Environment'},
     {'[0].clear_access_tokens_on_refresh': 'Clear access tokens on refresh must be a boolean'}
    ],
@@ -543,13 +572,13 @@ const validationResponses = {
 
 const users = {
  egi: {
-   admin_user:{
-     sub: "test_egi_admin_user",
-     edu_person_entitlement:['urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu']
-   },
    manager_user:{
      sub: "test_egi_manager_user",
-     edu_person_entitlement:['urn:mace:egi.eu:group:goc.egi.eu:role=member#aai.egi.eu']
+     edu_person_entitlement:['urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=approver#aai.egi.eu']
+   },
+   operator_user:{
+     sub: "test_egi_operator_user",
+     edu_person_entitlement:['urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu']
    },
    end_user: {
      sub: "test_egi_end_user",
@@ -557,13 +586,13 @@ const users = {
    }
  },
  eosc: {
-   admin_user: {
-     sub: "test_eosc_admin_user",
-     edu_person_entitlement :['urn:mace:egi.eu:group:service-integration.aai.eosc.eu:role=member#aai.eosc.eu']
-   },
-   manager_user:{
+   manager_user: {
      sub: "test_eosc_manager_user",
-     edu_person_entitlement : ['urn:mace:egi.eu:group:goc.egi.eu:role=member#aai.egi.eu']
+     edu_person_entitlement :['urn:mace:egi.eu:group:service-integration.aai.eosc.eu:role=approver#aai.eosc.eu']
+   },
+   operator_user:{
+     sub: "test_eosc_operator_user",
+     edu_person_entitlement : ['urn:mace:egi.eu:group:service-integration.aai.eosc.eu:role=member#aai.eosc.eu']
    },
    end_user: {
      sub: "test_eosc_end_user",

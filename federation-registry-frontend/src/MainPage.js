@@ -1,4 +1,4 @@
-import React,{useContext} from 'react';
+import React,{useContext,useEffect} from 'react';
 import {BrowserRouter as Router} from "react-router-dom";
 import useGlobalState from './useGlobalState.js';
 import {Header,Footer,NavbarTop} from './HeaderFooter.js';
@@ -14,6 +14,26 @@ import {userContext,tenantContext} from './context.js';
       const { t, i18n } = useTranslation();
       const globalState = useGlobalState();
       const logged = globalState.global_state.log_state;
+
+
+      useEffect(() => {
+        const faviconUpdate = async () => {
+          //grab favicon element by ID
+          const favicon = document.getElementById("favicon");
+          //check count value, if below 0 we change href property to our red circle image path
+          if (tenant&&tenant[0]&&tenant[0].name==='egi') {
+            favicon.href = "/favicon.ico?v=2";
+          }
+          //if above 0, we set back to green
+          else if (tenant&&tenant[0]&&tenant[0].name==='eosc'){
+            favicon.href = "/eosc.ico?v=2";
+          }
+        };
+        //run our function here
+        faviconUpdate();
+
+        //2nd paramenter passed to useEffect is dependency array so that this effect only runs on changes to count
+      }, [tenant]);
 
       return(
         <React.Fragment>

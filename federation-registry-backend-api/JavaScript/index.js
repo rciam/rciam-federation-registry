@@ -9,7 +9,7 @@ var config = require('./config');
 const cors = require('cors');
 var winston = require('winston');
 var expressWinston = require('express-winston');
-const bodyParser = require('body-parser')
+
 const {check,validationResult,body}= require('express-validator');
 const {petitionValitationRules,validate} = require('./validator.js');
 const {merge_data} = require('./merge_data.js');
@@ -40,13 +40,13 @@ var corsOptions = {
 db.tenants.getInit().then(async tenants => {
   for (const tenant of tenants){
     await Issuer.discover(tenant.issuer_url).then((issuer)=>{
-      //console.log(issuer.metadata);
 
       clients[tenant.name] = new issuer.Client({
         client_id: tenant.client_id,
         client_secret: tenant.client_secret,
         redirect_uris: process.env.REDIRECT_URI + tenant.name
       });
+
       clients[tenant.name].client_id = tenant.client_id;
       clients[tenant.name].client_secret = tenant.client_secret;
       clients[tenant.name].issuer_url = tenant.issuer_url;
@@ -103,9 +103,11 @@ app.use(expressWinston.logger({
 
 app.set('clients',clients);
 app.use(passport.initialize());
-app.use(bodyParser.json());
 app.use(cors(corsOptions));
 app.use(cookieParser());
+app.use(express.urlencoded({extended: true})); 
+app.use(express.json({ limit: '50mb' }));
+
 app.use('/', routes.router);
 
 
@@ -135,8 +137,13 @@ app.use(function (err, req, res, next) {
   if (res.headersSent) {
      return next(err)
    }
-   res.status(500)
-   res.json({ error: err.stack })
+   res.status(500);
+   if (err instanceof SyntaxError) {
+    res.json({error:err.message});
+  } else {
+    res.json({ error: err.stack });
+  }
+   
 
 });
 

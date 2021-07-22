@@ -10,7 +10,6 @@ class ServicePetitionDetailsRepository {
     constructor(db, pgp) {
         this.db = db;
         this.pgp = pgp;
-
         // set-up all ColumnSet objects, if needed:
         createColumnsets(pgp);
     }
@@ -19,7 +18,6 @@ class ServicePetitionDetailsRepository {
 
     // Save new Petition
     async add(body,sub){
-
       return this.db.one(sql.add,{
         service_description: body.service_description,
         service_name: body.service_name,
@@ -29,12 +27,13 @@ class ServicePetitionDetailsRepository {
         requester: sub,
         country: body.country,
         type:body.type,
-        status:"pending",
+        status:(body.status?body.status:"pending"),
         service_id:body.service_id,
         comment:body.comment,
         protocol:body.protocol,
         group_id:body.group_id,
-        tenant:body.tenant
+        tenant:body.tenant,
+        website_url:body.website_url
       })
     }
 
@@ -48,13 +47,16 @@ class ServicePetitionDetailsRepository {
           integration_environment:body.integration_environment,
           id:id,
           type:body.type,
-          protocol:body.protocol
+          protocol:body.protocol,
+          website_url:body.website_url,
+          status:"pending"
         })
     }
 
-    async getServiceId(id){
-      return this.db.oneOrNone('SELECT service_id FROM service_petition_details WHERE id=$1 and reviewed_at IS NULL',+id).then(res=>{
+    async getServiceId(petition_id){
+      return this.db.oneOrNone('SELECT service_id FROM service_petition_details WHERE id=$1',+petition_id).then(res=>{
         if(res){
+
           return res.service_id;
         }
         else {
@@ -83,8 +85,8 @@ class ServicePetitionDetailsRepository {
       });
     }
 
-    async belongsToRequester(petition_id,sub,tenant){
-        return this.db.oneOrNone(sql.belongsToRequester,{
+    async canBeEditedByRequester(petition_id,sub,tenant){
+        return this.db.oneOrNone(sql.canBeEditedByRequester,{
           id:+petition_id,
           sub:sub,
           tenant:tenant
@@ -97,6 +99,10 @@ class ServicePetitionDetailsRepository {
        return this.db.any("UPDATE service_petition_details SET status=$1, reviewed_at=$2, reviewer=$3, comment=$5 WHERE id=$4 AND tenant=$6 RETURNING *",[status,date,approved_by,+id,comment,tenant]);
     }
 
+    async requestReview(id,comment){
+      return this.db.none("UPDATE service_petition_details SET status='request_review', comment=$1 WHERE id=$2",[comment,+id]);
+    }
+
 
 
      async getHistory(service_id,tenant){
@@ -105,6 +111,28 @@ class ServicePetitionDetailsRepository {
 
      async deletePetition(petition_id){
        return this.db.oneOrNone('DELETE FROM service_petition_details WHERE id=$1 AND reviewed_at IS NULL RETURNING id',+petition_id);
+     }
+
+     async getEnvironment(petition_id,tenant){
+       const query = this.pgp.as.format('SELECT integration_environment FROM service_petition_details WHERE id=$1 and tenant=$2',[+petition_id,tenant]);
+       return await this.db.oneOrNone(query).then(result => {
+          if(result){
+            return result.integration_environment;
+
+          }
+          else{
+            return null;
+          }
+        });
+     }
+
+     async getTicketInfo(ids,envs){
+       const query = this.pgp.as.format(sql.getTicketInfo,{ids:ids,envs:envs});
+       return this.db.any(query);
+     }
+
+     async getDetails(petition_id,tenant){
+       return this.db.oneOrNone('SELECT service_name,integration_environment,type,preferred_username as username,email FROM (SELECT service_name,integration_environment,type,requester FROM service_petition_details WHERE id=$1 AND tenant=$2)as petition LEFT JOIN user_info ON petition.requester=user_info.sub',[+petition_id,tenant])
      }
 
 
@@ -137,7 +165,7 @@ function createColumnsets(pgp) {
         const table = new pgp.helpers.TableName({table: 'service_petition_details', schema: 'public'});
 
         cs.insert = new pgp.helpers.ColumnSet(['service_description','service_name','country',
-          'logo_uri','policy_uri','integration_environment','requester','protocol','comment'],
+          'logo_uri','policy_uri','integration_environment','requester','protocol','comment','website_url'],
           {table});
         cs.update = cs.insert.extend(['?id','state','type','reviewed_at','reviewer','service_id']);
     }

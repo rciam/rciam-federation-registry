@@ -1,4 +1,5 @@
 import React,{useState,useEffect,useContext,useRef} from 'react';
+import mapValues from 'lodash/mapValues';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {faCheckCircle,faBan,faSortDown} from '@fortawesome/free-solid-svg-icons';
 import Tabs from 'react-bootstrap/Tabs';
@@ -12,7 +13,7 @@ import Collapse from 'react-bootstrap/Collapse';
 import {useParams } from "react-router-dom";
 import { diff } from 'deep-diff';
 import {tenantContext} from './context.js';
-import Alert from 'react-bootstrap/Alert'
+import Alert from 'react-bootstrap/Alert';
 //import {Debug} from './Components/Debug.js';
 import {SimpleModal,ResponseModal,Logout,NotFound} from './Components/Modals.js';
 import Form from 'react-bootstrap/Form';
@@ -30,15 +31,16 @@ var availabilityCheckTimeout;
 var countries;
 let integrationEnvironment;
 
-
 const ServiceForm = (props)=> {
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   let {tenant_name} = useParams();
   const [notFound,setNotFound] = useState(false);
+  const [restrictReview,setRestrictReview] = useState(false);
   // eslint-disable-next-line
   const [tenant,setTenant] = useContext(tenantContext);
-  const [showInitErrors,setShowInitErrors] = useState(false)
+
+  const [showInitErrors,setShowInitErrors] = useState(false);
   useEffect(()=>{
     countries = [];
     if(props.service_id||props.petition_id){
@@ -54,6 +56,19 @@ const ServiceForm = (props)=> {
         if(props.disabled||props.review){
         setDisabled(true);
     }
+    Object.keys(tenant.form_config.code_of_contact).forEach((name,index)=>{
+        if(!Object.keys(props.initialValues).includes(name)){
+          props.initialValues[name]=false;
+        }
+    })
+
+    // Check restrictions for review
+    if(props.review){
+      if(tenant.restricted_environments.includes(props.initialValues.integration_environment)&&!props.user.review_restricted){
+        setRestrictReview(true);
+      }
+    }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
 
@@ -76,26 +91,49 @@ const ServiceForm = (props)=> {
       img.onload = function() { callback(true); };
       img.onerror = function() { callback(false); };
       img.src = url;
-
     }
     else{
       callback(true);
     }
   }
+
+  const dynamicValidation = async (values,props)=>{
+    let error = {};
+    lazy_schema.validate(values,{abortEarly:false}).catch(function (err) {
+      if(err.inner){
+        err.inner.forEach(item=>{
+          error[item.path] = item.message;
+        })
+      }
+    });
+    return error;
+  }
+
+  const lazy_schema  = yup.lazy(obj => yup.object(
+    mapValues(obj, (v, k) => {
+      if (Object.keys((tenant.form_config.code_of_contact)).includes(k)) {
+        return yup.boolean().required(t('yup_required')).when('integration_environment',{
+          is:(integration_environment)=> { return tenant.form_config.code_of_contact[k].required.includes(integration_environment)},
+          then: yup.boolean().oneOf([true],tenant.form_config.code_of_contact[k].error)
+          })
+      }
+      })
+    ));
   const schema = yup.object({
-    service_name:yup.string().nullable().min(4,t('yup_char_min') + ' ('+4+')').max(36,t('yup_char_max') + ' ('+36+')').required(t('yup_required')),
+    service_name:yup.string().nullable().min(4,t('yup_char_min') + ' ('+2+')').max(256,t('yup_char_max') + ' ('+256+')').required(t('yup_required')),
     // Everytime client_id changes we make a fetch request to see if it is available.
     policy_uri:yup.string().nullable().when('integration_environment',{
       is:'production',
-      then: yup.string().required(t('yup_required')).matches(reg.regSimpleUrl,t('yup_url')),
-      otherwise: yup.string().matches(reg.regSimpleUrl,t('yup_url'))
+      then: yup.string().nullable().required(t('yup_required')).matches(reg.regSimpleUrl,t('yup_url')),
+      otherwise: yup.string().nullable().matches(reg.regSimpleUrl,t('yup_url'))
       }),
+    website_url:yup.string().nullable().matches(reg.regSimpleUrl,t('yup_url')),
     client_id:yup.string().nullable().when('protocol',{
       is:'oidc',
-      then: yup.string().min(4,t('yup_char_min') + ' ('+4+')').max(36,t('yup_char_max') + ' ('+36+')').test('testAvailable',t('yup_client_id_available'),function(value){
+      then: yup.string().nullable().min(2,t('yup_char_min') + ' ('+2+')').max(128,t('yup_char_max') + ' ('+128+')').test('testAvailable',t('yup_client_id_available'),function(value){
           return new Promise((resolve,reject)=>{
             clearTimeout(availabilityCheckTimeout);
-            if(props.initialValues.client_id===value||!value||value.length<4||value.length>36)
+            if(!value)
               {resolve(true)}
             else{
               if(value===checkedId &&formRef.current.values.integration_environment===checkedEnvironment){
@@ -103,7 +141,7 @@ const ServiceForm = (props)=> {
               }
               setCheckingAvailability(true);
               availabilityCheckTimeout = setTimeout(()=> {
-                fetch(config.host+'tenants/'+tenant_name+'/check-availability?value='+ value +'&protocol=oidc&environment='+ this.parent.integration_environment, {
+                fetch(config.host+'tenants/'+tenant_name+'/check-availability?value='+ value +'&protocol=oidc&environment='+ this.parent.integration_environment+(props.petition_id?('&petition_id='+props.petition_id):"")+(props.service_id?('&service_id='+props.service_id):""), {
                   method:'GET',
                   credentials:'include',
                   headers:{
@@ -136,19 +174,21 @@ const ServiceForm = (props)=> {
     }),
     redirect_uris:yup.array().nullable().when('protocol',{
       is:'oidc',
-      then: yup.array().when('integration_environment',(integration_environment)=>{
+      then: yup.array().nullable().when('integration_environment',(integration_environment)=>{
         integrationEnvironment = integration_environment;
-      }).of(yup.string().test('test_redirect_uri','error',function(value){
-        if(integrationEnvironment==='production'){
-          return value.match(reg.regUrl) || value.match(reg.regLocalhostUrl)
-        }
-        else{
-          return value.match(reg.regSimpleUrl) || value.match(reg.regLocalhostUrl)
+      }).of(yup.string().required().test('test_redirect_uri','error',function(value){
+        if(value){
+          if(integrationEnvironment==='production'||integrationEnvironment==='demo'){
+            return value.match(reg.regUrl) || value.match(reg.regLocalhostUrl)
+          }
+          else{
+            return value.match(reg.regSimpleUrl) || value.match(reg.regLocalhostUrl)
+          }
         }
 
       })).unique(t('yup_redirect_uri_unique')).when('grant_types',{
         is:(grant_types)=> grant_types.includes("implicit")||grant_types.includes("authorization_code"),
-        then: yup.array().required(t('yup_required'))
+        then: yup.array().nullable().required(t('yup_required'))
       })
     }),
     logo_uri:yup.string().nullable().test('testImage',t('yup_image_url'),function(imageUrl){
@@ -177,24 +217,31 @@ const ServiceForm = (props)=> {
     }),
     grant_types:yup.array().nullable().when('protocol',{
       is:'oidc',
-      then: yup.array().of(yup.string().test('testGrantTypes','error-granttypes',function(value){return tenant.form_config.grant_types.includes(value)})).required(t('yup_select_option'))
+      then: yup.array().of(yup.string().test('testGrantTypes','error-grant-types',function(value){return tenant.form_config.grant_types.includes(value)})).required(t('yup_select_option'))
     }),
     id_token_timeout_seconds:yup.number().nullable().when('protocol',{
       is:'oidc',
-      then: yup.number().min(0).max(tenant.form_config.id_token_timeout_seconds,t('yup_exceeds_max'))}),
+      then: yup.number().nullable().min(0).max(tenant.form_config.id_token_timeout_seconds,t('yup_exceeds_max'))}),
     access_token_validity_seconds:yup.number().nullable().when('protocol',{
       is:'oidc',
-      then: yup.number().min(0).max(tenant.form_config.access_token_validity_seconds,t('yup_exceeds_max'))}),
+      then: yup.number().nullable().min(0).max(tenant.form_config.access_token_validity_seconds,t('yup_exceeds_max'))}),
     refresh_token_validity_seconds:yup.number().nullable().when('protocol',{
       is:'oidc',
-      then: yup.number().min(0).max(tenant.form_config.refresh_token_validity_seconds,t('yup_exceeds_max'))}),
+      then: yup.number().nullable().min(0).max(tenant.form_config.refresh_token_validity_seconds,t('yup_exceeds_max'))}),
     device_code_validity_seconds:yup.number().nullable().when('protocol',{
       is:'oidc',
-      then: yup.number().min(0).max(tenant.form_config.device_code_validity_seconds,t('yup_exceeds_max')).required(t('yup_required'))
+      then: yup.number().nullable().min(0).max(tenant.form_config.device_code_validity_seconds,t('yup_exceeds_max')).required(t('yup_required'))
     }),
     code_challenge_method:yup.string().nullable().when('protocol',{
       is:'oidc',
-      then: yup.string().matches(reg.regCodeChalMeth).required(t('yup_required'))
+      then: yup.string().nullable().test('test_code_challenge_method','Invalid Value',function(value){
+        if(!value){
+          return true;
+        }
+        else{
+          return tenant.form_config.code_challenge_method.includes(value)
+        }
+      })
     }),
     allow_introspection:yup.boolean().nullable().when('protocol',{
       is:'oidc',
@@ -204,7 +251,7 @@ const ServiceForm = (props)=> {
       is:'oidc',
       then: yup.boolean().required()
     }),
-    reuse_refresh_tokens:yup.boolean().nullable().when('protocol',{
+    reuse_refresh_token:yup.boolean().nullable().when('protocol',{
       is:'oidc',
       then: yup.boolean().required()
     }),
@@ -218,7 +265,7 @@ const ServiceForm = (props)=> {
       is:'oidc',
       then: yup.string().when(['generate_client_secret','token_endpoint_auth_method'],{
         is:(generate_client_secret,token_endpoint_auth_method)=> generate_client_secret===false&&!(token_endpoint_auth_method==='private_key_jwt'||token_endpoint_auth_method==='none'),
-        then: yup.string().required(t('yup_required')).min(4,t('yup_char_min') + ' ('+4+')').max(16,t('yup_char_min') + ' ('+16+')')
+        then: yup.string().required(t('yup_required')).min(4,t('yup_char_min') + ' ('+4+')').max(256,t('yup_char_max') + ' ('+256+')')
       }).nullable()
     }),
     metadata_url:yup.string().nullable().when('protocol',{
@@ -227,7 +274,7 @@ const ServiceForm = (props)=> {
     }),
     token_endpoint_auth_signing_alg:yup.string().nullable().when(['protocol',"token_endpoint_auth_method"],{
       is:(protocol,token_endpoint_auth_method)=> protocol==='oidc'&&(token_endpoint_auth_method==="private_key_jwt",token_endpoint_auth_method==="client_secret_jwt"),
-      then: yup.string().required(t('yup_select_option')).test('testTokenEndpointSigningAlgorithm','Invalid Value',function(value){console.log('Should not validate'); return tenant.form_config.token_endpoint_auth_signing_alg.includes(value)})
+      then: yup.string().required(t('yup_select_option')).test('testTokenEndpointSigningAlgorithm','Invalid Value',function(value){return tenant.form_config.token_endpoint_auth_signing_alg.includes(value)})
     }),
     token_endpoint_auth_method:yup.string().nullable().when('protocol',{
       is:'oidc',
@@ -252,17 +299,18 @@ const ServiceForm = (props)=> {
       is:'saml',
       then: yup.string().min(4,t('yup_char_min') + ' ('+4+')').test('testAvailable',t('yup_entity_id'),function(value){
           return new Promise((resolve,reject)=>{
-
+            
             clearTimeout(availabilityCheckTimeout);
-            if(props.initialValues.entity_id===value||!value||!reg.regUrl.test(value))
+            if(!value||!reg.regUrl.test(value))
               {resolve(true)}
             else{
+              setCheckingAvailability(true);
               if(value===checkedId &&formRef.current.values.integration_environment===checkedEnvironment){
                 resolve(availabilityCheck);
               }
-              setCheckingAvailability(true);
+              
               availabilityCheckTimeout = setTimeout(()=> {
-                fetch(config.host+'tenants/'+tenant_name+'/check-availability?value='+ value +'&protocol=saml&environment='+ this.parent.integration_environment, {
+                fetch(config.host+'tenants/'+tenant_name+'/check-availability?value='+ value +'&protocol=saml&environment='+ this.parent.integration_environment+(props.petition_id?('&petition_id='+props.petition_id):"")+(props.service_id?('&service_id='+props.service_id):""), {
                   method:'GET',
                   credentials:'include',
                   headers:{
@@ -294,6 +342,7 @@ const ServiceForm = (props)=> {
       })
     })
   });
+
 
   const [logout,setLogout] = useState(false);
   const [availabilityCheck,setAvailabilityCheck] = useState(true);
@@ -354,6 +403,8 @@ const ServiceForm = (props)=> {
       setMessage(t('petition_no_change_msg'));
     }
   }
+
+
   const editPetition = (petition) => {
     petition.type=props.type;
     petition.service_id=props.service_id;
@@ -418,6 +469,8 @@ const ServiceForm = (props)=> {
       }
     });
   }
+
+
   const reviewPetition = (comment,type)=>{
       setModalTitle(t('review_'+props.type+'_title'))
       setAsyncResponse(true);
@@ -472,8 +525,6 @@ const ServiceForm = (props)=> {
       }
       return touchedActive;
     }
-
-
   }
 
 
@@ -483,10 +534,11 @@ const ServiceForm = (props)=> {
     <NotFound notFound={notFound}/>
     <Formik
       initialValues={props.initialValues}
-      validateOnMount={props.service_id||props.petition_id}
+      validateOnMount={props.service_id||props.petition_id||props.copy}
       initialTouched={getInitialTouched(props.initialValues)}
       validationSchema={schema}
       innerRef={formRef}
+      validate={dynamicValidation}
       onSubmit={(values,{setSubmitting}) => {
         setHasSubmitted(true);
         if(!(values.token_endpoint_auth_method==="client_secret_jwt"||values.token_endpoint_auth_method==="private_key_jwt")){
@@ -541,11 +593,13 @@ const ServiceForm = (props)=> {
                 {props.disabled?null:
                   <div className="form-controls-container">
                     {props.review?
-                      <ReviewComponent errors={errors} reviewPetition={reviewPetition}/>
+                      <ReviewComponent errors={errors} reviewPetition={reviewPetition} restrictReview={restrictReview}/>
                       :
                       <React.Fragment>
-                        <Button className='submit-button' type="submit" variant="primary" ><FontAwesomeIcon icon={faCheckCircle}/>{t('button_submit')}</Button>
-                        {props.petition_id?<Button variant="danger" onClick={()=>deletePetition()}><FontAwesomeIcon icon={faBan}/>{t('button_cancel_request')}</Button>:null}
+                        <div className="form-submit-cancel-container">
+                          <Button className='submit-button' type="submit" variant="primary" ><FontAwesomeIcon icon={faCheckCircle}/>{t('button_submit')}</Button>
+                          {props.petition_id?<Button variant="danger" onClick={()=>deletePetition()}><FontAwesomeIcon icon={faBan}/>{t('button_cancel_request')}</Button>:null}
+                        </div>
                       </React.Fragment>
                     }
                   </div>
@@ -578,7 +632,7 @@ const ServiceForm = (props)=> {
                           onChange={handleChange}
                           disabled={disabled||tenant.form_config.integration_environment.length===1||props.copy||props.disableEnvironment}
                           changed={props.changes?props.changes.integration_environment:null}
-                          copyButtonActive={props.owned&&props.disabled}
+                          copybuttonActive={props.owned&&props.disabled&&props.service_id}
                           toggleCopyDialog={toggleCopyDialog}
 
                         />
@@ -598,6 +652,18 @@ const ServiceForm = (props)=> {
                           changed={props.changes?props.changes.logo_uri:null}
                         />
                       </InputRow>
+                      <InputRow title={t('form_website_url')} description={t('form_website_url_desc')} error={errors.website_url} touched={touched.website_url}>
+                        <SimpleInput
+                          name='website_url'
+                          placeholder={t('form_url_placeholder')}
+                          onChange={handleChange}
+                          value={values.website_url}
+                          isInvalid={hasSubmitted?!!errors.website_url:(!!errors.website_url&&touched.website_url)}
+                          onBlur={handleBlur}
+                          disabled={disabled}
+                          changed={props.changes?props.changes.website_url:null}
+                         />
+                     </InputRow>
                       <InputRow title={t('form_description')} required={true} description={t('form_description_desc')} error={errors.service_description} touched={touched.service_description}>
                         <TextAria
                           value={values.service_description?values.service_description:''}
@@ -635,12 +701,36 @@ const ServiceForm = (props)=> {
                         />
                       </InputRow>
 
-                      <InputRow title={t('form_contacts')} required={true} error={typeof(errors.contacts)=='string'?errors.contacts:null} touched={touched.contacts} description={t('form_contacts_desc')}>
+                      { Object.keys(tenant.form_config.code_of_contact).map((name,index)=>{
+                        return(
+                          <InputRow title={tenant.form_config.code_of_contact[name].title} key={index} required={
+                            tenant.form_config.code_of_contact[name].required.includes(values.integration_environment)} error={errors[name]?errors[name]:null} touched={touched[name]}>
+                            <SimpleCheckbox
+                            name= {name}
+                            label={
+                              <React.Fragment>
+                                {tenant.form_config.code_of_contact[name].desc} [<a href={tenant.form_config.code_of_contact[name].link}>{name}</a>]
+                              </React.Fragment>
+                            }
+                            onChange={handleChange}
+                            disabled={disabled}
+                            value={values[name]}
+                            onBlur={handleBlur}
+                            changed={props.changes?props.changes[name]:null}
+                            />
+                          </InputRow>
+                        )
+                      })}
+
+
+
+
+                      <InputRow title={t('form_contacts')} required={true} error={typeof(errors.contacts)==='string'?errors.contacts:null} touched={touched.contacts} description={t('form_contacts_desc')}>
                         <Contacts
                           values={values.contacts}
                           placeholder={t('form_type_prompt')}
                           name='contacts'
-                          empty={typeof(errors.contacts)=='string'?true:false}
+                          empty={typeof(errors.contacts)==='string'?true:false}
                           error={errors.contacts}
                           touched={touched.contacts}
                           onChange={handleChange}
@@ -652,7 +742,7 @@ const ServiceForm = (props)=> {
                       </InputRow>
                     </Tab>
                     <Tab eventKey="protocol" title={t('form_tab_protocol')}>
-                      <InputRow title={t('form_protocol')} required={true} extraClass='select-col' error={errors.protocol} touched={touched.code_challenge_method}>
+                      <InputRow title={t('form_protocol')} required={true} extraClass='select-col' error={errors.protocol} touched={touched.protocol}>
                         <Select
                           onBlur={handleBlur}
                           optionsTitle={['Select one option','OIDC Service','SAML Service']}
@@ -675,6 +765,7 @@ const ServiceForm = (props)=> {
                                 setFieldTouched('client_id');
                                 handleChange(e);
                               }}
+                              copybutton={props.copybutton}
                               value={values.client_id}
                               isInvalid={hasSubmitted?(!!errors.client_id&&!checkingAvailability):(!!errors.client_id&&touched.client_id&&!checkingAvailability)}
                               onBlur={handleBlur}
@@ -683,11 +774,11 @@ const ServiceForm = (props)=> {
                               isloading={values.client_id&&values.client_id!==checkedId&&checkingAvailability?1:0}
                              />
                            </InputRow>
-                           <InputRow title={t('form_redirect_uris')} required={values.grant_types.includes("implicit")||values.grant_types.includes("authorization_code")} error={typeof(errors.redirect_uris)=='string'?errors.redirect_uris:null}  touched={touched.redirect_uris} description={t('form_redirect_uris_desc')}>
+                           <InputRow title={t('form_redirect_uris')} required={values.grant_types.includes("implicit")||values.grant_types.includes("authorization_code")} error={typeof(errors.redirect_uris)==='string'?errors.redirect_uris:null}  touched={touched.redirect_uris} description={t('form_redirect_uris_desc')}>
                              <ListInput
                                values={values.redirect_uris}
                                placeholder={t('form_type_prompt')}
-                               empty={(typeof(errors.redirect_uris)=='string')?true:false}
+                               empty={(typeof(errors.redirect_uris)==='string')?true:false}
                                name='redirect_uris'
                                error={errors.redirect_uris}
                                touched={touched.redirect_uris}
@@ -773,6 +864,7 @@ const ServiceForm = (props)=> {
                              client_secret={values.client_secret}
                              error={errors.client_secret}
                              touched={touched.client_secret}
+                             copybutton={props.copybutton}
                              isInvalid={hasSubmitted?!!errors.client_secret:(!!errors.client_secret&&touched.client_secret)}
                              onBlur={handleBlur}
                              generate_client_secret={values.generate_client_secret}
@@ -804,7 +896,7 @@ const ServiceForm = (props)=> {
                           <InputRow required={true} title={t('form_code_challenge_method')} extraClass='select-col' error={errors.code_challenge_method} touched={touched.code_challenge_method}>
                             <Select
                               onBlur={handleBlur}
-                              optionsTitle={['No code challenge','Plain code challenge','SHA-256 hash algorithm']}
+                              optionsTitle={['PKCE will not be used for this service','Plain code challenge','SHA-256 hash algorithm (recomended)']}
                               options={['','plain','S256']}
                               name="code_challenge_method"
                               values={values}
@@ -825,7 +917,6 @@ const ServiceForm = (props)=> {
                               changed={props.changes?props.changes.allow_introspection:null}
                             />
                           </InputRow>
-
                           <InputRow title={t('form_access_token_validity_seconds')} extraClass='time-input' error={errors.access_token_validity_seconds} touched={touched.access_token_validity_seconds} description={t('form_access_token_validity_seconds_desc')}>
                             <TimeInput
                               name='access_token_validity_seconds'
@@ -861,6 +952,7 @@ const ServiceForm = (props)=> {
                               handleChange(e);
                             }}
                             value={values.entity_id}
+                            copybutton={props.copybutton}
                             isInvalid={hasSubmitted?!!(errors.entity_id&&!checkingAvailability):(!!errors.entity_id&&touched.entity_id&&!checkingAvailability)}
                             onBlur={handleBlur}
                             disabled={disabled}
@@ -873,6 +965,7 @@ const ServiceForm = (props)=> {
                              name='metadata_url'
                              placeholder='Type something'
                              onChange={handleChange}
+                             copybutton={props.copybutton}
                              value={values.metadata_url}
                              isInvalid={hasSubmitted?!!errors.metadata_url:(!!errors.metadata_url&&touched.metadata_url)}
                              onBlur={handleBlur}
@@ -889,11 +982,13 @@ const ServiceForm = (props)=> {
                   {props.disabled?null:
                     <div className="form-controls-container">
                       {props.review?
-                          <ReviewComponent errors={errors} reviewPetition={reviewPetition}/>
+                          <ReviewComponent errors={errors} reviewPetition={reviewPetition} restrictReview={restrictReview} />
                         :
                         <React.Fragment>
+                        <div className="form-submit-cancel-container">
                           <Button className='submit-button' type="submit" variant="primary" ><FontAwesomeIcon icon={faCheckCircle}/>Submit</Button>
                           {props.type==='delete'||props.type==='edit'?<Button variant="danger" onClick={()=>deletePetition()}><FontAwesomeIcon icon={faBan}/>Cancel Request</Button>:null}
+                        </div>
                         </React.Fragment>
                       }
                     </div>
@@ -975,39 +1070,72 @@ const ReviewComponent = (props)=>{
         <div className="expand-container">
         <div className="review-controls flex-column">
         <Form.Group>
-          <Row>
-            <Col md="auto" className="review-radio-col">
-              <Form.Check
+          {props.restrictReview?
+            <Row>
+              <Col md="auto" className="review-radio-col">
+                <Form.Check
                 type="radio"
                 name="formHorizontalRadios"
-                id="formHorizontalRadios1"
-                disabled={invalidPetition}
+                id="formHorizontalRadios4"
                 onChange={(e)=>{if(e.target.checked){setType(e.target.value)}}}
-                value="approve"
-                checked={type==='approve'}
-              />
-            </Col>
-            <Col onClick={()=>{
-              if(!invalidPetition){
-                setType('approve');
-              }
-            }}>
-              <Row>
+                value="request_review"
+                checked={type==='request_review'}
+                />
+              </Col>
+              <Col onClick={()=>{
+                setType('request_review');
+              }}>
+                <Row>
                 <strong>
-                  {t('review_approve')}
+                {t('review_request_review')}
                 </strong>
-                {invalidPetition?
-                  <div className="approve-error">
-                    Invalid Service Configuration, Approve disabled
-                  </div>:null
+                </Row>
+                <Row className="review-option-desc">
+                {t('review_request_review_desc')}
+                </Row>
+              </Col>
+            </Row>
+            :
+            <Row>
+              <Col md="auto" className="review-radio-col">
+              <Form.Check
+              type="radio"
+              name="formHorizontalRadios"
+              id="formHorizontalRadios1"
+              disabled={invalidPetition||props.restrictReview}
+              onChange={(e)=>{if(e.target.checked){setType(e.target.value)}}}
+              value="approve"
+              checked={type==='approve'}
+              />
+              </Col>
+              <Col onClick={()=>{
+                if(!invalidPetition&&!props.restrictReview){
+                  setType('approve');
                 }
+              }}>
+              <Row>
+              <strong>
+              {t('review_approve')}
+              </strong>
+              {invalidPetition?
+                <div className="approve-error">
+                Invalid Service Configuration, Approve disabled
+                </div>:null
+              }
+              {props.restrictReview?
+                <div className="approve-error">
+                Approval is disabled for this environment, please request review.
+                </div>:null
+              }
+
               </Row>
 
               <Row className="review-option-desc">
-                {t('review_approve_desc')}
+              {t('review_approve_desc')}
               </Row>
-            </Col>
-          </Row>
+              </Col>
+            </Row>
+          }
           <Row>
             <Col md="auto" className="review-radio-col">
               <Form.Check

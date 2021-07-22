@@ -4,6 +4,7 @@ var path = require("path");
 var fs = require('fs');
 var hbs = require('handlebars');
 nodeMailer = require('nodemailer');
+var config = require('../config');
 const customLogger = require('../loggers.js');
 
 
@@ -11,12 +12,18 @@ hbs.registerHelper('loud', function (aString) {
     return aString.toUpperCase()
 })
 
+const delay = ms => new Promise(res => setTimeout(res, ms));
+
 const sendMultipleInvitations = function (data,t) {
 
   try{
-    t.invitation.addMultiple(data).then(res=>{data.forEach(invitation_data=>{
-      sendInvitationMail(invitation_data);
-    })}).catch(err=>{customLogger(null,null,'warn','Error when creating and sending invitations: '+err)})
+    t.invitation.addMultiple(data).then(async res=>{
+      
+      for(const invitation_data of data){
+        await delay(400);
+        sendInvitationMail(invitation_data);
+      }
+      }).catch(err=>{customLogger(null,null,'warn','Error when creating and sending invitations: '+err)})
   }
   catch(err){
     customLogger(null,null,'warn','Error when creating and sending invitations: '+err);
@@ -106,13 +113,14 @@ const calcDiff = (oldState,newState) => {
     if(diff(old_values,new_values)){
       edits.details = new_values;
     }
+
     return edits
 }
 
 const sendInvitationMail = async (data) => {
 
   return new Promise(resolve=>{
-    if(process.env.NODE_ENV!=='test-docker'&& process.env.NODE_ENV!=='test'){
+    if(process.env.NODE_ENV!=='test-docker'&& process.env.NODE_ENV!=='test'&&!config.disable_emails){
       var currentDate = new Date();
       readHTMLFile(path.join(__dirname, '../html/invitation.hbs'), function(err, html) {
         let transporter = nodeMailer.createTransport({
@@ -162,7 +170,7 @@ const sendInvitationMail = async (data) => {
 
 }
 const newMemberNotificationMail = (data,managers) => {
-  if(process.env.NODE_ENV!=='test-docker'&& process.env.NODE_ENV!=='test'){
+  if(process.env.NODE_ENV!=='test-docker'&& process.env.NODE_ENV!=='test'&&!config.disable_emails){
     var currentDate = new Date();
     readHTMLFile(path.join(__dirname, '../html/new-member-notification.html'), function(err, html) {
       let transporter = nodeMailer.createTransport({
@@ -210,14 +218,22 @@ const newMemberNotificationMail = (data,managers) => {
 
 const sendMail= (data,template_uri,users)=>{
   var currentDate = new Date();
+
   var result;
-  if(process.env.NODE_ENV!=='test'&&process.env.NODE_ENV!=='test-docker'){
+  if(process.env.NODE_ENV!=='test'&&process.env.NODE_ENV!=='test-docker'&&!config.disable_emails){
   readHTMLFile(path.join(__dirname, '../html/', template_uri), function(err, html) {
       let transporter = nodeMailer.createTransport({
           host: 'relay.grnet.gr',
           port: 587,
           secure: false
       });
+      // let transporter = nodeMailer.createTransport({
+      //   service: 'gmail',
+      //   auth: {
+      //     user: 'orionaikido@gmail.com',
+      //     pass: ''
+      //   }
+      // });
       var template = hbs.compile(html);
       //var replacements = {username: "John Doe",name:"The name"};
       var state;
@@ -248,13 +264,12 @@ const sendMail= (data,template_uri,users)=>{
             subject : data.subject,
             html : htmlToSend
           };
-
           transporter.sendMail(mailOptions, function (error, response) {
             if (error) {
-              customLogger(null,null,'info',[{type:'email_log'},{message:'Email not sent'},{error:error},{user:users},{data:data}]);
+              customLogger(null,null,'info',[{type:'email_log'},{message:'Email not sent'},{error:error},{user:user},{data:data}]);
             }
             else {
-              customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{user:users},{data:data}]);
+              customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{user:user},{data:data}]);
             }
           });
       });
@@ -263,6 +278,81 @@ const sendMail= (data,template_uri,users)=>{
   }
   return result
 }
+
+
+const createGgusTickets =  function(data){
+  if(process.env.NODE_ENV!=='test'&&process.env.NODE_ENV!=='test-docker'&&!config.disable_emails){
+    try{
+        if(data){
+          readHTMLFile(path.join(__dirname, '../html/ticket.html'), async function(err, html) {
+            let transporter = nodeMailer.createTransport({
+              host: 'relay.grnet.gr',
+              port: 587,
+              secure: false
+            });
+            // let transporter = nodeMailer.createTransport({
+            //     service: 'gmail',
+            //     auth: {
+            //         user: 'orionaikido@gmail.com',
+            //         pass: "**********"
+            //       }
+            //     });
+
+                var template = hbs.compile(html);
+
+                data.forEach((ticket_data)=>{
+
+                  let code = makeCode(5);
+                  let type = ticket_data.type==='create'?'register':ticket_data.type==='edit'?'reconfigure':'deregister';
+                  let service_name = ticket_data.service_name;
+                  let requester_email = ticket_data.requester_email;
+                  let requester_username = ticket_data.requester_username;
+                  let reviewer_email = ticket_data.reviewer_email;
+                  let reviewer_username = ticket_data.reviewer_username;
+                  let protocol = ticket_data.protocol;
+                  let reviewed_at = ticket_data.reviewed_at;
+                  let env = ticket_data.integration_environment;
+
+                  var mailOptions = {
+                    from: ticket_data.reviewer_email,
+                    to : config.ggus_email,
+                    subject : "Federation Registry: Service integration to "+ ticket_data.integration_environment + " (" + code + ")",
+                    text:`A request was made to `+ type +` a service on the `+ env +` environment
+    Service Info
+      service_name: ` + service_name + `
+      service_protocol: ` + protocol + `
+    Submitted by
+      username: `+ requester_username + `
+      email: `+ requester_email + `
+    Approved by
+      username: `+ reviewer_username +`
+      email: `+ reviewer_email +`
+      date_of_approval: `+reviewed_at,
+                    cc:ticket_data.reviewer_email
+                  };
+                  transporter.sendMail(mailOptions, function (error, response) {
+                    if (error) {
+                      return true;
+                      customLogger(null,null,'info',[{type:'email_log'},{message:'Email not sent'},{error:error},{recipient:'Ggus'},{ticket_data:ticket_data}]);
+                    }
+                    else {
+                      return true;
+                      customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{recipient:'Ggus'},{ticket_data:ticket_data}]);
+                    }
+                  });
+
+                })
+              });
+            }
+
+        }catch(err){
+          console.log(err);
+        }
+
+    }
+}
+
+
 
 const addToString = (str,value) =>{
   let sentence='';
@@ -288,6 +378,29 @@ var readHTMLFile = function(path, callback) {
     });
 };
 
+const extractCoc = (service) => {
+  if(service.coc){
+    service.coc.map(item=>{
+      for(const name in item){
+        service[name] = item[name];
+      }
+    });
+  }
+  delete service.coc;
+  return service;
+}
+
+function makeCode(length) {
+    var result           = '';
+    var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var charactersLength = characters.length;
+    for ( var i = 0; i < length; i++ ) {
+      result += characters.charAt(Math.floor(Math.random() *
+ charactersLength));
+   }
+   return result;
+}
+
 
 module.exports = {
   calcDiff,
@@ -296,5 +409,8 @@ module.exports = {
   sendInvitationMail,
   newMemberNotificationMail,
   sendMultipleInvitations,
-  readHTMLFile
+  readHTMLFile,
+  extractCoc,
+  createGgusTickets,
+  delay
 }

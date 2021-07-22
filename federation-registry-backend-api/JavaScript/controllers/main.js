@@ -15,12 +15,19 @@ const findConnections = (req, res, db) => {
 
 const rejectPetition = (req,res,next,db) => {
   db.task('reject-petition',async t =>{
-    await t.service_petition_details.review(req.params.id,req.user.sub,'reject',req.body.comment,req.params.tenant_name).then(async results=>{
+    await t.service_petition_details.review(req.params.id,req.user.sub,'reject',req.body.comment,req.params.tenant).then(async results=>{
       if (results){
-        await t.user.getPetitionOwners(req.params.id).then(data=>{
+        await t.user.getPetitionOwners(req.params.id).then(async data=>{
           if(data){
-            data.forEach(email_data=>{
-              sendMail({subject:'Service Petition Review',service_name:email_data.service_name,state:'rejected',tenant:req.params.tenant_name},'review-notification.html',[{name:email_data.name,email:email_data.email}]);
+            await t.user.getReviewers(req.params.tenant).then(users =>{
+                if(data[0] && data[0].service_name){
+                users.forEach(user=>{
+                  sendMail({subject:'Service Request Reviewed',service_name:data[0].service_name,date:'rejected',tenant:req.params.tenant},'reviewed-notification.html',[{name:user.name,email:user.email}]);
+                });
+              }
+              data.forEach(email_data=>{
+                sendMail({subject:'Service Petition Review',service_name:email_data.service_name,state:'rejected',tenant:req.params.tenant},'review-notification.html',[{name:email_data.name,email:email_data.email}]);
+              });
             })
           }
         }).catch(err=>{next(err)});
@@ -35,24 +42,31 @@ const rejectPetition = (req,res,next,db) => {
 
 const changesPetition = (req,res,next,db) => {
   db.tx('approve-with-changes-petition',async t =>{
-        await t.petition.get(req.params.id,req.params.tenant_name).then(async petition =>{
+        await t.petition.get(req.params.id,req.params.tenant).then(async petition =>{
           if(petition){
             petition.service_data.type = petition.meta_data.type;
             petition.service_data.service_id = petition.meta_data.service_id;
             petition.service_data.requester = petition.meta_data.requester;
             petition = petition.service_data;
             petition.comment = req.body.comment;
-            petition.status = 'pending';
-            petition.tenant = req.params.tenant_name;
+            petition.status = 'changes';
+            petition.tenant = req.params.tenant;
             await t.petition.add(petition,petition.requester).then(async id=>{
               if(id){
-                await t.service_petition_details.review(req.params.id,req.user.sub,'approved_with_changes',req.body.comment,req.params.tenant_name).then(async result=>{
+                await t.service_petition_details.review(req.params.id,req.user.sub,'approved_with_changes',req.body.comment,req.params.tenant).then(async result=>{
                   if(result){
                     res.status(200).json({id});
-                    await t.user.getPetitionOwners(req.params.id).then(data=>{
+                    await t.user.getPetitionOwners(req.params.id).then(async data=>{
                       if(data){
-                        data.forEach(email_data=>{
-                          sendMail({subject:'Service Petition Review',service_name:email_data.service_name,state:'approved with changes',tenant:req.params.tenant_name},'review-notification.html',[{name:email_data.name,email:email_data.email}]);
+                        await t.user.getReviewers(req.params.tenant).then(users =>{
+                          if(data[0] && data[0].service_name){
+                            users.forEach(user=>{
+                              sendMail({subject:'Service Request Reviewed',service_name:data[0].service_name,state:'changes requested',tenant:req.params.tenant},'reviewed-notification.html',[{name:user.name,email:user.email}]);
+                            });
+                          }
+                          data.forEach(email_data=>{
+                            sendMail({subject:'Service Petition Review',service_name:email_data.service_name,state:'approved with changes',tenant:req.params.tenant},'review-notification.html',[{name:email_data.name,email:email_data.email}]);
+                          })
                         })
                       }
 
@@ -68,26 +82,52 @@ const changesPetition = (req,res,next,db) => {
         }).catch(err=>{next(err);});
       })
 }
+const requestReviewPetition = (req,res,next,db) => {
+  db.tx('request-review-petition',async t =>{
+    await t.service_petition_details.requestReview(req.params.id,req.body.comment).then(async result=>{
+      res.status(200).end();
+      await t.user.getUnrestrictedReviewers(req.params.tenant).then(async users=>{
+        console.log('Sending mail to managers');
+        await t.service_petition_details.getServiceId(req.params.id,req.params.tenant).then(async service_id => {
+          if(service_id){
+            await t.service.get(service_id,req.params.tenant).then(res => {
+              sendMail({subject:'Review Requested',service_name:res.service_data.service_name,tenant:req.params.tenant},'request-reviewer-notification.html',users);
+            });
+          }else{
+            await t.petition.get(req.params.id,req.params.tenant).then(res=>{
+                sendMail({subject:'Review Requested',service_name:res.service_data.service_name,tenant:req.params.tenant},'request-reviewer-notification.html',users);
+            });
+          }
+        })
+      }).catch(error=>{
+        next('Could not sent email to reviewers:' + error);
+      });
+    }).catch(err=>{
+      next(err);
+    });
+  })
+}
+
 
 const approvePetition = (req,res,next,db) => {
   db.tx('approve-petition',async t =>{
     let service_id;
-    await t.petition.get(req.params.id,req.params.tenant_name).then(async petition =>{
+    await t.petition.get(req.params.id,req.params.tenant).then(async petition =>{
       if(petition){
-        petition.service_data.tenant = req.params.tenant_name;
+        petition.service_data.tenant = req.params.tenant;
         if(petition.meta_data.type==='delete'){
           service_id = petition.meta_data.service_id;
           await t.batch([
             t.service_details.delete(petition.meta_data.service_id),
-            t.service_petition_details.review(req.params.id,req.user.sub,'approved',req.body.comment,req.params.tenant_name)
+            t.service_petition_details.review(req.params.id,req.user.sub,'approved',req.body.comment,req.params.tenant)
           ]);
         }
         else if(petition.meta_data.type==='edit'){
           // Edit Service
           service_id = petition.meta_data.service_id;
           await t.batch([
-            t.service.update(petition.service_data,petition.meta_data.service_id,req.params.tenant_name),
-            t.service_petition_details.review(req.params.id,req.user.sub,'approved',req.body.comment,req.params.tenant_name)
+            t.service.update(petition.service_data,petition.meta_data.service_id,req.params.tenant),
+            t.service_petition_details.review(req.params.id,req.user.sub,'approved',req.body.comment,req.params.tenant)
           ]);
         }
         else if(petition.meta_data.type==='create'){
@@ -95,18 +135,24 @@ const approvePetition = (req,res,next,db) => {
           await t.service.add(petition.service_data,petition.meta_data.requester,petition.meta_data.group_id).then(async id=>{
             if(id){
               service_id = id;
-              await t.service_petition_details.approveCreation(req.params.id,req.user.sub,'approved',req.body.comment,id,req.params.tenant_name);
+              await t.service_petition_details.approveCreation(req.params.id,req.user.sub,'approved',req.body.comment,id,req.params.tenant);
             }
           }).catch(err=>{
-            console.log('error')
             console.log(err);
             next(err);});
         }
         res.status(200).json({service_id});
-        await t.user.getPetitionOwners(req.params.id).then(data=>{
+        await t.user.getPetitionOwners(req.params.id).then(async data=>{
           if(data){
-            data.forEach(email_data=>{
-              sendMail({subject:'Service Petition Review',service_name:email_data.service_name,state:'approved',tenant:req.params.tenant_name},'review-notification.html',[{name:email_data.name,email:email_data.email}]);
+            await t.user.getReviewers(req.params.tenant).then(users =>{
+              if(data[0] && data[0].service_name){
+                users.forEach(user=>{
+                  sendMail({subject:'Service Request Reviewed',service_name:data[0].service_name,date:'rejected',tenant:req.params.tenant},'reviewed-notification.html',[{name:user.name,email:user.email}]);
+                });
+              }
+              data.forEach(email_data=>{
+                sendMail({subject:'Service Petition Review',service_name:email_data.service_name,state:'approved with changes',tenant:req.params.tenant},'review-notification.html',[{name:email_data.name,email:email_data.email}]);
+              })
             })
           }
         }).catch(err=>{next(err);})
@@ -122,7 +168,7 @@ const approvePetition = (req,res,next,db) => {
 const getOpenPetition = (req,res,next,db) =>{
   db.task('find-petition-data',async t=>{
   if(req.user.role.actions.includes('get_petition')){
-    await t.petition.get(req.params.id,req.params.tenant_name).then(result=>{return result.service_data}).then(petition => {
+    await t.petition.get(req.params.id,req.params.tenant).then(result=>{return result.service_data}).then(petition => {
        if(petition){
           res.status(200).json({petition});
        }
@@ -134,7 +180,7 @@ const getOpenPetition = (req,res,next,db) =>{
      }).catch(err=>{next(err);});
    }
    else if(req.user.role.actions.includes('get_own_petition')){
-     await t.petition.getOwn(req.params.id,req.user.sub,req.params.tenant_name).then(result=>{return result.service_data}).then(petition => {
+     await t.petition.getOwn(req.params.id,req.user.sub,req.params.tenant).then(result=>{return result.service_data}).then(petition => {
        if(petition){
           res.status(200).json({petition});
        }
@@ -154,7 +200,7 @@ const getOpenPetition = (req,res,next,db) =>{
 
 const getPetition = (req,res,next,db) => {
   if(req.user.role.actions.includes('get_petition')){
-    db.petition.getOld(req.params.id,req.user.sub,req.params.tenant_name).then(petition =>{
+    db.petition.getOld(req.params.id,req.user.sub,req.params.tenant).then(petition =>{
       if(petition){
         res.status(200).json({petition:petition.service_data});
       }
@@ -164,7 +210,7 @@ const getPetition = (req,res,next,db) => {
     }).catch(err=>{next(err)});
   }
   else if (req.user.role.actions.includes('get_own_petition')){
-    db.petition.getOwnOld(req.params.id,req.user.sub,req.params.tenant_name).then(petition =>{
+    db.petition.getOwnOld(req.params.id,req.user.sub,req.params.tenant).then(petition =>{
       if(petition){
         res.status(200).json({petition:petition.service_data});
       }
@@ -185,5 +231,6 @@ module.exports = {
   approvePetition,
   changesPetition,
   getOpenPetition,
-  getPetition
+  getPetition,
+  requestReviewPetition
 }

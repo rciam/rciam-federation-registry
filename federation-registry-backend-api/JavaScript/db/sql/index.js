@@ -31,8 +31,11 @@ module.exports = {
     },
     service:{
       getAll:(sql('service/getAll.sql')),
+      getAllPublic:(sql('service/getAllPublic.sql')),
+      getByProtocolIdPublic:sql('service/getByProtocolIdPublic.sql'),
       getService:sql('service/getService.sql'),
-      getPending:sql('service/getPending.sql')
+      getPending:sql('service/getPending.sql'),
+      getByProtocolId:sql('service/getByProtocolId.sql')
     },
     user_info:{
       add:sql('user_info/add.sql')
@@ -40,7 +43,8 @@ module.exports = {
     service_petition_details:{
       add:sql('service_petition_details/add.sql'),
       update:sql('service_petition_details/update.sql'),
-      belongsToRequester:sql('service_petition_details/belongsToRequester.sql')
+      getTicketInfo:sql('service_petition_details/getTicketInfo.sql'),
+      canBeEditedByRequester:sql('service_petition_details/canBeEditedByRequester.sql')
     },
     service_state:{
       add:sql('service_state/add.sql'),
@@ -51,7 +55,7 @@ module.exports = {
       getReviewers:sql('user/getReviewers.sql'),
       getServiceOwners:sql('user/getServiceOwners.sql'),
       getPetitionOwners:sql('user/getPetitionOwners.sql'),
-      getReviewEntitlements:sql('user/getReviewEntitlements.sql')
+      getActionEntitlements:sql('user/getActionEntitlements.sql')
     },
     petition: {
       getPetition:sql('petition/getPetition.sql'),
