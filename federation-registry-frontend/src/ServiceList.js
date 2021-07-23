@@ -586,7 +586,7 @@ function TableItem(props) {
 
               {props.service.owned?
                 <React.Fragment>
-                  {props.service.status==='changes'||(props.service.outdated&&!props.service.pettion_id&&props.service.state==="deployed")?
+                  {props.service.status==='changes'||(props.service.outdated&&!props.service.petition_id&&props.service.state==='deployed')?
                   <div className="notification">
                     <FontAwesomeIcon icon={faExclamation} className="fa-exclamation"/>
                     <FontAwesomeIcon icon={faCircle} className="fa-circle"/>
@@ -595,7 +595,7 @@ function TableItem(props) {
                     placement='top'
                     overlay={
                       <Tooltip id={`tooltip-top`}>
-                        {props.service.status==='changes'?t('changes_notification'):props.service.outdated&&!props.service.pettion_id&&props.service.state==="deployed"?"Service needs to be updated":(props.service.state==='deployed'||props.service.type==='create')&&props.service.status!=='request_review'?t('edit_notification'):props.service.status==='request_review'?t('review_requested_notification'):t('pending_notification')}
+                        {props.service.status==='changes'?t('changes_notification'):props.service.outdated&&!props.service.petition_id&&props.service.state==='deployed'?"Service needs to be updated":(props.service.state==='deployed'||props.service.type==='create')&&props.service.status!=='request_review'?t('edit_notification'):props.service.status==='request_review'?t('review_requested_notification'):t('pending_notification')}
                       </Tooltip>
                     }
                   >
