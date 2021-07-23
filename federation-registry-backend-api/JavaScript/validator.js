@@ -375,7 +375,7 @@ const serviceValidationRules = (options) => {
         }).optional({checkFalsy:true}).custom((value,{req,location,path})=> {
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         let max = config.form[tenant].id_token_timeout_seconds;
-        if(!value||(parseInt(value)&&parseInt(value)<=max&&parseInt(value)>=0)){return true}else{
+        if(!value||(value&&parseInt(value)<=max&&parseInt(value)>=0)){return true}else{
           throw new Error("id_token_timeout_seconds must be an integer in specified range [1-"+ max +"]")
         }}),
       body('*.access_token_validity_seconds').customSanitizer(value => {
@@ -388,7 +388,7 @@ const serviceValidationRules = (options) => {
         }).optional({checkFalsy:true}).custom((value,{req,location,path})=> {
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         let max = config.form[tenant].access_token_validity_seconds;
-        if(parseInt(value)&&parseInt(value)<=max&&parseInt(value)>=0){return true}else{
+        if(value&&parseInt(value)<=max&&parseInt(value)>=0){return true}else{
           throw new Error("access_token_timeout_seconds must be an integer in specified range [1-"+ max +"]")
         }}),
       body('*.refresh_token_validity_seconds').customSanitizer(value => {
@@ -417,7 +417,7 @@ const serviceValidationRules = (options) => {
           }
           let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
           let max = config.form[tenant].refresh_token_validity_seconds;
-          if(parseInt(value)&&parseInt(value)<=max&&parseInt(value)>=0){return true}else{
+          if(value&&parseInt(value)<=max&&parseInt(value)>=0){return true}else{
             throw new Error("Refresh Token Validity Seconds must be an integer in specified range [1-"+ max +"]")
           }
         }),
@@ -442,7 +442,7 @@ const serviceValidationRules = (options) => {
         }
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         let max = config.form[tenant].device_code_validity_seconds;
-        if((parseInt(value)&&parseInt(value)<=max&&parseInt(value)>=0)||(req.body[pos].protocol!=='oidc'||!req.body[pos].grant_types||!req.body[pos].grant_types.includes('urn:ietf:params:oauth:grant-type:device_code'))){
+        if((value&&parseInt(value)<=max&&parseInt(value)>=0)||(req.body[pos].protocol!=='oidc'||!req.body[pos].grant_types||!req.body[pos].grant_types.includes('urn:ietf:params:oauth:grant-type:device_code'))){
           return true}else{
           throw new Error("Device Code Validity Seconds must be an integer in specified range [0-"+ max +"]")
         }}).withMessage('Must be an integer in specified range'),

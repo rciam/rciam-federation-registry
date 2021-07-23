@@ -31,8 +31,10 @@ function requiredDeployment(old_values,new_values){
       }
   }
   helper = calculateMultivalueDiff(old_values,new_values,helper);
+  console.log(helper);
   for(property in helper){
     if(config.deployment_fields.includes(property)){
+      console.log(property);
       deploy = true;
     }
   }
@@ -94,26 +96,32 @@ function requiredDeployment(old_values,new_values){
       }
       edits.grant_types.N = new_values.grant_types.filter(x=>!old_values.grant_types.includes(x));
       edits.grant_types.D = old_values.grant_types.filter(x=>!new_values.grant_types.includes(x));
-      if(edits.grant_types&&edits.grant_types.N.length===0&&edits.grant_types.D.length===0){
-        delete edits.grant_types;
-      }
+
       edits.scope.N = new_values.scope.filter(x=>!old_values.scope.includes(x));
       edits.scope.D = old_values.scope.filter(x=>!new_values.scope.includes(x));
-      if(edits.scope&&edits.scope.N.length===0&&edits.scope.D.length===0){
-        delete edits.scope;
-      }
+
       edits.redirect_uris.N = new_values.redirect_uris.filter(x=>!old_values.redirect_uris.includes(x));
       edits.redirect_uris.D = old_values.redirect_uris.filter(x=>!new_values.redirect_uris.includes(x));
-      if(edits.redirect_uris&&edits.redirect_uris.N.length===0&&edits.redirect_uris.D.length===0){
-        delete edits.redirect_uris;
-      }
 
-      if(edits.contacts&&edits.contacts.N.length===0&&edits.contacts.D.length===0){
-        delete edits.contacts;
-      }
-      if(edits.redirect_uris&&edits.redirect_uris.N.length===0&&edits.redirect_uris.D.length===0){
-        delete edits.redirect_uris;
-      }
+      
+
+
+    }
+    if(edits.scope&&edits.scope.N.length===0&&edits.scope.D.length===0){
+      delete edits.scope;
+    }
+    if(edits.grant_types&&edits.grant_types.N.length===0&&edits.grant_types.D.length===0){
+      delete edits.grant_types;
+    }
+    if(edits.redirect_uris&&edits.redirect_uris.N.length===0&&edits.redirect_uris.D.length===0){
+      delete edits.redirect_uris;
+    }
+
+    if(edits.contacts&&edits.contacts.N.length===0&&edits.contacts.D.length===0){
+      delete edits.contacts;
+    }
+    if(edits.redirect_uris&&edits.redirect_uris.N.length===0&&edits.redirect_uris.D.length===0){
+      delete edits.redirect_uris;
     }
     return edits
   }
