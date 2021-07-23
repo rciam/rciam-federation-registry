@@ -87,7 +87,6 @@ router.get('/tenants/:tenant/services',getServicesValidation(),validate,authenti
 
 
 
-
 // Endpoint used to bootstrap a teant or generaly to import multiple services
 // Add changeContacts to alter contacts
 router.post('/tenants/:tenant/services',tenantValidation(),validate,authenticate,serviceValidationRules({optional:true,tenant_param:true,check_available:true,sanitize:true,null_client_id:false}),validate,(req,res,next)=> {

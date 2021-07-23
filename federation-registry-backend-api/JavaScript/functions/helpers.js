@@ -123,40 +123,39 @@ const calcDiff = (oldState,newState) => {
 
 const sendNotif= (data,template_uri,user)=>{
   if(process.env.NODE_ENV!=='test'&&process.env.NODE_ENV!=='test-docker'&&!config.disable_emails){
-  readHTMLFile(path.join(__dirname, '../html/', template_uri), function(err, html) {
+    readHTMLFile(path.join(__dirname, '../html/', template_uri), function(err, html) {
       let transporter = nodeMailer.createTransport({
-          host: 'relay.grnet.gr',
-          port: 587,
-          secure: false
-      });
-      // let transporter = nodeMailer.createTransport({
-      //   service: 'gmail',
-      //   auth: {
-      //     user: 'orionaikido@gmail.com',
-      //     pass: ''
-      //   }
-      // });
-      var template = hbs.compile(html);
-      //var replacements = {username: "John Doe",name:"The name"};
-      var replacements = {
-        tenant:data.tenant,
-        name:user.name
-      };     
-      var htmlToSend = template(replacements);
-      var mailOptions = {
-        from: data.tenant.toUpperCase()+" Check-in Notifications",
-        to : user.email,
-        subject : data.subject,
-        html : htmlToSend
-      };
-      transporter.sendMail(mailOptions, function (error, response) {
-        if (error) {
-          customLogger(null,null,'info',[{type:'email_log'},{message:'Email not sent'},{error:error},{user:user},{data:data},{template:template_uri}]);
-        }
-        else {
-          customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{user:user},{data:data},{template:template_uri}]);
-        }
-      });
+        host: 'relay.grnet.gr',
+        port: 587,
+        secure: false
+    });
+    // let transporter = nodeMailer.createTransport({
+    //   service: 'gmail',
+    //   auth: {
+    //     user: 'orionaikido@gmail.com',
+    //     pass: ''
+    //   }
+    // });
+    var replacements = {
+      name:user.name
+    };
+    var template = hbs.compile(html);
+    var htmlToSend = template(replacements);
+    var mailOptions = {
+      from: data.tenant.toUpperCase()+" Check-in Notifications <noreply@faai.grnet.gr>",
+      to : user.email,
+      subject : data.subject,
+      html : htmlToSend
+    };
+    transporter.sendMail(mailOptions, function (error, response) {
+      if (error) {
+        customLogger(null,null,'info',[{type:'email_log'},{message:'Email not sent'},{error:error},{user:user},{data:data}]);
+      }
+      else {user(null,null,'info',[{type:'email_log'},{message:'Email sent'},{user:user},{data:data}]);
+      }
+    });
+    
+
   });
  
   }
@@ -191,7 +190,7 @@ const sendInvitationMail = async (data) => {
         }
         var htmlToSend = template(replacements);
         var mailOptions = {
-          from: data.tenant.toUpperCase()+" Check-in Notifications",
+          from: data.tenant.toUpperCase()+" Check-in Notifications <noreply@faai.grnet.gr>",
           to : data.email,
           subject : 'Invitation to manage service',
           html : htmlToSend
@@ -244,7 +243,7 @@ const newMemberNotificationMail = (data,managers) => {
 
         var htmlToSend = template(replacements);
         var mailOptions = {
-          from: data.tenant.toUpperCase()+" Check-in Notifications",
+          from: data.tenant.toUpperCase()+" Check-in Notifications <noreply@faai.grnet.gr>",
           to : manager.email,
           subject : 'New member in your owners group',
           html : htmlToSend
@@ -264,7 +263,6 @@ const newMemberNotificationMail = (data,managers) => {
 
 const sendMail= (data,template_uri,users)=>{
   var currentDate = new Date();
-
   var result;
   if(process.env.NODE_ENV!=='test'&&process.env.NODE_ENV!=='test-docker'&&!config.disable_emails){
   readHTMLFile(path.join(__dirname, '../html/', template_uri), function(err, html) {
@@ -300,12 +298,11 @@ const sendMail= (data,template_uri,users)=>{
         state:state,
         url:process.env.REACT_BASE+'/'+ data.tenant
       };
-
       users.forEach((user) => {
           replacements.name = user.name;
           var htmlToSend = template(replacements);
           var mailOptions = {
-            from:  data.tenant+" Check-in Notifications",
+            from:  data.tenant.toUpperCase()+" Check-in Notifications <noreply@faai.grnet.gr>",
             to : user.email,
             subject : data.subject,
             html : htmlToSend

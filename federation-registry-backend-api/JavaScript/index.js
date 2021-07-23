@@ -61,7 +61,7 @@ if(config.send_notifications_on_startup){
       if(users){
         for(const user of users){
           await delay(400);
-          sendNotif({subject:'New portal for managing services in Check-in',tenant:'egi'},'introduction-to-fed.hbs',[{name:user.name,email:user.email}]);
+          sendNotif({subject:'New portal for managing services in Check-in',tenant:'egi'},'introduction-to-fed.hbs',{name:user.name,email:user.email});
         }
       }
     }).catch(err=>{
