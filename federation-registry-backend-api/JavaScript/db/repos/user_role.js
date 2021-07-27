@@ -9,7 +9,7 @@ class UserRoleRepository {
 
   async getRole(entitlements,tenant) {
     let role= {};
-    if(entitlements.length===0){
+    if(!entitlements||entitlements.length===0){
       entitlements = ['no_entitlements'];
     }
     const query = this.pgp.as.format('SELECT role_name, id FROM (SELECT role_name,id,entitlement FROM (user_roles LEFT JOIN role_entitlements on user_roles.id=role_entitlements.role_id) WHERE tenant=$1 AND (entitlement IN ($2:csv) OR entitlement IS NULL)) as roles ORDER BY id DESC LIMIT 1', [tenant,entitlements]);
