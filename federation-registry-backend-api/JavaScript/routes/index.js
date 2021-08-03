@@ -16,6 +16,7 @@ const { generators } = require('openid-client');
 const code_verifier = generators.codeVerifier();
 const {rejectPetition,approvePetition,changesPetition,getPetition,getOpenPetition,requestReviewPetition} = require('../controllers/main.js');
 const base64url = require('base64url');
+const { EADDRINUSE } = require('constants');
 
 
 
@@ -1252,6 +1253,7 @@ function authenticate(req,res,next){
         // Remove Bearer from string
         token = token.slice(7, token.length);
         req.user = decode(token);
+        
         db.user_role.getRoleActions(req.user.sub,req.params.tenant).then(role=>{
           if(role){
             req.user.role = role;
@@ -1380,6 +1382,12 @@ const saveUser=(userinfo,tenant)=>{
   return db.tx('user-check',async t=>{
     return t.user.getUser(userinfo.sub,tenant).then(async user=>{
       if(user){
+        if(!user.eduperson_entitlement||typeof(user.eduperson_entitlement)!=='object'){
+          user.eduperson_entitlement = [];
+        }
+        if(!userinfo.eduperson_entitlement||typeof(userinfo.eduperson_entitlement)!=='object'){
+          userinfo.eduperson_entitlement = [];
+        }
         await t.user_role.getRole(userinfo.eduperson_entitlement,tenant).then(async role=>{
           if(role){
             let update_userinfo = false;
@@ -1391,6 +1399,7 @@ const saveUser=(userinfo,tenant)=>{
             delete userinfo.eduperson_entitlement;
             delete user.eduperson_entitlement;
             userinfo.role_id = role.id.toString();
+            
             for (const property in userinfo) {
               if(user.hasOwnProperty(property)&&userinfo[property]!==user[property]){
                 update_userinfo= true;

@@ -107,7 +107,7 @@ export function PublicKey(props){
             placeholder='https://'
             type="text"
             ref={target}
-            value={props.values.jwks_uri}
+            value={props.values.jwks_uri?props.values.jwks_uri:""}
             onChange={props.onChange}
             isInvalid={props.isInvalid}
             disabled={props.disabled}
@@ -891,7 +891,7 @@ export  function LogoInput(props){
               overflowX: 'scroll',
             }}
           >
-            <Image src={props.value ? props.value:process.env.PUBLIC_URL + '/logo_placeholder.gif'} onError={addDefaultSrc} fluid />
+            <Image referrerPolicy="no-referrer" src={props.value ? props.value:process.env.PUBLIC_URL + '/logo_placeholder.gif'} onError={addDefaultSrc} fluid />
 
           </pre>
         )}

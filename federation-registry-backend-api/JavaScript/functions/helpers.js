@@ -149,7 +149,7 @@ const sendNotif= (data,template_uri,user)=>{
     };
     transporter.sendMail(mailOptions, function (error, response) {
       if (error) {
-        customLogger(null,null,'info',[{type:'email_log'},{message:'Email not sent'},{error:error},{user:user},{data:data}]);
+        customLogger(null,null,'error',[{type:'email_log'},{message:'Email not sent'},{error:error},{user:user},{data:data}]);
       }
       else {user(null,null,'info',[{type:'email_log'},{message:'Email sent'},{user:user},{data:data}]);
       }
@@ -198,11 +198,11 @@ const sendInvitationMail = async (data) => {
         return transporter.sendMail(mailOptions, function (error, response) {
           if (error) {
             resolve(false);
-            customLogger(null,null,'info',[{type:'email_log'},{message:'Email not sent'},{error:error},{user:null},{data:data.email}]);
+            customLogger(null,null,'error',[{type:'email_log'},{message:'Email not sent'},{template:'invitation'},{error:error},{user:null},{data:data.email}]);
           }
           else {
             resolve(true);
-            customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{user:null},{data:data.email}]);
+            customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{template:'invitation'},{user:null},{data:data.email}]);
           }
         });
       });
@@ -250,10 +250,10 @@ const newMemberNotificationMail = (data,managers) => {
         };
         transporter.sendMail(mailOptions, function (error, response) {
           if (error) {
-            customLogger(null,null,'info',[{type:'email_log'},{message:'Email not sent'},{error:error},{user:manager},{data:data}]);
+            customLogger(null,null,'error',[{type:'email_log'},{message:'Email not sent'},{error:error},{template:'new-member-notification'} ,{user:manager},{data:data}]);
           }
           else {
-            customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{user:manager},{data:data}]);
+            customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{user:manager},{template:'new-member-notification'},{data:data}]);
           }
         });
       })
@@ -309,10 +309,10 @@ const sendMail= (data,template_uri,users)=>{
           };
           transporter.sendMail(mailOptions, function (error, response) {
             if (error) {
-              customLogger(null,null,'info',[{type:'email_log'},{message:'Email not sent'},{error:error},{user:user},{data:data}]);
+              customLogger(null,null,'error',[{type:'email_log'},{message:'Email not sent'},{template:template_uri},{error:error},{user:user},{data:data}]);
             }
             else {
-              customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{user:user},{data:data}]);
+              customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{template:template_uri},{user:user},{data:data}]);
             }
           });
       });
@@ -376,7 +376,7 @@ const createGgusTickets =  function(data){
                   transporter.sendMail(mailOptions, function (error, response) {
                     if (error) {
                       return true;
-                      customLogger(null,null,'info',[{type:'email_log'},{message:'Email not sent'},{error:error},{recipient:'Ggus'},{ticket_data:ticket_data}]);
+                      customLogger(null,null,'error',[{type:'email_log'},{message:'Email not sent'},{error:error},{recipient:'Ggus'},{ticket_data:ticket_data}]);
                     }
                     else {
                       return true;

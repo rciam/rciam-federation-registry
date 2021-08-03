@@ -41,7 +41,8 @@ class ServiceStateRepository {
     return this.db.any(sql.update,{
       id:+id,
       state:state,
-      deployment_type:deployment_type
+      deployment_type:deployment_type,
+      outdated:state==='deployed'?false:true
     })
   }
 

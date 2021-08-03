@@ -219,7 +219,7 @@ const ServiceForm = (props)=> {
           }).required(t('yup_required')),
     scope:yup.array().nullable().when('protocol',{
       is:'oidc',
-      then: yup.array().min(1,t('yup_select_option')).nullable().of(yup.string().min(1,t('yup_scope')).max(50,t('yup_char_max') + ' ('+ 50 +')').matches(reg.regScope,t('yup_scope_reg'))).unique(t('yup_scope_unique')).required(t('yup_required'))
+      then: yup.array().min(1,t('yup_select_option')).nullable().of(yup.string().min(1,t('yup_scope')).max(256,t('yup_char_max') + ' ('+ 256 +')').matches(reg.regScope,t('yup_scope_reg'))).unique(t('yup_scope_unique')).required(t('yup_required'))
     }),
     grant_types:yup.array().nullable().when('protocol',{
       is:'oidc',
@@ -268,9 +268,9 @@ const ServiceForm = (props)=> {
     }),
     client_secret:yup.string().nullable().when('protocol',{
       is:'oidc',
-      then: yup.string().when(['generate_client_secret','token_endpoint_auth_method'],{
+      then: yup.string().nullable().when(['generate_client_secret','token_endpoint_auth_method'],{
         is:(generate_client_secret,token_endpoint_auth_method)=> generate_client_secret===false&&!(token_endpoint_auth_method==='private_key_jwt'||token_endpoint_auth_method==='none'),
-        then: yup.string().required(t('yup_required')).min(4,t('yup_char_min') + ' ('+4+')').max(256,t('yup_char_max') + ' ('+256+')')
+        then: yup.string().nullable().required(t('yup_required')).min(4,t('yup_char_min') + ' ('+4+')').max(256,t('yup_char_max') + ' ('+256+')')
       }).nullable()
     }),
     metadata_url:yup.string().nullable().when('protocol',{
@@ -278,7 +278,7 @@ const ServiceForm = (props)=> {
       then: yup.string().required(t('yup_required')).matches(reg.regSimpleUrl,'Enter a valid Url')
     }),
     token_endpoint_auth_signing_alg:yup.string().nullable().when(['protocol',"token_endpoint_auth_method"],{
-      is:(protocol,token_endpoint_auth_method)=> protocol==='oidc'&&(token_endpoint_auth_method==="private_key_jwt",token_endpoint_auth_method==="client_secret_jwt"),
+      is:(protocol,token_endpoint_auth_method)=> protocol==='oidc'&&(token_endpoint_auth_method==="private_key_jwt"||token_endpoint_auth_method==="client_secret_jwt"),
       then: yup.string().required(t('yup_select_option')).test('testTokenEndpointSigningAlgorithm','Invalid Value',function(value){return tenant.form_config.token_endpoint_auth_signing_alg.includes(value)})
     }),
     token_endpoint_auth_method:yup.string().nullable().when('protocol',{
@@ -287,12 +287,15 @@ const ServiceForm = (props)=> {
     }),
     jwks_uri:yup.string().nullable().when(['protocol','token_endpoint_auth_method'],{
       is:(protocol,token_endpoint_auth_method)=> protocol==='oidc'&&token_endpoint_auth_method==="private_key_jwt" ,
-      then:yup.string().test('testTokenEndpointAuthMethod','Invalid Value',function(value){if(this.parent.jwks||(value&&reg.regSimpleUrl.test(value))){return true}else{return false}})
+      then:yup.string().nullable().test('test','Required Field',function(value){if(this.parent.jwks||value){return true}else{return false}}).test('testTokenEndpointAuthMethod','Invalid Value',function(value){ if(this.parent.jwks||(value&&reg.regSimpleUrl.test(value))){return true}else{return false}})
     }),
-    jwks:yup.object().nullable().when(['protocol','jwks_uri','token_endpoint_auth_method'],{
+    jwks:yup.object().typeError("test").nullable().when(['protocol','jwks_uri','token_endpoint_auth_method'],{
       is:(protocol,jwks_uri,token_endpoint_auth_method)=> protocol==='oidc'&&!jwks_uri&&token_endpoint_auth_method==="private_key_jwt" ,
-      then:yup.object().required(t('yup_required')).test('testJwks','Invalid Schema',function(value){
-        if(value&&value.keys&&typeof(value.keys)==='object'&&Object.keys(value).length===1){
+      then:yup.object().nullable().test('test','Required Field',function(value){if(this.parent.jwks_uri||value){return true}else{return false}}).test('testJwks','Invalid Schema',function(value){
+        if(!value){
+          return true
+        }
+        else if(value.keys&&typeof(value.keys)==='object'&&Object.keys(value).length===1){
           return true
         }
         else{
@@ -565,7 +568,7 @@ const ServiceForm = (props)=> {
           values.client_secret = '';
         }
         if(values.jwks_uri){
-          values.jwks_uri=null;
+          values.jwks=null;
         }
         if(values.jwks){
           values.jwks = JSON.parse(values.jwks);
@@ -606,7 +609,7 @@ const ServiceForm = (props)=> {
                 {props.disabled?null:
                   <div className="form-controls-container">
                     {props.review?
-                      <ReviewComponent errors={errors} reviewPetition={reviewPetition} restrictReview={restrictReview}/>
+                      <ReviewComponent errors={errors} reviewPetition={reviewPetition} type={props.type} restrictReview={restrictReview}/>
                       :
                       <React.Fragment>
                         <div className="form-submit-cancel-container">
@@ -995,7 +998,7 @@ const ServiceForm = (props)=> {
                   {props.disabled?null:
                     <div className="form-controls-container">
                       {props.review?
-                          <ReviewComponent errors={errors} reviewPetition={reviewPetition} restrictReview={restrictReview} />
+                          <ReviewComponent errors={errors} type={props.type} reviewPetition={reviewPetition} restrictReview={restrictReview} />
                         :
                         <React.Fragment>
                         <div className="form-submit-cancel-container">
@@ -1033,9 +1036,11 @@ const ReviewComponent = (props)=>{
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   useEffect(()=>{
+
     setInvalidPetition(Object.keys(props.errors).length !== 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[props.errors]);
+
 
   const handleReview = () =>{
 
@@ -1115,14 +1120,14 @@ const ReviewComponent = (props)=>{
               type="radio"
               name="formHorizontalRadios"
               id="formHorizontalRadios1"
-              disabled={invalidPetition||props.restrictReview}
+              disabled={invalidPetition&&props.type!=='delete'}
               onChange={(e)=>{if(e.target.checked){setType(e.target.value)}}}
               value="approve"
               checked={type==='approve'}
               />
               </Col>
               <Col onClick={()=>{
-                if(!invalidPetition&&!props.restrictReview){
+                if(!invalidPetition||props.type==='delete'){
                   setType('approve');
                 }
               }}>
@@ -1130,17 +1135,11 @@ const ReviewComponent = (props)=>{
               <strong>
               {t('review_approve')}
               </strong>
-              {invalidPetition?
+              {invalidPetition&&props.type!=='delete'?
                 <div className="approve-error">
                 Invalid Service Configuration, Approve disabled
                 </div>:null
               }
-              {props.restrictReview?
-                <div className="approve-error">
-                Approval is disabled for this environment, please request review.
-                </div>:null
-              }
-
               </Row>
 
               <Row className="review-option-desc">
