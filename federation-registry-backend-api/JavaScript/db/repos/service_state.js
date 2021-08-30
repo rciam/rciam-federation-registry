@@ -75,7 +75,9 @@ class ServiceStateRepository {
             if(decoded_message.client_id){
               updateClientId.push({id:decoded_message.id,client_id:decoded_message.client_id});
             }
-            ids.push(decoded_message.id);
+            if(decoded_message.state !=='error'){
+              ids.push(decoded_message.id); 
+            }
           }
           if(decoded_message.state==='error'){
             errors.push({date:date,service_id:decoded_message.id,error_code:decoded_message.status_code,error_description:decoded_message.error_description})
@@ -112,10 +114,30 @@ class ServiceStateRepository {
   // Of the Services that have finished deployment (ids) delete those that were pending deletion
   async delete(ids){
 
-    return this.db.any("UPDATE service_details SET deleted=true WHERE id IN (SELECT id FROM service_state WHERE deployment_type='delete' AND id IN($1:csv))",ids)
+    return this.db.any("UPDATE service_details SET deleted=true WHERE id IN (SELECT id FROM service_state WHERE deployment_type='delete' AND id IN($1:csv))",[ids])
   }
 
-
+  async updateOutdated(ids){
+    let services_turned_outdated = 0;
+    let services_turned_up_to_date = 0;
+    let new_ids = [];
+    for(let i=0;i<10;i++){
+      new_ids.push(ids[i]);
+    }
+    const query = this.pgp.as.format("UPDATE service_state SET outdated=true WHERE id IN($1:csv) AND outdated=false RETURNING *",[ids]);
+    return this.db.any(query).then(async result=>{
+      if(result){
+        services_turned_outdated = result.length;
+        return await this.db.any("UPDATE service_state SET outdated=false WHERE id NOT IN($1:csv) AND outdated=true RETURNING *",[ids]).then(result=>{
+          services_turned_up_to_date = result.length;
+          return ({
+            services_turned_outdated:services_turned_outdated,
+            services_turned_up_to_date:services_turned_up_to_date
+          })
+        }) 
+      }
+    })
+  }
 
 
   async updateMultiple(updateData){

@@ -510,7 +510,7 @@ function TableItem(props) {
         </div>
 
         <div className="table-image-container">
-        <Image src={props.service.logo_uri?props.service.logo_uri:process.env.PUBLIC_URL + '/placeholder.png'} thumbnail/>
+        <Image referrerPolicy="no-referrer" src={props.service.logo_uri?props.service.logo_uri:process.env.PUBLIC_URL + '/placeholder.png'} thumbnail/>
         </div>
 
       </td>

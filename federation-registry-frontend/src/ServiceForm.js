@@ -227,16 +227,16 @@ const ServiceForm = (props)=> {
     }),
     id_token_timeout_seconds:yup.number().nullable().when('protocol',{
       is:'oidc',
-      then: yup.number().nullable().min(0).max(tenant.form_config.id_token_timeout_seconds,t('yup_exceeds_max'))}),
+      then: yup.number().nullable().min(1,"Must be a positive value greater that 0").max(tenant.form_config.id_token_timeout_seconds,t('yup_exceeds_max')).required('This is a required field')}),
     access_token_validity_seconds:yup.number().nullable().when('protocol',{
       is:'oidc',
-      then: yup.number().nullable().min(0).max(tenant.form_config.access_token_validity_seconds,t('yup_exceeds_max'))}),
-    refresh_token_validity_seconds:yup.number().nullable().when('protocol',{
-      is:'oidc',
-      then: yup.number().nullable().min(0).max(tenant.form_config.refresh_token_validity_seconds,t('yup_exceeds_max'))}),
-    device_code_validity_seconds:yup.number().nullable().when('protocol',{
-      is:'oidc',
-      then: yup.number().nullable().min(0).max(tenant.form_config.device_code_validity_seconds,t('yup_exceeds_max'))}),
+      then: yup.number().nullable().min(1,"Must be a positive value greater that 0").max(tenant.form_config.access_token_validity_seconds,t('yup_exceeds_max')).required('This is a required field')}),
+    refresh_token_validity_seconds:yup.number().nullable().when(['scope','protocol'],{
+      is:(scope,protocol)=> protocol==='oidc'&&scope.includes('offline_access'),
+      then: yup.number().min(1,"Must be a positive value greater that 0").max(tenant.form_config.refresh_token_validity_seconds,t('yup_exceeds_max')).required('This field is required when the offline_access is selected')}),
+    device_code_validity_seconds:yup.number().nullable().when(['protocol','grant_types'],{
+      is:(protocol,grant_types)=> protocol==='oidc'&&grant_types.includes('urn:ietf:params:oauth:grant-type:device_code'),
+      then: yup.number().nullable().min(0).max(tenant.form_config.device_code_validity_seconds,t('yup_exceeds_max')).required('This is a required field when the device code grant type is selected')}),
     code_challenge_method:yup.string().nullable().when('protocol',{
       is:'oidc',
       then: yup.string().nullable().test('test_code_challenge_method','Invalid Value',function(value){
@@ -586,6 +586,7 @@ const ServiceForm = (props)=> {
       values,
       setFieldValue,
       setFieldTouched,
+      setTouched,
       touched,
       isValid,
       validateField,
@@ -845,7 +846,7 @@ const ServiceForm = (props)=> {
                           {values.token_endpoint_auth_method==='private_key_jwt'||values.token_endpoint_auth_method==='client_secret_jwt'?
                           <InputRow title="Token Endpoint Signing Algorithm" required={true} extraClass='select-col' error={errors.token_endpoint_auth_signing_alg} touched={touched.token_endpoint_auth_signing_alg}>
                             <Select
-                              onBlur={handleBlur}
+                              onBlur={handleBlur} 
                               optionsTitle={tenant.form_config.token_endpoint_auth_signing_alg_title}
                               options={tenant.form_config.token_endpoint_auth_signing_alg}
                               default='RS256'
@@ -896,6 +897,8 @@ const ServiceForm = (props)=> {
                               isInvalid={hasSubmitted?!!errors.refresh_token_validity_seconds:(!!errors.refresh_token_validity_seconds&&touched.refresh_token_validity_seconds)}
                               onChange={handleChange}
                               disabled={disabled}
+                              setFieldValue={setFieldValue}
+                              validateField={validateField}
                               changed={props.changes}
                             />
                           </InputRow>
@@ -903,6 +906,8 @@ const ServiceForm = (props)=> {
                             <DeviceCode
                               onBlur={handleBlur}
                               values={values}
+                              setFieldValue={setFieldValue}
+                              validateField={validateField}
                               isInvalid={hasSubmitted?!!errors.device_code_validity_seconds:(!!errors.device_code_validity_seconds&&touched.device_code_validity_seconds)}
                               onChange={handleChange}
                               disabled={disabled}
@@ -933,7 +938,7 @@ const ServiceForm = (props)=> {
                               changed={props.changes?props.changes.allow_introspection:null}
                             />
                           </InputRow>
-                          <InputRow title={t('form_access_token_validity_seconds')} extraClass='time-input' error={errors.access_token_validity_seconds} touched={touched.access_token_validity_seconds} description={t('form_access_token_validity_seconds_desc')}>
+                          <InputRow required={true} title={t('form_access_token_validity_seconds')} extraClass='time-input' error={errors.access_token_validity_seconds} touched={touched.access_token_validity_seconds} description={t('form_access_token_validity_seconds_desc')}>
                             <TimeInput
                               name='access_token_validity_seconds'
                               value={values.access_token_validity_seconds}
@@ -944,7 +949,7 @@ const ServiceForm = (props)=> {
                               changed={props.changes?props.changes.access_token_validity_seconds:null}
                             />
                           </InputRow>
-                          <InputRow title={t('form_id_token_timeout_seconds')} extraClass='time-input' error={errors.id_token_timeout_seconds} touched={touched.id_token_timeout_seconds} description={t('form_id_token_timeout_seconds_desc')}>
+                          <InputRow required={true} title={t('form_id_token_timeout_seconds')} extraClass='time-input' error={errors.id_token_timeout_seconds} touched={touched.id_token_timeout_seconds} description={t('form_id_token_timeout_seconds_desc')}>
                             <TimeInput
                               name='id_token_timeout_seconds'
                               value={values.id_token_timeout_seconds}
@@ -1012,7 +1017,7 @@ const ServiceForm = (props)=> {
                   }
                   <ResponseModal message={message} modalTitle={modalTitle}/>
                   <SimpleModal isSubmitting={isSubmitting} isValid={isValid}/>
-                  {/*<Debug/>*/}
+                  {/* <Debug/> */}
 
                 </Form>
 

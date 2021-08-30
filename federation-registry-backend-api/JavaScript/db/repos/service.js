@@ -119,8 +119,9 @@ class ServiceRepository {
 
 
   async getAll(tenant){
-    return this.db.any(sql.getAll,{tenant:tenant}).then(services=>{
-      if(services){
+    const query = this.pgp.as.format(sql.getAll,{tenant:tenant});
+    return await this.db.any(query).then(services=>{
+      if(services){        
         const res = [];
         for (let i = 0; i < services.length; i++) {
           res.push(services[i].json);

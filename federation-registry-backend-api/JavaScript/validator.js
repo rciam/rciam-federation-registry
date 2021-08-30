@@ -79,13 +79,16 @@ const tenantValidation = (options) => {
   ]
 }
 const isNotEmpty = (value) => {
-  return ((typeof(value)==='number'&&value>=0)||(value&&typeof(value)==='string')||(typeof(value)==="boolean")||(value&&Array.isArray(value)&&value.length!==0)||(value&&value.constructor === Object && Object.keys(value).length !== 0))
+  return ((typeof(value)==='number')||(value&&typeof(value)==='string')||(typeof(value)==="boolean")||(value&&Array.isArray(value)&&value.length!==0)||(value&&value.constructor === Object && Object.keys(value).length !== 0))
+}
+const isEmpty = (value) => {
+  return !isNotEmpty(value);
 }
 
 const serviceValidationRules = (options) => {
   const required = (value,req,pos)=>{
     if(options.optional){
-      if(!isNotEmpty(value)){
+      if(isEmpty(value)){
         req.body[pos].outdated = true;
       }
       return true
@@ -97,7 +100,7 @@ const serviceValidationRules = (options) => {
 
   const requiredOidc = (value,req,pos) => {
       if(options.optional||req.body[pos].protocol!=='oidc'){
-        if(!isNotEmpty(value) && req.body[pos].protocol==='oidc'){
+        if(isEmpty(value) && req.body[pos].protocol==='oidc'){
           req.body[pos].outdated = true;
         }
       return true
@@ -109,7 +112,7 @@ const serviceValidationRules = (options) => {
 
   const requiredSaml = (value,req,pos) => {
     if(options.optional||req.body[pos].protocol!=='saml'){
-      if(!isNotEmpty(value)&& req.body[pos].protocol==='saml'){
+      if(isEmpty(value)&& req.body[pos].protocol==='saml'){
         req.body[pos].outdated = true;
       }
       return true;
@@ -133,6 +136,14 @@ const serviceValidationRules = (options) => {
     }
     else{
       return true;
+    }
+  }
+
+  const sanitizeInteger = (value) =>{
+    if(isEmpty(value)||(typeof(value)!=='number'&&typeof(parseInt(value))!=='number')){
+      return null;    
+    }else{
+      return parseInt(value);
     }
   }
 
@@ -367,39 +378,33 @@ const serviceValidationRules = (options) => {
             return config.form[req.params.tenant].token_endpoint_auth_signing_alg.includes(value)}).
             withMessage('Invalid Token Endpoint Signing Algorithm'),
       body('*.id_token_timeout_seconds').customSanitizer(value => {
-          if(typeof(value)!=='number'||typeof(parseInt(value))!=='number'){
-            return 0;
-          }else{
-            return value;
-          }
-        }).optional({checkFalsy:true}).custom((value,{req,location,path})=> {
+        return sanitizeInteger(value);
+        }).custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('id_token_timeout_seconds missing').if((value,{req,location,path})=> {return isNotEmpty(value)&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).custom((value,{req,location,path})=> {
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         let max = config.form[tenant].id_token_timeout_seconds;
-        if(!value||(value&&parseInt(value)<=max&&parseInt(value)>=0)){return true}else{
+        if(isEmpty(value)||(value<=max&&value>=1)){return true}else{
           throw new Error("id_token_timeout_seconds must be an integer in specified range [1-"+ max +"]")
         }}),
       body('*.access_token_validity_seconds').customSanitizer(value => {
-        if(typeof(value)!=='number'||typeof(parseInt(value))!=='number'){
-            return 0;
-
-          }else{
-            return value;
-          }
-        }).optional({checkFalsy:true}).custom((value,{req,location,path})=> {
+        return sanitizeInteger(value);
+        }).custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('access_token_validity_seconds missing').if((value,{req,location,path})=> {return isNotEmpty(value)&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).custom((value,{req,location,path})=> {
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         let max = config.form[tenant].access_token_validity_seconds;
-        if(value&&parseInt(value)<=max&&parseInt(value)>=0){return true}else{
+        if(isNotEmpty(value)&&value<=max&&value>=1){return true}else{
           throw new Error("access_token_timeout_seconds must be an integer in specified range [1-"+ max +"]")
         }}),
-      body('*.refresh_token_validity_seconds').customSanitizer(value => {
-        if(typeof(value)!=='number'||typeof(parseInt(value))!=='number'){
-            return 0;
-          }else{
-            return value;
-          }
+      body('*.refresh_token_validity_seconds').customSanitizer((value,{req,location,path}) => {
+        let pos = path.match(/\[(.*?)\]/)[1]; 
+        if(req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'&&req.body[pos].scope&&req.body[pos].scope.includes('offline_access')){
+          return sanitizeInteger(value);
+        }
+        else{
+          return null;
+        }
         }).custom((value,{req,location,path})=> {
           let pos = path.match(/\[(.*?)\]/)[1];
-          if(!isNotEmpty(value)&&req.body[pos].scope&&req.body[pos].scope.includes('offline_access')){
+          
+          if(isEmpty(value)&&req.body[pos].scope&&req.body[pos].scope.includes('offline_access')){
             if(options.optional){
               req.body[pos].outdated = true;
               return true
@@ -411,25 +416,30 @@ const serviceValidationRules = (options) => {
           else{
             return true
           }
-        }).withMessage("Refresh Token Validity Seconds is required when 'offline_access' is included in the scopes").custom((value,{req,location,path})=> {
-          if(!value){
+        }).withMessage("Refresh Token Validity Seconds is required when 'offline_access' is included in the scopes").
+        if((value,{req,location,path})=> {}).
+        custom((value,{req,location,path})=> {
+          if(isEmpty(value)){
             return true;
           }
           let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
           let max = config.form[tenant].refresh_token_validity_seconds;
-          if(value&&parseInt(value)<=max&&parseInt(value)>=0){return true}else{
-            throw new Error("Refresh Token Validity Seconds must be an integer in specified range [0-"+ max +"]")
+          if(isNotEmpty(value)&&value<=max&&value>=1){return true}else{
+            throw new Error("Refresh Token Validity Seconds must be an integer in specified range [1-"+ max +"]")
           }
         }),
-      body('*.device_code_validity_seconds').customSanitizer(value => {
-        if(typeof(value)!=='number'||typeof(parseInt(value))!=='number'){
-          return 0;
-        }else{
-          return value;
-        }
-      }).custom((value,{req,location,path})=> {
+      body('*.device_code_validity_seconds').customSanitizer((value,{req,location,path}) => {
         let pos = path.match(/\[(.*?)\]/)[1];
-        if(isNotEmpty(value)&&req.body[pos].protocol==='oidc'&&req.body[pos].grant_types&&req.body[pos].grant_types.includes('urn:ietf:params:oauth:grant-type:device_code')){
+        if(req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'&&req.body[pos].grant_types&&req.body[pos].grant_types.includes('urn:ietf:params:oauth:grant-type:device_code')){
+          return sanitizeInteger(value);
+        }
+        else{
+          return null;
+        }      
+      }).
+      custom((value,{req,location,path})=> {
+        let pos = path.match(/\[(.*?)\]/)[1];
+        if(isEmpty(value)&&req.body[pos].protocol==='oidc'&&req.body[pos].grant_types&&req.body[pos].grant_types.includes('urn:ietf:params:oauth:grant-type:device_code')){
           if(options.optional){
             req.body[pos].outdated = true;
             return true
@@ -437,15 +447,17 @@ const serviceValidationRules = (options) => {
             throw new Error("Device Code Validity Seconds is required when 'urn:ietf:params:oauth:grant-type:device_code' is included in the grant_types")
           }
         }
-        if(!value){
-          return true;
-        }
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         let max = config.form[tenant].device_code_validity_seconds;
-        if((!isNotEmpty(value)&&parseInt(value)<=max&&parseInt(value)>=0)||(req.body[pos].protocol!=='oidc'||!req.body[pos].grant_types||!req.body[pos].grant_types.includes('urn:ietf:params:oauth:grant-type:device_code'))){
+        
+        if(isEmpty(value)){
+          return true;
+        }else if((isNotEmpty(value)&&value<=max&&value>=0)||(req.body[pos].protocol!=='oidc'||isEmpty(req.body[pos].grant_types)||!req.body[pos].grant_types.includes('urn:ietf:params:oauth:grant-type:device_code'))){
           return true}else{
           throw new Error("Device Code Validity Seconds must be an integer in specified range [0-"+ max +"]")
-        }}).withMessage('Must be an integer in specified range'),
+        }
+        
+        }).withMessage('Must be an integer in specified range'),
       body('*.code_challenge_method').optional({checkFalsy:true}).isString().withMessage('Device Code must be a string').custom((value)=> {
         try{
           return value.match(reg.regCodeChalMeth)
@@ -527,13 +539,7 @@ const petitionValidationRules = () => {
     body('type').exists().withMessage('Required Field').bail().isString().withMessage('Must be a string').bail().custom((value)=>{if(['edit','create','delete'].includes(value)){return true}else{return false}}).bail()
   ]
 }
-const generateClientId = (req,res,next) => {
 
-  if(!req.body.client_id){
-    req.body.client_id = uuidv1();
-  }
-  next();
-}
 const formatPetition = (req,res,next) => {
   req.body = [req.body];
   if(req.body[0].type==='delete'){
@@ -588,7 +594,19 @@ const changeContacts = (req,res,next) => {
     next(err);
   }
 }
-
+const validateInternal = (req,res,next) =>{
+  const errors = validationResult(req);
+  if(!errors.isEmpty()){
+    errors.errors.forEach((error,index)=>{
+      var matches = error.param.match(/\[(.*?)\]/);
+      if(typeof(parseInt(matches[1]))=='number'){
+        req.body[matches[1]].outdated = true;
+        //console.log(error);
+      }      
+    });
+  }
+  next();
+}
 const validate = (req, res, next) => {
 
   try{
@@ -694,8 +712,8 @@ module.exports = {
   postAgentValidation,
   getServiceListValidation,
   formatPetition,
-  generateClientId,
   reFormatPetition,
   getServicesValidation,
-  changeContacts
+  changeContacts,
+  validateInternal
 }

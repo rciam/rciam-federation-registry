@@ -134,14 +134,16 @@ export const Footer =(props) =>{
             </div>
           </Col>
           <Col sm="4" className="ssp-footer__item">
-            <div className="ssp-footer__item__powered">
-              Leave <a href="https://forms.gle/rnAq7bBT4bN7WiNYA">Feedback</a>
-            </div>
-            <div className="ssp-footer__item__powered">
-              Powered by <a href="https://github.com/rciam">RCIAM</a>
-            </div>
-            <div className="ssp-footer__item__powered">
-               <a href={config.react+'docs'}>Documentation</a>
+            <div className="footer_link_container">
+              <div className="ssp-footer__item__powered">
+              <a href = "mailto: check-in@egi.eu">Contact us</a>
+              </div>
+              <div className="ssp-footer__item__powered">
+                <a href={config.react+'docs'}>Documentation</a>
+              </div>
+              <div className="ssp-footer__item__powered">
+                Powered by <a href="https://github.com/rciam">RCIAM</a>
+              </div>
             </div>
           </Col>
         </Row>

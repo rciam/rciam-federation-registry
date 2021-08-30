@@ -19,7 +19,6 @@ class UserRoleRepository {
   async getRoleActions(sub,tenant) {
     const query = this.pgp.as.format('SELECT role_name as name,role_id as id,ARRAY_AGG(action) actions FROM (SELECT role_id FROM user_info WHERE sub=$2 AND tenant=$1) as user_role LEFT JOIN role_actions USING(role_id) LEFT JOIN user_roles ON user_role.role_id=user_roles.id GROUP BY role_id,role_name', [tenant,sub]);
     return this.db.one(query).catch(err => {
-      console.log(err);
       return null
     });
   }

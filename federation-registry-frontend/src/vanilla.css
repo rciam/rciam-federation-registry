@@ -119,14 +119,14 @@
 
 .ssp-footer__item__powered {
   margin-top: 0.5rem;
-  float:right;
-  clear:both;
   position: relative;
 
 }
-.ssp-footer__item__feedback {
-
+.footer_link_container {
+    height: 100%;
+    float:right;
 }
+
 .ssp-footer__item__logo {
     height: 40px;
 }

@@ -22,7 +22,6 @@ class DeployerAgentRepository {
         values.push({id:agent.id,tenant:tenant,integration_environment:agent.integration_environment,type:agent.type,entity_type:agent.entity_type,hostname:agent.hostname,entity_protocol:agent.entity_protocol});
       });
       const query = this.pgp.helpers.insert(values, cs,'tenant_deployer_agents');
-      console.log(query);
       return this.db.none(query)
       .then( data => {
           return true
