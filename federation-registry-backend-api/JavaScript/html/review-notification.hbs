@@ -1,0 +1,23 @@
+<head>
+    <title>Request Reviewed</title>
+</head>
+<h5>Dear {{name}}<h5>
+<p>Your Service Request submitted to the <a href={{url}}>{{url}}</a> was {{state}} from an reviewer.
+Login to the platform for more information.</p>
+<h5></h5>
+
+<div style="text-align:center;margin-top:0.5;margin-bottom:0.5;background-color:#E9ECEF;padding:1rem;border-radius:1rem;">
+    <div style="text-align:left;font-size:1.2rem"> <strong>Service Request Info</strong></div>
+    <div style="text-align:left;margin-top:1rem"><strong>State: </strong> {{state}} </div>
+    <div style="text-align:left;margin-top:0.5rem;"><strong>Service Name: </strong>{{service_name}} </div>    
+    {{#if comment}}
+    <div style="text-align:left;margin-top:0.5rem;">
+        <strong>Comment from Reviewer: </strong> {{comment}}
+    </div>
+    {{/if}}
+    <div style="text-align:left;margin-top:0.5rem;"><strong>Reviewed At: </strong> {{date}}</div>
+    
+</div>
+  
+<h5>Big Thank you from the development team</h5>
+

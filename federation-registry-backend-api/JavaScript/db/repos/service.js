@@ -82,12 +82,17 @@ class ServiceRepository {
         let queries = [];
         return t.service.get(targetId,tenant).then(async oldState=>{
           if(oldState){
-            let edits = calcDiff(oldState.service_data,newState);
+            let edits = calcDiff(oldState.service_data,newState,tenant);
             let startDeployment = requiredDeployment(oldState.service_data,newState);
             if(Object.keys(edits.details).length !== 0){
                queries.push(t.service_details.update(edits.details,targetId));
-               queries.push(t.service_details_protocol.update('service',edits.details,targetId));
-               queries.push(t.service_multi_valued.updateCoc('service',{...edits.detals,tenant:tenant},targetId));
+               queries.push(t.service_details_protocol.update('service',edits.details,targetId));               
+            }
+            if(Object.keys(edits.update.coc).length >0){
+              queries.push(t.service_multi_valued.updateCoc('service',{...edits.update.coc,tenant:tenant},targetId));
+            }
+            if(Object.keys(edits.add.coc).length >0){
+              queries.push(t.service_multi_valued.addCoc('service',{...edits.add.coc,tenant:tenant},targetId));
             }
             queries.push(t.service_state.update(targetId,(startDeployment?'pending':'deployed'),'edit'));
             for (var key in edits.add){

@@ -24,8 +24,11 @@ import InputRow from './Components/InputRow.js';
 import Button from 'react-bootstrap/Button';
 import * as yup from 'yup';
 import { useTranslation } from 'react-i18next';
+import parse from 'html-react-parser';
 import countryData from 'country-region-data';
 import {SimpleInput,CountrySelect,AuthMethRadioList,SelectEnvironment,DeviceCode,Select,PublicKey,ListInput,LogoInput,TextAria,ListInputArray,CheckboxList,SimpleCheckbox,ClientSecret,TimeInput,RefreshToken,Contacts} from './Components/Inputs.js'// eslint-disable-next-line
+
+
 const {reg} = require('./regex.js');
 var availabilityCheckTimeout;
 var countries;
@@ -56,7 +59,7 @@ const ServiceForm = (props)=> {
         if(props.disabled||props.review){
         setDisabled(true);
     }
-    Object.keys(tenant.form_config.code_of_contact).forEach((name,index)=>{
+    Object.keys(tenant.form_config.code_of_condact).forEach((name,index)=>{
         if(!Object.keys(props.initialValues).includes(name)){
           props.initialValues[name]=false;
         }
@@ -111,10 +114,10 @@ const ServiceForm = (props)=> {
 
   const lazy_schema  = yup.lazy(obj => yup.object(
     mapValues(obj, (v, k) => {
-      if (Object.keys((tenant.form_config.code_of_contact)).includes(k)) {
+      if (Object.keys((tenant.form_config.code_of_condact)).includes(k)) {
         return yup.boolean().required(t('yup_required')).when('integration_environment',{
-          is:(integration_environment)=> { return tenant.form_config.code_of_contact[k].required.includes(integration_environment)},
-          then: yup.boolean().oneOf([true],tenant.form_config.code_of_contact[k].error)
+          is:(integration_environment)=> { return tenant.form_config.code_of_condact[k].required.includes(integration_environment)},
+          then: yup.boolean().oneOf([true],tenant.form_config.code_of_condact[k].error)
           })
       }
       })
@@ -718,15 +721,15 @@ const ServiceForm = (props)=> {
                         />
                       </InputRow>
 
-                      { Object.keys(tenant.form_config.code_of_contact).map((name,index)=>{
+                      { Object.keys(tenant.form_config.code_of_condact).map((name,index)=>{
                         return(
-                          <InputRow title={tenant.form_config.code_of_contact[name].title} key={index} required={
-                            tenant.form_config.code_of_contact[name].required.includes(values.integration_environment)} error={errors[name]?errors[name]:null} touched={touched[name]}>
+                          <InputRow title={tenant.form_config.code_of_condact[name].title} key={index} required={
+                            tenant.form_config.code_of_condact[name].required.includes(values.integration_environment)} error={errors[name]?errors[name]:null} touched={touched[name]}>
                             <SimpleCheckbox
                             name= {name}
                             label={
                               <React.Fragment>
-                                {tenant.form_config.code_of_contact[name].desc} [<a href={tenant.form_config.code_of_contact[name].link}>{name}</a>]
+                                {parse(tenant.form_config.code_of_condact[name].desc)}
                               </React.Fragment>
                             }
                             onChange={handleChange}
@@ -831,7 +834,7 @@ const ServiceForm = (props)=> {
 
                             />
                           </InputRow>
-                          <InputRow title="Token Endpoint Authorization Method" required={true} error={errors.token_endpoint_auth_method}>
+                          <InputRow title="Token Endpoint Authorization Method" required={true} error={errors.token_endpoint_auth_method} touched={touched.token_endpoint_auth_method}>
                             <AuthMethRadioList
                               name='token_endpoint_auth_method'
                               values={values}
@@ -1017,7 +1020,7 @@ const ServiceForm = (props)=> {
                   }
                   <ResponseModal message={message} modalTitle={modalTitle}/>
                   <SimpleModal isSubmitting={isSubmitting} isValid={isValid}/>
-                  {/* <Debug/> */}
+                   {/* <Debug/>  */}
 
                 </Form>
 

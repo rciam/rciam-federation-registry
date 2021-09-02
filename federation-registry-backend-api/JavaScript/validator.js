@@ -395,12 +395,7 @@ const serviceValidationRules = (options) => {
         }}),
       body('*.refresh_token_validity_seconds').customSanitizer((value,{req,location,path}) => {
         let pos = path.match(/\[(.*?)\]/)[1]; 
-        if(req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'&&req.body[pos].scope&&req.body[pos].scope.includes('offline_access')){
           return sanitizeInteger(value);
-        }
-        else{
-          return null;
-        }
         }).custom((value,{req,location,path})=> {
           let pos = path.match(/\[(.*?)\]/)[1];
           
@@ -430,12 +425,7 @@ const serviceValidationRules = (options) => {
         }),
       body('*.device_code_validity_seconds').customSanitizer((value,{req,location,path}) => {
         let pos = path.match(/\[(.*?)\]/)[1];
-        if(req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'&&req.body[pos].grant_types&&req.body[pos].grant_types.includes('urn:ietf:params:oauth:grant-type:device_code')){
           return sanitizeInteger(value);
-        }
-        else{
-          return null;
-        }      
       }).
       custom((value,{req,location,path})=> {
         let pos = path.match(/\[(.*?)\]/)[1];

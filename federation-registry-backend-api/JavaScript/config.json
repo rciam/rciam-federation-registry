@@ -1,18 +1,16 @@
 {
   "form" : {
     "egi" : {
-      "code_of_contact": {
+      "code_of_condact": {
         "egi_policy":{
-          "title": "Egi Policy",
-          "desc":"Service complies with the egi policies",
-          "link": "https://wiki.egi.eu/wiki/Policies_and_Procedures",
+          "title": "EGI Policies",
+          "desc":"<div>The service complies with the <a href='https://wiki.egi.eu/wiki/Policies_and_Procedures' target='_blank'>EGI Policies</a></div>",
           "required": ["production"],
           "error": "Service must commply"
         },
         "dpcoco":{
-          "title": "DPCoCo",
-          "desc": "Service complies with DPCoCo or any other code of conduct compatible with legislation and guidelines on data protection and privacy including GDPR",
-          "link": "https://wiki.refeds.org/display/CODE/Data+Protection+Code+of+Conduct+Home",
+          "title": "Data Protection Code of Conduct",
+          "desc": "The service complies with the <a href='https://wiki.refeds.org/display/CODE/Data+Protection+Code+of+Conduct+Home' target='_blank'>GÉANT Data Protection Code of Conduct version 1</a> or any other code of conduct compatible with legislation and guidelines on data protection and privacy including GDPR",
           "required": [],
           "error": "Service must commply"
         }
@@ -34,7 +32,7 @@
       "token_endpoint_auth_signing_alg_title":["HMAC using SHA-256 hash algorithm","HMAC using SHA-384 hash algorithm","HMAC using SHA-512 hash algorithm","RSASSA using SHA-256 hash algorithm","RSASSA using SHA-384 hash algorithm","RSASSA using SHA-512 hash algorithm","RSASSA-PSS using SHA-256 and MGF1 with SHA-256"]
     },
     "eosc" : {
-      "code_of_contact": [
+      "code_of_condact": [
         {
           "name": "egi_policy",
           "desc":"Sample Code of contact",

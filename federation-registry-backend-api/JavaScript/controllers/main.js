@@ -17,16 +17,16 @@ const rejectPetition = (req,res,next,db) => {
   db.task('reject-petition',async t =>{
     await t.service_petition_details.review(req.params.id,req.user.sub,'reject',req.body.comment,req.params.tenant).then(async results=>{
       if (results){
-        await t.user.getPetitionOwners(req.params.id).then(async data=>{
-          if(data){
+        await t.user.getPetitionOwners(req.params.id).then(async owners=>{
+          if(owners){
             await t.user.getUsersByAction('review_notification',req.params.tenant).then(users =>{
-                if(data[0] && data[0].service_name){
+                if(owners[0] && owners[0].service_name){
                 users.forEach(user=>{
                   sendMail({subject:'Service Request Reviewed',service_name:data[0].service_name,date:'rejected',tenant:req.params.tenant},'reviewed-notification.html',[{name:user.name,email:user.email}]);
                 });
               }
-              data.forEach(email_data=>{
-                sendMail({subject:'Service Petition Review',service_name:email_data.service_name,state:'rejected',tenant:req.params.tenant},'review-notification.html',[{name:email_data.name,email:email_data.email}]);
+              owners.forEach(email_data=>{
+                sendMail({subject:'Service Request Review',service_name:email_data.service_name,state:'rejected',tenant:req.params.tenant,comment:req.body.comment},'review-notification.hbs',[{name:email_data.name,email:email_data.email}]);
               });
             })
           }
@@ -56,18 +56,19 @@ const changesPetition = (req,res,next,db) => {
                 await t.service_petition_details.review(req.params.id,req.user.sub,'approved_with_changes',req.body.comment,req.params.tenant).then(async result=>{
                   if(result){
                     res.status(200).json({id});
-                    await t.user.getPetitionOwners(req.params.id).then(async data=>{
-                      if(data){
+                    await t.user.getPetitionOwners(req.params.id).then(async owners=>{
+                      if(owners){
                         await t.user.getUsersByAction('review_notification',req.params.tenant).then(users =>{
-                          if(data[0] && data[0].service_name){
+                          if(owners[0] && owners[0].service_name){
                             users.forEach(user=>{
-                              sendMail({subject:'Service Request Reviewed',service_name:data[0].service_name,state:'changes requested',tenant:req.params.tenant},'reviewed-notification.html',[{name:user.name,email:user.email}]);
+                              sendMail({subject:'Service Request Reviewed',service_name:owners[0].service_name,state:'changes requested',tenant:req.params.tenant},'reviewed-notification.html',[{name:user.name,email:user.email}]);
                             });
                           }
-                          data.forEach(email_data=>{
-                            sendMail({subject:'Service Petition Review',service_name:email_data.service_name,state:'approved with changes',tenant:req.params.tenant},'review-notification.html',[{name:email_data.name,email:email_data.email}]);
-                          })
+                          console.log(req.body.comment);
+                          owners.forEach(email_data=>{
+                            sendMail({subject:'Service Request Review',service_name:email_data.service_name,state:'approved with changes',tenant:req.params.tenant,comment:req.body.comment},'review-notification.hbs',[{name:email_data.name,email:email_data.email}]);
                         })
+                      });
                       }
 
                     }).catch(err=>{next(err);});
@@ -142,16 +143,16 @@ const approvePetition = (req,res,next,db) => {
             next(err);});
         }
         res.status(200).json({service_id});
-        await t.user.getPetitionOwners(req.params.id).then(async data=>{
-          if(data){
+        await t.user.getPetitionOwners(req.params.id).then(async owner=>{
+          if(owner){
             await t.user.getUsersByAction('review_notification',req.params.tenant).then(users =>{
-              if(data[0] && data[0].service_name){
+              if(owner[0] && owner[0].service_name){
                 users.forEach(user=>{
-                  sendMail({subject:'Service Request Reviewed',service_name:data[0].service_name,date:'rejected',tenant:req.params.tenant},'reviewed-notification.html',[{name:user.name,email:user.email}]);
+                  sendMail({subject:'Service Request Reviewed',service_name:owner[0].service_name,date:'rejected',tenant:req.params.tenant},'reviewed-notification.html',[{name:user.name,email:user.email}]);
                 });
               }
-              data.forEach(email_data=>{
-                sendMail({subject:'Service Petition Review',service_name:email_data.service_name,state:'approved with changes',tenant:req.params.tenant},'review-notification.html',[{name:email_data.name,email:email_data.email}]);
+              owner.forEach(email_data=>{
+                sendMail({subject:'Service Petition Review',service_name:email_data.service_name,state:'approved with changes',tenant:req.params.tenant,comment:req.body.comment},'review-notification.hbs',[{name:email_data.name,email:email_data.email}]);
               })
             })
           }

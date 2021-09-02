@@ -6,7 +6,7 @@ var hbs = require('handlebars');
 nodeMailer = require('nodemailer');
 var config = require('../config');
 const customLogger = require('../loggers.js');
-
+var formConfig = require('../config.json');
 
 hbs.registerHelper('loud', function (aString) {
     return aString.toUpperCase()
@@ -34,15 +34,21 @@ const sendMultipleInvitations = function (data,t) {
 
 
 
-const calcDiff = (oldState,newState) => {
+const calcDiff = (oldState,newState,tenant) => {
+  
     var new_values = Object.assign({},newState);
     var old_values = Object.assign({},oldState);
     let new_cont = [];
     let old_cont = [];
     let items;
     var edits = {
-      add:{},
+      add:{
+        coc:{}
+      },
       dlt:{},
+      update:{
+        coc:{}
+      },
       details:{}
     };
 
@@ -92,12 +98,24 @@ const calcDiff = (oldState,newState) => {
         new_values.scope = [];
       }
 
+
       edits.add.oidc_grant_types = new_values.grant_types.filter(x=>!old_values.grant_types.includes(x));
       edits.dlt.oidc_grant_types = old_values.grant_types.filter(x=>!new_values.grant_types.includes(x));
       edits.add.oidc_scopes = new_values.scope.filter(x=>!old_values.scope.includes(x));
       edits.dlt.oidc_scopes = old_values.scope.filter(x=>!new_values.scope.includes(x));
       edits.add.oidc_redirect_uris = new_values.redirect_uris.filter(x=>!old_values.redirect_uris.includes(x));
       edits.dlt.oidc_redirect_uris = old_values.redirect_uris.filter(x=>!new_values.redirect_uris.includes(x));
+    }
+    for(var property in formConfig.form[tenant].code_of_condact){
+      if(property in new_values){
+
+        if(property in old_values){
+          edits.update.coc[property]=new_values[property];
+        }
+        else{
+          edits.add.coc[property]=new_values[property];
+        }
+      }
     }
     for(var i in edits){
       for(var key in edits[i]){
@@ -296,7 +314,8 @@ const sendMail= (data,template_uri,users)=>{
         service_name:data.service_name,
         date:currentDate,
         state:state,
-        url:process.env.REACT_BASE+'/'+ data.tenant
+        url:process.env.REACT_BASE+'/'+ data.tenant,
+        comment:data.comment
       };
       users.forEach((user) => {
           replacements.name = user.name;

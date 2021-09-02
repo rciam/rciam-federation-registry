@@ -229,7 +229,7 @@ export function TimeInput(props){
          placeholder={'Enter Value'}
          onMouseOver={()=>setShow(true)}
          onMouseOut={()=>setShow(false)}
-         value={props.value?Math.round(props.value/(timeMetric==='0'?1:(timeMetric==='1'?60:3600)) * 100) / 100:''}
+         value={props.value?Math.round(props.value/(timeMetric==='0'?1:(timeMetric==='1'?60:3600)) * 100) / 100:props.value===0?'0':''}
          onChange={(e)=>{
            if(reg.test(e.target.value)){
            e.target.value= e.target.value*(timeMetric==='0'?1:(timeMetric==='0'?1:(timeMetric==='1'?60:3600)));
@@ -462,7 +462,7 @@ export function RefreshToken(props){
     // eslint-disable-next-line
     const { t, i18n } = useTranslation();
     useEffect(()=>{
-      if(props.values.scope.includes('offline_access')&&props.values.refresh_token_validity_seconds===null){
+      if(props.values.scope.includes('offline_access')&&(props.values.refresh_token_validity_seconds===null||props.values.refresh_token_validity_seconds===0)){
         props.setFieldValue('refresh_token_validity_seconds',initialValues.refresh_token_validity_seconds,true).then(()=>{
           props.validateField('refresh_token_validity_seconds');
         });        
