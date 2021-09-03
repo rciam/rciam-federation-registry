@@ -1300,7 +1300,7 @@ definitions:
           minimum: 0
           maximum: 3600
           description: "oidc specific"
-        code_of_contact_field:
+        code_of_condact_field:
           type: "boolean"
           description: "There could be multiple code of contact fields with different depending on the tenant some of them might be required to be true."
   Agent:
@@ -1603,7 +1603,7 @@ definitions:
         minimum: 0
         maximum: 3600
         description: "oidc specific"
-      code_of_contact_field:
+      code_of_condact_field:
         type: "boolean"
         description: "There could be multiple code of contact fields with different depending on the tenant some of them might be required to be true."
   Tenants:
@@ -1636,7 +1636,7 @@ definitions:
       form_config:
         type: "object"
         properties:
-          code_of_contact:
+          code_of_condact:
             type: "object"
             properties:
               title:
@@ -1867,7 +1867,7 @@ definitions:
         minimum: 0
         maximum: 3600
         description: "oidc specific"
-      code_of_contact_field:
+      code_of_condact_field:
         type: "boolean"
         description: "There could be multiple code of contact fields with different depending on the tenant some of them might be required to be true."
   Services:

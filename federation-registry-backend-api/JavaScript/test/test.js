@@ -930,7 +930,7 @@ describe('Service registry API Integration Tests', function() {
   describe('# POST SERVICES',function(){
     it('should create multiple service',function(done){
       userToken = setUser(users.egi.operator_user);
-      var req = request(server).post('/tenants/egi/services').set({Authorization: userToken}).send(postServices);
+      var req = request(server).post('/tenants/egi/services').set('X-Api-Key',process.env.AMS_AGENT_KEY).send(postServices);
       req.set('Accept','application/json')
       .expect('Content-Type',/json/)
       .expect(200)

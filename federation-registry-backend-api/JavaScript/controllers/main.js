@@ -22,7 +22,7 @@ const rejectPetition = (req,res,next,db) => {
             await t.user.getUsersByAction('review_notification',req.params.tenant).then(users =>{
                 if(owners[0] && owners[0].service_name){
                 users.forEach(user=>{
-                  sendMail({subject:'Service Request Reviewed',service_name:data[0].service_name,date:'rejected',tenant:req.params.tenant},'reviewed-notification.html',[{name:user.name,email:user.email}]);
+                  sendMail({subject:'Service Request Reviewed',service_name:owners[0].service_name,date:'rejected',tenant:req.params.tenant},'reviewed-notification.html',[{name:user.name,email:user.email}]);
                 });
               }
               owners.forEach(email_data=>{
