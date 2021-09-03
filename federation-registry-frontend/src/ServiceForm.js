@@ -24,8 +24,11 @@ import InputRow from './Components/InputRow.js';
 import Button from 'react-bootstrap/Button';
 import * as yup from 'yup';
 import { useTranslation } from 'react-i18next';
+import parse from 'html-react-parser';
 import countryData from 'country-region-data';
 import {SimpleInput,CountrySelect,AuthMethRadioList,SelectEnvironment,DeviceCode,Select,PublicKey,ListInput,LogoInput,TextAria,ListInputArray,CheckboxList,SimpleCheckbox,ClientSecret,TimeInput,RefreshToken,Contacts} from './Components/Inputs.js'// eslint-disable-next-line
+
+
 const {reg} = require('./regex.js');
 var availabilityCheckTimeout;
 var countries;
@@ -56,7 +59,7 @@ const ServiceForm = (props)=> {
         if(props.disabled||props.review){
         setDisabled(true);
     }
-    Object.keys(tenant.form_config.code_of_contact).forEach((name,index)=>{
+    Object.keys(tenant.form_config.code_of_condact).forEach((name,index)=>{
         if(!Object.keys(props.initialValues).includes(name)){
           props.initialValues[name]=false;
         }
@@ -111,10 +114,10 @@ const ServiceForm = (props)=> {
 
   const lazy_schema  = yup.lazy(obj => yup.object(
     mapValues(obj, (v, k) => {
-      if (Object.keys((tenant.form_config.code_of_contact)).includes(k)) {
+      if (Object.keys((tenant.form_config.code_of_condact)).includes(k)) {
         return yup.boolean().required(t('yup_required')).when('integration_environment',{
-          is:(integration_environment)=> { return tenant.form_config.code_of_contact[k].required.includes(integration_environment)},
-          then: yup.boolean().oneOf([true],tenant.form_config.code_of_contact[k].error)
+          is:(integration_environment)=> { return tenant.form_config.code_of_condact[k].required.includes(integration_environment)},
+          then: yup.boolean().oneOf([true],tenant.form_config.code_of_condact[k].error)
           })
       }
       })
@@ -219,7 +222,7 @@ const ServiceForm = (props)=> {
           }).required(t('yup_required')),
     scope:yup.array().nullable().when('protocol',{
       is:'oidc',
-      then: yup.array().min(1,t('yup_select_option')).nullable().of(yup.string().min(1,t('yup_scope')).max(50,t('yup_char_max') + ' ('+ 50 +')').matches(reg.regScope,t('yup_scope_reg'))).unique(t('yup_scope_unique')).required(t('yup_required'))
+      then: yup.array().min(1,t('yup_select_option')).nullable().of(yup.string().min(1,t('yup_scope')).max(256,t('yup_char_max') + ' ('+ 256 +')').matches(reg.regScope,t('yup_scope_reg'))).unique(t('yup_scope_unique')).required(t('yup_required'))
     }),
     grant_types:yup.array().nullable().when('protocol',{
       is:'oidc',
@@ -227,16 +230,16 @@ const ServiceForm = (props)=> {
     }),
     id_token_timeout_seconds:yup.number().nullable().when('protocol',{
       is:'oidc',
-      then: yup.number().nullable().min(0).max(tenant.form_config.id_token_timeout_seconds,t('yup_exceeds_max'))}),
+      then: yup.number().nullable().min(1,"Must be a positive value greater that 0").max(tenant.form_config.id_token_timeout_seconds,t('yup_exceeds_max')).required('This is a required field')}),
     access_token_validity_seconds:yup.number().nullable().when('protocol',{
       is:'oidc',
-      then: yup.number().nullable().min(0).max(tenant.form_config.access_token_validity_seconds,t('yup_exceeds_max'))}),
-    refresh_token_validity_seconds:yup.number().nullable().when('protocol',{
-      is:'oidc',
-      then: yup.number().nullable().min(0).max(tenant.form_config.refresh_token_validity_seconds,t('yup_exceeds_max'))}),
-    device_code_validity_seconds:yup.number().nullable().when('protocol',{
-      is:'oidc',
-      then: yup.number().nullable().min(0).max(tenant.form_config.device_code_validity_seconds,t('yup_exceeds_max'))}),
+      then: yup.number().nullable().min(1,"Must be a positive value greater that 0").max(tenant.form_config.access_token_validity_seconds,t('yup_exceeds_max')).required('This is a required field')}),
+    refresh_token_validity_seconds:yup.number().nullable().when(['scope','protocol'],{
+      is:(scope,protocol)=> protocol==='oidc'&&scope.includes('offline_access'),
+      then: yup.number().min(1,"Must be a positive value greater that 0").max(tenant.form_config.refresh_token_validity_seconds,t('yup_exceeds_max')).required('This field is required when the offline_access is selected')}),
+    device_code_validity_seconds:yup.number().nullable().when(['protocol','grant_types'],{
+      is:(protocol,grant_types)=> protocol==='oidc'&&grant_types.includes('urn:ietf:params:oauth:grant-type:device_code'),
+      then: yup.number().nullable().min(0).max(tenant.form_config.device_code_validity_seconds,t('yup_exceeds_max')).required('This is a required field when the device code grant type is selected')}),
     code_challenge_method:yup.string().nullable().when('protocol',{
       is:'oidc',
       then: yup.string().nullable().test('test_code_challenge_method','Invalid Value',function(value){
@@ -268,9 +271,9 @@ const ServiceForm = (props)=> {
     }),
     client_secret:yup.string().nullable().when('protocol',{
       is:'oidc',
-      then: yup.string().when(['generate_client_secret','token_endpoint_auth_method'],{
+      then: yup.string().nullable().when(['generate_client_secret','token_endpoint_auth_method'],{
         is:(generate_client_secret,token_endpoint_auth_method)=> generate_client_secret===false&&!(token_endpoint_auth_method==='private_key_jwt'||token_endpoint_auth_method==='none'),
-        then: yup.string().required(t('yup_required')).min(4,t('yup_char_min') + ' ('+4+')').max(256,t('yup_char_max') + ' ('+256+')')
+        then: yup.string().nullable().required(t('yup_required')).min(4,t('yup_char_min') + ' ('+4+')').max(256,t('yup_char_max') + ' ('+256+')')
       }).nullable()
     }),
     metadata_url:yup.string().nullable().when('protocol',{
@@ -278,7 +281,7 @@ const ServiceForm = (props)=> {
       then: yup.string().required(t('yup_required')).matches(reg.regSimpleUrl,'Enter a valid Url')
     }),
     token_endpoint_auth_signing_alg:yup.string().nullable().when(['protocol',"token_endpoint_auth_method"],{
-      is:(protocol,token_endpoint_auth_method)=> protocol==='oidc'&&(token_endpoint_auth_method==="private_key_jwt",token_endpoint_auth_method==="client_secret_jwt"),
+      is:(protocol,token_endpoint_auth_method)=> protocol==='oidc'&&(token_endpoint_auth_method==="private_key_jwt"||token_endpoint_auth_method==="client_secret_jwt"),
       then: yup.string().required(t('yup_select_option')).test('testTokenEndpointSigningAlgorithm','Invalid Value',function(value){return tenant.form_config.token_endpoint_auth_signing_alg.includes(value)})
     }),
     token_endpoint_auth_method:yup.string().nullable().when('protocol',{
@@ -287,12 +290,15 @@ const ServiceForm = (props)=> {
     }),
     jwks_uri:yup.string().nullable().when(['protocol','token_endpoint_auth_method'],{
       is:(protocol,token_endpoint_auth_method)=> protocol==='oidc'&&token_endpoint_auth_method==="private_key_jwt" ,
-      then:yup.string().test('testTokenEndpointAuthMethod','Invalid Value',function(value){if(this.parent.jwks||(value&&reg.regSimpleUrl.test(value))){return true}else{return false}})
+      then:yup.string().nullable().test('test','Required Field',function(value){if(this.parent.jwks||value){return true}else{return false}}).test('testTokenEndpointAuthMethod','Invalid Value',function(value){ if(this.parent.jwks||(value&&reg.regSimpleUrl.test(value))){return true}else{return false}})
     }),
-    jwks:yup.object().nullable().when(['protocol','jwks_uri','token_endpoint_auth_method'],{
+    jwks:yup.object().typeError("test").nullable().when(['protocol','jwks_uri','token_endpoint_auth_method'],{
       is:(protocol,jwks_uri,token_endpoint_auth_method)=> protocol==='oidc'&&!jwks_uri&&token_endpoint_auth_method==="private_key_jwt" ,
-      then:yup.object().required(t('yup_required')).test('testJwks','Invalid Schema',function(value){
-        if(value&&value.keys&&typeof(value.keys)==='object'&&Object.keys(value).length===1){
+      then:yup.object().nullable().test('test','Required Field',function(value){if(this.parent.jwks_uri||value){return true}else{return false}}).test('testJwks','Invalid Schema',function(value){
+        if(!value){
+          return true
+        }
+        else if(value.keys&&typeof(value.keys)==='object'&&Object.keys(value).length===1){
           return true
         }
         else{
@@ -565,7 +571,7 @@ const ServiceForm = (props)=> {
           values.client_secret = '';
         }
         if(values.jwks_uri){
-          values.jwks_uri=null;
+          values.jwks=null;
         }
         if(values.jwks){
           values.jwks = JSON.parse(values.jwks);
@@ -583,6 +589,7 @@ const ServiceForm = (props)=> {
       values,
       setFieldValue,
       setFieldTouched,
+      setTouched,
       touched,
       isValid,
       validateField,
@@ -606,7 +613,7 @@ const ServiceForm = (props)=> {
                 {props.disabled?null:
                   <div className="form-controls-container">
                     {props.review?
-                      <ReviewComponent errors={errors} reviewPetition={reviewPetition} restrictReview={restrictReview}/>
+                      <ReviewComponent errors={errors} reviewPetition={reviewPetition} type={props.type} restrictReview={restrictReview}/>
                       :
                       <React.Fragment>
                         <div className="form-submit-cancel-container">
@@ -714,15 +721,15 @@ const ServiceForm = (props)=> {
                         />
                       </InputRow>
 
-                      { Object.keys(tenant.form_config.code_of_contact).map((name,index)=>{
+                      { Object.keys(tenant.form_config.code_of_condact).map((name,index)=>{
                         return(
-                          <InputRow title={tenant.form_config.code_of_contact[name].title} key={index} required={
-                            tenant.form_config.code_of_contact[name].required.includes(values.integration_environment)} error={errors[name]?errors[name]:null} touched={touched[name]}>
+                          <InputRow title={tenant.form_config.code_of_condact[name].title} key={index} required={
+                            tenant.form_config.code_of_condact[name].required.includes(values.integration_environment)} error={errors[name]?errors[name]:null} touched={touched[name]}>
                             <SimpleCheckbox
                             name= {name}
                             label={
                               <React.Fragment>
-                                {tenant.form_config.code_of_contact[name].desc} [<a href={tenant.form_config.code_of_contact[name].link}>{name}</a>]
+                                {parse(tenant.form_config.code_of_condact[name].desc)}
                               </React.Fragment>
                             }
                             onChange={handleChange}
@@ -827,7 +834,7 @@ const ServiceForm = (props)=> {
 
                             />
                           </InputRow>
-                          <InputRow title="Token Endpoint Authorization Method" required={true} error={errors.token_endpoint_auth_method}>
+                          <InputRow title="Token Endpoint Authorization Method" required={true} error={errors.token_endpoint_auth_method} touched={touched.token_endpoint_auth_method}>
                             <AuthMethRadioList
                               name='token_endpoint_auth_method'
                               values={values}
@@ -842,7 +849,7 @@ const ServiceForm = (props)=> {
                           {values.token_endpoint_auth_method==='private_key_jwt'||values.token_endpoint_auth_method==='client_secret_jwt'?
                           <InputRow title="Token Endpoint Signing Algorithm" required={true} extraClass='select-col' error={errors.token_endpoint_auth_signing_alg} touched={touched.token_endpoint_auth_signing_alg}>
                             <Select
-                              onBlur={handleBlur}
+                              onBlur={handleBlur} 
                               optionsTitle={tenant.form_config.token_endpoint_auth_signing_alg_title}
                               options={tenant.form_config.token_endpoint_auth_signing_alg}
                               default='RS256'
@@ -893,6 +900,8 @@ const ServiceForm = (props)=> {
                               isInvalid={hasSubmitted?!!errors.refresh_token_validity_seconds:(!!errors.refresh_token_validity_seconds&&touched.refresh_token_validity_seconds)}
                               onChange={handleChange}
                               disabled={disabled}
+                              setFieldValue={setFieldValue}
+                              validateField={validateField}
                               changed={props.changes}
                             />
                           </InputRow>
@@ -900,6 +909,8 @@ const ServiceForm = (props)=> {
                             <DeviceCode
                               onBlur={handleBlur}
                               values={values}
+                              setFieldValue={setFieldValue}
+                              validateField={validateField}
                               isInvalid={hasSubmitted?!!errors.device_code_validity_seconds:(!!errors.device_code_validity_seconds&&touched.device_code_validity_seconds)}
                               onChange={handleChange}
                               disabled={disabled}
@@ -930,7 +941,7 @@ const ServiceForm = (props)=> {
                               changed={props.changes?props.changes.allow_introspection:null}
                             />
                           </InputRow>
-                          <InputRow title={t('form_access_token_validity_seconds')} extraClass='time-input' error={errors.access_token_validity_seconds} touched={touched.access_token_validity_seconds} description={t('form_access_token_validity_seconds_desc')}>
+                          <InputRow required={true} title={t('form_access_token_validity_seconds')} extraClass='time-input' error={errors.access_token_validity_seconds} touched={touched.access_token_validity_seconds} description={t('form_access_token_validity_seconds_desc')}>
                             <TimeInput
                               name='access_token_validity_seconds'
                               value={values.access_token_validity_seconds}
@@ -941,7 +952,7 @@ const ServiceForm = (props)=> {
                               changed={props.changes?props.changes.access_token_validity_seconds:null}
                             />
                           </InputRow>
-                          <InputRow title={t('form_id_token_timeout_seconds')} extraClass='time-input' error={errors.id_token_timeout_seconds} touched={touched.id_token_timeout_seconds} description={t('form_id_token_timeout_seconds_desc')}>
+                          <InputRow required={true} title={t('form_id_token_timeout_seconds')} extraClass='time-input' error={errors.id_token_timeout_seconds} touched={touched.id_token_timeout_seconds} description={t('form_id_token_timeout_seconds_desc')}>
                             <TimeInput
                               name='id_token_timeout_seconds'
                               value={values.id_token_timeout_seconds}
@@ -995,7 +1006,7 @@ const ServiceForm = (props)=> {
                   {props.disabled?null:
                     <div className="form-controls-container">
                       {props.review?
-                          <ReviewComponent errors={errors} reviewPetition={reviewPetition} restrictReview={restrictReview} />
+                          <ReviewComponent errors={errors} type={props.type} reviewPetition={reviewPetition} restrictReview={restrictReview} />
                         :
                         <React.Fragment>
                         <div className="form-submit-cancel-container">
@@ -1009,7 +1020,7 @@ const ServiceForm = (props)=> {
                   }
                   <ResponseModal message={message} modalTitle={modalTitle}/>
                   <SimpleModal isSubmitting={isSubmitting} isValid={isValid}/>
-                  {/*<Debug/>*/}
+                   {/* <Debug/>  */}
 
                 </Form>
 
@@ -1033,9 +1044,11 @@ const ReviewComponent = (props)=>{
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   useEffect(()=>{
+
     setInvalidPetition(Object.keys(props.errors).length !== 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[props.errors]);
+
 
   const handleReview = () =>{
 
@@ -1115,14 +1128,14 @@ const ReviewComponent = (props)=>{
               type="radio"
               name="formHorizontalRadios"
               id="formHorizontalRadios1"
-              disabled={invalidPetition||props.restrictReview}
+              disabled={invalidPetition&&props.type!=='delete'}
               onChange={(e)=>{if(e.target.checked){setType(e.target.value)}}}
               value="approve"
               checked={type==='approve'}
               />
               </Col>
               <Col onClick={()=>{
-                if(!invalidPetition&&!props.restrictReview){
+                if(!invalidPetition||props.type==='delete'){
                   setType('approve');
                 }
               }}>
@@ -1130,17 +1143,11 @@ const ReviewComponent = (props)=>{
               <strong>
               {t('review_approve')}
               </strong>
-              {invalidPetition?
+              {invalidPetition&&props.type!=='delete'?
                 <div className="approve-error">
                 Invalid Service Configuration, Approve disabled
                 </div>:null
               }
-              {props.restrictReview?
-                <div className="approve-error">
-                Approval is disabled for this environment, please request review.
-                </div>:null
-              }
-
               </Row>
 
               <Row className="review-option-desc">

@@ -31,10 +31,8 @@ function requiredDeployment(old_values,new_values){
       }
   }
   helper = calculateMultivalueDiff(old_values,new_values,helper);
-  console.log(helper);
   for(property in helper){
     if(config.deployment_fields.includes(property)){
-      console.log(property);
       deploy = true;
     }
   }

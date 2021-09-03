@@ -13,7 +13,7 @@ export const TenantHandler = () => {
 
   useEffect(()=>{
     getTenant(tenant_name);
-
+    
     // eslint-disable-next-line
   },[]);
 
@@ -34,6 +34,7 @@ export const TenantHandler = () => {
     }).then(response=>{
       if(response){
         setTenant(response);
+        
         history.push('/'+tenant_name+'/home');
       }
       else{

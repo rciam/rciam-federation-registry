@@ -9,7 +9,6 @@ var config = require('./config');
 const cors = require('cors');
 var winston = require('winston');
 var expressWinston = require('express-winston');
-
 const {check,validationResult,body}= require('express-validator');
 const {petitionValitationRules,validate} = require('./validator.js');
 const {merge_data} = require('./merge_data.js');
@@ -55,24 +54,24 @@ db.tenants.getInit().then(async tenants => {
   }
 }).catch(err => {console.log('Tenant initialization failed due to following error'); console.log(err);});
 
-if(config.send_notifications_on_startup){
-  try{
-    db.user.getTechnicalContacts('egi').then(async users=>{
-      if(users){
-        for(const user of users){
-          await delay(400);
-          sendNotif({subject:'New portal for managing services in Check-in',tenant:'egi'},'introduction-to-fed.hbs',{name:user.name,email:user.email});
-        }
-      }
-    }).catch(err=>{
-      console.log('Failed to get users to push the notifications');
-    })
+// if(config.send_notifications_on_startup){
+//   try{
+//     db.user.getTechnicalContacts('egi').then(async users=>{
+//       if(users){
+//         for(const user of users){
+//           await delay(400);
+//           sendNotif({subject:'New portal for managing services in Check-in',tenant:'egi'},'introduction-to-fed.hbs',{name:user.name,email:user.email});
+//         }
+//       }
+//     }).catch(err=>{
+//       console.log('Failed to get users to push the notifications');
+//     })
 
-  }
-  catch(err){
-      console.log('Error when trying to send notifications: '+ err);
-  }
-}
+//   }
+//   catch(err){
+//       console.log('Error when trying to send notifications: '+ err);
+//   }
+// }
 
 
 
@@ -151,6 +150,7 @@ app.use(expressWinston.errorLogger({
 
 
 
+
 app.use(function (err, req, res, next) {
   if (res.headersSent) {
      return next(err)
@@ -170,8 +170,9 @@ app.use(function (err, req, res, next) {
 
 const port = 5000;
 
-
-outdatedNotificationsWorker(config.outdated_notifications_interval_seconds);
+if(config.send_outdated_notif){
+  outdatedNotificationsWorker(config.outdated_notifications_interval_seconds);
+}
 
 var server = app.listen(port, () => {
     console.log('\nReady for GET requests on http://localhost:' + port);

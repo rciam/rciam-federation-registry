@@ -1,5 +1,6 @@
 import React, {useState, useRef ,useEffect,useContext} from 'react';
 import Col from 'react-bootstrap/Col';
+import initialValues from '../initialValues';
 import { Field, FieldArray,FormikConsumer } from 'formik';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Form from 'react-bootstrap/Form';
@@ -12,7 +13,7 @@ import Overlay from 'react-bootstrap/Overlay';
 import { useTranslation } from 'react-i18next';
 import countryData from 'country-region-data';
 import CopyToClipboardComponent from './CopyToClipboard.js'
- import {tenantContext} from '../context.js';
+import {tenantContext} from '../context.js';
 // import {removeA} from '../helpers.js';
 
 /*
@@ -107,7 +108,7 @@ export function PublicKey(props){
             placeholder='https://'
             type="text"
             ref={target}
-            value={props.values.jwks_uri}
+            value={props.values.jwks_uri?props.values.jwks_uri:""}
             onChange={props.onChange}
             isInvalid={props.isInvalid}
             disabled={props.disabled}
@@ -225,9 +226,10 @@ export function TimeInput(props){
          type='text'
          className={'col-form-label-sm ' + (props.changed?"input-edited":"")}
          ref={target}
+         placeholder={'Enter Value'}
          onMouseOver={()=>setShow(true)}
          onMouseOut={()=>setShow(false)}
-         value={Math.round(props.value/(timeMetric==='0'?1:(timeMetric==='1'?60:3600)) * 100) / 100}
+         value={props.value?Math.round(props.value/(timeMetric==='0'?1:(timeMetric==='1'?60:3600)) * 100) / 100:props.value===0?'0':''}
          onChange={(e)=>{
            if(reg.test(e.target.value)){
            e.target.value= e.target.value*(timeMetric==='0'?1:(timeMetric==='0'?1:(timeMetric==='1'?60:3600)));
@@ -459,6 +461,14 @@ export function RefreshToken(props){
     const target = useRef(null);
     // eslint-disable-next-line
     const { t, i18n } = useTranslation();
+    useEffect(()=>{
+      if(props.values.scope.includes('offline_access')&&(props.values.refresh_token_validity_seconds===null||props.values.refresh_token_validity_seconds===0)){
+        props.setFieldValue('refresh_token_validity_seconds',initialValues.refresh_token_validity_seconds,true).then(()=>{
+          props.validateField('refresh_token_validity_seconds');
+        });        
+      }
+      // eslint-disable-next-line
+    },[props.values.scope])
     return(
       <React.Fragment>
         <div
@@ -531,6 +541,14 @@ export function DeviceCode(props){
   const target = useRef(null);
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
+  useEffect(()=>{
+    if(props.values.grant_types.includes('urn:ietf:params:oauth:grant-type:device_code')&&props.values.refresh_token_validity_seconds===null){
+      props.setFieldValue('device_code_validity_seconds',initialValues.device_code_validity_seconds,true).then(()=>{
+        props.validateField('device_code_validity_seconds');
+      });        
+    }
+    // eslint-disable-next-line
+  },[props.values.grant_types])
   return(
     <React.Fragment>
       <div
@@ -891,7 +909,7 @@ export  function LogoInput(props){
               overflowX: 'scroll',
             }}
           >
-            <Image src={props.value ? props.value:process.env.PUBLIC_URL + '/logo_placeholder.gif'} onError={addDefaultSrc} fluid />
+            <Image referrerPolicy="no-referrer" src={props.value ? props.value:process.env.PUBLIC_URL + '/logo_placeholder.gif'} onError={addDefaultSrc} fluid />
 
           </pre>
         )}

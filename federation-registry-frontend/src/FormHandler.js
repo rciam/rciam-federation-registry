@@ -1,4 +1,4 @@
-import React,{useEffect,useState} from 'react';
+import React,{useEffect,useState,useContext} from 'react';
 import initialValues from './initialValues';
 import {useParams} from "react-router-dom";
 import * as config from './config.json';
@@ -13,7 +13,7 @@ import Container from 'react-bootstrap/Container';
 import {Logout,NotFound} from './Components/Modals';
 import { diff } from 'deep-diff';
 import { useTranslation } from 'react-i18next';
-
+import {tenantContext} from './context.js';
 
 const EditService = (props) => {
     // eslint-disable-next-line
@@ -25,6 +25,7 @@ const EditService = (props) => {
     const {tenant_name} = useParams();
     const [logout,setLogout] = useState(false);
     const [notFound,setNotFound] = useState(false);
+    const tenant = useContext(tenantContext);
     useEffect(()=>{
       getData();
 
@@ -53,6 +54,7 @@ const EditService = (props) => {
             N:[]
           }
         };
+        
         let attributes = ['contacts'];
         if(petition.protocol==='oidc'){
           attributes.push('grant_types','scope','redirect_uris');
@@ -66,6 +68,15 @@ const EditService = (props) => {
         attributes.forEach(item=>{
           petition[item].push(...helper[item].D);
         });
+
+        
+        for(var property in tenant[0].form_config.code_of_condact){
+          delete helper[property];
+          if(petition[property]!==service[property]&&!(!service[property]&&petition[property]===false)){
+            helper[property] = 'N'; 
+          }
+        }
+
         // eslint-disable-next-line react-hooks/exhaustive-deps
         setEditPetition(petition);
         setChanges(helper);

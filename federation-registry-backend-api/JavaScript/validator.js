@@ -79,13 +79,16 @@ const tenantValidation = (options) => {
   ]
 }
 const isNotEmpty = (value) => {
-  return ((value&&typeof(value)==='string')||(typeof(value)==="boolean")||(value&&Array.isArray(value)&&value.length!==0)||(value&&value.constructor === Object && Object.keys(value).length !== 0))
+  return ((typeof(value)==='number')||(value&&typeof(value)==='string')||(typeof(value)==="boolean")||(value&&Array.isArray(value)&&value.length!==0)||(value&&value.constructor === Object && Object.keys(value).length !== 0))
+}
+const isEmpty = (value) => {
+  return !isNotEmpty(value);
 }
 
 const serviceValidationRules = (options) => {
   const required = (value,req,pos)=>{
     if(options.optional){
-      if(!isNotEmpty(value)){
+      if(isEmpty(value)){
         req.body[pos].outdated = true;
       }
       return true
@@ -97,7 +100,7 @@ const serviceValidationRules = (options) => {
 
   const requiredOidc = (value,req,pos) => {
       if(options.optional||req.body[pos].protocol!=='oidc'){
-        if(!isNotEmpty(value) && req.body[pos].protocol==='oidc'){
+        if(isEmpty(value) && req.body[pos].protocol==='oidc'){
           req.body[pos].outdated = true;
         }
       return true
@@ -109,7 +112,7 @@ const serviceValidationRules = (options) => {
 
   const requiredSaml = (value,req,pos) => {
     if(options.optional||req.body[pos].protocol!=='saml'){
-      if(!isNotEmpty(value)&& req.body[pos].protocol==='saml'){
+      if(isEmpty(value)&& req.body[pos].protocol==='saml'){
         req.body[pos].outdated = true;
       }
       return true;
@@ -133,6 +136,14 @@ const serviceValidationRules = (options) => {
     }
     else{
       return true;
+    }
+  }
+
+  const sanitizeInteger = (value) =>{
+    if(isEmpty(value)||(typeof(value)!=='number'&&typeof(parseInt(value))!=='number')){
+      return null;    
+    }else{
+      return parseInt(value);
     }
   }
 
@@ -367,39 +378,28 @@ const serviceValidationRules = (options) => {
             return config.form[req.params.tenant].token_endpoint_auth_signing_alg.includes(value)}).
             withMessage('Invalid Token Endpoint Signing Algorithm'),
       body('*.id_token_timeout_seconds').customSanitizer(value => {
-          if(typeof(value)!=='number'&&typeof(parseInt(value))!=='number'){
-            return 0;
-          }else{
-            return value;
-          }
-        }).optional({checkFalsy:true}).custom((value,{req,location,path})=> {
+        return sanitizeInteger(value);
+        }).custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('id_token_timeout_seconds missing').if((value,{req,location,path})=> {return isNotEmpty(value)&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).custom((value,{req,location,path})=> {
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         let max = config.form[tenant].id_token_timeout_seconds;
-        if(!value||(value&&parseInt(value)<=max&&parseInt(value)>=0)){return true}else{
+        if(isEmpty(value)||(value<=max&&value>=1)){return true}else{
           throw new Error("id_token_timeout_seconds must be an integer in specified range [1-"+ max +"]")
         }}),
       body('*.access_token_validity_seconds').customSanitizer(value => {
-        if(typeof(value)!=='number'&&typeof(parseInt(value))!=='number'){
-            return 0;
-
-          }else{
-            return value;
-          }
-        }).optional({checkFalsy:true}).custom((value,{req,location,path})=> {
+        return sanitizeInteger(value);
+        }).custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('access_token_validity_seconds missing').if((value,{req,location,path})=> {return isNotEmpty(value)&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).custom((value,{req,location,path})=> {
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         let max = config.form[tenant].access_token_validity_seconds;
-        if(value&&parseInt(value)<=max&&parseInt(value)>=0){return true}else{
+        if(isNotEmpty(value)&&value<=max&&value>=1){return true}else{
           throw new Error("access_token_timeout_seconds must be an integer in specified range [1-"+ max +"]")
         }}),
-      body('*.refresh_token_validity_seconds').customSanitizer(value => {
-        if(typeof(value)!=='number'&&typeof(parseInt(value))!=='number'){
-            return 0;
-          }else{
-            return value;
-          }
+      body('*.refresh_token_validity_seconds').customSanitizer((value,{req,location,path}) => {
+        let pos = path.match(/\[(.*?)\]/)[1]; 
+          return sanitizeInteger(value);
         }).custom((value,{req,location,path})=> {
           let pos = path.match(/\[(.*?)\]/)[1];
-          if(!value&&req.body[pos].scope&&req.body[pos].scope.includes('offline_access')){
+          
+          if(isEmpty(value)&&req.body[pos].scope&&req.body[pos].scope.includes('offline_access')){
             if(options.optional){
               req.body[pos].outdated = true;
               return true
@@ -411,25 +411,25 @@ const serviceValidationRules = (options) => {
           else{
             return true
           }
-        }).withMessage("Refresh Token Validity Seconds is required when 'offline_access' is included in the scopes").custom((value,{req,location,path})=> {
-          if(!value){
+        }).withMessage("Refresh Token Validity Seconds is required when 'offline_access' is included in the scopes").
+        if((value,{req,location,path})=> {}).
+        custom((value,{req,location,path})=> {
+          if(isEmpty(value)){
             return true;
           }
           let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
           let max = config.form[tenant].refresh_token_validity_seconds;
-          if(value&&parseInt(value)<=max&&parseInt(value)>=0){return true}else{
+          if(isNotEmpty(value)&&value<=max&&value>=1){return true}else{
             throw new Error("Refresh Token Validity Seconds must be an integer in specified range [1-"+ max +"]")
           }
         }),
-      body('*.device_code_validity_seconds').customSanitizer(value => {
-        if(typeof(value)!=='number'&&typeof(parseInt(value))!=='number'){
-          return 0;
-        }else{
-          return value;
-        }
-      }).custom((value,{req,location,path})=> {
+      body('*.device_code_validity_seconds').customSanitizer((value,{req,location,path}) => {
         let pos = path.match(/\[(.*?)\]/)[1];
-        if(!value&&req.body[pos].protocol==='oidc'&&req.body[pos].grant_types&&req.body[pos].grant_types.includes('urn:ietf:params:oauth:grant-type:device_code')){
+          return sanitizeInteger(value);
+      }).
+      custom((value,{req,location,path})=> {
+        let pos = path.match(/\[(.*?)\]/)[1];
+        if(isEmpty(value)&&req.body[pos].protocol==='oidc'&&req.body[pos].grant_types&&req.body[pos].grant_types.includes('urn:ietf:params:oauth:grant-type:device_code')){
           if(options.optional){
             req.body[pos].outdated = true;
             return true
@@ -437,15 +437,17 @@ const serviceValidationRules = (options) => {
             throw new Error("Device Code Validity Seconds is required when 'urn:ietf:params:oauth:grant-type:device_code' is included in the grant_types")
           }
         }
-        if(!value){
-          return true;
-        }
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         let max = config.form[tenant].device_code_validity_seconds;
-        if((value&&parseInt(value)<=max&&parseInt(value)>=0)||(req.body[pos].protocol!=='oidc'||!req.body[pos].grant_types||!req.body[pos].grant_types.includes('urn:ietf:params:oauth:grant-type:device_code'))){
+        
+        if(isEmpty(value)){
+          return true;
+        }else if((isNotEmpty(value)&&value<=max&&value>=0)||(req.body[pos].protocol!=='oidc'||isEmpty(req.body[pos].grant_types)||!req.body[pos].grant_types.includes('urn:ietf:params:oauth:grant-type:device_code'))){
           return true}else{
           throw new Error("Device Code Validity Seconds must be an integer in specified range [0-"+ max +"]")
-        }}).withMessage('Must be an integer in specified range'),
+        }
+        
+        }).withMessage('Must be an integer in specified range'),
       body('*.code_challenge_method').optional({checkFalsy:true}).isString().withMessage('Device Code must be a string').custom((value)=> {
         try{
           return value.match(reg.regCodeChalMeth)
@@ -517,103 +519,7 @@ const serviceValidationRules = (options) => {
 }
 //
 //body('service_id').if*body('type'==='edit'||)
-const servicePostValidationRules = (strict) => {
-  return [
-    // body().isArray({min:1}).withMessage('Body must be an array containing at least one service'),
-    //body('*.country').exists().customSanitizer(value => {return value.toUpperCase();}).custom((country)=>{if(countryCodes.includes(country)){return true}else{return false}}).withMessage('Invalid Country Code'),
-    //body('*.token_endpoint_auth_method').exists().custom((value,{req,location,path})=>{if(config.form[req.params.name].token_endpoint_auth_method.includes(value)){return true}else{return false}}).withMessage('Invalid Token Endpoint Authentication Method'),
-    // body('*.token_endpoint_auth_signing_alg').customSanitizer((value,{req,location,path}) => {
-    //     if(!['private_key_jwt','client_secret_jwt'].includes(req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method)){
-    //       return '';}
-    //     else{return value}
-    //   }).if((value,{req,location,path})=>{return (['private_key_jwt','client_secret_jwt'].includes(req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method))}).
-    //   custom((value,{req,location,path})=>{
-    //     return config.form[req.params.name].token_endpoint_auth_signing_alg.includes(value)}).
-    //   withMessage(' Token Endpoint Signing Algorithm'),
-    // body('*.jwks_uri').
-    //   customSanitizer((value,{req,location,path})=>{
-    //     if(req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method==="private_key_jwt"){
-    //       return value
-    //     }
-    //     else{
-    //       return null
-    //     }
-    //   }).
-    //   if((value,{req,location,path})=>{return req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method==="private_key_jwt"}).
-    //   custom((value,{req,location,path}) => {
-    //     if(req.body[path.match(/\[(.*?)\]/)[1]].jwks&&value){
-    //       return false;
-    //     }
-    //     else{
-    //       return true;
-    //     }
-    //   }).withMessage("Invalid private key option, only one of the following values should exist ['jwks','jwks_uri']").bail().
-    //   custom((value)=>
-    //     value.match(reg.regSimpleUrl)).withMessage('Private key uri must be a valid url').bail()
-    //   ,
-    // body('*.jwks').customSanitizer((value,{req,location,path})=>{
-    //     if(req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method==="private_key_jwt"){
-    //       console.log('success');
-    //       return value
-    //     }
-    //     else{
-    //       return null
-    //     }
-    //   }).
-    //   if((value,{req,location,path})=>{return req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method==="private_key_jwt"}).
-    //   custom(value=>{
-    //     console.log(value);
-    //     if(value&&value.keys&&typeof(value.keys)==='object'&&Object.keys(value).length===1){
-    //       return true
-    //     }
-    //     else{
-    //       return false
-    //     }
-    //   }).withMessage('Invalid Schema for private key'),
-    //body('*.external_id').optional({checkFalsy:true}).exists().withMessage('Required Field').bail().custom((value)=>{if(parseInt(value)){return true}else{return false}}).bail(),
-    //body('*.protocol').exists().withMessage('Required Field').bail().custom((value)=> {if(['oidc','saml'].includes(value)){return true}else{return false}}).withMessage('Invalid value'),
-    //body('*.service_name').optional({checkFalsy:true}).exists().withMessage('Required Field').bail().isString().withMessage('Must be a string').bail().isLength({min:4, max:36}).bail(),
-    // body('*.client_id').if((value,{req,location,path})=>{return req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).exists().withMessage('Required Field').bail().isString().withMessage('Must be a string').bail().isLength({min:4, max:36}).withMessage('Must be between 4 and 36 characters').bail().custom((value,{req,location,path})=> {
-    //   return db.service_details_protocol.checkClientId(value,0,0,req.params.name,req.body[path.match(/\[(.*?)\]/)[1]].integration_environment).then(available=> {
-    //     if(!available){
-    //       return Promise.reject('Not available ('+ value +')');
-    //     }
-    //     else{
-    //       return Promise.resolve();
-    //     }
-    //   });
-    // }),
-    //body('*.redirect_uris').optional({checkFalsy:true}).isArray({min:1}).withMessage('Must be an array').bail().custom((value,success=true)=> {value.map((item,index)=>{if(!item.match(reg.regUrl)){success=false}}); return success }).withMessage('Must be secure url').bail(),
-    //body('*.logo_uri').optional({checkFalsy:true}).exists().withMessage('Required Field').bail().isString().withMessage('Must be a string').bail().custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Must be a url').bail(),
-    //body('*.policy_uri').optional({checkFalsy:true}).exists().withMessage('Required Field').bail().isString().withMessage('Must be a string').bail().custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Must be a url').bail(),
-    //body('*.service_description').optional({checkFalsy:true}).exists().withMessage('Required Field').bail().isString().withMessage('Must be a string').bail().isLength({min:1}).bail(),
-    //body('*.contacts').optional({checkFalsy:true}).if(param('name').custom((value)=> {tenant=value; return true;})).exists().withMessage('Required Field').bail().isArray({min:1}).withMessage('Must be an array').bail().custom((value,success=true)=> {value.map((item,index)=>{if(item.email&&!item.email.toLowerCase().match(reg.regEmail)||!config.form[tenant].contact_types.includes(item.type)){success=false}}); return success }).withMessage('Invalid value').bail(),
-    //body('*.scope').optional({checkFalsy:true}).isArray({min:1}).withMessage('Must be an array').bail().custom((value,success=true)=> {value.map((item,index)=>{if(!item.match(reg.regScope)){success=false}}); return success }).withMessage('Invalid value').bail(),
-    //body('*.grant_types').if(param('name').custom((value)=> {tenant=value; return true;})).optional({checkFalsy:true}).isArray({min:1}).withMessage('Must be an array').bail().custom((value,success=true)=> {value.map((item,index)=>{if(!config.form[tenant].grant_types.includes(item)){success=false}}); return success }).withMessage('Invalid value').bail(),
-    //body('*.id_token_timeout_seconds').optional({checkFalsy:true}).custom((value)=> {if(parseInt(value)&&parseInt(value)<34128000&&parseInt(value)>0){return true}else{return false}}).withMessage('Must be an integer in specified range').bail(),
-    //body('*.access_token_validity_seconds').optional({checkFalsy:true}).custom((value)=> {if(parseInt(value)&&parseInt(value)<34128000&&parseInt(value)>0){return true}else{return false}}).withMessage('Must be an integer in specified range').bail(),
-    //body('*.refresh_token_validity_seconds').optional({checkFalsy:true}).custom((value)=> {if(parseInt(value)&&parseInt(value)<34128000&&parseInt(value)>0){return true}else{return false}}).withMessage('Must be an integer in specified range').bail(),
-    //body('*.device_code_validity_seconds').optional({checkFalsy:true}).custom((value)=> {if(parseInt(value)&&parseInt(value)<34128000&&parseInt(value)>0){return true}else{return false}}).withMessage('Must be an integer in specified range').bail(),
-    //body('*.code_challenge_method').optional({checkFalsy:true}).isString().withMessage('Must be a string').bail().custom((value)=> value.match(reg.regCodeChalMeth)).withMessage('Invalid value').bail(),
-    //body('*.allow_introspection').optional({checkFalsy:true}).custom((value)=> typeof(value)==='boolean').withMessage('Must be a boolean').bail(),
-    //body('*.generate_client_secret').optional({checkFalsy:true}).custom((value)=> typeof(value)==='boolean').withMessage('Must be a boolean').bail(),
-    //body('*.reuse_refresh_token').optional({checkFalsy:true}).custom((value)=> typeof(value)==='boolean').withMessage('Must be a boolean').bail(),
-    //body('*.integration_environment').if(param('name').custom((value)=> {tenant=value; return true;})).exists().withMessage('Required Field').bail().isString().withMessage('Must be a string').bail().custom((value)=> {if(config.form[tenant].integration_environment.includes(value)){return true}else{return false}}).bail(),
-    //body('*.clear_access_tokens_on_refresh').optional({checkFalsy:true}).custom((value)=> typeof(value)==='boolean').withMessage('Must be a boolean').bail(),
-    //body('*.client_secret').optional({checkFalsy:true}).if(body('protocol').custom((value)=>{return value==='oidc'})&&(body('token_endpoint_auth_method').custom((value)=>{return value!=='private_key_jwt'&&value!=='none'}))).if((value,req)=> req.body.data.generate_client_secret=false).bail().isString().withMessage('Must be a string').bail().isLength({min:4,max:16}).bail(),
-    //body('*.entity_id').optional({checkFalsy:true}).isString().withMessage('Must be a string').bail().isLength({min:4, max:256}).bail().custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Must be a url').bail(),
-    // body('*.metadata_url').if((value,{req,location,path})=>{ return req.body[path.match(/\[(.*?)\]/)[1]].protocol==='saml'}).exists().withMessage('Required Field').bail().isString().withMessage('Must be a string').bail().custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Must be a url').bail().custom((value,{req,location,path})=> {
-    //   return db.service_details_protocol.checkClientId(value,0,0,req.params.name,req.body[path.match(/\[(.*?)\]/)[1]].integration_environment).then(available=> {
-    //     if(!available){
-    //       return Promise.reject('Not available');
-    //     }
-    //     else{
-    //       return Promise.resolve();
-    //     }
-    //   });
-    // }),
-  ]
-}
+
 
 
 const petitionValidationRules = () => {
@@ -623,13 +529,7 @@ const petitionValidationRules = () => {
     body('type').exists().withMessage('Required Field').bail().isString().withMessage('Must be a string').bail().custom((value)=>{if(['edit','create','delete'].includes(value)){return true}else{return false}}).bail()
   ]
 }
-const generateClientId = (req,res,next) => {
 
-  if(!req.body.client_id){
-    req.body.client_id = uuidv1();
-  }
-  next();
-}
 const formatPetition = (req,res,next) => {
   req.body = [req.body];
   if(req.body[0].type==='delete'){
@@ -684,7 +584,19 @@ const changeContacts = (req,res,next) => {
     next(err);
   }
 }
-
+const validateInternal = (req,res,next) =>{
+  const errors = validationResult(req);
+  if(!errors.isEmpty()){
+    errors.errors.forEach((error,index)=>{
+      var matches = error.param.match(/\[(.*?)\]/);
+      if(typeof(parseInt(matches[1]))=='number'){
+        req.body[matches[1]].outdated = true;
+        //console.log(error);
+      }      
+    });
+  }
+  next();
+}
 const validate = (req, res, next) => {
 
   try{
@@ -790,8 +702,8 @@ module.exports = {
   postAgentValidation,
   getServiceListValidation,
   formatPetition,
-  generateClientId,
   reFormatPetition,
   getServicesValidation,
-  changeContacts
+  changeContacts,
+  validateInternal
 }

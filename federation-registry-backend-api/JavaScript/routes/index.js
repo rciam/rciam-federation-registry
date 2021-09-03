@@ -1,5 +1,5 @@
 require('dotenv').config();
-const {petitionValidationRules,validate,tenantValidation,changeContacts,formatPetition,getServiceListValidation,postInvitationValidation,serviceValidationRules,putAgentValidation,postAgentValidation,decodeAms,amsIngestValidation,generateClientId,reFormatPetition,getServicesValidation} = require('../validator.js');
+const {petitionValidationRules,validate,validateInternal,tenantValidation,changeContacts,formatPetition,getServiceListValidation,postInvitationValidation,serviceValidationRules,putAgentValidation,postAgentValidation,decodeAms,amsIngestValidation,reFormatPetition,getServicesValidation} = require('../validator.js');
 const {validationResult} = require('express-validator');
 const qs = require('qs');
 const {v1:uuidv1} = require('uuid');
@@ -16,6 +16,7 @@ const { generators } = require('openid-client');
 const code_verifier = generators.codeVerifier();
 const {rejectPetition,approvePetition,changesPetition,getPetition,getOpenPetition,requestReviewPetition} = require('../controllers/main.js');
 const base64url = require('base64url');
+const { EADDRINUSE } = require('constants');
 
 
 
@@ -27,11 +28,31 @@ const base64url = require('base64url');
 
 
 function getData(req,res,next) {
-  db.service.getAll().then(services=>{
+  db.service.getAll(req.params.tenant).then(services=>{
     req.body = services;
     next();
   });
 }
+
+router.put('/tenants/:tenant/services/validate',adminAuth,getData,serviceValidationRules({optional:true,tenant_param:true,check_available:false,sanitize:true,null_client_id:false}),validateInternal,(req,res,next)=>{
+  try{
+    // Initialized with O in case there are no new outdated services
+    let outdated_ids = [];
+    req.body.forEach((service,index)=>{
+      if(service.outdated){
+        outdated_ids.push(parseInt(service.id));
+      };
+    });
+    db.service_state.updateOutdated(outdated_ids).then(result=>{
+      res.status(200).send("Success, " + result.services_turned_outdated+ ' Services where flagged as outdated and '+ result.services_turned_up_to_date + " Services where unflagged.")
+    }).catch(err=> {
+      next(err);
+    });
+  }catch(err){
+    next(err);
+  }
+});
+
 router.get('/tenants/:tenant/services',getServicesValidation(),validate,authenticate_allow_unauthorised, (req,res,next)=>{
   try{
     if(req.user && req.user.role && req.user.role.actions.includes('get_services')){
@@ -89,7 +110,7 @@ router.get('/tenants/:tenant/services',getServicesValidation(),validate,authenti
 
 // Endpoint used to bootstrap a teant or generaly to import multiple services
 // Add changeContacts to alter contacts
-router.post('/tenants/:tenant/services',tenantValidation(),validate,authenticate,serviceValidationRules({optional:true,tenant_param:true,check_available:true,sanitize:true,null_client_id:false}),validate,(req,res,next)=> {
+router.post('/tenants/:tenant/services',adminAuth,tenantValidation(),validate,serviceValidationRules({optional:true,tenant_param:true,check_available:true,sanitize:true,null_client_id:false}),validate,(req,res,next)=> {
   let services = req.body;
   // Populate json objects with all necessary fields
   services.forEach((service,index) => {
@@ -1252,6 +1273,7 @@ function authenticate(req,res,next){
         // Remove Bearer from string
         token = token.slice(7, token.length);
         req.user = decode(token);
+        
         db.user_role.getRoleActions(req.user.sub,req.params.tenant).then(role=>{
           if(role){
             req.user.role = role;
@@ -1327,6 +1349,14 @@ function authenticate(req,res,next){
 
 }
 
+function adminAuth(req,res,next){
+  if(req.header('X-Api-Key')===process.env.ADMIN_AUTH_KEY){
+    next();
+  }else{
+    res.status(401).send("Unauthorized");
+  }
+}
+
 // Authenticating AmsAgent
 function amsAgentAuth(req,res,next){
   if(req.header('X-Api-Key')===process.env.AMS_AGENT_KEY){
@@ -1380,6 +1410,12 @@ const saveUser=(userinfo,tenant)=>{
   return db.tx('user-check',async t=>{
     return t.user.getUser(userinfo.sub,tenant).then(async user=>{
       if(user){
+        if(!user.eduperson_entitlement||typeof(user.eduperson_entitlement)!=='object'){
+          user.eduperson_entitlement = [];
+        }
+        if(!userinfo.eduperson_entitlement||typeof(userinfo.eduperson_entitlement)!=='object'){
+          userinfo.eduperson_entitlement = [];
+        }
         await t.user_role.getRole(userinfo.eduperson_entitlement,tenant).then(async role=>{
           if(role){
             let update_userinfo = false;
@@ -1391,6 +1427,7 @@ const saveUser=(userinfo,tenant)=>{
             delete userinfo.eduperson_entitlement;
             delete user.eduperson_entitlement;
             userinfo.role_id = role.id.toString();
+            
             for (const property in userinfo) {
               if(user.hasOwnProperty(property)&&userinfo[property]!==user[property]){
                 update_userinfo= true;

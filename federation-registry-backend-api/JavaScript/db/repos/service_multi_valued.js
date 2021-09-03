@@ -20,7 +20,7 @@ class ServiceMultiValuedRepository {
     let upd_cs;
     id = parseInt(id);
     for(const property in service){
-      if(Object.keys(config.form[service.tenant].code_of_contact).includes(property)){
+      if(Object.keys(config.form[service.tenant].code_of_condact).includes(property)){
         if(type==='petition'){
           data.push({petition_id:id,name:property,value:service[property]});
           upd_cs = cs.cocPetUpd;
@@ -47,7 +47,7 @@ class ServiceMultiValuedRepository {
     let add_cs = {};
     let table_name;
     for(const property in service){
-      if(Object.keys(config.form[service.tenant].code_of_contact).includes(property)){
+      if(Object.keys(config.form[service.tenant].code_of_condact).includes(property)){
         if(type==='petition'){
           data.push({petition_id:id,name:property,value:service[property]});
           add_cs = cs.cocPet;
