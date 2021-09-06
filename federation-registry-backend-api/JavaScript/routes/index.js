@@ -897,7 +897,7 @@ router.delete('/tenants/:tenant/groups/:group_id/invitations/:id',authenticate,c
 router.put('/tenants/:tenant/groups/:group_id/invitations/:id',authenticate,canInvite,(req,res,next)=>{
   try{
     db.invitation.refresh(req.params.id).then(response=>{
-      if(response.code){
+      if(response&&response.code){
         response.tenant = req.params.tenant;
         sendInvitationMail(response)
         res.status(200).end();
