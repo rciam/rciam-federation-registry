@@ -120,9 +120,8 @@ class ServiceStateRepository {
   async updateOutdated(ids){
     let services_turned_outdated = 0;
     let services_turned_up_to_date = 0;
-    let new_ids = [];
-    for(let i=0;i<10;i++){
-      new_ids.push(ids[i]);
+    if(ids.length===0){
+      ids.push(0);
     }
     const query = this.pgp.as.format("UPDATE service_state SET outdated=true WHERE id IN($1:csv) AND outdated=false RETURNING *",[ids]);
     return this.db.any(query).then(async result=>{
