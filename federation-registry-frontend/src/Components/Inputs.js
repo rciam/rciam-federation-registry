@@ -461,9 +461,6 @@ export function RefreshToken(props){
     const target = useRef(null);
     // eslint-disable-next-line
     const { t, i18n } = useTranslation();
-    useEffect(()=>{
-      props.validateField('refresh_token_validity_seconds');
-    },[props.values.refresh_token_validity_seconds])
     return(
       <React.Fragment>
         <div
@@ -474,7 +471,9 @@ export function RefreshToken(props){
           >
           <Checkbox name="scope" disabled={props.disabled} checked={props.values.scope.includes('offline_access')} value='offline_access' onClick={()=>{
                   if(!props.values.scope.includes('offline_access')&&(props.values.refresh_token_validity_seconds===null||props.values.refresh_token_validity_seconds===0)){
-                    props.setFieldValue('refresh_token_validity_seconds',initialValues.refresh_token_validity_seconds,true);      
+                    props.setFieldValue('refresh_token_validity_seconds',initialValues.refresh_token_validity_seconds,true).then(()=>{
+                      props.validateField('refresh_token_validity_seconds');
+                    });      
                   }
           }}/>
             {t('form_reuse_refresh_token_scope')}
@@ -540,10 +539,7 @@ export function DeviceCode(props){
   const target = useRef(null);
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
-  useEffect(()=>{
-    props.validateField('device_code_validity_seconds');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[props.values.device_code_validity_seconds]);
+
   return(
     <React.Fragment>
       <div
@@ -554,7 +550,9 @@ export function DeviceCode(props){
       >
         <Checkbox name="grant_types" disabled={props.disabled} value='urn:ietf:params:oauth:grant-type:device_code' onClick={()=>{
            if(!props.values.grant_types.includes('urn:ietf:params:oauth:grant-type:device_code')&&props.values.device_code_validity_seconds===null){
-            props.setFieldValue('device_code_validity_seconds',initialValues.device_code_validity_seconds,true);
+            props.setFieldValue('device_code_validity_seconds',initialValues.device_code_validity_seconds,true).then(()=>{
+              props.validateField('device_code_validity_seconds');
+            });
            }    
         }}/>
           {t('form_device_code_desc')}

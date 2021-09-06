@@ -412,7 +412,7 @@ const serviceValidationRules = (options) => {
             return true
           }
         }).withMessage("Refresh Token Validity Seconds is required when 'offline_access' is included in the scopes").
-        if((value,{req,location,path})=> {}).
+        if((value,{req,location,path})=> {return isNotEmpty(value);}).
         custom((value,{req,location,path})=> {
           if(isEmpty(value)){
             return true;
