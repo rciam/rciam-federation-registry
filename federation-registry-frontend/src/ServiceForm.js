@@ -900,6 +900,7 @@ const ServiceForm = (props)=> {
                               isInvalid={hasSubmitted?!!errors.refresh_token_validity_seconds:(!!errors.refresh_token_validity_seconds&&touched.refresh_token_validity_seconds)}
                               onChange={handleChange}
                               disabled={disabled}
+                              errors={errors}
                               setFieldValue={setFieldValue}
                               validateField={validateField}
                               changed={props.changes}
@@ -910,6 +911,7 @@ const ServiceForm = (props)=> {
                               onBlur={handleBlur}
                               values={values}
                               setFieldValue={setFieldValue}
+                              errors={errors}
                               validateField={validateField}
                               isInvalid={hasSubmitted?!!errors.device_code_validity_seconds:(!!errors.device_code_validity_seconds&&touched.device_code_validity_seconds)}
                               onChange={handleChange}

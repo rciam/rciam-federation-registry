@@ -4,6 +4,7 @@ const {db} = require('../db');
 const filePath = path.resolve(__dirname+'/last_notif');
 require('dotenv').config();
 var fs2 = require('fs');
+var config = require('../config');
 var hbs = require('handlebars');
 nodeMailer = require('nodemailer');
 const customLogger = require('../loggers.js');
@@ -112,6 +113,7 @@ const sendOutdatedNotification = async (data) => {
         var replacements = {
           username:data.username,
           tenant:data.tenant,
+          logo_url:config[data.tenant].logo_url,
           url:process.env.REACT_BASE+'/'+ data.tenant
         }
         var htmlToSend = template(replacements);

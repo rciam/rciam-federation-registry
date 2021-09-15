@@ -84,8 +84,8 @@ export const NavbarTop = (props)=>{
               if(tenant[0].name==='egi'){
                 window.location.assign('https://aai.egi.eu/oidc/saml/logout?redirect='+config.react+tenant[0].name);
               }
-              else{
-                history.push('/'+(tenant&&tenant[0]?tenant[0].name:null));
+              else if(tenant[0].name==='eosc'){
+                window.location.assign('https://aai-demo.eosc-portal.eu/oidc/saml/logout?redirect='+config.react+tenant[0].name);
               }
             }}>
               {t('logout')}<FontAwesomeIcon icon={faSignOutAlt}/>

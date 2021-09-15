@@ -1,4 +1,12 @@
 {
+  "egi" :{
+    "logo_url":"https://aai-dev.egi.eu/proxy/module.php/themeegi/resources/images/logo.svg",
+    "base_url":"https://aai.egi.eu/federation"
+  },
+  "eosc" : {
+    "logo_url":"https://www.eosc-portal.eu/sites/all/themes/theme1/logo.png",
+    "base_url":null
+  },
   "form" : {
     "egi" : {
       "code_of_condact": {
@@ -56,10 +64,11 @@
       "id_token_timeout_seconds":86400,
       "code_challenge_method":[null,"plain","S256"],
       "protocol":["oidc","saml"],
-      "integration_environment": ["development","demo","production"],
+      "integration_environment": ["demo","production"],
       "grant_types":["implicit","authorization_code","refresh_token","client_credentials","urn:ietf:params:oauth:grant_type:redelegate","urn:ietf:params:oauth:grant-type:token-exchange","urn:ietf:params:oauth:grant-type:device_code","urn:ietf:params:oauth:grant-type:jwt-bearer"],
       "contact_types":["admin","technical","support","security"],
       "invitation_validity_seconds":2592000,
+      "scope":["openid","email","profile","offline_access","eduperson_entitlement","eduperson_scoped_affiliation","eduperson_unique_id"],
       "token_endpoint_auth_method":["client_secret_basic","client_secret_post","client_secret_jwt","private_key_jwt","none"],
       "token_endpoint_auth_method_title":["Client Secret over HTTP Basic","Client Secret over HTTP POST","Client Secret via symmetrically-signed JWT assertion","Asymmetrically-signed JWT assertion","No authentication"],
       "token_endpoint_auth_signing_alg":["HS256","HS384","HS512","RS256","RS384","RS512","PS256"],
@@ -71,7 +80,7 @@
       "env":["production"]
     },
     "eosc": {
-      "env":[]
+      "env":["production"]
     }
   },
   "agent" : {

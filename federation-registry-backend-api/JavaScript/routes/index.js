@@ -266,6 +266,7 @@ router.get('/callback/:tenant',(req,res,next)=>{
   clients[req.params.tenant].callback(process.env.REDIRECT_URI+req.params.tenant,{code:req.query.code}).then(async response => {
     let code = await db.tokens.addToken(response.access_token);
     clients[req.params.tenant].userinfo(response.access_token).then(usr_info=>{
+      
       saveUser(usr_info,req.params.tenant);
 
     }); // => Promise
@@ -399,7 +400,9 @@ router.post('/ams/ingest',checkCertificate,decodeAms,amsIngestValidation(),valid
             await t.user.getServiceOwners(ids).then(async data=>{
               if(data){
                 await t.service_petition_details.getTicketInfo(ids,config.restricted_env.egi.env).then(ticket_data=>{
-                  createGgusTickets(ticket_data);
+                  if(ticket_data){
+                    createGgusTickets(ticket_data);
+                  }
                   data.forEach(email_data=>{
                     sendMail({subject:'Service Deployment Result',service_name:email_data.service_name,state:email_data.state,tenant:email_data.tenant},'deployment-notification.html',[{name:email_data.name,email:email_data.email}]);
                   });
@@ -483,7 +486,6 @@ router.get('/tenants/:tenant/services/list', getServiceListValidation(),validate
             }
             return res.status(200).send(response[0]);
         }).catch(err=>{
-          console.log(err);
           return res.status(416).send('Out of range');
         });
       }
@@ -498,7 +500,6 @@ router.get('/tenants/:tenant/services/list', getServiceListValidation(),validate
           }
           return res.status(200).send(response[0]);
         }).catch(err=>{
-          console.log(err);
           return res.status(416).send('Out of range');
         });
       }
@@ -554,7 +555,7 @@ router.get('/tenants/:tenant/services/:id',authenticate,(req,res,next)=>{
                   res.status(200).json({service:result.service_data});
                 }
                 else {
-                  res.status(404).end();
+                    res.status(404).end();
                 }
               }).catch(err=>{next(err);})
             }
@@ -878,7 +879,7 @@ router.post('/tenants/:tenant/groups/:group_id/invitations',authenticate,postInv
 // Delete invitation
 router.delete('/tenants/:tenant/groups/:group_id/invitations/:id',authenticate,canInvite,(req,res,next)=>{
   try{
-    db.invitation.delete(req.params.id).then(response=>{
+    db.invitation.delete(req.params.id,req.params.tenant).then(response=>{
       if(response){
         res.status(200).end();
       }
@@ -918,13 +919,13 @@ router.put('/tenants/:tenant/invitations/:invite_id/:action',authenticate,(req,r
   try{
     if(req.params.action==='accept'){
       db.tx('accept-invite',async t =>{
-        await t.invitation.getOne(req.params.invite_id,req.user.sub).then(async invitation_data=>{
+        await t.invitation.getOne(req.params.invite_id,req.user.sub,req.params.tenant).then(async invitation_data=>{
           if(invitation_data){
             invitation_data.tenant = req.params.tenant;
             let done = await t.batch([
               t.group.newMemberNotification(invitation_data),
               t.group.addMember(invitation_data),
-              t.invitation.reject(req.params.invite_id,req.user.sub)
+              t.invitation.reject(req.params.invite_id,req.user.sub,req.params.tenant)
             ]).catch(err=>{next(err)});
             res.status(200).end();
           }
@@ -935,7 +936,7 @@ router.put('/tenants/:tenant/invitations/:invite_id/:action',authenticate,(req,r
       })
     }
     else if(req.params.action==='decline'){
-      db.invitation.reject(req.params.invite_id,req.user.sub).then(response=>{
+      db.invitation.reject(req.params.invite_id,req.user.sub,req.params.tenant).then(response=>{
         if(response){
           res.status(200).end();
         }
@@ -957,7 +958,7 @@ router.put('/tenants/:tenant/invitations/:invite_id/:action',authenticate,(req,r
 // Get all invitations for requesting user
 router.get('/tenants/:tenant/invitations',authenticate,(req,res,next)=>{
   try{
-    db.invitation.getAll(req.user.sub).then((response)=>{
+    db.invitation.getAll(req.user.sub,req.params.tenant).then((response)=>{
       if(response){
         res.status(200).json(response);
       }
@@ -993,7 +994,7 @@ router.get('/tenants/:tenant/groups/:group_id/invitations',authenticate,(req,res
 // Activate invitation
 router.put('/tenants/:tenant/invitations/activate_by_code',authenticate,(req,res,next)=>{
   try{
-    db.invitation.setUser(req.body.code,req.user.sub).then(result=>{
+    db.invitation.setUser(req.body.code,req.user.sub,req.params.tenant).then(result=>{
       if(result.success){
         res.status(200).json({id:result.id});
       }
@@ -1089,7 +1090,7 @@ router.post('/tenants/:tenant/agents',postAgentValidation(),validate,(req,res,ne
       else{
         res.status(404).send('Could not add agents')
       }
-    }).catch(err=>{console.log(err); next(err);})
+    }).catch(err=>{next(err);})
   }
   catch(err){
     next(err);
