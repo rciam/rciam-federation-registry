@@ -8,7 +8,7 @@ class InvitationRepository {
     this.pgp = pgp;
     // set-up all ColumnSet objects, if needed:
      //cs.update_multi = new pgp.helpers.ColumnSet(['?id','state',{name: 'last_edited', mod: '^', def: 'CURRENT_TIMESTAMP'}],{table:'service_state'});
-     cs.insert_multi = new pgp.helpers.ColumnSet(['code','group_manager','group_id','email',{name:'invited_by',def:'Federation Registry'},{name: 'date', mod: '^', def: 'CURRENT_TIMESTAMP'}],{table:'invitations'});
+     cs.insert_multi = new pgp.helpers.ColumnSet(['code','group_manager','group_id','email',{name:'invited_by',def:'Federation Registry'},{name: 'date', mod: '^', def: 'CURRENT_TIMESTAMP'},'tenant'],{table:'invitations'});
   }
   async addMultiple(invitation_data){
     
@@ -25,13 +25,16 @@ class InvitationRepository {
   }
   async add(data){
     let date = new Date(Date.now());
-    return this.db.one('INSERT INTO invitations(code,group_manager,group_id,email,invited_by,date) VALUES($1,$2,$3,$4,$5,$6) RETURNING code',[data.code,data.group_manager,+data.group_id,data.email,data.invited_by,date]).then(async res =>{
+    return this.db.one('INSERT INTO invitations(code,group_manager,group_id,email,invited_by,date,tenant) VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING code',[data.code,data.group_manager,+data.group_id,data.email,data.invited_by,date,data.tenant]).then(async res =>{
       if(res){
         return res.code;
       }
       else{
         return false;
       }
+    }).catch(err=>{
+      console.log(err);
+      throw err;
     });
   }
   async refresh(id){
@@ -39,21 +42,21 @@ class InvitationRepository {
     return this.db.oneOrNone('UPDATE invitations SET date=$1 WHERE id=$2 AND sub IS NULL returning *',[date,+id]);
   }
 
-  async getAll(sub){
+  async getAll(sub,tenant){
     let date = new Date(Date.now());
-    return this.db.any(sql.getAll,{sub: sub});
+    return this.db.any(sql.getAll,{sub: sub,tenant:tenant});
   }
 
-  async getOne(id,sub){
-    return this.db.oneOrNone(sql.getOne,{sub: sub,id:+id});
+  async getOne(id,sub,tenant){
+    return this.db.oneOrNone(sql.getOne,{sub: sub,id:+id,tenant:tenant});
   }
 
-  async reject(id,sub){
-    return this.db.oneOrNone('DELETE FROM invitations WHERE id=$1 AND sub=$2 RETURNING id',[+id,sub]);
+  async reject(id,sub,tenant){
+    return this.db.oneOrNone('DELETE FROM invitations WHERE id=$1 AND sub=$2 AND tenant=$3 RETURNING id',[+id,sub,tenant]);
   }
 
-  async delete(id){
-    return this.db.oneOrNone('DELETE FROM invitations WHERE id=$1 RETURNING id',+id);
+  async delete(id,tenant){
+    return this.db.oneOrNone('DELETE FROM invitations WHERE id=$1 RETURNING id',[+id,tenant]);
   }
 
   async get(group_id){
@@ -61,10 +64,10 @@ class InvitationRepository {
     return this.db.any(sql.get,{group_id:+group_id,now:date,validity_seconds:+config.invitation_validity_seconds});
   }
 
-  async setUser(code,sub){
+  async setUser(code,sub,tenant){
     let date2 = new Date(Date.now());
     return this.db.task('set-user',async t=>{
-      return await t.oneOrNone('SELECT date,groups.group_id FROM (SELECT date,group_id FROM invitations WHERE code=$1) as invitation LEFT JOIN (SELECT group_id FROM group_subs WHERE sub=$2) AS groups USING (group_id)',[code,sub]).then(res=>{
+      return await t.oneOrNone('SELECT date,groups.group_id FROM (SELECT date,group_id FROM invitations WHERE code=$1 AND tenant=$3) as invitation LEFT JOIN (SELECT group_id FROM group_subs WHERE sub=$2) AS groups USING (group_id)',[code,sub,tenant]).then(res=>{
         if(res){
           if(res.group_id){
             return {success:false,error:'member'}

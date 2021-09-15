@@ -255,7 +255,7 @@ const serviceValidationRules = (options) => {
         }
       }).withMessage('Service redirect_uri missing').if((value,{req,location,path})=> {
         let pos = path.match(/\[(.*?)\]/)[1];
-        return value&&value.length>0&&req.body[pos].protocol==='oidc'
+        return isNotEmpty(value)&&req.body[pos].protocol==='oidc'
       }).custom((value,{req,location,path})=> {
         let pos = path.match(/\[(.*?)\]/)[1];
         try{
@@ -263,7 +263,7 @@ const serviceValidationRules = (options) => {
             value.map((item,index)=>{
               if(req.body[pos].integration_environment==="production"){
 
-                if(!(item.match(reg.regLocalhostUrlSecure)||item.match(reg.regUrl))){
+                if(!(item.match(reg.regLocalhostUrl)||item.match(reg.regUrl))){
                   //reuse_refresh_token(item);
                   throw new Error("Invalid redirect url, it must be a secure or localhost url");
                 }

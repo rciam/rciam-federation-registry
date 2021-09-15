@@ -10,7 +10,9 @@ class GroupRepository {
   }
 
   async getMembers(group_id){
-    return this.db.any(sql.getGroupMembers,{group_id: +group_id}).then(members => {return members});
+    return this.db.any(sql.getGroupMembers,{group_id: +group_id}).then(members => {return members}).catch(err=>{
+      throw(err);
+    });
   }
 
   async newMemberNotification(invitation_data){

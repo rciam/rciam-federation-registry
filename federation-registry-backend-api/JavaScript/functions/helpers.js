@@ -155,7 +155,8 @@ const sendNotif= (data,template_uri,user)=>{
     //   }
     // });
     var replacements = {
-      name:user.name
+      name:user.name,
+      logo_url:config[data.tenant].logo_url
     };
     var template = hbs.compile(html);
     var htmlToSend = template(replacements);
@@ -198,12 +199,14 @@ const sendInvitationMail = async (data) => {
         //     pass: ''
         //   }
         // });
+        console.log(config[data.tenant].logo_url);
         var template = hbs.compile(html);
         var replacements = {
           invited_by:data.invited_by,
           group_manager:data.group_manager,
           registry_url: process.env.REACT_BASE+'/'+ data.tenant,
           tenant:data.tenant,
+          logo_url:config[data.tenant].logo_url,
           url:process.env.REACT_BASE+'/'+ data.tenant +'/invitation/' + data.code
         }
         var htmlToSend = template(replacements);
@@ -252,7 +255,9 @@ const newMemberNotificationMail = (data,managers) => {
         invitation_mail:data.invitation_mail,
         username:data.preferred_username,
         email:data.email,
-        url:process.env.REACT_BASE+'/'+ data.tenant
+        url:process.env.REACT_BASE+'/'+ data.tenant,
+        tenant:data.tenant.toUpperCase(),
+        logo_url:config[data.tenant].logo_url
       };
       var template = hbs.compile(html);
       managers.forEach((manager)=>{
@@ -315,7 +320,8 @@ const sendMail= (data,template_uri,users)=>{
         date:currentDate,
         state:state,
         url:process.env.REACT_BASE+'/'+ data.tenant,
-        comment:data.comment
+        comment:data.comment,
+        logo_url:config[data.tenant].logo_url
       };
       users.forEach((user) => {
           replacements.name = user.name;
@@ -356,7 +362,7 @@ const createGgusTickets =  function(data){
             //     service: 'gmail',
             //     auth: {
             //         user: 'orionaikido@gmail.com',
-            //         pass: "**********"
+            //         pass: ''
             //       }
             //     });
 
