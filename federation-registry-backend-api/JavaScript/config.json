@@ -1,11 +1,20 @@
 {
   "egi" :{
     "logo_url":"https://aai-dev.egi.eu/proxy/module.php/themeegi/resources/images/logo.svg",
-    "base_url":"https://aai.egi.eu/federation"
+    "base_url":"https://aai.egi.eu/federation",
+    "sender":"EGI Check-in",
+    "contact":"check-in@egi.eu"
   },
   "eosc" : {
     "logo_url":"https://www.eosc-portal.eu/sites/all/themes/theme1/logo.png",
-    "base_url":null
+    "base_url":null,
+    "sender":"EOSC Infrastructure Proxy",
+    "contact":"support@example.org"
+  },
+  "grnet": {
+    "logo_url":"https://upload.wikimedia.org/wikipedia/en/e/e8/Grnet-transp.jpg",
+    "base_url":null,
+    "sender":"support@example.org"
   },
   "form" : {
     "egi" : {
@@ -42,20 +51,25 @@
     "eosc" : {
       "code_of_condact": [
         {
-          "name": "egi_policy",
-          "desc":"Sample Code of contact",
-          "title": "Do you aggree with the egi policies",
+          "name": "eosc_security_policies",
+          "desc":"The service adheres to the EOSC Security Baseline",
+          "title": "EOSC Security Policies",
           "required": ["production","demo"],
-          "link": "https://policy_link.com",
-          "error": "please select"
+          "error": "Service must commply"
         },
         {
-          "name": "egi_policy2",
-          "desc":"Sample Code of contact",
-          "title": "Do you aggree with the egi policies",
+          "name": "eosc_data_protection",
+          "desc":"The service is compliant with the <a href='https://wiki.refeds.org/display/CODE/Data+Protection+Code+of+Conduct+Home'>GEANT Code of Conduct version 1</a> or any other code of conduct compatible with legislation and guidelines on data protection and privacy including GDPR",
+          "title": "Data Protection Code of Conduct",
           "required": [],
-          "link": "https:\/\/policy_link.com",
-          "error": "please select"
+          "error": "Service must commply"
+        },
+        {
+          "name": "eosc_data_protection",
+          "desc":"The service is compliant with the <a href='https://refeds.org/category/research-and-scholarship'>REFEDS Research & Scholarship Entity Category</a>",
+          "title": "Research & Scholarship",
+          "required": [],
+          "error": "Service must commply"
         }
       ],
       "device_code_validity_seconds":30000,
@@ -73,6 +87,37 @@
       "token_endpoint_auth_method_title":["Client Secret over HTTP Basic","Client Secret over HTTP POST","Client Secret via symmetrically-signed JWT assertion","Asymmetrically-signed JWT assertion","No authentication"],
       "token_endpoint_auth_signing_alg":["HS256","HS384","HS512","RS256","RS384","RS512","PS256"],
       "token_endpoint_auth_signing_alg_title":["HMAC using SHA-256 hash algorithm","HMAC using SHA-384 hash algorithm","HMAC using SHA-512 hash algorithm","RSASSA using SHA-256 hash algorithm","RSASSA using SHA-384 hash algorithm","RSASSA using SHA-512 hash algorithm","RSASSA-PSS using SHA-256 and MGF1 with SHA-256"]
+    },
+    "grnet" : {
+      "code_of_condact": {
+        "grnet_policy":{
+          "title": "Grnet Policies",
+          "desc":"<div>The service complies with the <a href='https://wiki.egi.eu/wiki/Policies_and_Procedures' target='_blank'>EGI Policies</a></div>",
+          "required": ["production"],
+          "error": "Service must commply"
+        },
+        "dpcoco":{
+          "title": "Data Protection Code of Conduct",
+          "desc": "The service complies with the <a href='https://wiki.refeds.org/display/CODE/Data+Protection+Code+of+Conduct+Home' target='_blank'>GÉANT Data Protection Code of Conduct version 1</a> or any other code of conduct compatible with legislation and guidelines on data protection and privacy including GDPR",
+          "required": [],
+          "error": "Service must commply"
+        }
+      },
+      "device_code_validity_seconds":30000,
+      "refresh_token_validity_seconds":34128000,
+      "access_token_validity_seconds":1000000,
+      "id_token_timeout_seconds":86400,
+      "code_challenge_method":[null,"plain","S256"],
+      "protocol":["saml"],
+      "integration_environment": ["development"],
+      "grant_types":["authorization_code","client_credentials","urn:ietf:params:oauth:grant-type:token-exchange","urn:ietf:params:oauth:grant-type:device_code","implicit","refresh_token"],
+      "contact_types":["admin","technical","support","security"],
+      "scope":["openid","email","profile","offline_access","eduperson_entitlement","eduperson_scoped_affiliation","eduperson_unique_id"],
+      "invitation_validity_seconds":2592000,
+      "token_endpoint_auth_method":["client_secret_basic","client_secret_post","client_secret_jwt","private_key_jwt","none"],
+      "token_endpoint_auth_method_title":["Client Secret over HTTP Basic","Client Secret over HTTP POST","Client Secret via symmetrically-signed JWT assertion","Asymmetrically-signed JWT assertion","No authentication"],
+      "token_endpoint_auth_signing_alg":["HS256","HS384","HS512","RS256","RS384","RS512","PS256"],
+      "token_endpoint_auth_signing_alg_title":["HMAC using SHA-256 hash algorithm","HMAC using SHA-384 hash algorithm","HMAC using SHA-512 hash algorithm","RSASSA using SHA-256 hash algorithm","RSASSA using SHA-384 hash algorithm","RSASSA using SHA-512 hash algorithm","RSASSA-PSS using SHA-256 and MGF1 with SHA-256"]
     }
   },
   "restricted_env" : {
@@ -81,6 +126,9 @@
     },
     "eosc": {
       "env":["production"]
+    },
+    "grnet":{
+      "env":[]
     }
   },
   "agent" : {

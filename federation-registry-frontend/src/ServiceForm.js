@@ -766,7 +766,7 @@ const ServiceForm = (props)=> {
                         <Select
                           onBlur={handleBlur}
                           optionsTitle={['Select one option','OIDC Service','SAML Service']}
-                          options={['','oidc','saml']}
+                          options={['',...tenant.form_config.protocol]}
                           name="protocol"
                           values={values}
                           isInvalid={hasSubmitted?!!errors.protocol:(!!errors.protocol&&touched.protocol)}

@@ -210,6 +210,9 @@ router.get('/tenants/:tenant',(req,res,next)=>{
         if(config.form[req.params.tenant]){
           tenant.form_config = config.form[req.params.tenant];
         }
+        if(config[tenant]){
+          tenant.config = config[tenant];
+        }
         if(config.restricted_env[req.params.tenant]){
           tenant.restricted_environments = config.restricted_env[req.params.tenant].env;
         }

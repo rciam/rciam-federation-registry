@@ -38,7 +38,8 @@ const Home = ()=> {
                if(response.status===200){return response.json();}
                else {return false}
              }).then(response=> {
-             globalState.setLogState({log_state:response});
+              //localStorage.setItem('user', response.user);
+              globalState.setLogState({log_state:response});
 
              if(response){
                setUser(response.user);
@@ -48,6 +49,11 @@ const Home = ()=> {
                else{
                  setLoading(false);
                }
+               let url =  localStorage.getItem('url');
+               localStorage.removeItem('url');
+                if(url){
+                  history.push(url);
+                }
              }
              else{
                setLoading(false);

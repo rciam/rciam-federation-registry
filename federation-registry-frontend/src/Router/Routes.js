@@ -1,4 +1,4 @@
-import React,{useContext} from 'react';
+import React,{useContext,useEffect} from 'react';
 import {Switch,Route,Redirect,Link} from 'react-router-dom';
 import Home from '../Home';
 import ServiceList from '../ServiceList.js';
@@ -11,6 +11,12 @@ import GroupsPage from '../Groups.js';
 import InvitationsPage from '../Invitations.js'
 import {tenantContext,userContext} from '../context.js';
 import {PageNotFound,TenantHandler} from '../Components/TenantHandler.js';
+import * as config from '../config.json';
+import useGlobalState from '../useGlobalState.js';
+//import { useParams } from "react-router-dom";
+
+
+
 const Routes = (props) => {
   const tenant = useContext(tenantContext);
 
@@ -30,13 +36,13 @@ const Routes = (props) => {
       <ProtectedRoute user={props.user} path="/:tenant_name/invitation_error">
         <InvitationNotFound/>
       </ProtectedRoute>
-      <ProtectedRoute user={props.user} path="/:tenant_name/petitions">
+      <ProtectedRoute path="/:tenant_name/petitions">
         <div className="links">
           <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/home"}>{props.t('link_home')}</Link>
           <span className="link-seperator">/</span>
           {props.t('link_petitions')}
         </div>
-        <ServiceList user={props.user}/>
+        <ServiceList/>
       </ProtectedRoute>
       <ProtectedRoute user={props.user} path="/:tenant_name/userinfo">
         <div className="links">
@@ -149,9 +155,49 @@ const TenantRoute = (props) => {
 }
 
 
+
 const ProtectedRoute= (props)=> {
-  const user = useContext(userContext);
+  const [user, setUser] = useContext(userContext);
   const tenant = useContext(tenantContext);
+  const globalState = useGlobalState();
+  //let {tenant_name} = useParams();
+
+  useEffect(()=>{
+    if(!(tenant&&tenant[0]&&tenant[0].name)||!(user&&user[0])){
+      localStorage.setItem('url', props.location.pathname);
+    }
+    
+    if(localStorage.getItem('token')&&tenant&&tenant[0]&&tenant[0].name){
+      fetch(config.host+'tenants/'+tenant[0].name+'/user', {
+        method: 'GET', // *GET, POST, PUT, DELETE, etc.
+        credentials: 'include', // include, *same-origin, omit
+        headers: {
+        'Content-Type': 'application/json',
+        'Authorization': localStorage.getItem('token')
+      }}).then( response=>{
+            if(response.status===200){return response.json();}
+            else {return false}
+          }).then(response=> {
+           //localStorage.setItem('user', response.user);
+           globalState.setLogState({log_state:response});
+  
+          if(response){
+            setUser(response.user);           
+          }
+          else{
+            setUser(null);
+            localStorage.removeItem('token');
+          }
+  
+      })
+    }
+    else{
+      globalState.setLogState({log_state:false});
+    }
+    // eslint-disable-next-line
+  },[]);
+
+  
   const childrenWithProps = React.Children.map(props.children, child =>
       React.cloneElement(child, {...props.location.state})
     );
@@ -161,7 +207,9 @@ const ProtectedRoute= (props)=> {
       render={({ location }) =>
         !(tenant && tenant[0] && (props.computedMatch.params.tenant_name === tenant[0].name)) ?
         <TenantHandler/>:
-        localStorage.getItem('token')&& user && user[0] && (!(props.admin && !user[0].review)||props.location.state.integration_environment==='development') ? (
+        //localStorage.getItem('user')
+        // user && user[0] && (!(props.admin && !user[0].review)||props.location.state.integration_environment==='development')
+        localStorage.getItem('token')&&user? (
           childrenWithProps
         ) : (
           <Redirect

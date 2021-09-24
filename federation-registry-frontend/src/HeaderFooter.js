@@ -110,6 +110,7 @@ export const NavbarTop = (props)=>{
 export const Footer =(props) =>{
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
+  const tenant = useContext(tenantContext);
 
   return (
     <footer className="ssp-footer text-center">
@@ -136,10 +137,10 @@ export const Footer =(props) =>{
           <Col sm="4" className="ssp-footer__item">
             <div className="footer_link_container">
               <div className="ssp-footer__item__powered">
-              <a href = "mailto: check-in@egi.eu">Contact us</a>
+              <a href = {"mailto: "+ (tenant[0]&&tenant[0].config?tenant.config.contact:null) }>Contact us</a>
               </div>
               <div className="ssp-footer__item__powered">
-                <a href={config.react+'docs'}>Documentation</a>
+                <a href={'https://federation.rciam.grnet.gr/docs'}>Documentation</a>
               </div>
               <div className="ssp-footer__item__powered">
                 Powered by <a href="https://github.com/rciam">RCIAM</a>

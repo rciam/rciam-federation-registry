@@ -34,8 +34,16 @@ export const TenantHandler = () => {
     }).then(response=>{
       if(response){
         setTenant(response);
+
+        let url =  localStorage.getItem('url');
+        localStorage.removeItem('url');
+        if(url && url.split('/')[1]===tenant_name){
+          history.push(url);
+        }
+        else{
+          history.push('/'+tenant_name+'/home');
+        }
         
-        history.push('/'+tenant_name+'/home');
       }
       else{
         setTenant(null);

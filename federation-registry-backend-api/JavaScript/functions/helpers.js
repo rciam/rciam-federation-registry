@@ -161,7 +161,7 @@ const sendNotif= (data,template_uri,user)=>{
     var template = hbs.compile(html);
     var htmlToSend = template(replacements);
     var mailOptions = {
-      from: data.tenant.toUpperCase()+" Check-in Notifications <noreply@faai.grnet.gr>",
+      from: config[data.tenant].sender+" Notifications <noreply@faai.grnet.gr>",
       to : user.email,
       subject : data.subject,
       html : htmlToSend
@@ -211,7 +211,7 @@ const sendInvitationMail = async (data) => {
         }
         var htmlToSend = template(replacements);
         var mailOptions = {
-          from: data.tenant.toUpperCase()+" Check-in Notifications <noreply@faai.grnet.gr>",
+          from: config[data.tenant].sender+" Notifications <noreply@faai.grnet.gr>",
           to : data.email,
           subject : 'Invitation to manage service',
           html : htmlToSend
@@ -266,7 +266,7 @@ const newMemberNotificationMail = (data,managers) => {
 
         var htmlToSend = template(replacements);
         var mailOptions = {
-          from: data.tenant.toUpperCase()+" Check-in Notifications <noreply@faai.grnet.gr>",
+          from: config[data.tenant].sender+" Notifications <noreply@faai.grnet.gr>",
           to : manager.email,
           subject : 'New member in your owners group',
           html : htmlToSend
@@ -321,13 +321,14 @@ const sendMail= (data,template_uri,users)=>{
         state:state,
         url:process.env.REACT_BASE+'/'+ data.tenant,
         comment:data.comment,
-        logo_url:config[data.tenant].logo_url
+        logo_url:config[data.tenant].logo_url,
+        ...data
       };
       users.forEach((user) => {
           replacements.name = user.name;
           var htmlToSend = template(replacements);
           var mailOptions = {
-            from:  data.tenant.toUpperCase()+" Check-in Notifications <noreply@faai.grnet.gr>",
+            from:  config[data.tenant].sender+" Notifications <noreply@faai.grnet.gr>",
             to : user.email,
             subject : data.subject,
             html : htmlToSend

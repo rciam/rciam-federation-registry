@@ -8,16 +8,17 @@ import { Translation } from 'react-i18next';
 import {tenantContext} from '../context.js';
 
 export const Logout = (props) => {
-  const history = useHistory();
-  const tenant = useContext(tenantContext);
+  // const history = useHistory();
+  // const tenant = useContext(tenantContext);
   let {tenant_name} = useParams();
   const handleClose = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     if(tenant_name==='egi'){
       window.location.assign('https://aai.egi.eu/oidc/saml/logout?redirect='+config.react+tenant_name);
     }
     else{
-      history.push('/'+(tenant&&tenant[0]?tenant[0].name:null));
+      window.location.assign('https://aai-demo.eosc-portal.eu/oidc/saml/logout?redirect='+config.react+tenant_name);
     }
 
   }
