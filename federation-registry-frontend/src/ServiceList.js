@@ -66,6 +66,10 @@ const ServiceList= (props)=> {
   useEffect(()=>{
     setInitialLoading(true);
     getInvites();
+    console.log(props.user);
+    console.log(user);
+    console.log(localStorage.getItem(user));
+    //setUser(localStorage.getItem(user));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
 
@@ -327,7 +331,7 @@ const ServiceList= (props)=> {
       <ConfirmationModal active={confirmationData.action?true:false} setActive={setConfirmationData} action={()=>{if(confirmationData.action==='delete_service'){deleteService(...confirmationData.args)}else{deletePetition(...confirmationData.args)}}} title={confirmationData.title} accept={'Yes'} decline={'No'}/>
       <div>
         <LoadingBar loading={initialLoading}>
-        {requestReviewCount>0&&props.user.review_restricted?<Collapse in={showNotification}>
+        {requestReviewCount>0&&user.review_restricted?<Collapse in={showNotification}>
           <div>
             <Alert variant='primary' className="invitation_alert">
               {requestReviewCount>1?'There are ':'There is '} <span>{requestReviewCount}</span>{' '}
@@ -411,11 +415,11 @@ const ServiceList= (props)=> {
                     <span>Show Outdated</span>
                     <input type='checkbox' name='filter' checked={showOutdated} onChange={()=>setShowOutdated(!showOutdated)}/>
                   </div>
-                  {props.user.review_restricted?<div className='filter-container' onClick={()=> setShowRequestReview(!showRequestReview)}>
+                  {user.review_restricted?<div className='filter-container' onClick={()=> setShowRequestReview(!showRequestReview)}>
                     <span>Review Requested</span>
                     <input type='checkbox' name='filter' checked={showRequestReview} onChange={()=>setShowRequestReview(!showRequestReview)}/>
                   </div>:null}
-                  {props.user.view_all?
+                  {user.view_all?
                   <div className='filter-container' onClick={()=> setShowOwned(!showOwned)}>
                     <span>Show Owned by Me</span>
                     <input type='checkbox' name='filter' checked={showOwned} onChange={()=> setShowOwned(!showOwned)}/>
@@ -451,7 +455,7 @@ const ServiceList= (props)=> {
 
                 {services.length>=1?services.map((item,index)=>{
                     return(
-                      <TableItem service={item} user={props.user} key={index}  setConfirmationData={setConfirmationData} />
+                      <TableItem service={item} key={index}  setConfirmationData={setConfirmationData} />
                     )
                 }):<tr><td></td><td>{t('no_services')}</td><td></td></tr>}
                 {loadingList?
@@ -618,13 +622,13 @@ function TableItem(props) {
               :null
               }
               {
-                (props.user.review||
+                (user.review||
                   (props.service.owned&&props.service.integration_environment==='development'))
                 &&props.service.petition_id
                 &&!(props.service.status==='changes')
-                &&(props.service.status!=='request_review'||(props.service.status==='request_review'&&props.user.review_restricted))?
+                &&(props.service.status!=='request_review'||(props.service.status==='request_review'&&user.review_restricted))?
               <React.Fragment>
-              {props.service.status==='request_review'&&props.user.review_restricted?
+              {props.service.status==='request_review'&&user.review_restricted?
                 <div className="notification">
                 <FontAwesomeIcon icon={faExclamation} className="fa-exclamation"/>
                 <FontAwesomeIcon icon={faCircle} className="fa-circle"/>
@@ -643,7 +647,7 @@ function TableItem(props) {
                   type:props.service.type,
                   comment:props.service.comment
                 }
-              }}><Button variant="success" disabled={props.service.status==="request_review"&&!props.user.review_restricted}><FontAwesomeIcon icon={faEdit}/>{t('button_review')}</Button></Link>
+              }}><Button variant="success" disabled={props.service.status==="request_review"&&!user.review_restricted}><FontAwesomeIcon icon={faEdit}/>{t('button_review')}</Button></Link>
               </React.Fragment>
               :null}
 

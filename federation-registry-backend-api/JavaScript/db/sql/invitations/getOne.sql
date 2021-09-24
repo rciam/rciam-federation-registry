@@ -2,3 +2,4 @@ SELECT group_id,invitation_mail,preferred_username,email,sub,group_manager,CASE 
 FROM
   (SELECT group_id,sub,group_manager,email as invitation_mail FROM invitations WHERE id=${id} and sub=${sub} AND tenant=${tenant}) as invitation
 LEFT JOIN user_info USING (sub) LEFT JOIN service_details USING (group_id) LEFT JOIN service_petition_details USING (group_id)
+WHERE user_info.tenant=${tenant}

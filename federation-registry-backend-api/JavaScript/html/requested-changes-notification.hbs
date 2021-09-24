@@ -1,0 +1,31 @@
+<head>
+    <title>Request Reviewed</title>
+</head>
+<div style="width:100%;text-align:center;margin-top:0.5;margin-bottom:0.5;">
+    <img src={{logo_url}} style="width:150px;">
+</div>
+<h5>Dear {{name}}</h5>
+<p>
+Thanks for your patience while we reviewed your request.
+To continue with the {{type}} process, you need to update your service {{service_name}} based on the following requested changes:
+</p>
+
+
+<div style="text-align:center;margin-top:0.5;margin-bottom:0.5;background-color:#E9ECEF;padding:1rem;border-radius:1rem;">
+    {{#if comment}}
+    <div style="text-align:left;margin-top:0.5rem;">
+        <strong>Comment from Reviewer: </strong> {{comment}}
+    </div>
+    {{/if}}
+    <div style="text-align:left;margin-top:0.5rem;"><strong>Reviewed At: </strong> {{date}}</div>
+</div>
+<p>
+    Please follow the link <a href={{url}}>{{url}}</a> and:
+</p>
+<p>b) login to the service</p> 
+<p>c) Find your service request and</p>    
+<p>d) Update the data based on the changes requested</p>    
+
+  
+<h5>Big Thank you from the development team</h5>
+

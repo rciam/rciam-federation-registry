@@ -1,3 +1,4 @@
+const { create } = require('domain');
 const {sendMail} = require('../functions/helpers.js');
 
 
@@ -64,9 +65,9 @@ const changesPetition = (req,res,next,db) => {
                               sendMail({subject:'Service Request Reviewed',service_name:owners[0].service_name,state:'changes requested',tenant:req.params.tenant},'reviewed-notification.html',[{name:user.name,email:user.email}]);
                             });
                           }
-                          console.log(req.body.comment);
                           owners.forEach(email_data=>{
-                            sendMail({subject:'Service Request Review',service_name:email_data.service_name,state:'approved with changes',tenant:req.params.tenant,comment:req.body.comment},'review-notification.hbs',[{name:email_data.name,email:email_data.email}]);
+                            //sendMail({subject:'Service Request Review',service_name:email_data.service_name,state:'approved with changes',tenant:req.params.tenant,comment:req.body.comment},'review-notification.hbs',[{name:email_data.name,email:email_data.email}]);
+                            sendMail({subject:'Service Request Review',service_name:email_data.service_name,type:(email_data.type==='create'?'registration':email_data.type==='edit'?'reconfiguration':'deregistration'),tenant:req.params.tenant,comment:req.body.comment},'requested-changes-notification.hbs',[{name:email_data.name,email:email_data.email}]);
                         })
                       });
                       }
