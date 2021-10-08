@@ -2,7 +2,6 @@ import React,{useEffect,useState,useContext} from 'react';
 import { useTranslation } from 'react-i18next';
 import {userContext,tenantContext} from './context.js';
 import { useHistory,useParams } from "react-router-dom";
-import useGlobalState from './useGlobalState.js';
 import {LoadingPage} from './Components/LoadingPage.js';
 import * as config from './config.json';
 
@@ -17,56 +16,28 @@ const Home = ()=> {
   const [user, setUser] = useContext(userContext);
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
-  const globalState = useGlobalState();
   const [loading,setLoading] = useState(false);
 
    useEffect(()=>{
-     login();
+    if(user&&user.name){
+      let redirectUrl = localStorage.getItem('url');
+      if(localStorage.getItem('invitation')){
+        activateInvitation();
+      }
+      else if(redirectUrl){
+        if(redirectUrl.split('/')[0]===tenant_name){
+          history.push(redirectUrl);
+        }
+        else{
+          localStorage.removeItem('url');
+        }
+      }
+    }
+      
+
      // eslint-disable-next-line
-   },[]);
+   },[user]);
 
-   const login = () => {
-       if(localStorage.getItem('token')){
-         setLoading(true);
-         fetch(config.host+'tenants/'+tenant_name+'/user', {
-           method: 'GET', // *GET, POST, PUT, DELETE, etc.
-           credentials: 'include', // include, *same-origin, omit
-           headers: {
-           'Content-Type': 'application/json',
-           'Authorization': localStorage.getItem('token')
-         }}).then( response=>{
-               if(response.status===200){return response.json();}
-               else {return false}
-             }).then(response=> {
-              //localStorage.setItem('user', response.user);
-              globalState.setLogState({log_state:response});
-
-             if(response){
-               setUser(response.user);
-               if(localStorage.getItem('invitation')){
-                 activateInvitation();
-               }
-               else{
-                 setLoading(false);
-               }
-               let url =  localStorage.getItem('url');
-               localStorage.removeItem('url');
-                if(url){
-                  history.push(url);
-                }
-             }
-             else{
-               setLoading(false);
-               setUser(null);
-               localStorage.removeItem('token');
-             }
-
-         })
-       }
-       else{
-         globalState.setLogState({log_state:false});
-       }
-     }
 
 
 

@@ -86,6 +86,7 @@ const isEmpty = (value) => {
 }
 
 const serviceValidationRules = (options) => {
+
   const required = (value,req,pos)=>{
     if(options.optional){
       if(isEmpty(value)){
@@ -101,6 +102,7 @@ const serviceValidationRules = (options) => {
   const requiredOidc = (value,req,pos) => {
       if(options.optional||req.body[pos].protocol!=='oidc'){
         if(isEmpty(value) && req.body[pos].protocol==='oidc'){
+
           req.body[pos].outdated = true;
         }
       return true
@@ -108,6 +110,14 @@ const serviceValidationRules = (options) => {
     else{
       return isNotEmpty(value) &&(req.body[pos].protocol==='oidc');
       }
+  }
+  const optionalError = (error,req,pos) => {
+    if(options.optional){
+      req.body[pos].outdated = true;
+    }
+    else{
+      throw new Error(error);
+    }
   }
 
   const requiredSaml = (value,req,pos) => {
@@ -122,21 +132,18 @@ const serviceValidationRules = (options) => {
     }
   }
   const requiredProduction = (value,env,req,pos) =>{
-    let required = false;
-    if(env==="production"){
+    let error = false;
+
+    if(env==="production"&&isEmpty(value)){
       if(options.optional){
         req.body[pos].outdated = true;
-        required = false;
+        error = false;
       }else{
-        required = true;
+        error = true;
       }
     }
-    if(required){
-      return value;
-    }
-    else{
-      return true;
-    }
+
+    return !error;
   }
 
   const sanitizeInteger = (value) =>{
@@ -184,22 +191,37 @@ const serviceValidationRules = (options) => {
       body('*.contacts').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Service Contacts missing').if((value)=> {
         return value&&(Array.isArray(value)&&value.length!==0)
       }).isArray({min:1}).withMessage('Service Contacts must be an array').custom((value,{req,location,path})=> {
-
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant
         let success = true;
         try{
           value.map((contact,index)=>{
             if(contact.email&&!contact.email.toLowerCase().match(reg.regEmail)||!config.form[tenant].contact_types.includes(contact.type)){
-              success=false}});
-          }
-          catch(err){
-            if(Array.isArray(value)){
-              success = false
+              success=false
             }
-            else{
-              success = true
+            
+          }); 
+          config.form[tenant].contact_requirements.forEach((requirement,index)=>{
+            let type_array =requirement.type.split(" ");
+            let requirement_met = false; 
+            value.forEach(contact=>{              
+              if(type_array.includes(contact.type)){
+                requirement_met = true;
+              }
+            })
+            if(!requirement_met){
+              success=false;
             }
+          });
+          
+        }
+        catch(err){
+          if(Array.isArray(value)){
+            success = false
           }
+          else{
+            success = true
+          }
+        }
           return success}).withMessage('Invalid contact'),
       body('*.protocol').exists({checkFalsy:true}).withMessage('Protocol missing').if(value=>{return value}).custom((value,{req,location,path})=> {
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
@@ -237,6 +259,7 @@ const serviceValidationRules = (options) => {
           // required
           if(!value||value.length===0){
             if(options.optional){
+
               req.body[pos].outdated = true;
               return true
             }
@@ -512,7 +535,41 @@ const serviceValidationRules = (options) => {
         });
       }),
       body('*.external_id').optional({checkFalsy:true}).custom((value)=>{if(parseInt(value)){return true}else{return false}}).withMessage('External id must be an integer'),
-      body('*.website_url').optional({checkFalsy:true}).isString().withMessage('Website Url must be a string').custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Website Url must be a valid url')
+      body('*.website_url').optional({checkFalsy:true}).isString().withMessage('Website Url must be a string').custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Website Url must be a valid url'),
+      body('*.aup_uri').custom((value,{req,location,path})=>{
+        let pos = path.match(/\[(.*?)\]/)[1];
+        let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
+        let integration_environment = req.body[path.match(/\[(.*?)\]/)[1]].integration_environment;
+        let aup_uri_config = config.form[tenant].extra_fields.aup_uri;
+        if(aup_uri_config){
+          if(isNotEmpty(value)){
+            if(reg.regSimpleUrl.test(value)){
+              return true
+            }
+            else{
+              throw new Error("aup_uri must be a secure url");
+            }
+          }
+          else if (aup_uri_config.required.includes(integration_environment)){
+            optionalError("aup_uri is missing",req,pos);
+            return true;
+            //throw new Error();
+          }
+          else{
+            return true
+          }          
+        }
+        else{
+          if(isEmpty(value)){
+            return true;
+          }
+          else{
+            throw new Error("aup_uri value is not supported for this tenant");
+          }
+        }
+      })
+        
+        
     ]
 
 
@@ -585,12 +642,15 @@ const changeContacts = (req,res,next) => {
   }
 }
 const validateInternal = (req,res,next) =>{
+  //console.log(req.body);
   const errors = validationResult(req);
+  console.log(errors);
   if(!errors.isEmpty()){
     errors.errors.forEach((error,index)=>{
       var matches = error.param.match(/\[(.*?)\]/);
       if(typeof(parseInt(matches[1]))=='number'){
         req.body[matches[1]].outdated = true;
+
         //console.log(error);
       }      
     });
@@ -679,7 +739,6 @@ const validate = (req, res, next) => {
       const extractedErrors = []
       errors.array().map(err => extractedErrors.push({ [err.param]: err.msg }));
       var log ={};
-
       customLogger(req,res,'warn','Failed schema validation',extractedErrors);
       res.status(422).send(extractedErrors);
       return res.end();

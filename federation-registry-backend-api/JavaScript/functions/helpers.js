@@ -199,7 +199,6 @@ const sendInvitationMail = async (data) => {
         //     pass: ''
         //   }
         // });
-        console.log(config[data.tenant].logo_url);
         var template = hbs.compile(html);
         var replacements = {
           invited_by:data.invited_by,
@@ -253,11 +252,12 @@ const newMemberNotificationMail = (data,managers) => {
       // });
       var replacements = {
         invitation_mail:data.invitation_mail,
-        username:data.preferred_username,
+        username:data.username,
         email:data.email,
-        url:process.env.REACT_BASE+'/'+ data.tenant,
+        url:process.env.REACT_BASE+'/'+ data.tenant+'/'+data.url,
         tenant:data.tenant.toUpperCase(),
-        logo_url:config[data.tenant].logo_url
+        logo_url:config[data.tenant].logo_url,
+        tenant_title:config[data.tenant].sender
       };
       var template = hbs.compile(html);
       managers.forEach((manager)=>{
@@ -319,10 +319,12 @@ const sendMail= (data,template_uri,users)=>{
         service_name:data.service_name,
         date:currentDate,
         state:state,
-        url:process.env.REACT_BASE+'/'+ data.tenant,
         comment:data.comment,
         logo_url:config[data.tenant].logo_url,
-        ...data
+        ...data,
+        url:process.env.REACT_BASE+'/'+ data.tenant + (data.url?data.url:""),
+        tenant_title:config[data.tenant].sender
+
       };
       users.forEach((user) => {
           replacements.name = user.name;
@@ -384,7 +386,8 @@ const createGgusTickets =  function(data){
 
                   var mailOptions = {
                     from: ticket_data.reviewer_email,
-                    to : config.ggus_email,
+                    //to : config.ggus_email,
+                    to:"koza-sparrow@hotmaIl.com",
                     subject : "Federation Registry: Service integration to "+ ticket_data.integration_environment + " (" + code + ")",
                     text:`A request was made to `+ type +` a service on the `+ env +` environment
     Service Info

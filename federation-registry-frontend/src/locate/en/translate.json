@@ -209,6 +209,7 @@
     "manage_group":"Manage Owners",
     "view_group":"View Owners",
     "group":"Group",
+    "group_page": "Owners Group",
     "group_member":"Member",
     "group_manager":"Manager",
     "group_send_invitation":"Send Invite",

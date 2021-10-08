@@ -48,8 +48,7 @@ export const NotFound = (props) => {
   const history = useHistory();
   const tenant = useContext(tenantContext);
   const handleClose = () => {
-    history.push('/'+(tenant&&tenant[0]?tenant[0].name:null)+'/petitions');
-    props.setNotFound(false);
+    history.push('/'+(tenant&&tenant[0]?tenant[0].name:null)+'/services');
   }
   return (
     <Translation>
@@ -158,7 +157,7 @@ export function ResponseModal(props){
 
   //const handleClose = () => props.setMessage();
   const handleClose = () => {
-    history.push('/'+tenant_name+'/petitions');}
+    history.push('/'+tenant_name+'/services');}
   return (
     <Modal show={props.message?true:false} onHide={handleClose}>
         <Modal.Header closeButton>

@@ -15,24 +15,13 @@ class PetitionRepository {
 
 
   async get(id,tenant){
+    
     return this.db.oneOrNone(sql.getPetition,{
       id:+id,
       tenant:tenant
     }).then(result => {
       if(result){
-        let data = {};
-        result.json.generate_client_secret = false;
-        data.meta_data = {};
-        data.meta_data.type = result.json.type;
-        data.meta_data.group_id = result.json.group_id;
-        data.meta_data.requester = result.json.requester;
-        data.meta_data.service_id = result.json.service_id;
-        delete result.json.type;
-        delete result.json.service_id;
-        delete result.json.requester;
-        data.service_data = extractCoc(result.json);
-
-        return data
+        return fixPetition(result);
       }
       else {
         return null
@@ -52,17 +41,8 @@ class PetitionRepository {
       tenant:tenant
     }).then(result => {
       if(result){
-        let data = {};
-        result.json.generate_client_secret = false;
-        data.meta_data = {};
-        data.meta_data.type = result.json.type;
-        data.meta_data.requester = result.json.requester;
-        data.meta_data.service_id = result.json.service_id;
-        delete result.json.type;
-        delete result.json.service_id;
-        delete result.json.requester;
-        data.service_data = extractCoc(result.json);
-        return data
+        return fixPetition(result);
+
       }
       else {
         return null
@@ -76,23 +56,15 @@ class PetitionRepository {
       tenant:tenant
     }).then(result => {
       if(result){
-        let data = {};
-        result.json.generate_client_secret = false;
-        data.meta_data = {};
-        data.meta_data.type = result.json.type;
-        data.meta_data.requester = result.json.requester;
-        data.meta_data.service_id = result.json.service_id;
-        delete result.json.type;
-        delete result.json.service_id;
-        delete result.json.requester;
-        data.service_data = extractCoc(result.json);
-        return data
+        return fixPetition(result);
       }
       else {
         return null
       }
     })
   }
+
+
 
   async getOwn(id,sub,tenant){
     return this.db.oneOrNone(sql.getOwnPetition,{
@@ -101,19 +73,8 @@ class PetitionRepository {
       tenant:tenant
     }).then(result => {
       if(result){
-        let data = {};
-        result.json.generate_client_secret = false;
-        data.meta_data = {};
-        data.meta_data.type = result.json.type;
-        data.meta_data.requester = result.json.requester;
-        data.meta_data.service_id = result.json.service_id;
-        delete result.json.type;
-        delete result.json.service_id;
-        delete result.json.requester;
-        data.service_data = extractCoc(result.json);
+        return fixPetition(result);
 
-
-        return data
       }
       else {
         return null
@@ -209,7 +170,28 @@ class PetitionRepository {
 
 }
 
+const fixPetition = (result) => {
+  let data = {};
+  result.json.generate_client_secret = false;
+  data.meta_data = {};
+  data.meta_data.type = result.json.type;
+  data.meta_data.comment = result.json.comment;
+  data.meta_data.submitted_at = result.json.submitted_at;
+  data.meta_data.requester = result.json.requester;
+  data.meta_data.service_id = result.json.service_id;
+  data.meta_data.status = result.json.status;
+  data.meta_data.reviewed_at = result.json.reviewed_at;
 
+  delete result.json.status;
+  delete result.json.reviewed_at;
+  delete result.json.type;
+  delete result.json.service_id;
+  delete result.json.requester;
+  delete result.json.comment;
+  delete result.json.submitted_at;
+  data.service_data = extractCoc(result.json);
+  return data
+}
 
 
 

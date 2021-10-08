@@ -374,6 +374,27 @@ code {
 
 /* Service Form */
 
+
+
+.input-title-row div:first-child {
+  padding:0!important;
+}
+.input-title-row {
+  padding-right: 0.8rem;
+}
+
+.more_info_field {
+  padding:0 0 0 0.3rem  !important;
+  color:#0A559C;
+  
+}
+.more_info_field:hover {
+  color:#1377d6;
+}
+
+.error-message p {
+  margin-bottom:0.3rem;
+}
 .tab-panel {
   margin-top:1rem;
 }
@@ -404,11 +425,14 @@ code {
   margin-right:0.5rem;
 }
 
-.form-tabs-contianer {
+.form-tabs-container {
   margin-bottom: 1.5rem;
 }
 .form-tabs {
   margin-bottom:1.5rem!important;
+}
+.form-tabs-container .tab-content {
+  min-height:100vh;
 }
 
 .comment-input {
@@ -1015,6 +1039,9 @@ tbody tr td:last-child {
 #hide-tooltip {
   display: none;
 }
+.tooltip .arrow{
+  height: 0.5rem!important;
+}
 
 /* Lang fix */
 html:lang(gr) .home-container h1 {
@@ -1257,4 +1284,10 @@ html:lang(gr) .home-container h1 {
 
 .form-submit-cancel-container button svg {
   margin-right:0.3rem!important;
+}
+
+
+/* Manage Owners */
+.manage_owners_tabs {
+  margin-top: 1rem;
 }

@@ -40,13 +40,89 @@
       "protocol":["oidc","saml"],
       "integration_environment": ["development","demo","production"],
       "grant_types":["authorization_code","client_credentials","urn:ietf:params:oauth:grant-type:token-exchange","urn:ietf:params:oauth:grant-type:device_code","implicit","refresh_token"],
+      "contact_requirements":[
+        {
+          "type":"support technical",
+          "error":"The Service must have Technical and/or Support contact information"
+        },
+        {
+          "type":"security",
+          "error":"The Service must have Security contact information"
+        }
+      ],
       "contact_types":["admin","technical","support","security"],
       "scope":["openid","email","profile","offline_access","eduperson_entitlement","eduperson_scoped_affiliation","eduperson_unique_id"],
       "invitation_validity_seconds":2592000,
       "token_endpoint_auth_method":["client_secret_basic","client_secret_post","client_secret_jwt","private_key_jwt","none"],
       "token_endpoint_auth_method_title":["Client Secret over HTTP Basic","Client Secret over HTTP POST","Client Secret via symmetrically-signed JWT assertion","Asymmetrically-signed JWT assertion","No authentication"],
       "token_endpoint_auth_signing_alg":["HS256","HS384","HS512","RS256","RS384","RS512","PS256"],
-      "token_endpoint_auth_signing_alg_title":["HMAC using SHA-256 hash algorithm","HMAC using SHA-384 hash algorithm","HMAC using SHA-512 hash algorithm","RSASSA using SHA-256 hash algorithm","RSASSA using SHA-384 hash algorithm","RSASSA using SHA-512 hash algorithm","RSASSA-PSS using SHA-256 and MGF1 with SHA-256"]
+      "token_endpoint_auth_signing_alg_title":["HMAC using SHA-256 hash algorithm","HMAC using SHA-384 hash algorithm","HMAC using SHA-512 hash algorithm","RSASSA using SHA-256 hash algorithm","RSASSA using SHA-384 hash algorithm","RSASSA using SHA-512 hash algorithm","RSASSA-PSS using SHA-256 and MGF1 with SHA-256"],
+      "more_info":{
+        "service_name": "This should be a human readable name",
+        "client_id":"A Client ID is an identifier associated with an application that assists with client / server OAuth 2.0 authentication for ArcGIS client APIs",
+        "contacts":"",
+        "service_description":"",
+        "website_url":"",
+        "protocol":"",
+        "integration_environment":"",
+        "policy_uri":"",
+        "redirect_uris":"",
+        "logo_uri":"",
+        "metadata_url":"",
+        "entity_id":"",
+        "allow_introspection":"",
+        "token_endpoint_auth_method":"",
+        "code_challenge_method":"",
+        "device_code_validity_seconds":"",
+        "access_token_validity_seconds":"",
+        "refresh_token_validity_seconds":"",
+        "client_secret":"",
+        "country":"",
+        "reuse_refresh_tokens":"",
+        "clear_access_tokens_on_refresh":"",
+        "id_token_timeout_seconds":"",
+        "scope":"",
+        "grant_types":"",
+        "generate_client_secret":"",
+        "token_endpoint_auth_signing_alg":"",
+        "jwks":"",
+        "jwks_uri":"",
+        "egi_policy":"",
+        "dpcoco":""
+      },
+      "extra_fields":{
+        "aup_uri":{
+          "title": "Link to Terms of Use",
+          "desc": "Link to the Acceptable Use Policy / Terms of Use based on the <a href='https://wise-community.org/wise-baseline-aup/'>WISE AUP Baseline template</a>",
+          "type":"string",
+          "tag":"url",
+          "default":"",
+          "tab":"general",
+          "placeholder":"https://",
+          "required":["production","demo","dev"]
+        },
+        "egi_policy":{
+          "title": "EGI Policies",
+          "desc":"<div>The service complies with the <a href='https://wiki.egi.eu/wiki/Policies_and_Procedures' target='_blank'>EGI Policies</a></div>",
+          "required": ["production"],
+          "type":"boolean",
+          "tag":"coc",
+          "tab":"general",
+          "default": "false",
+          "error": "The service must comply with this policy"
+        },
+        "dpcoco":{
+          "title": "Data Protection Code of Conduct",
+          "desc": "The service complies with the <a href='https://wiki.refeds.org/display/CODE/Data+Protection+Code+of+Conduct+Home' target='_blank'>GÉANT Data Protection Code of Conduct version 1</a> or any other code of conduct compatible with legislation and guidelines on data protection and privacy including GDPR",
+          "required": [],
+          "default": "false",
+          "tab":"general",
+          "type":"boolean",
+          "tag":"coc",
+          "error": "The service must comply with this policy"
+        }
+
+      }
     },
     "eosc" : {
       "code_of_condact": [
@@ -80,13 +156,56 @@
       "protocol":["oidc","saml"],
       "integration_environment": ["demo","production"],
       "grant_types":["implicit","authorization_code","refresh_token","client_credentials","urn:ietf:params:oauth:grant_type:redelegate","urn:ietf:params:oauth:grant-type:token-exchange","urn:ietf:params:oauth:grant-type:device_code","urn:ietf:params:oauth:grant-type:jwt-bearer"],
+      "contact_requirements":[
+        {
+          "type":"support technical",
+          "error":"The Service must have Technical and/or Support contact information"
+        },
+        {
+          "type":"security",
+          "error":"The Service must have Security contact information"
+        }
+      ],
       "contact_types":["admin","technical","support","security"],
       "invitation_validity_seconds":2592000,
       "scope":["openid","email","profile","offline_access","eduperson_entitlement","eduperson_scoped_affiliation","eduperson_unique_id"],
       "token_endpoint_auth_method":["client_secret_basic","client_secret_post","client_secret_jwt","private_key_jwt","none"],
       "token_endpoint_auth_method_title":["Client Secret over HTTP Basic","Client Secret over HTTP POST","Client Secret via symmetrically-signed JWT assertion","Asymmetrically-signed JWT assertion","No authentication"],
       "token_endpoint_auth_signing_alg":["HS256","HS384","HS512","RS256","RS384","RS512","PS256"],
-      "token_endpoint_auth_signing_alg_title":["HMAC using SHA-256 hash algorithm","HMAC using SHA-384 hash algorithm","HMAC using SHA-512 hash algorithm","RSASSA using SHA-256 hash algorithm","RSASSA using SHA-384 hash algorithm","RSASSA using SHA-512 hash algorithm","RSASSA-PSS using SHA-256 and MGF1 with SHA-256"]
+      "token_endpoint_auth_signing_alg_title":["HMAC using SHA-256 hash algorithm","HMAC using SHA-384 hash algorithm","HMAC using SHA-512 hash algorithm","RSASSA using SHA-256 hash algorithm","RSASSA using SHA-384 hash algorithm","RSASSA using SHA-512 hash algorithm","RSASSA-PSS using SHA-256 and MGF1 with SHA-256"],
+      "more_info":{
+        "service_name": "This should be a human readable name",
+        "client_id":"A Client ID is an identifier associated with an application that assists with client / server OAuth 2.0 authentication for ArcGIS client APIs",
+        "contacts":"",
+        "service_description":"",
+        "website_url":"",
+        "protocol":"",
+        "integration_environment":"",
+        "policy_uri":"",
+        "redirect_uris":"",
+        "logo_uri":"",
+        "metadata_url":"",
+        "entity_id":"",
+        "allow_introspection":"",
+        "token_endpoint_auth_method":"",
+        "code_challenge_method":"",
+        "device_code_validity_seconds":"",
+        "access_token_validity_seconds":"",
+        "refresh_token_validity_seconds":"",
+        "client_secret":"",
+        "country":"",
+        "reuse_refresh_tokens":"",
+        "clear_access_tokens_on_refresh":"",
+        "id_token_timeout_seconds":"",
+        "scope":"",
+        "grant_types":"",
+        "generate_client_secret":"",
+        "token_endpoint_auth_signing_alg":"",
+        "jwks":"",
+        "jwks_uri":"",
+        "egi_policy":"",
+        "dpcoco":""
+    }
     },
     "grnet" : {
       "code_of_condact": {
@@ -94,13 +213,13 @@
           "title": "Grnet Policies",
           "desc":"<div>The service complies with the <a href='https://wiki.egi.eu/wiki/Policies_and_Procedures' target='_blank'>EGI Policies</a></div>",
           "required": ["production"],
-          "error": "Service must commply"
+          "error": "The service must comply with this policy"
         },
         "dpcoco":{
           "title": "Data Protection Code of Conduct",
           "desc": "The service complies with the <a href='https://wiki.refeds.org/display/CODE/Data+Protection+Code+of+Conduct+Home' target='_blank'>GÉANT Data Protection Code of Conduct version 1</a> or any other code of conduct compatible with legislation and guidelines on data protection and privacy including GDPR",
           "required": [],
-          "error": "Service must commply"
+          "error": "The service must comply with this policy"
         }
       },
       "device_code_validity_seconds":30000,
@@ -111,13 +230,49 @@
       "protocol":["saml"],
       "integration_environment": ["development"],
       "grant_types":["authorization_code","client_credentials","urn:ietf:params:oauth:grant-type:token-exchange","urn:ietf:params:oauth:grant-type:device_code","implicit","refresh_token"],
+      "contact_requirements":[
+        
+      ],
       "contact_types":["admin","technical","support","security"],
       "scope":["openid","email","profile","offline_access","eduperson_entitlement","eduperson_scoped_affiliation","eduperson_unique_id"],
       "invitation_validity_seconds":2592000,
       "token_endpoint_auth_method":["client_secret_basic","client_secret_post","client_secret_jwt","private_key_jwt","none"],
       "token_endpoint_auth_method_title":["Client Secret over HTTP Basic","Client Secret over HTTP POST","Client Secret via symmetrically-signed JWT assertion","Asymmetrically-signed JWT assertion","No authentication"],
       "token_endpoint_auth_signing_alg":["HS256","HS384","HS512","RS256","RS384","RS512","PS256"],
-      "token_endpoint_auth_signing_alg_title":["HMAC using SHA-256 hash algorithm","HMAC using SHA-384 hash algorithm","HMAC using SHA-512 hash algorithm","RSASSA using SHA-256 hash algorithm","RSASSA using SHA-384 hash algorithm","RSASSA using SHA-512 hash algorithm","RSASSA-PSS using SHA-256 and MGF1 with SHA-256"]
+      "token_endpoint_auth_signing_alg_title":["HMAC using SHA-256 hash algorithm","HMAC using SHA-384 hash algorithm","HMAC using SHA-512 hash algorithm","RSASSA using SHA-256 hash algorithm","RSASSA using SHA-384 hash algorithm","RSASSA using SHA-512 hash algorithm","RSASSA-PSS using SHA-256 and MGF1 with SHA-256"],
+      "more_info": {
+        "service_name": "This should be a human readable name",
+        "client_id":"A Client ID is an identifier associated with an application that assists with client / server OAuth 2.0 authentication for ArcGIS client APIs",
+        "contacts":"",
+        "service_description":"",
+        "website_url":"",
+        "protocol":"",
+        "integration_environment":"",
+        "policy_uri":"",
+        "redirect_uris":"",
+        "logo_uri":"",
+        "metadata_url":"",
+        "entity_id":"",
+        "allow_introspection":"",
+        "token_endpoint_auth_method":"",
+        "code_challenge_method":"",
+        "device_code_validity_seconds":"",
+        "access_token_validity_seconds":"",
+        "refresh_token_validity_seconds":"",
+        "client_secret":"",
+        "country":"",
+        "reuse_refresh_tokens":"",
+        "clear_access_tokens_on_refresh":"",
+        "id_token_timeout_seconds":"",
+        "scope":"",
+        "grant_types":"",
+        "generate_client_secret":"",
+        "token_endpoint_auth_signing_alg":"",
+        "jwks":"",
+        "jwks_uri":"",
+        "egi_policy":"",
+        "dpcoco":""
+      }
     }
   },
   "restricted_env" : {

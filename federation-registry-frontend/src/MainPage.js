@@ -1,6 +1,5 @@
 import React,{useContext,useEffect} from 'react';
 import {BrowserRouter as Router} from "react-router-dom";
-import useGlobalState from './useGlobalState.js';
 import {Header,Footer,NavbarTop} from './HeaderFooter.js';
 import Routes from './Router';
 import {SideNav} from './Components/SideNav.js';
@@ -12,15 +11,12 @@ import {userContext,tenantContext} from './context.js';
       const user = useContext(userContext);
       // eslint-disable-next-line
       const { t, i18n } = useTranslation();
-      const globalState = useGlobalState();
-      const logged = globalState.global_state.log_state;
 
 
       useEffect(() => {
         const faviconUpdate = async () => {
           //grab favicon element by ID
           const favicon = document.getElementById("favicon");
-          //check count value, if below 0 we change href property to our red circle image path
           if (tenant&&tenant[0]&&tenant[0].name==='egi') {
             favicon.href = "/favicon.ico?v=2";
           }
@@ -42,7 +38,7 @@ import {userContext,tenantContext} from './context.js';
             <NavbarTop/>
             <div className="ssp-container main">
               <div className="flex-container">
-                {logged&&<SideNav tenant_name={tenant&&tenant[0]?tenant[0].name:null}/>}
+                {user&&user[0]&&<SideNav tenant_name={tenant&&tenant[0]?tenant[0].name:null}/>}
                 <Routes user={user[0]} tenant={tenant[0]} t={t} />
               </div>
             </div>
