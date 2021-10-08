@@ -19,36 +19,20 @@ class ServicePetitionDetailsRepository {
     // Save new Petition
     async add(body,sub){
       return this.db.one(sql.add,{
-        service_description: body.service_description,
-        service_name: body.service_name,
-        logo_uri: body.logo_uri,
-        policy_uri: body.policy_uri,
-        integration_environment: body.integration_environment,
+        ...body,
+        comment:body.comment,
+        group_id:body.group_id,
         requester: sub,
-        country: body.country,
         type:body.type,
         status:(body.status?body.status:"pending"),
-        service_id:body.service_id,
-        comment:body.comment,
-        protocol:body.protocol,
-        group_id:body.group_id,
         tenant:body.tenant,
-        website_url:body.website_url
       })
     }
 
     async update(body,id){
         return this.db.none(sql.update,{
-          service_description: body.service_description,
-          service_name: body.service_name,
-          logo_uri: body.logo_uri,
-          country: body.country,
-          policy_uri: body.policy_uri,
-          integration_environment:body.integration_environment,
+          ...body,
           id:id,
-          type:body.type,
-          protocol:body.protocol,
-          website_url:body.website_url,
           status:"pending"
         })
     }
@@ -83,6 +67,21 @@ class ServicePetitionDetailsRepository {
       return this.db.oneOrNone('SELECT id FROM service_petition_details WHERE id = $1 AND requester= $2', [+petition_id,sub]).then(res=>{
         if(res){return true}else{return false}
       });
+    }
+
+
+    async belongsToRequester(petition_id,sub){
+      return this.db.any(sql.belongsToRequester,{
+        petition_id:petition_id,
+        sub:sub
+      }).then(petition_id=>{
+        if(petition_id.length>0){
+          return true;
+        }
+        else{
+          return false;
+        }
+      })
     }
 
     async canBeEditedByRequester(petition_id,sub,tenant){

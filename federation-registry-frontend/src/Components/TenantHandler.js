@@ -10,10 +10,8 @@ export const TenantHandler = () => {
   // eslint-disable-next-line
   const [tenant,setTenant] = useContext(tenantContext);
   let history = useHistory();
-
   useEffect(()=>{
     getTenant(tenant_name);
-    
     // eslint-disable-next-line
   },[]);
 
@@ -34,17 +32,8 @@ export const TenantHandler = () => {
     }).then(response=>{
       if(response){
         setTenant(response);
-
-        let url =  localStorage.getItem('url');
-        localStorage.removeItem('url');
-        if(url && url.split('/')[1]===tenant_name){
-          history.push(url);
+        console.log(response);
         }
-        else{
-          history.push('/'+tenant_name+'/home');
-        }
-        
-      }
       else{
         setTenant(null);
         history.push('/404');

@@ -19,17 +19,8 @@ class ServiceDetailsRepository {
 
     async add(data,sub){
       return this.db.one(sql.add,{
-        service_description: data.service_description,
-        service_name: data.service_name,
-        logo_uri: data.logo_uri,
-        policy_uri: data.policy_uri,
-        integration_environment: data.integration_environment,
-        requester: sub,
-        group_id:data.group_id,
-        country:data.country,
-        protocol:data.protocol,
-        tenant:data.tenant,
-        website_url:data.website_url
+        ...data,
+        requester: sub
       })
     }
 
@@ -50,16 +41,9 @@ class ServiceDetailsRepository {
 
     async update(data,id,sub){
         return this.db.oneOrNone(sql.update,{
-          service_description: data.service_description,
-          service_name: data.service_name,
-          logo_uri: data.logo_uri,
-          policy_uri: data.policy_uri,
-          country:data.country,
-          integration_environment:data.integration_environment,
+          ...data,
           requester:sub,
-          id:id,
-          protocol:data.protocol,
-          website_url:data.website_url
+          id:id
         });
     }
 
@@ -128,9 +112,9 @@ function createColumnsets(pgp) {
         const table = new pgp.helpers.TableName({table: 'service_details', schema: 'public'});
 
         cs.insert = new pgp.helpers.ColumnSet(['service_description','service_name',
-          'logo_uri','policy_uri','integration_environment','country','requester','protocol','website_url'],
+          'logo_uri','policy_uri','integration_environment','country','requester','protocol','website_url','aup_uri'],
           {table});
-        cs.insert_multi = new pgp.helpers.ColumnSet(['external_id','tenant','service_name','group_id','service_description','logo_uri','policy_uri','country','integration_environment','protocol','website_url'])
+        cs.insert_multi = new pgp.helpers.ColumnSet(['external_id','tenant','service_name','group_id','service_description','logo_uri','policy_uri','country','integration_environment','protocol','website_url','aup_uri'])
         cs.update = cs.insert.extend(['?id','deleted']);
         cs.external_id = new pgp.helpers.ColumnSet(['?id','external_id'],{table:'service_details'});
     }

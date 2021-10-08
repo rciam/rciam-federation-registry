@@ -6,7 +6,6 @@ import Row from 'react-bootstrap/Row';
 import Image from 'react-bootstrap/Image';
 import Navbar from 'react-bootstrap/Navbar';
 import Button from 'react-bootstrap/Button';
-import useGlobalState from './useGlobalState.js';
 import * as config from './config.json';
 import DropdownButton from 'react-bootstrap/DropdownButton';
 import Dropdown from 'react-bootstrap/Dropdown';
@@ -41,8 +40,6 @@ export const NavbarTop = (props)=>{
   const [user,setUser] = useContext(userContext);
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
-  const globalState = useGlobalState();
-  const logged = globalState.global_state.log_state;
   const [admin,setAdmin] = useState(false);
   const tenant = useContext(tenantContext);
 
@@ -57,7 +54,7 @@ export const NavbarTop = (props)=>{
     {tenant[0]?
       <Navbar className="navbar-fixed-top">
         <Navbar.Collapse className="justify-content-end">
-          {logged?
+          {user?
           (<DropdownButton
             variant="link"
             alignRight
@@ -86,6 +83,9 @@ export const NavbarTop = (props)=>{
               }
               else if(tenant[0].name==='eosc'){
                 window.location.assign('https://aai-demo.eosc-portal.eu/oidc/saml/logout?redirect='+config.react+tenant[0].name);
+              }
+              else if(tenant[0].name==='egi'){
+                window.location.assign('https://aai.egi.eu/oidc/saml/logout?redirect='+config.react+tenant[0].name);
               }
             }}>
               {t('logout')}<FontAwesomeIcon icon={faSignOutAlt}/>

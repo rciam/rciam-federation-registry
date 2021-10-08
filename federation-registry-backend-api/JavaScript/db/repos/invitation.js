@@ -59,9 +59,9 @@ class InvitationRepository {
     return this.db.oneOrNone('DELETE FROM invitations WHERE id=$1 RETURNING id',[+id,tenant]);
   }
 
-  async get(group_id){
+  async getByGroupId(group_id,tenant){
     let date = new Date(Date.now());
-    return this.db.any(sql.get,{group_id:+group_id,now:date,validity_seconds:+config.invitation_validity_seconds});
+    return this.db.any(sql.get,{group_id:+group_id,now:date,validity_seconds:+config.invitation_validity_seconds,tenant:tenant});
   }
 
   async setUser(code,sub,tenant){

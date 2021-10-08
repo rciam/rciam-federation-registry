@@ -1,0 +1,1 @@
+SELECT name as organization_name,url as organization_url FROM organizations WHERE name LIKE ${search_string}

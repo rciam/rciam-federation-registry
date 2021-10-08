@@ -22,11 +22,11 @@ class ServiceMultiValuedRepository {
     for(const property in service){
       if(Object.keys(config.form[service.tenant].code_of_condact).includes(property)){
         if(type==='petition'){
-          data.push({petition_id:id,name:property,value:service[property]});
+          data.push({petition_id:id,name:property,value:(service[property] === 'true')});
           upd_cs = cs.cocPetUpd;
         }
         else{
-          data.push({service_id:id,name:property,value:service[property]});
+          data.push({service_id:id,name:property,value:(service[property] === 'true')});
           upd_cs = cs.cocSerUpd;
         }
       }
@@ -49,12 +49,12 @@ class ServiceMultiValuedRepository {
     for(const property in service){
       if(Object.keys(config.form[service.tenant].code_of_condact).includes(property)){
         if(type==='petition'){
-          data.push({petition_id:id,name:property,value:service[property]});
+          data.push({petition_id:id,name:property,value:(service[property] === 'true')});
           add_cs = cs.cocPet;
           table_name = "service_petition_coc";
         }
         else{
-          data.push({service_id:id,name:property,value:service[property]});
+          data.push({service_id:id,name:property,value:(service[property] === 'true')});
           add_cs = cs.cocSer;
           table_name = "service_coc";
         }

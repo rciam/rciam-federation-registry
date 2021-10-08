@@ -9,14 +9,15 @@ class GroupRepository {
       cs = new pgp.helpers.ColumnSet(['group_name']);
   }
 
-  async getMembers(group_id){
-    return this.db.any(sql.getGroupMembers,{group_id: +group_id}).then(members => {return members}).catch(err=>{
+  async getMembers(group_id,tenant){
+    return this.db.any(sql.getGroupMembers,{group_id: +group_id,tenant:tenant}).then(members => {return members}).catch(err=>{
       throw(err);
     });
   }
 
   async newMemberNotification(invitation_data){
-    this.db.any(sql.getGroupManagers,{group_id: +invitation_data.group_id}).then(managers => {
+    this.db.any(sql.getGroupManagers,{group_id: +invitation_data.group_id,tenant:invitation_data.tenant}).then(managers => {
+      invitation_data.url = (managers[0].service_id?"services/"+managers[0].service_id+"/groups/"+invitation_data.group_id:"requests/"+managers[0].petition_id+"/groups/"+invitation_data.group_id);
       newMemberNotificationMail(invitation_data,managers)
     });
   }

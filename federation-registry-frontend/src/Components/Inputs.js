@@ -1,5 +1,7 @@
 import React, {useState, useRef ,useEffect,useContext} from 'react';
 import Col from 'react-bootstrap/Col';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {faSearch} from '@fortawesome/free-solid-svg-icons';
 import initialValues from '../initialValues';
 import { Field, FieldArray,FormikConsumer } from 'formik';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
@@ -14,6 +16,8 @@ import { useTranslation } from 'react-i18next';
 import countryData from 'country-region-data';
 import CopyToClipboardComponent from './CopyToClipboard.js'
 import {tenantContext} from '../context.js';
+import { Typeahead } from 'react-bootstrap-typeahead'; // ES2015
+import 'react-bootstrap-typeahead/css/Typeahead.css';
 // import {removeA} from '../helpers.js';
 
 /*
@@ -46,6 +50,123 @@ export function SimpleInput(props){
 
           <MyOverLay show={props.changed&&show?'string':null} type='Edited' target={target}/>
           {props.isloading?<div className="loader"></div>:null}
+        </React.Fragment>
+  )
+}
+
+
+export function OrganizationField(props){
+  const [show, setShow] = useState(false);
+  const target = useRef(null);
+  const [singleSelections, setSingleSelections] = useState([]);
+  const [organizations,setOrganizations] = useState({});
+  useEffect(()=>{
+    if(props.values.organization_name){
+      setSingleSelections([props.values.organization_name]);
+    }
+  },[])
+ 
+
+  useEffect(()=>{
+    getOrganizations(singleSelections[0]?singleSelections[0]:"");
+  },[singleSelections])
+
+  const getOrganizations = (searchString) =>{
+    console.log(searchString);
+    console.log(typeof(searchString))
+    if(true){
+      fetch("https://api.ror.org/organizations"+(searchString?("?query="+searchString):''), {
+        method:'GET',
+        accept: '*/*',
+        headers:{
+          'Content-Type':'application/json',
+        }}).then(response=>{
+          if(response.status===200||response.status===304){
+            return response.json();
+          }
+          else {
+            return false
+          }
+        }).then(response=>{
+            let options = {};
+            // if(searchString){
+            //   options[searchString+ " (Add New Organization)"] = {};
+            //   options[searchString+ " (Add New Organization)"].url = null;
+            // }
+
+            if(response){
+                //options[searchString]     
+                let loaded = false;     
+                response.items.forEach((item,index)=>{
+                  
+                  options[item.name] = {};
+                  options[item.name].url=(item.links[0]?item.links[0]:"");
+                  options[item.name].ror_id = item.id;
+                  
+                  if(item.name===singleSelections[0]&&options[item.name].url){
+                    loaded = true
+                  }
+                })
+                if(loaded){
+                  props.setDisabledOrganizationFields(['organization_url']);                  
+                }
+                else{
+                  props.setDisabledOrganizationFields([]);                  
+
+                } 
+                
+                setOrganizations(options);
+            }
+            else{
+              setOrganizations(options);
+            }
+          }
+        ).catch((err)=>{console.log(err); alert('Error')});
+    }
+  }
+  return (
+        <React.Fragment>
+          <Form.Group>
+            <InputGroup>  
+              <InputGroup.Text><FontAwesomeIcon icon={faSearch}/></InputGroup.Text>
+              <Typeahead
+                id="basic-typeahead-single"
+                labelKey="name"
+                onInputChange={(e)=>{getOrganizations(e);}}
+                onChange={(selected,index)=>{
+                  console.log(selected);
+                  
+                  if(selected&&selected[0]){
+                                        
+                    if(selected[0].includes(" (Add New Organization)","")){
+                    }
+                    selected[0]= selected[0].replace(" (Add New Organization)","");
+                  
+                  }
+                  let organization = (organizations[selected[0]]?organizations[selected[0]]:{});
+                  props.setFieldValue('ror_id',organization.ror_id)
+                  props.setFieldValue('organization_id',organization.organization_id)
+                  props.setFieldValue('organization_name',(selected&&selected[0]?selected[0]:""));
+                  if(organization.url){
+                    props.setDisabledOrganizationFields(['organization_url']);
+                  }
+                  else{
+                    props.setDisabledOrganizationFields([]);
+                  }
+                  props.setFieldValue('organization_url',(organizations[selected[0]]&&organizations[selected[0]].url?organizations[selected[0]].url:''));
+                  setSingleSelections(selected);
+                }}
+                options={Object.keys(organizations)}
+                disabled={props.disabled}
+                ref={target}
+                placeholder="Type the name of your organization..."
+                selected={singleSelections}
+              />
+            </InputGroup>
+          </Form.Group>  
+        <MyOverLay show={true?'string':null} type='Edited' target={target}/>
+        {props.isloading?<div className="loader"></div>:null}
+          
         </React.Fragment>
   )
 }

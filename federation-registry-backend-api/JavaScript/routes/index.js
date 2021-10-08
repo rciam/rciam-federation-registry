@@ -30,9 +30,23 @@ const { EADDRINUSE } = require('constants');
 function getData(req,res,next) {
   db.service.getAll(req.params.tenant).then(services=>{
     req.body = services;
+    //console.log(services);
     next();
   });
 }
+
+router.post('/tenants/:tenant/organizations',authenticate,(req,res,next)=>{
+  try{
+    db.organizations.add(req.body).then(organization_id=>{
+      if(organization_id){
+        res.status(200).send({organization_id:organization_id});
+      }
+    })
+  }
+  catch(err){
+    next(err);
+  }
+});
 
 router.put('/tenants/:tenant/services/validate',adminAuth,getData,serviceValidationRules({optional:true,tenant_param:true,check_available:false,sanitize:true,null_client_id:false}),validateInternal,(req,res,next)=>{
   try{
@@ -489,6 +503,7 @@ router.get('/tenants/:tenant/services/list', getServiceListValidation(),validate
             }
             return res.status(200).send(response[0]);
         }).catch(err=>{
+          console.log(err);
           return res.status(416).send('Out of range');
         });
       }
@@ -539,35 +554,23 @@ router.get('/agent/get_new_configurations',amsAgentAuth,(req,res,next)=>{
 router.get('/tenants/:tenant/services/:id',authenticate,(req,res,next)=>{
   if(req.user.role.actions.includes('get_own_service')){
     try{
-      if(req.user.role.actions.includes('get_service')){
-        db.service.get(req.params.id,req.params.tenant).then(result=>{
-          if(result){
-            res.status(200).json({service:result.service_data});
+      return db.task('find-service-data',async t=>{
+        await t.service_details.getProtocol(req.params.id,req.user.sub,req.params.tenant).then(async exists=>{
+          if(exists||req.user.role.actions.includes('get_service')){
+            await t.service.get(req.params.id,req.params.tenant).then(result=>{
+              if(result){
+                res.status(200).json({service:result.service_data,owned:(exists?true:false)});
+              }
+              else {
+                  res.status(404).end();
+              }
+            }).catch(err=>{next(err);})
           }
-          else {
+          else{
             res.status(404).end();
           }
-        }).catch(err=>{next(err);})
-      }
-      else{
-        return db.task('find-service-data',async t=>{
-          await t.service_details.getProtocol(req.params.id,req.user.sub,req.params.tenant).then(async exists=>{
-            if(exists){
-              await t.service.get(req.params.id,req.params.tenant).then(result=>{
-                if(result){
-                  res.status(200).json({service:result.service_data});
-                }
-                else {
-                    res.status(404).end();
-                }
-              }).catch(err=>{next(err);})
-            }
-            else{
-              res.status(404).end();
-            }
-          }).catch(err=>{next(err);});;
-        });
-      }
+        }).catch(err=>{next(err);});;
+      });
     }
     catch(err){
       next(err);
@@ -648,7 +651,7 @@ router.post('/tenants/:tenant/petitions',authenticate,petitionValidationRules(),
                 if(id){
                   res.status(200).json({id:id});
                   await t.user.getUsersByAction('review_notification',req.params.tenant).then(users=>{
-                    sendMail({subject:'New Petition to Review',service_name:req.body.service_name,tenant:req.params.tenant},'reviewer-notification.html',users);
+                    sendMail({subject:'New Petition to Review',service_name:req.body.service_name,tenant:req.params.tenant,url:"/services/"+req.body.service_id+"/requests/"+id+"/review"},'reviewer-notification.html',users);
                   }).catch(error=>{
                     next('Could not sent email to reviewers:' + error);
                   });
@@ -666,7 +669,7 @@ router.post('/tenants/:tenant/petitions',authenticate,petitionValidationRules(),
             if(id){
               res.status(200).json({id:id});
               await t.user.getUsersByAction('review_notification',req.params.tenant).then(users=>{
-                sendMail({subject:'New Petition to Review',service_name:req.body.service_name,tenant:req.params.tenant},'reviewer-notification.html',users);
+                sendMail({subject:'New Petition to Review',service_name:req.body.service_name,tenant:req.params.tenant,url:(req.body.service_id?"/services/"+req.body.service_id:"")+"/requests/"+id+"/review"},'reviewer-notification.html',users);
               }).catch(error=>{
                 next('Could not sent email to reviewers:' + error);
               });
@@ -814,7 +817,7 @@ router.get('/tenants/:tenant/check-availability',(req,res,next)=>{
 // Get group members
 router.get('/tenants/:tenant/groups/:group_id/members',authenticate,view_group,(req,res,next)=>{
   try{
-    db.group.getMembers(req.params.group_id).then(group_members =>{
+    db.group.getMembers(req.params.group_id,req.params.tenant).then(group_members =>{
       if(group_members){
         res.status(200).json({group_members});
       }
@@ -979,7 +982,7 @@ router.get('/tenants/:tenant/invitations',authenticate,(req,res,next)=>{
 // Get all invitations for a specific
 router.get('/tenants/:tenant/groups/:group_id/invitations',authenticate,(req,res,next)=>{
   try{
-    db.invitation.get(req.params.group_id).then(invitations => {
+    db.invitation.getByGroupId(req.params.group_id,req.params.tenant).then(invitations => {
       if(invitations){
         res.status(200).json({invitations});
       }
@@ -1145,14 +1148,19 @@ function is_group_manager(req,res,next){
 
   try{
     req.body.group_id=req.params.group_id;
-    db.group.isGroupManager(req.user.sub,req.body.group_id).then(result=>{
-      if(result){
-        next();
-      }
-      else{
-        res.status(406).send({error:"Can't access this resource"});
-      }
-    }).catch(err=>{next(err)});
+    if(req.user.sub===req.params.sub){
+      next();
+    }
+    else{
+      db.group.isGroupManager(req.user.sub,req.body.group_id).then(result=>{
+        if(result){
+          next();
+        }
+        else{
+          res.status(406).send({error:"Can't access this resource"});
+        }
+      }).catch(err=>{next(err)});
+    }
   }
   catch(err){
     next(err);
