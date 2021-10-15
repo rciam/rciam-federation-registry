@@ -53,7 +53,7 @@ class ServicePetitionDetailsRepository {
           website_url:body.website_url,
           status:"pending",
           aup_uri:body.aup_uri,
-          ogranization_id:body.organization_id
+          organization_id:body.organization_id
 
         })
     }
