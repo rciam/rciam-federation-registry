@@ -137,6 +137,9 @@ const Routes = (props) => {
       <ProtectedRoute user={props.user} path='/:tenant_name/services/:service_id/requests/:petition_id/history'>
         <HistoryRequest user={props.user}/>
       </ProtectedRoute>
+      <ProtectedRoute user={props.user} path='/:tenant_name/requests/:petition_id/history'>
+        <HistoryRequest user={props.user}/>
+      </ProtectedRoute>
       <ProtectedRoute user={props.user} exact path="/:tenant_name/services/:service_id/requests/:petition_id/review" admin={true}>
           <div className="links">
             <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/home"}>{props.t('link_home')}</Link>
@@ -258,7 +261,7 @@ const ProtectedRoute= (props)=> {
         // user && user[0] && (!(props.admin && !user[0].review)||props.location.state.integration_environment==='development')
         localStorage.getItem('token')&&!(user&&user[0])? 
           <UserHandler/>:
-        localStorage.getItem('token')&&(user&&user[0]&&(!(props.admin && !user[0].review)))?
+        localStorage.getItem('token')&&(user&&user[0])?
         (
           childrenWithProps
         ) : (

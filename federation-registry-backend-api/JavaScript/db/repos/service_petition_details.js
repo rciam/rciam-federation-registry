@@ -19,21 +19,42 @@ class ServicePetitionDetailsRepository {
     // Save new Petition
     async add(body,sub){
       return this.db.one(sql.add,{
-        ...body,
-        comment:body.comment,
-        group_id:body.group_id,
+        service_description: body.service_description,
+        service_name: body.service_name,
+        logo_uri: body.logo_uri,
+        policy_uri: body.policy_uri,
+        integration_environment: body.integration_environment,
         requester: sub,
+        country: body.country,
+        protocol:body.protocol,
+        group_id:body.group_id,
+        organization_id: body.organization_id,
+        aup_uri:body.aup_uri,
+        website_url:body.website_url,
+        tenant:body.tenant,
         type:body.type,
         status:(body.status?body.status:"pending"),
-        tenant:body.tenant,
+        service_id:body.service_id,
+        comment:body.comment,
       })
     }
 
     async update(body,id){
         return this.db.none(sql.update,{
-          ...body,
+          service_description: body.service_description,
+          service_name: body.service_name,
+          logo_uri: body.logo_uri,
+          country: body.country,
+          policy_uri: body.policy_uri,
+          integration_environment:body.integration_environment,
           id:id,
-          status:"pending"
+          type:body.type,
+          protocol:body.protocol,
+          website_url:body.website_url,
+          status:"pending",
+          aup_uri:body.aup_uri,
+          ogranization_id:body.organization_id
+
         })
     }
 

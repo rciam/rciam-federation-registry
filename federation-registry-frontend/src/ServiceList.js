@@ -64,6 +64,7 @@ const ServiceList= (props)=> {
   const pageSize = 10;
 
   useEffect(()=>{
+    localStorage.removeItem('url');
     getInvites();
     //setUser(localStorage.getItem(user));
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -174,7 +175,6 @@ const ServiceList= (props)=> {
           if(!showOwned&&!showPending&!showOutdated&&!searchString){
             setOutdatedCount(response.outdated_count);
           }
-          console.log(response);
           setRequestReviewCount(response.request_review_count);
           createPaginationItems(response.full_count);
           setReset(!reset);

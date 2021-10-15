@@ -6,7 +6,7 @@ SELECT json_build_object('service_name', sd.service_name,'service_description',s
 						 'client_secret',sd.client_secret,'reuse_refresh_token',sd.reuse_refresh_token,'protocol',sd.protocol,'jwks',sd.jwks,'jwks_uri',sd.jwks_uri,
 						 'country',sd.country,'website_url',sd.website_url,'token_endpoint_auth_method',sd.token_endpoint_auth_method,'token_endpoint_auth_signing_alg',sd.token_endpoint_auth_signing_alg,
 						 'clear_access_tokens_on_refresh',sd.clear_access_tokens_on_refresh,'id_token_timeout_seconds',sd.id_token_timeout_seconds,'metadata_url',sd.metadata_url,'aup_uri',sd.aup_uri
-						 ,'entity_id',sd.entity_id,'organization_name',sd.name,'organization_url',sd.url,
+						 ,'entity_id',sd.entity_id,'organization_name',sd.name,'organization_url',sd.url,'organization_id',sd.organization_id,
 						  'coc',(SELECT CASE WHEN json_agg(json_build_object(v.name,v.value)) IS NULL THEN NULL ELSE json_agg(json_build_object(v.name,v.value)) END
 							FROM service_coc v WHERE sd.id = v.service_id),
 						 'grant_types',

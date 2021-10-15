@@ -139,21 +139,12 @@ const calcDiff = (oldState,newState,tenant) => {
     return edits
 }
 
+
 const sendNotif= (data,template_uri,user)=>{
   if(process.env.NODE_ENV!=='test'&&process.env.NODE_ENV!=='test-docker'&&!config.disable_emails){
     readHTMLFile(path.join(__dirname, '../html/', template_uri), function(err, html) {
-      let transporter = nodeMailer.createTransport({
-        host: 'relay.grnet.gr',
-        port: 587,
-        secure: false
-    });
-    // let transporter = nodeMailer.createTransport({
-    //   service: 'gmail',
-    //   auth: {
-    //     user: 'orionaikido@gmail.com',
-    //     pass: ''
-    //   }
-    // });
+      let transporter = createTransport();
+
     var replacements = {
       name:user.name,
       logo_url:config[data.tenant].logo_url
@@ -187,18 +178,8 @@ const sendInvitationMail = async (data) => {
     if(process.env.NODE_ENV!=='test-docker'&& process.env.NODE_ENV!=='test'&&!config.disable_emails){
       var currentDate = new Date();
       readHTMLFile(path.join(__dirname, '../html/invitation.hbs'), function(err, html) {
-        let transporter = nodeMailer.createTransport({
-            host: 'relay.grnet.gr',
-            port: 587,
-            secure: false
-        });
-        // let transporter = nodeMailer.createTransport({
-        //   service: 'gmail',
-        //   auth: {
-        //     user: 'orionaikido@gmail.com',
-        //     pass: ''
-        //   }
-        // });
+        let transporter = createTransport();
+
         var template = hbs.compile(html);
         var replacements = {
           invited_by:data.invited_by,
@@ -238,18 +219,8 @@ const newMemberNotificationMail = (data,managers) => {
   if(process.env.NODE_ENV!=='test-docker'&& process.env.NODE_ENV!=='test'&&!config.disable_emails){
     var currentDate = new Date();
     readHTMLFile(path.join(__dirname, '../html/new-member-notification.html'), function(err, html) {
-      let transporter = nodeMailer.createTransport({
-          host: 'relay.grnet.gr',
-          port: 587,
-          secure: false
-      });
-      // let transporter = nodeMailer.createTransport({
-      //   service: 'gmail',
-      //   auth: {
-      //     user: 'orionaikido@gmail.com',
-      //     pass: ''
-      //   }
-      // });
+      let transporter = createTransport();
+
       var replacements = {
         invitation_mail:data.invitation_mail,
         username:data.username,
@@ -289,18 +260,8 @@ const sendMail= (data,template_uri,users)=>{
   var result;
   if(process.env.NODE_ENV!=='test'&&process.env.NODE_ENV!=='test-docker'&&!config.disable_emails){
   readHTMLFile(path.join(__dirname, '../html/', template_uri), function(err, html) {
-      let transporter = nodeMailer.createTransport({
-          host: 'relay.grnet.gr',
-          port: 587,
-          secure: false
-      });
-      // let transporter = nodeMailer.createTransport({
-      //   service: 'gmail',
-      //   auth: {
-      //     user: 'orionaikido@gmail.com',
-      //     pass: ''
-      //   }
-      // });
+      let transporter = createTransport();
+
       var template = hbs.compile(html);
       //var replacements = {username: "John Doe",name:"The name"};
       var state;
@@ -356,18 +317,7 @@ const createGgusTickets =  function(data){
     try{
         if(data){
           readHTMLFile(path.join(__dirname, '../html/ticket.html'), async function(err, html) {
-            let transporter = nodeMailer.createTransport({
-              host: 'relay.grnet.gr',
-              port: 587,
-              secure: false
-            });
-            // let transporter = nodeMailer.createTransport({
-            //     service: 'gmail',
-            //     auth: {
-            //         user: 'orionaikido@gmail.com',
-            //         pass: ''
-            //       }
-            //     });
+            let transporter = createTransport();
 
                 var template = hbs.compile(html);
 
@@ -424,7 +374,21 @@ const createGgusTickets =  function(data){
     }
 }
 
-
+const createTransport = () =>{
+  let transporter = nodeMailer.createTransport({
+    host: 'relay.grnet.gr',
+    port: 587,
+    secure: false
+  });
+  // let transporter = nodeMailer.createTransport({
+  //     service: 'gmail',
+  //     auth: {
+  //         user: 'orionaikido@gmail.com',
+  //         pass: ''
+  //       }
+  //     });
+  return transporter
+}
 
 const addToString = (str,value) =>{
   let sentence='';
@@ -485,5 +449,6 @@ module.exports = {
   extractCoc,
   createGgusTickets,
   delay,
-  sendNotif
+  sendNotif,
+  createTransport
 }

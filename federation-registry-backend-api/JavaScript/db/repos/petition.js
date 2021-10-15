@@ -177,11 +177,13 @@ const fixPetition = (result) => {
   data.meta_data.type = result.json.type;
   data.meta_data.comment = result.json.comment;
   data.meta_data.submitted_at = result.json.submitted_at;
+  data.meta_data.group_id = result.json.group_id;
   data.meta_data.requester = result.json.requester;
   data.meta_data.service_id = result.json.service_id;
   data.meta_data.status = result.json.status;
   data.meta_data.reviewed_at = result.json.reviewed_at;
 
+  delete result.group_id;
   delete result.json.status;
   delete result.json.reviewed_at;
   delete result.json.type;

@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {faQuestionCircle} from '@fortawesome/free-solid-svg-icons';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
+import parse from 'html-react-parser';
 
 export default function InputRow(props){
   return (
@@ -36,7 +37,7 @@ export default function InputRow(props){
           {props.children}
           {props.description?
             <Form.Text className="text-muted text-left">
-            {props.description}
+              {parse(props.description)}
             </Form.Text>
             :''}
             {props.error && props.touched ? (

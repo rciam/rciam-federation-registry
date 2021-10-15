@@ -37,9 +37,25 @@ function getData(req,res,next) {
 
 router.post('/tenants/:tenant/organizations',authenticate,(req,res,next)=>{
   try{
-    db.organizations.add(req.body).then(organization_id=>{
-      if(organization_id){
-        res.status(200).send({organization_id:organization_id});
+    db.organizations.add(req.body).then(response=>{
+      if(response.exists){
+        res.status(200).send({organization_id:response.organization_id});
+      }
+      else{
+        res.status(409).send({organization_id:response.organization_id});
+      }
+    })
+  }
+  catch(err){
+    next(err);
+  }
+});
+
+router.get('/tenants/:tenant/organizations',(req,res,next)=>{
+  try{
+    db.organizations.get(req.query.search_string,req.query.ror).then(organizations=>{
+      if(organizations){
+        res.status(200).send({organizations:organizations});
       }
     })
   }
@@ -283,10 +299,9 @@ router.get('/callback/:tenant',(req,res,next)=>{
   clients[req.params.tenant].callback(process.env.REDIRECT_URI+req.params.tenant,{code:req.query.code}).then(async response => {
     let code = await db.tokens.addToken(response.access_token);
     clients[req.params.tenant].userinfo(response.access_token).then(usr_info=>{
-      
-      saveUser(usr_info,req.params.tenant);
+    saveUser(usr_info,req.params.tenant);
 
-    }); // => Promise
+  }); // => Promise
     res.redirect(process.env.REACT_BASE+'/'+req.params.tenant+'/code/' + code.code);
   });
 });
@@ -1440,6 +1455,11 @@ const saveUser=(userinfo,tenant)=>{
             delete user.eduperson_entitlement;
             userinfo.role_id = role.id.toString();
             
+            // Generate preferred username from given name and family name
+            if(!userinfo.preferred_username&&userinfo.given_name&&userinfo.family_name){
+              userinfo.preferred_username= (userinfo.given_name.replace(/[^a-zA-Z0-9]/g,'_').charAt(0)+userinfo.family_name.replace(/[^a-zA-Z0-9]/g,'_')).toLowerCase();;
+            }
+
             for (const property in userinfo) {
               if(user.hasOwnProperty(property)&&userinfo[property]!==user[property]){
                 update_userinfo= true;

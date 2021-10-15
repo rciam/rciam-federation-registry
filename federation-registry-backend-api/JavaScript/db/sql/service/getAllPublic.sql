@@ -1,6 +1,6 @@
 SELECT json_build_object('id',sd.id,'service_name', sd.service_name,'service_description',sd.service_description,
 						 'logo_uri',sd.logo_uri,'policy_uri',sd.policy_uri,'integration_environment',sd.integration_environment,'protocol',sd.protocol,
-						 'country',sd.country,'website_url',sd.website_url,'tenant',sd.tenant,'organization_name',sd.name,'organization_url',sd.url,
+						 'country',sd.country,'website_url',sd.website_url,'tenant',sd.tenant,'organization_name',sd.name,'organization_url',sd.url,'organization_id',sd.organization_id,
 						 'coc',(SELECT CASE WHEN json_agg(json_build_object(v.name,v.value)) IS NULL THEN NULL ELSE json_agg(json_build_object(v.name,v.value)) END
 						 FROM service_coc v WHERE sd.id = v.service_id),
 						 'contacts',
