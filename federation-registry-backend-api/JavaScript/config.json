@@ -93,29 +93,29 @@
       "extra_fields":{
         "aup_uri":{
           "title": "Link to Terms of Use",
-          "desc": "Link to the Acceptable Use Policy / Terms of Use based on the <a href='https://wise-community.org/wise-baseline-aup/'>WISE AUP Baseline template</a>",
+          "desc": "Link to the Acceptable Use Policy / Terms of Use based on the <a href='https://wise-community.org/wise-baseline-aup/' target='_blank' rel='noopener noreferrer'>WISE AUP Baseline template</a>",
           "type":"string",
           "tag":"url",
           "default":"",
           "tab":"general",
           "placeholder":"https://",
-          "required":["production","demo","dev"]
+          "required":["production","demo"]
         },
         "egi_policy":{
           "title": "EGI Policies",
-          "desc":"<div>The service complies with the <a href='https://wiki.egi.eu/wiki/Policies_and_Procedures' target='_blank'>EGI Policies</a></div>",
+          "desc":"<div>The service complies with the <a href='https://wiki.egi.eu/wiki/Policies_and_Procedures' target='_blank' rel='noopener noreferrer'>EGI Policies</a></div>",
           "required": ["production"],
           "type":"boolean",
           "tag":"coc",
           "tab":"general",
-          "default": "false",
+          "default": false,
           "error": "The service must comply with this policy"
         },
         "dpcoco":{
           "title": "Data Protection Code of Conduct",
-          "desc": "The service complies with the <a href='https://wiki.refeds.org/display/CODE/Data+Protection+Code+of+Conduct+Home' target='_blank'>GÉANT Data Protection Code of Conduct version 1</a> or any other code of conduct compatible with legislation and guidelines on data protection and privacy including GDPR",
+          "desc": "The service complies with the <a href='https://wiki.refeds.org/display/CODE/Data+Protection+Code+of+Conduct+Home' target='_blank' rel='noopener noreferrer'>GÉANT Data Protection Code of Conduct version 1</a> or any other code of conduct compatible with legislation and guidelines on data protection and privacy including GDPR",
           "required": [],
-          "default": "false",
+          "default": false,
           "tab":"general",
           "type":"boolean",
           "tag":"coc",
@@ -205,6 +205,49 @@
         "jwks_uri":"",
         "egi_policy":"",
         "dpcoco":""
+    },
+    "extra_fields":{
+      "aup_uri":{
+        "title": "Link to Terms of Use",
+        "desc": "Link to the Acceptable Use Policy / Terms of Use based on the <a href='https://wise-community.org/wise-baseline-aup/'>WISE AUP Baseline template</a>",
+        "type":"string",
+        "tag":"url",
+        "default":"",
+        "tab":"general",
+        "placeholder":"https://",
+        "required":["production","demo","dev"]
+      },
+      "eosc_security_policies":{
+        "title": "EOSC Security Policies",
+        "desc":"The service adheres to the EOSC Security Baseline",
+        "required": ["production","demo"],
+        "type":"boolean",
+        "tag":"coc",
+        "tab":"general",
+        "default": false,
+        "error": "The service must comply with this policy"
+      },
+      "eosc_data_protection":{
+        "title": "Research & Scholarship",
+        "desc":"The service is compliant with the <a href='https://refeds.org/category/research-and-scholarship'>REFEDS Research & Scholarship Entity Category</a>",
+        "required": [],
+        "type":"boolean",
+        "tag":"coc",
+        "tab":"general",
+        "default": false,
+        "error": "The service must comply with this policy"
+      },
+      "dpcoco":{
+        "title": "Data Protection Code of Conduct",
+        "desc": "The service is compliant with the <a href='https://wiki.refeds.org/display/CODE/Data+Protection+Code+of+Conduct+Home'>GEANT Code of Conduct version 1</a> or any other code of conduct compatible with legislation and guidelines on data protection and privacy including GDPR",
+        "required": [],
+        "default": false,
+        "tab":"general",
+        "type":"boolean",
+        "tag":"coc",
+        "error": "The service must comply with this policy"
+      }
+
     }
     },
     "grnet" : {
@@ -294,7 +337,7 @@
   "outdated_notifications_interval_seconds":604800,
   "send_outdated_notifications":false,
   "invitation_validity_seconds": 5184000,
-  "service_fields":["external_id","tenant","service_name","service_description","logo_uri","policy_uri","integration_environment","protocol","client_id","allow_introspection","code_challenge_method","device_code_validity_seconds","access_token_validity_seconds","refresh_token_validity_seconds","client_secret","reuse_refresh_token","clear_access_tokens_on_refresh","id_token_timeout_seconds","entity_id","metadata_url","grant_types","scope","contacts","redirect_uris","token_endpoint_auth_method","token_endpoint_auth_signing_alg","jwks","jwks_uri","country","website_url"],
+  "service_fields":["external_id","tenant","service_name","service_description","logo_uri","policy_uri","integration_environment","protocol","client_id","allow_introspection","code_challenge_method","device_code_validity_seconds","access_token_validity_seconds","refresh_token_validity_seconds","client_secret","reuse_refresh_token","clear_access_tokens_on_refresh","id_token_timeout_seconds","entity_id","metadata_url","grant_types","scope","contacts","redirect_uris","token_endpoint_auth_method","token_endpoint_auth_signing_alg","jwks","jwks_uri","country","website_url","aup_uri","organization_id"],
   "ggus_email":"checkin-support@mailman.egi.eu",
   "disable_emails":false,
   "deployment_fields":["service_name","service_description","client_id","allow_introspection","code_challenge_method","device_code_validity_seconds","access_token_validity_seconds","refresh_token_validity_seconds","client_secret","reuse_refresh_token","clear_access_tokens_on_refresh","id_token_timeout_seconds","entity_id","metadata_url","grant_types","scope","contacts","redirect_uris","token_endpoint_auth_method","token_endpoint_auth_signing_alg","jwks","jwks_uri"],

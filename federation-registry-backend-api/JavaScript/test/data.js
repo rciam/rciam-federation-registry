@@ -10,8 +10,12 @@ const create = {
      protocol:"oidc",
      contacts:[ {
          "email": "mymail@gmail.com",
-         "type": "admin"
-       }],
+         "type": "technical"
+       },{
+         "email": "mymail@gmail.com",
+         "type": "security"
+       }
+      ],
      metadata_url:null,
      country:"gr",
      token_endpoint_auth_method:"private_key_jwt",
@@ -29,6 +33,8 @@ const create = {
      reuse_refresh_token:true,
      clear_access_tokens_on_refresh:true,
      id_token_timeout_seconds:1000,
+     aup_uri:"https://test.com",
+     organization_id:1,
      scope: [
        "openid",
        "profile",
@@ -55,11 +61,16 @@ const create = {
      protocol:"saml",
      country:"gr",
      contacts:[ {
-         "email": "mymail@gmail.com",
-         "type": "admin"
-       }],
+      "email": "mymail@gmail.com",
+      "type": "technical"
+    },{
+      "email": "mymail@gmail.com",
+      "type": "security"
+    }],
      metadata_url:'https://metadata.com',
      entity_id:"https://entity_id.com",
+     aup_uri:"https://test.com",
+     organization_id:1,
      client_id:null,
      allow_introspection:null,
      code_challenge_method:null,
@@ -90,14 +101,13 @@ const edit = {
    "integration_environment":"development",
    "protocol":"oidc",
    "contacts":[
-      {
-         "email":"uricommail@gmail.com",
-         "type":"admin"
-      },
-      {
-         "email":"ctuitcommail@gmail.com",
-         "type":"admin"
-      }
+    {
+      "email": "mymail@gmail.com",
+      "type": "technical"
+    },{
+      "email": "mymail@gmail.com",
+      "type": "security"
+    }
    ],
    "country":"Gr",
    "token_endpoint_auth_method":"private_key_jwt",
@@ -105,6 +115,8 @@ const edit = {
    "jwks":"",
    "jwks_uri":"https://test.com",
    "metadata_url":"",
+   "aup_uri":"https://test.com",
+   "organization_id":1,
    "entity_id":"",
    "client_id":"testCreate2",
    "allow_introspection":false,
@@ -141,16 +153,17 @@ const edit = {
    integration_environment:"development",
    protocol:"saml",
    contacts:[{
-       "email": "uricommail@gmail.com",
-       "type": "admin"
-     },
-     {
-       "email": "ctuitcommail@gmail.com",
-       "type": "admin"
-     }
+    "email": "mymail@gmail.com",
+    "type": "technical"
+  },{
+    "email": "mymail@gmail.com",
+    "type": "security"
+  }
    ],
    metadata_url:'https://metadataedit.com',
    entity_id:"https://entity_id_edit.com",
+   aup_uri:"https://test.com",
+   organization_id:1,
    client_id:null,
    country:"gr",
    allow_introspection:null,
@@ -176,9 +189,12 @@ const postServices = [
     "protocol": "oidc",
     "client_id": "clqweient1",
     "contacts": [ {
-        "email": "mymail@gmail.com",
-        "type": "admin"
-      }],
+      "email": "mymail@gmail.com",
+      "type": "technical"
+    },{
+      "email": "mymail@gmail.com",
+      "type": "security"
+    }],
     "allow_introspection": null,
     "code_challenge_method": "plain",
     "device_code_validity_seconds": 800,
@@ -190,6 +206,8 @@ const postServices = [
     "token_endpoint_auth_signing_alg": "HS256",
     "jwks": {"keys":[]},
     "jwks_uri": "",
+    "aup_uri":"",
+    "organization_id":null,
     "reuse_refresh_token": true,
     "clear_access_tokens_on_refresh": true,
     "id_token_timeout_seconds": 1000,
@@ -229,6 +247,8 @@ const postServices = [
     "token_endpoint_auth_method": "private_key_jwt",
     "token_endpoint_auth_signing_alg": "HS256",
     "jwks": "",
+    "aup_uri":"https://test.com",
+    "organization_id":1,
     "jwks_uri": "https://test.com",
     "reuse_refresh_token": true,
     "clear_access_tokens_on_refresh": true,
@@ -307,6 +327,8 @@ const validationRequests = {
    metadata_url:null,
    entity_id:null,
    client_id:1,
+   aup_uri:"https://test.com",
+   organization_id:1,
    allow_introspection:"string",
    code_challenge_method:1,
    device_code_validity_seconds:"string",
@@ -339,6 +361,8 @@ const validationRequests = {
    jwks_uri:"https://test.com",
    contacts:["string","string"],
    metadata_url:null,
+   aup_uri:"https://test.com",
+   organization_id:1,
    entity_id:null,
    client_id:"str",
    allow_introspection:true,
@@ -367,17 +391,17 @@ const validationRequests = {
    integration_environment:"development",
    protocol:"saml",
    contacts:[{
-       "email": "uricommail@gmail.com",
-       "type": "admin"
-     },
-     {
-       "email": "ctuitcommail@gmail.com",
-       "type": "admin"
-     }
-   ],
+    "email": "mymail@gmail.com",
+    "type": "technical"
+  },{
+    "email": "mymail@gmail.com",
+    "type": "security"
+  }],
    metadata_url:1,
    entity_id:1,
    client_id:null,
+   aup_uri:"https://test.com",
+   organization_id:1,
    allow_introspection:null,
    code_challenge_method:null,
    device_code_validity_seconds:null,
@@ -402,17 +426,17 @@ const validationRequests = {
    integration_environment:"development",
    protocol:"saml",
    contacts:[{
-       "email": "uricommail@gmail.com",
-       "type": "admin"
-     },
-     {
-       "email": "ctuitcommail@gmail.com",
-       "type": "admin"
-     }
-   ],
+    "email": "mymail@gmail.com",
+    "type": "technical"
+  },{
+    "email": "mymail@gmail.com",
+    "type": "security"
+  }],
    metadata_url:"string",
    entity_id:"string",
    client_id:null,
+   aup_uri:"https://test.com",
+   organization_id:1,
    allow_introspection:null,
    code_challenge_method:null,
    device_code_validity_seconds:null,

@@ -20,19 +20,20 @@ class ServiceMultiValuedRepository {
     let upd_cs;
     id = parseInt(id);
     for(const property in service){
-      if(Object.keys(config.form[service.tenant].code_of_condact).includes(property)){
+      if(Object.keys(config.form[service.tenant].extra_fields).includes(property) && config.form[service.tenant].extra_fields[property].tag==='coc'){
         if(type==='petition'){
-          data.push({petition_id:id,name:property,value:(service[property] === 'true')});
+          data.push({petition_id:id,name:property,value:(service[property] === 'true'||service[property]===true)});
           upd_cs = cs.cocPetUpd;
         }
         else{
-          data.push({service_id:id,name:property,value:(service[property] === 'true')});
+          data.push({service_id:id,name:property,value:(service[property] === 'true'||service[property]===true)});
           upd_cs = cs.cocSerUpd;
         }
       }
     }
     if(data.length>0){
       const query = this.pgp.helpers.update(data,upd_cs) + ' WHERE '+(type==='service'?'v.service_id = t.service_id ':'v.petition_id =t.petition_id ') +'and v.name = t.name RETURNING t.id';
+
       return this.db.any(query).then(data => {
         return true;
       })
@@ -47,14 +48,14 @@ class ServiceMultiValuedRepository {
     let add_cs = {};
     let table_name;
     for(const property in service){
-      if(Object.keys(config.form[service.tenant].code_of_condact).includes(property)){
+      if(Object.keys(config.form[service.tenant].extra_fields).includes(property) && config.form[service.tenant].extra_fields[property].tag==='coc'){
         if(type==='petition'){
-          data.push({petition_id:id,name:property,value:(service[property] === 'true')});
+          data.push({petition_id:id,name:property,value:(service[property] === 'true'||service[property]===true)});
           add_cs = cs.cocPet;
           table_name = "service_petition_coc";
         }
         else{
-          data.push({service_id:id,name:property,value:(service[property] === 'true')});
+          data.push({service_id:id,name:property,value:(service[property] === 'true'||service[property]===true)});
           add_cs = cs.cocSer;
           table_name = "service_coc";
         }

@@ -6,6 +6,8 @@ const cs = {}; // Reusable ColumnSet objects.
  This repository mixes hard-coded and dynamic SQL, primarily to show a diverse example of using both.
  */
 
+
+
 class Organizations {
   constructor(db, pgp) {
       this.db = db;
@@ -13,9 +15,45 @@ class Organizations {
       // set-up all ColumnSet objects, if needed:
   }
   async getById(id){
-    return this.db.oneOrNone(sql.getById,{id:+id});
+    return this.db.oneOrNone(sql.getById,{id:+id}).then(organization=>{
+      if(organization){
+        return organization
+      }
+      else{
+        return false;
+      }
+    });
   }
 
+
+  async get(search_string,ror){
+    if(search_string){
+      search_string= " WHERE LOWER(name) ILIKE '%"+search_string.toLowerCase() +"%'";
+    }
+    else{
+      search_string = '';
+    }
+    if(ror==='true'||ror===true){
+      if(search_string.length>0){
+        search_string = search_string + " AND ror_id IS NULL" 
+      }
+      else{
+        search_string = " WHERE ror_id IS NULL"
+      }
+    }
+    return this.db.any(sql.get,{search_string}).then(organizations=>{
+      if(organizations){
+        
+        return organizations;
+      }
+      else{
+        return false;
+      }
+    })
+  }
+
+
+ 
  
   
 //   async get(id,tenant){
@@ -87,18 +125,26 @@ class Organizations {
 //     })
 //   }
 async add(organization){
-  return this.db.one(sql.add,{
-    name: organization.organization_name,
-    url: organization.organization_url,
-    ror_id: organization.ror_id
-  }).then(res=>{
+  return this.db.oneOrNone('SELECT organization_id from organizations WHERE name=$1',organization.organization_name).then(async res =>{
     if(res){
-      return res.organization_id
+      return {exists:true,organization_id:res.organization_id}
     }
     else{
-      return false;
+      return this.db.one(sql.add,{
+        name: organization.organization_name,
+        url: organization.organization_url,
+        ror_id: organization.ror_id
+      }).then(res=>{
+        if(res){
+          return {exists:false,organization_id:res.organization_id}
+        }
+        else{
+          return false;
+        }
+      });
+
     }
-  });
+  })
 }
 //   async add(petition,requester){
 //         return this.db.tx('add-service',async t =>{

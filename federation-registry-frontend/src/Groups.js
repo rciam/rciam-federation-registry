@@ -28,6 +28,7 @@ const GroupsPage = (props) => {
   const [notFound,setNotFound] = useState(false);
   const [isGroupManager,setIsGroupManager] = useState(false);
   useEffect(()=>{
+    localStorage.removeItem('url');
     getData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);

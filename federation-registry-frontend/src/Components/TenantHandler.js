@@ -32,7 +32,6 @@ export const TenantHandler = () => {
     }).then(response=>{
       if(response){
         setTenant(response);
-        console.log(response);
         }
       else{
         setTenant(null);

@@ -45,6 +45,7 @@ const ServiceForm = (props)=> {
   // eslint-disable-next-line
   const [tenant,setTenant] = useContext(tenantContext);
   const [logout,setLogout] = useState(false);
+  const [submitDisabled,setSubmitDisabled] = useState(false);
   const [availabilityCheck,setAvailabilityCheck] = useState(true);
   const formRef = useRef();
   const [disabled,setDisabled] = useState(false);
@@ -60,7 +61,6 @@ const ServiceForm = (props)=> {
   const [showCopyDialog,setShowCopyDialog] = useState(false);
   const [showInitErrors,setShowInitErrors] = useState(false);
   useEffect(()=>{
-    console.log(props);
 
     countries = [];
     if(service_id||petition_id){
@@ -76,7 +76,7 @@ const ServiceForm = (props)=> {
         if(props.disabled||props.review){
         setDisabled(true);
     }
-    let extra_fields =tenant.form_config.extra_fields
+    let extra_fields =tenant.form_config.extra_fields;
     Object.keys(extra_fields).forEach((name,index)=>{
       if(!Object.keys(props.initialValues).includes(name)){
         props.initialValues[name]= extra_fields[name].default;
@@ -139,11 +139,17 @@ const ServiceForm = (props)=> {
           then: yup.boolean().oneOf([true],tenant.form_config.extra_fields[k].error)
           })
       }
-      else if(Object.keys((tenant.form_config.extra_fields)).includes(k) && k ==='aup_uasdasdri'){
-        return yup.string().nullable().matches(reg.regSimpleUrl,t('yup_url')).when('integration_environment',{
-        is:(integration_environment)=> tenant.form_config.extra_fields[k].required.includes(integration_environment),
-        then: yup.string().required(t('yup_required'))
-        })
+      else if(Object.keys((tenant.form_config.extra_fields)).includes(k) && k ==='aup_uri'){
+        return yup.string().nullable().matches(reg.regSimpleUrl,(item)=>{
+              if(item.value){
+                return t('yup_url');
+              }else{
+                return null;
+              }
+            }).when('integration_environment',{
+          is:(integration_environment)=> tenant.form_config.extra_fields[k].required.includes(integration_environment),
+          then: yup.string().nullable().required(t('yup_required'))
+          })
       }
     })
   ));
@@ -352,8 +358,8 @@ const ServiceForm = (props)=> {
         }
       })
     }),
-    organization_name:yup.string().required('This is a required field'),
-    organization_url:yup.string().matches(reg.regSimpleUrl,t('yup_secure_url')).required('This is a required field'),
+    organization_name:yup.string().nullable().required('This is a required field'),
+    organization_url:yup.string().nullable().matches(reg.regSimpleUrl,t('yup_secure_url')).required('This is a required field'),
     entity_id:yup.string().matches(reg.regUrl,t('yup_secure_url')).nullable().when('protocol',{
       is:'saml',
       then: yup.string().min(4,t('yup_char_min') + ' ('+4+')').test('testAvailable',t('yup_entity_id'),function(value){
@@ -536,15 +542,17 @@ const ServiceForm = (props)=> {
           },
           body:JSON.stringify({organization_name:data.organization_name,organization_url:data.organization_url,ror_id:data.ror_id})
       }).then(response=>{
-        if(response.status===200){
+        if(response.status===200||response.status===409){
           return response.json();
+        }
+        else if(response.status===401){
+          setLogout(true);
         }
         else{
           return false
         }
       }).then((response)=>{
         if(response){
-          console.log(response);
           return response.organization_id;
         }
         else{
@@ -585,7 +593,7 @@ const ServiceForm = (props)=> {
           return false;
         }
         else{
-          setMessage(t('review_error +response.status'));
+          setMessage(t('review_error') +response.status);
         }
       });
   }
@@ -595,7 +603,6 @@ const ServiceForm = (props)=> {
   const postApi= async (data)=>{
     data = gennerateValues(data);
     let organization_id = await addOrganization(data);
-    console.log(organization_id);
     if(organization_id){
       data.organization_id = organization_id;
       if(!props.type){
@@ -607,7 +614,7 @@ const ServiceForm = (props)=> {
       }
     }
     else{
-      console.log('Here');
+      setNotFound(true)
     }
   }
 
@@ -651,6 +658,7 @@ const ServiceForm = (props)=> {
       innerRef={formRef}
       validate={dynamicValidation}
       onSubmit={(values,{setSubmitting}) => {
+        setSubmitDisabled(true);
         setHasSubmitted(true);
         if(!(values.token_endpoint_auth_method==="client_secret_jwt"||values.token_endpoint_auth_method==="private_key_jwt")){
           values.token_endpoint_auth_signing_alg=null;
@@ -709,7 +717,7 @@ const ServiceForm = (props)=> {
                       :
                       <React.Fragment>
                         <div className="form-submit-cancel-container">
-                          <Button className='submit-button' type="submit" variant="primary" ><FontAwesomeIcon icon={faCheckCircle}/>{t('button_submit')}</Button>
+                          <Button className='submit-button' type="submit" disabled={submitDisabled} variant="primary" ><FontAwesomeIcon icon={faCheckCircle}/>{t('button_submit')}</Button>
                           {petition_id?<Button variant="danger" onClick={()=>deletePetition()}><FontAwesomeIcon icon={faBan}/>{t('button_cancel_request')}</Button>:null}
                         </div>
                       </React.Fragment>
@@ -800,6 +808,34 @@ const ServiceForm = (props)=> {
                           changed={props.changes?props.changes.country:null}
                         />
                       </InputRow>
+                      <InputRow  moreInfo={tenant.form_config.more_info.organization_name} required={true} title="Organization" description="Search for your orginization" error={errors.organization_name} touched={touched.organization_name}>
+                          <OrganizationField
+                            name='organization_name'
+                            placeholder='Type the name of your organization'
+                            onChange={handleChange}
+                            values={values}
+                            isInvalid={hasSubmitted?!!errors.organization_name:(!!errors.organization_name&&touched.organization_name)}
+                            setFieldTouched={setFieldTouched}
+                            validateForm={validateForm}
+                            validateField={validateField}
+                            disabled={disabled}
+                            setFieldValue={setFieldValue}
+                            setDisabledOrganizationFields={setDisabledOrganizationFields} 
+                            changed={props.changes?props.changes.organization_name:null}
+                          />
+                        </InputRow>
+                        <InputRow  moreInfo={tenant.form_config.more_info.service_name} title="Organization Website Url" required={true} description="Link to the organization's website" error={errors.organization_url} touched={touched.organization_url}>
+                          <SimpleInput
+                            name='organization_url'
+                            placeholder={t('form_type_prompt')}
+                            onChange={handleChange}
+                            value={values.organization_url}
+                            isInvalid={hasSubmitted?!!errors.organization_url:(!!errors.organization_url&&touched.organization_url)}
+                            onBlur={handleBlur}
+                            disabled={disabled||disabledOrganizationFields.includes('organization_url')}
+                            changed={props.changes?props.changes.organization_url:null}
+                          />
+                        </InputRow>
                       <InputRow  moreInfo={tenant.form_config.more_info.policy_uri} title={t('form_policy_uri')} required={true&&values.integration_environment==='production'} description={t('form_policy_uri_desc')} error={errors.policy_uri} touched={touched.policy_uri}>
                         <SimpleInput
                           name='policy_uri'
@@ -813,10 +849,13 @@ const ServiceForm = (props)=> {
                         />
                       </InputRow>
 
+
+                      
+
                       {Object.entries(tenant.form_config.extra_fields).map(([name,field_data])=>{
-                        if(field_data.tab==='general'){
-                          field_data.name = name;
-                          return generateInput({
+                        field_data.name = name;                    
+                        return (field_data.tab==='general'?<React.Fragment key={name}>
+                          {generateInput({
                             field_data,
                             values,
                             errors,
@@ -827,8 +866,8 @@ const ServiceForm = (props)=> {
                             disabled,
                             handleBlur,
                             tenant
-                          });
-                        }
+                          })}
+                      </React.Fragment>:null)                    
                       })
 
                       
@@ -1115,34 +1154,6 @@ const ServiceForm = (props)=> {
                        </React.Fragment>
                      :null}
                     </Tab>
-                    <Tab eventKey="organization" title="Organization">
-                      <InputRow  moreInfo={tenant.form_config.more_info.organization_name} required={true} title="Organization" description="Search for your orginization" error={errors.organization_name} touched={touched.organization_name}>
-                          <OrganizationField
-                            name='organization_name'
-                            placeholder='Type the name of your organization'
-                            onChange={handleChange}
-                            values={values}
-                            isInvalid={hasSubmitted?!!errors.organization_name:(!!errors.organization_name&&touched.organization_name)}
-                            onBlur={handleBlur}
-                            disabled={disabled}
-                            setFieldValue={setFieldValue}
-                            setDisabledOrganizationFields={setDisabledOrganizationFields} 
-                            changed={props.changes?props.changes.organization_name:null}
-                          />
-                        </InputRow>
-                        <InputRow  moreInfo={tenant.form_config.more_info.service_name} title="Organization Website Url" required={true} description="Link to the organization's website" error={errors.organization_url} touched={touched.organization_url}>
-                          <SimpleInput
-                            name='organization_url'
-                            placeholder={t('form_type_prompt')}
-                            onChange={handleChange}
-                            value={values.organization_url}
-                            isInvalid={hasSubmitted?!!errors.organization_url:(!!errors.organization_url&&touched.organization_url)}
-                            onBlur={handleBlur}
-                            disabled={disabled||disabledOrganizationFields.includes('organization_url')}
-                            changed={props.changes?props.changes.organization_url:null}
-                          />
-                        </InputRow>
-                    </Tab>
                   </Tabs>
                   </div>
                   {props.disabled?null:
@@ -1152,7 +1163,7 @@ const ServiceForm = (props)=> {
                         :
                         <React.Fragment>
                         <div className="form-submit-cancel-container">
-                          <Button className='submit-button' type="submit" variant="primary" ><FontAwesomeIcon icon={faCheckCircle}/>Submit</Button>
+                          <Button className='submit-button' type="submit" disabled={submitDisabled} variant="primary" ><FontAwesomeIcon icon={faCheckCircle}/>Submit</Button>
                           {props.type==='delete'||props.type==='edit'?<Button variant="danger" onClick={()=>deletePetition()}><FontAwesomeIcon icon={faBan}/>Cancel Request</Button>:null}
                         </div>
                         </React.Fragment>
@@ -1393,15 +1404,16 @@ function hex(n){
 
 const  generateInput = (props)=>  {
   return (
-    <InputRow  
-      moreInfo={props.tenant.form_config.more_info[props.field_data.name]} 
-      title={props.field_data.title} 
-      key={props.field_data.name} 
-      required={props.field_data.required.includes(props.values.integration_environment)} 
-      error={props.errors[props.field_data.name]?props.errors[props.field_data.name]:null} 
-      touched={props.touched[props.field_data.name]}
-    > 
+   <React.Fragment>
     {props.field_data.type==='boolean'?
+        <InputRow  
+        moreInfo={props.tenant.form_config.more_info[props.field_data.name]} 
+        title={props.field_data.title} 
+        key={props.field_data.name} 
+        required={props.field_data.required.includes(props.values.integration_environment)} 
+        error={props.errors[props.field_data.name]?props.errors[props.field_data.name]:null} 
+        touched={props.touched[props.field_data.name]}
+      > 
       <SimpleCheckbox
       name= {props.field_data.name}
       label={
@@ -1415,7 +1427,17 @@ const  generateInput = (props)=>  {
       onBlur={props.handleBlur}
       changed={props.changes?props.changes[props.field_data.name]:null}
       />
+      </InputRow>
       :props.field_data.type==='string'?
+      <InputRow  
+      description={props.field_data.desc}
+      moreInfo={props.tenant.form_config.more_info[props.field_data.name]} 
+      title={props.field_data.title} 
+      key={props.field_data.name} 
+      required={props.field_data.required.includes(props.values.integration_environment)} 
+      error={props.errors[props.field_data.name]?props.errors[props.field_data.name]:null} 
+      touched={props.touched[props.field_data.name]}
+    > 
         <SimpleInput
         name={props.field_data.name}
         placeholder={props.field_data.placeholder}
@@ -1426,10 +1448,11 @@ const  generateInput = (props)=>  {
         disabled={props.disabled}
         changed={props.changes?props.changes[props.field_data.name]:null}
       />
+    </InputRow>
       :null
       }
-    </InputRow>
-                        
+    
+    </React.Fragment>         
   )
 }
 

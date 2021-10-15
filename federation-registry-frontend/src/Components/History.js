@@ -54,7 +54,6 @@ export const HistoryRequest = () =>{
         }
       }).then(response=> {
       if(response){
-        console.log(response.metadata);
         setPetition(response);
       }
     });
@@ -66,8 +65,12 @@ export const HistoryRequest = () =>{
       <Link to={"/"+tenant_name+"/home"}>{t('link_home')}</Link>
       <span className="link-seperator">/</span>
       <Link to={"/"+tenant_name+"/services"}>{t('link_petitions')}</Link>
+      {service_id?
+      <React.Fragment>
       <span className="link-seperator">/</span>
       <span className="fake-link" onClick={()=>{history.push("/"+tenant_name+"/services/"+service_id+"/history")}}>{t('history_title')}</span>
+      </React.Fragment>:null
+      }      
       <span className="link-seperator">/</span>
       {t('history_view_state')}
     </div>

@@ -8,7 +8,7 @@ var config = require('../config');
 var hbs = require('handlebars');
 nodeMailer = require('nodemailer');
 const customLogger = require('../loggers.js');
-const {delay,readHTMLFile} = require('./helpers');
+const {delay,readHTMLFile,createTransport} = require('./helpers');
 
 const outdatedNotificationsWorker =  async(interval_seconds) =>{
   
@@ -97,18 +97,7 @@ const sendOutdatedNotification = async (data) => {
     if(process.env.NODE_ENV!=='test-docker'&& process.env.NODE_ENV!=='test'){
       var currentDate = new Date();
       readHTMLFile(path.join(__dirname, '../html/outdated_notif.hbs'), function(err, html) {
-        let transporter = nodeMailer.createTransport({
-            host: 'relay.grnet.gr',
-            port: 587,
-            secure: false
-        });
-        // let transporter = nodeMailer.createTransport({
-        //   service: 'gmail',
-        //   auth: {
-        //     user: 'orionaikido@gmail.com',
-        //     pass: ''
-        //   }
-        // });
+        let transporter = createTransport();
         var template = hbs.compile(html);
         var replacements = {
           username:data.username,

@@ -25,7 +25,8 @@ const Home = ()=> {
         activateInvitation();
       }
       else if(redirectUrl){
-        if(redirectUrl.split('/')[0]===tenant_name){
+        if(redirectUrl.split('/')[1]===tenant_name){
+          localStorage.removeItem('url');
           history.push(redirectUrl);
         }
         else{

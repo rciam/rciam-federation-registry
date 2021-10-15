@@ -13,7 +13,7 @@ import Container from 'react-bootstrap/Container';
 import {Logout,NotFound} from './Components/Modals';
 import { diff } from 'deep-diff';
 import { useTranslation } from 'react-i18next';
-import {tenantContext} from './context.js';
+import {tenantContext,userContext} from './context.js';
 
 const EditService = (props) => {
     // eslint-disable-next-line
@@ -28,8 +28,11 @@ const EditService = (props) => {
     const [logout,setLogout] = useState(false);
     const [notFound,setNotFound] = useState(false);
     const tenant = useContext(tenantContext);
+    const [user] = useContext(userContext);
+
     
     useEffect(()=>{
+      localStorage.removeItem('url');
       getData();
       // eslint-disable-next-line react-hooks/exhaustive-deps
     },[]);
@@ -81,7 +84,6 @@ const EditService = (props) => {
             helper[property] = 'N'; 
           }
         }
-        console.log(helper);
         // eslint-disable-next-line react-hooks/exhaustive-deps
 
         setEditPetition(petitionData.petition);
@@ -107,6 +109,7 @@ const EditService = (props) => {
             return false
           }
           if(response.status===404){
+            
             setNotFound(true);
             return false;
           }
@@ -143,9 +146,13 @@ const EditService = (props) => {
           }
         }).then(response=> {
           if(response){
-            console.log(response.metadata);
-            // console.log(...response.metadata)
-            setPetitionData(response);
+            if(props.review&&!user.review&&response&&response.petition.integration_environment!=='development'){
+              setNotFound(true);
+            }
+            else{
+              // console.log(...response.metadata)
+              setPetitionData(response);
+            }
           }
         });
       }
@@ -153,12 +160,13 @@ const EditService = (props) => {
 
   return (
     <React.Fragment>
+      <Logout logout={logout}/>
+      <NotFound notFound={notFound}/>
     {!((petitionData||!petition_id)&&(!service_id||service))?<LoadingBar loading={true}/>:
       <React.Fragment>
        {props.review?
         <React.Fragment>
-          <Logout logout={logout}/>
-          <NotFound notFound={notFound}/>
+          
           {
             petitionData.metadata.type==='edit'?
               <React.Fragment>
@@ -182,7 +190,7 @@ const EditService = (props) => {
                 {petitionData?
                   <React.Fragment>
                     <RequestedReviewAlert comment={props.comment} />
-                    <ServiceForm initialValues={petitionData.petition} {...props}/>
+                    <ServiceForm initialValues={petitionData.petition} {...petitionData.metadata} {...props}/>
                   </React.Fragment>:<LoadingBar loading={true}/>}
               </React.Fragment>
             :
@@ -209,7 +217,7 @@ const EditService = (props) => {
             <RequestedChangesAlert comment={petitionData.metadata.comment} tab1={service} tab2={service} {...petitionData.metadata} {...props}/>
             :petitionData.metadata.type==='create'?
             <React.Fragment>
-              {props.comment?
+              {petitionData.metadata.type?
                 <React.Fragment>
                   <Alert variant='warning' className='form-alert'>
                     {t('edit_changes_info')}
@@ -259,6 +267,7 @@ const ViewService = (props)=>{
   const [logout,setLogout] = useState(false);
   const [notFound,setNotFound] = useState(false);
   useEffect(()=>{
+    localStorage.removeItem('url');
     getData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);

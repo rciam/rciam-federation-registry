@@ -14,10 +14,15 @@ import Tooltip from 'react-bootstrap/Tooltip';
 import Overlay from 'react-bootstrap/Overlay';
 import { useTranslation } from 'react-i18next';
 import countryData from 'country-region-data';
+import {Logout,NotFound} from './Modals.js';
 import CopyToClipboardComponent from './CopyToClipboard.js'
 import {tenantContext} from '../context.js';
 import { Typeahead } from 'react-bootstrap-typeahead'; // ES2015
 import 'react-bootstrap-typeahead/css/Typeahead.css';
+import * as config from '../config.json';
+import {useParams } from "react-router-dom";
+
+
 // import {removeA} from '../helpers.js';
 
 /*
@@ -56,24 +61,15 @@ export function SimpleInput(props){
 
 
 export function OrganizationField(props){
-  const [show, setShow] = useState(false);
+  //const [show, setShow] = useState(false);
   const target = useRef(null);
-  const [singleSelections, setSingleSelections] = useState([]);
+  const [singleSelections, setSingleSelections] = useState((props.values.organization_name?[props.values.organization_name]:[]));
   const [organizations,setOrganizations] = useState({});
-  useEffect(()=>{
-    if(props.values.organization_name){
-      setSingleSelections([props.values.organization_name]);
-    }
-  },[])
- 
-
-  useEffect(()=>{
-    getOrganizations(singleSelections[0]?singleSelections[0]:"");
-  },[singleSelections])
-
+  const [notFound,setNotFound] = useState(false);
+  const [logout,setLogout] = useState(false);
+  let {tenant_name} = useParams();
   const getOrganizations = (searchString) =>{
-    console.log(searchString);
-    console.log(typeof(searchString))
+
     if(true){
       fetch("https://api.ror.org/organizations"+(searchString?("?query="+searchString):''), {
         method:'GET',
@@ -84,78 +80,148 @@ export function OrganizationField(props){
           if(response.status===200||response.status===304){
             return response.json();
           }
+          else if(response.status===401){
+            setLogout(true);
+            return false;
+          }
+          else if(response.status===404){
+            setNotFound('No invitations found');
+            return false;
+          }
           else {
             return false
           }
-        }).then(response=>{
+        }).then(ror_response=>{
             let options = {};
-            // if(searchString){
-            //   options[searchString+ " (Add New Organization)"] = {};
-            //   options[searchString+ " (Add New Organization)"].url = null;
-            // }
-
-            if(response){
+            let exists = false;
+            
+            fetch(config.host+'tenants/'+tenant_name+'/organizations?ror=true'+(searchString?("&search_string="+searchString):''),{
+              method:'GET',
+              credentials:'include',
+              headers:{
+                'Content-Type':'application/json',
+                'Authorization': localStorage.getItem('token')
+              }
+            }).then(response=>{
+              if(response.status===200||response.status===304){
+                return response.json();
+              }
+              else if(response.status===401){
+                setLogout(true);
+                return false;
+              }
+              else if(response.status===404){
+                setNotFound('No invitations found');
+                return false;
+              }
+              else{
+                return false
+              }
+            }).then(response=>{
+              if(response){
                 //options[searchString]     
                 let loaded = false;     
-                response.items.forEach((item,index)=>{
-                  
-                  options[item.name] = {};
-                  options[item.name].url=(item.links[0]?item.links[0]:"");
-                  options[item.name].ror_id = item.id;
-                  
-                  if(item.name===singleSelections[0]&&options[item.name].url){
-                    loaded = true
+
+                response.organizations.forEach((item,index)=>{
+                  if(searchString===item.organization_name){
+                    exists = true;
                   }
+                  options[item.organization_name] = {};
+                  options[item.organization_name].url = item.organization_url;
+                  options[item.organization_name].ror_id = null;
+                  options[item.organization_name].id = item.organization_id;
                 })
+                if(ror_response&&ror_response.items){
+                  ror_response.items.forEach((item,index)=>{
+                    if(searchString===item.name){
+                      exists = true;
+                    }
+                    options[item.name] = {};
+                    options[item.name].url=(item.links[0]?item.links[0]:"");
+                    options[item.name].ror_id = item.id;
+                    
+                    if(item.name===singleSelections[0]&&options[item.name].url){
+                      loaded = true
+                    }
+                  })
+                }
                 if(loaded){
                   props.setDisabledOrganizationFields(['organization_url']);                  
                 }
                 else{
-                  props.setDisabledOrganizationFields([]);                  
-
+                  props.setDisabledOrganizationFields([]);
                 } 
+                let newOption = {};
+                if(!exists&& searchString.length>0){
+                  newOption[searchString+ " (Add New Organization)"] = {};
+                  newOption[searchString+ " (Add New Organization)"].url = null;
+                }
                 
-                setOrganizations(options);
+                setOrganizations({...newOption,...options});
             }
             else{
               setOrganizations(options);
             }
+            })
+
+            
           }
         ).catch((err)=>{console.log(err); alert('Error')});
     }
   }
+
+  useEffect(()=>{
+    getOrganizations(singleSelections[0]?singleSelections[0]:"");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[singleSelections])
+
+  const handleChange = async (selected,index) => {
+    if(selected&&selected[0]){                         
+      if(selected[0].includes(" (Add New Organization)","")){
+      }
+      selected[0]= selected[0].replace(" (Add New Organization)","");
+    }
+
+    let organization = (organizations[selected[0]]?organizations[selected[0]]:{});
+    props.setFieldValue('ror_id',organization.ror_id,false)
+    props.setFieldValue('organization_id',organization.organization_id,false);
+    props.setFieldValue('organization_name',(selected&&selected[0]?selected[0]:""),false).then(()=>{
+      props.validateField('organization_name');
+    });
+    
+    if(organization.url){
+      props.setDisabledOrganizationFields(['organization_url']);
+    }
+    else{
+      props.setDisabledOrganizationFields([]);
+    }
+     props.setFieldValue('organization_url',(organizations[selected[0]]&&organizations[selected[0]].url?organizations[selected[0]].url:''),false).then(()=>{
+      props.validateField('organization_url');       
+     });
+     setSingleSelections(selected);
+
+  } 
+  
   return (
         <React.Fragment>
+          <Logout logout={logout}/>
+          <NotFound notFound={notFound}/>
           <Form.Group>
             <InputGroup>  
               <InputGroup.Text><FontAwesomeIcon icon={faSearch}/></InputGroup.Text>
               <Typeahead
                 id="basic-typeahead-single"
                 labelKey="name"
-                onInputChange={(e)=>{getOrganizations(e);}}
-                onChange={(selected,index)=>{
-                  console.log(selected);
+                name='organization_name'
+                onBlur={()=>{props.setFieldTouched('organization_name')}}
+                onInputChange={(e)=>{getOrganizations(e);
                   
-                  if(selected&&selected[0]){
-                                        
-                    if(selected[0].includes(" (Add New Organization)","")){
-                    }
-                    selected[0]= selected[0].replace(" (Add New Organization)","");
-                  
-                  }
-                  let organization = (organizations[selected[0]]?organizations[selected[0]]:{});
-                  props.setFieldValue('ror_id',organization.ror_id)
-                  props.setFieldValue('organization_id',organization.organization_id)
-                  props.setFieldValue('organization_name',(selected&&selected[0]?selected[0]:""));
-                  if(organization.url){
-                    props.setDisabledOrganizationFields(['organization_url']);
-                  }
-                  else{
-                    props.setDisabledOrganizationFields([]);
-                  }
-                  props.setFieldValue('organization_url',(organizations[selected[0]]&&organizations[selected[0]].url?organizations[selected[0]].url:''));
-                  setSingleSelections(selected);
                 }}
+                isInvalid={props.isInvalid}
+                onChange={(selected,index)=>{
+                  
+                  handleChange(selected,index);
+                                  }}
                 options={Object.keys(organizations)}
                 disabled={props.disabled}
                 ref={target}
@@ -1052,7 +1118,7 @@ function MyOverLay(props) {
   return (
     <Overlay target={props.target.current}  show={show} placement="right">
       {propsOv => (
-        <Tooltip id="overlay-example" placement={propsOv.placement} arrowProps={propsOv.arrowProps} ref={propsOv.ref} style={propsOv.style} outOfBoundaries={propsOv.outofboundaries} >
+        <Tooltip id="overlay-example" placement={propsOv.placement} arrowProps={propsOv.arrowProps} ref={propsOv.ref} style={propsOv.style} outofboundaries={propsOv.outofboundaries} >
           {props.type==="Added"?t('input_added'):props.type==="Deleted"?t('input_deleted'):props.type==="Edited"?t('input_edited'):null}
         </Tooltip>
 
