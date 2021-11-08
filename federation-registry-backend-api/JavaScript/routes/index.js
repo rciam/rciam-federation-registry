@@ -1,5 +1,5 @@
 require('dotenv').config();
-const {petitionValidationRules,validate,validateInternal,tenantValidation,changeContacts,formatPetition,getServiceListValidation,postInvitationValidation,serviceValidationRules,putAgentValidation,postAgentValidation,decodeAms,amsIngestValidation,reFormatPetition,getServicesValidation} = require('../validator.js');
+const {petitionValidationRules,validate,validateInternal,tenantValidation,changeContacts,formatPetition,getServiceListValidation,postInvitationValidation,serviceValidationRules,putAgentValidation,postAgentValidation,decodeAms,amsIngestValidation,reFormatPetition,getServicesValidation,formatCocForValidation} = require('../validator.js');
 const {validationResult} = require('express-validator');
 const qs = require('qs');
 const {v1:uuidv1} = require('uuid');
@@ -51,7 +51,7 @@ router.post('/tenants/:tenant/organizations',authenticate,(req,res,next)=>{
   }
 });
 
-router.get('/tenants/:tenant/organizations',(req,res,next)=>{
+router.get('/tenants/:tenant/organizations',authenticate,(req,res,next)=>{
   try{
     db.organizations.get(req.query.search_string,req.query.ror).then(organizations=>{
       if(organizations){
@@ -64,7 +64,7 @@ router.get('/tenants/:tenant/organizations',(req,res,next)=>{
   }
 });
 
-router.put('/tenants/:tenant/services/validate',adminAuth,getData,serviceValidationRules({optional:true,tenant_param:true,check_available:false,sanitize:true,null_client_id:false}),validateInternal,(req,res,next)=>{
+router.put('/tenants/:tenant/services/validate',adminAuth,getData,formatCocForValidation,serviceValidationRules({optional:true,tenant_param:true,check_available:false,sanitize:true,null_client_id:false}),validateInternal,(req,res,next)=>{
   try{
     // Initialized with O in case there are no new outdated services
     let outdated_ids = [];
@@ -140,7 +140,7 @@ router.get('/tenants/:tenant/services',getServicesValidation(),validate,authenti
 
 // Endpoint used to bootstrap a teant or generaly to import multiple services
 // Add changeContacts to alter contacts
-router.post('/tenants/:tenant/services',adminAuth,tenantValidation(),validate,serviceValidationRules({optional:true,tenant_param:true,check_available:true,sanitize:true,null_client_id:false}),validate,(req,res,next)=> {
+router.post('/tenants/:tenant/services',adminAuth,tenantValidation(),validate,formatCocForValidation,serviceValidationRules({optional:true,tenant_param:true,check_available:true,sanitize:true,null_client_id:false}),validate,(req,res,next)=> {
   let services = req.body;
   // Populate json objects with all necessary fields
   services.forEach((service,index) => {
@@ -650,7 +650,7 @@ router.get('/tenants/:tenant/petitions/:id',authenticate,(req,res,next)=>{
 
 // Add a new client/petition
 // Post petition endpoint
-router.post('/tenants/:tenant/petitions',authenticate,petitionValidationRules(),validate,formatPetition,serviceValidationRules({optional:false,tenant_param:true,check_available:false,sanitize:false,null_client_id:true}),validate,reFormatPetition,asyncPetitionValidation,(req,res,next)=>{
+router.post('/tenants/:tenant/petitions',authenticate,petitionValidationRules(),validate,formatPetition,formatCocForValidation,serviceValidationRules({optional:false,tenant_param:true,check_available:false,sanitize:false,null_client_id:true}),validate,reFormatPetition,asyncPetitionValidation,(req,res,next)=>{
   res.setHeader('Content-Type', 'application/json');
   if(req.user.role.actions.includes('add_own_petition')){
     try{
@@ -666,7 +666,7 @@ router.post('/tenants/:tenant/petitions',authenticate,petitionValidationRules(),
                 if(id){
                   res.status(200).json({id:id});
                   await t.user.getUsersByAction('review_notification',req.params.tenant).then(users=>{
-                    sendMail({subject:'New Petition to Review',service_name:req.body.service_name,tenant:req.params.tenant,url:"/services/"+req.body.service_id+"/requests/"+id+"/review"},'reviewer-notification.html',users);
+                    sendMail({subject:'New Petition to Review',service_name:req.body.service_name,tenant:req.params.tenant,url:"/services/"+req.body.service_id+"/requests/"+id+"/review",integration_environment:req.body.integration_environment},'reviewer-notification.html',users);
                   }).catch(error=>{
                     next('Could not sent email to reviewers:' + error);
                   });
@@ -684,7 +684,7 @@ router.post('/tenants/:tenant/petitions',authenticate,petitionValidationRules(),
             if(id){
               res.status(200).json({id:id});
               await t.user.getUsersByAction('review_notification',req.params.tenant).then(users=>{
-                sendMail({subject:'New Petition to Review',service_name:req.body.service_name,tenant:req.params.tenant,url:(req.body.service_id?"/services/"+req.body.service_id:"")+"/requests/"+id+"/review"},'reviewer-notification.html',users);
+                sendMail({subject:'New Petition to Review',service_name:req.body.service_name,tenant:req.params.tenant,url:(req.body.service_id?"/services/"+req.body.service_id:"")+"/requests/"+id+"/review",integration_environment:req.body.integration_environment},'reviewer-notification.html',users);
               }).catch(error=>{
                 next('Could not sent email to reviewers:' + error);
               });
@@ -737,7 +737,7 @@ router.delete('/tenants/:tenant/petitions/:id',authenticate,(req,res,next)=>{
 
 
 // PUT Petition Endpoint
-router.put('/tenants/:tenant/petitions/:id',authenticate,petitionValidationRules(),validate,formatPetition,serviceValidationRules({optional:false,tenant_param:true,check_available:false,sanitize:false,null_client_id:true}),validate,reFormatPetition,asyncPetitionValidation,(req,res,next)=>{
+router.put('/tenants/:tenant/petitions/:id',authenticate,formatPetition,formatCocForValidation,serviceValidationRules({optional:false,tenant_param:true,check_available:false,sanitize:false,null_client_id:true}),validate,reFormatPetition,asyncPetitionValidation, (req,res,next)=>{
   if(req.user.role.actions.includes('update_own_petition')){
     return db.task('update-petition',async t =>{
       try{

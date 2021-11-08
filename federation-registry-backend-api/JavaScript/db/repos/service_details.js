@@ -38,7 +38,6 @@ class ServiceDetailsRepository {
 
     async addMultiple(services){
       const query = this.pgp.helpers.insert(services,cs.insert_multi,'service_details')+"RETURNING id";
-      console.log(query);
       return this.db.any(query)
       .then(service_ids => {
           services.forEach((service,index)=> {

@@ -6,6 +6,7 @@ const customLogger = require('./loggers.js');
 var config = require('./config');
 const {db} = require('./db');
 const { runInNewContext } = require('vm');
+const e = require('express');
 let countryCodes =[];
 var stringConstructor = "test".constructor;
 countryData.forEach(country=>{
@@ -85,8 +86,7 @@ const isEmpty = (value) => {
   return !isNotEmpty(value);
 }
 
-const serviceValidationRules = (options) => {
-
+const serviceValidationRules = (options,req) => {
   const required = (value,req,pos)=>{
     if(options.optional){
       if(isEmpty(value)){
@@ -191,14 +191,14 @@ const serviceValidationRules = (options) => {
       body('*.contacts').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Service Contacts missing').if((value)=> {
         return value&&(Array.isArray(value)&&value.length!==0)
       }).isArray({min:1}).withMessage('Service Contacts must be an array').custom((value,{req,location,path})=> {
-        let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant
+        let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
+        let pos = path.match(/\[(.*?)\]/)[1];
         let success = true;
         try{
           value.map((contact,index)=>{
             if(contact.email&&!contact.email.toLowerCase().match(reg.regEmail)||!config.form[tenant].contact_types.includes(contact.type)){
-              success=false
+              throw new Error("Invalid contact format");
             }
-            
           }); 
           config.form[tenant].contact_requirements.forEach((requirement,index)=>{
             let type_array =requirement.type.split(" ");
@@ -212,7 +212,6 @@ const serviceValidationRules = (options) => {
               success=false;
             }
           });
-          
         }
         catch(err){
           if(Array.isArray(value)){
@@ -222,7 +221,13 @@ const serviceValidationRules = (options) => {
             success = true
           }
         }
-          return success}).withMessage('Invalid contact'),
+        if(!success){          
+          optionalError("Contact type missing",req,pos);
+          return true;
+        }else{
+          return true;
+        }
+          }),
       body('*.protocol').exists({checkFalsy:true}).withMessage('Protocol missing').if(value=>{return value}).custom((value,{req,location,path})=> {
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         if(config.form[tenant].protocol.includes(value)){return true}else{return false}}).withMessage('Invalid Prorocol value'),
@@ -567,6 +572,57 @@ const serviceValidationRules = (options) => {
             throw new Error("aup_uri value is not supported for this tenant");
           }
         }
+      }),
+      body('*.service_coc').custom((value,{req,location,path})=>{
+        let pos = path.match(/\[(.*?)\]/)[1];
+        let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
+        let integration_environment = req.body[path.match(/\[(.*?)\]/)[1]].integration_environment;
+        let extra_fields = config.form[tenant].extra_fields;
+        // Iterrate through extra fields for code of condact fields
+        let error = false; 
+        for(const extra_field in extra_fields){
+          // If coc field is required 
+          if(extra_fields[extra_field].tag==='coc'&&extra_fields[extra_field].required.includes(integration_environment)){
+            if(value&& !(value[extra_field]==='true'||value[extra_field]===true)){
+              optionalError(extra_field+ " field should be enabled",req,pos);
+            }
+          }
+        }
+        delete req.body[path.match(/\[(.*?)\]/)[1]].service_coc;
+        return true;
+      }),
+      body('*.organization_id').customSanitizer((value,{req,location,path})=>{
+        let pos = path.match(/\[(.*?)\]/)[1];
+        let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
+        let integration_environment = req.body[path.match(/\[(.*?)\]/)[1]].integration_environment;
+        let extra_fields = config.form[tenant].extra_fields;
+
+        if(!extra_fields.organization.active.includes(integration_environment)){
+          return null;
+        }
+        else{
+          return value;
+        }
+      }).custom((value,{req,location,path})=>{
+        let pos = path.match(/\[(.*?)\]/)[1];
+        let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
+        let integration_environment = req.body[path.match(/\[(.*?)\]/)[1]].integration_environment;
+        if(integration_environment==='development'){
+          return true;
+        }
+        else{
+          if(isEmpty(value)){
+            optionalError("organization_id is missing",req,pos);
+          }
+          else{
+            if(typeof(value)==='number'||typeof(parseInt(value))==='number'){
+              return true;
+            }
+            else{
+              throw new Error("organization_id must be an integer");
+            }
+          }
+        }
       })
         
         
@@ -657,92 +713,51 @@ const validateInternal = (req,res,next) =>{
   }
   next();
 }
+
+const formatCocForValidation = (req,res,next) => {
+  try{
+    if(Array.isArray(req.body)&&req.body[0].service_name){
+      // Group Code of contact properties into one property service_coc
+      req.body.forEach((service,index)=>{
+        if(typeof service === 'object' && service !== null){
+          req.body[index].service_coc = {};
+          let tenant = req.params.tenant?req.params.tenant:service.tenant;
+          let extra_fields = config.form[tenant].extra_fields;
+          for(const extra_field in extra_fields){
+            if(extra_fields[extra_field].tag==='coc'){
+              req.body[index].service_coc[extra_field] = req.body[index][extra_field]=== 'true'||req.body[index][extra_field]=== true?true:false;
+            }
+          } 
+        }
+      })
+    }
+    return next();
+  }
+  catch(err){
+      console.log(err);
+      return res.status(422).send("Invalid Format")
+    }
+  
+}
+
+
 const validate = (req, res, next) => {
 
   try{
     if(req.skipValidation){
       return next();
     }
-    //console.log(req.body);
     
     const errors = validationResult(req);
-    //console.log(req.body);
-
-    // let service_name = 0;
-    // let min = 1000;
-    // let max = 0;
-    // let count = 0;
-    // let total_count = 0;
-    //console.log(req.body);
-    // let max_sec = {
-    //   id_token_timeout_seconds:0,
-    //   access_token_validity_seconds:0,
-    //   refresh_token_validity_seconds:0,
-    //   device_code_validity_seconds:0
-    // }
-    // if(Array.isArray(req.body)){
-    //   req.body.forEach(service=>{
-    //       total_count++;
-    //       if(service.id_token_timeout_seconds>max_sec.id_token_timeout_seconds){
-    //         max_sec.id_token_timeout_seconds = service.id_token_timeout_seconds;
-    //       }
-    //       if(service.device_code_validity_seconds>max_sec.device_code_validity_seconds){
-    //         max_sec.device_code_validity_seconds = service.device_code_validity_seconds;
-    //       }
-    //       if(service.access_token_validity_seconds>max_sec.access_token_validity_seconds){
-    //         max_sec.access_token_validity_seconds = service.access_token_validity_seconds;
-    //       }
-    //       if(service.refresh_token_validity_seconds>max_sec.refresh_token_validity_seconds){
-    //         max_sec.refresh_token_validity_seconds = service.refresh_token_validity_seconds;
-    //       }
-    //       if(!service.dynamically_registered && (!service.contacts || Object.keys(service.contacts).length===0 )){
-    //         count++;
-    //         console.log('client_id: '+service.client_id);
-    //         console.log('contacts: '+service.contacts);
-    //       }
-    //       if(service.client_secret&& service.client_secret.length>max){
-    //         max = service.client_secret.length;
-    //       }
-    //       if(service.client_secret&& service.client_secret.length<min){
-    //         min = service.client_secret.length;
-    //       }
-  
-    //       if(!service.client_id||service.client_id.length===0){
-    //         service_name = service_name + 1;
-    //       }
-  
-    //   })
-
-    // }
-    // console.log('refresh_token_validity_seconds: ' + max_sec.refresh_token_validity_seconds );
-    // console.log('access_token_validity_seconds: ' + max_sec.access_token_validity_seconds );
-    // console.log('id_token_timeout_seconds: ' + max_sec.id_token_timeout_seconds );
-    // console.log('device_code_validity_seconds: ' + max_sec.device_code_validity_seconds );
-
-    
-    // console.log('Total count ' + total_count);
-    // console.log('Count ' + count);
-    // if(Array.isArray(req.body)){
-    //   req.body.forEach((service,index)=>{
-    //     console.log('Service id: '+ index);
-    //     console.log('Service client_id ' + service.client_id);  
-    //     console.log(service.device_code_validity_seconds);
-    //     console.log(service.reuse_refresh_token);
-    //   });
-
-    // }
-      
-
-      if (errors.isEmpty()) {
-        return next();
-      }
-      const extractedErrors = []
-      errors.array().map(err => extractedErrors.push({ [err.param]: err.msg }));
-      var log ={};
-      customLogger(req,res,'warn','Failed schema validation',extractedErrors);
-      res.status(422).send(extractedErrors);
-      return res.end();
-
+    if (errors.isEmpty()) {
+      return next();
+    }
+    const extractedErrors = []
+    errors.array().map(err => extractedErrors.push({ [err.param]: err.msg }));
+    var log ={};
+    customLogger(req,res,'warn','Failed schema validation',extractedErrors);
+    res.status(422).send(extractedErrors);
+    return res.end();
   }catch(err){
     console.log(err);
     return res.status(422).send("Invalid Format")
@@ -764,5 +779,6 @@ module.exports = {
   reFormatPetition,
   getServicesValidation,
   changeContacts,
-  validateInternal
+  validateInternal,
+  formatCocForValidation
 }

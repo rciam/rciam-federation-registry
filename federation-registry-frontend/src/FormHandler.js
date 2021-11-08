@@ -29,9 +29,10 @@ const EditService = (props) => {
     const [notFound,setNotFound] = useState(false);
     const tenant = useContext(tenantContext);
     const [user] = useContext(userContext);
-
+    const [owned,setOwned] = useState(true);
     
     useEffect(()=>{
+      
       localStorage.removeItem('url');
       getData();
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -118,6 +119,7 @@ const EditService = (props) => {
           }
           }).then(response=> {
           if(response){
+            setOwned(response.owned);
             setService(response.service);
           }
         });
@@ -150,6 +152,7 @@ const EditService = (props) => {
               setNotFound(true);
             }
             else{
+              setOwned(response.metadata.owned);
               // console.log(...response.metadata)
               setPetitionData(response);
             }
@@ -189,7 +192,7 @@ const EditService = (props) => {
                 </Alert>
                 {petitionData?
                   <React.Fragment>
-                    <RequestedReviewAlert comment={props.comment} />
+                    <RequestedReviewAlert comment={petitionData.metadata.comment} />
                     <ServiceForm initialValues={petitionData.petition} {...petitionData.metadata} {...props}/>
                   </React.Fragment>:<LoadingBar loading={true}/>}
               </React.Fragment>
@@ -200,7 +203,7 @@ const EditService = (props) => {
                 </Alert>
                 {service?
                   <React.Fragment>
-                    <RequestedReviewAlert comment={props.comment} />
+                    <RequestedReviewAlert comment={petitionData.metadata.comment} />
                     <ServiceForm copy={true} initialValues={service} {...petitionData.metadata} {...props}/>
                   </React.Fragment>:<LoadingBar loading={true}/>}
               </React.Fragment>
@@ -208,6 +211,8 @@ const EditService = (props) => {
         </React.Fragment>
       :
       <React.Fragment>
+        <NotFound notAuthorised={!owned}/>
+
         {!petitionData?
           <RequestedChangesAlert tab1={service} tab2={service}  {...props}/>
         :
@@ -217,7 +222,7 @@ const EditService = (props) => {
             <RequestedChangesAlert comment={petitionData.metadata.comment} tab1={service} tab2={service} {...petitionData.metadata} {...props}/>
             :petitionData.metadata.type==='create'?
             <React.Fragment>
-              {petitionData.metadata.type?
+              {petitionData.metadata.comment?
                 <React.Fragment>
                   <Alert variant='warning' className='form-alert'>
                     {t('edit_changes_info')}

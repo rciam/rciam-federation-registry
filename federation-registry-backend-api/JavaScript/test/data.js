@@ -14,7 +14,15 @@ const create = {
        },{
          "email": "mymail@gmail.com",
          "type": "security"
-       }
+       },
+       {
+        "email": "mymail@gmail.com",
+        "type": "support"
+      },
+      {
+        "email": "mymail@gmail.com",
+        "type": "admin"
+      }
       ],
      metadata_url:null,
      country:"gr",
@@ -60,13 +68,21 @@ const create = {
      integration_environment:"development",
      protocol:"saml",
      country:"gr",
-     contacts:[ {
+     contacts:[{
       "email": "mymail@gmail.com",
       "type": "technical"
     },{
       "email": "mymail@gmail.com",
       "type": "security"
-    }],
+    },
+    {
+     "email": "mymail@gmail.com",
+     "type": "support"
+   },
+   {
+     "email": "mymail@gmail.com",
+     "type": "admin"
+   }],
      metadata_url:'https://metadata.com',
      entity_id:"https://entity_id.com",
      aup_uri:"https://test.com",
@@ -100,14 +116,21 @@ const edit = {
    "website_url":"",
    "integration_environment":"development",
    "protocol":"oidc",
-   "contacts":[
-    {
-      "email": "mymail@gmail.com",
-      "type": "technical"
-    },{
-      "email": "mymail@gmail.com",
-      "type": "security"
-    }
+   "contacts":[{
+    "email": "mymail@gmail.com",
+    "type": "technical"
+  },{
+    "email": "mymail@gmail.com",
+    "type": "security"
+  },
+  {
+   "email": "mymail@gmail.com",
+   "type": "support"
+ },
+ {
+   "email": "mymail@gmail.com",
+   "type": "admin"
+ }
    ],
    "country":"Gr",
    "token_endpoint_auth_method":"private_key_jwt",
@@ -158,7 +181,15 @@ const edit = {
   },{
     "email": "mymail@gmail.com",
     "type": "security"
-  }
+  },
+  {
+   "email": "mymail@gmail.com",
+   "type": "support"
+ },
+ {
+   "email": "mymail@gmail.com",
+   "type": "admin"
+ }
    ],
    metadata_url:'https://metadataedit.com',
    entity_id:"https://entity_id_edit.com",

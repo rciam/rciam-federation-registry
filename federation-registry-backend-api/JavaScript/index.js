@@ -170,7 +170,7 @@ app.use(function (err, req, res, next) {
 
 const port = 5000;
 
-if(config.send_outdated_notif){
+if(config.send_outdated_notifications){
   outdatedNotificationsWorker(config.outdated_notifications_interval_seconds);
 }
 

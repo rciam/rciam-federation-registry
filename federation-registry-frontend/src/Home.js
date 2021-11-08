@@ -62,7 +62,7 @@ const Home = ()=> {
              history.push('/'+tenant_name+'/invitation_error',{error: response.error});
            }
            else {
-             history.push('/'+tenant.name+'/invitations');
+             history.push('/'+tenant_name+'/invitations');
            }
      })
    }
