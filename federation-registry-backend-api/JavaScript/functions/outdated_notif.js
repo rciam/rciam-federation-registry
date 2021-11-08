@@ -11,10 +11,9 @@ const customLogger = require('../loggers.js');
 const {delay,readHTMLFile,createTransport} = require('./helpers');
 
 const outdatedNotificationsWorker =  async(interval_seconds) =>{
-  
-  
   const sendNotif = () =>{
   //  console.log(db);
+    
     db.service_state.getOutdatedOwners().then(async users=>{
       if(users){
         console.log('Sending notication to the users');
@@ -63,6 +62,7 @@ const outdatedNotificationsWorker =  async(interval_seconds) =>{
       catch(error){
         customLogger(null,null,'error',[{type:'outdated_notifications'},{message:'Error when sending notifications about outdated services'},{error:error.stack},{interval:interval_seconds}]);
       }
+
       if(time_passed_sec>interval_seconds){
         sendNotif();
         setInterval(function(){
@@ -103,13 +103,15 @@ const sendOutdatedNotification = async (data) => {
           username:data.username,
           tenant:data.tenant,
           logo_url:config[data.tenant].logo_url,
-          url:process.env.REACT_BASE+'/'+ data.tenant
+          url:process.env.REACT_BASE+'/'+ data.tenant+'/services/'+ data.service_id+'/edit',
+          integration_environment:data.integration_environment,
+          service_name:data.service_name
         }
         var htmlToSend = template(replacements);
         var mailOptions = {
           from: config[data.tenant].sender+" Notifications <noreply@faai.grnet.gr>",
           to : data.email,
-          subject : 'Service Configuration Update Required',
+          subject : 'Service ('+data.service_name+') is outdated [Action Required]',
           html : htmlToSend
         };
         return transporter.sendMail(mailOptions, function (error, response) {

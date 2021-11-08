@@ -1,5 +1,5 @@
 import React,{useEffect,useContext,useState} from 'react';
-import {useParams} from "react-router-dom";
+import {useParams,useLocation,useHistory} from "react-router-dom";
 import * as config from '../config.json';
 import {tenantContext,userContext} from '../context.js';
 import {LoadingPage} from './LoadingPage.js';
@@ -9,15 +9,17 @@ import {Logout} from './Modals';
 export const UserHandler = () => {
   // eslint-disable-next-line
   let {tenant_name} = useParams();
+  const location = useLocation();
   // eslint-disable-next-line
   const [tenant,setTenant] = useContext(tenantContext);
   // eslint-disable-next-line
   const [user,setUser] = useContext(userContext);
   const [logout,setLogout] = useState(false);
+  const history = useHistory();
 
   useEffect(()=>{
     getUser(tenant_name);
-    
+
     // eslint-disable-next-line
   },[]);
 
@@ -37,7 +39,14 @@ export const UserHandler = () => {
             setUser(response.user);           
           }
           else{
-            setLogout(true);
+            
+            if(location.pathname.split('/')[2]==='home'){
+              localStorage.removeItem('token');
+              history.push("/"+tenant_name+'/home')
+            }
+            else{
+              setLogout(true);
+            }
           }
          
       })

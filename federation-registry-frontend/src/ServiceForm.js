@@ -60,6 +60,8 @@ const ServiceForm = (props)=> {
   const [formValues,setFormValues] = useState();
   const [showCopyDialog,setShowCopyDialog] = useState(false);
   const [showInitErrors,setShowInitErrors] = useState(false);
+  const [logoWarning,setLogoWarning] = useState(false);
+
   useEffect(()=>{
 
     countries = [];
@@ -89,6 +91,7 @@ const ServiceForm = (props)=> {
         setRestrictReview(true);
       }
     }
+    //console.log(props.initialValues);
     setFormValues(props.initialValues);
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -106,15 +109,16 @@ const ServiceForm = (props)=> {
         }
       });
   });
-  function imageExists(url, callback) {
+  function imageExists(url) {
     if(url){
       var img = new Image();
-      img.onload = function() { callback(true); };
-      img.onerror = function() { callback(false); };
+      img.onload = function() { setLogoWarning(false); };
+      img.onerror = function() { setLogoWarning(true); };
       img.src = url;
+
     }
     else{
-      callback(true);
+      setLogoWarning(false);
     }
   }
 
@@ -232,15 +236,10 @@ const ServiceForm = (props)=> {
         then: yup.array().min(1,t('yup_required')).nullable().required(t('yup_required'))
       })
     }),
-    logo_uri:yup.string().nullable().test('testImage',t('yup_image_url'),function(imageUrl){
-      return new Promise((resolve,reject)=>{
-        //var imageUrl = 'http://www.google.com/images/srpr/nav_logo14.png';
-        imageExists(imageUrl, function(exists) {
-          resolve(exists);
-          //console.log('RESULT: url=' + imageUrl + ', exists=' + exists);
-        });
-      });
-      }),
+    logo_uri:yup.string().nullable().matches(reg.regSimpleUrl,'Enter a valid Url').test('testImage',t('yup_image_url'),function(imageUrl){
+      imageExists(imageUrl);
+      return true;
+    }),
     country:yup.string().nullable().test('testCountry','Select one of the available options',function(value){return countries.includes(value)}).required(t('yup_required')),
     service_description:yup.string().nullable().required(t('yup_required')),
     contacts:yup.array().min(1,t('yup_required')).nullable().of(yup.object().shape({
@@ -358,8 +357,14 @@ const ServiceForm = (props)=> {
         }
       })
     }),
-    organization_name:yup.string().nullable().required('This is a required field'),
-    organization_url:yup.string().nullable().matches(reg.regSimpleUrl,t('yup_secure_url')).required('This is a required field'),
+    organization_name:yup.string().nullable().when(['integration_environment'],{
+      is:(integration_environment)=> tenant.form_config.extra_fields.organization.active.includes(integration_environment),
+      then: yup.string().nullable().required('This is a required field')
+    }),
+    organization_url:yup.string().nullable().nullable().when(['integration_environment'],{
+      is:(integration_environment)=> tenant.form_config.extra_fields.organization.active.includes(integration_environment),
+      then: yup.string().nullable().matches(reg.regSimpleUrl,t('yup_secure_url')).required('This is a required field')
+    }),
     entity_id:yup.string().matches(reg.regUrl,t('yup_secure_url')).nullable().when('protocol',{
       is:'saml',
       then: yup.string().min(4,t('yup_char_min') + ' ('+4+')').test('testAvailable',t('yup_entity_id'),function(value){
@@ -769,6 +774,7 @@ const ServiceForm = (props)=> {
                           validateField={validateField}
                           isInvalid={hasSubmitted?!!errors.logo_uri:(!!errors.logo_uri&&touched.logo_uri)}
                           disabled={disabled}
+                          warning={logoWarning}
                           changed={props.changes?props.changes.logo_uri:null}
                         />
                       </InputRow>
@@ -808,34 +814,39 @@ const ServiceForm = (props)=> {
                           changed={props.changes?props.changes.country:null}
                         />
                       </InputRow>
-                      <InputRow  moreInfo={tenant.form_config.more_info.organization_name} required={true} title="Organization" description="Search for your orginization" error={errors.organization_name} touched={touched.organization_name}>
-                          <OrganizationField
-                            name='organization_name'
-                            placeholder='Type the name of your organization'
-                            onChange={handleChange}
-                            values={values}
-                            isInvalid={hasSubmitted?!!errors.organization_name:(!!errors.organization_name&&touched.organization_name)}
-                            setFieldTouched={setFieldTouched}
-                            validateForm={validateForm}
-                            validateField={validateField}
-                            disabled={disabled}
-                            setFieldValue={setFieldValue}
-                            setDisabledOrganizationFields={setDisabledOrganizationFields} 
-                            changed={props.changes?props.changes.organization_name:null}
-                          />
-                        </InputRow>
-                        <InputRow  moreInfo={tenant.form_config.more_info.service_name} title="Organization Website Url" required={true} description="Link to the organization's website" error={errors.organization_url} touched={touched.organization_url}>
-                          <SimpleInput
-                            name='organization_url'
-                            placeholder={t('form_type_prompt')}
-                            onChange={handleChange}
-                            value={values.organization_url}
-                            isInvalid={hasSubmitted?!!errors.organization_url:(!!errors.organization_url&&touched.organization_url)}
-                            onBlur={handleBlur}
-                            disabled={disabled||disabledOrganizationFields.includes('organization_url')}
-                            changed={props.changes?props.changes.organization_url:null}
-                          />
-                        </InputRow>
+                      {tenant.form_config.extra_fields.organization.active.includes(values.integration_environment)?
+                      <React.Fragment>
+                        <InputRow  moreInfo={tenant.form_config.more_info.organization_name} required={true} title="Organization" description="Search for your orginization" error={errors.organization_name} touched={touched.organization_name}>
+                            <OrganizationField
+                              name='organization_name'
+                              placeholder='Type the name of your organization'
+                              onChange={handleChange}
+                              values={values}
+                              isInvalid={hasSubmitted?!!errors.organization_name:(!!errors.organization_name&&touched.organization_name)}
+                              setFieldTouched={setFieldTouched}
+                              validateForm={validateForm}
+                              validateField={validateField}
+                              disabled={disabled}
+                              setFieldValue={setFieldValue}
+                              setDisabledOrganizationFields={setDisabledOrganizationFields} 
+                              changed={props.changes?props.changes.organization_name:null}
+                            />
+                          </InputRow>
+                          <InputRow  moreInfo={tenant.form_config.more_info.organization_url} title="Organization Website Url" required={true} description="Link to the organization's website" error={errors.organization_url} touched={touched.organization_url}>
+                            <SimpleInput
+                              name='organization_url'
+                              placeholder={t('form_type_prompt')}
+                              onChange={handleChange}
+                              value={values.organization_url}
+                              isInvalid={hasSubmitted?!!errors.organization_url:(!!errors.organization_url&&touched.organization_url)}
+                              onBlur={handleBlur}
+                              disabled={disabled||disabledOrganizationFields.includes('organization_url')}
+                              changed={props.changes?props.changes.organization_url:null}
+                            />
+                          </InputRow>
+                        </React.Fragment>
+                        :null
+                      }
                       <InputRow  moreInfo={tenant.form_config.more_info.policy_uri} title={t('form_policy_uri')} required={true&&values.integration_environment==='production'} description={t('form_policy_uri_desc')} error={errors.policy_uri} touched={touched.policy_uri}>
                         <SimpleInput
                           name='policy_uri'

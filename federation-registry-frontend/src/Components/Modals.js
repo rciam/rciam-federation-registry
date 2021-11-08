@@ -54,9 +54,9 @@ export const NotFound = (props) => {
     <Translation>
       {t=> {
         return(
-          <Modal show={props.notFound} onHide={handleClose}>
+          <Modal show={props.notFound||props.notAuthorised} onHide={handleClose}>
             <Modal.Header >
-              <Modal.Title>Resourse requested was not found</Modal.Title>
+              <Modal.Title>{props.notFound?"Resourse requested was not found":props.notAuthorised?"Resourse not authorised":null}</Modal.Title>
             </Modal.Header>
             <Modal.Footer>
               <Button variant="secondary" onClick={handleClose}>

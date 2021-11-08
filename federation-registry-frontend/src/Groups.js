@@ -324,12 +324,17 @@ const GroupsPage = (props) => {
     <ConfirmationModal active={confirmationData.action?true:false} setActive={setConfirmationData} action={()=>{if(confirmationData.action==='cancel'){cancelInvitation(...confirmationData.args)}else{removeMember(...confirmationData.args)}}} title={confirmationData.title} message={confirmationData.message} accept={'Yes'} decline={'No'}/>
 
       <ProcessingRequest active={sending}/>
+     
       <Tabs className="manage_owners_tabs" defaultActiveKey="owners" id="uncontrolled-tab-example">
 
                   <Tab eventKey="owners" title="View Owners">
                     <LoadingBar loading={loading}>
-
-                      <h3 className="group_title">Group Members</h3>
+                      
+                      
+                      <h2 className="group_page_main_title">{isGroupManager?"Owners Group Managment Page":"Owners Group Page"}</h2>
+                        <p>Owner group members can view, edit and create service requests for this service. Owner group managers can also manage the members of this owners group by inviting or removing users.</p>
+                    
+                      <h4 className="group_title">Group Members</h4>
                         <Table striped bordered hover size='sm' className="groups-table">
                           <thead>
                             <tr>
@@ -402,7 +407,7 @@ const GroupsPage = (props) => {
                         {
                           isGroupManager?
                           <React.Fragment>
-                          <h3 className="group_title">Group Invites</h3>
+                          <h4 className="group_title">Group Invites</h4>
                           <Table striped bordered hover size='sm' className="groups-table groups-invite-table">
                             <thead>
                               <tr>
@@ -505,7 +510,7 @@ const GroupsPage = (props) => {
                         }
                         {isGroupManager||user[0].actions.includes('invite_to_group')?
                           <React.Fragment>
-                            <h3 className="group_title">Send Invites</h3>
+                            <h4 className="group_title">Send Invites</h4>
                             <Row className="group_invite_row">
                               <InputGroup className={error?'invalid-input mb-3':'mb-3'}>
                                 <Form.Control

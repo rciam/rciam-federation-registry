@@ -47,6 +47,8 @@ paths:
       responses:
         "301":
           description: "Redirects back to React App"
+        "401":
+          description: "Tenant is not available" 
         "500":
           description: "Error"
   /tokens/{code}:
@@ -117,6 +119,82 @@ paths:
           description: "Redirects back to React App"
         "500":
           description: "Error"
+  /tenants/{name}/organizations:
+    post:
+      tags:
+      - "Organizations"
+      summary: "Add Organization"
+      description: ""
+      operationId: "postOrganization"
+      consumes:
+        - "application/json"
+      produces:
+        - "application/json"
+      parameters:
+      - in: path
+        type: string
+        name: name
+        description: "Tenant that the request is targeting"
+        required: true
+      - in: "body"
+        name: "body"
+        description: "Organization object"
+        required: true
+        schema:
+          $ref: "#/definitions/PostOrganization"
+      responses:
+        "200":
+          description: "OK"
+        "401":
+          description: "Unauthenticated request"
+        "422":
+          description: "Invalid Data"
+        "500":
+          description: "Internal Error"
+      security:
+      - access_tokenAuth: []
+    get:
+      tags:
+      - "Organizations"
+      summary: "Get organizations"
+      description: ""
+      operationId: "getOrganizations"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - in: path
+        type: string
+        name: name
+        description: "Tenant that the request is targeting"
+        required: true
+      - in: query 
+        type: string
+        name: search_string
+        description: "Search string to filter organizations"
+        required: false
+      - in: query
+        type: boolean
+        name: ror
+        description: "If true returns only orgnanization registered at ror.org"
+      responses: 
+        "200":
+          description: "OK"
+          schema:
+            type: "array"
+            items:
+              type: "object"
+              additionalProperties:
+                $ref: "#/definitions/PostOrganization"
+        "401":
+          description: "Unauthenticated request"
+        "422":
+          description: "Invalid Data"
+        "500":
+          description: "Internal Error"
+      security:
+        - access_tokenAuth: []
   /tenants/{name}/petitions:
     post:
       tags:
@@ -334,13 +412,13 @@ paths:
           description: "Internal Error"
       security:
       - access_tokenAuth: []
-  /tenants/{name}/services:
+  /tenants/{name}/services/list:
     get:
       tags:
       - "Services"
       summary: "Get all available services"
-      description: "Returns all available services"
-      operationId: "getServices"
+      description: "Returns paginated service information for creating a service list"
+      operationId: "getServiceList"
       produces:
       - "application/json"
       parameters:
@@ -386,6 +464,36 @@ paths:
               type: "object"
               additionalProperties:
                 $ref: "#/definitions/Services"
+        "401":
+          description: "Unauthenticated request"
+        "500":
+          description: "Internal Error"
+      security:
+      - access_tokenAuth: []
+  /tenants/{name}/services:
+    get:
+      tags:
+      - "Services"
+      summary: "Get all available services"
+      description: "Returns all available services, some properties are returned only if a "
+      operationId: "getServices"
+      produces:
+      - "application/json"
+      parameters:
+        - in: path
+          type: string
+          name: name
+          description: "Tenant that the request is targeting"
+          required: true
+      responses:
+        "200":
+          description: "OK"
+          schema:
+            type: "array"
+            items:
+              type: "object"
+              additionalProperties:
+                $ref: "#/definitions/Service"
         "401":
           description: "Unauthenticated request"
         "500":
@@ -1130,6 +1238,21 @@ securityDefinitions:
     name: "api_key"
     in: "header"
 definitions:
+  PostOrganization:
+    type: "object"
+    required: 
+      - organization_name
+      - organization_url
+    properties:
+      organization_name:
+        type: "string"
+        description: "Human-readable organization name"
+      organization_url:
+        type: "string"
+        description: "Link to the organizations website"
+      ror_id:
+        type: "string"
+        description: "The id of the organization on the ror.org dataset"
   PostServices:
     type: "array"
     items:

@@ -1,7 +1,7 @@
 import React, {useState, useRef ,useEffect,useContext} from 'react';
 import Col from 'react-bootstrap/Col';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {faSearch} from '@fortawesome/free-solid-svg-icons';
+import {faSearch,faExclamationTriangle} from '@fortawesome/free-solid-svg-icons';
 import initialValues from '../initialValues';
 import { Field, FieldArray,FormikConsumer } from 'formik';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
@@ -130,6 +130,9 @@ export function OrganizationField(props){
                   options[item.organization_name].url = item.organization_url;
                   options[item.organization_name].ror_id = null;
                   options[item.organization_name].id = item.organization_id;
+                  if(item.organization_name ===singleSelections[0]&&options[item.organization_name].url){
+                    loaded= true;
+                  }
                 })
                 if(ror_response&&ror_response.items){
                   ror_response.items.forEach((item,index)=>{
@@ -143,7 +146,7 @@ export function OrganizationField(props){
                     if(item.name===singleSelections[0]&&options[item.name].url){
                       loaded = true
                     }
-                  })
+                  });
                 }
                 if(loaded){
                   props.setDisabledOrganizationFields(['organization_url']);                  
@@ -151,6 +154,7 @@ export function OrganizationField(props){
                 else{
                   props.setDisabledOrganizationFields([]);
                 } 
+               
                 let newOption = {};
                 if(!exists&& searchString.length>0){
                   newOption[searchString+ " (Add New Organization)"] = {};
@@ -206,7 +210,7 @@ export function OrganizationField(props){
         <React.Fragment>
           <Logout logout={logout}/>
           <NotFound notFound={notFound}/>
-          <Form.Group>
+          <Form.Group className='organizations-input'>
             <InputGroup>  
               <InputGroup.Text><FontAwesomeIcon icon={faSearch}/></InputGroup.Text>
               <Typeahead
@@ -1062,7 +1066,6 @@ export  function LogoInput(props){
       ev.target.src = process.env.PUBLIC_URL + '/logo_placeholder.gif';
   }
 
-
   return (
     <React.Fragment>
       <Form.Control
@@ -1083,6 +1086,7 @@ export  function LogoInput(props){
         {props.description}
       </Form.Text>
       <MyOverLay show={props.changed&&show?'string':null} type='Edited' target={target}/>
+      {props.warning&&!props.error?<div className="warning-message"> <FontAwesomeIcon icon={faExclamationTriangle}/>Warning: Image could not be loaded, please makes sure the url points to an image resourse</div>:null}
       {props.error && props.touched ? (typeof(props.error)==='string')?(<div className="error-message">{props.error}</div>):(<div className="error-message">{t('input_image_error')}</div>):null}
       <FormikConsumer>
         {({ validationSchema, validate, onSubmit, ...rest }) => (
