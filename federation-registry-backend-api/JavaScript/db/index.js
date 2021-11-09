@@ -65,7 +65,6 @@ else if(process.env.NODE_ENV==='test-docker'){
 else{
   config = dbConfig;
 }
-
 const db = pgp(config);
 
 // Initializing optional diagnostics:
