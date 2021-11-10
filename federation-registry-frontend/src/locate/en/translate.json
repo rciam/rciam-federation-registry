@@ -108,7 +108,7 @@
     "form_logo":"Logo",
     "form_logo_desc":"URL that points to a logo image, will be displayed on approval page",
     "form_description":"Description",
-    "form_description_desc":"Human-readable text description, plain text format",
+    "form_description_desc":"Human-readable text description, plain text format (max 1000 characters)",
     "form_policy_uri":"Link to Privacy Policy",
     "form_policy_uri_desc":"URL for the Policy Statement of this service, will be displayed to the user",
     "form_contacts":"Contacts",

@@ -64,7 +64,7 @@ router.get('/tenants/:tenant/organizations',authenticate,(req,res,next)=>{
   }
 });
 
-router.put('/tenants/:tenant/services/validate',adminAuth,getData,formatCocForValidation,serviceValidationRules({optional:true,tenant_param:true,check_available:false,sanitize:true,null_client_id:false}),validateInternal,(req,res,next)=>{
+router.put('/tenants/:tenant/services/validate',adminAuth,getData,serviceValidationRules({optional:true,tenant_param:true,check_available:false,sanitize:true,null_client_id:false}),validateInternal,(req,res,next)=>{
   try{
     // Initialized with O in case there are no new outdated services
     let outdated_ids = [];
