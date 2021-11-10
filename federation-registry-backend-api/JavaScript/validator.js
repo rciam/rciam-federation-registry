@@ -90,6 +90,7 @@ const serviceValidationRules = (options,req) => {
   const required = (value,req,pos)=>{
     if(options.optional){
       if(isEmpty(value)){
+    
         req.body[pos].outdated = true;
       }
       return true
@@ -102,7 +103,6 @@ const serviceValidationRules = (options,req) => {
   const requiredOidc = (value,req,pos) => {
       if(options.optional||req.body[pos].protocol!=='oidc'){
         if(isEmpty(value) && req.body[pos].protocol==='oidc'){
-
           req.body[pos].outdated = true;
         }
       return true
@@ -112,7 +112,7 @@ const serviceValidationRules = (options,req) => {
       }
   }
   const optionalError = (error,req,pos) => {
-    if(options.optional){
+    if(options.optional){      
       req.body[pos].outdated = true;
     }
     else{
@@ -607,7 +607,8 @@ const serviceValidationRules = (options,req) => {
         let pos = path.match(/\[(.*?)\]/)[1];
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         let integration_environment = req.body[path.match(/\[(.*?)\]/)[1]].integration_environment;
-        if(integration_environment==='development'){
+        let extra_fields = config.form[tenant].extra_fields;
+        if(!extra_fields.organization.required.includes(integration_environment)){
           return true;
         }
         else{
@@ -622,6 +623,7 @@ const serviceValidationRules = (options,req) => {
               throw new Error("organization_id must be an integer");
             }
           }
+
         }
       })
         

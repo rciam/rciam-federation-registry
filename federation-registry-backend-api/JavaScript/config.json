@@ -112,7 +112,8 @@
         "organization":{
             "title": "Organization",
             "tag": "org",
-            "active": ["production","demo"]
+            "active": ["production","demo"],
+            "required": ["production","demo"]
         },
         "egi_policy":{
           "title": "EGI Policies",
@@ -233,7 +234,8 @@
       "organization":{
         "title": "Organization",
         "tag": "org",
-        "active": ["production","demo"]
+        "active": ["production","demo"],
+        "required": ["production","demo"]
       },
       "eosc_security_policies":{
         "title": "EOSC Security Policies",
