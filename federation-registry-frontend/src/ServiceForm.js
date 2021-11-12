@@ -144,13 +144,14 @@ const ServiceForm = (props)=> {
           })
       }
       else if(Object.keys((tenant.form_config.extra_fields)).includes(k) && k ==='aup_uri'){
-        return yup.string().nullable().matches(reg.regSimpleUrl,(item)=>{
-              if(item.value){
-                return t('yup_url');
-              }else{
-                return null;
-              }
-            }).when('integration_environment',{
+        return yup.string().nullable().test('testAvailable',t('yup_url'),function(value){
+            if(!value){
+              return true
+            }
+            else{
+              return value.match(reg.regSimpleUrl)
+            }
+        }).when('integration_environment',{
           is:(integration_environment)=> tenant.form_config.extra_fields[k].required.includes(integration_environment),
           then: yup.string().nullable().required(t('yup_required'))
           })
@@ -1183,7 +1184,7 @@ const ServiceForm = (props)=> {
 
                   }
                   <ResponseModal message={message} modalTitle={modalTitle}/>
-                  <SimpleModal isSubmitting={isSubmitting} isValid={isValid}/>
+                  <SimpleModal isSubmitting={isSubmitting} isValid={!Object.keys(errors).length}/>
                    {/* <Debug/> */}
 
                 </Form>
