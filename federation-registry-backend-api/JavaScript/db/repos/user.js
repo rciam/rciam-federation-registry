@@ -32,8 +32,8 @@ class User {
     return this.db.any(sql.getTenchicalContacts,{tenant:tenant});
   }
 
-  async getPetitionOwners(id){
-    const query = this.pgp.as.format(sql.getPetitionOwners,{id:+id});
+  async getPetitionOwners(id,tenant){
+    const query = this.pgp.as.format(sql.getPetitionOwners,{id:+id,tenant:tenant});
     return this.db.any(query).then( data => {
       if(data){
         return data;
