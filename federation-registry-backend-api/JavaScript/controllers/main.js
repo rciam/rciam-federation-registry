@@ -19,7 +19,7 @@ const rejectPetition = (req,res,next,db) => {
   db.task('reject-petition',async t =>{
     await t.service_petition_details.review(req.params.id,req.user.sub,'reject',req.body.comment,req.params.tenant).then(async results=>{
       if (results){
-        await t.user.getPetitionOwners(req.params.id).then(async owners=>{
+        await t.user.getPetitionOwners(req.params.id,req.params.tenant).then(async owners=>{
           if(owners){
             await t.user.getUsersByAction('review_notification',req.params.tenant).then(users =>{
                 if(owners[0] && owners[0].service_name){
@@ -60,7 +60,7 @@ const changesPetition = (req,res,next,db) => {
                 await t.service_petition_details.review(req.params.id,req.user.sub,'approved_with_changes',req.body.comment,req.params.tenant).then(async result=>{
                   if(result){
                     res.status(200).json({id});
-                    await t.user.getPetitionOwners(req.params.id).then(async owners=>{
+                    await t.user.getPetitionOwners(req.params.id,req.params.tenant).then(async owners=>{
                       if(owners){
                         await t.user.getUsersByAction('review_notification',req.params.tenant).then(users =>{
                           if(owners[0] && owners[0].service_name){
@@ -152,7 +152,7 @@ const approvePetition = (req,res,next,db) => {
             next(err);});
         }
         res.status(200).json({service_id});
-        await t.user.getPetitionOwners(req.params.id).then(async owners=>{
+        await t.user.getPetitionOwners(req.params.id,req.params.tenant).then(async owners=>{
           if(owners){
             await t.user.getUsersByAction('review_notification',req.params.tenant).then(users =>{
               if(owners[0] && owners[0].service_name){
