@@ -608,8 +608,11 @@ const ServiceForm = (props)=> {
 
   const postApi= async (data)=>{
     data = gennerateValues(data);
-    let organization_id = await addOrganization(data);
-    if(organization_id){
+    let organization_id;
+    if(tenant.form_config.extra_fields.organization.active.includes(data.integration_environment)){
+      organization_id = await addOrganization(data);
+    }
+    if(organization_id||!tenant.form_config.extra_fields.organization.active.includes(data.integration_environment)){
       data.organization_id = organization_id;
       if(!props.type){
         createNewPetition(data);
