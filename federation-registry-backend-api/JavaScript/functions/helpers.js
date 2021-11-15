@@ -336,8 +336,8 @@ const createGgusTickets =  function(data){
 
                   var mailOptions = {
                     from: ticket_data.reviewer_email,
-                    //to : config.ggus_email,
-                    to:"koza-sparrow@hotmaIl.com",
+                    to : config.ggus_email,
+                    //to:"koza-sparrow@hotmaIl.com",
                     subject : "Federation Registry: Service integration to "+ ticket_data.integration_environment + " (" + code + ")",
                     text:`A request was made to `+ type +` a service on the `+ env +` environment
     Service Info
