@@ -4,17 +4,18 @@
 <h5>Dear {{name}}</h5>
 <p>
   {{#ifEquals state "deployed"}}
-      Your 
-      {{#ifEquals deployment_type "create"}} 
-        registration
-      {{/ifEquals}}  
-      {{#ifEquals deployment_type "delete"}}
-        deregistration
-      {{/ifEquals}}
-      {{#ifEquals deployment_type "edit"}}
-        reconfiguration
-      {{/ifEquals}}
-       request submitted at <a href={{url}}>{{url}}</a> was implemented successfully.
+    Your 
+    {{#ifEquals deployment_type "create"}} 
+      registration
+    {{/ifEquals}}  
+    {{#ifEquals deployment_type "delete"}}
+      deregistration
+    {{/ifEquals}}
+    {{#ifEquals deployment_type "edit"}}
+      reconfiguration
+    {{/ifEquals}}
+      request submitted at <a href={{url}}>{{url}}</a> was implemented successfully.
+  {{/ifEquals}}
   {{#ifEquals state "error"}}
     Your 
     {{#ifEquals deployment_type "create"}} 
