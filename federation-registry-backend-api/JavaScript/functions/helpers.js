@@ -10,7 +10,11 @@ var formConfig = require('../config.json');
 
 hbs.registerHelper('loud', function (aString) {
     return aString.toUpperCase()
-})
+});
+
+hbs.registerHelper('ifEquals', function(arg1, arg2, options) {
+  return (arg1 == arg2) ? options.fn(this) : options.inverse(this);
+});
 
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
@@ -220,10 +224,9 @@ const newMemberNotificationMail = (data,managers) => {
     var currentDate = new Date();
     readHTMLFile(path.join(__dirname, '../html/new-member-notification.html'), function(err, html) {
       let transporter = createTransport();
-
-      var replacements = {
+      var replacements = {  
         invitation_mail:data.invitation_mail,
-        username:data.username,
+        username:data.preferred_username,
         email:data.email,
         url:process.env.REACT_BASE+'/'+ data.tenant+'/'+data.url,
         tenant:data.tenant.toUpperCase(),
@@ -231,10 +234,10 @@ const newMemberNotificationMail = (data,managers) => {
         tenant_title:config[data.tenant].sender
       };
       var template = hbs.compile(html);
-      managers.forEach((manager)=>{
+      managers.forEach(async (manager)=>{
         replacements.target_email = manager.email;
-        replacements.username = manager.username;
-
+        replacements.recipient_name = manager.name;
+        await delay(400);
         var htmlToSend = template(replacements);
         var mailOptions = {
           from: config[data.tenant].sender+" Notifications <noreply@faai.grnet.gr>",
