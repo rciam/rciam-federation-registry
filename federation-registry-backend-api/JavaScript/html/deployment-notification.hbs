@@ -1,0 +1,57 @@
+<div style="width:100%;text-align:center;margin-top:0.5;margin-bottom:0.5;">
+  <img src={{logo_url}} style="width:150px;">
+</div>
+<h5>Dear {{name}}</h5>
+<p>
+  {{#ifEquals state "deployed"}}
+      Your 
+      {{#ifEquals deployment_type "create"}} 
+        registration
+      {{/ifEquals}}  
+      {{#ifEquals deployment_type "delete"}}
+        deregistration
+      {{/ifEquals}}
+      {{#ifEquals deployment_type "edit"}}
+        reconfiguration
+      {{/ifEquals}}
+       request submitted at <a href={{url}}>{{url}}</a> was implemented successfully.
+  {{#ifEquals state "error"}}
+    Your 
+    {{#ifEquals deployment_type "create"}} 
+      registration
+    {{/ifEquals}}  
+    {{#ifEquals deployment_type "delete"}}
+      deregistration
+    {{/ifEquals}}
+    {{#ifEquals deployment_type "edit"}}
+      reconfiguration
+    {{/ifEquals}}
+     request could not be deployed due to an internal error, our technical team is currently investigating the issue.
+  {{/ifEquals}}
+Login to the platform for more information.</p>
+<h5>Service info</h5>
+<ul>
+  <li>Service name: {{service_name}}</li>
+  <li>
+    {{#ifEquals state "deployed"}}    
+      {{#ifEquals deployment_type "create"}} 
+        Registered
+      {{/ifEquals}}  
+      {{#ifEquals deployment_type "delete"}}
+        Deregistered
+      {{/ifEquals}}
+      {{#ifEquals deployment_type "edit"}}
+        Reconfigured 
+      {{/ifEquals}}
+       at:
+    {{/ifEquals}}
+    {{#ifEquals state "error"}}  
+      Deployment Date:
+    {{/ifEquals}} {{date}}</li>
+</ul>
+{{#ifEquals state "deployed"}}
+<h5>Thank you from the development team</h5>
+{{/ifEquals}}
+{{#ifEquals state "error"}}
+<h5>Thank you for your patience</h5>
+{{/ifEquals}}

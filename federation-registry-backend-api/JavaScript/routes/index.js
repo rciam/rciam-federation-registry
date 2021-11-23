@@ -436,7 +436,7 @@ router.post('/ams/ingest',checkCertificate,decodeAms,amsIngestValidation(),valid
                     createGgusTickets(ticket_data);
                   }
                   data.forEach(email_data=>{
-                    sendMail({subject:'Service Deployment Result',service_name:email_data.service_name,state:email_data.state,tenant:email_data.tenant},'deployment-notification.html',[{name:email_data.name,email:email_data.email}]);
+                    sendMail({subject:'Service Deployment Result',service_name:email_data.service_name,state:email_data.state,tenant:email_data.tenant,deployment_type:email_data.deployment_type},'deployment-notification.hbs',[{name:email_data.name,email:email_data.email}]);
                   });
                 });
               }
@@ -994,9 +994,11 @@ router.get('/tenants/:tenant/invitations',authenticate,(req,res,next)=>{
 });
 
 
-// Get all invitations for a specific
+// Get all invitations for a specific group
 router.get('/tenants/:tenant/groups/:group_id/invitations',authenticate,(req,res,next)=>{
   try{
+  
+
     db.invitation.getByGroupId(req.params.group_id,req.params.tenant).then(invitations => {
       if(invitations){
         res.status(200).json({invitations});
