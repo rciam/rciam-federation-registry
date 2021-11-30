@@ -1,19 +1,23 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Problem with a Service</title>
+    <title>Service needs to be updated</title>
   </head>
   <body>
     <div style="width:100%;text-align:center;margin-top:0.5;margin-bottom:0.5;">
-      <img src="https://aai-dev.egi.eu/proxy/module.php/themeegi/resources/images/logo.svg" style="width:150px;">
+      <img src={{logo_url}} style="width:150px;">
     </div>
-    <h5>Hello, {{username}}<h5>
+    <h5>Hello, {{username}}</h5>
 
-    <p>A Service you are managing through the Federation Registry Portal needs to be reconfigured because it is not up to date with the latest requirements. Please use the following link to login to the portal to find more details about the issue and update your service.</a>
+    <p>A Service you are managing through the Federation Registry Portal needs to be reconfigured because it is not up to date with the latest requirements. Please use the following link to login to the portal and update your service.</a>
     </p>
+    <ul>
+      <li>Service name: {{service_name}}</li>
+      <li>Integration Environment: {{integration_environment}}</li>
+    </ul>
     <div style="width:100%;text-align:center;margin-top:0.5;margin-bottom:0.5;">
-      <a href={{url}} style="text-decoration:none;color:white;background-color:#207ABA;padding:0.5rem;">Go to Federation Registry</a>
+     <h5><a href={{url}} style="text-decoration:none;color:white;background-color:#207ABA;padding:0.5rem;">Go to Federation Registry</a></h5>
     </div>
-    <h5>Big Thank you from the development team</h5>
+    <h5>Thank you from the development team</h5>
   </body>
 </html>

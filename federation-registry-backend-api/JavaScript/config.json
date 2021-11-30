@@ -1,4 +1,21 @@
 {
+  "egi" :{
+    "logo_url":"https://aai-dev.egi.eu/proxy/module.php/themeegi/resources/images/logo.svg",
+    "base_url":"https://aai.egi.eu/federation",
+    "sender":"EGI Check-in",
+    "contact":"check-in@egi.eu"
+  },
+  "eosc" : {
+    "logo_url":"https://www.eosc-portal.eu/sites/all/themes/theme1/logo.png",
+    "base_url":null,
+    "sender":"EOSC Infrastructure Proxy",
+    "contact":"support@example.org"
+  },
+  "grnet": {
+    "logo_url":"https://upload.wikimedia.org/wikipedia/en/e/e8/Grnet-transp.jpg",
+    "base_url":null,
+    "sender":"support@example.org"
+  },
   "form" : {
     "egi" : {
       "code_of_condact": {
@@ -23,31 +40,126 @@
       "protocol":["oidc","saml"],
       "integration_environment": ["development","demo","production"],
       "grant_types":["authorization_code","client_credentials","urn:ietf:params:oauth:grant-type:token-exchange","urn:ietf:params:oauth:grant-type:device_code","implicit","refresh_token"],
+      "contact_requirements":[
+        {
+          "type":"support",
+          "error":"The Service must have Support contact information"
+        },
+        {
+          "type":"security",
+          "error":"The Service must have Security contact information"
+        },
+        {
+          "type":"technical",
+          "error":"The Serrvice must have Technical contact information"
+        },
+        {
+          "type":"admin",
+          "error": "The Service must have Administrative contact information"
+        }
+      ],
       "contact_types":["admin","technical","support","security"],
       "scope":["openid","email","profile","offline_access","eduperson_entitlement","eduperson_scoped_affiliation","eduperson_unique_id"],
       "invitation_validity_seconds":2592000,
       "token_endpoint_auth_method":["client_secret_basic","client_secret_post","client_secret_jwt","private_key_jwt","none"],
       "token_endpoint_auth_method_title":["Client Secret over HTTP Basic","Client Secret over HTTP POST","Client Secret via symmetrically-signed JWT assertion","Asymmetrically-signed JWT assertion","No authentication"],
       "token_endpoint_auth_signing_alg":["HS256","HS384","HS512","RS256","RS384","RS512","PS256"],
-      "token_endpoint_auth_signing_alg_title":["HMAC using SHA-256 hash algorithm","HMAC using SHA-384 hash algorithm","HMAC using SHA-512 hash algorithm","RSASSA using SHA-256 hash algorithm","RSASSA using SHA-384 hash algorithm","RSASSA using SHA-512 hash algorithm","RSASSA-PSS using SHA-256 and MGF1 with SHA-256"]
+      "token_endpoint_auth_signing_alg_title":["HMAC using SHA-256 hash algorithm","HMAC using SHA-384 hash algorithm","HMAC using SHA-512 hash algorithm","RSASSA using SHA-256 hash algorithm","RSASSA using SHA-384 hash algorithm","RSASSA using SHA-512 hash algorithm","RSASSA-PSS using SHA-256 and MGF1 with SHA-256"],
+      "more_info":{
+        "service_name": "",
+        "client_id":"A Client ID is an identifier associated with an application that assists with client / server OAuth 2.0 authentication for ArcGIS client APIs",
+        "contacts":"",
+        "service_description":"",
+        "website_url":"",
+        "protocol":"",
+        "integration_environment":"",
+        "policy_uri":"",
+        "redirect_uris":"",
+        "logo_uri":"",
+        "metadata_url":"",
+        "entity_id":"",
+        "allow_introspection":"",
+        "token_endpoint_auth_method":"",
+        "code_challenge_method":"",
+        "device_code_validity_seconds":"",
+        "access_token_validity_seconds":"",
+        "refresh_token_validity_seconds":"",
+        "client_secret":"",
+        "country":"",
+        "reuse_refresh_tokens":"",
+        "clear_access_tokens_on_refresh":"",
+        "id_token_timeout_seconds":"",
+        "scope":"",
+        "grant_types":"",
+        "generate_client_secret":"",
+        "token_endpoint_auth_signing_alg":"",
+        "jwks":"",
+        "jwks_uri":"",
+        "egi_policy":"",
+        "dpcoco":""
+      },
+      "extra_fields":{
+        "aup_uri":{
+          "title": "Link to Terms of Use",
+          "desc": "Link to the Acceptable Use Policy / Terms of Use based on the <a href='https://wise-community.org/wise-baseline-aup/' target='_blank' rel='noopener noreferrer'>WISE AUP Baseline template</a>",
+          "type":"string",
+          "tag":"url",
+          "default":"",
+          "tab":"general",
+          "placeholder":"https://",
+          "required":["production"]
+        },
+        "organization":{
+            "title": "Organization",
+            "tag": "org",
+            "active": ["production","demo"],
+            "required": ["production","demo"]
+        },
+        "egi_policy":{
+          "title": "EGI Policies",
+          "desc":"<div>The service complies with the <a href='https://wiki.egi.eu/wiki/Policies_and_Procedures' target='_blank' rel='noopener noreferrer'>EGI Policies</a></div>",
+          "required": ["production"],
+          "type":"boolean",
+          "tag":"coc",
+          "tab":"general",
+          "default": false,
+          "error": "The service must comply with this policy"
+        },
+        "dpcoco":{
+          "title": "Data Protection Code of Conduct",
+          "desc": "The service complies with the <a href='https://wiki.refeds.org/display/CODE/Data+Protection+Code+of+Conduct+Home' target='_blank' rel='noopener noreferrer'>GÉANT Data Protection Code of Conduct version 1</a> or any other code of conduct compatible with legislation and guidelines on data protection and privacy including GDPR",
+          "required": [],
+          "default": false,
+          "tab":"general",
+          "type":"boolean",
+          "tag":"coc",
+          "error": "The service must comply with this policy"
+        }
+
+      }
     },
     "eosc" : {
       "code_of_condact": [
         {
-          "name": "egi_policy",
-          "desc":"Sample Code of contact",
-          "title": "Do you aggree with the egi policies",
+          "name": "eosc_security_policies",
+          "desc":"The service adheres to the EOSC Security Baseline",
+          "title": "EOSC Security Policies",
           "required": ["production","demo"],
-          "link": "https://policy_link.com",
-          "error": "please select"
+          "error": "Service must commply"
         },
         {
-          "name": "egi_policy2",
-          "desc":"Sample Code of contact",
-          "title": "Do you aggree with the egi policies",
+          "name": "eosc_data_protection",
+          "desc":"The service is compliant with the <a href='https://wiki.refeds.org/display/CODE/Data+Protection+Code+of+Conduct+Home'>GEANT Code of Conduct version 1</a> or any other code of conduct compatible with legislation and guidelines on data protection and privacy including GDPR",
+          "title": "Data Protection Code of Conduct",
           "required": [],
-          "link": "https:\/\/policy_link.com",
-          "error": "please select"
+          "error": "Service must commply"
+        },
+        {
+          "name": "eosc_data_protection",
+          "desc":"The service is compliant with the <a href='https://refeds.org/category/research-and-scholarship'>REFEDS Research & Scholarship Entity Category</a>",
+          "title": "Research & Scholarship",
+          "required": [],
+          "error": "Service must commply"
         }
       ],
       "device_code_validity_seconds":30000,
@@ -56,14 +168,107 @@
       "id_token_timeout_seconds":86400,
       "code_challenge_method":[null,"plain","S256"],
       "protocol":["oidc","saml"],
-      "integration_environment": ["development","demo","production"],
+      "integration_environment": ["demo","production"],
       "grant_types":["implicit","authorization_code","refresh_token","client_credentials","urn:ietf:params:oauth:grant_type:redelegate","urn:ietf:params:oauth:grant-type:token-exchange","urn:ietf:params:oauth:grant-type:device_code","urn:ietf:params:oauth:grant-type:jwt-bearer"],
+      "contact_requirements":[
+        {
+          "type":"support technical",
+          "error":"The Service must have Technical and/or Support contact information"
+        },
+        {
+          "type":"security",
+          "error":"The Service must have Security contact information"
+        }
+      ],
       "contact_types":["admin","technical","support","security"],
       "invitation_validity_seconds":2592000,
+      "scope":["openid","email","profile","offline_access","eduperson_entitlement","eduperson_scoped_affiliation","eduperson_unique_id"],
       "token_endpoint_auth_method":["client_secret_basic","client_secret_post","client_secret_jwt","private_key_jwt","none"],
       "token_endpoint_auth_method_title":["Client Secret over HTTP Basic","Client Secret over HTTP POST","Client Secret via symmetrically-signed JWT assertion","Asymmetrically-signed JWT assertion","No authentication"],
       "token_endpoint_auth_signing_alg":["HS256","HS384","HS512","RS256","RS384","RS512","PS256"],
-      "token_endpoint_auth_signing_alg_title":["HMAC using SHA-256 hash algorithm","HMAC using SHA-384 hash algorithm","HMAC using SHA-512 hash algorithm","RSASSA using SHA-256 hash algorithm","RSASSA using SHA-384 hash algorithm","RSASSA using SHA-512 hash algorithm","RSASSA-PSS using SHA-256 and MGF1 with SHA-256"]
+      "token_endpoint_auth_signing_alg_title":["HMAC using SHA-256 hash algorithm","HMAC using SHA-384 hash algorithm","HMAC using SHA-512 hash algorithm","RSASSA using SHA-256 hash algorithm","RSASSA using SHA-384 hash algorithm","RSASSA using SHA-512 hash algorithm","RSASSA-PSS using SHA-256 and MGF1 with SHA-256"],
+      "more_info":{
+        "service_name": "This should be a human readable name",
+        "client_id":"A Client ID is an identifier associated with an application that assists with client / server OAuth 2.0 authentication for ArcGIS client APIs",
+        "contacts":"",
+        "service_description":"",
+        "website_url":"",
+        "protocol":"",
+        "integration_environment":"",
+        "policy_uri":"",
+        "redirect_uris":"",
+        "logo_uri":"",
+        "metadata_url":"",
+        "entity_id":"",
+        "allow_introspection":"",
+        "token_endpoint_auth_method":"",
+        "code_challenge_method":"",
+        "device_code_validity_seconds":"",
+        "access_token_validity_seconds":"",
+        "refresh_token_validity_seconds":"",
+        "client_secret":"",
+        "country":"",
+        "reuse_refresh_tokens":"",
+        "clear_access_tokens_on_refresh":"",
+        "id_token_timeout_seconds":"",
+        "scope":"",
+        "grant_types":"",
+        "generate_client_secret":"",
+        "token_endpoint_auth_signing_alg":"",
+        "jwks":"",
+        "jwks_uri":"",
+        "egi_policy":"",
+        "dpcoco":""
+    },
+    "extra_fields":{
+      "aup_uri":{
+        "title": "Link to Terms of Use",
+        "desc": "Link to the Acceptable Use Policy / Terms of Use based on the <a href='https://wise-community.org/wise-baseline-aup/'>WISE AUP Baseline template</a>",
+        "type":"string",
+        "tag":"url",
+        "default":"",
+        "tab":"general",
+        "placeholder":"https://",
+        "required":["production","demo","dev"]
+      },
+      "organization":{
+        "title": "Organization",
+        "tag": "org",
+        "active": ["production","demo"],
+        "required": ["production","demo"]
+      },
+      "eosc_security_policies":{
+        "title": "EOSC Security Policies",
+        "desc":"The service adheres to the EOSC Security Baseline",
+        "required": ["production","demo"],
+        "type":"boolean",
+        "tag":"coc",
+        "tab":"general",
+        "default": false,
+        "error": "The service must comply with this policy"
+      },
+      "eosc_data_protection":{
+        "title": "Research & Scholarship",
+        "desc":"The service is compliant with the <a href='https://refeds.org/category/research-and-scholarship'>REFEDS Research & Scholarship Entity Category</a>",
+        "required": [],
+        "type":"boolean",
+        "tag":"coc",
+        "tab":"general",
+        "default": false,
+        "error": "The service must comply with this policy"
+      },
+      "dpcoco":{
+        "title": "Data Protection Code of Conduct",
+        "desc": "The service is compliant with the <a href='https://wiki.refeds.org/display/CODE/Data+Protection+Code+of+Conduct+Home'>GEANT Code of Conduct version 1</a> or any other code of conduct compatible with legislation and guidelines on data protection and privacy including GDPR",
+        "required": [],
+        "default": false,
+        "tab":"general",
+        "type":"boolean",
+        "tag":"coc",
+        "error": "The service must comply with this policy"
+      }
+
+    }
     }
   },
   "restricted_env" : {
@@ -71,6 +276,9 @@
       "env":["production"]
     },
     "eosc": {
+      "env":["production"]
+    },
+    "grnet":{
       "env":[]
     }
   },
@@ -82,10 +290,10 @@
   "outdated_notifications_interval_seconds":604800,
   "send_outdated_notifications":false,
   "invitation_validity_seconds": 5184000,
-  "service_fields":["external_id","tenant","service_name","service_description","logo_uri","policy_uri","integration_environment","protocol","client_id","allow_introspection","code_challenge_method","device_code_validity_seconds","access_token_validity_seconds","refresh_token_validity_seconds","client_secret","reuse_refresh_token","clear_access_tokens_on_refresh","id_token_timeout_seconds","entity_id","metadata_url","grant_types","scope","contacts","redirect_uris","token_endpoint_auth_method","token_endpoint_auth_signing_alg","jwks","jwks_uri","country","website_url"],
+  "service_fields":["external_id","tenant","service_name","service_description","logo_uri","policy_uri","integration_environment","protocol","client_id","allow_introspection","code_challenge_method","device_code_validity_seconds","access_token_validity_seconds","refresh_token_validity_seconds","client_secret","reuse_refresh_token","clear_access_tokens_on_refresh","id_token_timeout_seconds","entity_id","metadata_url","grant_types","scope","contacts","redirect_uris","token_endpoint_auth_method","token_endpoint_auth_signing_alg","jwks","jwks_uri","country","website_url","aup_uri","organization_id"],
   "ggus_email":"checkin-support@mailman.egi.eu",
   "disable_emails":false,
-  "deployment_fields":["service_name","service_description","client_id","allow_introspection","code_challenge_method","device_code_validity_seconds","access_token_validity_seconds","refresh_token_validity_seconds","client_secret","reuse_refresh_token","clear_access_tokens_on_refresh","id_token_timeout_seconds","entity_id","metadata_url","grant_types","scope","contacts","redirect_uris","token_endpoint_auth_method","token_endpoint_auth_signing_alg","jwks","jwks_uri"],
+  "deployment_fields":["service_name","service_description","client_id","allow_introspection","code_challenge_method","device_code_validity_seconds","access_token_validity_seconds","refresh_token_validity_seconds","client_secret","reuse_refresh_token","clear_access_tokens_on_refresh","id_token_timeout_seconds","entity_id","metadata_url","grant_types","scope","contacts","redirect_uris","token_endpoint_auth_method","token_endpoint_auth_signing_alg","jwks","jwks_uri","website_url","aup_uri","policy_uri"],
   "multivalue_fields": ["grant_types","scope","contacts","redirect_uris"],
   "send_notifications_on_startup":false
 }

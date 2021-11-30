@@ -21,6 +21,7 @@ function removeA(arr) {
 }
 
 
+
 module.exports = {
   capitalWords,removeA
 }

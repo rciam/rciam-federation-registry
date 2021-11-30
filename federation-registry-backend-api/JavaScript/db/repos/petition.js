@@ -1,7 +1,7 @@
 const sql = require('../sql').petition;
 const {calcDiff,extractCoc} = require('../../functions/helpers.js');
 const cs = {}; // Reusable ColumnSet objects.
-
+const {sendMail} = require('../../functions/helpers.js');
 /*
  This repository mixes hard-coded and dynamic SQL, primarily to show a diverse example of using both.
  */
@@ -15,24 +15,13 @@ class PetitionRepository {
 
 
   async get(id,tenant){
+    
     return this.db.oneOrNone(sql.getPetition,{
       id:+id,
       tenant:tenant
     }).then(result => {
       if(result){
-        let data = {};
-        result.json.generate_client_secret = false;
-        data.meta_data = {};
-        data.meta_data.type = result.json.type;
-        data.meta_data.group_id = result.json.group_id;
-        data.meta_data.requester = result.json.requester;
-        data.meta_data.service_id = result.json.service_id;
-        delete result.json.type;
-        delete result.json.service_id;
-        delete result.json.requester;
-        data.service_data = extractCoc(result.json);
-
-        return data
+        return fixPetition(result);
       }
       else {
         return null
@@ -52,17 +41,8 @@ class PetitionRepository {
       tenant:tenant
     }).then(result => {
       if(result){
-        let data = {};
-        result.json.generate_client_secret = false;
-        data.meta_data = {};
-        data.meta_data.type = result.json.type;
-        data.meta_data.requester = result.json.requester;
-        data.meta_data.service_id = result.json.service_id;
-        delete result.json.type;
-        delete result.json.service_id;
-        delete result.json.requester;
-        data.service_data = extractCoc(result.json);
-        return data
+        return fixPetition(result);
+
       }
       else {
         return null
@@ -76,23 +56,15 @@ class PetitionRepository {
       tenant:tenant
     }).then(result => {
       if(result){
-        let data = {};
-        result.json.generate_client_secret = false;
-        data.meta_data = {};
-        data.meta_data.type = result.json.type;
-        data.meta_data.requester = result.json.requester;
-        data.meta_data.service_id = result.json.service_id;
-        delete result.json.type;
-        delete result.json.service_id;
-        delete result.json.requester;
-        data.service_data = extractCoc(result.json);
-        return data
+        return fixPetition(result);
       }
       else {
         return null
       }
     })
   }
+
+
 
   async getOwn(id,sub,tenant){
     return this.db.oneOrNone(sql.getOwnPetition,{
@@ -101,19 +73,8 @@ class PetitionRepository {
       tenant:tenant
     }).then(result => {
       if(result){
-        let data = {};
-        result.json.generate_client_secret = false;
-        data.meta_data = {};
-        data.meta_data.type = result.json.type;
-        data.meta_data.requester = result.json.requester;
-        data.meta_data.service_id = result.json.service_id;
-        delete result.json.type;
-        delete result.json.service_id;
-        delete result.json.requester;
-        data.service_data = extractCoc(result.json);
+        return fixPetition(result);
 
-
-        return data
       }
       else {
         return null
@@ -125,25 +86,23 @@ class PetitionRepository {
         return this.db.tx('add-service',async t =>{
           let queries = [];
           if(petition.type==='create'){
-            return await t.group.addGroup(requester).then(async id =>{
-              if(id){
-                petition.group_id = id;
-                return await t.service_petition_details.add(petition,requester).then(async result=>{
-                  if(result){
-                    queries.push(t.service_details_protocol.add('petition',petition,result.id));
-                    queries.push(t.service_contacts.add('petition',petition.contacts,result.id));
-                    queries.push(t.service_multi_valued.addCoc('petition',petition,result.id));
-                    if(petition.protocol==='oidc'){
-                      queries.push(t.service_multi_valued.add('petition','oidc_grant_types',petition.grant_types,result.id));
-                      queries.push(t.service_multi_valued.add('petition','oidc_scopes',petition.scope,result.id));
-                      queries.push(t.service_multi_valued.add('petition','oidc_redirect_uris',petition.redirect_uris,result.id));
-                    }
-                    var result2 = await t.batch(queries);
-                    if(result2){
-                      return result.id
-                    }
-                  }
-                });
+            if(!petition.group_id){
+              petition.group_id = await t.group.addGroup(requester)
+            }
+            return await t.service_petition_details.add(petition,requester).then(async result=>{
+              if(result){
+                queries.push(t.service_details_protocol.add('petition',petition,result.id));
+                queries.push(t.service_contacts.add('petition',petition.contacts,result.id));
+                queries.push(t.service_multi_valued.addCoc('petition',petition,result.id));
+                if(petition.protocol==='oidc'){
+                  queries.push(t.service_multi_valued.add('petition','oidc_grant_types',petition.grant_types,result.id));
+                  queries.push(t.service_multi_valued.add('petition','oidc_scopes',petition.scope,result.id));
+                  queries.push(t.service_multi_valued.add('petition','oidc_redirect_uris',petition.redirect_uris,result.id));
+                }
+                var result2 = await t.batch(queries);
+                if(result2){
+                  return result.id
+                }
               }
             });
           }
@@ -194,6 +153,11 @@ class PetitionRepository {
             }
             var result = await t.batch(queries);
             if(result){
+              if(oldState.meta_data.status==='changes'){
+                await t.user.getUsersByAction('review_notification',tenant).then(users=>{
+                  sendMail({subject:'New Petition to Review',service_name:newState.service_name,tenant:tenant,url:(oldState.meta_data.service_id?"/services/"+oldState.meta_data.service_id:"")+"/requests/"+targetId+"/review"},'reviewer-notification.html',users);
+                })
+              }
               return {success:true};
             }
           }
@@ -209,7 +173,30 @@ class PetitionRepository {
 
 }
 
+const fixPetition = (result) => {
+  let data = {};
+  result.json.generate_client_secret = false;
+  data.meta_data = {};
+  data.meta_data.type = result.json.type;
+  data.meta_data.comment = result.json.comment;
+  data.meta_data.submitted_at = result.json.submitted_at;
+  data.meta_data.group_id = result.json.group_id;
+  data.meta_data.requester = result.json.requester;
+  data.meta_data.service_id = result.json.service_id;
+  data.meta_data.status = result.json.status;
+  data.meta_data.reviewed_at = result.json.reviewed_at;
 
+  delete result.group_id;
+  delete result.json.status;
+  delete result.json.reviewed_at;
+  delete result.json.type;
+  delete result.json.service_id;
+  delete result.json.requester;
+  delete result.json.comment;
+  delete result.json.submitted_at;
+  data.service_data = extractCoc(result.json);
+  return data
+}
 
 
 

@@ -767,6 +767,7 @@ describe('Service registry API Integration Tests', function() {
         let dataSend = create.oidc;
         dataSend.integration_environment = "demo";
         dataSend.type = "create";
+        dataSend.eosc_security_policies = true;
         var req = request(server).post('/tenants/eosc/petitions').set({Authorization: userToken}).send({
           ...dataSend
         });

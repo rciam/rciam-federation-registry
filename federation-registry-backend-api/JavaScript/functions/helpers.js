@@ -10,7 +10,11 @@ var formConfig = require('../config.json');
 
 hbs.registerHelper('loud', function (aString) {
     return aString.toUpperCase()
-})
+});
+
+hbs.registerHelper('ifEquals', function(arg1, arg2, options) {
+  return (arg1 == arg2) ? options.fn(this) : options.inverse(this);
+});
 
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
@@ -139,28 +143,20 @@ const calcDiff = (oldState,newState,tenant) => {
     return edits
 }
 
+
 const sendNotif= (data,template_uri,user)=>{
   if(process.env.NODE_ENV!=='test'&&process.env.NODE_ENV!=='test-docker'&&!config.disable_emails){
     readHTMLFile(path.join(__dirname, '../html/', template_uri), function(err, html) {
-      let transporter = nodeMailer.createTransport({
-        host: 'relay.grnet.gr',
-        port: 587,
-        secure: false
-    });
-    // let transporter = nodeMailer.createTransport({
-    //   service: 'gmail',
-    //   auth: {
-    //     user: 'orionaikido@gmail.com',
-    //     pass: ''
-    //   }
-    // });
+      let transporter = createTransport();
+
     var replacements = {
-      name:user.name
+      name:user.name,
+      logo_url:config[data.tenant].logo_url
     };
     var template = hbs.compile(html);
     var htmlToSend = template(replacements);
     var mailOptions = {
-      from: data.tenant.toUpperCase()+" Check-in Notifications <noreply@faai.grnet.gr>",
+      from: config[data.tenant].sender+" Notifications <noreply@faai.grnet.gr>",
       to : user.email,
       subject : data.subject,
       html : htmlToSend
@@ -186,29 +182,20 @@ const sendInvitationMail = async (data) => {
     if(process.env.NODE_ENV!=='test-docker'&& process.env.NODE_ENV!=='test'&&!config.disable_emails){
       var currentDate = new Date();
       readHTMLFile(path.join(__dirname, '../html/invitation.hbs'), function(err, html) {
-        let transporter = nodeMailer.createTransport({
-            host: 'relay.grnet.gr',
-            port: 587,
-            secure: false
-        });
-        // let transporter = nodeMailer.createTransport({
-        //   service: 'gmail',
-        //   auth: {
-        //     user: 'orionaikido@gmail.com',
-        //     pass: ''
-        //   }
-        // });
+        let transporter = createTransport();
+
         var template = hbs.compile(html);
         var replacements = {
           invited_by:data.invited_by,
           group_manager:data.group_manager,
           registry_url: process.env.REACT_BASE+'/'+ data.tenant,
           tenant:data.tenant,
+          logo_url:config[data.tenant].logo_url,
           url:process.env.REACT_BASE+'/'+ data.tenant +'/invitation/' + data.code
         }
         var htmlToSend = template(replacements);
         var mailOptions = {
-          from: data.tenant.toUpperCase()+" Check-in Notifications <noreply@faai.grnet.gr>",
+          from: config[data.tenant].sender+" Notifications <noreply@faai.grnet.gr>",
           to : data.email,
           subject : 'Invitation to manage service',
           html : htmlToSend
@@ -236,32 +223,24 @@ const newMemberNotificationMail = (data,managers) => {
   if(process.env.NODE_ENV!=='test-docker'&& process.env.NODE_ENV!=='test'&&!config.disable_emails){
     var currentDate = new Date();
     readHTMLFile(path.join(__dirname, '../html/new-member-notification.html'), function(err, html) {
-      let transporter = nodeMailer.createTransport({
-          host: 'relay.grnet.gr',
-          port: 587,
-          secure: false
-      });
-      // let transporter = nodeMailer.createTransport({
-      //   service: 'gmail',
-      //   auth: {
-      //     user: 'orionaikido@gmail.com',
-      //     pass: ''
-      //   }
-      // });
-      var replacements = {
+      let transporter = createTransport();
+      var replacements = {  
         invitation_mail:data.invitation_mail,
         username:data.preferred_username,
         email:data.email,
-        url:process.env.REACT_BASE+'/'+ data.tenant
+        url:process.env.REACT_BASE+'/'+ data.tenant+'/'+data.url,
+        tenant:data.tenant.toUpperCase(),
+        logo_url:config[data.tenant].logo_url,
+        tenant_title:config[data.tenant].sender
       };
       var template = hbs.compile(html);
-      managers.forEach((manager)=>{
+      managers.forEach(async (manager)=>{
         replacements.target_email = manager.email;
-        replacements.username = manager.username;
-
+        replacements.recipient_name = manager.name;
+        await delay(400);
         var htmlToSend = template(replacements);
         var mailOptions = {
-          from: data.tenant.toUpperCase()+" Check-in Notifications <noreply@faai.grnet.gr>",
+          from: config[data.tenant].sender+" Notifications <noreply@faai.grnet.gr>",
           to : manager.email,
           subject : 'New member in your owners group',
           html : htmlToSend
@@ -284,18 +263,8 @@ const sendMail= (data,template_uri,users)=>{
   var result;
   if(process.env.NODE_ENV!=='test'&&process.env.NODE_ENV!=='test-docker'&&!config.disable_emails){
   readHTMLFile(path.join(__dirname, '../html/', template_uri), function(err, html) {
-      let transporter = nodeMailer.createTransport({
-          host: 'relay.grnet.gr',
-          port: 587,
-          secure: false
-      });
-      // let transporter = nodeMailer.createTransport({
-      //   service: 'gmail',
-      //   auth: {
-      //     user: 'orionaikido@gmail.com',
-      //     pass: ''
-      //   }
-      // });
+      let transporter = createTransport();
+
       var template = hbs.compile(html);
       //var replacements = {username: "John Doe",name:"The name"};
       var state;
@@ -314,14 +283,18 @@ const sendMail= (data,template_uri,users)=>{
         service_name:data.service_name,
         date:currentDate,
         state:state,
-        url:process.env.REACT_BASE+'/'+ data.tenant,
-        comment:data.comment
+        comment:data.comment,
+        logo_url:config[data.tenant].logo_url,
+        ...data,
+        url:process.env.REACT_BASE+'/'+ data.tenant + (data.url?data.url:""),
+        tenant_title:config[data.tenant].sender
+
       };
       users.forEach((user) => {
           replacements.name = user.name;
           var htmlToSend = template(replacements);
           var mailOptions = {
-            from:  data.tenant.toUpperCase()+" Check-in Notifications <noreply@faai.grnet.gr>",
+            from:  config[data.tenant].sender+" Notifications <noreply@faai.grnet.gr>",
             to : user.email,
             subject : data.subject,
             html : htmlToSend
@@ -347,18 +320,7 @@ const createGgusTickets =  function(data){
     try{
         if(data){
           readHTMLFile(path.join(__dirname, '../html/ticket.html'), async function(err, html) {
-            let transporter = nodeMailer.createTransport({
-              host: 'relay.grnet.gr',
-              port: 587,
-              secure: false
-            });
-            // let transporter = nodeMailer.createTransport({
-            //     service: 'gmail',
-            //     auth: {
-            //         user: 'orionaikido@gmail.com',
-            //         pass: "**********"
-            //       }
-            //     });
+            let transporter = createTransport();
 
                 var template = hbs.compile(html);
 
@@ -378,6 +340,7 @@ const createGgusTickets =  function(data){
                   var mailOptions = {
                     from: ticket_data.reviewer_email,
                     to : config.ggus_email,
+                    //to:"koza-sparrow@hotmaIl.com",
                     subject : "Federation Registry: Service integration to "+ ticket_data.integration_environment + " (" + code + ")",
                     text:`A request was made to `+ type +` a service on the `+ env +` environment
     Service Info
@@ -414,7 +377,21 @@ const createGgusTickets =  function(data){
     }
 }
 
-
+const createTransport = () =>{
+  let transporter = nodeMailer.createTransport({
+    host: 'relay.grnet.gr',
+    port: 587,
+    secure: false
+  });
+  // let transporter = nodeMailer.createTransport({
+  //     service: 'gmail',
+  //     auth: {
+  //         user: 'orionaikido@gmail.com',
+  //         pass: ''
+  //       }
+  //     });
+  return transporter
+}
 
 const addToString = (str,value) =>{
   let sentence='';
@@ -475,5 +452,6 @@ module.exports = {
   extractCoc,
   createGgusTickets,
   delay,
-  sendNotif
+  sendNotif,
+  createTransport
 }

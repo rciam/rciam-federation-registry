@@ -374,6 +374,30 @@ code {
 
 /* Service Form */
 
+.mb-3 .text-muted {
+  margin-top: -0.6rem;
+}
+
+.input-title-row div:first-child {
+  padding:0!important;
+}
+.input-title-row {
+  padding-right: 0.8rem;
+}
+
+.more_info_field {
+  padding:0 0 0 0.3rem  !important;
+  color:#0A559C;
+  
+}
+.more_info_field:hover {
+  color:#1377d6;
+}
+
+
+.error-message p {
+  margin-bottom:0.3rem;
+}
 .tab-panel {
   margin-top:1rem;
 }
@@ -404,11 +428,14 @@ code {
   margin-right:0.5rem;
 }
 
-.form-tabs-contianer {
+.form-tabs-container {
   margin-bottom: 1.5rem;
 }
 .form-tabs {
   margin-bottom:1.5rem!important;
+}
+.form-tabs-container .tab-content {
+  min-height:100vh;
 }
 
 .comment-input {
@@ -586,8 +613,12 @@ textarea {
 .checkbox-item-edited {
   padding:0.5rem 1rem;
 }
+.mb-3 {
+  margin-bottom: 0.4rem!important;
+}
 .spacing-bot-contact {
-  margin-bottom:1.2rem!important;
+  margin-top:0.9rem!important;
+  margin-bottom:0.9rem!important;
 }
 .spacing-bot {
   margin-bottom: 0.3rem!important;
@@ -627,6 +658,12 @@ textarea {
 
   display:inline-block;
   padding-left:0;
+}
+.warning-message {
+  color:#D89C46;
+}
+.warning-message svg {
+  margin-right:0.5rem;
 }
 .error-message, .error-message-list-item{
   color:#dc3545;
@@ -768,7 +805,9 @@ tbody tr td:last-child {
   margin-right:0.5rem;
 }
 
-
+.organizations-input {
+  margin-bottom: 0;
+}
 
 #hide_input {
   display:none;
@@ -1015,6 +1054,9 @@ tbody tr td:last-child {
 #hide-tooltip {
   display: none;
 }
+.tooltip .arrow{
+  height: 0.5rem!important;
+}
 
 /* Lang fix */
 html:lang(gr) .home-container h1 {
@@ -1055,6 +1097,9 @@ html:lang(gr) .home-container h1 {
 
 
 /* Groups PPage */
+.group_page_main_title {
+  margin-top:1rem;
+}
 
 .groups-table {
   width:auto;
@@ -1257,4 +1302,10 @@ html:lang(gr) .home-container h1 {
 
 .form-submit-cancel-container button svg {
   margin-right:0.3rem!important;
+}
+
+
+/* Manage Owners */
+.manage_owners_tabs {
+  margin-top: 1rem;
 }

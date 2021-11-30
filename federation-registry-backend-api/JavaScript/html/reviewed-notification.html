@@ -1,8 +1,13 @@
 <h5>Dear {{name}}<h5>
-<p>Service Request submitted at the <a href={{url}}>{{url}}</a>, has been reviewed and your action is no longer needed</p>
+<div style="width:100%;text-align:center;margin-top:0.5;margin-bottom:0.5;">
+  <img src={{logo_url}} style="width:150px;">
+</div>
+<p>Service Request submitted at the {{tenant_title}} Federation Registry, has been reviewed and your action is no longer needed, follow this link (<a href={{url}}>{{url}}</a>) to see the request.</p>
 <h5>Service info</h5>
 <ul>
   <li>Service name: {{service_name}}</li>
+  <li>Integration Environment: {{integration_environment}}</li>
   <li>Reviewed at: {{date}}</li>
+
 </ul>
-<h5>Big Thank you from the development team</h5>
+<h5>Thank you from the development team</h5>

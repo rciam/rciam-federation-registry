@@ -1,0 +1,1 @@
+SELECT name as organization_name,url as organization_url,ror_id FROM organizations WHERE active=true ${search_string:raw}

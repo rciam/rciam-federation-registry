@@ -45,7 +45,8 @@ module.exports = {
       add:sql('service_petition_details/add.sql'),
       update:sql('service_petition_details/update.sql'),
       getTicketInfo:sql('service_petition_details/getTicketInfo.sql'),
-      canBeEditedByRequester:sql('service_petition_details/canBeEditedByRequester.sql')
+      canBeEditedByRequester:sql('service_petition_details/canBeEditedByRequester.sql'),
+      belongsToRequester:sql('service_petition_details/belongsToRequester.sql')
     },
     service_state:{
       add:sql('service_state/add.sql'),
@@ -78,6 +79,13 @@ module.exports = {
       get:(sql('invitations/get.sql')),
       getOne:(sql('invitations/getOne.sql'))
 
+    },
+    organizations: {
+      getById:(sql('organizations/getById.sql')),
+      get:(sql('organizations/get.sql')),
+      delete:(sql('organizations/delete.sql')),
+      update:(sql('organizations/update.sql')),
+      add:(sql('organizations/add.sql'))
     }
 };
 

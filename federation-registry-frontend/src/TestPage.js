@@ -44,7 +44,6 @@ const TestRoute = (props)=> {
     }
   }).then(response=> {
     if(response){
-      console.log(response)
       setDeploymentError(response.error)
     }
     else{

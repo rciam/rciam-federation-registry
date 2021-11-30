@@ -21,7 +21,7 @@ export const InvitationRoute = () => {
   }
   return (
     <React.Fragment>
-      <LoadingPage loading={loading} tenant_name={tenant_name}/>
+      <LoadingPage loading={loading} tenant_name={tenant_name} redirect_url={"/"+tenant_name+"/home"}/>
     </React.Fragment>
   )
 }

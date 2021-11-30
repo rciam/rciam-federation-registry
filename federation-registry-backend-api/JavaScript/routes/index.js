@@ -1,5 +1,5 @@
 require('dotenv').config();
-const {petitionValidationRules,validate,validateInternal,tenantValidation,changeContacts,formatPetition,getServiceListValidation,postInvitationValidation,serviceValidationRules,putAgentValidation,postAgentValidation,decodeAms,amsIngestValidation,reFormatPetition,getServicesValidation} = require('../validator.js');
+const {petitionValidationRules,validate,validateInternal,tenantValidation,changeContacts,formatPetition,getServiceListValidation,postInvitationValidation,serviceValidationRules,putAgentValidation,postAgentValidation,decodeAms,amsIngestValidation,reFormatPetition,getServicesValidation,formatCocForValidation} = require('../validator.js');
 const {validationResult} = require('express-validator');
 const qs = require('qs');
 const {v1:uuidv1} = require('uuid');
@@ -30,9 +30,39 @@ const { EADDRINUSE } = require('constants');
 function getData(req,res,next) {
   db.service.getAll(req.params.tenant).then(services=>{
     req.body = services;
+    //console.log(services);
     next();
   });
 }
+
+router.post('/tenants/:tenant/organizations',authenticate,(req,res,next)=>{
+  try{
+    db.organizations.add(req.body).then(response=>{
+      if(response.exists){
+        res.status(200).send({organization_id:response.organization_id});
+      }
+      else{
+        res.status(409).send({organization_id:response.organization_id});
+      }
+    })
+  }
+  catch(err){
+    next(err);
+  }
+});
+
+router.get('/tenants/:tenant/organizations',authenticate,(req,res,next)=>{
+  try{
+    db.organizations.get(req.query.search_string,req.query.ror).then(organizations=>{
+      if(organizations){
+        res.status(200).send({organizations:organizations});
+      }
+    })
+  }
+  catch(err){
+    next(err);
+  }
+});
 
 router.put('/tenants/:tenant/services/validate',adminAuth,getData,serviceValidationRules({optional:true,tenant_param:true,check_available:false,sanitize:true,null_client_id:false}),validateInternal,(req,res,next)=>{
   try{
@@ -110,7 +140,7 @@ router.get('/tenants/:tenant/services',getServicesValidation(),validate,authenti
 
 // Endpoint used to bootstrap a teant or generaly to import multiple services
 // Add changeContacts to alter contacts
-router.post('/tenants/:tenant/services',adminAuth,tenantValidation(),validate,serviceValidationRules({optional:true,tenant_param:true,check_available:true,sanitize:true,null_client_id:false}),validate,(req,res,next)=> {
+router.post('/tenants/:tenant/services',adminAuth,tenantValidation(),validate,formatCocForValidation,serviceValidationRules({optional:true,tenant_param:true,check_available:true,sanitize:true,null_client_id:false}),validate,(req,res,next)=> {
   let services = req.body;
   // Populate json objects with all necessary fields
   services.forEach((service,index) => {
@@ -210,6 +240,9 @@ router.get('/tenants/:tenant',(req,res,next)=>{
         if(config.form[req.params.tenant]){
           tenant.form_config = config.form[req.params.tenant];
         }
+        if(config[tenant]){
+          tenant.config = config[tenant];
+        }
         if(config.restricted_env[req.params.tenant]){
           tenant.restricted_environments = config.restricted_env[req.params.tenant].env;
         }
@@ -266,9 +299,9 @@ router.get('/callback/:tenant',(req,res,next)=>{
   clients[req.params.tenant].callback(process.env.REDIRECT_URI+req.params.tenant,{code:req.query.code}).then(async response => {
     let code = await db.tokens.addToken(response.access_token);
     clients[req.params.tenant].userinfo(response.access_token).then(usr_info=>{
-      saveUser(usr_info,req.params.tenant);
+    saveUser(usr_info,req.params.tenant);
 
-    }); // => Promise
+  }); // => Promise
     res.redirect(process.env.REACT_BASE+'/'+req.params.tenant+'/code/' + code.code);
   });
 });
@@ -399,9 +432,11 @@ router.post('/ams/ingest',checkCertificate,decodeAms,amsIngestValidation(),valid
             await t.user.getServiceOwners(ids).then(async data=>{
               if(data){
                 await t.service_petition_details.getTicketInfo(ids,config.restricted_env.egi.env).then(ticket_data=>{
-                  createGgusTickets(ticket_data);
+                  if(ticket_data){
+                    createGgusTickets(ticket_data);
+                  }
                   data.forEach(email_data=>{
-                    sendMail({subject:'Service Deployment Result',service_name:email_data.service_name,state:email_data.state,tenant:email_data.tenant},'deployment-notification.html',[{name:email_data.name,email:email_data.email}]);
+                    sendMail({subject:'Service Deployment Result',service_name:email_data.service_name,state:email_data.state,tenant:email_data.tenant,deployment_type:email_data.deployment_type},'deployment-notification.hbs',[{name:email_data.name,email:email_data.email}]);
                   });
                 });
               }
@@ -498,7 +533,6 @@ router.get('/tenants/:tenant/services/list', getServiceListValidation(),validate
           }
           return res.status(200).send(response[0]);
         }).catch(err=>{
-          console.log(err);
           return res.status(416).send('Out of range');
         });
       }
@@ -535,35 +569,23 @@ router.get('/agent/get_new_configurations',amsAgentAuth,(req,res,next)=>{
 router.get('/tenants/:tenant/services/:id',authenticate,(req,res,next)=>{
   if(req.user.role.actions.includes('get_own_service')){
     try{
-      if(req.user.role.actions.includes('get_service')){
-        db.service.get(req.params.id,req.params.tenant).then(result=>{
-          if(result){
-            res.status(200).json({service:result.service_data});
+      return db.task('find-service-data',async t=>{
+        await t.service_details.getProtocol(req.params.id,req.user.sub,req.params.tenant).then(async exists=>{
+          if(exists||req.user.role.actions.includes('get_service')){
+            await t.service.get(req.params.id,req.params.tenant).then(result=>{
+              if(result){
+                res.status(200).json({service:result.service_data,owned:(exists?true:false)});
+              }
+              else {
+                  res.status(404).end();
+              }
+            }).catch(err=>{next(err);})
           }
-          else {
+          else{
             res.status(404).end();
           }
-        }).catch(err=>{next(err);})
-      }
-      else{
-        return db.task('find-service-data',async t=>{
-          await t.service_details.getProtocol(req.params.id,req.user.sub,req.params.tenant).then(async exists=>{
-            if(exists){
-              await t.service.get(req.params.id,req.params.tenant).then(result=>{
-                if(result){
-                  res.status(200).json({service:result.service_data});
-                }
-                else {
-                  res.status(404).end();
-                }
-              }).catch(err=>{next(err);})
-            }
-            else{
-              res.status(404).end();
-            }
-          }).catch(err=>{next(err);});;
-        });
-      }
+        }).catch(err=>{next(err);});;
+      });
     }
     catch(err){
       next(err);
@@ -628,7 +650,7 @@ router.get('/tenants/:tenant/petitions/:id',authenticate,(req,res,next)=>{
 
 // Add a new client/petition
 // Post petition endpoint
-router.post('/tenants/:tenant/petitions',authenticate,petitionValidationRules(),validate,formatPetition,serviceValidationRules({optional:false,tenant_param:true,check_available:false,sanitize:false,null_client_id:true}),validate,reFormatPetition,asyncPetitionValidation,(req,res,next)=>{
+router.post('/tenants/:tenant/petitions',authenticate,petitionValidationRules(),validate,formatPetition,formatCocForValidation,serviceValidationRules({optional:false,tenant_param:true,check_available:false,sanitize:false,null_client_id:true}),validate,reFormatPetition,asyncPetitionValidation,(req,res,next)=>{
   res.setHeader('Content-Type', 'application/json');
   if(req.user.role.actions.includes('add_own_petition')){
     try{
@@ -644,7 +666,7 @@ router.post('/tenants/:tenant/petitions',authenticate,petitionValidationRules(),
                 if(id){
                   res.status(200).json({id:id});
                   await t.user.getUsersByAction('review_notification',req.params.tenant).then(users=>{
-                    sendMail({subject:'New Petition to Review',service_name:req.body.service_name,tenant:req.params.tenant},'reviewer-notification.html',users);
+                    sendMail({subject:'New Petition to Review',service_name:req.body.service_name,tenant:req.params.tenant,url:"/services/"+req.body.service_id+"/requests/"+id+"/review",integration_environment:req.body.integration_environment},'reviewer-notification.html',users);
                   }).catch(error=>{
                     next('Could not sent email to reviewers:' + error);
                   });
@@ -662,7 +684,7 @@ router.post('/tenants/:tenant/petitions',authenticate,petitionValidationRules(),
             if(id){
               res.status(200).json({id:id});
               await t.user.getUsersByAction('review_notification',req.params.tenant).then(users=>{
-                sendMail({subject:'New Petition to Review',service_name:req.body.service_name,tenant:req.params.tenant},'reviewer-notification.html',users);
+                sendMail({subject:'New Petition to Review',service_name:req.body.service_name,tenant:req.params.tenant,url:(req.body.service_id?"/services/"+req.body.service_id:"")+"/requests/"+id+"/review",integration_environment:req.body.integration_environment},'reviewer-notification.html',users);
               }).catch(error=>{
                 next('Could not sent email to reviewers:' + error);
               });
@@ -715,7 +737,7 @@ router.delete('/tenants/:tenant/petitions/:id',authenticate,(req,res,next)=>{
 
 
 // PUT Petition Endpoint
-router.put('/tenants/:tenant/petitions/:id',authenticate,petitionValidationRules(),validate,formatPetition,serviceValidationRules({optional:false,tenant_param:true,check_available:false,sanitize:false,null_client_id:true}),validate,reFormatPetition,asyncPetitionValidation,(req,res,next)=>{
+router.put('/tenants/:tenant/petitions/:id',authenticate,formatPetition,formatCocForValidation,serviceValidationRules({optional:false,tenant_param:true,check_available:false,sanitize:false,null_client_id:true}),validate,reFormatPetition,asyncPetitionValidation, (req,res,next)=>{
   if(req.user.role.actions.includes('update_own_petition')){
     return db.task('update-petition',async t =>{
       try{
@@ -810,7 +832,7 @@ router.get('/tenants/:tenant/check-availability',(req,res,next)=>{
 // Get group members
 router.get('/tenants/:tenant/groups/:group_id/members',authenticate,view_group,(req,res,next)=>{
   try{
-    db.group.getMembers(req.params.group_id).then(group_members =>{
+    db.group.getMembers(req.params.group_id,req.params.tenant).then(group_members =>{
       if(group_members){
         res.status(200).json({group_members});
       }
@@ -878,7 +900,7 @@ router.post('/tenants/:tenant/groups/:group_id/invitations',authenticate,postInv
 // Delete invitation
 router.delete('/tenants/:tenant/groups/:group_id/invitations/:id',authenticate,canInvite,(req,res,next)=>{
   try{
-    db.invitation.delete(req.params.id).then(response=>{
+    db.invitation.delete(req.params.id,req.params.tenant).then(response=>{
       if(response){
         res.status(200).end();
       }
@@ -918,13 +940,13 @@ router.put('/tenants/:tenant/invitations/:invite_id/:action',authenticate,(req,r
   try{
     if(req.params.action==='accept'){
       db.tx('accept-invite',async t =>{
-        await t.invitation.getOne(req.params.invite_id,req.user.sub).then(async invitation_data=>{
+        await t.invitation.getOne(req.params.invite_id,req.user.sub,req.params.tenant).then(async invitation_data=>{
           if(invitation_data){
             invitation_data.tenant = req.params.tenant;
             let done = await t.batch([
               t.group.newMemberNotification(invitation_data),
               t.group.addMember(invitation_data),
-              t.invitation.reject(req.params.invite_id,req.user.sub)
+              t.invitation.reject(req.params.invite_id,req.user.sub,req.params.tenant)
             ]).catch(err=>{next(err)});
             res.status(200).end();
           }
@@ -935,7 +957,7 @@ router.put('/tenants/:tenant/invitations/:invite_id/:action',authenticate,(req,r
       })
     }
     else if(req.params.action==='decline'){
-      db.invitation.reject(req.params.invite_id,req.user.sub).then(response=>{
+      db.invitation.reject(req.params.invite_id,req.user.sub,req.params.tenant).then(response=>{
         if(response){
           res.status(200).end();
         }
@@ -957,7 +979,7 @@ router.put('/tenants/:tenant/invitations/:invite_id/:action',authenticate,(req,r
 // Get all invitations for requesting user
 router.get('/tenants/:tenant/invitations',authenticate,(req,res,next)=>{
   try{
-    db.invitation.getAll(req.user.sub).then((response)=>{
+    db.invitation.getAll(req.user.sub,req.params.tenant).then((response)=>{
       if(response){
         res.status(200).json(response);
       }
@@ -972,10 +994,12 @@ router.get('/tenants/:tenant/invitations',authenticate,(req,res,next)=>{
 });
 
 
-// Get all invitations for a specific
+// Get all invitations for a specific group
 router.get('/tenants/:tenant/groups/:group_id/invitations',authenticate,(req,res,next)=>{
   try{
-    db.invitation.get(req.params.group_id).then(invitations => {
+  
+
+    db.invitation.getByGroupId(req.params.group_id,req.params.tenant).then(invitations => {
       if(invitations){
         res.status(200).json({invitations});
       }
@@ -993,7 +1017,7 @@ router.get('/tenants/:tenant/groups/:group_id/invitations',authenticate,(req,res
 // Activate invitation
 router.put('/tenants/:tenant/invitations/activate_by_code',authenticate,(req,res,next)=>{
   try{
-    db.invitation.setUser(req.body.code,req.user.sub).then(result=>{
+    db.invitation.setUser(req.body.code,req.user.sub,req.params.tenant).then(result=>{
       if(result.success){
         res.status(200).json({id:result.id});
       }
@@ -1089,7 +1113,7 @@ router.post('/tenants/:tenant/agents',postAgentValidation(),validate,(req,res,ne
       else{
         res.status(404).send('Could not add agents')
       }
-    }).catch(err=>{console.log(err); next(err);})
+    }).catch(err=>{next(err);})
   }
   catch(err){
     next(err);
@@ -1141,14 +1165,19 @@ function is_group_manager(req,res,next){
 
   try{
     req.body.group_id=req.params.group_id;
-    db.group.isGroupManager(req.user.sub,req.body.group_id).then(result=>{
-      if(result){
-        next();
-      }
-      else{
-        res.status(406).send({error:"Can't access this resource"});
-      }
-    }).catch(err=>{next(err)});
+    if(req.user.sub===req.params.sub){
+      next();
+    }
+    else{
+      db.group.isGroupManager(req.user.sub,req.body.group_id).then(result=>{
+        if(result){
+          next();
+        }
+        else{
+          res.status(406).send({error:"Can't access this resource"});
+        }
+      }).catch(err=>{next(err)});
+    }
   }
   catch(err){
     next(err);
@@ -1428,6 +1457,11 @@ const saveUser=(userinfo,tenant)=>{
             delete user.eduperson_entitlement;
             userinfo.role_id = role.id.toString();
             
+            // Generate preferred username from given name and family name
+            if(!userinfo.preferred_username&&userinfo.given_name&&userinfo.family_name){
+              userinfo.preferred_username= (userinfo.given_name.replace(/[^a-zA-Z0-9]/g,'_').charAt(0)+userinfo.family_name.replace(/[^a-zA-Z0-9]/g,'_')).toLowerCase();;
+            }
+
             for (const property in userinfo) {
               if(user.hasOwnProperty(property)&&userinfo[property]!==user[property]){
                 update_userinfo= true;

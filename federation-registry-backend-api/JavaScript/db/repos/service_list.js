@@ -27,7 +27,8 @@ class ServiceListRepository {
       select_all:'',
       select_own_service:'',
       protocol_filter:'',
-      search_filter:'',
+      search_filter_services:'',
+      search_filter_petitions:'',
       integration_environment_filter:'',
       select_own_petition:'',
       pending_filter:'',
@@ -43,8 +44,8 @@ class ServiceListRepository {
       params.protocol_filter = "AND protocol='" + req.query.protocol+"'";
     }
     if(req.query.search_string){
-      params.search_filter = "AND service_name ILIKE '%"+ req.query.search_string + "%'";
-      params.search_filter_client_id = "AND client_id ILIKE '%"+ req.query.search_string + "%'";
+      params.search_filter_services = "AND (service_name ILIKE '%"+req.query.search_string +"%' OR client_id ILIKE '%"+req.query.search_string +"%')";
+      params.search_filter_petitions = "WHERE service_name ILIKE '%"+req.query.search_string +"%' OR client_id ILIKE '%"+req.query.search_string +"%'";
      }
     if(req.query.env){
       params.integration_environment_filter = "AND integration_environment='" + req.query.env + "'"

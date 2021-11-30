@@ -7,7 +7,7 @@ import Spinner from 'react-bootstrap/Spinner';
 export const LoadingPage = (props) => {
   return (
     <div className="loading-page">
-      {props.loading?<Spinner animation="border" variant="primary" />:<Redirect to={"/"+props.tenant_name+'/home'}/>}
+      {props.loading?<Spinner animation="border" variant="primary" />:<Redirect to={props.redirect_url?props.redirect_url:"/"+props.tenant_name+'/home'}/>}
     </div>
   )
 }
