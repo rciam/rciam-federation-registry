@@ -78,13 +78,13 @@ export const NavbarTop = (props)=>{
             <Dropdown.Item onClick={()=>{
               localStorage.removeItem('token');
               if(tenant[0].name==='egi'){
-                window.location.assign('https://aai.egi.eu/oidc/saml/logout?redirect='+ window.location.protocol+ "//" + window.location.hostname + (config.basename==="/"?"/":config.basename+"/") +tenant[0].name);
+                window.location.assign('https://aai.egi.eu/oidc/saml/logout?redirect='+ window.location.protocol+ "//" + window.location.hostname + (window.location.port?":"+window.location.port:"") + (config.basename==="/"?"/":config.basename+"/") +tenant[0].name);
               }
               else if(tenant[0].name==='eosc'){
-                window.location.assign('https://aai-demo.eosc-portal.eu/oidc/saml/logout?redirect='+window.location.protocol+ "//" + window.location.hostname + (config.basename==="/"?"/":config.basename+"/")+tenant[0].name);
+                window.location.assign('https://aai-demo.eosc-portal.eu/oidc/saml/logout?redirect='+window.location.protocol+ "//" + window.location.hostname + (window.location.port?":"+window.location.port:"") + (config.basename==="/"?"/":config.basename+"/")+tenant[0].name);
               }
               else if(tenant[0].name==='egi'){
-                window.location.assign('https://aai.egi.eu/oidc/saml/logout?redirect='+window.location.protocol+ "//" + window.location.hostname + (config.basename==="/"?"/":config.basename+"/")+tenant[0].name);
+                window.location.assign('https://aai.egi.eu/oidc/saml/logout?redirect='+window.location.protocol+ "//" + window.location.hostname + (window.location.port?":"+window.location.port:"") + (config.basename==="/"?"/":config.basename+"/")+tenant[0].name);
               }
             }}>
               {t('logout')}<FontAwesomeIcon icon={faSignOutAlt}/>
