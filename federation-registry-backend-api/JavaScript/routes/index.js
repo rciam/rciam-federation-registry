@@ -287,7 +287,7 @@ router.get('/tenants/:tenant/login',(req,res)=>{
       redirect_uri: process.env.REDIRECT_URI+req.params.tenant
     }));
   }else{
-    res.redirect(process.env.REACT_BASE+'/404');
+    res.redirect(tenant_config[Object.keys(tenant_config)[0]].base_url.split("/"+Object.keys(tenant_config)[0])[0]+'/404');
   }
 })
 
@@ -302,7 +302,7 @@ router.get('/callback/:tenant',(req,res,next)=>{
     saveUser(usr_info,req.params.tenant);
 
   }); // => Promise
-    res.redirect(process.env.REACT_BASE+'/'+req.params.tenant+'/code/' + code.code);
+    res.redirect(tenant_config[req.params.tenant].base_url+'/code/' + code.code);
   });
 });
 

@@ -5,6 +5,7 @@ import Routes from './Router';
 import {SideNav} from './Components/SideNav.js';
 import { useTranslation } from 'react-i18next';
 import {userContext,tenantContext} from './context.js';
+import * as config from './config.json';
 
  const MainPage= (props)=> {
       const tenant = useContext(tenantContext);
@@ -27,13 +28,12 @@ import {userContext,tenantContext} from './context.js';
         };
         //run our function here
         faviconUpdate();
-
         //2nd paramenter passed to useEffect is dependency array so that this effect only runs on changes to count
       }, [tenant]);
 
       return(
         <React.Fragment>
-          <Router>
+          <Router basename={config.basename}>
             <Header/>
             <NavbarTop/>
             <div className="ssp-container main">

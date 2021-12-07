@@ -15,10 +15,10 @@ export const Logout = (props) => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     if(tenant_name==='egi'){
-      window.location.assign('https://aai.egi.eu/oidc/saml/logout?redirect='+config.react+tenant_name);
+      window.location.assign('https://aai.egi.eu/oidc/saml/logout?redirect='+window.location.protocol+ "//" + window.location.hostname + (window.location.port?":"+window.location.port:"") + (config.basename==="/"?"/":config.basename+"/")+tenant_name);
     }
     else{
-      window.location.assign('https://aai-demo.eosc-portal.eu/oidc/saml/logout?redirect='+config.react+tenant_name);
+      window.location.assign('https://aai-demo.eosc-portal.eu/oidc/saml/logout?redirect='+window.location.protocol+ "//" + window.location.hostname + (window.location.port?":"+window.location.port:"") + (config.basename==="/"?"/":config.basename+"/")+tenant_name);
     }
 
   }

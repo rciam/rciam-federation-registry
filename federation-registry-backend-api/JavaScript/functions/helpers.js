@@ -188,10 +188,10 @@ const sendInvitationMail = async (data) => {
         var replacements = {
           invited_by:data.invited_by,
           group_manager:data.group_manager,
-          registry_url: process.env.REACT_BASE+'/'+ data.tenant,
+          registry_url: tenant_config[data.tenant].base_url,
           tenant:data.tenant,
           logo_url:config[data.tenant].logo_url,
-          url:process.env.REACT_BASE+'/'+ data.tenant +'/invitation/' + data.code
+          url:tenant_config[data.tenant].base_url +'/invitation/' + data.code
         }
         var htmlToSend = template(replacements);
         var mailOptions = {
@@ -228,7 +228,7 @@ const newMemberNotificationMail = (data,managers) => {
         invitation_mail:data.invitation_mail,
         username:data.preferred_username,
         email:data.email,
-        url:process.env.REACT_BASE+'/'+ data.tenant+'/'+data.url,
+        url:tenant_config[data.tenant].base_url+'/'+data.url,
         tenant:data.tenant.toUpperCase(),
         logo_url:config[data.tenant].logo_url,
         tenant_title:config[data.tenant].sender
@@ -286,7 +286,7 @@ const sendMail= (data,template_uri,users)=>{
         comment:data.comment,
         logo_url:config[data.tenant].logo_url,
         ...data,
-        url:process.env.REACT_BASE+'/'+ data.tenant + (data.url?data.url:""),
+        url:tenant_config[data.tenant].base_url+ (data.url?data.url:""),
         tenant_title:config[data.tenant].sender
 
       };

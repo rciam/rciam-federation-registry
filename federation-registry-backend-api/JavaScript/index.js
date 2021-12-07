@@ -24,11 +24,20 @@ const {outdatedNotificationsWorker} = require('./functions/outdated_notif.js');
 
 // We set Cors options so that express can handle preflight requests containing cookies
 let clients= {};
+let tenant_config = {};
 custom.setHttpOptionsDefaults({
   timeout: 20000,
 });
+
+let whitelist = process.env.CORS.split(' ');
 var corsOptions = {
-    origin:  process.env.REACT_BASE,
+    origin: function (origin, callback) {
+      if (whitelist.indexOf(origin) !== -1 || !origin) {
+        callback(null, true)
+      } else {
+        callback(new Error('Not allowed by CORS'))
+      }
+    },
     methods: "GET,HEAD,POST,PATCH,DELETE,OPTIONS,PUT",
     allowedHeaders: ['Origin','X-Requested-With','contentType','Content-Type','Accept','Authorization'],
     credentials: true,
@@ -36,11 +45,16 @@ var corsOptions = {
     preflightContinue:true
 }
 
+const app = express();
 
 db.tenants.getInit().then(async tenants => {
   for (const tenant of tenants){
-    await Issuer.discover(tenant.issuer_url).then((issuer)=>{
 
+    tenant_config[tenant.name] = {
+      base_url:tenant.base_url
+    }
+    await Issuer.discover(tenant.issuer_url).then((issuer)=>{
+    
       clients[tenant.name] = new issuer.Client({
         client_id: tenant.client_id,
         client_secret: tenant.client_secret,
@@ -52,6 +66,8 @@ db.tenants.getInit().then(async tenants => {
       clients[tenant.name].issuer_url = tenant.issuer_url;
     });
   }
+  app.set('clients',clients);
+  global.tenant_config = tenant_config;
 }).catch(err => {console.log('Tenant initialization failed due to following error'); console.log(err);});
 
 // if(config.send_notifications_on_startup){
@@ -76,7 +92,6 @@ db.tenants.getInit().then(async tenants => {
 
 
 
-const app = express();
 
 app.use(expressWinston.logger({
     transports: [
@@ -118,7 +133,8 @@ app.use(expressWinston.logger({
 
 
 
-app.set('clients',clients);
+
+
 app.use(passport.initialize());
 app.use(cors(corsOptions));
 app.use(cookieParser());
@@ -188,5 +204,6 @@ function stop() {
 }
 
 module.exports = server;
+
 
 module.exports.stop = stop;

@@ -11,7 +11,7 @@ class TenantsRepository {
   }
 
   async getInit(){
-    return this.db.any('SELECT name,client_id,client_secret,issuer_url FROM tenants');
+    return this.db.any('SELECT name,client_id,client_secret,issuer_url,base_url FROM tenants');
   }
 
 }
