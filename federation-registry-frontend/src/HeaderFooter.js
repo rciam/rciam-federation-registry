@@ -130,7 +130,7 @@ export const Footer =(props) =>{
                 <Image className="ssp-footer__item__logo" src="https://vanilla-ui.aai-dev.grnet.gr/proxy/module.php/themevanilla/resources/images/grnet_logo_en.svg" alt="GRNET"/>
               </a>
               <div className="ssp-footer__item__copyright">
-                Copyright ©2016-2020      </div>
+                Copyright ©2016-2022      </div>
             </div>
           </Col>
           <Col sm="4" className="ssp-footer__item">
