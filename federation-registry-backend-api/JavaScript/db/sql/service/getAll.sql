@@ -8,7 +8,7 @@ SELECT json_build_object('id',sd.id,'service_name', sd.service_name,'service_des
 						 'clear_access_tokens_on_refresh',sd.clear_access_tokens_on_refresh,'id_token_timeout_seconds',sd.id_token_timeout_seconds,'metadata_url',sd.metadata_url
 						 ,'entity_id',sd.entity_id,'tenant',sd.tenant,'aup_uri',sd.aup_uri,'organization_name',sd.name,'organization_url',sd.url,'organization_id',sd.organization_id,
 						 'service_coc',(SELECT CASE WHEN  json_object_agg(v.name,v.value) IS NULL THEN NULL ELSE  json_object_agg(v.name,v.value) END
-						 FROM service_coc v WHERE sd.id = v.service_id),
+						 FROM service_coc v WHERE sd.id = v.service_id),'created_at',created_at,
 						 'grant_types',
 							(SELECT json_agg((v.value))
 							 FROM service_oidc_grant_types v WHERE sd.id = v.owner_id),
@@ -26,7 +26,7 @@ SELECT json_build_object('id',sd.id,'service_name', sd.service_name,'service_des
 						 		FROM group_subs v WHERE sd.group_id = v.group_id)
 							) json
     FROM (SELECT *
-	FROM ((SELECT id FROM service_state WHERE state!='deleted') AS bar LEFT JOIN service_details USING (id)) AS foo
+	FROM ((SELECT id,created_at FROM service_state WHERE state!='deleted') AS bar LEFT JOIN service_details USING (id)) AS foo
 	LEFT JOIN service_details_oidc USING (id)
 	LEFT JOIN service_details_saml USING (id)
 	LEFT JOIN organizations USING(organization_id) WHERE tenant=${tenant}) as sd

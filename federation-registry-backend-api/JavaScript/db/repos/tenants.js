@@ -7,7 +7,7 @@ class TenantsRepository {
   }
 
   async getTheme(tenant_name){
-    return this.db.oneOrNone('SELECT name,logo,main_title,color,description FROM tenants WHERE name=$1',tenant_name);
+    return this.db.oneOrNone('SELECT name,logo,main_title,color,description,base_url FROM tenants WHERE name=$1',tenant_name);
   }
 
   async getInit(){

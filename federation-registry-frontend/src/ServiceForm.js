@@ -171,7 +171,7 @@ const ServiceForm = (props)=> {
     client_id:yup.string().nullable().when('protocol',{
       is:'oidc',
       then: yup.string().nullable().min(2,t('yup_char_min') + ' ('+2+')').max(128,t('yup_char_max') + ' ('+128+')').test('testAvailable',t('yup_client_id_available'),function(value){
-        if(props.initialValues.client_id===value){
+        if(props.initialValues.client_id===value && !props.copy){
           return true
         }
         else{
@@ -369,7 +369,7 @@ const ServiceForm = (props)=> {
     entity_id:yup.string().matches(reg.regUrl,t('yup_secure_url')).nullable().when('protocol',{
       is:'saml',
       then: yup.string().min(4,t('yup_char_min') + ' ('+4+')').test('testAvailable',t('yup_entity_id'),function(value){
-        if(props.initialValues.entity_id===value){
+        if(props.initialValues.entity_id===value && !props.copy){
           return true
         }
         else{
@@ -380,7 +380,9 @@ const ServiceForm = (props)=> {
                 {resolve(true)}
               else{
                 setCheckingAvailability(true);
+                //&&!(props.copy&&)
                 if(value===checkedId &&formRef.current.values.integration_environment===checkedEnvironment){
+                  setCheckingAvailability(false);
                   resolve(availabilityCheck);
                 }
                 else{
@@ -393,6 +395,7 @@ const ServiceForm = (props)=> {
                         'Authorization': localStorage.getItem('token')
                       }}).then(response=>{
                         if(response.status===200){
+
                           return response.json();
                         }
                         else {

@@ -30,7 +30,7 @@ export const TenantHandler = () => {
         return false
       }
     }).then(response=>{
-      if(response){
+      if(response&&response.base_url===window.location.protocol +"//"+ window.location.hostname +(window.location.port?(":"+window.location.port):"") +config.basename + tenant_name ){
         setTenant(response);
         }
       else{

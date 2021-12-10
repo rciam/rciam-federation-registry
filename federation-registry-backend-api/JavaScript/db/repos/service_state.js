@@ -42,7 +42,7 @@ class ServiceStateRepository {
       id:+id,
       state:state,
       deployment_type:deployment_type,
-      outdated:state==='deployed'?false:true
+      outdated:true
     })
   }
 

@@ -85,7 +85,6 @@ export function OrganizationField(props){
             return false;
           }
           else if(response.status===404){
-            setNotFound('No invitations found');
             return false;
           }
           else {
@@ -127,6 +126,7 @@ export function OrganizationField(props){
                     exists = true;
                   }
                   options[item.organization_name] = {};
+                  options[item.organization_name].name = item.organization_name 
                   options[item.organization_name].url = item.organization_url;
                   options[item.organization_name].ror_id = null;
                   options[item.organization_name].id = item.organization_id;
@@ -134,16 +134,18 @@ export function OrganizationField(props){
                     loaded= true;
                   }
                 })
+
                 if(ror_response&&ror_response.items){
                   ror_response.items.forEach((item,index)=>{
                     if(searchString===item.name){
                       exists = true;
                     }
-                    options[item.name] = {};
-                    options[item.name].url=(item.links[0]?item.links[0]:"");
-                    options[item.name].ror_id = item.id;
+                    options[item.name + (item.acronyms.length>0?(" (" + item.acronyms[0] +")"):"")] = {};
+                    options[item.name + (item.acronyms.length>0?(" (" + item.acronyms[0] +")"):"")].name = item.name 
+                    options[item.name + (item.acronyms.length>0?(" (" + item.acronyms[0] +")"):"")].url=(item.links[0]?item.links[0]:"");
+                    options[item.name + (item.acronyms.length>0?(" (" + item.acronyms[0] +")"):"")].ror_id = item.id;
                     
-                    if(item.name===singleSelections[0]&&options[item.name].url){
+                    if(item.name +(item.acronyms.length>0?(" (" + item.acronyms[0] +")"):"")===singleSelections[0]&&options[item.name+(item.acronyms.length>0?(" (" + item.acronyms[0] +")"):"")].url){
                       loaded = true
                     }
                   });
@@ -158,9 +160,11 @@ export function OrganizationField(props){
                 let newOption = {};
                 if(!exists&& searchString.length>0){
                   newOption[searchString+ " (Add New Organization)"] = {};
+                  newOption[searchString+ " (Add New Organization)"].name = searchString; 
                   newOption[searchString+ " (Add New Organization)"].url = null;
                 }
-                
+                // console.log(options);
+                // console.log(ror_response.items);
                 setOrganizations({...newOption,...options});
             }
             else{
@@ -179,17 +183,13 @@ export function OrganizationField(props){
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[singleSelections])
 
+ 
   const handleChange = async (selected,index) => {
-    if(selected&&selected[0]){                         
-      if(selected[0].includes(" (Add New Organization)","")){
-      }
-      selected[0]= selected[0].replace(" (Add New Organization)","");
-    }
-
+ 
     let organization = (organizations[selected[0]]?organizations[selected[0]]:{});
     props.setFieldValue('ror_id',organization.ror_id,false)
     props.setFieldValue('organization_id',organization.organization_id,false);
-    props.setFieldValue('organization_name',(selected&&selected[0]?selected[0]:""),false).then(()=>{
+    props.setFieldValue('organization_name',(selected&&selected[0]?organizations[selected[0]].name:""),false).then(()=>{
       props.validateField('organization_name');
     });
     
@@ -221,6 +221,7 @@ export function OrganizationField(props){
                 onInputChange={(e)=>{getOrganizations(e);
                   
                 }}
+                filterBy={() => true}
                 isInvalid={props.isInvalid}
                 onChange={(selected,index)=>{
                   
