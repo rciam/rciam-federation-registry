@@ -15,7 +15,8 @@ create table tenants (
   logo VARCHAR(256),
   description VARCHAR(1054),
   main_title VARCHAR(256),
-  color VARCHAR(128)
+  color VARCHAR(128),
+  base_url VARCHAR(256)
 );
 
 create table user_info (
@@ -124,6 +125,7 @@ create table service_state (
   state VARCHAR(256),
   deployment_type VARCHAR(256) DEFAULT NULL,
   last_edited timestamp without time zone DEFAULT NULL, 
+  created_at timestamp without time zone DEFAULT NULL, 
   FOREIGN KEY (id) REFERENCES service_details(id) ON DELETE CASCADE
 );
 

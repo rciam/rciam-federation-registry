@@ -5,7 +5,7 @@ SELECT json_build_object('id',sd.id,'service_name', sd.service_name,'service_des
 						 FROM service_coc v WHERE sd.id = v.service_id),
 						 'contacts',
 						 	(SELECT json_agg(json_build_object('email',v.value,'type',v.type))
-							 FROM service_contacts v WHERE sd.id = v.owner_id)
+							 FROM service_contacts v WHERE sd.id = v.owner_id),'created_at',created_at,
 							) json
     FROM (SELECT *
       FROM (

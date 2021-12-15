@@ -155,7 +155,7 @@ class PetitionRepository {
             if(result){
               if(oldState.meta_data.status==='changes'){
                 await t.user.getUsersByAction('review_notification',tenant).then(users=>{
-                  sendMail({subject:'New Petition to Review',service_name:newState.service_name,tenant:tenant,url:(oldState.meta_data.service_id?"/services/"+oldState.meta_data.service_id:"")+"/requests/"+targetId+"/review"},'reviewer-notification.html',users);
+                  sendMail({subject:'New Petition to Review',service_name:newState.service_name,integration_environment:newState.integration_environment,tenant:tenant,url:(oldState.meta_data.service_id?"/services/"+oldState.meta_data.service_id:"")+"/requests/"+targetId+"/review"},'reviewer-notification.html',users);
                 })
               }
               return {success:true};
