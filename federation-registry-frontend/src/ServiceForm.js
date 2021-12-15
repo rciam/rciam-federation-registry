@@ -959,7 +959,7 @@ const ServiceForm = (props)=> {
                               value={values.client_id}
                               isInvalid={hasSubmitted?(!!errors.client_id&&!checkingAvailability):(!!errors.client_id&&touched.client_id&&!checkingAvailability)}
                               onBlur={handleBlur}
-                              disabled={disabled}
+                              disabled={disabled||service_id}
                               changed={props.changes?props.changes.client_id:null}
                               isloading={values.client_id&&values.client_id!==checkedId&&checkingAvailability?1:0}
                              />
