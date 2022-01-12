@@ -110,15 +110,17 @@ const calcDiff = (oldState,newState,tenant) => {
       edits.add.oidc_redirect_uris = new_values.redirect_uris.filter(x=>!old_values.redirect_uris.includes(x));
       edits.dlt.oidc_redirect_uris = old_values.redirect_uris.filter(x=>!new_values.redirect_uris.includes(x));
     }
-    for(var property in formConfig.form[tenant].code_of_condact){
-      if(property in new_values){
+    for(var property in formConfig.form[tenant].extra_fields){
+      if(formConfig.form[tenant].extra_fields[property].tag==="coc"){
+        if(property in new_values){
+          if(property in old_values && old_values[property]!==new_values[property]){
+            edits.update.coc[property]=new_values[property];
+          }
+          else{
+            edits.add.coc[property]=new_values[property];
+          }
+        }
 
-        if(property in old_values){
-          edits.update.coc[property]=new_values[property];
-        }
-        else{
-          edits.add.coc[property]=new_values[property];
-        }
       }
     }
     for(var i in edits){

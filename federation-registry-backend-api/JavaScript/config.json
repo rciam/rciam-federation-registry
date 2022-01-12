@@ -18,20 +18,6 @@
   },
   "form" : {
     "egi" : {
-      "code_of_condact": {
-        "egi_policy":{
-          "title": "EGI Policies",
-          "desc":"<div>The service complies with the <a href='https://wiki.egi.eu/wiki/Policies_and_Procedures' target='_blank'>EGI Policies</a></div>",
-          "required": ["production"],
-          "error": "Service must commply"
-        },
-        "dpcoco":{
-          "title": "Data Protection Code of Conduct",
-          "desc": "The service complies with the <a href='https://wiki.refeds.org/display/CODE/Data+Protection+Code+of+Conduct+Home' target='_blank'>GÉANT Data Protection Code of Conduct version 1</a> or any other code of conduct compatible with legislation and guidelines on data protection and privacy including GDPR",
-          "required": [],
-          "error": "Service must commply"
-        }
-      },
       "device_code_validity_seconds":30000,
       "refresh_token_validity_seconds":34128000,
       "access_token_validity_seconds":1000000,
@@ -139,29 +125,6 @@
       }
     },
     "eosc" : {
-      "code_of_condact": [
-        {
-          "name": "eosc_security_policies",
-          "desc":"The service adheres to the EOSC Security Baseline",
-          "title": "EOSC Security Policies",
-          "required": ["production","demo"],
-          "error": "Service must commply"
-        },
-        {
-          "name": "eosc_data_protection",
-          "desc":"The service is compliant with the <a href='https://wiki.refeds.org/display/CODE/Data+Protection+Code+of+Conduct+Home'>GEANT Code of Conduct version 1</a> or any other code of conduct compatible with legislation and guidelines on data protection and privacy including GDPR",
-          "title": "Data Protection Code of Conduct",
-          "required": [],
-          "error": "Service must commply"
-        },
-        {
-          "name": "eosc_data_protection",
-          "desc":"The service is compliant with the <a href='https://refeds.org/category/research-and-scholarship'>REFEDS Research & Scholarship Entity Category</a>",
-          "title": "Research & Scholarship",
-          "required": [],
-          "error": "Service must commply"
-        }
-      ],
       "device_code_validity_seconds":30000,
       "refresh_token_validity_seconds":34128000,
       "access_token_validity_seconds":1000000,
