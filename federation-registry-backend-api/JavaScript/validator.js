@@ -660,6 +660,7 @@ const reFormatPetition = (req,res,next) => {
 const decodeAms = (req,res,next) => {
   try{
     req.body.decoded_messages = [];
+    
     req.body.messages.forEach(item=> {
       req.body.decoded_messages.push(JSON.parse(Buffer.from(item.message.data, 'base64').toString()));
     });
@@ -700,7 +701,6 @@ const changeContacts = (req,res,next) => {
   }
 }
 const validateInternal = (req,res,next) =>{
-  //console.log(req.body);
   const errors = validationResult(req);
   console.log(errors);
   if(!errors.isEmpty()){
@@ -708,8 +708,6 @@ const validateInternal = (req,res,next) =>{
       var matches = error.param.match(/\[(.*?)\]/);
       if(typeof(parseInt(matches[1]))=='number'){
         req.body[matches[1]].outdated = true;
-
-        //console.log(error);
       }      
     });
   }

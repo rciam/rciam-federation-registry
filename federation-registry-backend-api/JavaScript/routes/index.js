@@ -5,7 +5,7 @@ const qs = require('qs');
 const {v1:uuidv1} = require('uuid');
 const axios = require('axios').default;
 const {merge_data,merge_services_and_petitions} = require('../merge_data.js');
-const {addToString,clearPetitionData,sendMail,sendInvitationMail,sendMultipleInvitations,createGgusTickets} = require('../functions/helpers.js');
+const {addToString,clearPetitionData,sendMail,sendInvitationMail,sendMultipleInvitations,createGgusTickets,delay} = require('../functions/helpers.js');
 const {db} = require('../db');
 var diff = require('deep-diff').diff;
 var router = require('express').Router();
@@ -404,10 +404,6 @@ router.get('/tenants/:tenant/user',authenticate,(req,res,next)=>{
       else{
         user.review_restricted = false;
       }
-
-
-
-
       user.actions = req.user.role.actions;
       user.role = req.user.role.name;
       res.end(JSON.stringify({user}));
@@ -418,26 +414,64 @@ router.get('/tenants/:tenant/user',authenticate,(req,res,next)=>{
   }
 });
 
-
+const format_error_email_data = (service_info,error_info,admins) => {
+  email_data = [];
+  error_info.forEach(error=>{
+    let service_data = error;
+    let admin_data = [];
+    service_info.forEach(service=>{
+      if(service.id===error.service_id){
+        service_data.service_name = service.service_name;
+        service_data.tenant = service.tenant;
+        service_data.deployment_type = service.deployment_type;
+        service_data.integration_environment = service.integration_environment;
+      }
+      // {name:email_data.name,email:email_data.email}
+    });
+    admins.forEach(admin=>{
+      if(service_data.tenant===admin.tenant){
+        admin_data.push(admin)
+      }
+    });
+    email_data.push({service_data:service_data,admin_data:admin_data});
+  });
+  return email_data;
+} 
 // Push endpoint for recieving deployment result messages
 router.post('/ams/ingest',checkCertificate,decodeAms,amsIngestValidation(),validate,(req,res,next)=>{
   // Decode messages
   try{
     return db.task('deploymentTasks', async t => {
       // update state
-      await t.service_state.deploymentUpdate(req.body.decoded_messages).then(async ids=>{
+      await t.service_state.deploymentUpdate(req.body.decoded_messages).then(async response=>{
+        let ids = response.deployed_ids;
+        let errors = response.errors;
         if(ids){
           res.status(200).end();
           if(ids.length>0){
             await t.user.getServiceOwners(ids).then(async data=>{
               if(data){
-                await t.service_petition_details.getTicketInfo(ids,config.restricted_env.egi.env).then(ticket_data=>{
+                await t.service_petition_details.getTicketInfo(ids,config.restricted_env.egi.env).then(async ticket_data=>{
                   if(ticket_data){
                     createGgusTickets(ticket_data);
                   }
-                  data.forEach(email_data=>{
-                    sendMail({subject:'Service Deployment Result',service_name:email_data.service_name,state:email_data.state,tenant:email_data.tenant,deployment_type:email_data.deployment_type},'deployment-notification.hbs',[{name:email_data.name,email:email_data.email}]);
-                  });
+                  if(errors.length>0){
+                    await t.user.getUsersByAction('view_errors').then(users=>{
+                      let error_services = format_error_email_data(data,errors,users);
+                      error_services.forEach(async error_data=>{
+                        await delay(400);
+                        sendMail({subject:'Deployment Error',url:"/services/"+error_data.service_data.service_id, ...error_data.service_data},'deployment-error-admin-notif.hbs',error_data.admin_data);
+                      })
+                      
+                    }).catch(error=>{
+                      next('Could not sent email to reviewers:' + error);
+                    });
+                  }
+                  if(ids.length>0){
+                    data.forEach(email_data=>{
+                      sendMail({subject:'Service Deployment Result',service_name:email_data.service_name,state:email_data.state,tenant:email_data.tenant,deployment_type:email_data.deployment_type},'deployment-notification.hbs',[{name:email_data.name,email:email_data.email}]);
+                    });
+                  }
                 });
               }
             }).catch(err=>{
@@ -465,6 +499,7 @@ router.post('/ams/ingest',checkCertificate,decodeAms,amsIngestValidation(),valid
 // updateData = [{id:1,state:'deployed',tenant:'egi',protocol:'oidc'},{id:2,state:'deployed',tenant:'egi',protocol:'saml'},{id:3,state:'failed',tenant:'eosc',protocol:'oidc'}];
 router.put('/agent/set_services_state',amsAgentAuth,(req,res,next)=>{
   try{
+
     return db.task('set_state_and_agents',async t=>{
       let service_pending_agents = [];
       await t.service_state.updateMultiple(req.body).then(async result=>{
@@ -478,7 +513,6 @@ router.put('/agent/set_services_state',amsAgentAuth,(req,res,next)=>{
                   }
                 })
               });
-
               await t.deployment_tasks.setDeploymentTasks(service_pending_agents).then(success=> {
                 if(success){
                   res.status(200).end();
@@ -666,7 +700,7 @@ router.post('/tenants/:tenant/petitions',authenticate,petitionValidationRules(),
                 if(id){
                   res.status(200).json({id:id});
                   await t.user.getUsersByAction('review_notification',req.params.tenant).then(users=>{
-                    sendMail({subject:'New Petition to Review',service_name:req.body.service_name,tenant:req.params.tenant,url:"/services/"+req.body.service_id+"/requests/"+id+"/review",integration_environment:req.body.integration_environment},'reviewer-notification.html',users);
+                    sendMail({subject:'New Petition to Review',service_name:service.service_name,tenant:req.params.tenant,url:"/services/"+req.body.service_id+"/requests/"+id+"/review",integration_environment:service.integration_environment},'reviewer-notification.html',users);
                   }).catch(error=>{
                     next('Could not sent email to reviewers:' + error);
                   });
@@ -1306,7 +1340,6 @@ function authenticate(req,res,next){
         db.user_role.getRoleActions(req.user.sub,req.params.tenant).then(role=>{
           if(role){
             req.user.role = role;
-            //console.log('authenticated');
             next();
           }
           else{
@@ -1347,7 +1380,6 @@ function authenticate(req,res,next){
             db.user_role.getRoleActions(req.user.sub,req.params.tenant).then(role=>{
               if(role){
                 req.user.role = role;
-                //console.log('authenticated');
                 next();
               }
               else{
@@ -1594,7 +1626,7 @@ function asyncPetitionValidation(req,res,next){
       }
       else if(req.route.methods.put){
         await t.service_petition_details.canBeEditedByRequester(req.params.id,req.user.sub,req.params.tenant).then(async petition => {
-          if(petition){
+          if(petition&&petition.status!=='request_review'){
             if(req.body.type==='delete'){
               next();
             }

@@ -75,9 +75,7 @@ class ServiceStateRepository {
             if(decoded_message.client_id){
               updateClientId.push({id:decoded_message.id,client_id:decoded_message.client_id});
             }
-            if(decoded_message.state !=='error'){
-              ids.push(decoded_message.id); 
-            }
+            ids.push(decoded_message.id); 
           }
           if(decoded_message.state==='error'){
             errors.push({date:date,service_id:decoded_message.id,error_code:decoded_message.status_code,error_description:decoded_message.error_description})
@@ -105,7 +103,7 @@ class ServiceStateRepository {
           throw err;
         });
       }
-      return ids;
+      return {deployed_ids:ids,errors:errors};
 
     });
   }

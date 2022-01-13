@@ -113,7 +113,6 @@ class Organizations {
 
 
 //   async getOwn(id,sub,tenant){
-//     console.log('her');
 //     return this.db.oneOrNone(sql.getOwnPetition,{
 //       sub:sub,
 //       id:+id,

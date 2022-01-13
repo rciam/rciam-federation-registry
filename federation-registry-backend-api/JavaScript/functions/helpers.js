@@ -292,7 +292,7 @@ const sendMail= (data,template_uri,users)=>{
         tenant_title:config[data.tenant].sender
 
       };
-      users.forEach((user) => {
+      users.forEach(async (user) => {
           replacements.name = user.name;
           var htmlToSend = template(replacements);
           var mailOptions = {
@@ -301,6 +301,7 @@ const sendMail= (data,template_uri,users)=>{
             subject : data.subject,
             html : htmlToSend
           };
+          await delay(400);
           transporter.sendMail(mailOptions, function (error, response) {
             if (error) {
               customLogger(null,null,'error',[{type:'email_log'},{message:'Email not sent'},{template:template_uri},{error:error},{user:user},{data:data}]);

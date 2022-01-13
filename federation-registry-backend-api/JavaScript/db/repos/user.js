@@ -45,7 +45,11 @@ class User {
   }
 
   async getUsersByAction(action,tenant){
-    const query = this.pgp.as.format(sql.getUsersByAction,{action:action,tenant:tenant});
+    let tenant_search = "";
+    if(tenant){
+      tenant_search = "WHERE tenant='"+ tenant +"'"
+    }
+    const query = this.pgp.as.format(sql.getUsersByAction,{action:action,tenant_search:tenant_search});
     return this.db.any(query).then(res=>{
       if(res){
         return res;
