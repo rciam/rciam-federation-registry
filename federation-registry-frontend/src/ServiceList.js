@@ -629,7 +629,7 @@ function TableItem(props) {
                 </div>
               </Dropdown.Item>
               :null}
-              {props.service.owned && props.service.state==='deployed' && props.service.type!=='delete'?
+              {props.service.owned && props.service.state==='deployed'&& props.service.status!=='request_review' && props.service.type!=='delete'?
                 <Dropdown.Item>
                   <div
                   onClick={()=>{

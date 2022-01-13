@@ -21,8 +21,6 @@ var passport = require('passport');
 const { generators } = require('openid-client');
 const code_verifier = generators.codeVerifier();
 const {outdatedNotificationsWorker} = require('./functions/outdated_notif.js');
-
-// We set Cors options so that express can handle preflight requests containing cookies
 let clients= {};
 let tenant_config = {};
 custom.setHttpOptionsDefaults({

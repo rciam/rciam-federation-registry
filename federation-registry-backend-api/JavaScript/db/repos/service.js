@@ -176,7 +176,8 @@ class ServiceRepository {
   }
 
   async getPending(){
-    return this.db.any(sql.getPending).then(services=>{
+    const query = this.pgp.as.format(sql.getPending);
+    return this.db.any(query).then(services=>{
       if(services){
         return services;
       }
