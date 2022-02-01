@@ -16,12 +16,12 @@ export default function InputRow(props){
           <Form.Label column="true" sm="2" className='col-form-label text-right list-input-label'>
             <Row className="input-title-row">
               <Col>{props.title}</Col>
-              {props.moreInfo?
+              {props.moreInfo&&props.moreInfo.tooltip?
               <OverlayTrigger
               placement='top'
               overlay={
                 <Tooltip id={`tooltip-top`}>
-                  {props.moreInfo}
+                  {props.moreInfo.tooltip}
                 </Tooltip>
               }
             >
@@ -35,9 +35,9 @@ export default function InputRow(props){
           {props.required?<span className="required_indicator">*</span>:null}
           <Col sm="8" className={props.extraClass?props.extraClass:''}>
           {props.children}
-          {props.description?
+          {props.description||(props.moreInfo&&props.moreInfo.description)?
             <Form.Text className="text-muted text-left">
-              {parse(props.description)}
+              {parse(props.moreInfo&&props.moreInfo.description?props.moreInfo.description:props.description)}
             </Form.Text>
             :''}
             {props.error && props.touched ? (

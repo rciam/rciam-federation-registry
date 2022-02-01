@@ -370,11 +370,21 @@ const ViewService = (props)=>{
     <NotFound notFound={notFound}/>
     <Logout logout={logout}/>
     <ErrorComponent deploymentError={deploymentError} setDeploymentError={setDeploymentError} service_id={service_id} setLogout={setLogout}/>
-      {service?<ServiceForm initialValues={service} disabled={true} copyButton={true} owned={owned} {...props}/>:service_id?<LoadingBar loading={true}/>:petitionData?
+      {service?
+        <React.Fragment>        
+          {service.created_at?
+            <Alert variant='primary' className='form-alert'>
+              Service was registered at: <b>{service.created_at.slice(0,10).split('-').join('/')+ ' ' + service.created_at.slice(11,19).split('-').join('/')}</b>
+            </Alert>:null}
+          <ServiceForm initialValues={service} disabled={true} copyButton={true} owned={owned} {...props}/>
+        </React.Fragment>
+        :service_id?<LoadingBar loading={true}/>:petitionData?
         <React.Fragment>
           <Alert variant='danger' className='form-alert'>
             {t('view_create_info')}
           </Alert>
+          
+          
           <ServiceForm initialValues={petitionData.petition} copyButton={true} owned={owned} disabled={true} {...petitionData.metadata} {...props}/>
         </React.Fragment>
       :petition_id?<LoadingBar loading={true}/>:null

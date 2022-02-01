@@ -769,11 +769,12 @@ const ServiceForm = (props)=> {
 
                         />
                       </InputRow>
-                      <InputRow  moreInfo={tenant.form_config.more_info.logo_uri} title={t('form_logo')}>
+                      <InputRow  moreInfo={{}} title={t('form_logo')}>
                         <LogoInput
                           value={values.logo_uri?values.logo_uri:''}
                           name='logo_uri'
                           description={t('form_logo_desc')}
+                          moreInfo={tenant.form_config.more_info.logo_uri}
                           onChange={handleChange}
                           error={errors.logo_uri}
                           touched={touched.logo_uri}
@@ -1189,7 +1190,7 @@ const ServiceForm = (props)=> {
                     </div>
 
                   }
-                  <ResponseModal message={message} modalTitle={modalTitle}/>
+                  <ResponseModal return_url={'/'+tenant_name+'/services'} message={message} modalTitle={modalTitle}/>
                   <SimpleModal isSubmitting={isSubmitting} isValid={!Object.keys(errors).length}/>
                    {/* <Debug/> */}
 

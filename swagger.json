@@ -428,6 +428,14 @@ paths:
           description: "Tenant that the request is targeting"
           required: true
         - in: query
+          type: integer
+          name: page
+          description: "The page number of the respone"
+        - in: query
+          type: integer
+          name: limit
+          description: "The page size determining the number of services contained in each page of the response"
+        - in: query
           type: boolean
           name: owned
           description: "If true returns only services and petitions owned by requesting user"
@@ -439,10 +447,10 @@ paths:
           type: string
           name: search_string
           description: "Returns only services and petitions that contain the provided string"
-        - in: query
-          type: string
-          name: protocol
-          description: "Returns only services of the selected protocol"
+        # - in: query
+        #   type: string
+        #   name: protocol
+        #   description: "Returns only services of the selected protocol"
         - in: query
           type: string
           name: env
@@ -1844,6 +1852,13 @@ definitions:
         type: "string"
         format: "uri"
         description: "URL for the Policy Statement of this service"
+      aup_uri:
+        type: "string"
+        format: "uri"
+        description: "URL that contains the Acceptable Use Policy for the users of the service"
+      organization_id:
+        type: "integer"
+        description: "The unique identifier of the Organization of the Service"
       integration_environment:
         type: "string"
         enum:
@@ -1913,7 +1928,7 @@ definitions:
         enum:
         - "plain"
         - "S256"
-        - null
+        - "null"
         description: "Proof Key for Code Exchange (PKCE) Code Challenge Method. For oidc services."
       client_secret:
         type: "string"
@@ -2007,6 +2022,7 @@ definitions:
       full_count:
         type: "integer"
         format: "int64"
+        description: "Total Services matching the request query filters and are available to the user"
       list_items:
         type: "array"
         items:
@@ -2081,6 +2097,10 @@ definitions:
               - "demo"
               - "development"
               - "production"
+            created_at: 
+              type: "string"
+              format: "date"
+              description: "Date that the service was created"
   Pending:
     type: "object"
     properties:

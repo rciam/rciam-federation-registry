@@ -12,6 +12,7 @@ import InvitationsPage from '../Invitations.js'
 import {tenantContext,userContext} from '../context.js';
 import {PageNotFound,TenantHandler} from '../Components/TenantHandler.js';
 import UserHandler from '../Components/UserHandler.js';
+import Notifications from '../Components/Notifications.js'; 
 //import { useParams } from "react-router-dom";
 
 
@@ -90,6 +91,14 @@ const Routes = (props) => {
           Edit Service
         </div>
         <EditService user={props.user}/>
+      </ProtectedRoute>
+      <ProtectedRoute user={props.user} exact path="/:tenant_name/notifications" actions={['send_notifications']} >
+        <div className="links">
+          <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/home"}>{props.t('link_home')}</Link>
+          <span className="link-seperator">/</span>
+          Send Notifications
+        </div>
+        <Notifications user={props.user}/>
       </ProtectedRoute>
       <ProtectedRoute user={props.user} exact path="/:tenant_name/requests/:petition_id/edit">
         <div className="links">
@@ -247,7 +256,19 @@ const ProtectedRoute= (props)=> {
     }
   },[props.location.pathname,tenant,user]);
 
-  
+  const authorisedActions = (actions) =>{
+    let authorized = true;
+    console.log(actions)
+    if(props.actions && props.actions.length>0){
+      props.actions.forEach(action=>{
+        if(!actions.includes(action)){
+          authorized = false
+        }
+      
+      })
+    }
+    return authorized;
+  }
   const childrenWithProps = React.Children.map(props.children, child =>
       React.cloneElement(child, {...props.location.state})
     );
@@ -261,7 +282,7 @@ const ProtectedRoute= (props)=> {
         // user && user[0] && (!(props.admin && !user[0].review)||props.location.state.integration_environment==='development')
         localStorage.getItem('token')&&!(user&&user[0])? 
           <UserHandler/>:
-        localStorage.getItem('token')&&(user&&user[0])?
+        localStorage.getItem('token')&&(user&&user[0])&&(!props.actions||authorisedActions(user[0].actions))?
         (
           childrenWithProps
         ) : (

@@ -21,6 +21,7 @@ import { Typeahead } from 'react-bootstrap-typeahead'; // ES2015
 import 'react-bootstrap-typeahead/css/Typeahead.css';
 import * as config from '../config.json';
 import {useParams } from "react-router-dom";
+import parse from 'html-react-parser';
 
 
 // import {removeA} from '../helpers.js';
@@ -1083,9 +1084,11 @@ export  function LogoInput(props){
         onMouseOver={()=>setShow(true)}
         onMouseOut={()=>setShow(false)}
       />
-      <Form.Text className="text-muted text-left">
-        {props.description}
-      </Form.Text>
+      {props.description||(props.moreInfo&&props.moreInfo.description)?
+          <Form.Text className="text-muted text-left">
+            {parse(props.moreInfo&&props.moreInfo.description?props.moreInfo.description:props.description)}
+          </Form.Text>
+          :''}
       <MyOverLay show={props.changed&&show?'string':null} type='Edited' target={target}/>
       {props.warning&&!props.error?<div className="warning-message"> <FontAwesomeIcon icon={faExclamationTriangle}/>Warning: Image could not be loaded, make sure the url points to an image resourse</div>:null}
       {props.error && props.touched ? (typeof(props.error)==='string')?(<div className="error-message">{props.error}</div>):(<div className="error-message">{t('input_image_error')}</div>):null}

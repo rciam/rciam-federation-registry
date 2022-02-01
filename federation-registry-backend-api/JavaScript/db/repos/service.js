@@ -24,13 +24,24 @@ class ServiceRepository {
             let data = {};
             result.json.generate_client_secret = false;
             data.service_data = extractCoc(result.json);
-
             return data
           }
           else {
             return null;
           }
         });
+  }
+
+  async getContacts(contact_types,environments){
+    const query = this.pgp.as.format(sql.getContacts,{environments:environments,contact_types:contact_types});
+    return this.db.any(query).then(users =>{
+      if(users&&users[0]&&users[0].emails){
+        return users[0].emails;
+      }
+      else{
+        return [];
+      }
+    });
   }
 
 

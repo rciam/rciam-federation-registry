@@ -260,6 +260,45 @@ const newMemberNotificationMail = (data,managers) => {
   }
 }
 
+const sendNotifications = (data,template_uri,users) => {
+  if(process.env.NODE_ENV!=='test'&&process.env.NODE_ENV!=='test-docker'&&!config.disable_emails){
+  readHTMLFile(path.join(__dirname, '../html/', template_uri), function(err, html) {
+      let transporter = createTransport();
+
+      var template = hbs.compile(html);
+      //var replacements = {username: "John Doe",name:"The name"};
+      console.log(tenant_config[data.tenant].base_url);
+      var replacements = {
+        ...data,
+        url:tenant_config[data.tenant].base_url+ (data.url?data.url:""),
+        tenant_title:config[data.tenant].sender
+      };
+      var htmlToSend = template(replacements);
+      console.log(config[data.tenant].sender+" Notifications "+data.sender_name+" <"+data.sender_email+">");
+      var mailOptions = {
+        from: {
+          name: data.sender_name,
+          address: data.sender_email
+        },
+        to : users,
+        subject : data.subject + " ["+"EGI Check-in Notifications"+"]",
+        html : htmlToSend,
+        cc : data.cc_emails
+      };
+      transporter.sendMail(mailOptions, function (error, response) {
+        if (error) {
+          customLogger(null,null,'error',[{type:'email_log'},{message:'Email not sent'},{template:template_uri},{error:error},{users:users},{data:data}]);
+        }
+        else {
+          customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{template:template_uri},{users:users},{data:data}]);
+        }
+      });
+
+
+  });
+  }
+}
+
 const sendMail= (data,template_uri,users)=>{
   var currentDate = new Date();
   var result;
@@ -456,5 +495,6 @@ module.exports = {
   createGgusTickets,
   delay,
   sendNotif,
-  createTransport
+  createTransport,
+  sendNotifications
 }
