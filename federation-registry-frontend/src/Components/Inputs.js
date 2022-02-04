@@ -121,7 +121,6 @@ export function OrganizationField(props){
               if(response){
                 //options[searchString]     
                 let loaded = false;     
-
                 response.organizations.forEach((item,index)=>{
                   if(searchString===item.organization_name){
                     exists = true;
@@ -131,6 +130,7 @@ export function OrganizationField(props){
                   options[item.organization_name].url = item.organization_url;
                   options[item.organization_name].ror_id = null;
                   options[item.organization_name].id = item.organization_id;
+
                   if(item.organization_name ===singleSelections[0]&&options[item.organization_name].url){
                     loaded= true;
                   }
@@ -151,7 +151,7 @@ export function OrganizationField(props){
                     }
                   });
                 }
-                if(loaded){
+                if(loaded||exists){
                   props.setDisabledOrganizationFields(['organization_url']);                  
                 }
                 else{

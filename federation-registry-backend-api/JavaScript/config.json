@@ -3,18 +3,22 @@
     "logo_url":"https://aai-dev.egi.eu/proxy/module.php/themeegi/resources/images/logo.svg",
     "base_url":"https://aai.egi.eu/federation",
     "sender":"EGI Check-in",
-    "contact":"check-in@egi.eu"
+    "contact":"check-in@egi.eu",
+    "tenant_signature": "EGI AAI team"
   },
   "eosc" : {
     "logo_url":"https://www.eosc-portal.eu/sites/all/themes/theme1/logo.png",
     "base_url":null,
     "sender":"EOSC Infrastructure Proxy",
-    "contact":"support@example.org"
+    "contact":"support@example.org",
+    "tenant_signature": "EOSC team"
   },
   "grnet": {
     "logo_url":"https://upload.wikimedia.org/wikipedia/en/e/e8/Grnet-transp.jpg",
     "base_url":null,
-    "sender":"support@example.org"
+    "sender":"support@example.org",
+    "contact": "check-in@egi.eu",
+    "tenant_signature": "GRNET team"
   },
   "form" : {
     "egi" : {
@@ -52,6 +56,12 @@
       "token_endpoint_auth_signing_alg":["HS256","HS384","HS512","RS256","RS384","RS512","PS256"],
       "token_endpoint_auth_signing_alg_title":["HMAC using SHA-256 hash algorithm","HMAC using SHA-384 hash algorithm","HMAC using SHA-512 hash algorithm","RSASSA using SHA-256 hash algorithm","RSASSA using SHA-384 hash algorithm","RSASSA using SHA-512 hash algorithm","RSASSA-PSS using SHA-256 and MGF1 with SHA-256"],
       "more_info":{
+        "website_url": {
+          "description": "Website URL for information about the service (This information will be shown in the Consent Page)"
+        },
+        "service_description": {
+          "description" : "Human-readable text description, plain text format (max 1000 characters) (This information will be shown in the Consent Page)"
+        },
         "client_id":{
           "tooltip": "A unique string representing the registration information provided by the OAuth 2.0 client at the authorisation server."
         },
@@ -138,6 +148,12 @@
       "token_endpoint_auth_signing_alg":["HS256","HS384","HS512","RS256","RS384","RS512","PS256"],
       "token_endpoint_auth_signing_alg_title":["HMAC using SHA-256 hash algorithm","HMAC using SHA-384 hash algorithm","HMAC using SHA-512 hash algorithm","RSASSA using SHA-256 hash algorithm","RSASSA using SHA-384 hash algorithm","RSASSA using SHA-512 hash algorithm","RSASSA-PSS using SHA-256 and MGF1 with SHA-256"],
       "more_info":{
+        "website_url": {
+          "description": "Website URL for information about the service (This information will be shown in the Consent Page)"
+        },
+        "service_description": {
+          "description" : "Human-readable text description, plain text format (max 1000 characters) (This information will be shown in the Consent Page)"
+        },
         "client_id":{
           "tooltip": "A unique string representing the registration information provided by the OAuth 2.0 client at the authorisation server."
         },
@@ -230,7 +246,7 @@
   "service_fields":["external_id","tenant","service_name","service_description","logo_uri","policy_uri","integration_environment","protocol","client_id","allow_introspection","code_challenge_method","device_code_validity_seconds","access_token_validity_seconds","refresh_token_validity_seconds","client_secret","reuse_refresh_token","clear_access_tokens_on_refresh","id_token_timeout_seconds","entity_id","metadata_url","grant_types","scope","contacts","redirect_uris","token_endpoint_auth_method","token_endpoint_auth_signing_alg","jwks","jwks_uri","country","website_url","aup_uri","organization_id"],
   "ggus_email":"checkin-support@mailman.egi.eu",
   "disable_emails":false,
-  "deployment_fields":["service_name","service_description","client_id","allow_introspection","code_challenge_method","device_code_validity_seconds","access_token_validity_seconds","refresh_token_validity_seconds","client_secret","reuse_refresh_token","clear_access_tokens_on_refresh","id_token_timeout_seconds","entity_id","metadata_url","grant_types","scope","contacts","redirect_uris","token_endpoint_auth_method","token_endpoint_auth_signing_alg","jwks","jwks_uri","website_url","aup_uri","policy_uri"],
+  "deployment_fields":["service_name","service_description","client_id","allow_introspection","code_challenge_method","device_code_validity_seconds","access_token_validity_seconds","refresh_token_validity_seconds","client_secret","reuse_refresh_token","clear_access_tokens_on_refresh","id_token_timeout_seconds","entity_id","metadata_url","grant_types","scope","contacts","redirect_uris","token_endpoint_auth_method","token_endpoint_auth_signing_alg","jwks","jwks_uri","website_url","aup_uri","policy_uri","country"],
   "multivalue_fields": ["grant_types","scope","contacts","redirect_uris"],
   "send_notifications_on_startup":false
 }

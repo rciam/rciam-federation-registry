@@ -258,7 +258,6 @@ const ProtectedRoute= (props)=> {
 
   const authorisedActions = (actions) =>{
     let authorized = true;
-    console.log(actions)
     if(props.actions && props.actions.length>0){
       props.actions.forEach(action=>{
         if(!actions.includes(action)){

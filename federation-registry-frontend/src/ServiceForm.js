@@ -68,6 +68,7 @@ const ServiceForm = (props)=> {
     if(service_id||petition_id){
       setShowInitErrors(true)
     }
+
     if(!tenant.form_config.integration_environment.includes(props.initialValues.integration_environment)){
       props.initialValues.integration_environment = tenant.form_config.integration_environment[0];
     }
@@ -90,6 +91,9 @@ const ServiceForm = (props)=> {
       if(tenant.restricted_environments.includes(props.initialValues.integration_environment)&&!props.user.review_restricted){
         setRestrictReview(true);
       }
+    }
+    if(props.initialValues.organization_name){
+      setDisabledOrganizationFields(['organization_url']);
     }
     //console.log(props.initialValues);
     setFormValues(props.initialValues);

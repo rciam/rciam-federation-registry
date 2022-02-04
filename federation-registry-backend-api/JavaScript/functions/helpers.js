@@ -193,7 +193,8 @@ const sendInvitationMail = async (data) => {
           registry_url: tenant_config[data.tenant].base_url,
           tenant:data.tenant,
           logo_url:config[data.tenant].logo_url,
-          url:tenant_config[data.tenant].base_url +'/invitation/' + data.code
+          url:tenant_config[data.tenant].base_url +'/invitation/' + data.code,
+          tenant_signature:config[data.tenant].tenant_signature
         }
         var htmlToSend = template(replacements);
         var mailOptions = {
@@ -233,7 +234,8 @@ const newMemberNotificationMail = (data,managers) => {
         url:tenant_config[data.tenant].base_url+'/'+data.url,
         tenant:data.tenant.toUpperCase(),
         logo_url:config[data.tenant].logo_url,
-        tenant_title:config[data.tenant].sender
+        tenant_title:config[data.tenant].sender,
+        tenant_signature:config[data.tenant].tenant_signature
       };
       var template = hbs.compile(html);
       managers.forEach(async (manager)=>{
@@ -267,21 +269,21 @@ const sendNotifications = (data,template_uri,users) => {
 
       var template = hbs.compile(html);
       //var replacements = {username: "John Doe",name:"The name"};
-      console.log(tenant_config[data.tenant].base_url);
       var replacements = {
         ...data,
         url:tenant_config[data.tenant].base_url+ (data.url?data.url:""),
-        tenant_title:config[data.tenant].sender
+        logo_url:config[data.tenant].logo_url,
+        tenant_title:config[data.tenant].sender,
+        tenant_signature:config[data.tenant].tenant_signature
       };
       var htmlToSend = template(replacements);
-      console.log(config[data.tenant].sender+" Notifications "+data.sender_name+" <"+data.sender_email+">");
       var mailOptions = {
         from: {
           name: data.sender_name,
           address: data.sender_email
         },
         to : users,
-        subject : data.subject + " ["+"EGI Check-in Notifications"+"]",
+        subject : data.subject + " ["+config[data.tenant].sender +" Notifications"+"]",
         html : htmlToSend,
         cc : data.cc_emails
       };
@@ -328,8 +330,8 @@ const sendMail= (data,template_uri,users)=>{
         logo_url:config[data.tenant].logo_url,
         ...data,
         url:tenant_config[data.tenant].base_url+ (data.url?data.url:""),
-        tenant_title:config[data.tenant].sender
-
+        tenant_title:config[data.tenant].sender,
+        tenant_signature:config[data.tenant].tenant_signature
       };
       users.forEach(async (user) => {
           replacements.name = user.name;

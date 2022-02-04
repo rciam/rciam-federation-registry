@@ -32,8 +32,8 @@ class ServiceRepository {
         });
   }
 
-  async getContacts(contact_types,environments){
-    const query = this.pgp.as.format(sql.getContacts,{environments:environments,contact_types:contact_types});
+  async getContacts(contact_types,environments,tenant){
+    const query = this.pgp.as.format(sql.getContacts,{environments:environments,contact_types:contact_types,tenant:tenant});
     return this.db.any(query).then(users =>{
       if(users&&users[0]&&users[0].emails){
         return users[0].emails;

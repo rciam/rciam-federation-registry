@@ -1,5 +1,5 @@
 require('dotenv').config();
-const {petitionValidationRules,validate,validateInternal,tenantValidation,changeContacts,formatPetition,getServiceListValidation,postInvitationValidation,serviceValidationRules,putAgentValidation,postAgentValidation,decodeAms,amsIngestValidation,reFormatPetition,getServicesValidation,formatCocForValidation} = require('../validator.js');
+const {petitionValidationRules,validate,validateInternal,tenantValidation,changeContacts,formatPetition,getServiceListValidation,postInvitationValidation,serviceValidationRules,putAgentValidation,postAgentValidation,decodeAms,amsIngestValidation,reFormatPetition,getServicesValidation,formatCocForValidation,putNotificationsValidation} = require('../validator.js');
 const {validationResult} = require('express-validator');
 const qs = require('qs');
 const {v1:uuidv1} = require('uuid');
@@ -1076,7 +1076,7 @@ router.get('/tenants/:tenant/notifications/recipients',authenticate,(req,res,nex
   let environments = req.query.environments.split(',');
 
   try{
-    db.service.getContacts(contact_types,environments).then(async users=>{
+    db.service.getContacts(contact_types,environments,req.params.tenant).then(async users=>{
       res.status(200).send(users);
     }).catch(err=>{
       next(err)
@@ -1088,10 +1088,10 @@ router.get('/tenants/:tenant/notifications/recipients',authenticate,(req,res,nex
   
 })
 
-router.put('/tenants/:tenant/notifications', authenticate,(req,res,next)=>{
+router.put('/tenants/:tenant/notifications',authenticate,putNotificationsValidation(),validate,(req,res,next)=>{
   try{
     if(req.user.role.actions.includes('send_notifications')){
-      db.service.getContacts(req.body.contact_types,req.body.environments).then(async users=>{
+      db.service.getContacts(req.body.contact_types,req.body.environments,req.params.tenant).then(async users=>{
         if(req.body.notify_admins){
           admins = await db.user.getUsersByAction("send_notifications");
           admins.forEach(admin=>{
@@ -1547,7 +1547,6 @@ const saveUser=(userinfo,tenant)=>{
                 update_userinfo= true;
               }
             }
-            console.log("Update User:" + update_userinfo);
             if(update_userinfo){
               queries.push(t.user_info.update(userinfo,tenant));
             }

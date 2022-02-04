@@ -11,8 +11,8 @@ import Row from 'react-bootstrap/esm/Row';
 import {Formik} from 'formik';
 import Form from 'react-bootstrap/Form';
 import * as yup from 'yup';
-import {ResponseModal,Logout} from './Modals.js';
- import {Debug} from './Debug.js';
+import {ResponseModal,Logout,ConfirmationModal} from './Modals.js';
+//  import {Debug} from './Debug.js';
 
  const Error = (props) =>{
   return (
@@ -27,14 +27,14 @@ import {ResponseModal,Logout} from './Modals.js';
 const Notifications = () =>{
   let {tenant_name} = useParams();
   let initialValues = {
-    environments: ['production'],
-    contact_types: ['technical'],
-    cc_emails: ['kozas-sparrow@hotmail.com'],
-    name: "Andreas Kozadinos 44",
-    email_address: "koza-sparrow@hotmail.com",
-    email_subject: "Test Notification",
-    email_body: "This is not good bad bad",
-    notify_admins: "false"
+    environments:["production"],
+    contact_types:["technical"],
+    cc_emails:[],
+    name:"",
+    email_address:"",
+    email_subject:"",
+    email_body:"",
+    notify_admins:"false"
   }
 
   useEffect(()=>{
@@ -50,7 +50,8 @@ const Notifications = () =>{
   const [responseTitle,setResponseTitle] = useState();
   const [responseMessage,setResponseMessage] = useState();
   const [recipients,setRecipients] = useState([]);
-  
+  const [confirmationData,setConfirmationData] = useState({active:false}) 
+
 
   const schema = yup.object({
     name :yup.string().nullable().min(4,t('yup_char_min') + ' ('+4+')').max(36,t('yup_char_max') + ' ('+36+')').required(t('yup_required')),
@@ -76,12 +77,6 @@ const Notifications = () =>{
       }
     }))
 
-    // Everytime client_id changes we make a fetch request to see if it is available.
-    // policy_uri:yup.string().nullable().when('integration_environment',{
-    //   is:'production',
-    //   then: yup.string().nullable().required(t('yup_required')).matches(reg.regSimpleUrl,t('yup_url')),
-    //   otherwise: yup.string().nullable().matches(reg.regSimpleUrl,t('yup_url'))
-    //   })
     })
   const getRecipients = (data) => {
     fetch(config.host+'tenants/'+tenant_name+'/notifications/recipients?contact_types='+data.contact_types+'&environments='+data.environments, {
@@ -166,6 +161,7 @@ const Notifications = () =>{
         {({
       handleSubmit,
       handleChange,
+      submitForm,
       handleBlur,
       values,
       setFieldValue,
@@ -191,7 +187,7 @@ const Notifications = () =>{
               <div>
                 <FontAwesomeIcon icon={faEnvelope}/>
               </div>
-               <Button disabled={true}>Selected Target(s): {recipients.length}</Button>
+               <Button disabled={true}>Number of Recipients: {recipients.length}</Button>
             </Row>
             
             <h3>Contact Types</h3>
@@ -333,7 +329,7 @@ const Notifications = () =>{
                     <Form.Check
                         name="notify_admins"
                         label={"Also notify " + tenant_name.toUpperCase() +" Operators and Managers"}
-                        checked={values.notify_admins}
+                        checked={values.notify_admins==='false'||!values.notify_admins?false:true}
                         value= {values.notify_admins}
                         disabled={false}
                         onChange={handleChange}
@@ -442,10 +438,11 @@ const Notifications = () =>{
                   </div>
                   <Error error={errors.email_body} possition={'up'} show={hasSubmitted||touched.email_body}/>
                 </div>
-                <Button className='submit-button' type="submit" disabled={false} variant="primary" ><FontAwesomeIcon icon={faPaperPlane}/>Send</Button>
+                <ConfirmationModal active={confirmationData.active?true:false} setActive={setConfirmationData} action={()=>{submitForm()}} title={"Are you sure you want to send this notification"} message={recipients.length + ' users will be notified'} accept={'Yes'} decline={'No'}/>
+                <Button className='submit-button' onClick={()=>{setConfirmationData({active:true})}} disabled={false} variant="primary" ><FontAwesomeIcon icon={faPaperPlane}/>Send</Button>
             
           </Col>
-          <Debug/>
+          {/* <Debug/> */}
           </Form>
         </React.Fragment>
       )}
