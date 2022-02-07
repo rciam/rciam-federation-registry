@@ -1,6 +1,6 @@
 import React,{useContext} from 'react';
 import Modal from 'react-bootstrap/Modal';
-import * as config from '../config.json';
+import config from '../config.json';
 import {useHistory,useParams} from "react-router-dom";
 import Button from 'react-bootstrap/Button';
 import { useTranslation } from 'react-i18next';

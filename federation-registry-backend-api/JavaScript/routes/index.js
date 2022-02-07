@@ -1093,7 +1093,7 @@ router.put('/tenants/:tenant/notifications',authenticate,putNotificationsValidat
     if(req.user.role.actions.includes('send_notifications')){
       db.service.getContacts(req.body.contact_types,req.body.environments,req.params.tenant).then(async users=>{
         if(req.body.notify_admins){
-          admins = await db.user.getUsersByAction("send_notifications");
+          admins = await db.user.getUsersByAction("send_notifications",req.params.tenant);
           admins.forEach(admin=>{
             if(!req.body.cc_emails.includes(admin.email)){
               req.body.cc_emails.push(admin.email);

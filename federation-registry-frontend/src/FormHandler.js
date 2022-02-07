@@ -1,7 +1,7 @@
 import React,{useEffect,useState,useContext} from 'react';
 import initialValues from './initialValues';
 import {useParams} from "react-router-dom";
-import * as config from './config.json';
+import config from './config.json';
 import ServiceForm from "./ServiceForm.js";
 import ErrorComponent from "./Components/Error.js"
 import {LoadingBar} from './Components/LoadingBar';

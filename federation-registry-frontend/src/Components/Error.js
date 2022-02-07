@@ -1,7 +1,7 @@
 import React,{useState,useContext} from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {faSortDown,faSortUp} from '@fortawesome/free-solid-svg-icons';
-import * as config from '../config.json';
+import config from '../config.json';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Alert from 'react-bootstrap/Alert';
 import Row from 'react-bootstrap/Row';

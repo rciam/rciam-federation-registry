@@ -19,7 +19,7 @@ import CopyToClipboardComponent from './CopyToClipboard.js'
 import {tenantContext} from '../context.js';
 import { Typeahead } from 'react-bootstrap-typeahead'; // ES2015
 import 'react-bootstrap-typeahead/css/Typeahead.css';
-import * as config from '../config.json';
+import config from '../config.json';
 import {useParams } from "react-router-dom";
 import parse from 'html-react-parser';
 

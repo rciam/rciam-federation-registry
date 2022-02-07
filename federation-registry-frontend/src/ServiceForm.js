@@ -19,7 +19,7 @@ import {SimpleModal,ResponseModal,Logout,NotFound} from './Components/Modals.js'
 import Form from 'react-bootstrap/Form';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import {Formik} from 'formik';
-import * as config from './config.json';
+import config from './config.json';
 import InputRow from './Components/InputRow.js';
 import Button from 'react-bootstrap/Button';
 import * as yup from 'yup';
@@ -49,7 +49,7 @@ const ServiceForm = (props)=> {
   const [availabilityCheck,setAvailabilityCheck] = useState(true);
   const formRef = useRef();
   const [disabled,setDisabled] = useState(false);
-  const [disabledOrganizationFields,setDisabledOrganizationFields] = useState([])
+  const [disabledOrganizationFields,setDisabledOrganizationFields] = useState([]);
   const [hasSubmitted,setHasSubmitted] = useState(false);
   const [message,setMessage] = useState();
   const [modalTitle,setModalTitle] = useState(null);
@@ -770,7 +770,6 @@ const ServiceForm = (props)=> {
                           changed={props.changes?props.changes.integration_environment:null}
                           copybuttonActive={props.owned&&props.disabled&&service_id}
                           toggleCopyDialog={toggleCopyDialog}
-
                         />
                       </InputRow>
                       <InputRow  moreInfo={{}} title={t('form_logo')}>
@@ -800,7 +799,7 @@ const ServiceForm = (props)=> {
                           onBlur={handleBlur}
                           disabled={disabled}
                           changed={props.changes?props.changes.website_url:null}
-                         />
+                        />
                      </InputRow>
                       <InputRow  moreInfo={tenant.form_config.more_info.service_description} title={t('form_description')} required={true} description={t('form_description_desc')} error={errors.service_description} touched={touched.service_description}>
                         <TextAria

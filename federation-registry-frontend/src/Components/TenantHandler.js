@@ -1,6 +1,6 @@
 import React,{useEffect,useContext} from 'react';
 import {useParams,useHistory} from "react-router-dom";
-import * as config from '../config.json';
+import config from '../config.json';
 import {tenantContext} from '../context.js';
 import {LoadingPage} from './LoadingPage.js';
 

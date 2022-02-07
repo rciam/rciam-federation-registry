@@ -1,6 +1,6 @@
 import React,{useEffect,useState} from 'react';
 import Badge from 'react-bootstrap/Badge';
-import * as config from '../config.json';
+import config from '../config.json';
 import {LoadingBar} from './LoadingBar';
 import ServiceForm from "../ServiceForm.js";
 import Table from 'react-bootstrap/Table';

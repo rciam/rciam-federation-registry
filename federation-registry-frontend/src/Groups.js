@@ -6,7 +6,7 @@ import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
 import { useTranslation } from 'react-i18next';
 import Form from 'react-bootstrap/Form';
-import * as config from './config.json';
+import config from './config.json';
 import InputGroup from 'react-bootstrap/InputGroup';
 import {useParams } from "react-router-dom";
 import Button from 'react-bootstrap/Button';

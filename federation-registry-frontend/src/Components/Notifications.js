@@ -1,5 +1,5 @@
 import React,{useEffect,useState,useContext} from 'react';
-import * as config from '../config.json';
+import config from '../config.json';
 import Button from 'react-bootstrap/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {faPaperPlane,faEnvelope} from '@fortawesome/free-solid-svg-icons';
@@ -11,7 +11,7 @@ import Row from 'react-bootstrap/esm/Row';
 import {Formik} from 'formik';
 import Form from 'react-bootstrap/Form';
 import * as yup from 'yup';
-import {ResponseModal,Logout,ConfirmationModal} from './Modals.js';
+import {ResponseModal,Logout,ConfirmationModal,SimpleModal} from './Modals.js';
 //  import {Debug} from './Debug.js';
 
  const Error = (props) =>{
@@ -155,7 +155,7 @@ const Notifications = () =>{
          validationSchema={schema}
         onSubmit={(values,{setSubmitting}) => {
           setHasSubmitted(true);
-          sendNotification(values);
+          setConfirmationData({active:true})
         }}
       >
         {({
@@ -438,9 +438,9 @@ const Notifications = () =>{
                   </div>
                   <Error error={errors.email_body} possition={'up'} show={hasSubmitted||touched.email_body}/>
                 </div>
-                <ConfirmationModal active={confirmationData.active?true:false} setActive={setConfirmationData} action={()=>{submitForm()}} title={"Are you sure you want to send this notification"} message={recipients.length + ' users will be notified'} accept={'Yes'} decline={'No'}/>
-                <Button className='submit-button' onClick={()=>{setConfirmationData({active:true})}} disabled={false} variant="primary" ><FontAwesomeIcon icon={faPaperPlane}/>Send</Button>
-            
+                <SimpleModal isSubmitting={isSubmitting} isValid={!Object.keys(errors).length}/>
+                <ConfirmationModal active={confirmationData.active?true:false} setActive={setConfirmationData} action={()=>{sendNotification(values);}} title={"Are you sure you want to send this notification"} message={recipients.length + ' users will be notified'} accept={'Yes'} decline={'No'}/>
+                <Button className='submit-button' type="submit" variant="primary" ><FontAwesomeIcon icon={faPaperPlane}/>Send</Button>
           </Col>
           {/* <Debug/> */}
           </Form>
