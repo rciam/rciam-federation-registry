@@ -193,7 +193,8 @@ const sendInvitationMail = async (data) => {
           registry_url: tenant_config[data.tenant].base_url,
           tenant:data.tenant,
           logo_url:config[data.tenant].logo_url,
-          url:tenant_config[data.tenant].base_url +'/invitation/' + data.code
+          url:tenant_config[data.tenant].base_url +'/invitation/' + data.code,
+          tenant_signature:config[data.tenant].tenant_signature
         }
         var htmlToSend = template(replacements);
         var mailOptions = {
@@ -233,7 +234,8 @@ const newMemberNotificationMail = (data,managers) => {
         url:tenant_config[data.tenant].base_url+'/'+data.url,
         tenant:data.tenant.toUpperCase(),
         logo_url:config[data.tenant].logo_url,
-        tenant_title:config[data.tenant].sender
+        tenant_title:config[data.tenant].sender,
+        tenant_signature:config[data.tenant].tenant_signature
       };
       var template = hbs.compile(html);
       managers.forEach(async (manager)=>{
@@ -257,6 +259,45 @@ const newMemberNotificationMail = (data,managers) => {
         });
       })
     })
+  }
+}
+
+const sendNotifications = (data,template_uri,users) => {
+  if(process.env.NODE_ENV!=='test'&&process.env.NODE_ENV!=='test-docker'&&!config.disable_emails){
+  readHTMLFile(path.join(__dirname, '../html/', template_uri), function(err, html) {
+      let transporter = createTransport();
+
+      var template = hbs.compile(html);
+      //var replacements = {username: "John Doe",name:"The name"};
+      var replacements = {
+        ...data,
+        url:tenant_config[data.tenant].base_url+ (data.url?data.url:""),
+        logo_url:config[data.tenant].logo_url,
+        tenant_title:config[data.tenant].sender,
+        tenant_signature:config[data.tenant].tenant_signature
+      };
+      var htmlToSend = template(replacements);
+      var mailOptions = {
+        from: {
+          name: data.sender_name,
+          address: data.sender_email
+        },
+        to : users,
+        subject : data.subject + " ["+config[data.tenant].sender +" Notifications"+"]",
+        html : htmlToSend,
+        cc : data.cc_emails
+      };
+      transporter.sendMail(mailOptions, function (error, response) {
+        if (error) {
+          customLogger(null,null,'error',[{type:'email_log'},{message:'Email not sent'},{template:template_uri},{error:error},{users:users},{data:data}]);
+        }
+        else {
+          customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{template:template_uri},{users:users},{data:data}]);
+        }
+      });
+
+
+  });
   }
 }
 
@@ -289,8 +330,8 @@ const sendMail= (data,template_uri,users)=>{
         logo_url:config[data.tenant].logo_url,
         ...data,
         url:tenant_config[data.tenant].base_url+ (data.url?data.url:""),
-        tenant_title:config[data.tenant].sender
-
+        tenant_title:config[data.tenant].sender,
+        tenant_signature:config[data.tenant].tenant_signature
       };
       users.forEach(async (user) => {
           replacements.name = user.name;
@@ -456,5 +497,6 @@ module.exports = {
   createGgusTickets,
   delay,
   sendNotif,
-  createTransport
+  createTransport,
+  sendNotifications
 }

@@ -82,9 +82,7 @@ class ServiceStateRepository {
           }
         }
       }
-	    if(ids.length>0){
-        batch_queries.push(t.service_state.delete(ids));
-      }
+	    
       if(errors.length>0){
         batch_queries.push(t.service_errors.add(errors));
       }
@@ -97,7 +95,10 @@ class ServiceStateRepository {
       if(updateState.length>0){
         batch_queries.push(t.service_state.updateMultiple(updateState));
       }
-
+      if(ids.length>0){
+        batch_queries.push(t.service_state.delete(ids));
+        batch_queries.push(t.service_state.setCreatedAt(ids));
+      }
       if(batch_queries.length>0){
         let batch_result = await t.batch(batch_queries).catch(err=>{
           throw err;
@@ -108,7 +109,10 @@ class ServiceStateRepository {
     });
   }
 
+  async setCreatedAt(ids){
+    return this.db.any("UPDATE service_state set created_at=CURRENT_TIMESTAMP where id IN($1:csv) AND deployment_type='create' AND state='deployed'",[ids]);
 
+  }
   // Of the Services that have finished deployment (ids) delete those that were pending deletion
   async delete(ids){
 

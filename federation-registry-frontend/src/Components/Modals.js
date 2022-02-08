@@ -1,6 +1,6 @@
 import React,{useContext} from 'react';
 import Modal from 'react-bootstrap/Modal';
-import * as config from '../config.json';
+import config from '../config.json';
 import {useHistory,useParams} from "react-router-dom";
 import Button from 'react-bootstrap/Button';
 import { useTranslation } from 'react-i18next';
@@ -150,14 +150,14 @@ export const ConfirmationModal = (props) =>{
 }
 
 export function ResponseModal(props){
-  let {tenant_name} = useParams();
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   let history = useHistory();
 
   //const handleClose = () => props.setMessage();
   const handleClose = () => {
-    history.push('/'+tenant_name+'/services');}
+    history.push(props.return_url);
+  }
   return (
     <Modal show={props.message?true:false} onHide={handleClose}>
         <Modal.Header closeButton>

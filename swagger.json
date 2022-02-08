@@ -340,6 +340,116 @@ paths:
           description: "Internal Error"
       security:
       - access_tokenAuth: []
+  /tenants/{name}/notifications/recipients:
+    get:
+      tags:
+      - "Notifications"
+      summary: "Get recipients"
+      description: "Fetches all contacts that match the criteria provided"
+      operationId: "getRecipients"
+      produces:
+      - "application/json"
+      parameters:
+      - in: path
+        type: string
+        required: true
+        name: name
+        description: "Tenant that the request is targeting"
+      - in: query 
+        name: contact_types
+        type: array
+        items:
+          type: string
+        description: "Types of contacts to get"
+      - in: query
+        name: environments
+        type: array
+        items:
+          type: string
+        description: "Target environments to get contacts from"
+      responses:
+        "200":
+          description: "successful"
+          schema:
+            type: "array"
+            items:
+              type: "string"
+            description: "Contact email addresses that match the criteria"
+        "401":
+          description: "Unauthenticated request"
+        "500":
+          description: "Internal Error"
+      security:
+      - access_tokenAuth: []
+  /tenants/{name}/notifications:
+    put:
+      tags:
+      - "Notifications"
+      summary: "Send Notifications"
+      description: "Sends Notifications to the contacts of registered services"
+      operationId: "sendNotif"
+      produces:
+      - "application/json"
+      parameters:
+      - in: path
+        type: string
+        required: true
+        name: name
+        description: "Tenant that the request is targeting"
+      - in: "body"
+        name: "body"
+        description: "Notification data"
+        required: true
+        schema:
+          type: "object"
+          properties:
+            name:
+              type: "string"
+              description: "Name of the notification sender"
+            email_address:
+              type: "string"
+              format: "email"
+              description: "Email address of the notifications sender"
+            email_subject:
+              type: "string"
+              description: "Subject of the notification"
+            email_body:
+              type: "string"
+              description: "Notification Text"
+            contact_types:
+              type: "array"
+              items: 
+                type: "string"
+              description: "Types of Contacts that will recieve the notification"
+            cc_emails:
+              type: "array"
+              items: 
+                type: "string"
+                format: "email"
+              description: "Email addresses that will be added as CC to the notification email"
+            environments:
+              type: "array"
+              items:
+                type: "string"
+              description: "Environments that will be affected by the notification"
+            notify_admins:
+              type: "boolean"
+              description: "Also add administrators as CC to the notification email"
+      responses:
+        "200":
+          description: "successful"
+          schema:
+            type: "object"
+            properties: 
+              notified_users:
+                type: "number"
+                description: "Number of users the notification was sent to"
+        "401":
+          description: "Unauthenticated request"
+        "500":
+          description: "Internal Error"
+      security:
+      - access_tokenAuth: []
   /tenants/{name}/services/{id}:
     get:
       tags:
@@ -428,6 +538,14 @@ paths:
           description: "Tenant that the request is targeting"
           required: true
         - in: query
+          type: integer
+          name: page
+          description: "The page number of the respone"
+        - in: query
+          type: integer
+          name: limit
+          description: "The page size determining the number of services contained in each page of the response"
+        - in: query
           type: boolean
           name: owned
           description: "If true returns only services and petitions owned by requesting user"
@@ -439,10 +557,10 @@ paths:
           type: string
           name: search_string
           description: "Returns only services and petitions that contain the provided string"
-        - in: query
-          type: string
-          name: protocol
-          description: "Returns only services of the selected protocol"
+        # - in: query
+        #   type: string
+        #   name: protocol
+        #   description: "Returns only services of the selected protocol"
         - in: query
           type: string
           name: env
@@ -475,7 +593,7 @@ paths:
       tags:
       - "Services"
       summary: "Get all available services"
-      description: "Returns all available services, some properties are returned only if a "
+      description: "Returns all available services, some properties are returned only for authorized requests"
       operationId: "getServices"
       produces:
       - "application/json"
@@ -1262,170 +1380,8 @@ definitions:
         - protocol
         - client_id
         - metadata_url
-      properties:
-        service_name:
-          type: "string"
-          description: "Human-readable application name"
-        service_description:
-          type: "string"
-          description: "Human-readable text description"
-        logo_uri:
-          type: "string"
-          format: "uri"
-          description: "URL that points to an image"
-        policy_uri:
-          type: "string"
-          format: "uri"
-          description: "URL for the Policy Statement of this service"
-        integration_environment:
-          type: "string"
-          enum:
-          - "demo"
-          - "development"
-          - "production"
-        contacts:
-          type: "array"
-          items:
-            type: "object"
-            properties:
-              email:
-                type: "string"
-                format: "email"
-              type:
-                type: "string"
-                enum:
-                - "admin"
-                - "support"
-                - "technical"
-                - "security"
-        protocol:
-          type: "string"
-          enum:
-          - "oidc"
-          - "saml"
-        entity_id:
-          type: "string"
-          description: "Unique identifier for saml services"
-        metadata_uri:
-          type: "string"
-          format: "uri"
-          description: "Metadata uri for saml services"
-        client_id:
-          type: "string"
-          description: "Unique identifier for oidc services"
-        grant_types:
-          type: "array"
-          items:
-            type: "string"
-            enum:
-            - "authorization_code"
-            - "client_credentials"
-            - "urn:ietf:params:oauth:grant-type:token-exchange"
-            - "urn:ietf:params:oauth:grant-type:device_code"
-            - "implicit"
-          description: "Grant Types Values"
-        scope:
-          type: "array"
-          items:
-            type: "string"
-            enum:
-            - "openid"
-            - "email"
-            - "profile"
-            - "offline_access"
-            - "eduperson_entitlement"
-            - "eduperson_scoped_affiliation"
-            - "eduperson_unique_id"
-            - "refeds_edu"
-          description: "oidc specific"
-        allow_introspection:
-          type: "boolean"
-          description: "Allow calls to the Introspection Endpoint. For oidc services."
-        code_challenge_method:
-          type: "string"
-          enum:
-          - "plain"
-          - "S256"
-          - null
-          description: "Proof Key for Code Exchange (PKCE) Code Challenge Method. For oidc services."
-        client_secret:
-          type: "string"
-          format: "password"
-          description: "Client secret, oidc specific"
-        token_endpoint_auth_method:
-          type: "string"
-          enum:
-          - "client_secret_basic"
-          - "client_secret_post"
-          - "client_secret_jwt"
-          - "private_key_jwt"
-          - "none"
-          description: "Authentication method for token endpoint, oidc specific"
-        token_endpoint_auth_signing_alg:
-          type: "string"
-          enum:
-            - "HS256"
-            - "HS384"
-            - "HS512"
-            - "RS256"
-            - "RS384"
-            - "RS512"
-            - "PS256"
-          description: "Signing algorithm for the token endpoint, oidc specific"
-        jwks:
-          type: "object"
-          properties:
-            keys:
-              type: "array"
-              items:
-                type: "string"
-          description: "Public key value for the token endpoint, oidc specific"
-        jwks_uri:
-          type: "string"
-          description: "Uri containing public key for the token endpoint, oidc specific"
-        country:
-          type: "string"
-          description: "Country of the organisation of the service"
-        website_url:
-          type: "string"
-          description: "Website Url containing information about the service"
-        redirect_uris:
-          type: "array"
-          items:
-            type: "string"
-            description: "Allowed Redirect uris for the service"
-        generate_client_secret:
-          type: boolean
-          description: "Prompts backend to generate value for client secret. Oidc specific"
-        reuse_refresh_tokens:
-          type: "boolean"
-          description: "Adds the offline_access scope to the client's scope, oidc specific"
-        clear_access_tokens_on_refresh:
-          type: "boolean"
-          description: "oidc specific"
-        device_code_validity_seconds:
-          type: integer
-          minimum: 0
-          maximum: 1800
-          description: "oidc specific"
-        access_token_validity_seconds:
-          type: integer
-          minimum: 0
-          maximum: 11160
-          description: "oidc specific"
-        refresh_token_validity_seconds:
-          type: integer
-          minimum: 0
-          maximum: 1422000
-          description: "oidc specific"
-        id_token_timeout_seconds:
-          type: integer
-          minimum: 0
-          maximum: 3600
-          description: "oidc specific"
-        code_of_condact_field:
-          type: "boolean"
-          description: "There could be multiple code of contact fields with different depending on the tenant some of them might be required to be true."
+      additionalProperties:
+                $ref: "#/definitions/Service"
   Agent:
     type: "object"
     properties:
@@ -1844,6 +1800,13 @@ definitions:
         type: "string"
         format: "uri"
         description: "URL for the Policy Statement of this service"
+      aup_uri:
+        type: "string"
+        format: "uri"
+        description: "URL that contains the Acceptable Use Policy for the users of the service"
+      organization_id:
+        type: "integer"
+        description: "The unique identifier of the Organization of the Service"
       integration_environment:
         type: "string"
         enum:
@@ -1913,7 +1876,7 @@ definitions:
         enum:
         - "plain"
         - "S256"
-        - null
+        - "null"
         description: "Proof Key for Code Exchange (PKCE) Code Challenge Method. For oidc services."
       client_secret:
         type: "string"
@@ -2007,6 +1970,7 @@ definitions:
       full_count:
         type: "integer"
         format: "int64"
+        description: "Total Services matching the request query filters and are available to the user"
       list_items:
         type: "array"
         items:
@@ -2081,6 +2045,10 @@ definitions:
               - "demo"
               - "development"
               - "production"
+            created_at: 
+              type: "string"
+              format: "date"
+              description: "Date that the service was created"
   Pending:
     type: "object"
     properties:

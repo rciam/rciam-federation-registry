@@ -5,7 +5,7 @@ import Routes from './Router';
 import {SideNav} from './Components/SideNav.js';
 import { useTranslation } from 'react-i18next';
 import {userContext,tenantContext} from './context.js';
-import * as config from './config.json';
+import config from './config.json';
 
  const MainPage= (props)=> {
       const tenant = useContext(tenantContext);

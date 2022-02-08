@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import {userContext,tenantContext} from './context.js';
 import { useHistory,useParams } from "react-router-dom";
 import {LoadingPage} from './Components/LoadingPage.js';
-import * as config from './config.json';
+import config from './config.json';
 
 
 const Home = ()=> {

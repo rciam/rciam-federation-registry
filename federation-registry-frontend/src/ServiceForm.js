@@ -19,7 +19,7 @@ import {SimpleModal,ResponseModal,Logout,NotFound} from './Components/Modals.js'
 import Form from 'react-bootstrap/Form';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import {Formik} from 'formik';
-import * as config from './config.json';
+import config from './config.json';
 import InputRow from './Components/InputRow.js';
 import Button from 'react-bootstrap/Button';
 import * as yup from 'yup';
@@ -49,7 +49,7 @@ const ServiceForm = (props)=> {
   const [availabilityCheck,setAvailabilityCheck] = useState(true);
   const formRef = useRef();
   const [disabled,setDisabled] = useState(false);
-  const [disabledOrganizationFields,setDisabledOrganizationFields] = useState([])
+  const [disabledOrganizationFields,setDisabledOrganizationFields] = useState([]);
   const [hasSubmitted,setHasSubmitted] = useState(false);
   const [message,setMessage] = useState();
   const [modalTitle,setModalTitle] = useState(null);
@@ -68,6 +68,7 @@ const ServiceForm = (props)=> {
     if(service_id||petition_id){
       setShowInitErrors(true)
     }
+
     if(!tenant.form_config.integration_environment.includes(props.initialValues.integration_environment)){
       props.initialValues.integration_environment = tenant.form_config.integration_environment[0];
     }
@@ -90,6 +91,9 @@ const ServiceForm = (props)=> {
       if(tenant.restricted_environments.includes(props.initialValues.integration_environment)&&!props.user.review_restricted){
         setRestrictReview(true);
       }
+    }
+    if(props.initialValues.organization_name){
+      setDisabledOrganizationFields(['organization_url']);
     }
     //console.log(props.initialValues);
     setFormValues(props.initialValues);
@@ -766,14 +770,14 @@ const ServiceForm = (props)=> {
                           changed={props.changes?props.changes.integration_environment:null}
                           copybuttonActive={props.owned&&props.disabled&&service_id}
                           toggleCopyDialog={toggleCopyDialog}
-
                         />
                       </InputRow>
-                      <InputRow  moreInfo={tenant.form_config.more_info.logo_uri} title={t('form_logo')}>
+                      <InputRow  moreInfo={{}} title={t('form_logo')}>
                         <LogoInput
                           value={values.logo_uri?values.logo_uri:''}
                           name='logo_uri'
                           description={t('form_logo_desc')}
+                          moreInfo={tenant.form_config.more_info.logo_uri}
                           onChange={handleChange}
                           error={errors.logo_uri}
                           touched={touched.logo_uri}
@@ -795,7 +799,7 @@ const ServiceForm = (props)=> {
                           onBlur={handleBlur}
                           disabled={disabled}
                           changed={props.changes?props.changes.website_url:null}
-                         />
+                        />
                      </InputRow>
                       <InputRow  moreInfo={tenant.form_config.more_info.service_description} title={t('form_description')} required={true} description={t('form_description_desc')} error={errors.service_description} touched={touched.service_description}>
                         <TextAria
@@ -1189,7 +1193,7 @@ const ServiceForm = (props)=> {
                     </div>
 
                   }
-                  <ResponseModal message={message} modalTitle={modalTitle}/>
+                  <ResponseModal return_url={'/'+tenant_name+'/services'} message={message} modalTitle={modalTitle}/>
                   <SimpleModal isSubmitting={isSubmitting} isValid={!Object.keys(errors).length}/>
                    {/* <Debug/> */}
 

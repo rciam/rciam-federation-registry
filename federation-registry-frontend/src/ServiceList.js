@@ -12,7 +12,7 @@ import Button from 'react-bootstrap/Button';
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import Table from 'react-bootstrap/Table';
-import * as config from './config.json';
+import config from './config.json';
 import Image from 'react-bootstrap/Image';
 import {Link,useParams} from "react-router-dom";
 import Badge from 'react-bootstrap/Badge';

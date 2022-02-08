@@ -35,6 +35,7 @@ module.exports = {
       getByProtocolIdPublic:sql('service/getByProtocolIdPublic.sql'),
       getService:sql('service/getService.sql'),
       getPending:sql('service/getPending.sql'),
+      getContacts:sql('service/getContacts.sql'),
       getByProtocolId:sql('service/getByProtocolId.sql')
     },
     user_info:{

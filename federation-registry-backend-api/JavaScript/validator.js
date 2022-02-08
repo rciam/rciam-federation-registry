@@ -65,6 +65,69 @@ const postAgentValidation = () => {
   ]
 }
 
+// name :yup.string().nullable().min(4,t('yup_char_min') + ' ('+4+')').max(36,t('yup_char_max') + ' ('+36+')').required(t('yup_required')),
+// email_body: yup.string().nullable().min(4,t('yup_char_min') + ' ('+4+')').max(4064,t('yup_char_max') + ' ('+4064+')').required(t('yup_required')),
+// cc_emails: yup.array().nullable().of(yup.string().email(object=>{return object.value})),
+// email_subject: yup.string().nullable().min(4,t('yup_char_min') + ' ('+4+')').max(64,t('yup_char_max') + ' ('+64+')').required(t('yup_required')),
+// notify_admins: yup.boolean().nullable().required(t('yup_required')),
+// email_address: yup.string().nullable().email().required(t('yup_required')),
+// contact_types: yup.array().nullable().min(1,t('yup_select_option')).of(yup.string().test("Test contact types","Pleace select one of the available options",function(contact_type){
+
+
+const putNotificationsValidation = () => {
+  return [
+    body('name').exists().withMessage('Required Field').bail().isString().withMessage('name must be a string').isLength({min:4, max:36}).withMessage('name must be from 4 up to 36 characters'),
+    body('email_body').exists().withMessage('Required Field').bail().isString().withMessage('email_body must be a string').isLength({min:4, max:4064}).withMessage('email_subject must be from 4 up to 4064 characters'),
+    body('cc_emails').optional({checkFalsy:true}).isArray().withMessage('cc_emails must be an array').bail().custom((value,{req,location,path})=> {
+      try{
+        if(value.length>0){
+          value.map((email,index)=>{
+            if(!email.toLowerCase().match(reg.regEmail)){
+              throw new Error(email +" is not a valid email address");
+            }
+          }); 
+        }
+      }
+      catch(err){
+        throw new Error(err);
+      }
+      return true
+    }),
+    body('email_subject').exists().withMessage('Required Field').bail().isString().withMessage('email_subject must be a string').isLength({min:4, max:64}).withMessage('email_subject must be from 4 up to 64 characters'),
+    body('notify_admins').customSanitizer(value => {
+      if(value==='true'|| (typeof(value)==="boolean" && value)){
+        return true
+      }
+      else{
+        return false
+      }
+    }).optional({checkFalsy:true}).custom((value)=> typeof(value)==='boolean').withMessage('notify_admins must be a boolean').bail(),
+    body('email_address').exists().withMessage('Required Field').bail().isString().withMessage('Must be a string').bail().custom((value,success=true)=> {if(!value.toLowerCase().match(reg.regEmail)){success=false} return success }).withMessage('Must be a valid email address'),
+    body('contact_types').exists().withMessage('Required Field').isArray().bail().custom((value,{req,location,path})=> {   
+      
+      if(value.length>0){
+        value.forEach(type=>{
+          if(!config.form[req.params.tenant].contact_types.includes(type)){
+            throw new Error(type +" is not a valid contact type");
+          }
+        });
+      }
+      return true;
+      }),
+    body('environments').exists().withMessage('Required Field').isArray().bail().custom((value,{req,location,path})=> {   
+    
+      if(value.length>0){
+        value.forEach(environment=>{
+          if(!config.form[req.params.tenant].integration_environment.includes(environment)){
+            throw new Error(environment +" is not a valid environment");
+          }
+        });
+      }
+      return true;
+      })
+  ]
+}
+
 const getServicesValidation = () => {
   return [
     query('integration_environment').optional({checkFalsy:true}).isString().custom((value,{req,location,path})=> { if(config.form[req.params.tenant].integration_environment.includes(value)){return true}else{return false}}).withMessage('Integration environment value not supported'),
@@ -780,5 +843,6 @@ module.exports = {
   getServicesValidation,
   changeContacts,
   validateInternal,
-  formatCocForValidation
+  formatCocForValidation,
+  putNotificationsValidation
 }

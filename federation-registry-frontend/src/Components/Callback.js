@@ -1,6 +1,6 @@
 import React,{useState, useEffect} from 'react';
 import {useParams} from "react-router-dom";
-import * as config from '../config.json';
+import config from '../config.json';
 import useGlobalState from '../useGlobalState.js';
 import {LoadingPage} from './LoadingPage.js';
 

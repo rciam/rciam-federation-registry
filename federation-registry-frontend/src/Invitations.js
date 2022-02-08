@@ -1,7 +1,7 @@
 import React,{useState,useEffect} from 'react';
 import {useParams} from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import * as config from './config.json';
+import config from './config.json';
 import Button from 'react-bootstrap/Button';
 import {Logout,NotFound} from './Components/Modals';
 import {ProcessingRequest,LoadingBar} from './Components/LoadingBar';

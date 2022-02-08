@@ -28,6 +28,12 @@ const UserInfo = (props)=>{
           <span className="dl-text-info">{props.user.name}</span>
         </dd>
         <dt>
+          <span className="dl-text-info">{t('user_preferred_username')}</span>
+        </dt>
+        <dd>
+          <span className="dl-text-info">{props.user.preferred_username}</span>
+        </dd>
+        <dt>
           <span className="dl-text-info">{t('user_info_given_name')}</span>
         </dt>
         <dd>

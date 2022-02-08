@@ -1,11 +1,11 @@
 require('dotenv').config();
-const {petitionValidationRules,validate,validateInternal,tenantValidation,changeContacts,formatPetition,getServiceListValidation,postInvitationValidation,serviceValidationRules,putAgentValidation,postAgentValidation,decodeAms,amsIngestValidation,reFormatPetition,getServicesValidation,formatCocForValidation} = require('../validator.js');
+const {petitionValidationRules,validate,validateInternal,tenantValidation,changeContacts,formatPetition,getServiceListValidation,postInvitationValidation,serviceValidationRules,putAgentValidation,postAgentValidation,decodeAms,amsIngestValidation,reFormatPetition,getServicesValidation,formatCocForValidation,putNotificationsValidation} = require('../validator.js');
 const {validationResult} = require('express-validator');
 const qs = require('qs');
 const {v1:uuidv1} = require('uuid');
 const axios = require('axios').default;
 const {merge_data,merge_services_and_petitions} = require('../merge_data.js');
-const {addToString,clearPetitionData,sendMail,sendInvitationMail,sendMultipleInvitations,createGgusTickets,delay} = require('../functions/helpers.js');
+const {addToString,clearPetitionData,sendMail,sendInvitationMail,sendMultipleInvitations,createGgusTickets,delay,sendNotifications} = require('../functions/helpers.js');
 const {db} = require('../db');
 var diff = require('deep-diff').diff;
 var router = require('express').Router();
@@ -13,10 +13,8 @@ var passport = require('passport');
 var config = require('../config');
 const customLogger = require('../loggers.js');
 const { generators } = require('openid-client');
-const code_verifier = generators.codeVerifier();
 const {rejectPetition,approvePetition,changesPetition,getPetition,getOpenPetition,requestReviewPetition} = require('../controllers/main.js');
 const base64url = require('base64url');
-const { EADDRINUSE } = require('constants');
 
 
 
@@ -83,6 +81,8 @@ router.put('/tenants/:tenant/services/validate',adminAuth,getData,serviceValidat
   }
 });
 
+
+// GET ALL SERVICES
 router.get('/tenants/:tenant/services',getServicesValidation(),validate,authenticate_allow_unauthorised, (req,res,next)=>{
   try{
     if(req.user && req.user.role && req.user.role.actions.includes('get_services')){
@@ -385,6 +385,7 @@ router.get('/tenants/:tenant/user',authenticate,(req,res,next)=>{
     clients[req.params.tenant].userinfo(TokenArray[1]) // => Promise
     .then(function (userinfo) {
       let user = userinfo;
+      user = generatePreferredUsername(user);
       if(req.user.role.actions.includes('review_own_petition')||req.user.role.actions.includes('review_petition')){
         user.review = true;
       }
@@ -1068,6 +1069,52 @@ router.put('/tenants/:tenant/invitations/activate_by_code',authenticate,(req,res
   }
 })
 
+// Notifications 
+
+router.get('/tenants/:tenant/notifications/recipients',authenticate,(req,res,next)=>{
+  let contact_types = req.query.contact_types.split(',');
+  let environments = req.query.environments.split(',');
+
+  try{
+    db.service.getContacts(contact_types,environments,req.params.tenant).then(async users=>{
+      res.status(200).send(users);
+    }).catch(err=>{
+      next(err)
+    })
+  }
+  catch(e){
+    next(err)
+  }
+  
+})
+
+router.put('/tenants/:tenant/notifications',authenticate,putNotificationsValidation(),validate,(req,res,next)=>{
+  try{
+    if(req.user.role.actions.includes('send_notifications')){
+      db.service.getContacts(req.body.contact_types,req.body.environments,req.params.tenant).then(async users=>{
+        if(req.body.notify_admins){
+          admins = await db.user.getUsersByAction("send_notifications",req.params.tenant);
+          admins.forEach(admin=>{
+            if(!req.body.cc_emails.includes(admin.email)){
+              req.body.cc_emails.push(admin.email);
+            }
+          })
+        }
+        if(users.length>0){
+          sendNotifications({cc_emails:req.body.cc_emails,subject:req.body.email_subject,url:"/",sender_name:req.body.name,sender_email:req.body.email_address,email_body:req.body.email_body,tenant:req.params.tenant},'contacts-notification.hbs',users);
+        }
+        res.status(200).send({notified_users:users.length});
+      })
+    }
+    else{
+      res.status(403).end();
+    }
+  }
+  catch(err){
+    next(err);
+  }
+})
+
 
 // Tenants Deployer Agents
 router.get('/agent/get_agents',amsAgentAuth,(req,res,next)=>{
@@ -1188,6 +1235,9 @@ router.delete('/tenants/:tenant/agents/:id',(req,res,next)=>{
     next(err);
   }
 });
+
+
+
 
 
 // ----------------------------------------------------------
@@ -1490,9 +1540,7 @@ const saveUser=(userinfo,tenant)=>{
             userinfo.role_id = role.id.toString();
             
             // Generate preferred username from given name and family name
-            if(!userinfo.preferred_username&&userinfo.given_name&&userinfo.family_name){
-              userinfo.preferred_username= (userinfo.given_name.replace(/[^a-zA-Z0-9]/g,'_').charAt(0)+userinfo.family_name.replace(/[^a-zA-Z0-9]/g,'_')).toLowerCase();;
-            }
+            userinfo = generatePreferredUsername(userinfo);
 
             for (const property in userinfo) {
               if(user.hasOwnProperty(property)&&userinfo[property]!==user[property]){
@@ -1559,6 +1607,13 @@ const isAvailable= async (t,id,protocol,petition_id,service_id,tenant,environmen
   else {
     return true;
   }
+}
+
+const generatePreferredUsername = (userinfo) => {
+  if(!userinfo.preferred_username&&userinfo.given_name&&userinfo.family_name){
+    userinfo.preferred_username= (userinfo.given_name.replace(/[^a-zA-Z0-9]/g,'_').charAt(0)+userinfo.family_name.replace(/[^a-zA-Z0-9]/g,'_')).toLowerCase();;
+  }
+  return userinfo;
 }
 
 // This validation is for the POST,PUT /petition
