@@ -271,6 +271,8 @@ const ViewService = (props)=>{
   const [owned,setOwned] = useState(false);
   const [logout,setLogout] = useState(false);
   const [notFound,setNotFound] = useState(false);
+  const [user] = useContext(userContext);
+
   useEffect(()=>{
     localStorage.removeItem('url');
     getData();
@@ -369,7 +371,12 @@ const ViewService = (props)=>{
     <React.Fragment>
     <NotFound notFound={notFound}/>
     <Logout logout={logout}/>
-    <ErrorComponent deploymentError={deploymentError} setDeploymentError={setDeploymentError} service_id={service_id} setLogout={setLogout}/>
+    {deploymentError&&!user.actions.includes('error_action')?
+      <Alert variant='primary' className='form-alert'>
+        The deployment for the following request could not be completed due to an error. Our technical team will handle this issue and you will be notified when it is resolved. Thank you for your patience.
+      </Alert>
+      :null}
+    <ErrorComponent deploymentError={deploymentError} user={user} setDeploymentError={setDeploymentError} service_id={service_id} setLogout={setLogout}/>
       {service?
         <React.Fragment>        
           {service.created_at?
