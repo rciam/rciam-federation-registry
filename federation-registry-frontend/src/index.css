@@ -27,10 +27,7 @@ code {
 
 
 /* Main Page */
-.main-container {
 
-
-}
 #footer .ssp-footer__item  {
   min-height: 40px;
   font-size: 12px;
@@ -155,6 +152,8 @@ code {
   padding:1rem!important;
   text-align: left;
   max-height:7123rem;
+  margin-top: 1rem;
+  margin-bottom:0rem!important;
 }
 .jumbotron-comment h5 {
   font-size:1.3rem;

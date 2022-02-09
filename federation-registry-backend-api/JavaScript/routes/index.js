@@ -357,7 +357,7 @@ router.get('/tenants/:tenant/services/:id/error',authenticate,(req,res,next)=>{
 // Handle Deployment Error
 router.put('/tenants/:tenant/services/:id/error',authenticate,(req,res,next)=> {
   try{
-    if(req.user.role.actions.includes('view_errors')){
+    if(req.user.role.actions.includes('error_action')){
       if(req.query.action==='resend'){
         db.tx('accept-invite',async t =>{
               let done = await t.batch([
@@ -367,6 +367,9 @@ router.put('/tenants/:tenant/services/:id/error',authenticate,(req,res,next)=> {
               res.status(200).end();
         }).catch(err=>{next(err)})
       }
+    }
+    else{
+      res.status(403).end();
     }
   }
   catch(err){
@@ -457,7 +460,7 @@ router.post('/ams/ingest',checkCertificate,decodeAms,amsIngestValidation(),valid
                     createGgusTickets(ticket_data);
                   }
                   if(errors.length>0){
-                    await t.user.getUsersByAction('view_errors').then(users=>{
+                    await t.user.getUsersByAction('error_action').then(users=>{
                       let error_services = format_error_email_data(data,errors,users);
                       error_services.forEach(async error_data=>{
                         await delay(400);
