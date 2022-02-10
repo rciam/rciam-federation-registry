@@ -1482,6 +1482,45 @@ html:lang(gr) .home-container h1 {
   margin-left: 1.5rem!important;
 }
 
+/* Development Banner */
+
+.noty-top-global {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  position: absolute;
+  z-index: 2000;
+  padding: 0.5em;
+}
+.noty-top-global svg {
+  margin-right: 0.5rem;
+}
+
+
+.noty-top-info {
+    color: #00529B;
+    background-color: #BDE5F8;
+  }
+
+  .noty-top-info, .noty-top-success, .noty-top-warning, .noty-top-error {
+    border-bottom: 1px solid;
+  }
+
+  .noty-top-error {
+    color: #D8000C;
+    background-color: #FFBABA;
+  }
+
+  .noty-top-warning {
+    color: #9F6000;
+    background-color: #FEEFB3;
+  }
+  .alert_bar_displacement {
+    margin-top: 2.5rem;
+  }
+
+
 /* Media */
 
 @media only screen and (max-width: 1058px) {

@@ -17,7 +17,7 @@ export const Header= (props)=> {
     const tenant = useContext(tenantContext);
     return(
 
-      <div className="header">
+      <div className={"header" + (props.alertBar?' alert_bar_displacement':'')}>
         {/*<div className="corner-ribbon red">Devel</div>*/}
         <div className="text-center ssp-logo">
           <a href="https://www.egi.eu/" >
@@ -51,7 +51,7 @@ export const NavbarTop = (props)=>{
   return (
     <React.Fragment>
     {tenant[0]?
-      <Navbar className="navbar-fixed-top">
+      <Navbar className={"navbar-fixed-top" + (props.alertBar?' alert_bar_displacement':'')}>
         <Navbar.Collapse className="justify-content-end">
           {user?
           (<DropdownButton

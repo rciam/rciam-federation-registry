@@ -1,24 +1,24 @@
 {
   "egi" :{
     "logo_url":"https://aai-dev.egi.eu/proxy/module.php/themeegi/resources/images/logo.svg",
-    "base_url":"https://aai.egi.eu/federation",
     "sender":"EGI Check-in",
     "contact":"check-in@egi.eu",
-    "tenant_signature": "EGI AAI team"
+    "tenant_signature": "EGI AAI team",
+    "production_url": "https://aai.egi.eu/federation/egi"
   },
   "eosc" : {
     "logo_url":"https://www.eosc-portal.eu/sites/all/themes/theme1/logo.png",
-    "base_url":null,
     "sender":"EOSC Infrastructure Proxy",
     "contact":"support@example.org",
-    "tenant_signature": "EOSC team"
+    "tenant_signature": "EOSC team",
+    "production_url": null
   },
   "grnet": {
     "logo_url":"https://upload.wikimedia.org/wikipedia/en/e/e8/Grnet-transp.jpg",
-    "base_url":null,
     "sender":"support@example.org",
     "contact": "check-in@egi.eu",
-    "tenant_signature": "GRNET team"
+    "tenant_signature": "GRNET team",
+    "production_url": null
   },
   "form" : {
     "egi" : {

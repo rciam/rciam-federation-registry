@@ -1,4 +1,4 @@
-import React,{useContext,useEffect} from 'react';
+import React,{useContext,useEffect,useState} from 'react';
 import {BrowserRouter as Router} from "react-router-dom";
 import {Header,Footer,NavbarTop} from './HeaderFooter.js';
 import Routes from './Router';
@@ -6,13 +6,17 @@ import {SideNav} from './Components/SideNav.js';
 import { useTranslation } from 'react-i18next';
 import {userContext,tenantContext} from './context.js';
 import config from './config.json';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
+import {faTimes} from '@fortawesome/free-solid-svg-icons';
 
  const MainPage= (props)=> {
       const tenant = useContext(tenantContext);
       const user = useContext(userContext);
       // eslint-disable-next-line
       const { t, i18n } = useTranslation();
-
+      const [showAlertBar,setShowAlertBar] = useState(config.testing_instance);
+      
 
       useEffect(() => {
         const faviconUpdate = async () => {
@@ -34,8 +38,23 @@ import config from './config.json';
       return(
         <React.Fragment>
           <Router basename={config.basename}>
-            <Header/>
-            <NavbarTop/>
+            {showAlertBar?
+              <div id="noty-info-bar" className="noty-top-info noty-top-global">
+                <div>
+                  This instance of Federation Registry is only used for testing purposes. 
+                  {tenant&&tenant[0]&&tenant[0].config.production_url?
+                    <React.Fragment>
+                    To manage your services please use the production instance available at <a href={tenant[0].config.production_url}>{tenant[0].config.production_url}</a>
+                    </React.Fragment>:null}
+                </div>
+                <a className="noty-top-close" href="#" onClick={()=>{setShowAlertBar(false); console.log('alert')}}>
+                  <FontAwesomeIcon icon={faTimes}/>
+                </a>
+              </div>
+            :null}
+          
+            <Header alertBar={showAlertBar} />
+            <NavbarTop alertBar={showAlertBar}/>
             <div className="ssp-container main">
               <div className="flex-container">
                 {user&&user[0]&&<SideNav tenant_name={tenant&&tenant[0]?tenant[0].name:null}/>}
