@@ -140,7 +140,6 @@ const Notifications = () =>{
         else{
           setResponseMessage('We could not send the notification, please try again');
         }
-        console.log(response);
       }
     });
   }
@@ -302,7 +301,6 @@ const Notifications = () =>{
                             str = str.replace(/(,+\s*)/g, ',');
                             str = str.replace(/(\s*,+)/g, ',');
                             str = str.replace(",,", ",");
-                            console.log(str);
                             if(str.slice(-1)===','){
                               str = str.slice(0,-1);
                               
@@ -328,7 +326,7 @@ const Notifications = () =>{
               <div className='notifications-input-container '>
                     <Form.Check
                         name="notify_admins"
-                        label={"Also notify " + tenant_name.toUpperCase() +" Operators and Managers"}
+                        label={"Also notify Federation Registry Operators and Managers"}
                         checked={values.notify_admins==='false'||!values.notify_admins?false:true}
                         value= {values.notify_admins}
                         disabled={false}

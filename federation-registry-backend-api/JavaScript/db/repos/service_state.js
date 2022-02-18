@@ -115,7 +115,6 @@ class ServiceStateRepository {
   }
   // Of the Services that have finished deployment (ids) delete those that were pending deletion
   async delete(ids){
-
     return this.db.any("UPDATE service_details SET deleted=true WHERE id IN (SELECT id FROM service_state WHERE deployment_type='delete' AND id IN($1:csv))",[ids])
   }
 

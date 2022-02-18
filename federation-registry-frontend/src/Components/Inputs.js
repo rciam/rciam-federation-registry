@@ -458,6 +458,7 @@ export function CountrySelect(props){
       <Field
       name={props.name}
       as="select"
+      value={props.values[props.name]?props.values[props.name]:""}
       onMouseOver={()=>setShow(true)}
       onMouseOut={()=>setShow(false)}
       disabled={props.disabled}
@@ -476,7 +477,7 @@ export function CountrySelect(props){
 export function SelectEnvironment(props){
   const [show, setShow] = useState(false);
   const target = useRef(null);
-
+  
 
   return(
     <React.Fragment>
@@ -487,6 +488,7 @@ export function SelectEnvironment(props){
       <Field
       name={props.name}
       as="select"
+      value={props.values[props.name]?props.values[props.name]:""}
       default={props.default?props.default:''}
       onMouseOver={()=>setShow(true)}
       onMouseOut={()=>setShow(false)}
@@ -531,6 +533,7 @@ export function Select(props){
       <Field
       name={props.name}
       as="select"
+      value={props.values[props.name]?props.values[props.name]:""}
       default={props.default?props.default:''}
       onMouseOver={()=>setShow(true)}
       onMouseOut={()=>setShow(false)}
@@ -832,7 +835,7 @@ export function ClientSecret(props){
                 isInvalid={props.isInvalid}
                 onBlur={props.onBlur}
                 placeholder='Type a secret'
-                value={props.client_secret}
+                value={props.client_secret?props.client_secret:""}
                 disabled={props.disabled}
                 ref={editSecret?null:target}
                 onMouseOver={()=>setShow(true)}
@@ -965,6 +968,12 @@ function ListInputArrayInput1(props){
   const [show, setShow] = useState(false);
   const [type, setType] = useState();
   const target = useRef(null);
+
+  const mystyle = {
+    width: "100%",
+    wordWrap: "break-word",
+    wordBreak:"break-all"
+  };
   useEffect(()=>{
 
     if(props.changed){
@@ -983,6 +992,7 @@ function ListInputArrayInput1(props){
   return (
     <React.Fragment>
     <tr
+      
       key={props.index}
       onMouseOver={()=>setShow(true)}
       onMouseOut={()=>setShow(false)}
@@ -990,10 +1000,10 @@ function ListInputArrayInput1(props){
     >
 
         <React.Fragment>
-          <td className={'td-item ' + (type==='Added'?'row-added':type==='Deleted'?'row-deleted':null)}>{props.item}</td>
+          <td style={mystyle} className={'td-item ' + (type==='Added'?'row-added':type==='Deleted'?'row-deleted':"")}>{props.item}</td>
 
             <React.Fragment>
-            <td>
+            <td style={{whiteSpace: "nowrap"}}>
               <Checkbox disabled={props.disabled} name={props.name} value={props.item}/>
             </td>
             </React.Fragment>
@@ -1001,7 +1011,7 @@ function ListInputArrayInput1(props){
         </React.Fragment>
 
     </tr>
-      <MyOverLay show={type&&type!=='Exists'&&show?'true':null} type={type} target={target}/>
+      <MyOverLay show={type&&type!=='Exists'&&show?'true':""} type={type} target={target}/>
     </React.Fragment>
   )
 }
@@ -1016,6 +1026,11 @@ function ListInputArrayInput2(props){
   const [show, setShow] = useState(false);
   const [type, setType] = useState(false);
   const target = useRef(null);
+  const mystyle = {
+    width: "100%",
+    wordWrap: "break-word",
+    wordBreak:"break-all"
+  };
   useEffect(()=>{
 
     if(props.changed){
@@ -1037,11 +1052,14 @@ function ListInputArrayInput2(props){
       onMouseOut={()=>setShow(false)}
       ref={target}
       >
-      <td className={"td-item "+(type==='Added'?'row-added':type==='Deleted'?'row-deleted':null)}>
+      <td style={mystyle} className={"td-item "+(type==='Added'?'row-added':type==='Deleted'?'row-deleted':null)}>
         {props.item}
       </td>
 
-        <td>
+        <td
+          style={{whiteSpace: "nowrap"}}
+        >
+          
           <Button
             variant="danger"
             onClick={()=>{props.arrayHelpers.remove(props.index)}}

@@ -241,8 +241,11 @@ const ServiceForm = (props)=> {
         then: yup.array().min(1,t('yup_required')).nullable().required(t('yup_required'))
       })
     }),
-    logo_uri:yup.string().nullable().matches(reg.regSimpleUrl,'Enter a valid Url').test('testImage',t('yup_image_url'),function(imageUrl){
+    logo_uri:yup.string().nullable().matches(reg.regUrl,'Logo must be be a secure url starting with https://').test('testImage',t('yup_image_url'),function(imageUrl){
       imageExists(imageUrl);
+      if(imageUrl&&imageUrl.length > 6000){
+        return this.createError({ message: "Logo Url exceeds maximum character length (6000)" });
+      }
       return true;
     }),
     country:yup.string().nullable().test('testCountry','Select one of the available options',function(value){return countries.includes(value)}).required(t('yup_required')),
@@ -317,13 +320,13 @@ const ServiceForm = (props)=> {
     }),
     reuse_refresh_token:yup.boolean().nullable().when('protocol',{
       is:'oidc',
-      then: yup.boolean().required()
+      then: yup.boolean().nullable().required()
     }),
     protocol: yup.string().test('testProtocol',t('yup_protocol'),function(value){return ['saml','oidc'].includes(value)}).required(t('yup_protocol')),
     integration_environment:yup.string().test('testIntegrationEnv','Invalid Value',function(value){return tenant.form_config.integration_environment.includes(value)}).required(t('yup_select_option')),
     clear_access_tokens_on_refresh:yup.boolean().nullable().when('protocol',{
       is:'oidc',
-      then: yup.boolean().required()
+      then: yup.boolean().nullable().required()
     }),
     client_secret:yup.string().nullable().when('protocol',{
       is:'oidc',
@@ -984,7 +987,7 @@ const ServiceForm = (props)=> {
                                changed={props.changes?props.changes.redirect_uris:null}
                              />
                            </InputRow>
-                          <InputRow  moreInfo={tenant.form_config.more_info.scope} title={t('form_scope')} required={true} description={t('form_scope_desc')}>
+                          <InputRow  moreInfo={tenant.form_config.more_info.scope} title={t('form_scope')} required={true} description={t('form_scope_desc')} error={typeof(errors.scope)==='string'?errors.scope:null} touched={true}>
                             <ListInputArray
                               name='scope'
                               values={values.scope}

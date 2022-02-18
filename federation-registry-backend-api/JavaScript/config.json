@@ -22,6 +22,11 @@
   },
   "form" : {
     "egi" : {
+      "multivalue_fields": {
+        "general": ["contacts"],
+        "oidc": ["grant_types","scope","redirect_uris"],
+        "saml": []
+      },
       "device_code_validity_seconds":30000,
       "refresh_token_validity_seconds":34128000,
       "access_token_validity_seconds":1000000,
@@ -122,6 +127,11 @@
       }
     },
     "eosc" : {
+      "multivalue_fields": {
+        "general": ["contacts"],
+        "oidc": ["grant_types","scope","redirect_uris"],
+        "saml": []
+      },
       "device_code_validity_seconds":30000,
       "refresh_token_validity_seconds":34128000,
       "access_token_validity_seconds":1000000,

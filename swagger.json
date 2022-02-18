@@ -28,6 +28,8 @@ tags:
   description: "Deditated endpoints for the ams-agent"
 - name: "Deployer Agents"
   description: "Manage Tenant Deployer Agents"
+- name: "Banner Alerts"
+  description: "Banner notification alerts"
 schemes:
 - "https"
 paths:
@@ -450,6 +452,135 @@ paths:
           description: "Internal Error"
       security:
       - access_tokenAuth: []
+  /tenants/{name}/banner_alert:
+    get:
+      tags:
+      - "Banner Alerts"
+      summary: "Get all banner alerts for the given tenant"
+      description: "Get all banner alerts for the given tenant"
+      operationId: "getBannerAlerts"
+      produces:
+      - "application/json"
+      parameters:
+      - in: path
+        type: string
+        name: name
+        description: "Tenant that the request is targeting"
+        required: true
+      - name: "active"
+        in: "query"
+        description: "If true returns only active alerts"
+        required: false
+        type: "boolean"
+      responses:
+        "200":
+          description: "successful"
+          schema:
+            type: "array"
+            items:
+              type: "object"
+              additionalProperties:
+                $ref: "#/definitions/Service"
+        "401":
+          description: "Unauthenticated request"
+        "500":
+          description: "Internal Error"
+      security:
+      - admin_key: []
+    post: 
+      tags:
+      - "Banner Alerts"
+      summary: "Create a new banner alert"
+      description: "Create a new banner alert"
+      operationId: "createBannerAlerts"
+      produces:
+      - "application/json"
+      parameters:
+      - in: path
+        type: string
+        name: name
+        description: "Tenant that the request is targeting"
+        required: true
+      - in: "body"
+        name: "body"
+        schema:     
+          $ref: "#/definitions/Service"
+      responses:
+        "200":
+          description: "successful"
+        "401":
+          description: "Unauthenticated request"
+        "500":
+          description: "Internal Error"
+      security:
+      - admin_key: []
+  /tenants/{name}/banner_alert/{id}:
+    put:
+      tags:
+      - "Banner Alerts"
+      summary: "Update a banner alert"
+      description: "Update a banner alert"
+      operationId: "UpdateBannerAlerts"
+      produces:
+      - "application/json"
+      parameters:
+      - in: path
+        type: string
+        name: name
+        description: "Tenant that the request is targeting"
+        required: true
+      - in: path
+        name: id
+        type: "integer"
+        format: "int64"
+        required: true
+        description: "Id of Banner Alert to update"
+      - in: "body"
+        name: "body"
+        schema:     
+          $ref: "#/definitions/Service"
+      responses:
+        "200":
+          description: "successful"
+        "401":
+          description: "Unauthenticated request"
+        "500":
+          description: "Internal Error"
+      security:
+      - admin_key: []
+    delete:
+      tags:
+      - "Banner Alerts"
+      summary: "Delete a banner alert"
+      description: "Delete a banner alert"
+      operationId: "DeleteBannerAlerts"
+      produces:
+      - "application/json"
+      parameters:
+      - in: path
+        type: string
+        name: name
+        description: "Tenant that the request is targeting"
+        required: true
+      - in: path
+        name: id
+        type: "integer"
+        format: "int64"
+        required: true
+        description: "Id of Banner Alert to delete"
+      - in: "body"
+        name: "body"
+        schema:     
+          $ref: "#/definitions/Service"
+      responses:
+        "200":
+          description: "successful"
+        "401":
+          description: "Unauthenticated request"
+        "500":
+          description: "Internal Error"
+      security:
+      - admin_key: []
   /tenants/{name}/services/{id}:
     get:
       tags:
@@ -1355,6 +1486,10 @@ securityDefinitions:
     type: "apiKey"
     name: "api_key"
     in: "header"
+  admin_key:
+    type: "apiKey"
+    name: "X-API-KEY"
+    in: "header"
 definitions:
   PostOrganization:
     type: "object"
@@ -2059,6 +2194,26 @@ definitions:
           properties:
             additionalProperties:
               $ref: "#/definitions/Petition"
+  BannerAlert:
+    type: "object"
+    properties:
+      alert_message: 
+        type: "string"
+        description: "The Alert message"
+      type:
+        type: "string"
+        description: "Color and style of the alert banner"
+        enum:
+          - "warning"
+          - "error"
+          - "info"
+      priority:
+        type: "integer"
+        format: "int64"
+        description: "Banner Alerts are being shown one at a time based on priority"
+      active:
+        type: "boolean"
+        description: "Only Banner Alerts that are active are shown for each tenant"
   AmsPending:
     type: "object"
     properties:

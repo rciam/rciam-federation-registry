@@ -1,5 +1,4 @@
 import React,{useContext,useEffect,useState} from 'react';
-import {BrowserRouter as Router} from "react-router-dom";
 import {Header,Footer,NavbarTop} from './HeaderFooter.js';
 import Routes from './Router';
 import {SideNav} from './Components/SideNav.js';
@@ -7,17 +6,56 @@ import { useTranslation } from 'react-i18next';
 import {userContext,tenantContext} from './context.js';
 import config from './config.json';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-
+import parse from 'html-react-parser';
 import {faTimes} from '@fortawesome/free-solid-svg-icons';
 
  const MainPage= (props)=> {
+     
       const tenant = useContext(tenantContext);
       const user = useContext(userContext);
       // eslint-disable-next-line
       const { t, i18n } = useTranslation();
-      const [showAlertBar,setShowAlertBar] = useState(config.testing_instance);
       
 
+
+
+      const [bannerAlertInfo,setBannerAlertInfo] = useState([]);
+      const getBannerAlerts = () => {
+        if(tenant[0]){
+          fetch(config.host+'tenants/'+tenant[0].name+'/banner_alert?active=true', {
+            method: 'GET', // *GET, POST, PUT, DELETE, etc.
+            credentials: 'include', // include, *same-origin, omit
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          }).then(response=>{
+            if(response.status===200){
+              return response.json();
+            }else if(response.status===401){
+              return false
+            }
+            if(response.status===404){
+              return false;
+            }
+            else {
+              return false
+            }
+          }).then(response=> {
+            if(response){
+              setBannerAlertInfo(response);
+            }
+          });
+
+        }
+      }
+
+
+      
+      useEffect(()=>{
+        getBannerAlerts();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+      },[tenant])
+      
       useEffect(() => {
         const faviconUpdate = async () => {
           //grab favicon element by ID
@@ -32,29 +70,28 @@ import {faTimes} from '@fortawesome/free-solid-svg-icons';
         };
         //run our function here
         faviconUpdate();
+        
         //2nd paramenter passed to useEffect is dependency array so that this effect only runs on changes to count
       }, [tenant]);
 
       return(
         <React.Fragment>
-          <Router basename={config.basename}>
-            {showAlertBar?
-              <div id="noty-info-bar" className="noty-top-info noty-top-global">
+            
+            {bannerAlertInfo[0]?
+              <div id="noty-info-bar" className={"noty-top-"+bannerAlertInfo[0].type+" noty-top-global"}>
                 <div>
-                  This instance of Federation Registry is only used for testing purposes. 
-                  {tenant&&tenant[0]&&tenant[0].config.production_url?
-                    <React.Fragment>
-                    To manage your services please use the production instance available at <a href={tenant[0].config.production_url}>{tenant[0].config.production_url}</a>
-                    </React.Fragment>:null}
+                  {parse(bannerAlertInfo[0].alert_message)}
                 </div>
-                <a className="noty-top-close" href="#" onClick={()=>{setShowAlertBar(false); console.log('alert')}}>
+                <button className="noty-top-close link-button" onClick={()=>{setBannerAlertInfo([...bannerAlertInfo.slice(1)])}}>
                   <FontAwesomeIcon icon={faTimes}/>
-                </a>
+                </button>
               </div>
             :null}
-          
-            <Header alertBar={showAlertBar} />
-            <NavbarTop alertBar={showAlertBar}/>
+            
+            {/* <Header alertBar={showAlertBar} />
+            <NavbarTop alertBar={showAlertBar}/> */}
+            <Header alertBar={bannerAlertInfo.length>0} />
+            <NavbarTop alertBar={bannerAlertInfo.length>0} />
             <div className="ssp-container main">
               <div className="flex-container">
                 {user&&user[0]&&<SideNav tenant_name={tenant&&tenant[0]?tenant[0].name:null}/>}
@@ -62,7 +99,7 @@ import {faTimes} from '@fortawesome/free-solid-svg-icons';
               </div>
             </div>
             <Footer lang={props.lang} changeLanguage={props.changeLanguage}/>
-          </Router>
+          
         </React.Fragment>
       );
 }
