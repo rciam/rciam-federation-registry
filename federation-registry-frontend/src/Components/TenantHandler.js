@@ -1,6 +1,6 @@
 import React,{useEffect,useContext} from 'react';
 import {useParams,useHistory} from "react-router-dom";
-import * as config from '../config.json';
+import config from '../config.json';
 import {tenantContext} from '../context.js';
 import {LoadingPage} from './LoadingPage.js';
 
@@ -10,10 +10,8 @@ export const TenantHandler = () => {
   // eslint-disable-next-line
   const [tenant,setTenant] = useContext(tenantContext);
   let history = useHistory();
-
   useEffect(()=>{
     getTenant(tenant_name);
-
     // eslint-disable-next-line
   },[]);
 
@@ -32,10 +30,9 @@ export const TenantHandler = () => {
         return false
       }
     }).then(response=>{
-      if(response){
+      if(response&&response.base_url===window.location.protocol +"//"+ window.location.hostname +(window.location.port?(":"+window.location.port):"") +(config.basename==="/"?"/":config.basename + "/") + tenant_name ){
         setTenant(response);
-        history.push('/'+tenant_name+'/home');
-      }
+        }
       else{
         setTenant(null);
         history.push('/404');

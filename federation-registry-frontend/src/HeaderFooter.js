@@ -6,8 +6,7 @@ import Row from 'react-bootstrap/Row';
 import Image from 'react-bootstrap/Image';
 import Navbar from 'react-bootstrap/Navbar';
 import Button from 'react-bootstrap/Button';
-import useGlobalState from './useGlobalState.js';
-import * as config from './config.json';
+import config from './config.json';
 import DropdownButton from 'react-bootstrap/DropdownButton';
 import Dropdown from 'react-bootstrap/Dropdown';
 import { useTranslation } from 'react-i18next';
@@ -15,13 +14,11 @@ import {useHistory} from "react-router-dom";
 import {userContext,tenantContext} from './context.js';
 
 export const Header= (props)=> {
-
     const tenant = useContext(tenantContext);
     return(
 
-      <div className="header">
-        <div className="corner-ribbon red">Devel</div>
-
+      <div className={"header" + (props.alertBar?' alert_bar_displacement':'')}>
+        {/*<div className="corner-ribbon red">Devel</div>*/}
         <div className="text-center ssp-logo">
           <a href="https://www.egi.eu/" >
             <Image src={tenant[0]?tenant[0].logo:null} fluid />
@@ -42,10 +39,9 @@ export const NavbarTop = (props)=>{
   const [user,setUser] = useContext(userContext);
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
-  const globalState = useGlobalState();
-  const logged = globalState.global_state.log_state;
   const [admin,setAdmin] = useState(false);
   const tenant = useContext(tenantContext);
+
 
   useEffect(()=>{
     if(user){
@@ -56,9 +52,9 @@ export const NavbarTop = (props)=>{
   return (
     <React.Fragment>
     {tenant[0]?
-      <Navbar className="navbar-fixed-top">
+      <Navbar className={"navbar-fixed-top" + (props.alertBar?' alert_bar_displacement':'')}>
         <Navbar.Collapse className="justify-content-end">
-          {logged?
+          {user?
           (<DropdownButton
             variant="link"
             alignRight
@@ -82,12 +78,7 @@ export const NavbarTop = (props)=>{
             </Dropdown.Item>
             <Dropdown.Item onClick={()=>{
               localStorage.removeItem('token');
-              if(tenant[0].name==='egi'){
-                window.location.assign('https://aai.egi.eu/oidc/saml/logout?redirect='+config.react+tenant[0].name);
-              }
-              else{
-                history.push('/'+(tenant&&tenant[0]?tenant[0].name:null));
-              }
+              window.location.assign(tenant[0].issuer_url+ 'saml/logout?redirect='+ window.location.protocol+ "//" + window.location.hostname + (window.location.port?":"+window.location.port:"") + (config.basename==="/"?"/":config.basename+"/") +tenant[0].name);
             }}>
               {t('logout')}<FontAwesomeIcon icon={faSignOutAlt}/>
             </Dropdown.Item>
@@ -111,6 +102,7 @@ export const NavbarTop = (props)=>{
 export const Footer =(props) =>{
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
+  const tenant = useContext(tenantContext);
 
   return (
     <footer className="ssp-footer text-center">
@@ -126,20 +118,30 @@ export const Footer =(props) =>{
           </div>
           </Col>
     			<Col sm="3" className="ssp-footer__item">
-            <a href="https://grnet.gr/">
-              <Image className="ssp-footer__item__logo" src="https://vanilla-ui.aai-dev.grnet.gr/proxy/module.php/themevanilla/resources/images/grnet_logo_en.svg" alt="GRNET"/>
-            </a>
-            <div className="ssp-footer__item__copyright">
-              Copyright ©2016-2020      </div>
+            <div className="footer-logo-container">
+              <a href="https://grnet.gr/">
+                <Image className="ssp-footer__item__logo" src="https://vanilla-ui.aai-dev.grnet.gr/proxy/module.php/themevanilla/resources/images/grnet_logo_en.svg" alt="GRNET"/>
+              </a>
+              <div className="ssp-footer__item__copyright">
+                Copyright ©2016-2022      </div>
+            </div>
           </Col>
           <Col sm="4" className="ssp-footer__item">
-            <div className="ssp-footer__item__powered">
-              Leave <a href="https://forms.gle/rnAq7bBT4bN7WiNYA">Feedback</a>
-            </div>
-            <div className="ssp-footer__item__powered">
-              Powered by <a href="https://github.com/rciam">RCIAM</a>
+            <div className="footer_link_container">
+              <div className="ssp-footer__item__powered">
+              <a href = {"mailto: "+ (tenant[0]&&tenant[0].config?tenant[0].config.contact:null) }>Contact us</a>
+              </div>
+              <div className="ssp-footer__item__powered">
+                <a href={'https://federation.rciam.grnet.gr/docs'}>Documentation</a>
+              </div>
             </div>
           </Col>
+        </Row>
+        <Row>
+          <div className='copyright-funding-footer'>
+            Copyright ©2016-2022 | Check-in is an EGI service provided by GRNET, receiving funding from the <a href="https://www.egi.eu/about/egi-foundation/" target="_blank" rel="noreferrer"> EGI Foundation (EGI.eu) </a> and the <a href="https://www.egi.eu/projects/egi/ace/" target="_blank" rel="noreferrer">EGI-ACE project </a> (Horizon 2020) under Grant number 101017567 | Powered by <a href="https://rciam.github.io/rciam-docs/" target="_blank" rel="noreferrer"> RCIAM</a>
+
+          </div>
         </Row>
       </div>
     </footer>

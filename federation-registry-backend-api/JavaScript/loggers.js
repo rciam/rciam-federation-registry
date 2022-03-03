@@ -4,7 +4,6 @@ var logPath = __dirname + "/logs/logs.log";
 
 
 const customLogger = (req,res,level,message,data)=>{
-
     var log ={};
     log.level =level;
     if(req){

@@ -1,5 +1,6 @@
 const sql = require('../sql').service;
 const {calcDiff,extractCoc} = require('../../functions/helpers.js');
+const {requiredDeployment} = require('../../functions/requiredDeployment.js');
 const cs = {}; // Reusable ColumnSet objects.
 
 /*
@@ -23,13 +24,24 @@ class ServiceRepository {
             let data = {};
             result.json.generate_client_secret = false;
             data.service_data = extractCoc(result.json);
-
             return data
           }
           else {
             return null;
           }
         });
+  }
+
+  async getContacts(data,tenant){
+    const query = this.pgp.as.format(sql.getContacts,{...data,tenant:tenant});
+    return this.db.any(query).then(users =>{
+      if(users&&users[0]&&users[0].emails){
+        return users[0].emails;
+      }
+      else{
+        return [];
+      }
+    });
   }
 
 
@@ -81,13 +93,19 @@ class ServiceRepository {
         let queries = [];
         return t.service.get(targetId,tenant).then(async oldState=>{
           if(oldState){
-            let edits = calcDiff(oldState.service_data,newState);
+            let edits = calcDiff(oldState.service_data,newState,tenant);
+            let startDeployment = requiredDeployment(oldState.service_data,newState);
             if(Object.keys(edits.details).length !== 0){
                queries.push(t.service_details.update(edits.details,targetId));
-               queries.push(t.service_details_protocol.update('service',edits.details,targetId));
-               queries.push(t.service_multi_valued.updateCoc('service',{...edits.detals,tenant:tenant},targetId));
+               queries.push(t.service_details_protocol.update('service',edits.details,targetId));               
             }
-            queries.push(t.service_state.update(targetId,'pending','edit'));
+            if(Object.keys(edits.update.coc).length >0){
+              queries.push(t.service_multi_valued.updateCoc('service',{...edits.update.coc,tenant:tenant},targetId));
+            }
+            if(Object.keys(edits.add.coc).length >0){
+              queries.push(t.service_multi_valued.addCoc('service',{...edits.add.coc,tenant:tenant},targetId));
+            }
+            queries.push(t.service_state.update(targetId,(startDeployment?'pending':'deployed'),'edit'));
             for (var key in edits.add){
               if(key==='contacts') {
                 queries.push(t.service_contacts.add('service',edits.add[key],targetId));
@@ -117,8 +135,9 @@ class ServiceRepository {
 
 
   async getAll(tenant){
-    return this.db.any(sql.getAll,{tenant:tenant}).then(services=>{
-      if(services){
+    const query = this.pgp.as.format(sql.getAll,{tenant:tenant});
+    return await this.db.any(query).then(services=>{
+      if(services){        
         const res = [];
         for (let i = 0; i < services.length; i++) {
           res.push(services[i].json);
@@ -168,7 +187,8 @@ class ServiceRepository {
   }
 
   async getPending(){
-    return this.db.any(sql.getPending).then(services=>{
+    const query = this.pgp.as.format(sql.getPending);
+    return this.db.any(query).then(services=>{
       if(services){
         return services;
       }

@@ -1,6 +1,6 @@
 import React,{useState, useEffect} from 'react';
 import {useParams} from "react-router-dom";
-import * as config from '../config.json';
+import config from '../config.json';
 import useGlobalState from '../useGlobalState.js';
 import {LoadingPage} from './LoadingPage.js';
 
@@ -43,7 +43,7 @@ export const Callback = () => {
   }
   return (
     <React.Fragment>
-      <LoadingPage loading={loading} tenant_name={tenant_name}/>
+      <LoadingPage loading={loading} tenant_name={tenant_name} redirect={"/"+tenant_name+"/home"}/>
     </React.Fragment>
   )
 }

@@ -12,8 +12,8 @@ class User {
       // set-up all ColumnSet objects, if needed:
 
   }
-  async getUser(sub){
-
+  async getUser(sub,tenant){
+    return this.db.oneOrNone(sql.getUser,{sub:sub,tenant:tenant});
   }
 
   async getServiceOwners(ids){
@@ -26,8 +26,14 @@ class User {
       }
     });
   }
-  async getPetitionOwners(id){
-    const query = this.pgp.as.format(sql.getPetitionOwners,{id:+id});
+
+
+  async getTechnicalContacts(tenant){
+    return this.db.any(sql.getTenchicalContacts,{tenant:tenant});
+  }
+
+  async getPetitionOwners(id,tenant){
+    const query = this.pgp.as.format(sql.getPetitionOwners,{id:+id,tenant:tenant});
     return this.db.any(query).then( data => {
       if(data){
         return data;
@@ -38,53 +44,21 @@ class User {
     });
   }
 
-  async getReviewers(tenant) {
-    let entitlements = [];
-    return this.db.any(sql.getActionEntitlements,{tenant:tenant,action:"review_notification"}).then(result => {
-      if(result){
-        result.forEach(item=> {
-          entitlements.push(item.entitlement);
-        });
-        return this.db.any(sql.getReviewers,{
-          entitlements:entitlements
-        }).then(info=>{
-          if(info){
-            return info;
-          }
-          else{
-            return [];
-          }
-        });
+  async getUsersByAction(action,tenant){
+    let tenant_search = "";
+    if(tenant){
+      tenant_search = "WHERE tenant='"+ tenant +"'"
+    }
+    const query = this.pgp.as.format(sql.getUsersByAction,{action:action,tenant_search:tenant_search});
+    return this.db.any(query).then(res=>{
+      if(res){
+        return res;
+      }
+      else{
+        return null;
       }
     })
   }
-
-
-  async getUnrestrictedReviewers(tenant){
-    let entitlements = [];
-    return this.db.any(sql.getActionEntitlements,{tenant:tenant,action:"review_restricted"}).then(result => {
-      if(result&&result.length>0){
-        result.forEach(item=> {
-          entitlements.push(item.entitlement);
-        });
-        return this.db.any(sql.getReviewers,{
-          entitlements:entitlements
-        }).then(info=>{
-          if(info){
-            return info;
-          }
-          else{
-            return [];
-          }
-        });
-      }
-    })
-
-  }
-
-
-
-
 
 }
 

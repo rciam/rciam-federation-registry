@@ -12,6 +12,7 @@
 .ssp-container {
     flex: 1;
     margin-top: 12px;
+    display:flex;
 }
 .header .ssp-logo {
     margin-top: 10px;
@@ -67,7 +68,7 @@
 }
 
 .ssp-footer--container {
-    padding: 12px 18px 18px;
+    padding: 12px 18px 0.5rem;
 }
 
 .ssp-footer {
@@ -80,6 +81,14 @@
 .ssp-footer__item {
     font-size: 12px;
     letter-spacing: 1px;
+    display: table-cell;
+    vertical-align: bottom!important;
+}
+.footer-logo-container{
+    position:absolute;
+    bottom:0;
+    width:100%;
+    text-align:center;
 }
 
 .ssp-footer__item__lang {
@@ -111,14 +120,14 @@
 
 .ssp-footer__item__powered {
   margin-top: 0.5rem;
-  float:right;
-  clear:both;
   position: relative;
 
 }
-.ssp-footer__item__feedback {
-
+.footer_link_container {
+    height: 100%;
+    float:right;
 }
+
 .ssp-footer__item__logo {
     height: 40px;
 }

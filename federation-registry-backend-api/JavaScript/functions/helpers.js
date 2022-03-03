@@ -6,11 +6,15 @@ var hbs = require('handlebars');
 nodeMailer = require('nodemailer');
 var config = require('../config');
 const customLogger = require('../loggers.js');
-
+var formConfig = require('../config.json');
 
 hbs.registerHelper('loud', function (aString) {
     return aString.toUpperCase()
-})
+});
+
+hbs.registerHelper('ifEquals', function(arg1, arg2, options) {
+  return (arg1 == arg2) ? options.fn(this) : options.inverse(this);
+});
 
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
@@ -31,15 +35,24 @@ const sendMultipleInvitations = function (data,t) {
 
 }
 
-const calcDiff = (oldState,newState) => {
+
+
+
+const calcDiff = (oldState,newState,tenant) => {
+  
     var new_values = Object.assign({},newState);
     var old_values = Object.assign({},oldState);
     let new_cont = [];
     let old_cont = [];
     let items;
     var edits = {
-      add:{},
+      add:{
+        coc:{}
+      },
       dlt:{},
+      update:{
+        coc:{}
+      },
       details:{}
     };
 
@@ -88,12 +101,27 @@ const calcDiff = (oldState,newState) => {
       if(!new_values.grant_types){
         new_values.scope = [];
       }
+
+
       edits.add.oidc_grant_types = new_values.grant_types.filter(x=>!old_values.grant_types.includes(x));
       edits.dlt.oidc_grant_types = old_values.grant_types.filter(x=>!new_values.grant_types.includes(x));
       edits.add.oidc_scopes = new_values.scope.filter(x=>!old_values.scope.includes(x));
       edits.dlt.oidc_scopes = old_values.scope.filter(x=>!new_values.scope.includes(x));
       edits.add.oidc_redirect_uris = new_values.redirect_uris.filter(x=>!old_values.redirect_uris.includes(x));
       edits.dlt.oidc_redirect_uris = old_values.redirect_uris.filter(x=>!new_values.redirect_uris.includes(x));
+    }
+    for(var property in formConfig.form[tenant].extra_fields){
+      if(formConfig.form[tenant].extra_fields[property].tag==="coc"){
+        if(property in new_values){
+          if(property in old_values && old_values[property]!==new_values[property]){
+            edits.update.coc[property]=new_values[property];
+          }
+          else{
+            edits.add.coc[property]=new_values[property];
+          }
+        }
+
+      }
     }
     for(var i in edits){
       for(var key in edits[i]){
@@ -117,35 +145,60 @@ const calcDiff = (oldState,newState) => {
     return edits
 }
 
+
+const sendNotif= (data,template_uri,user)=>{
+  if(process.env.NODE_ENV!=='test'&&process.env.NODE_ENV!=='test-docker'&&!config.disable_emails){
+    readHTMLFile(path.join(__dirname, '../html/', template_uri), function(err, html) {
+      let transporter = createTransport();
+
+    var replacements = {
+      name:user.name,
+      logo_url:config[data.tenant].logo_url
+    };
+    var template = hbs.compile(html);
+    var htmlToSend = template(replacements);
+    var mailOptions = {
+      from: config[data.tenant].sender+" Notifications <noreply@faai.grnet.gr>",
+      to : user.email,
+      subject : data.subject,
+      html : htmlToSend
+    };
+    transporter.sendMail(mailOptions, function (error, response) {
+      if (error) {
+        customLogger(null,null,'error',[{type:'email_log'},{message:'Email not sent'},{error:error},{user:user},{data:data}]);
+      }
+      else {user(null,null,'info',[{type:'email_log'},{message:'Email sent'},{user:user},{data:data}]);
+      }
+    });
+    
+
+  });
+ 
+  }
+  
+}
+
 const sendInvitationMail = async (data) => {
 
   return new Promise(resolve=>{
     if(process.env.NODE_ENV!=='test-docker'&& process.env.NODE_ENV!=='test'&&!config.disable_emails){
       var currentDate = new Date();
       readHTMLFile(path.join(__dirname, '../html/invitation.hbs'), function(err, html) {
-        let transporter = nodeMailer.createTransport({
-            host: 'relay.grnet.gr',
-            port: 587,
-            secure: false
-        });
-        // let transporter = nodeMailer.createTransport({
-        //   service: 'gmail',
-        //   auth: {
-        //     user: 'orionaikido@gmail.com',
-        //     pass: ''
-        //   }
-        // });
+        let transporter = createTransport();
+
         var template = hbs.compile(html);
         var replacements = {
           invited_by:data.invited_by,
           group_manager:data.group_manager,
-          registry_url: process.env.REACT_BASE+'/'+ data.tenant,
+          registry_url: tenant_config[data.tenant].base_url,
           tenant:data.tenant,
-          url:process.env.REACT_BASE+'/'+ data.tenant +'/invitation/' + data.code
+          logo_url:config[data.tenant].logo_url,
+          url:tenant_config[data.tenant].base_url +'/invitation/' + data.code,
+          tenant_signature:config[data.tenant].tenant_signature
         }
         var htmlToSend = template(replacements);
         var mailOptions = {
-          from: "noreply@faai.grnet.gr",
+          from: config[data.tenant].sender+" Notifications <noreply@faai.grnet.gr>",
           to : data.email,
           subject : 'Invitation to manage service',
           html : htmlToSend
@@ -153,11 +206,11 @@ const sendInvitationMail = async (data) => {
         return transporter.sendMail(mailOptions, function (error, response) {
           if (error) {
             resolve(false);
-            customLogger(null,null,'info',[{type:'email_log'},{message:'Email not sent'},{error:error},{user:null},{data:data.email}]);
+            customLogger(null,null,'error',[{type:'email_log'},{message:'Email not sent'},{template:'invitation'},{error:error},{user:null},{data:data.email}]);
           }
           else {
             resolve(true);
-            customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{user:null},{data:data.email}]);
+            customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{template:'invitation'},{user:null},{data:data.email}]);
           }
         });
       });
@@ -173,42 +226,35 @@ const newMemberNotificationMail = (data,managers) => {
   if(process.env.NODE_ENV!=='test-docker'&& process.env.NODE_ENV!=='test'&&!config.disable_emails){
     var currentDate = new Date();
     readHTMLFile(path.join(__dirname, '../html/new-member-notification.html'), function(err, html) {
-      let transporter = nodeMailer.createTransport({
-          host: 'relay.grnet.gr',
-          port: 587,
-          secure: false
-      });
-      // let transporter = nodeMailer.createTransport({
-      //   service: 'gmail',
-      //   auth: {
-      //     user: 'orionaikido@gmail.com',
-      //     pass: ''
-      //   }
-      // });
-      var replacements = {
+      let transporter = createTransport();
+      var replacements = {  
         invitation_mail:data.invitation_mail,
         username:data.preferred_username,
         email:data.email,
-        url:process.env.REACT_BASE+'/'+ data.tenant
+        url:tenant_config[data.tenant].base_url+'/'+data.url,
+        tenant:data.tenant.toUpperCase(),
+        logo_url:config[data.tenant].logo_url,
+        tenant_title:config[data.tenant].sender,
+        tenant_signature:config[data.tenant].tenant_signature
       };
       var template = hbs.compile(html);
-      managers.forEach((manager)=>{
+      managers.forEach(async (manager)=>{
         replacements.target_email = manager.email;
-        replacements.username = manager.username;
-
+        replacements.recipient_name = manager.name;
+        await delay(400);
         var htmlToSend = template(replacements);
         var mailOptions = {
-          from: "noreply@faai.grnet.gr",
+          from: config[data.tenant].sender+" Notifications <noreply@faai.grnet.gr>",
           to : manager.email,
           subject : 'New member in your owners group',
           html : htmlToSend
         };
         transporter.sendMail(mailOptions, function (error, response) {
           if (error) {
-            customLogger(null,null,'info',[{type:'email_log'},{message:'Email not sent'},{error:error},{user:manager},{data:data}]);
+            customLogger(null,null,'error',[{type:'email_log'},{message:'Email not sent'},{error:error},{template:'new-member-notification'} ,{user:manager},{data:data}]);
           }
           else {
-            customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{user:manager},{data:data}]);
+            customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{user:manager},{template:'new-member-notification'},{data:data}]);
           }
         });
       })
@@ -216,24 +262,52 @@ const newMemberNotificationMail = (data,managers) => {
   }
 }
 
+const sendNotifications = (data,template_uri,users) => {
+  if(process.env.NODE_ENV!=='test'&&process.env.NODE_ENV!=='test-docker'&&!config.disable_emails){
+  readHTMLFile(path.join(__dirname, '../html/', template_uri), function(err, html) {
+      let transporter = createTransport();
+
+      var template = hbs.compile(html);
+      //var replacements = {username: "John Doe",name:"The name"};
+      var replacements = {
+        ...data,
+        url:tenant_config[data.tenant].base_url+ (data.url?data.url:""),
+        logo_url:config[data.tenant].logo_url,
+        tenant_title:config[data.tenant].sender,
+        tenant_signature:config[data.tenant].tenant_signature
+      };
+      var htmlToSend = template(replacements);
+      var mailOptions = {
+        from: {
+          name: data.sender_name,
+          address: data.sender_email
+        },
+        to : users,
+        subject : data.subject + " ["+config[data.tenant].sender +" Notifications"+"]",
+        html : htmlToSend,
+        cc : data.cc_emails
+      };
+      transporter.sendMail(mailOptions, function (error, response) {
+        if (error) {
+          customLogger(null,null,'error',[{type:'email_log'},{message:'Email not sent'},{template:template_uri},{error:error},{users:users},{data:data}]);
+        }
+        else {
+          customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{template:template_uri},{users:users},{data:data}]);
+        }
+      });
+
+
+  });
+  }
+}
+
 const sendMail= (data,template_uri,users)=>{
   var currentDate = new Date();
-
   var result;
   if(process.env.NODE_ENV!=='test'&&process.env.NODE_ENV!=='test-docker'&&!config.disable_emails){
   readHTMLFile(path.join(__dirname, '../html/', template_uri), function(err, html) {
-      let transporter = nodeMailer.createTransport({
-          host: 'relay.grnet.gr',
-          port: 587,
-          secure: false
-      });
-      // let transporter = nodeMailer.createTransport({
-      //   service: 'gmail',
-      //   auth: {
-      //     user: 'orionaikido@gmail.com',
-      //     pass: ''
-      //   }
-      // });
+      let transporter = createTransport();
+
       var template = hbs.compile(html);
       //var replacements = {username: "John Doe",name:"The name"};
       var state;
@@ -252,24 +326,29 @@ const sendMail= (data,template_uri,users)=>{
         service_name:data.service_name,
         date:currentDate,
         state:state,
-        url:process.env.REACT_BASE+'/'+ data.tenant
+        comment:data.comment,
+        logo_url:config[data.tenant].logo_url,
+        ...data,
+        url:tenant_config[data.tenant].base_url+ (data.url?data.url:""),
+        tenant_title:config[data.tenant].sender,
+        tenant_signature:config[data.tenant].tenant_signature
       };
-
-      users.forEach((user) => {
+      users.forEach(async (user) => {
           replacements.name = user.name;
           var htmlToSend = template(replacements);
           var mailOptions = {
-            from: "noreply@faai.grnet.gr",
+            from:  config[data.tenant].sender+" Notifications <noreply@faai.grnet.gr>",
             to : user.email,
             subject : data.subject,
             html : htmlToSend
           };
+          await delay(400);
           transporter.sendMail(mailOptions, function (error, response) {
             if (error) {
-              customLogger(null,null,'info',[{type:'email_log'},{message:'Email not sent'},{error:error},{user:user},{data:data}]);
+              customLogger(null,null,'error',[{type:'email_log'},{message:'Email not sent'},{template:template_uri},{error:error},{user:user},{data:data}]);
             }
             else {
-              customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{user:user},{data:data}]);
+              customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{template:template_uri},{user:user},{data:data}]);
             }
           });
       });
@@ -285,18 +364,7 @@ const createGgusTickets =  function(data){
     try{
         if(data){
           readHTMLFile(path.join(__dirname, '../html/ticket.html'), async function(err, html) {
-            let transporter = nodeMailer.createTransport({
-              host: 'relay.grnet.gr',
-              port: 587,
-              secure: false
-            });
-            // let transporter = nodeMailer.createTransport({
-            //     service: 'gmail',
-            //     auth: {
-            //         user: 'orionaikido@gmail.com',
-            //         pass: "**********"
-            //       }
-            //     });
+            let transporter = createTransport();
 
                 var template = hbs.compile(html);
 
@@ -316,6 +384,7 @@ const createGgusTickets =  function(data){
                   var mailOptions = {
                     from: ticket_data.reviewer_email,
                     to : config.ggus_email,
+                    //to:"koza-sparrow@hotmaIl.com",
                     subject : "Federation Registry: Service integration to "+ ticket_data.integration_environment + " (" + code + ")",
                     text:`A request was made to `+ type +` a service on the `+ env +` environment
     Service Info
@@ -333,7 +402,7 @@ const createGgusTickets =  function(data){
                   transporter.sendMail(mailOptions, function (error, response) {
                     if (error) {
                       return true;
-                      customLogger(null,null,'info',[{type:'email_log'},{message:'Email not sent'},{error:error},{recipient:'Ggus'},{ticket_data:ticket_data}]);
+                      customLogger(null,null,'error',[{type:'email_log'},{message:'Email not sent'},{error:error},{recipient:'Ggus'},{ticket_data:ticket_data}]);
                     }
                     else {
                       return true;
@@ -352,7 +421,21 @@ const createGgusTickets =  function(data){
     }
 }
 
-
+const createTransport = () =>{
+  let transporter = nodeMailer.createTransport({
+    host: 'relay.grnet.gr',
+    port: 587,
+    secure: false
+  });
+  // let transporter = nodeMailer.createTransport({
+  //     service: 'gmail',
+  //     auth: {
+  //         user: 'orionaikido@gmail.com',
+  //         pass: ''
+  //       }
+  //     });
+  return transporter
+}
 
 const addToString = (str,value) =>{
   let sentence='';
@@ -402,6 +485,21 @@ function makeCode(length) {
 }
 
 
+function shallowEqual(object1, object2) {
+  const keys1 = Object.keys(object1);
+  const keys2 = Object.keys(object2);
+  if (keys1.length !== keys2.length) {
+    return false;
+  }
+  for (let key of keys1) {
+    if (object1[key] !== object2[key]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+
 module.exports = {
   calcDiff,
   addToString,
@@ -412,5 +510,9 @@ module.exports = {
   readHTMLFile,
   extractCoc,
   createGgusTickets,
-  delay
+  delay,
+  sendNotif,
+  createTransport,
+  sendNotifications,
+  shallowEqual
 }

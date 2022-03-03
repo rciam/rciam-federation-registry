@@ -767,6 +767,7 @@ describe('Service registry API Integration Tests', function() {
         let dataSend = create.oidc;
         dataSend.integration_environment = "demo";
         dataSend.type = "create";
+        dataSend.eosc_security_policies = true;
         var req = request(server).post('/tenants/eosc/petitions').set({Authorization: userToken}).send({
           ...dataSend
         });
@@ -930,7 +931,7 @@ describe('Service registry API Integration Tests', function() {
   describe('# POST SERVICES',function(){
     it('should create multiple service',function(done){
       userToken = setUser(users.egi.operator_user);
-      var req = request(server).post('/tenants/egi/services').set({Authorization: userToken}).send(postServices);
+      var req = request(server).post('/tenants/egi/services').set('X-Api-Key',process.env.AMS_AGENT_KEY).send(postServices);
       req.set('Accept','application/json')
       .expect('Content-Type',/json/)
       .expect(200)
@@ -939,4 +940,63 @@ describe('Service registry API Integration Tests', function() {
         done();});
     })
   });
+  describe('# Test Banner Alert', function(){
+    it('should fail to create new banner alert null body',function(done){
+      var req = request(server).post('/tenants/egi/banner_alert').set('X-Api-Key',process.env.ADMIN_AUTH_KEY).send({});
+      req.set('Accept','application/json')
+      .expect('Content-Type',/json/)
+      .expect(422)
+      .end(function(err,res){
+        let body = JSON.parse(res.text);
+        expect(res.statusCode).to.equal(422);
+        done();
+      });
+    });
+    it('should create a new banner alert',function(done){
+      var req = request(server).post('/tenants/egi/banner_alert').set('X-Api-Key',process.env.ADMIN_AUTH_KEY).send({
+        "alert_message": "test_alert",
+        "priority": 10,
+        "type": "info",
+        "active": true
+      });
+      req.set('Accept','application/json')
+      .expect('Content-Type',/json/)
+      .expect(200)
+      .end(function(err,res){
+        expect(res.statusCode).to.equal(200);
+        done();});
+    });
+    it('should update banner alert',function(done){
+      var req = request(server).put('/tenants/egi/banner_alert/1').set('X-Api-Key',process.env.ADMIN_AUTH_KEY).send({
+        "alert_message": "test_alert update",
+        "active": false
+      });
+      req.set('Accept','application/json')
+      .expect('Content-Type',/json/)
+      .expect(200)
+      .end(function(err,res){
+        expect(res.statusCode).to.equal(200);
+        done();});
+    });
+    it('should get banner',function(done){
+      var req = request(server).get('/tenants/egi/banner_alert').set('X-Api-Key',process.env.ADMIN_AUTH_KEY);
+      req.set('Accept','application/json')
+      .expect('Content-Type',/json/)
+      .expect(200)
+      .end(function(err,res){
+        expect(res.statusCode).to.equal(200);
+        done();});
+    });
+    it('should delete banner', function(done){
+      var req = request(server).delete('/tenants/egi/banner_alert/1').set('X-Api-Key',process.env.ADMIN_AUTH_KEY);
+      req.set('Accept','application/json')
+      .expect('Content-Type',/json/)
+      .expect(200)
+      .end(function(err,res){
+        expect(res.statusCode).to.equal(200);
+        done();});
+    })
+
+  })
+  
 });

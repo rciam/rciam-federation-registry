@@ -1,6 +1,6 @@
 import React,{useContext} from 'react';
 import Modal from 'react-bootstrap/Modal';
-import * as config from '../config.json';
+import config from '../config.json';
 import {useHistory,useParams} from "react-router-dom";
 import Button from 'react-bootstrap/Button';
 import { useTranslation } from 'react-i18next';
@@ -8,16 +8,17 @@ import { Translation } from 'react-i18next';
 import {tenantContext} from '../context.js';
 
 export const Logout = (props) => {
-  const history = useHistory();
-  const tenant = useContext(tenantContext);
+  // const history = useHistory();
+  // const tenant = useContext(tenantContext);
   let {tenant_name} = useParams();
   const handleClose = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     if(tenant_name==='egi'){
-      window.location.assign('https://aai.egi.eu/oidc/saml/logout?redirect='+config.react+tenant_name);
+      window.location.assign('https://aai.egi.eu/oidc/saml/logout?redirect='+window.location.protocol+ "//" + window.location.hostname + (window.location.port?":"+window.location.port:"") + (config.basename==="/"?"/":config.basename+"/")+tenant_name);
     }
     else{
-      history.push('/'+(tenant&&tenant[0]?tenant[0].name:null));
+      window.location.assign('https://aai-demo.eosc-portal.eu/oidc/saml/logout?redirect='+window.location.protocol+ "//" + window.location.hostname + (window.location.port?":"+window.location.port:"") + (config.basename==="/"?"/":config.basename+"/")+tenant_name);
     }
 
   }
@@ -47,16 +48,15 @@ export const NotFound = (props) => {
   const history = useHistory();
   const tenant = useContext(tenantContext);
   const handleClose = () => {
-    history.push('/'+(tenant&&tenant[0]?tenant[0].name:null)+'/petitions');
-    props.setNotFound(false);
+    history.push('/'+(tenant&&tenant[0]?tenant[0].name:null)+'/services');
   }
   return (
     <Translation>
       {t=> {
         return(
-          <Modal show={props.notFound} onHide={handleClose}>
+          <Modal show={props.notFound||props.notAuthorised} onHide={handleClose}>
             <Modal.Header >
-              <Modal.Title>Resourse requested was not found</Modal.Title>
+              <Modal.Title>{props.notFound?"Resourse requested was not found":props.notAuthorised?"Resourse not authorised":null}</Modal.Title>
             </Modal.Header>
             <Modal.Footer>
               <Button variant="secondary" onClick={handleClose}>
@@ -150,14 +150,14 @@ export const ConfirmationModal = (props) =>{
 }
 
 export function ResponseModal(props){
-  let {tenant_name} = useParams();
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   let history = useHistory();
 
   //const handleClose = () => props.setMessage();
   const handleClose = () => {
-    history.push('/'+tenant_name+'/petitions');}
+    history.push(props.return_url);
+  }
   return (
     <Modal show={props.message?true:false} onHide={handleClose}>
         <Modal.Header closeButton>

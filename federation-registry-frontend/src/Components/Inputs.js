@@ -1,5 +1,8 @@
 import React, {useState, useRef ,useEffect,useContext} from 'react';
 import Col from 'react-bootstrap/Col';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {faSearch,faExclamationTriangle} from '@fortawesome/free-solid-svg-icons';
+import initialValues from '../initialValues';
 import { Field, FieldArray,FormikConsumer } from 'formik';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Form from 'react-bootstrap/Form';
@@ -11,8 +14,16 @@ import Tooltip from 'react-bootstrap/Tooltip';
 import Overlay from 'react-bootstrap/Overlay';
 import { useTranslation } from 'react-i18next';
 import countryData from 'country-region-data';
+import {Logout,NotFound} from './Modals.js';
 import CopyToClipboardComponent from './CopyToClipboard.js'
- import {tenantContext} from '../context.js';
+import {tenantContext} from '../context.js';
+import { Typeahead } from 'react-bootstrap-typeahead'; // ES2015
+import 'react-bootstrap-typeahead/css/Typeahead.css';
+import config from '../config.json';
+import {useParams } from "react-router-dom";
+import parse from 'html-react-parser';
+
+
 // import {removeA} from '../helpers.js';
 
 /*
@@ -45,6 +56,189 @@ export function SimpleInput(props){
 
           <MyOverLay show={props.changed&&show?'string':null} type='Edited' target={target}/>
           {props.isloading?<div className="loader"></div>:null}
+        </React.Fragment>
+  )
+}
+
+
+export function OrganizationField(props){
+  //const [show, setShow] = useState(false);
+  const target = useRef(null);
+  const [singleSelections, setSingleSelections] = useState((props.values.organization_name?[props.values.organization_name]:[]));
+  const [organizations,setOrganizations] = useState({});
+  const [notFound,setNotFound] = useState(false);
+  const [logout,setLogout] = useState(false);
+  let {tenant_name} = useParams();
+  const getOrganizations = (searchString) =>{
+
+    if(true){
+      fetch("https://api.ror.org/organizations"+(searchString?("?query="+searchString):''), {
+        method:'GET',
+        accept: '*/*',
+        headers:{
+          'Content-Type':'application/json',
+        }}).then(response=>{
+          if(response.status===200||response.status===304){
+            return response.json();
+          }
+          else if(response.status===401){
+            setLogout(true);
+            return false;
+          }
+          else if(response.status===404){
+            return false;
+          }
+          else {
+            return false
+          }
+        }).then(ror_response=>{
+            let options = {};
+            let exists = false;
+            
+            fetch(config.host+'tenants/'+tenant_name+'/organizations?ror=true'+(searchString?("&search_string="+searchString):''),{
+              method:'GET',
+              credentials:'include',
+              headers:{
+                'Content-Type':'application/json',
+                'Authorization': localStorage.getItem('token')
+              }
+            }).then(response=>{
+              if(response.status===200||response.status===304){
+                return response.json();
+              }
+              else if(response.status===401){
+                setLogout(true);
+                return false;
+              }
+              else if(response.status===404){
+                setNotFound('No invitations found');
+                return false;
+              }
+              else{
+                return false
+              }
+            }).then(response=>{
+              if(response){
+                //options[searchString]     
+                let loaded = false;     
+                response.organizations.forEach((item,index)=>{
+                  if(searchString===item.organization_name){
+                    exists = true;
+                  }
+                  options[item.organization_name] = {};
+                  options[item.organization_name].name = item.organization_name 
+                  options[item.organization_name].url = item.organization_url;
+                  options[item.organization_name].ror_id = null;
+                  options[item.organization_name].id = item.organization_id;
+
+                  if(item.organization_name ===singleSelections[0]&&options[item.organization_name].url){
+                    loaded= true;
+                  }
+                })
+
+                if(ror_response&&ror_response.items){
+                  ror_response.items.forEach((item,index)=>{
+                    if(searchString===item.name){
+                      exists = true;
+                    }
+                    options[item.name + (item.acronyms.length>0?(" (" + item.acronyms[0] +")"):"")] = {};
+                    options[item.name + (item.acronyms.length>0?(" (" + item.acronyms[0] +")"):"")].name = item.name 
+                    options[item.name + (item.acronyms.length>0?(" (" + item.acronyms[0] +")"):"")].url=(item.links[0]?item.links[0]:"");
+                    options[item.name + (item.acronyms.length>0?(" (" + item.acronyms[0] +")"):"")].ror_id = item.id;
+                    
+                    if(item.name +(item.acronyms.length>0?(" (" + item.acronyms[0] +")"):"")===singleSelections[0]&&options[item.name+(item.acronyms.length>0?(" (" + item.acronyms[0] +")"):"")].url){
+                      loaded = true
+                    }
+                  });
+                }
+                if(loaded||exists){
+                  props.setDisabledOrganizationFields(['organization_url']);                  
+                }
+                else{
+                  props.setDisabledOrganizationFields([]);
+                } 
+               
+                let newOption = {};
+                if(!exists&& searchString.length>0){
+                  newOption[searchString+ " (Add New Organization)"] = {};
+                  newOption[searchString+ " (Add New Organization)"].name = searchString; 
+                  newOption[searchString+ " (Add New Organization)"].url = null;
+                }
+                // console.log(options);
+                // console.log(ror_response.items);
+                setOrganizations({...newOption,...options});
+            }
+            else{
+              setOrganizations(options);
+            }
+            })
+
+            
+          }
+        ).catch((err)=>{console.log(err); alert('Error')});
+    }
+  }
+
+  useEffect(()=>{
+    getOrganizations(singleSelections[0]?singleSelections[0]:"");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[singleSelections])
+
+ 
+  const handleChange = async (selected,index) => {
+ 
+    let organization = (organizations[selected[0]]?organizations[selected[0]]:{});
+    props.setFieldValue('ror_id',organization.ror_id,false)
+    props.setFieldValue('organization_id',organization.organization_id,false);
+    props.setFieldValue('organization_name',(selected&&selected[0]?organizations[selected[0]].name:""),false).then(()=>{
+      props.validateField('organization_name');
+    });
+    
+    if(organization.url){
+      props.setDisabledOrganizationFields(['organization_url']);
+    }
+    else{
+      props.setDisabledOrganizationFields([]);
+    }
+     props.setFieldValue('organization_url',(organizations[selected[0]]&&organizations[selected[0]].url?organizations[selected[0]].url:''),false).then(()=>{
+      props.validateField('organization_url');       
+     });
+     setSingleSelections(selected);
+
+  } 
+  
+  return (
+        <React.Fragment>
+          <Logout logout={logout}/>
+          <NotFound notFound={notFound}/>
+          <Form.Group className='organizations-input'>
+            <InputGroup>  
+              <InputGroup.Text><FontAwesomeIcon icon={faSearch}/></InputGroup.Text>
+              <Typeahead
+                id="basic-typeahead-single"
+                labelKey="name"
+                name='organization_name'
+                onBlur={()=>{props.setFieldTouched('organization_name')}}
+                onInputChange={(e)=>{getOrganizations(e);
+                  
+                }}
+                filterBy={() => true}
+                isInvalid={props.isInvalid}
+                onChange={(selected,index)=>{
+                  
+                  handleChange(selected,index);
+                                  }}
+                options={Object.keys(organizations)}
+                disabled={props.disabled}
+                ref={target}
+                placeholder="Type the name of your organization..."
+                selected={singleSelections}
+              />
+            </InputGroup>
+          </Form.Group>  
+        <MyOverLay show={true?'string':null} type='Edited' target={target}/>
+        {props.isloading?<div className="loader"></div>:null}
+          
         </React.Fragment>
   )
 }
@@ -107,7 +301,7 @@ export function PublicKey(props){
             placeholder='https://'
             type="text"
             ref={target}
-            value={props.values.jwks_uri}
+            value={props.values.jwks_uri?props.values.jwks_uri:""}
             onChange={props.onChange}
             isInvalid={props.isInvalid}
             disabled={props.disabled}
@@ -225,9 +419,10 @@ export function TimeInput(props){
          type='text'
          className={'col-form-label-sm ' + (props.changed?"input-edited":"")}
          ref={target}
+         placeholder={'Enter Value'}
          onMouseOver={()=>setShow(true)}
          onMouseOut={()=>setShow(false)}
-         value={Math.round(props.value/(timeMetric==='0'?1:(timeMetric==='1'?60:3600)) * 100) / 100}
+         value={props.value?Math.round(props.value/(timeMetric==='0'?1:(timeMetric==='1'?60:3600)) * 100) / 100:props.value===0?'0':''}
          onChange={(e)=>{
            if(reg.test(e.target.value)){
            e.target.value= e.target.value*(timeMetric==='0'?1:(timeMetric==='0'?1:(timeMetric==='1'?60:3600)));
@@ -263,6 +458,7 @@ export function CountrySelect(props){
       <Field
       name={props.name}
       as="select"
+      value={props.values[props.name]?props.values[props.name]:""}
       onMouseOver={()=>setShow(true)}
       onMouseOut={()=>setShow(false)}
       disabled={props.disabled}
@@ -281,7 +477,7 @@ export function CountrySelect(props){
 export function SelectEnvironment(props){
   const [show, setShow] = useState(false);
   const target = useRef(null);
-
+  
 
   return(
     <React.Fragment>
@@ -292,6 +488,7 @@ export function SelectEnvironment(props){
       <Field
       name={props.name}
       as="select"
+      value={props.values[props.name]?props.values[props.name]:""}
       default={props.default?props.default:''}
       onMouseOver={()=>setShow(true)}
       onMouseOut={()=>setShow(false)}
@@ -336,6 +533,7 @@ export function Select(props){
       <Field
       name={props.name}
       as="select"
+      value={props.values[props.name]?props.values[props.name]:""}
       default={props.default?props.default:''}
       onMouseOver={()=>setShow(true)}
       onMouseOut={()=>setShow(false)}
@@ -467,7 +665,13 @@ export function RefreshToken(props){
           onMouseOver={()=>setShow(true)}
           onMouseOut={()=>setShow(false)}
           >
-          <Checkbox name="scope" disabled={props.disabled} checked={props.values.scope.includes('offline_access')} value='offline_access'/>
+          <Checkbox name="scope" disabled={props.disabled} checked={props.values.scope.includes('offline_access')} value='offline_access' onClick={()=>{
+                  if(!props.values.scope.includes('offline_access')&&(props.values.refresh_token_validity_seconds===null||props.values.refresh_token_validity_seconds===0)){
+                    props.setFieldValue('refresh_token_validity_seconds',initialValues.refresh_token_validity_seconds,true).then(()=>{
+                      props.validateField('refresh_token_validity_seconds');
+                    });      
+                  }
+          }}/>
             {t('form_reuse_refresh_token_scope')}
           <MyOverLay show={props.changed&&(props.changed.scope.D.includes('offline_access')||props.changed.scope.N.includes('offline_access'))&&show} type='Edited' target={target}/>
         </div>
@@ -531,6 +735,7 @@ export function DeviceCode(props){
   const target = useRef(null);
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
+
   return(
     <React.Fragment>
       <div
@@ -539,7 +744,13 @@ export function DeviceCode(props){
         onMouseOver={()=>setShow(true)}
         onMouseOut={()=>setShow(false)}
       >
-        <Checkbox name="grant_types" disabled={props.disabled} value='urn:ietf:params:oauth:grant-type:device_code'/>
+        <Checkbox name="grant_types" disabled={props.disabled} value='urn:ietf:params:oauth:grant-type:device_code' onClick={()=>{
+           if(!props.values.grant_types.includes('urn:ietf:params:oauth:grant-type:device_code')&&props.values.device_code_validity_seconds===null){
+            props.setFieldValue('device_code_validity_seconds',initialValues.device_code_validity_seconds,true).then(()=>{
+              props.validateField('device_code_validity_seconds');
+            });
+           }    
+        }}/>
           {t('form_device_code_desc')}
         <MyOverLay show={(props.changed&&(props.changed.grant_types.D.includes('urn:ietf:params:oauth:grant-type:device_code')||props.changed.grant_types.N.includes('urn:ietf:params:oauth:grant-type:device_code'))?'input-edited checkbox-item-edited':'')&&show} type='Edited' target={target}/>
       </div>
@@ -624,7 +835,7 @@ export function ClientSecret(props){
                 isInvalid={props.isInvalid}
                 onBlur={props.onBlur}
                 placeholder='Type a secret'
-                value={props.client_secret}
+                value={props.client_secret?props.client_secret:""}
                 disabled={props.disabled}
                 ref={editSecret?null:target}
                 onMouseOver={()=>setShow(true)}
@@ -757,6 +968,12 @@ function ListInputArrayInput1(props){
   const [show, setShow] = useState(false);
   const [type, setType] = useState();
   const target = useRef(null);
+
+  const mystyle = {
+    width: "100%",
+    wordWrap: "break-word",
+    wordBreak:"break-all"
+  };
   useEffect(()=>{
 
     if(props.changed){
@@ -775,6 +992,7 @@ function ListInputArrayInput1(props){
   return (
     <React.Fragment>
     <tr
+      
       key={props.index}
       onMouseOver={()=>setShow(true)}
       onMouseOut={()=>setShow(false)}
@@ -782,10 +1000,10 @@ function ListInputArrayInput1(props){
     >
 
         <React.Fragment>
-          <td className={'td-item ' + (type==='Added'?'row-added':type==='Deleted'?'row-deleted':null)}>{props.item}</td>
+          <td style={mystyle} className={'td-item ' + (type==='Added'?'row-added':type==='Deleted'?'row-deleted':"")}>{props.item}</td>
 
             <React.Fragment>
-            <td>
+            <td style={{whiteSpace: "nowrap"}}>
               <Checkbox disabled={props.disabled} name={props.name} value={props.item}/>
             </td>
             </React.Fragment>
@@ -793,7 +1011,7 @@ function ListInputArrayInput1(props){
         </React.Fragment>
 
     </tr>
-      <MyOverLay show={type&&type!=='Exists'&&show?'true':null} type={type} target={target}/>
+      <MyOverLay show={type&&type!=='Exists'&&show?'true':""} type={type} target={target}/>
     </React.Fragment>
   )
 }
@@ -808,6 +1026,11 @@ function ListInputArrayInput2(props){
   const [show, setShow] = useState(false);
   const [type, setType] = useState(false);
   const target = useRef(null);
+  const mystyle = {
+    width: "100%",
+    wordWrap: "break-word",
+    wordBreak:"break-all"
+  };
   useEffect(()=>{
 
     if(props.changed){
@@ -829,11 +1052,14 @@ function ListInputArrayInput2(props){
       onMouseOut={()=>setShow(false)}
       ref={target}
       >
-      <td className={"td-item "+(type==='Added'?'row-added':type==='Deleted'?'row-deleted':null)}>
+      <td style={mystyle} className={"td-item "+(type==='Added'?'row-added':type==='Deleted'?'row-deleted':null)}>
         {props.item}
       </td>
 
-        <td>
+        <td
+          style={{whiteSpace: "nowrap"}}
+        >
+          
           <Button
             variant="danger"
             onClick={()=>{props.arrayHelpers.remove(props.index)}}
@@ -860,7 +1086,6 @@ export  function LogoInput(props){
       ev.target.src = process.env.PUBLIC_URL + '/logo_placeholder.gif';
   }
 
-
   return (
     <React.Fragment>
       <Form.Control
@@ -877,10 +1102,13 @@ export  function LogoInput(props){
         onMouseOver={()=>setShow(true)}
         onMouseOut={()=>setShow(false)}
       />
-      <Form.Text className="text-muted text-left">
-        {props.description}
-      </Form.Text>
+      {props.description||(props.moreInfo&&props.moreInfo.description)?
+          <Form.Text className="text-muted text-left">
+            {parse(props.moreInfo&&props.moreInfo.description?props.moreInfo.description:props.description)}
+          </Form.Text>
+          :''}
       <MyOverLay show={props.changed&&show?'string':null} type='Edited' target={target}/>
+      {props.warning&&!props.error?<div className="warning-message"> <FontAwesomeIcon icon={faExclamationTriangle}/>Warning: Image could not be loaded, make sure the url points to an image resourse</div>:null}
       {props.error && props.touched ? (typeof(props.error)==='string')?(<div className="error-message">{props.error}</div>):(<div className="error-message">{t('input_image_error')}</div>):null}
       <FormikConsumer>
         {({ validationSchema, validate, onSubmit, ...rest }) => (
@@ -891,7 +1119,7 @@ export  function LogoInput(props){
               overflowX: 'scroll',
             }}
           >
-            <Image src={props.value ? props.value:process.env.PUBLIC_URL + '/logo_placeholder.gif'} onError={addDefaultSrc} fluid />
+            <Image referrerPolicy="no-referrer" src={props.value ? props.value:process.env.PUBLIC_URL + '/logo_placeholder.gif'} onError={addDefaultSrc} fluid />
 
           </pre>
         )}
@@ -916,7 +1144,7 @@ function MyOverLay(props) {
   return (
     <Overlay target={props.target.current}  show={show} placement="right">
       {propsOv => (
-        <Tooltip id="overlay-example" placement={propsOv.placement} arrowProps={propsOv.arrowProps} ref={propsOv.ref} style={propsOv.style} outOfBoundaries={propsOv.outofboundaries} >
+        <Tooltip id="overlay-example" placement={propsOv.placement} arrowProps={propsOv.arrowProps} ref={propsOv.ref} style={propsOv.style} outofboundaries={propsOv.outofboundaries} >
           {props.type==="Added"?t('input_added'):props.type==="Deleted"?t('input_deleted'):props.type==="Edited"?t('input_edited'):null}
         </Tooltip>
 

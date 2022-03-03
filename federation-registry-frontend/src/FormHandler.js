@@ -1,7 +1,7 @@
-import React,{useEffect,useState} from 'react';
+import React,{useEffect,useState,useContext} from 'react';
 import initialValues from './initialValues';
 import {useParams} from "react-router-dom";
-import * as config from './config.json';
+import config from './config.json';
 import ServiceForm from "./ServiceForm.js";
 import ErrorComponent from "./Components/Error.js"
 import {LoadingBar} from './Components/LoadingBar';
@@ -13,72 +13,56 @@ import Container from 'react-bootstrap/Container';
 import {Logout,NotFound} from './Components/Modals';
 import { diff } from 'deep-diff';
 import { useTranslation } from 'react-i18next';
+import {tenantContext,userContext} from './context.js';
+import {calcDiff} from './helpers.js'
 
 
 const EditService = (props) => {
     // eslint-disable-next-line
     const { t, i18n } = useTranslation();
-    const [petition,setPetition] = useState();
+    const [petitionData,setPetitionData] = useState();
     const [service,setService] = useState();
     const [editPetition,setEditPetition] = useState();
     const [changes,setChanges] = useState();
     const {tenant_name} = useParams();
+    const {service_id} = useParams();
+    const {petition_id} = useParams();
     const [logout,setLogout] = useState(false);
     const [notFound,setNotFound] = useState(false);
+    const tenant = useContext(tenantContext);
+    const [user] = useContext(userContext);
+    const [owned,setOwned] = useState(true);
+    
     useEffect(()=>{
+      
+      localStorage.removeItem('url');
       getData();
-
       // eslint-disable-next-line react-hooks/exhaustive-deps
     },[]);
 
     useEffect(()=>{
         // eslint-disable-next-line react-hooks/exhaustive-deps
-      if(petition&&service&&props.review&&!editPetition){
-        const changes = diff(service,petition);
-        let helper = {
-          grant_types: {
-            D:[],
-            N:[],
-          },
-          scope: {
-            D:[],
-            N:[]
-          },
-          contacts: {
-            D:[],
-            N:[]
-          },
-          redirect_uris: {
-            D:[],
-            N:[]
+      if(petitionData&&service&&props.review&&!editPetition){
+
+        let helper = calcDiff(service,petitionData.petition,tenant[0].form_config,diff);
+        let multivalue_attributes = [];
+        for (const service_property in service) service[service_property]&&typeof(service[service_property])==='object'&&multivalue_attributes.push(service_property); 
+        for (const service_property in petitionData.petition) petitionData.petition[service_property]&&typeof(petitionData.petition[service_property])==='object'&&!multivalue_attributes.includes(service_property)&&multivalue_attributes.push(service_property);
+        multivalue_attributes.forEach(item=>{
+          if(helper[item].D){
+            petitionData.petition[item].push(...helper[item].D);
           }
-        };
-        let attributes = ['contacts'];
-        if(petition.protocol==='oidc'){
-          attributes.push('grant_types','scope','redirect_uris');
-        }
-        for(let i=0;i<changes.length;i++){
-          if(! ['grant_types','scope','contacts','redirect_uris'].includes(changes[i].path[0])){
-              helper[changes[i].path[0]]=changes[i].kind;
-            }
-        }
-        helper = calculateMultivalueDiff(service,petition,helper);
-        attributes.forEach(item=>{
-          petition[item].push(...helper[item].D);
         });
         // eslint-disable-next-line react-hooks/exhaustive-deps
-        setEditPetition(petition);
+        setEditPetition(petitionData.petition);
         setChanges(helper);
-
-
-
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    },[petition, service, props.review, editPetition]);
+    },[petitionData, service, props.review, editPetition]);
 
-    const getData = () => {
-      if(props.service_id){
-        fetch(config.host+'tenants/'+tenant_name+'/services/'+props.service_id, {
+    const getData = async () => {
+      if(service_id){
+        fetch(config.host+'tenants/'+tenant_name+'/services/'+service_id, {
           method: 'GET', // *GET, POST, PUT, DELETE, etc.
           credentials: 'include', // include, *same-origin, omit
           headers: {
@@ -93,6 +77,7 @@ const EditService = (props) => {
             return false
           }
           if(response.status===404){
+            
             setNotFound(true);
             return false;
           }
@@ -101,12 +86,13 @@ const EditService = (props) => {
           }
           }).then(response=> {
           if(response){
+            setOwned(response.owned);
             setService(response.service);
           }
         });
       }
-      if(props.petition_id&&props.type!=='delete'){
-        fetch(config.host+'tenants/'+tenant_name+'/petitions/'+props.petition_id+'?type=open', {
+      if(petition_id){
+        fetch(config.host+'tenants/'+tenant_name+'/petitions/'+petition_id+'?type=open', {
           method: 'GET', // *GET, POST, PUT, DELETE, etc.
           credentials: 'include', // include, *same-origin, omit
           headers: {
@@ -129,7 +115,14 @@ const EditService = (props) => {
           }
         }).then(response=> {
           if(response){
-            setPetition(response.petition);
+            if(props.review&&!user.review&&response&&response.petition.integration_environment!=='development'){
+              setNotFound(true);
+            }
+            else{
+              setOwned(response.metadata.owned);
+              // console.log(...response.metadata)
+              setPetitionData(response);
+            }
           }
         });
       }
@@ -137,84 +130,95 @@ const EditService = (props) => {
 
   return (
     <React.Fragment>
-    {props.review?
+      <Logout logout={logout}/>
+      <NotFound notFound={notFound}/>
+    {!((petitionData||!petition_id)&&(!service_id||service))?<LoadingBar loading={true}/>:
       <React.Fragment>
-        <Logout logout={logout}/>
-        <NotFound notFound={notFound}/>
-        {
-          props.type==='edit'?
-            <React.Fragment>
-              <Alert variant='warning' className='form-alert'>
-                {t('reconfiguration_info')} It was submitted on {props.submitted.slice(12,19)}(GMT+3) at {props.submitted.slice(0,10).split('-').join('/')}.
-              </Alert>
-              {editPetition&&changes?
-                <React.Fragment>
-                  <RequestedReviewAlert comment={props.comment} />
-                  <ServiceForm disableEnvironment={true} initialValues={editPetition} changes={changes} {...props}/>
-                </React.Fragment>
-                  :<LoadingBar loading={true}/>
+       {props.review?
+        <React.Fragment>
+          
+          {
+            petitionData.metadata.type==='edit'?
+              <React.Fragment>
+                <Alert variant='warning' className='form-alert'>
+                  {t('reconfiguration_info')} It was submitted on {petitionData.metadata.submitted_at.slice(12,19)}(GMT+3) at {petitionData.metadata.submitted_at.slice(0,10).split('-').join('/')}.
+                </Alert>
+                {editPetition&&changes?
+                  <React.Fragment>
+                    <RequestedReviewAlert comment={petitionData.metadata.comment} />
+                    <ServiceForm disableEnvironment={true} initialValues={editPetition} changes={changes} {...petitionData.metadata} {...props}/>
+                  </React.Fragment>
+                    :<LoadingBar loading={true}/>
+  
+                }
+              </React.Fragment>
+            :petitionData.metadata.type==='create'?
+              <React.Fragment>
+                <Alert variant='warning' className='form-alert'>
+                  {t('edit_create_info')} It was submitted on {petitionData.metadata.submitted_at.slice(12,19)}(GMT+3) at {petitionData.metadata.submitted_at.slice(0,10).split('-').join('/')}.
+                </Alert>
+                {petitionData?
+                  <React.Fragment>
+                    <RequestedReviewAlert comment={petitionData.metadata.comment} />
+                    <ServiceForm initialValues={petitionData.petition} {...petitionData.metadata} {...props}/>
+                  </React.Fragment>:<LoadingBar loading={true}/>}
+              </React.Fragment>
+            :
+              <React.Fragment>
+                <Alert variant='warning' className='form-alert'>
+                  {t('edit_delete_info')} It was submitted on {petitionData.metadata.submitted_at.slice(12,19)}(GMT+3) at {petitionData.metadata.submitted_at.slice(0,10).split('-').join('/')}.
+                </Alert>
+                {service?
+                  <React.Fragment>
+                    <RequestedReviewAlert comment={petitionData.metadata.comment} />
+                    <ServiceForm copy={true} initialValues={service} {...petitionData.metadata} {...props}/>
+                  </React.Fragment>:<LoadingBar loading={true}/>}
+              </React.Fragment>
+            }
+        </React.Fragment>
+      :
+      <React.Fragment>
+        <NotFound notAuthorised={!owned}/>
 
-              }
-            </React.Fragment>
-          :props.type==='create'?
+        {!petitionData?
+          <RequestedChangesAlert tab1={service} tab2={service}  {...props}/>
+        :
+          petitionData.metadata.type==='edit'?
+            <RequestedChangesAlert comment={petitionData.metadata.comment}  tab1={petitionData.petition} tab2={service} {...petitionData.metadata} {...props}/>
+          :petitionData.metadata.type==='delete'?
+            <RequestedChangesAlert comment={petitionData.metadata.comment} tab1={service} tab2={service} {...petitionData.metadata} {...props}/>
+            :petitionData.metadata.type==='create'?
             <React.Fragment>
-              <Alert variant='warning' className='form-alert'>
-                {t('edit_create_info')} It was submitted on {props.submitted.slice(12,19)}(GMT+3) at {props.submitted.slice(0,10).split('-').join('/')}.
-              </Alert>
-              {petition?
+              {petitionData.metadata.comment?
                 <React.Fragment>
-                  <RequestedReviewAlert comment={props.comment} />
-                  <ServiceForm initialValues={petition} {...props}/>
-                </React.Fragment>:<LoadingBar loading={true}/>}
+                  <Alert variant='warning' className='form-alert'>
+                    {t('edit_changes_info')}
+                  </Alert>
+                  <Jumbotron fluid className="jumbotron-comment">
+                    <Container>
+                      <h5>Comment from Reviewer</h5>
+                      <p className="text-comment">
+                        {petitionData.metadata.comment}
+                      </p>
+                    </Container>
+                  </Jumbotron>
+                </React.Fragment>
+              :petitionData.metadata.type?
+                  <Alert variant='warning' className='form-alert'>
+                  {t('edit_create_pending_info')}
+                  </Alert>
+              :null
+              }
+              {petitionData?<ServiceForm disableEnvironment={true} initialValues={petitionData.petition} {...petitionData.metadata} {...props}/>:<LoadingBar loading={true}/>}
             </React.Fragment>
           :
-            <React.Fragment>
-              <Alert variant='warning' className='form-alert'>
-                {t('edit_delete_info')} It was submitted on {props.submitted.slice(12,19)}(GMT+3) at {props.submitted.slice(0,10).split('-').join('/')}.
-              </Alert>
-              {service?
-                <React.Fragment>
-                  <RequestedReviewAlert comment={props.comment} />
-                  <ServiceForm copy={true} initialValues={service} {...props} />
-                </React.Fragment>:<LoadingBar loading={true}/>}
-            </React.Fragment>
-          }
-    </React.Fragment>
-    :
-    <React.Fragment>
-      {props.type==='edit'?
-        <RequestedChangesAlert comment={props.comment}  tab1={petition} tab2={service} {...props}/>
-      :props.type==='delete'?
-        <RequestedChangesAlert comment={props.comment} tab1={service} tab2={service} {...props}/>
-        :props.type==='create'?
-        <React.Fragment>
-          {props.comment?
-            <React.Fragment>
-              <Alert variant='warning' className='form-alert'>
-                {t('edit_changes_info')}
-              </Alert>
-              <Jumbotron fluid className="jumbotron-comment">
-                <Container>
-                  <h5>Comment from Reviewer</h5>
-                  <p className="text-comment">
-                    {props.comment}
-                  </p>
-                </Container>
-              </Jumbotron>
-            </React.Fragment>
-          :props.type?
-              <Alert variant='warning' className='form-alert'>
-              {t('edit_create_pending_info')}
-              </Alert>
-          :null
-          }
-          {petition?<ServiceForm disableEnvironment={true} initialValues={petition} {...props}/>:<LoadingBar loading={true}/>}
-        </React.Fragment>
-        :
-        <RequestedChangesAlert comment={props.comment} tab1={service} tab2={service} {...props}/>
+          <RequestedChangesAlert comment={petitionData?petitionData.metadata.comment:null} tab1={service} tab2={service} {...petitionData.metadata} {...props}/>
+        }
+      </React.Fragment>
       }
-    </React.Fragment>
+      </React.Fragment>
     }
+   
 
 
     </React.Fragment>
@@ -226,50 +230,51 @@ const ViewService = (props)=>{
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   const [service,setService] = useState();
-  const [petition,setPetition] = useState();
   const [deploymentError,setDeploymentError] = useState();
   const {tenant_name} = useParams();
+  const {petition_id} = useParams();
+  const {service_id} = useParams();
+  const [petitionData,setPetitionData] = useState();
+  const [owned,setOwned] = useState(false);
   const [logout,setLogout] = useState(false);
   const [notFound,setNotFound] = useState(false);
+  const [user] = useContext(userContext);
+
   useEffect(()=>{
+    localStorage.removeItem('url');
     getData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
 
   const getData = () => {
-    if(props.service_id){
-      if(props.get_error){
-          fetch(config.host+'tenants/'+tenant_name+'/services/'+props.service_id +'/error', {
-            method: 'GET', // *GET, POST, PUT, DELETE, etc.
-            credentials: 'include', // include, *same-origin, omit
-            headers: {
-            'Content-Type': 'application/json',
-            'Authorization': localStorage.getItem('token')
-            }
-        }).then(response=> {
-          if(response.status===200){
-            return response.json();
-          }else if(response.status===401){
-            setLogout(true);
-            return false;
-          }
-          else if(response.status===404){
-            setNotFound(true);
-            return false;
-          }
-          else {
-            return false
-          }
-        }).then(response=> {
-          if(response){
-            setDeploymentError(response.error)
-          }
-          else{
-            setLogout(true)
-          }
-        });
-      }
-      fetch(config.host+'tenants/'+tenant_name+'/services/'+props.service_id, {
+    if(service_id){
+      fetch(config.host+'tenants/'+tenant_name+'/services/'+service_id +'/error', {
+        method: 'GET', // *GET, POST, PUT, DELETE, etc.
+        credentials: 'include', // include, *same-origin, omit
+        headers: {
+        'Content-Type': 'application/json',
+        'Authorization': localStorage.getItem('token')
+        }
+      }).then(response=> {
+        if(response.status===200){
+          return response.json();
+        }else if(response.status===401){
+          setLogout(true);
+          return false;
+        }
+        else if(response.status===404){
+          return false;
+        }
+        else {
+          return false
+        }
+      }).then(response=> {
+        if(response){
+          setDeploymentError(response.error)
+        }
+      });
+      
+      fetch(config.host+'tenants/'+tenant_name+'/services/'+service_id, {
         method: 'GET', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
@@ -293,12 +298,13 @@ const ViewService = (props)=>{
         }
       }).then(response=> {
         if(response.service){
+          setOwned(response.owned);
           setService(response.service);
         }
       });
     }
-    if(props.petition_id&&props.type!=='delete'){
-      fetch(config.host+'tenants/'+tenant_name+'/petitions/'+props.petition_id+'?type=open', {
+    if(petition_id){
+      fetch(config.host+'tenants/'+tenant_name+'/petitions/'+petition_id+'?type=open', {
         method: 'GET', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
@@ -322,8 +328,8 @@ const ViewService = (props)=>{
           return false
         }
       }).then(response=> {
-        if(response.petition){
-          setPetition(response.petition);
+        if(response){
+          setPetitionData(response);
         }
       });
     }
@@ -332,15 +338,30 @@ const ViewService = (props)=>{
     <React.Fragment>
     <NotFound notFound={notFound}/>
     <Logout logout={logout}/>
-    <ErrorComponent deploymentError={deploymentError} setDeploymentError={setDeploymentError} service_id={props.service_id} setLogout={setLogout}/>
-      {service?<ServiceForm initialValues={service} disabled={true} copyButton={true} owned={props.owned} {...props} />:props.service_id?<LoadingBar loading={true}/>:petition?
+    {deploymentError&&!user.actions.includes('error_action')?
+      <Alert variant='primary' className='form-alert'>
+        The deployment for the following request could not be completed due to an error. Our technical team will handle this issue and you will be notified when it is resolved. Thank you for your patience.
+      </Alert>
+      :null}
+    <ErrorComponent deploymentError={deploymentError} user={user} setDeploymentError={setDeploymentError} service_id={service_id} setLogout={setLogout}/>
+      {service?
+        <React.Fragment>        
+          {service.created_at?
+            <Alert variant='primary' className='form-alert'>
+              Service was registered at: <b>{service.created_at.slice(0,10).split('-').join('/')+ ' ' + service.created_at.slice(11,19).split('-').join('/')}</b>
+            </Alert>:null}
+          <ServiceForm initialValues={service} disabled={true} copyButton={true} owned={owned} {...props}/>
+        </React.Fragment>
+        :service_id?<LoadingBar loading={true}/>:petitionData?
         <React.Fragment>
           <Alert variant='danger' className='form-alert'>
             {t('view_create_info')}
           </Alert>
-          <ServiceForm initialValues={petition} copyButton={true} owned={props.owned} disabled={true} {...props}/>
+          
+          
+          <ServiceForm initialValues={petitionData.petition} copyButton={true} owned={owned} disabled={true} {...petitionData.metadata} {...props}/>
         </React.Fragment>
-      :props.petition_id?<LoadingBar loading={true}/>:null
+      :petition_id?<LoadingBar loading={true}/>:null
       }
     </React.Fragment>
   )
@@ -470,66 +491,6 @@ const NewService = (props)=>{
   )
 }
 
-function calculateMultivalueDiff(old_values,new_values,edits){
-  let new_cont = [];
-  let old_cont = [];
-  let items;
-  if(!old_values.contacts){
-    old_values.contacts = [];
-  }
-  if(!new_values.contacts){
-    new_values.contacts = [];
-  }
-
-  new_values.contacts.forEach(item=>{
-    new_cont.push(item.email+' '+item.type);
-  });
-  old_values.contacts.forEach(item=>{
-    old_cont.push(item.email+' '+item.type);
-  });
-  edits.contacts.N = new_cont.filter(x=>!old_cont.includes(x));
-  edits.contacts.D = old_cont.filter(x=>!new_cont.includes(x));
-  if(edits.contacts.D.length>0){
-      edits.contacts.D.forEach((item,index)=>{
-        items = item.split(' ');
-        edits.contacts.D[index] = {email:items[0],type:items[1]};
-      })
-  }
-  if(edits.contacts.N.length>0){
-      edits.contacts.N.forEach((item,index)=>{
-        items = item.split(' ');
-        edits.contacts.N[index] = {email:items[0],type:items[1]};
-    })
-  }
-  if(new_values.protocol==='oidc'){
-    if(!old_values.redirect_uris){
-      old_values.redirect_uris = [];
-    }
-    if(!new_values.redirect_uris){
-      new_values.redirect_uris = [];
-    }
-    if(!old_values.scope){
-      old_values.scope = [];
-    }
-    if(!new_values.scope){
-      new_values.scope = [];
-    }
-    if(!old_values.grant_types){
-      old_values.scope = [];
-    }
-    if(!new_values.grant_types){
-      new_values.scope = [];
-    }
-
-    edits.grant_types.N = new_values.grant_types.filter(x=>!old_values.grant_types.includes(x));
-    edits.grant_types.D = old_values.grant_types.filter(x=>!new_values.grant_types.includes(x));
-    edits.scope.N = new_values.scope.filter(x=>!old_values.scope.includes(x));
-    edits.scope.D = old_values.scope.filter(x=>!new_values.scope.includes(x));
-    edits.redirect_uris.N = new_values.redirect_uris.filter(x=>!old_values.redirect_uris.includes(x));
-    edits.redirect_uris.D = old_values.redirect_uris.filter(x=>!new_values.redirect_uris.includes(x));
-  }
-  return edits
-}
 
 export {
    EditService,

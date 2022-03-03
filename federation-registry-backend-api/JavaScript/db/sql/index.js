@@ -35,27 +35,32 @@ module.exports = {
       getByProtocolIdPublic:sql('service/getByProtocolIdPublic.sql'),
       getService:sql('service/getService.sql'),
       getPending:sql('service/getPending.sql'),
+      getContacts:sql('service/getContacts.sql'),
       getByProtocolId:sql('service/getByProtocolId.sql')
     },
     user_info:{
-      add:sql('user_info/add.sql')
+      add:sql('user_info/add.sql'),
+      update:sql('user_info/update.sql')
     },
     service_petition_details:{
       add:sql('service_petition_details/add.sql'),
       update:sql('service_petition_details/update.sql'),
       getTicketInfo:sql('service_petition_details/getTicketInfo.sql'),
-      canBeEditedByRequester:sql('service_petition_details/canBeEditedByRequester.sql')
+      canBeEditedByRequester:sql('service_petition_details/canBeEditedByRequester.sql'),
+      belongsToRequester:sql('service_petition_details/belongsToRequester.sql')
     },
     service_state:{
       add:sql('service_state/add.sql'),
       update:sql('service_state/update.sql'),
-      getOutdatedOwners:sql('service_state/getOutdatedOwners.sql')
+      getOutdatedOwners:sql('service_state/getOutdatedOwners.sql'),
+      getOutdatedServices:sql('service_state/getOutdatedServices.sql')
     },
     user:{
-      getReviewers:sql('user/getReviewers.sql'),
+      getTenchicalContacts: sql('user/getTenchicalContacts.sql'),
+      getUser:sql('user/getUser.sql'),
       getServiceOwners:sql('user/getServiceOwners.sql'),
       getPetitionOwners:sql('user/getPetitionOwners.sql'),
-      getActionEntitlements:sql('user/getActionEntitlements.sql')
+      getUsersByAction:sql('user/getUsersByAction.sql')
     },
     petition: {
       getPetition:sql('petition/getPetition.sql'),
@@ -76,6 +81,13 @@ module.exports = {
       get:(sql('invitations/get.sql')),
       getOne:(sql('invitations/getOne.sql'))
 
+    },
+    organizations: {
+      getById:(sql('organizations/getById.sql')),
+      get:(sql('organizations/get.sql')),
+      delete:(sql('organizations/delete.sql')),
+      update:(sql('organizations/update.sql')),
+      add:(sql('organizations/add.sql'))
     }
 };
 

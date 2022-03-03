@@ -26,14 +26,16 @@ class ServicePetitionDetailsRepository {
         integration_environment: body.integration_environment,
         requester: sub,
         country: body.country,
+        protocol:body.protocol,
+        group_id:body.group_id,
+        organization_id: body.organization_id,
+        aup_uri:body.aup_uri,
+        website_url:body.website_url,
+        tenant:body.tenant,
         type:body.type,
         status:(body.status?body.status:"pending"),
         service_id:body.service_id,
         comment:body.comment,
-        protocol:body.protocol,
-        group_id:body.group_id,
-        tenant:body.tenant,
-        website_url:body.website_url
       })
     }
 
@@ -49,7 +51,10 @@ class ServicePetitionDetailsRepository {
           type:body.type,
           protocol:body.protocol,
           website_url:body.website_url,
-          status:"pending"
+          status:"pending",
+          aup_uri:body.aup_uri,
+          organization_id:body.organization_id
+
         })
     }
 
@@ -83,6 +88,21 @@ class ServicePetitionDetailsRepository {
       return this.db.oneOrNone('SELECT id FROM service_petition_details WHERE id = $1 AND requester= $2', [+petition_id,sub]).then(res=>{
         if(res){return true}else{return false}
       });
+    }
+
+
+    async belongsToRequester(petition_id,sub){
+      return this.db.any(sql.belongsToRequester,{
+        petition_id:petition_id,
+        sub:sub
+      }).then(petition_id=>{
+        if(petition_id.length>0){
+          return true;
+        }
+        else{
+          return false;
+        }
+      })
     }
 
     async canBeEditedByRequester(petition_id,sub,tenant){
@@ -127,8 +147,13 @@ class ServicePetitionDetailsRepository {
      }
 
      async getTicketInfo(ids,envs){
-       const query = this.pgp.as.format(sql.getTicketInfo,{ids:ids,envs:envs});
-       return this.db.any(query);
+       if(envs.length>0){
+         const query = this.pgp.as.format(sql.getTicketInfo,{ids:ids,envs:envs});
+         return this.db.any(query);
+       }
+       else{
+         return null;
+       }
      }
 
      async getDetails(petition_id,tenant){

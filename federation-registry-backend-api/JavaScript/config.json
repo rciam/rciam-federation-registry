@@ -1,21 +1,31 @@
 {
+  "egi" :{
+    "logo_url":"https://aai-dev.egi.eu/proxy/module.php/themeegi/resources/images/logo.svg",
+    "sender":"EGI Check-in",
+    "contact":"check-in@egi.eu",
+    "tenant_signature": "EGI AAI team",
+    "production_url": "https://aai.egi.eu/federation/egi"
+  },
+  "eosc" : {
+    "logo_url":"https://www.eosc-portal.eu/sites/all/themes/theme1/logo.png",
+    "sender":"EOSC Infrastructure Proxy",
+    "contact":"support@example.org",
+    "tenant_signature": "EOSC team",
+    "production_url": null
+  },
+  "grnet": {
+    "logo_url":"https://upload.wikimedia.org/wikipedia/en/e/e8/Grnet-transp.jpg",
+    "sender":"support@example.org",
+    "contact": "check-in@egi.eu",
+    "tenant_signature": "GRNET team",
+    "production_url": null
+  },
   "form" : {
     "egi" : {
-      "code_of_contact": {
-        "egi_policy":{
-          "title": "Egi Policy",
-          "desc":"Service complies with the egi policies",
-          "link": "https://wiki.egi.eu/wiki/Policies_and_Procedures",
-          "required": ["production"],
-          "error": "Service must commply"
-        },
-        "dpcoco":{
-          "title": "DPCoCo",
-          "desc": "Service complies with DPCoCo or any other code of conduct compatible with legislation and guidelines on data protection and privacy including GDPR",
-          "link": "https://wiki.refeds.org/display/CODE/Data+Protection+Code+of+Conduct+Home",
-          "required": [],
-          "error": "Service must commply"
-        }
+      "multivalue_fields": {
+        "general": ["contacts"],
+        "oidc": ["grant_types","scope","redirect_uris"],
+        "saml": []
       },
       "device_code_validity_seconds":30000,
       "refresh_token_validity_seconds":34128000,
@@ -23,49 +33,205 @@
       "id_token_timeout_seconds":86400,
       "code_challenge_method":[null,"plain","S256"],
       "protocol":["oidc","saml"],
-      "integration_environment": ["development","demo","production"],
+      "integration_environment": ["production","development","demo"],
       "grant_types":["authorization_code","client_credentials","urn:ietf:params:oauth:grant-type:token-exchange","urn:ietf:params:oauth:grant-type:device_code","implicit","refresh_token"],
+      "contact_requirements":[
+        {
+          "type":"support",
+          "error":"The Service must have Support contact information"
+        },
+        {
+          "type":"security",
+          "error":"The Service must have Security contact information"
+        },
+        {
+          "type":"technical",
+          "error":"The Serrvice must have Technical contact information"
+        },
+        {
+          "type":"admin",
+          "error": "The Service must have Administrative contact information"
+        }
+      ],
       "contact_types":["admin","technical","support","security"],
-      "scope":["openid","email","profile","offline_access","eduperson_entitlement","eduperson_scoped_affiliation","eduperson_unique_id"],
+      "scope":["openid","voperson_id","email","profile","offline_access","eduperson_entitlement","eduperson_scoped_affiliation","eduperson_unique_id","aarc"],
       "invitation_validity_seconds":2592000,
       "token_endpoint_auth_method":["client_secret_basic","client_secret_post","client_secret_jwt","private_key_jwt","none"],
       "token_endpoint_auth_method_title":["Client Secret over HTTP Basic","Client Secret over HTTP POST","Client Secret via symmetrically-signed JWT assertion","Asymmetrically-signed JWT assertion","No authentication"],
       "token_endpoint_auth_signing_alg":["HS256","HS384","HS512","RS256","RS384","RS512","PS256"],
-      "token_endpoint_auth_signing_alg_title":["HMAC using SHA-256 hash algorithm","HMAC using SHA-384 hash algorithm","HMAC using SHA-512 hash algorithm","RSASSA using SHA-256 hash algorithm","RSASSA using SHA-384 hash algorithm","RSASSA using SHA-512 hash algorithm","RSASSA-PSS using SHA-256 and MGF1 with SHA-256"]
+      "token_endpoint_auth_signing_alg_title":["HMAC using SHA-256 hash algorithm","HMAC using SHA-384 hash algorithm","HMAC using SHA-512 hash algorithm","RSASSA using SHA-256 hash algorithm","RSASSA using SHA-384 hash algorithm","RSASSA using SHA-512 hash algorithm","RSASSA-PSS using SHA-256 and MGF1 with SHA-256"],
+      "more_info":{
+        "website_url": {
+          "description": "Website URL for information about the service (This information will be shown in the Consent Page)"
+        },
+        "service_description": {
+          "description" : "Human-readable text description, plain text format (max 1000 characters) (This information will be shown in the Consent Page)"
+        },
+        "client_id":{
+          "tooltip": "A unique string representing the registration information provided by the OAuth 2.0 client at the authorisation server."
+        },
+        "scope": {
+          "description": "OAuth scopes this client is allowed to request. See <a href='https://docs.egi.eu/providers/check-in/sp/#claims' target='_blank' rel='noopener noreferrer'>here</a> for more information."
+        },
+        "contacts": {
+          "description": "List of contacts for administrators of this service. (Technical and Support Contacts will be shown in the Consent Page)"
+        },
+        "policy_uri": {
+          "description": "URL for the Policy Statement of this service, will be displayed to the user. (This information will be shown in the Consent Page)"
+        },
+        "service_name": {
+          "description": "Human-readable application name. (This information will be shown in the Consent Page)"
+        },
+        "logo_uri": {
+          "description": "URL that points to a logo image. (Logo will be displayed in the Consent Page)"
+        }
+      },
+      "extra_fields":{
+        "aup_uri":{
+          "title": "Link to Terms of Use",
+          "desc": "Link to the Acceptable Use Policy / Terms of Use based on the <a href='https://wise-community.org/wise-baseline-aup/' target='_blank' rel='noopener noreferrer'>WISE AUP Baseline template</a> (This information will be shown in the Consent Page)",
+          "type":"string",
+          "tag":"url",
+          "default":"",
+          "tab":"general",
+          "placeholder":"https://",
+          "required":["production"]
+        },
+        "organization":{
+            "title": "Organization",
+            "tag": "org",
+            "active": ["production","demo"],
+            "required": ["production","demo"]
+        },
+        "egi_policy":{
+          "title": "EGI Policies",
+          "desc":"<div>The service complies with the <a href='https://wiki.egi.eu/wiki/Policies_and_Procedures' target='_blank' rel='noopener noreferrer'>EGI Policies</a></div>",
+          "required": ["production"],
+          "type":"boolean",
+          "tag":"coc",
+          "tab":"general",
+          "default": false,
+          "error": "The service must comply with this policy"
+        },
+        "dpcoco":{
+          "title": "Data Protection Code of Conduct",
+          "desc": "The service complies with the <a href='https://wiki.refeds.org/display/CODE/Data+Protection+Code+of+Conduct+Home' target='_blank' rel='noopener noreferrer'>GÉANT Data Protection Code of Conduct version 1</a> or any other code of conduct compatible with legislation and guidelines on data protection and privacy including GDPR",
+          "required": [],
+          "default": false,
+          "tab":"general",
+          "type":"boolean",
+          "tag":"coc",
+          "error": "The service must comply with this policy"
+        }
+
+      }
     },
     "eosc" : {
-      "code_of_contact": [
-        {
-          "name": "egi_policy",
-          "desc":"Sample Code of contact",
-          "title": "Do you aggree with the egi policies",
-          "required": ["production","demo"],
-          "link": "https://policy_link.com",
-          "error": "please select"
-        },
-        {
-          "name": "egi_policy2",
-          "desc":"Sample Code of contact",
-          "title": "Do you aggree with the egi policies",
-          "required": [],
-          "link": "https:\/\/policy_link.com",
-          "error": "please select"
-        }
-      ],
+      "multivalue_fields": {
+        "general": ["contacts"],
+        "oidc": ["grant_types","scope","redirect_uris"],
+        "saml": []
+      },
       "device_code_validity_seconds":30000,
       "refresh_token_validity_seconds":34128000,
       "access_token_validity_seconds":1000000,
       "id_token_timeout_seconds":86400,
       "code_challenge_method":[null,"plain","S256"],
       "protocol":["oidc","saml"],
-      "integration_environment": ["development","demo","production"],
+      "integration_environment": ["production","demo"],
       "grant_types":["implicit","authorization_code","refresh_token","client_credentials","urn:ietf:params:oauth:grant_type:redelegate","urn:ietf:params:oauth:grant-type:token-exchange","urn:ietf:params:oauth:grant-type:device_code","urn:ietf:params:oauth:grant-type:jwt-bearer"],
+      "contact_requirements":[
+        {
+          "type":"support technical",
+          "error":"The Service must have Technical and/or Support contact information"
+        },
+        {
+          "type":"security",
+          "error":"The Service must have Security contact information"
+        }
+      ],
       "contact_types":["admin","technical","support","security"],
       "invitation_validity_seconds":2592000,
+      "scope":["openid","email","profile","offline_access","eduperson_entitlement","eduperson_scoped_affiliation","eduperson_unique_id"],
       "token_endpoint_auth_method":["client_secret_basic","client_secret_post","client_secret_jwt","private_key_jwt","none"],
       "token_endpoint_auth_method_title":["Client Secret over HTTP Basic","Client Secret over HTTP POST","Client Secret via symmetrically-signed JWT assertion","Asymmetrically-signed JWT assertion","No authentication"],
       "token_endpoint_auth_signing_alg":["HS256","HS384","HS512","RS256","RS384","RS512","PS256"],
-      "token_endpoint_auth_signing_alg_title":["HMAC using SHA-256 hash algorithm","HMAC using SHA-384 hash algorithm","HMAC using SHA-512 hash algorithm","RSASSA using SHA-256 hash algorithm","RSASSA using SHA-384 hash algorithm","RSASSA using SHA-512 hash algorithm","RSASSA-PSS using SHA-256 and MGF1 with SHA-256"]
+      "token_endpoint_auth_signing_alg_title":["HMAC using SHA-256 hash algorithm","HMAC using SHA-384 hash algorithm","HMAC using SHA-512 hash algorithm","RSASSA using SHA-256 hash algorithm","RSASSA using SHA-384 hash algorithm","RSASSA using SHA-512 hash algorithm","RSASSA-PSS using SHA-256 and MGF1 with SHA-256"],
+      "more_info":{
+        "website_url": {
+          "description": "Website URL for information about the service (This information will be shown in the Consent Page)"
+        },
+        "service_description": {
+          "description" : "Human-readable text description, plain text format (max 1000 characters) (This information will be shown in the Consent Page)"
+        },
+        "client_id":{
+          "tooltip": "A unique string representing the registration information provided by the OAuth 2.0 client at the authorisation server."
+        },
+        "scope": {
+          "description": "OAuth scopes this client is allowed to request. See <a href='https://docs.egi.eu/providers/check-in/sp/#claims' target='_blank' rel='noopener noreferrer'>here</a> for more information."
+        },
+        "contacts": {
+          "description": "List of contacts for administrators of this service. (Technical and Support Contacts will be shown in the Consent Page)"
+        },
+        "policy_uri": {
+          "description": "URL for the Policy Statement of this service, will be displayed to the user. (This information will be shown in the Consent Page)"
+        },
+        "service_name": {
+          "description": "Human-readable application name. (This information will be shown in the Consent Page)"
+        },
+        "logo_uri": {
+          "description": "URL that points to a logo image. (Logo will be displayed in the Consent Page)"
+        }
+    },
+    "extra_fields":{
+      "aup_uri":{
+        "title": "Link to Terms of Use",
+        "desc": "Link to the Acceptable Use Policy / Terms of Use based on the <a href='https://wise-community.org/wise-baseline-aup/'>WISE AUP Baseline template</a>",
+        "type":"string",
+        "tag":"url",
+        "default":"",
+        "tab":"general",
+        "placeholder":"https://",
+        "required":["production","demo","dev"]
+      },
+      "organization":{
+        "title": "Organization",
+        "tag": "org",
+        "active": ["production","demo"],
+        "required": ["production","demo"]
+      },
+      "eosc_security_policies":{
+        "title": "EOSC Security Policies",
+        "desc":"The service adheres to the EOSC Security Baseline",
+        "required": ["production","demo"],
+        "type":"boolean",
+        "tag":"coc",
+        "tab":"general",
+        "default": false,
+        "error": "The service must comply with this policy"
+      },
+      "eosc_data_protection":{
+        "title": "Research & Scholarship",
+        "desc":"The service is compliant with the <a href='https://refeds.org/category/research-and-scholarship'>REFEDS Research & Scholarship Entity Category</a>",
+        "required": [],
+        "type":"boolean",
+        "tag":"coc",
+        "tab":"general",
+        "default": false,
+        "error": "The service must comply with this policy"
+      },
+      "dpcoco":{
+        "title": "Data Protection Code of Conduct",
+        "desc": "The service is compliant with the <a href='https://wiki.refeds.org/display/CODE/Data+Protection+Code+of+Conduct+Home'>GEANT Code of Conduct version 1</a> or any other code of conduct compatible with legislation and guidelines on data protection and privacy including GDPR",
+        "required": [],
+        "default": false,
+        "tab":"general",
+        "type":"boolean",
+        "tag":"coc",
+        "error": "The service must comply with this policy"
+      }
+
+    }
     }
   },
   "restricted_env" : {
@@ -73,6 +239,9 @@
       "env":["production"]
     },
     "eosc": {
+      "env":["production"]
+    },
+    "grnet":{
       "env":[]
     }
   },
@@ -81,9 +250,13 @@
     "entity_type": ["service","idp"],
     "entity_protocol": ["saml","oidc"]
   },
-  "outdated_notifications_interval_seconds":86400,
-  "invitation_validity_seconds": "604800",
-  "service_fields":["external_id","tenant","service_name","service_description","logo_uri","policy_uri","integration_environment","protocol","client_id","allow_introspection","code_challenge_method","device_code_validity_seconds","access_token_validity_seconds","refresh_token_validity_seconds","client_secret","reuse_refresh_token","clear_access_tokens_on_refresh","id_token_timeout_seconds","entity_id","metadata_url","grant_types","scope","contacts","redirect_uris","token_endpoint_auth_method","token_endpoint_auth_signing_alg","jwks","jwks_uri","country","website_url"],
+  "outdated_notifications_interval_seconds":604800,
+  "send_outdated_notifications":false,
+  "invitation_validity_seconds": 5184000,
+  "service_fields":["external_id","tenant","service_name","service_description","logo_uri","policy_uri","integration_environment","protocol","client_id","allow_introspection","code_challenge_method","device_code_validity_seconds","access_token_validity_seconds","refresh_token_validity_seconds","client_secret","reuse_refresh_token","clear_access_tokens_on_refresh","id_token_timeout_seconds","entity_id","metadata_url","grant_types","scope","contacts","redirect_uris","token_endpoint_auth_method","token_endpoint_auth_signing_alg","jwks","jwks_uri","country","website_url","aup_uri","organization_id"],
   "ggus_email":"checkin-support@mailman.egi.eu",
-  "disable_emails":false
+  "disable_emails":false,
+  "deployment_fields":["service_name","service_description","client_id","allow_introspection","code_challenge_method","device_code_validity_seconds","access_token_validity_seconds","refresh_token_validity_seconds","client_secret","reuse_refresh_token","clear_access_tokens_on_refresh","id_token_timeout_seconds","entity_id","metadata_url","grant_types","scope","contacts","redirect_uris","token_endpoint_auth_method","token_endpoint_auth_signing_alg","jwks","jwks_uri","website_url","aup_uri","policy_uri","country"],
+  "multivalue_fields": ["grant_types","scope","contacts","redirect_uris"],
+  "send_notifications_on_startup":false
 }

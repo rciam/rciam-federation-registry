@@ -5,8 +5,8 @@ SELECT json_build_object('service_name', sd.service_name,'service_description',s
 						 'refresh_token_validity_seconds',sd.refresh_token_validity_seconds,'refresh_token_validity_seconds',sd.refresh_token_validity_seconds,
 						 'client_secret',sd.client_secret,'reuse_refresh_token',sd.reuse_refresh_token,'protocol',sd.protocol,'jwks',sd.jwks,'jwks_uri',sd.jwks_uri,
 						 'country',sd.country,'website_url',sd.website_url,'token_endpoint_auth_method',sd.token_endpoint_auth_method,'token_endpoint_auth_signing_alg',sd.token_endpoint_auth_signing_alg,
-						 'clear_access_tokens_on_refresh',sd.clear_access_tokens_on_refresh,'id_token_timeout_seconds',sd.id_token_timeout_seconds,'metadata_url',sd.metadata_url
-						 ,'entity_id',sd.entity_id,
+						 'clear_access_tokens_on_refresh',sd.clear_access_tokens_on_refresh,'id_token_timeout_seconds',sd.id_token_timeout_seconds,'metadata_url',sd.metadata_url,'aup_uri',sd.aup_uri
+						 ,'entity_id',sd.entity_id,'organization_name',sd.name,'organization_url',sd.url,'organization_id',sd.organization_id,
 						  'coc',(SELECT CASE WHEN json_agg(json_build_object(v.name,v.value)) IS NULL THEN NULL ELSE json_agg(json_build_object(v.name,v.value)) END
 							FROM service_coc v WHERE sd.id = v.service_id),
 						 'grant_types',
@@ -21,8 +21,10 @@ SELECT json_build_object('service_name', sd.service_name,'service_description',s
 						 'contacts',
 						 	(SELECT CASE WHEN array_agg(json_build_object('email',v.value,'type',v.type)) IS NULL THEN Array[]::json[] ELSE array_agg(json_build_object('email',v.value,'type',v.type)) END
 							 FROM service_contacts v WHERE sd.id = v.owner_id)
-							) json
+						 ,'created_at',created_at) json
     FROM (SELECT *
-	FROM (SELECT * FROM service_details WHERE id=${id} AND deleted = FALSE AND tenant='egi') AS foo
+	FROM (SELECT * FROM service_details WHERE id=${id} AND deleted = FALSE AND tenant=${tenant}) AS foo
 	LEFT JOIN service_details_oidc USING (id)
-	LEFT JOIN service_details_saml USING (id)) as sd
+	LEFT JOIN service_details_saml USING (id)
+	LEFT JOIN service_state USING (id)
+	LEFT JOIN organizations USING(organization_id)) as sd

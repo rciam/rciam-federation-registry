@@ -1,11 +1,11 @@
 require('dotenv').config();
-const {petitionValidationRules,validate,tenantValidation,changeContacts,formatPetition,getServiceListValidation,postInvitationValidation,serviceValidationRules,putAgentValidation,postAgentValidation,decodeAms,amsIngestValidation,generateClientId,reFormatPetition,getServicesValidation} = require('../validator.js');
+const {petitionValidationRules,validate,validateInternal,tenantValidation,changeContacts,formatPetition,getServiceListValidation,postInvitationValidation,serviceValidationRules,putAgentValidation,postAgentValidation,decodeAms,amsIngestValidation,reFormatPetition,getServicesValidation,formatCocForValidation,broadcastNotificationsValidation,outdatedNotificationsValidation,getRecipientsBroadcastNotifications} = require('../validator.js');
 const {validationResult} = require('express-validator');
 const qs = require('qs');
 const {v1:uuidv1} = require('uuid');
 const axios = require('axios').default;
 const {merge_data,merge_services_and_petitions} = require('../merge_data.js');
-const {addToString,clearPetitionData,sendMail,sendInvitationMail,sendMultipleInvitations,createGgusTickets} = require('../functions/helpers.js');
+const {addToString,clearPetitionData,sendMail,sendInvitationMail,sendMultipleInvitations,createGgusTickets,delay,sendNotifications,shallowEqual} = require('../functions/helpers.js');
 const {db} = require('../db');
 var diff = require('deep-diff').diff;
 var router = require('express').Router();
@@ -13,10 +13,10 @@ var passport = require('passport');
 var config = require('../config');
 const customLogger = require('../loggers.js');
 const { generators } = require('openid-client');
-const code_verifier = generators.codeVerifier();
 const {rejectPetition,approvePetition,changesPetition,getPetition,getOpenPetition,requestReviewPetition} = require('../controllers/main.js');
 const base64url = require('base64url');
-
+const {adminAuth} = require('./authentication.js'); 
+const {sendOutdatedNotification} = require('../functions/outdated_notif.js');
 
 
 // ----------------------------------------------------------
@@ -27,15 +27,77 @@ const base64url = require('base64url');
 
 
 function getData(req,res,next) {
-  db.service.getAll().then(services=>{
+  db.service.getAll(req.params.tenant).then(services=>{
     req.body = services;
+    //console.log(services);
     next();
   });
 }
+
+router.post('/tenants/:tenant/organizations',authenticate,(req,res,next)=>{
+  try{
+    db.organizations.add(req.body).then(response=>{
+      if(response.exists){
+        res.status(200).send({organization_id:response.organization_id});
+      }
+      else{
+        res.status(409).send({organization_id:response.organization_id});
+      }
+    })
+  }
+  catch(err){
+    next(err);
+  }
+});
+
+router.get('/tenants/:tenant/organizations',authenticate,(req,res,next)=>{
+  try{
+    db.organizations.get(req.query.search_string,req.query.ror).then(organizations=>{
+      if(organizations){
+        res.status(200).send({organizations:organizations});
+      }
+    })
+  }
+  catch(err){
+    next(err);
+  }
+});
+
+router.put('/tenants/:tenant/services/validate',adminAuth,getData,serviceValidationRules({optional:true,tenant_param:true,check_available:false,sanitize:true,null_client_id:false}),validateInternal,(req,res,next)=>{
+  try{
+    // Initialized with O in case there are no new outdated services
+    let outdated_ids = [];
+    req.body.forEach((service,index)=>{
+      if(service.outdated){
+        outdated_ids.push(parseInt(service.id));
+      };
+    });
+    db.service_state.updateOutdated(outdated_ids).then(result=>{
+      res.status(200).send("Success, " + result.services_turned_outdated+ ' Services where flagged as outdated and '+ result.services_turned_up_to_date + " Services where unflagged.")
+    }).catch(err=> {
+      next(err);
+    });
+  }catch(err){
+    next(err);
+  }
+});
+
+
+// GET ALL SERVICES
 router.get('/tenants/:tenant/services',getServicesValidation(),validate,authenticate_allow_unauthorised, (req,res,next)=>{
   try{
-    if(req.user && req.user.role && req.user.role.actions.includes('get_services')){
-      if(req.query && Object.keys(req.query).length > 0 && req.query.constructor === Object){
+    if(req.query.outdated==='true'){
+      db.service_state.getOutdatedServices(req.params.tenant).then(async outdated_services=>{
+        if(outdated_services){
+          res.status(200).send(outdated_services);
+          }
+        else{
+          res.status(200).send([]);
+        }
+      });
+    }
+    else if(req.user && req.user.role && req.user.role.actions.includes('get_services')){
+      if(req.query && Object.keys(req.query).length > 0 && req.query.constructor === Object && req.query.integration_environment && req.query.protocol_id){
         db.service.getByProtocolId(req.query.integration_environment,req.query.protocol_id,req.params.tenant).then(result=>{
           if(result){
             res.status(200).send(result);
@@ -56,7 +118,7 @@ router.get('/tenants/:tenant/services',getServicesValidation(),validate,authenti
       }
     }
     else{
-      if(req.query && Object.keys(req.query).length > 0 && req.query.constructor === Object){
+      if(req.query && Object.keys(req.query).length > 0 && req.query.constructor === Object && req.query.integration_environment && req.query.protocol_id){
         db.service.getByProtocolIdPublic(req.query.integration_environment,req.query.protocol_id,req.params.tenant).then(result=>{
           if(result){
             res.status(200).send(result);
@@ -87,15 +149,13 @@ router.get('/tenants/:tenant/services',getServicesValidation(),validate,authenti
 
 
 
-
 // Endpoint used to bootstrap a teant or generaly to import multiple services
 // Add changeContacts to alter contacts
-router.post('/tenants/:tenant/services',tenantValidation(),validate,authenticate,serviceValidationRules({optional:true,tenant_param:true,check_available:true,sanitize:true,null_client_id:false}),validate,(req,res,next)=> {
+router.post('/tenants/:tenant/services',adminAuth,tenantValidation(),validate,formatCocForValidation,serviceValidationRules({optional:true,tenant_param:true,check_available:true,sanitize:true,null_client_id:false}),validate,(req,res,next)=> {
   let services = req.body;
   // Populate json objects with all necessary fields
   services.forEach((service,index) => {
     services[index].tenant = req.params.tenant
-
     config.service_fields.forEach(field=>{
       if(!services[index].hasOwnProperty(field)){
         services[index][field] = null;
@@ -110,6 +170,7 @@ router.post('/tenants/:tenant/services',tenantValidation(),validate,authenticate
             services[index].group_id = ids[index].id;
           });
           await t.service_details.addMultiple(services).then(async services =>{
+
             if(services){
               let contacts = [];
               let grant_types = [];
@@ -190,6 +251,9 @@ router.get('/tenants/:tenant',(req,res,next)=>{
         if(config.form[req.params.tenant]){
           tenant.form_config = config.form[req.params.tenant];
         }
+        if(config[req.params.tenant]){
+          tenant.config = config[req.params.tenant];
+        }
         if(config.restricted_env[req.params.tenant]){
           tenant.restricted_environments = config.restricted_env[req.params.tenant].env;
         }
@@ -234,7 +298,7 @@ router.get('/tenants/:tenant/login',(req,res)=>{
       redirect_uri: process.env.REDIRECT_URI+req.params.tenant
     }));
   }else{
-    res.redirect(process.env.REACT_BASE+'/404');
+    res.redirect(tenant_config[Object.keys(tenant_config)[0]].base_url.split("/"+Object.keys(tenant_config)[0])[0]+'/404');
   }
 })
 
@@ -246,10 +310,10 @@ router.get('/callback/:tenant',(req,res,next)=>{
   clients[req.params.tenant].callback(process.env.REDIRECT_URI+req.params.tenant,{code:req.query.code}).then(async response => {
     let code = await db.tokens.addToken(response.access_token);
     clients[req.params.tenant].userinfo(response.access_token).then(usr_info=>{
-      saveUser(usr_info,req.params.tenant);
+    saveUser(usr_info,req.params.tenant);
 
-    }); // => Promise
-    res.redirect(process.env.REACT_BASE+'/'+req.params.tenant+'/code/' + code.code);
+  }); // => Promise
+    res.redirect(tenant_config[req.params.tenant].base_url+'/code/' + code.code);
   });
 });
 
@@ -304,7 +368,7 @@ router.get('/tenants/:tenant/services/:id/error',authenticate,(req,res,next)=>{
 // Handle Deployment Error
 router.put('/tenants/:tenant/services/:id/error',authenticate,(req,res,next)=> {
   try{
-    if(req.user.role.actions.includes('view_errors')){
+    if(req.user.role.actions.includes('error_action')){
       if(req.query.action==='resend'){
         db.tx('accept-invite',async t =>{
               let done = await t.batch([
@@ -314,6 +378,9 @@ router.put('/tenants/:tenant/services/:id/error',authenticate,(req,res,next)=> {
               res.status(200).end();
         }).catch(err=>{next(err)})
       }
+    }
+    else{
+      res.status(403).end();
     }
   }
   catch(err){
@@ -332,6 +399,7 @@ router.get('/tenants/:tenant/user',authenticate,(req,res,next)=>{
     clients[req.params.tenant].userinfo(TokenArray[1]) // => Promise
     .then(function (userinfo) {
       let user = userinfo;
+      user = generatePreferredUsername(user);
       if(req.user.role.actions.includes('review_own_petition')||req.user.role.actions.includes('review_petition')){
         user.review = true;
       }
@@ -351,10 +419,6 @@ router.get('/tenants/:tenant/user',authenticate,(req,res,next)=>{
       else{
         user.review_restricted = false;
       }
-
-
-
-
       user.actions = req.user.role.actions;
       user.role = req.user.role.name;
       res.end(JSON.stringify({user}));
@@ -365,24 +429,64 @@ router.get('/tenants/:tenant/user',authenticate,(req,res,next)=>{
   }
 });
 
-
+const format_error_email_data = (service_info,error_info,admins) => {
+  email_data = [];
+  error_info.forEach(error=>{
+    let service_data = error;
+    let admin_data = [];
+    service_info.forEach(service=>{
+      if(service.id===error.service_id){
+        service_data.service_name = service.service_name;
+        service_data.tenant = service.tenant;
+        service_data.deployment_type = service.deployment_type;
+        service_data.integration_environment = service.integration_environment;
+      }
+      // {name:email_data.name,email:email_data.email}
+    });
+    admins.forEach(admin=>{
+      if(service_data.tenant===admin.tenant){
+        admin_data.push(admin)
+      }
+    });
+    email_data.push({service_data:service_data,admin_data:admin_data});
+  });
+  return email_data;
+} 
 // Push endpoint for recieving deployment result messages
 router.post('/ams/ingest',checkCertificate,decodeAms,amsIngestValidation(),validate,(req,res,next)=>{
   // Decode messages
   try{
     return db.task('deploymentTasks', async t => {
       // update state
-      await t.service_state.deploymentUpdate(req.body.decoded_messages).then(async ids=>{
+      await t.service_state.deploymentUpdate(req.body.decoded_messages).then(async response=>{
+        let ids = response.deployed_ids;
+        let errors = response.errors;
         if(ids){
           res.status(200).end();
           if(ids.length>0){
             await t.user.getServiceOwners(ids).then(async data=>{
               if(data){
-                await t.service_petition_details.getTicketInfo(ids,config.restricted_env.egi.env).then(ticket_data=>{
-                  createGgusTickets(ticket_data);
-                  data.forEach(email_data=>{
-                    sendMail({subject:'Service Deployment Result',service_name:email_data.service_name,state:email_data.state,tenant:email_data.tenant},'deployment-notification.html',[{name:email_data.name,email:email_data.email}]);
-                  });
+                await t.service_petition_details.getTicketInfo(ids,config.restricted_env.egi.env).then(async ticket_data=>{
+                  if(ticket_data){
+                    createGgusTickets(ticket_data);
+                  }
+                  if(errors.length>0){
+                    await t.user.getUsersByAction('error_action').then(users=>{
+                      let error_services = format_error_email_data(data,errors,users);
+                      error_services.forEach(async error_data=>{
+                        await delay(400);
+                        sendMail({subject:'Deployment Error',url:"/services/"+error_data.service_data.service_id, ...error_data.service_data},'deployment-error-admin-notif.hbs',error_data.admin_data);
+                      })
+                      
+                    }).catch(error=>{
+                      next('Could not sent email to reviewers:' + error);
+                    });
+                  }
+                  if(ids.length>0){
+                    data.forEach(email_data=>{
+                      sendMail({subject:'Service Deployment Result',service_name:email_data.service_name,state:email_data.state,tenant:email_data.tenant,deployment_type:email_data.deployment_type},'deployment-notification.hbs',[{name:email_data.name,email:email_data.email}]);
+                    });
+                  }
                 });
               }
             }).catch(err=>{
@@ -410,6 +514,7 @@ router.post('/ams/ingest',checkCertificate,decodeAms,amsIngestValidation(),valid
 // updateData = [{id:1,state:'deployed',tenant:'egi',protocol:'oidc'},{id:2,state:'deployed',tenant:'egi',protocol:'saml'},{id:3,state:'failed',tenant:'eosc',protocol:'oidc'}];
 router.put('/agent/set_services_state',amsAgentAuth,(req,res,next)=>{
   try{
+
     return db.task('set_state_and_agents',async t=>{
       let service_pending_agents = [];
       await t.service_state.updateMultiple(req.body).then(async result=>{
@@ -423,7 +528,6 @@ router.put('/agent/set_services_state',amsAgentAuth,(req,res,next)=>{
                   }
                 })
               });
-
               await t.deployment_tasks.setDeploymentTasks(service_pending_agents).then(success=> {
                 if(success){
                   res.status(200).end();
@@ -478,7 +582,6 @@ router.get('/tenants/:tenant/services/list', getServiceListValidation(),validate
           }
           return res.status(200).send(response[0]);
         }).catch(err=>{
-          console.log(err);
           return res.status(416).send('Out of range');
         });
       }
@@ -515,35 +618,23 @@ router.get('/agent/get_new_configurations',amsAgentAuth,(req,res,next)=>{
 router.get('/tenants/:tenant/services/:id',authenticate,(req,res,next)=>{
   if(req.user.role.actions.includes('get_own_service')){
     try{
-      if(req.user.role.actions.includes('get_service')){
-        db.service.get(req.params.id,req.params.tenant).then(result=>{
-          if(result){
-            res.status(200).json({service:result.service_data});
+      return db.task('find-service-data',async t=>{
+        await t.service_details.getProtocol(req.params.id,req.user.sub,req.params.tenant).then(async exists=>{
+          if(exists||req.user.role.actions.includes('get_service')){
+            await t.service.get(req.params.id,req.params.tenant).then(result=>{
+              if(result){
+                res.status(200).json({service:result.service_data,owned:(exists?true:false)});
+              }
+              else {
+                  res.status(404).end();
+              }
+            }).catch(err=>{next(err);})
           }
-          else {
+          else{
             res.status(404).end();
           }
-        }).catch(err=>{next(err);})
-      }
-      else{
-        return db.task('find-service-data',async t=>{
-          await t.service_details.getProtocol(req.params.id,req.user.sub,req.params.tenant).then(async exists=>{
-            if(exists){
-              await t.service.get(req.params.id,req.params.tenant).then(result=>{
-                if(result){
-                  res.status(200).json({service:result.service_data});
-                }
-                else {
-                  res.status(404).end();
-                }
-              }).catch(err=>{next(err);})
-            }
-            else{
-              res.status(404).end();
-            }
-          }).catch(err=>{next(err);});;
-        });
-      }
+        }).catch(err=>{next(err);});;
+      });
     }
     catch(err){
       next(err);
@@ -608,7 +699,7 @@ router.get('/tenants/:tenant/petitions/:id',authenticate,(req,res,next)=>{
 
 // Add a new client/petition
 // Post petition endpoint
-router.post('/tenants/:tenant/petitions',authenticate,petitionValidationRules(),validate,formatPetition,serviceValidationRules({optional:false,tenant_param:true,check_available:false,sanitize:false,null_client_id:true}),validate,reFormatPetition,asyncPetitionValidation,(req,res,next)=>{
+router.post('/tenants/:tenant/petitions',authenticate,petitionValidationRules(),validate,formatPetition,formatCocForValidation,serviceValidationRules({optional:false,tenant_param:true,check_available:false,sanitize:false,null_client_id:true}),validate,reFormatPetition,asyncPetitionValidation,(req,res,next)=>{
   res.setHeader('Content-Type', 'application/json');
   if(req.user.role.actions.includes('add_own_petition')){
     try{
@@ -623,8 +714,8 @@ router.post('/tenants/:tenant/petitions',authenticate,petitionValidationRules(),
               await t.petition.add(service,req.user.sub).then(async id=>{
                 if(id){
                   res.status(200).json({id:id});
-                  await t.user.getReviewers(req.params.tenant).then(users=>{
-                    sendMail({subject:'New Petition to Review',service_name:req.body.service_name,tenant:req.params.tenant},'reviewer-notification.html',users);
+                  await t.user.getUsersByAction('review_notification',req.params.tenant).then(users=>{
+                    sendMail({subject:'New Petition to Review',service_name:service.service_name,tenant:req.params.tenant,url:"/services/"+req.body.service_id+"/requests/"+id+"/review",integration_environment:service.integration_environment},'reviewer-notification.html',users);
                   }).catch(error=>{
                     next('Could not sent email to reviewers:' + error);
                   });
@@ -641,8 +732,8 @@ router.post('/tenants/:tenant/petitions',authenticate,petitionValidationRules(),
           await t.petition.add(req.body,req.user.sub).then(async id=>{
             if(id){
               res.status(200).json({id:id});
-              await t.user.getReviewers(req.params.tenant).then(users=>{
-                sendMail({subject:'New Petition to Review',service_name:req.body.service_name,tenant:req.params.tenant},'reviewer-notification.html',users);
+              await t.user.getUsersByAction('review_notification',req.params.tenant).then(users=>{
+                sendMail({subject:'New Petition to Review',service_name:req.body.service_name,tenant:req.params.tenant,url:(req.body.service_id?"/services/"+req.body.service_id:"")+"/requests/"+id+"/review",integration_environment:req.body.integration_environment},'reviewer-notification.html',users);
               }).catch(error=>{
                 next('Could not sent email to reviewers:' + error);
               });
@@ -695,7 +786,7 @@ router.delete('/tenants/:tenant/petitions/:id',authenticate,(req,res,next)=>{
 
 
 // PUT Petition Endpoint
-router.put('/tenants/:tenant/petitions/:id',authenticate,petitionValidationRules(),validate,formatPetition,serviceValidationRules({optional:false,tenant_param:true,check_available:false,sanitize:false,null_client_id:true}),validate,reFormatPetition,asyncPetitionValidation,(req,res,next)=>{
+router.put('/tenants/:tenant/petitions/:id',authenticate,formatPetition,formatCocForValidation,serviceValidationRules({optional:false,tenant_param:true,check_available:false,sanitize:false,null_client_id:true}),validate,reFormatPetition,asyncPetitionValidation, (req,res,next)=>{
   if(req.user.role.actions.includes('update_own_petition')){
     return db.task('update-petition',async t =>{
       try{
@@ -790,7 +881,7 @@ router.get('/tenants/:tenant/check-availability',(req,res,next)=>{
 // Get group members
 router.get('/tenants/:tenant/groups/:group_id/members',authenticate,view_group,(req,res,next)=>{
   try{
-    db.group.getMembers(req.params.group_id).then(group_members =>{
+    db.group.getMembers(req.params.group_id,req.params.tenant).then(group_members =>{
       if(group_members){
         res.status(200).json({group_members});
       }
@@ -858,7 +949,7 @@ router.post('/tenants/:tenant/groups/:group_id/invitations',authenticate,postInv
 // Delete invitation
 router.delete('/tenants/:tenant/groups/:group_id/invitations/:id',authenticate,canInvite,(req,res,next)=>{
   try{
-    db.invitation.delete(req.params.id).then(response=>{
+    db.invitation.delete(req.params.id,req.params.tenant).then(response=>{
       if(response){
         res.status(200).end();
       }
@@ -877,7 +968,7 @@ router.delete('/tenants/:tenant/groups/:group_id/invitations/:id',authenticate,c
 router.put('/tenants/:tenant/groups/:group_id/invitations/:id',authenticate,canInvite,(req,res,next)=>{
   try{
     db.invitation.refresh(req.params.id).then(response=>{
-      if(response.code){
+      if(response&&response.code){
         response.tenant = req.params.tenant;
         sendInvitationMail(response)
         res.status(200).end();
@@ -898,13 +989,13 @@ router.put('/tenants/:tenant/invitations/:invite_id/:action',authenticate,(req,r
   try{
     if(req.params.action==='accept'){
       db.tx('accept-invite',async t =>{
-        await t.invitation.getOne(req.params.invite_id,req.user.sub).then(async invitation_data=>{
+        await t.invitation.getOne(req.params.invite_id,req.user.sub,req.params.tenant).then(async invitation_data=>{
           if(invitation_data){
             invitation_data.tenant = req.params.tenant;
             let done = await t.batch([
-              t.group.newMemberNotification(invitation_data),
               t.group.addMember(invitation_data),
-              t.invitation.reject(req.params.invite_id,req.user.sub)
+              t.group.newMemberNotification(invitation_data),
+              t.invitation.reject(req.params.invite_id,req.user.sub,req.params.tenant)
             ]).catch(err=>{next(err)});
             res.status(200).end();
           }
@@ -915,7 +1006,7 @@ router.put('/tenants/:tenant/invitations/:invite_id/:action',authenticate,(req,r
       })
     }
     else if(req.params.action==='decline'){
-      db.invitation.reject(req.params.invite_id,req.user.sub).then(response=>{
+      db.invitation.reject(req.params.invite_id,req.user.sub,req.params.tenant).then(response=>{
         if(response){
           res.status(200).end();
         }
@@ -937,7 +1028,7 @@ router.put('/tenants/:tenant/invitations/:invite_id/:action',authenticate,(req,r
 // Get all invitations for requesting user
 router.get('/tenants/:tenant/invitations',authenticate,(req,res,next)=>{
   try{
-    db.invitation.getAll(req.user.sub).then((response)=>{
+    db.invitation.getAll(req.user.sub,req.params.tenant).then((response)=>{
       if(response){
         res.status(200).json(response);
       }
@@ -952,10 +1043,12 @@ router.get('/tenants/:tenant/invitations',authenticate,(req,res,next)=>{
 });
 
 
-// Get all invitations for a specific
+// Get all invitations for a specific group
 router.get('/tenants/:tenant/groups/:group_id/invitations',authenticate,(req,res,next)=>{
   try{
-    db.invitation.get(req.params.group_id).then(invitations => {
+  
+
+    db.invitation.getByGroupId(req.params.group_id,req.params.tenant).then(invitations => {
       if(invitations){
         res.status(200).json({invitations});
       }
@@ -973,7 +1066,7 @@ router.get('/tenants/:tenant/groups/:group_id/invitations',authenticate,(req,res
 // Activate invitation
 router.put('/tenants/:tenant/invitations/activate_by_code',authenticate,(req,res,next)=>{
   try{
-    db.invitation.setUser(req.body.code,req.user.sub).then(result=>{
+    db.invitation.setUser(req.body.code,req.user.sub,req.params.tenant).then(result=>{
       if(result.success){
         res.status(200).json({id:result.id});
       }
@@ -984,6 +1077,83 @@ router.put('/tenants/:tenant/invitations/activate_by_code',authenticate,(req,res
         res.status(404).end();
       }
     }).catch(err=>{next(err)})
+  }
+  catch(err){
+    next(err);
+  }
+})
+
+// Notifications 
+
+router.get('/tenants/:tenant/notifications/broadcast/recipients',authenticate,getRecipientsBroadcastNotifications(),validate,(req,res,next)=>{
+  try{
+    let data = {};
+    data.contact_types = req.query.contact_types.split(',');
+    data.environments = req.query.environments.split(',');
+    data.protocols = req.query.protocols.split(',')
+  db.service.getContacts(data,req.params.tenant).then(async users=>{
+      res.status(200).send(users);
+    }).catch(err=>{
+      next(err)
+    })
+  }
+  catch(e){
+    next(err)
+  }
+});
+
+
+router.put('/tenants/:tenant/notifications/outdated',authenticate,outdatedNotificationsValidation(),validate,(req,res,next)=>{
+  try{
+    if(req.user.role.actions.includes('send_notifications')){
+      db.service_state.getOutdatedOwners(req.params.tenant,req.body.integration_environment).then(async users=>{
+        if(users){
+          let outdated_services = [];
+          if(users.length>0){
+            users.forEach(user=>{
+              if(!outdated_services.includes(user.service_id)){
+                outdated_services.push(user.service_id);
+              }
+            })
+          }
+          res.status(200).send({user_count:users.length,service_count:outdated_services.length});
+          for(const user of users){
+            await delay(400);
+            sendOutdatedNotification(user);
+          }       
+        }
+      }).catch(err=>{customLogger(null,null,'warn','Error when creating and sending invitations: '+err)})
+    }
+    else{
+      res.status(403).end();
+    }
+  }
+  catch(err){
+    next(err);
+  }
+})
+
+router.put('/tenants/:tenant/notifications/broadcast',authenticate,broadcastNotificationsValidation(),validate,(req,res,next)=>{
+  try{
+    if(req.user.role.actions.includes('send_notifications')){
+      db.service.getContacts(req.body,req.params.tenant).then(async users=>{
+        if(req.body.notify_admins){
+          admins = await db.user.getUsersByAction("send_notifications",req.params.tenant);
+          admins.forEach(admin=>{
+            if(!req.body.cc_emails.includes(admin.email)){
+              req.body.cc_emails.push(admin.email);
+            }
+          })
+        }
+        if(users.length>0){
+          sendNotifications({cc_emails:req.body.cc_emails,subject:req.body.email_subject,url:"/",sender_name:req.body.name,sender_email:req.body.email_address,email_body:req.body.email_body,tenant:req.params.tenant},'contacts-notification.hbs',users);
+        }
+        res.status(200).send({notified_users:users.length});
+      })
+    }
+    else{
+      res.status(403).end();
+    }
   }
   catch(err){
     next(err);
@@ -1069,7 +1239,7 @@ router.post('/tenants/:tenant/agents',postAgentValidation(),validate,(req,res,ne
       else{
         res.status(404).send('Could not add agents')
       }
-    }).catch(err=>{console.log(err); next(err);})
+    }).catch(err=>{next(err);})
   }
   catch(err){
     next(err);
@@ -1112,6 +1282,9 @@ router.delete('/tenants/:tenant/agents/:id',(req,res,next)=>{
 });
 
 
+
+
+
 // ----------------------------------------------------------
 // ******************** HELPER FUNCTIONS ********************
 // ----------------------------------------------------------
@@ -1121,14 +1294,19 @@ function is_group_manager(req,res,next){
 
   try{
     req.body.group_id=req.params.group_id;
-    db.group.isGroupManager(req.user.sub,req.body.group_id).then(result=>{
-      if(result){
-        next();
-      }
-      else{
-        res.status(406).send({error:"Can't access this resource"});
-      }
-    }).catch(err=>{next(err)});
+    if(req.user.sub===req.params.sub){
+      next();
+    }
+    else{
+      db.group.isGroupManager(req.user.sub,req.body.group_id).then(result=>{
+        if(result){
+          next();
+        }
+        else{
+          res.status(406).send({error:"Can't access this resource"});
+        }
+      }).catch(err=>{next(err)});
+    }
   }
   catch(err){
     next(err);
@@ -1214,15 +1392,13 @@ function authenticate_allow_unauthorised(req,res,next){
         req.user.iss = result.data.iss;
         req.user.email = result.data.email;
         if(req.user.sub){
-          db.user_role.getRoleActions(req.user.edu_person_entitlement,req.params.tenant).then(role=>{
-            if(role.success){
-              req.user.role = role.role;
-              //console.log('authenticated');
+          db.user_role.getRoleActions(req.user.sub,req.params.tenant).then(role=>{
+            if(role){
+              req.user.role = role;
               next();
             }
             else{
-
-              next();
+              res.status(401).send('Unauthenticated Request');
             }
           }).catch((err)=> {
             next();
@@ -1255,11 +1431,13 @@ function authenticate(req,res,next){
         // Remove Bearer from string
         token = token.slice(7, token.length);
         req.user = decode(token);
-        db.user_role.getRoleActions(req.user.edu_person_entitlement,req.params.tenant).then(role=>{
-          if(role.success){
-            req.user.role = role.role;
+        
+        db.user_role.getRoleActions(req.user.sub,req.params.tenant).then(role=>{
+          if(role){
+            req.user.role = role;
             next();
-          }else{
+          }
+          else{
             res.status(401).send('Unauthenticated Request');
           }
         }).catch(err=>{
@@ -1294,17 +1472,13 @@ function authenticate(req,res,next){
           req.user.iss = result.data.iss;
           req.user.email = result.data.email;
           if(req.user.sub){
-            db.user_role.getRoleActions(req.user.edu_person_entitlement,req.params.tenant).then(role=>{
-              if(role.success){
-                req.user.role = role.role;
-
-                console.log('User with email ' + result.data.email + ' is authenticated');
-                //console.log('authenticated');
+            db.user_role.getRoleActions(req.user.sub,req.params.tenant).then(role=>{
+              if(role){
+                req.user.role = role;
                 next();
               }
               else{
-
-                res.status(401).end();
+                res.status(401).send('Unauthenticated Request');
               }
             }).catch((err)=> {
               customLogger(req,res,'warn','Unauthenticated request'+err);
@@ -1330,6 +1504,8 @@ function authenticate(req,res,next){
   }
 
 }
+
+
 
 // Authenticating AmsAgent
 function amsAgentAuth(req,res,next){
@@ -1382,14 +1558,67 @@ function canReview(req,res,next){
 // Save new User to db. Gets called on Authentication
 const saveUser=(userinfo,tenant)=>{
   return db.tx('user-check',async t=>{
-    return t.user_info.findBySub(userinfo.sub,tenant).then(async user=>{
-      if(!user) {
-        return t.user_info.add(userinfo,tenant).then(async result=>{
-          if(result){
-              return t.user_edu_person_entitlement.add(userinfo.eduperson_entitlement,result.id);
+    return t.user.getUser(userinfo.sub,tenant).then(async user=>{
+      if(user){
+        if(!user.eduperson_entitlement||typeof(user.eduperson_entitlement)!=='object'){
+          user.eduperson_entitlement = [];
+        }
+        if(!userinfo.eduperson_entitlement||typeof(userinfo.eduperson_entitlement)!=='object'){
+          userinfo.eduperson_entitlement = [];
+        }
+        await t.user_role.getRole(userinfo.eduperson_entitlement,tenant).then(async role=>{
+          if(role){
+            let update_userinfo = false;
+            let dlt_entitlements = [];
+            let add_entitlements = [];
+            let queries = [];
+            add_entitlements = userinfo.eduperson_entitlement.filter(x=>!user.eduperson_entitlement.includes(x));
+            dlt_entitlements = user.eduperson_entitlement.filter(x=>!userinfo.eduperson_entitlement.includes(x));
+            delete userinfo.eduperson_entitlement;
+            delete user.eduperson_entitlement;
+            userinfo.role_id = role.id.toString();
+            
+            // Generate preferred username from given name and family name
+            userinfo = generatePreferredUsername(userinfo);
+
+            for (const property in userinfo) {
+              if(user.hasOwnProperty(property)&&userinfo[property]!==user[property]){
+                update_userinfo= true;
+              }
+            }
+            if(update_userinfo){
+              queries.push(t.user_info.update(userinfo,tenant));
+            }
+            if(add_entitlements.length>0){
+              queries.push(t.user_edu_person_entitlement.add(add_entitlements,user.id));
+            }
+            if(dlt_entitlements.length>0){
+              queries.push(t.user_edu_person_entitlement.dlt_values(dlt_entitlements,user.id));
+            }
+            if(queries.length>0){
+              await t.batch(queries).then(done=>{
+                if(done){
+                  customLogger(null,null,'info','Updated User');
+                }
+              });
+            }
+          }
+        }).catch(err=>{console.log(err);})
+      }else{
+        await t.user_role.getRole(userinfo.eduperson_entitlement,tenant).then(async role=>{
+          if(role){
+            userinfo.role_id = role.id;
+            return t.user_info.add(userinfo,tenant).then(async result=>{
+              if(result){
+                  return t.user_edu_person_entitlement.add(userinfo.eduperson_entitlement,result.id);
+              }
+            });
           }
         });
       }
+      
+
+
     })
     
   });
@@ -1417,6 +1646,13 @@ const isAvailable= async (t,id,protocol,petition_id,service_id,tenant,environmen
   else {
     return true;
   }
+}
+
+const generatePreferredUsername = (userinfo) => {
+  if(!userinfo.preferred_username&&userinfo.given_name&&userinfo.family_name){
+    userinfo.preferred_username= (userinfo.given_name.replace(/[^a-zA-Z0-9]/g,'_').charAt(0)+userinfo.family_name.replace(/[^a-zA-Z0-9]/g,'_')).toLowerCase();;
+  }
+  return userinfo;
 }
 
 // This validation is for the POST,PUT /petition
@@ -1484,7 +1720,7 @@ function asyncPetitionValidation(req,res,next){
       }
       else if(req.route.methods.put){
         await t.service_petition_details.canBeEditedByRequester(req.params.id,req.user.sub,req.params.tenant).then(async petition => {
-          if(petition){
+          if(petition&&petition.status!=='request_review'){
             if(req.body.type==='delete'){
               next();
             }
