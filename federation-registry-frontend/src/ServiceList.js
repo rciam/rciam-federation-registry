@@ -569,7 +569,7 @@ function TableItem(props) {
       img.src = props.service.logo_uri;
 
     }
-  },[])
+  },[props.service.logo_uri])
 
   const {tenant_name} = useParams();
 
