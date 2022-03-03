@@ -2,7 +2,7 @@ const promise = require('bluebird'); // best promise library today
 const pgPromise = require('pg-promise'); // pg-promise core library
 const dbConfig = require('../../db-config/db-config.json'); // db connection details
 const {Diagnostics} = require('./diagnostics'); // optional diagnostics
-const {ServiceContacts,ServiceDetailsProtocol,ServiceErrors,Invitation,Tenants,DeploymentTasks,ServiceState,Group,ServiceDetails,DeployerAgents,Tokens,User,UserInfo,UserRole,UserEduPersonEntitlement,ServiceMultiValued,ServicePetitionDetails,Service,Petition,ServiceList,Organizations} = require('./repos');
+const {ServiceContacts,ServiceDetailsProtocol,ServiceErrors,Invitation,Tenants,DeploymentTasks,ServiceState,Group,ServiceDetails,DeployerAgents,Tokens,User,UserInfo,UserRole,UserEduPersonEntitlement,ServiceMultiValued,ServicePetitionDetails,Service,Petition,ServiceList,Organizations, BannerAlerts} = require('./repos');
 const testdbConfig = require('../../db-config/test-db-config.json');
 const dockerTestdbConfig = require('../../db-config/docker-test-db-config.json');
 let config;
@@ -41,6 +41,7 @@ const initOptions = {
         obj.invitation = new Invitation(obj,pgp);
         obj.tenants = new Tenants(obj,pgp);
         obj.deployer_agents = new DeployerAgents(obj,pgp);
+        obj.banner_alerts = new BannerAlerts(obj,pgp);
         obj.deployment_tasks = new DeploymentTasks(obj,pgp);
         obj.organizations = new Organizations(obj,pgp);
         // Do not use 'require()' here, because this event occurs for every task and transaction being executed,

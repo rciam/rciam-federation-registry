@@ -20,5 +20,6 @@ module.exports = {
     DeployerAgents: require('./deployer_agent'),
     DeploymentTasks: require('./deployment_tasks'),
     ServiceErrors: require('./service_errors'),
-    Organizations: require('./organizations')
+    Organizations: require('./organizations'),
+    BannerAlerts: require('./banner_alerts')
 };

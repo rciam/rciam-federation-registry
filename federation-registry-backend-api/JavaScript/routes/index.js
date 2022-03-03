@@ -15,6 +15,7 @@ const customLogger = require('../loggers.js');
 const { generators } = require('openid-client');
 const {rejectPetition,approvePetition,changesPetition,getPetition,getOpenPetition,requestReviewPetition} = require('../controllers/main.js');
 const base64url = require('base64url');
+const {adminAuth} = require('./authentication.js'); 
 
 
 
@@ -145,7 +146,6 @@ router.post('/tenants/:tenant/services',adminAuth,tenantValidation(),validate,fo
   // Populate json objects with all necessary fields
   services.forEach((service,index) => {
     services[index].tenant = req.params.tenant
-
     config.service_fields.forEach(field=>{
       if(!services[index].hasOwnProperty(field)){
         services[index][field] = null;
@@ -160,6 +160,7 @@ router.post('/tenants/:tenant/services',adminAuth,tenantValidation(),validate,fo
             services[index].group_id = ids[index].id;
           });
           await t.service_details.addMultiple(services).then(async services =>{
+
             if(services){
               let contacts = [];
               let grant_types = [];
@@ -1463,13 +1464,7 @@ function authenticate(req,res,next){
 
 }
 
-function adminAuth(req,res,next){
-  if(req.header('X-Api-Key')===process.env.ADMIN_AUTH_KEY){
-    next();
-  }else{
-    res.status(401).send("Unauthorized");
-  }
-}
+
 
 // Authenticating AmsAgent
 function amsAgentAuth(req,res,next){

@@ -17,7 +17,7 @@ export const Header= (props)=> {
     const tenant = useContext(tenantContext);
     return(
 
-      <div className="header">
+      <div className={"header" + (props.alertBar?' alert_bar_displacement':'')}>
         {/*<div className="corner-ribbon red">Devel</div>*/}
         <div className="text-center ssp-logo">
           <a href="https://www.egi.eu/" >
@@ -42,6 +42,7 @@ export const NavbarTop = (props)=>{
   const [admin,setAdmin] = useState(false);
   const tenant = useContext(tenantContext);
 
+
   useEffect(()=>{
     if(user){
       setAdmin(user.review);
@@ -51,7 +52,7 @@ export const NavbarTop = (props)=>{
   return (
     <React.Fragment>
     {tenant[0]?
-      <Navbar className="navbar-fixed-top">
+      <Navbar className={"navbar-fixed-top" + (props.alertBar?' alert_bar_displacement':'')}>
         <Navbar.Collapse className="justify-content-end">
           {user?
           (<DropdownButton
@@ -77,15 +78,7 @@ export const NavbarTop = (props)=>{
             </Dropdown.Item>
             <Dropdown.Item onClick={()=>{
               localStorage.removeItem('token');
-              if(tenant[0].name==='egi'){
-                window.location.assign('https://aai.egi.eu/oidc/saml/logout?redirect='+ window.location.protocol+ "//" + window.location.hostname + (window.location.port?":"+window.location.port:"") + (config.basename==="/"?"/":config.basename+"/") +tenant[0].name);
-              }
-              else if(tenant[0].name==='eosc'){
-                window.location.assign('https://aai-demo.eosc-portal.eu/oidc/saml/logout?redirect='+window.location.protocol+ "//" + window.location.hostname + (window.location.port?":"+window.location.port:"") + (config.basename==="/"?"/":config.basename+"/")+tenant[0].name);
-              }
-              else if(tenant[0].name==='egi'){
-                window.location.assign('https://aai.egi.eu/oidc/saml/logout?redirect='+window.location.protocol+ "//" + window.location.hostname + (window.location.port?":"+window.location.port:"") + (config.basename==="/"?"/":config.basename+"/")+tenant[0].name);
-              }
+              window.location.assign(tenant[0].issuer_url+ 'saml/logout?redirect='+ window.location.protocol+ "//" + window.location.hostname + (window.location.port?":"+window.location.port:"") + (config.basename==="/"?"/":config.basename+"/") +tenant[0].name);
             }}>
               {t('logout')}<FontAwesomeIcon icon={faSignOutAlt}/>
             </Dropdown.Item>

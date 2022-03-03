@@ -21,6 +21,9 @@ var passport = require('passport');
 const { generators } = require('openid-client');
 const code_verifier = generators.codeVerifier();
 const {outdatedNotificationsWorker} = require('./functions/outdated_notif.js');
+const bannerAlertRoutes = require('./routes/banner_alerts.js');
+
+
 let clients= {};
 let tenant_config = {};
 custom.setHttpOptionsDefaults({
@@ -139,6 +142,7 @@ app.use(cookieParser());
 app.use(express.urlencoded({extended: true})); 
 app.use(express.json({ limit: '50mb' }));
 
+app.use('/tenants/:tenant/banner_alert', bannerAlertRoutes);
 app.use('/', routes.router);
 
 

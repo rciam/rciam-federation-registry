@@ -73,6 +73,42 @@ const postAgentValidation = () => {
 // email_address: yup.string().nullable().email().required(t('yup_required')),
 // contact_types: yup.array().nullable().min(1,t('yup_select_option')).of(yup.string().test("Test contact types","Pleace select one of the available options",function(contact_type){
 
+const postBannerAlertValidation = () => {
+  return [
+    param('tenant').custom((value,{req,location,path})=>{if(value in config.form){return true}else{return false}}).withMessage('Invalid Tenant in the url'),
+    body('alert_message').exists().bail().isString().withMessage('alert_message must be a string').isLength({min:4,max:1024}).withMessage('alert_message must be from 4 to 1024 characters long'),
+    body('type').exists().bail().custom((value)=>{
+      let supported_types = ['warning','error','info'];
+      if(supported_types.includes(value)){
+        return true
+      }
+      else{
+        throw new Error(value +" is not a supported Banner Alert type. Supported types: (" + supported_types + ")");
+      }
+    }),
+    body('priority').optional().isInt().withMessage('priority must must an integer'),
+    body('active').optional().isBoolean()
+  ]
+}
+const putBannerAlertValidation = () =>{
+  return [
+    param('tenant').custom((value,{req,location,path})=>{if(value in config.form){return true}else{return false}}).withMessage('Invalid Tenant in the url'),
+    param('id').exists().isInt({gt:0}).withMessage('id parametes must be a possitive integer'),
+    body('alert_message').optional().isString().withMessage('alert_message must be a string').isLength({min:4,max:1024}).withMessage('alert_message must be from 4 to 1024 characters long'),
+    body('type').optional().bail().custom((value)=>{
+      let supported_types = ['warning','error','info'];
+      if(supported_types.includes(value)){
+        return true
+      }
+      else{
+        throw new Error(value +" is not a supported Banner Alert type. Supported types: (" + supported_types + ")");
+      }
+    }),
+    body('priority').optional().isInt().withMessage('priority must must an integer'),
+    body('active').optional().isBoolean()
+  ]
+}
+
 
 const putNotificationsValidation = () => {
   return [
@@ -249,7 +285,7 @@ const serviceValidationRules = (options,req) => {
         }
       }).withMessage('Invalid Country Code'),
       body('*.service_description').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Service Description missing').if((value)=> {return value}).isString().withMessage('Service Description must be a string').isLength({min:1}).withMessage("Service description can't be empty"),
-      body('*.logo_uri').optional({checkFalsy:true}).isString().withMessage('Service Logo must be a string').custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Service Logo must be a url'),
+      body('*.logo_uri').optional({checkFalsy:true}).isString().withMessage('Service Logo must be a string').custom((value)=> value.match(reg.regUrl)).withMessage('Service Logo must be a secure url https://').isLength({max:256}).withMessage("Service logo cant exceed character limit (6000)"),
       body('*.policy_uri').custom((value,{req,location,path})=>{return requiredProduction(value,req.body[path.match(/\[(.*?)\]/)[1]].integration_environment,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Service Policy Uri missing').if((value)=> {return value}).isString().withMessage('Service Policy Uri must be a string').custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Service Policy Uri must be a url'),
       body('*.contacts').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Service Contacts missing').if((value)=> {
         return value&&(Array.isArray(value)&&value.length!==0)
@@ -561,17 +597,17 @@ const serviceValidationRules = (options,req) => {
         }else{
           return value;
         }
-      }).optional({checkFalsy:true}).custom((value)=> typeof(value)==='boolean').withMessage('Reuse refresh tokens must be a boolean'),
+      }).custom((value)=> typeof(value)==='boolean').withMessage('Reuse refresh tokens must be a boolean'),
       body('*.integration_environment').exists({checkFalsy:true}).withMessage('Integration Environment missing').if(value=>{return value}).custom((value,{req,location,path})=> {
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         if(config.form[tenant].integration_environment.includes(value)){return true}else{return false}}).withMessage('Invalid Integration Environment'),
-        body('*.clear_access_tokens_on_refresh').customSanitizer(value => {
-          if((typeof(value)!=="boolean")){
-            return false;
-          }else{
-            return value;
-          }
-        }).optional({checkFalsy:true}).custom((value)=> typeof(value)==='boolean').withMessage('Clear access tokens on refresh must be a boolean').bail(),
+      body('*.clear_access_tokens_on_refresh').customSanitizer(value => {
+        if((typeof(value)!=="boolean")){
+          return false;
+        }else{
+          return value;
+        }
+      }).custom((value)=> typeof(value)==='boolean').withMessage('Clear access tokens on refresh must be a boolean').bail(),
       body('*.client_secret').customSanitizer((value,{req,location,path})=>{
         if(options.sanitize&&req.body[path.match(/\[(.*?)\]/)[1]].protocol!=='oidc'||['none',null,'private_key_jwt'].includes(req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method)){
           return null;
@@ -844,5 +880,7 @@ module.exports = {
   changeContacts,
   validateInternal,
   formatCocForValidation,
-  putNotificationsValidation
+  putNotificationsValidation,
+  postBannerAlertValidation,
+  putBannerAlertValidation
 }

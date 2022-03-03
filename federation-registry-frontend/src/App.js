@@ -3,6 +3,8 @@ import './App.css';
 import { withTranslation } from 'react-i18next';
 import MainPage from './MainPage.js';
 import {userContext,tenantContext} from './context.js';
+import {BrowserRouter as Router} from "react-router-dom";
+import config from './config.json';
 
 
 
@@ -23,7 +25,9 @@ const App = (props) =>{
 
     <userContext.Provider value={[context, setContext]}>
       <tenantContext.Provider value={[tenant,setTenant]}>
-        <MainPage lang={lang} changeLanguage={onLanguageHandle}/>
+        <Router basename={config.basename}>
+         <MainPage lang={lang} changeLanguage={onLanguageHandle}/>
+        </Router>
       </tenantContext.Provider>
     </userContext.Provider>
 
