@@ -1,11 +1,11 @@
 require('dotenv').config();
-const {petitionValidationRules,validate,validateInternal,tenantValidation,changeContacts,formatPetition,getServiceListValidation,postInvitationValidation,serviceValidationRules,putAgentValidation,postAgentValidation,decodeAms,amsIngestValidation,reFormatPetition,getServicesValidation,formatCocForValidation,putNotificationsValidation} = require('../validator.js');
+const {petitionValidationRules,validate,validateInternal,tenantValidation,changeContacts,formatPetition,getServiceListValidation,postInvitationValidation,serviceValidationRules,putAgentValidation,postAgentValidation,decodeAms,amsIngestValidation,reFormatPetition,getServicesValidation,formatCocForValidation,broadcastNotificationsValidation,outdatedNotificationsValidation,getRecipientsBroadcastNotifications} = require('../validator.js');
 const {validationResult} = require('express-validator');
 const qs = require('qs');
 const {v1:uuidv1} = require('uuid');
 const axios = require('axios').default;
 const {merge_data,merge_services_and_petitions} = require('../merge_data.js');
-const {addToString,clearPetitionData,sendMail,sendInvitationMail,sendMultipleInvitations,createGgusTickets,delay,sendNotifications} = require('../functions/helpers.js');
+const {addToString,clearPetitionData,sendMail,sendInvitationMail,sendMultipleInvitations,createGgusTickets,delay,sendNotifications,shallowEqual} = require('../functions/helpers.js');
 const {db} = require('../db');
 var diff = require('deep-diff').diff;
 var router = require('express').Router();
@@ -16,7 +16,7 @@ const { generators } = require('openid-client');
 const {rejectPetition,approvePetition,changesPetition,getPetition,getOpenPetition,requestReviewPetition} = require('../controllers/main.js');
 const base64url = require('base64url');
 const {adminAuth} = require('./authentication.js'); 
-
+const {sendOutdatedNotification} = require('../functions/outdated_notif.js');
 
 
 // ----------------------------------------------------------
@@ -86,8 +86,18 @@ router.put('/tenants/:tenant/services/validate',adminAuth,getData,serviceValidat
 // GET ALL SERVICES
 router.get('/tenants/:tenant/services',getServicesValidation(),validate,authenticate_allow_unauthorised, (req,res,next)=>{
   try{
-    if(req.user && req.user.role && req.user.role.actions.includes('get_services')){
-      if(req.query && Object.keys(req.query).length > 0 && req.query.constructor === Object){
+    if(req.query.outdated==='true'){
+      db.service_state.getOutdatedServices(req.params.tenant).then(async outdated_services=>{
+        if(outdated_services){
+          res.status(200).send(outdated_services);
+          }
+        else{
+          res.status(200).send([]);
+        }
+      });
+    }
+    else if(req.user && req.user.role && req.user.role.actions.includes('get_services')){
+      if(req.query && Object.keys(req.query).length > 0 && req.query.constructor === Object && req.query.integration_environment && req.query.protocol_id){
         db.service.getByProtocolId(req.query.integration_environment,req.query.protocol_id,req.params.tenant).then(result=>{
           if(result){
             res.status(200).send(result);
@@ -108,7 +118,7 @@ router.get('/tenants/:tenant/services',getServicesValidation(),validate,authenti
       }
     }
     else{
-      if(req.query && Object.keys(req.query).length > 0 && req.query.constructor === Object){
+      if(req.query && Object.keys(req.query).length > 0 && req.query.constructor === Object && req.query.integration_environment && req.query.protocol_id){
         db.service.getByProtocolIdPublic(req.query.integration_environment,req.query.protocol_id,req.params.tenant).then(result=>{
           if(result){
             res.status(200).send(result);
@@ -983,8 +993,8 @@ router.put('/tenants/:tenant/invitations/:invite_id/:action',authenticate,(req,r
           if(invitation_data){
             invitation_data.tenant = req.params.tenant;
             let done = await t.batch([
-              t.group.newMemberNotification(invitation_data),
               t.group.addMember(invitation_data),
+              t.group.newMemberNotification(invitation_data),
               t.invitation.reject(req.params.invite_id,req.user.sub,req.params.tenant)
             ]).catch(err=>{next(err)});
             res.status(200).end();
@@ -1075,12 +1085,13 @@ router.put('/tenants/:tenant/invitations/activate_by_code',authenticate,(req,res
 
 // Notifications 
 
-router.get('/tenants/:tenant/notifications/recipients',authenticate,(req,res,next)=>{
-  let contact_types = req.query.contact_types.split(',');
-  let environments = req.query.environments.split(',');
-
+router.get('/tenants/:tenant/notifications/broadcast/recipients',authenticate,getRecipientsBroadcastNotifications(),validate,(req,res,next)=>{
   try{
-    db.service.getContacts(contact_types,environments,req.params.tenant).then(async users=>{
+    let data = {};
+    data.contact_types = req.query.contact_types.split(',');
+    data.environments = req.query.environments.split(',');
+    data.protocols = req.query.protocols.split(',')
+  db.service.getContacts(data,req.params.tenant).then(async users=>{
       res.status(200).send(users);
     }).catch(err=>{
       next(err)
@@ -1089,13 +1100,43 @@ router.get('/tenants/:tenant/notifications/recipients',authenticate,(req,res,nex
   catch(e){
     next(err)
   }
-  
-})
+});
 
-router.put('/tenants/:tenant/notifications',authenticate,putNotificationsValidation(),validate,(req,res,next)=>{
+
+router.put('/tenants/:tenant/notifications/outdated',authenticate,outdatedNotificationsValidation(),validate,(req,res,next)=>{
   try{
     if(req.user.role.actions.includes('send_notifications')){
-      db.service.getContacts(req.body.contact_types,req.body.environments,req.params.tenant).then(async users=>{
+      db.service_state.getOutdatedOwners(req.params.tenant,req.body.integration_environment).then(async users=>{
+        if(users){
+          let outdated_services = [];
+          if(users.length>0){
+            users.forEach(user=>{
+              if(!outdated_services.includes(user.service_id)){
+                outdated_services.push(user.service_id);
+              }
+            })
+          }
+          res.status(200).send({user_count:users.length,service_count:outdated_services.length});
+          for(const user of users){
+            await delay(400);
+            sendOutdatedNotification(user);
+          }       
+        }
+      }).catch(err=>{customLogger(null,null,'warn','Error when creating and sending invitations: '+err)})
+    }
+    else{
+      res.status(403).end();
+    }
+  }
+  catch(err){
+    next(err);
+  }
+})
+
+router.put('/tenants/:tenant/notifications/broadcast',authenticate,broadcastNotificationsValidation(),validate,(req,res,next)=>{
+  try{
+    if(req.user.role.actions.includes('send_notifications')){
+      db.service.getContacts(req.body,req.params.tenant).then(async users=>{
         if(req.body.notify_admins){
           admins = await db.user.getUsersByAction("send_notifications",req.params.tenant);
           admins.forEach(admin=>{

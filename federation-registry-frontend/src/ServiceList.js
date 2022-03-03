@@ -5,7 +5,7 @@ import DropdownButton from 'react-bootstrap/DropdownButton';
 import Dropdown from 'react-bootstrap/Dropdown';
 import Collapse from 'react-bootstrap/Collapse';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {faSync,faPlus,faTimes,faEdit,faExclamation,faCircle,faEllipsisV,faEye,faSortDown,faSortUp,faFilter} from '@fortawesome/free-solid-svg-icons';
+import {faSync,faPlus,faTimes,faEdit,faExclamation,faCircle,faCheckCircle,faEllipsisV,faEye,faSortDown,faSortUp,faFilter} from '@fortawesome/free-solid-svg-icons';
 import InputGroup from 'react-bootstrap/InputGroup';
 import FormControl from 'react-bootstrap/FormControl';
 import Button from 'react-bootstrap/Button';
@@ -13,7 +13,7 @@ import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import Table from 'react-bootstrap/Table';
 import config from './config.json';
-import Image from 'react-bootstrap/Image';
+import BootstrapImage from 'react-bootstrap/Image';
 import {Link,useParams} from "react-router-dom";
 import Badge from 'react-bootstrap/Badge';
 import Pagination from 'react-bootstrap/Pagination';
@@ -23,11 +23,16 @@ import CopyDialog from './Components/CopyDialog.js';
 import { useTranslation } from 'react-i18next';
 import Alert from 'react-bootstrap/Alert';import {ConfirmationModal} from './Components/Modals';
 import {userContext,tenantContext} from './context.js';
+import ButtonGroup from 'react-bootstrap/ButtonGroup'
 const {capitalWords} = require('./helpers.js');
 var filterTimeout;
 
 
 const ServiceList= (props)=> {
+
+  const query = new Proxy(new URLSearchParams(window.location.search), {
+    get: (searchParams, prop) => searchParams.get(prop),
+  });
   // eslint-disable-next-line
   const [tenant,setTeanant] = useContext(tenantContext);
   const {tenant_name} = useParams();
@@ -55,31 +60,40 @@ const ServiceList= (props)=> {
   const [integrationEnvironment,setIntegrationEnvironment] = useState();
   const [showOutdated,setShowOutdated] = useState(false);
   const [showRequestReview,setShowRequestReview] = useState(false);
+  const [showPendingSubFilter,setShowPendingSubFilter] = useState('');
   const [paginationItems,setPaginationItems] = useState([]);
   const [initialLoading,setInitialLoading] = useState(true);
-
-
+  const [showOrphan,setShowOrphan] = useState(false);
   const [showNotification,setShowNotification] = useState(true);
 
   const pageSize = 10;
+  
 
   useEffect(()=>{
     localStorage.removeItem('url');
     getInvites();
-    //setUser(localStorage.getItem(user));
+    if(query.integration_environment){
+      setExpandFilters(true);
+
+      setIntegrationEnvironment(query.integration_environment);
+    }
+    if(query.outdated==='true'){
+      setExpandFilters(true);
+      setShowOutdated(true);
+    }    
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
 
   useEffect(()=>{
      getServices();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[searchString,showOwned,showPending,integrationEnvironment,activePage,showOutdated,showRequestReview]);
+  },[searchString,showOwned,showPending,integrationEnvironment,activePage,showOutdated,showPendingSubFilter,showRequestReview,showOrphan]);
 
   useEffect(()=>{
     setActivePage(1);
-  },[searchString,showOwned,showPending,integrationEnvironment,showOutdated,setShowRequestReview]);
+  },[searchString,showOwned,showPending,integrationEnvironment,showOutdated,showPendingSubFilter,setShowRequestReview,showOrphan]);
 
-
+  
 
 
   const generateFilerString = ()=> {
@@ -99,8 +113,11 @@ const ServiceList= (props)=> {
     if(showOutdated){
       filterString = filterString + '&outdated=' +true;
     }
-    if(showRequestReview){
-      filterString = filterString + '&request_review=' +true
+    if(showPendingSubFilter){
+      filterString = filterString + '&pending_sub=' +showPendingSubFilter;
+    }
+    if(showOrphan){
+      filterString = filterString + '&orphan=' +true;
     }
 
     return filterString;
@@ -229,7 +246,6 @@ const ServiceList= (props)=> {
 
 
 
-
   const deleteService = (service_id,petition_id)=>{
     setAsyncResponse(true);
     if(petition_id){
@@ -319,12 +335,12 @@ const ServiceList= (props)=> {
  }
 
 
+
   return(
     <React.Fragment>
       <Logout logout={logout}/>
       <NotFound notFound={notFound?true:false} setNotFound={setNotFound}/>
       <ListResponseModal message={message} modalTitle={responseTitle} setMessage={setMessage}/>
-
       <ConfirmationModal active={confirmationData.action?true:false} setActive={setConfirmationData} action={()=>{if(confirmationData.action==='delete_service'){deleteService(...confirmationData.args)}else{deletePetition(...confirmationData.args)}}} title={confirmationData.title} accept={'Yes'} decline={'No'}/>
       <div>
         <LoadingBar loading={initialLoading}>
@@ -404,23 +420,89 @@ const ServiceList= (props)=> {
           <Row className="filters-row">
               <Col>
                 <div className="filters-col">
+                  {user.actions.includes('review_petition')||user.actions.includes('review_restricted')?
+                    <div className='pending-filter-container'>
+                      <Dropdown as={ButtonGroup}>
+                        <Button variant="secondary" className="split-button" onClick={()=> {if(showPending){setShowPendingSubFilter('');} setShowPending(!showPending)} }>Show Pending <input type="checkbox" readOnly checked={showPending}/></Button>
+
+                        <Dropdown.Toggle split variant="secondary" id="dropdown-split-basic" />
+
+                        <Dropdown.Menu>
+                          <Dropdown.Item className={showPending&&!showPendingSubFilter?'pending-filter-active':''}>
+                            <div className="dropdown_item_container_pending_filter" onClick={()=>{setShowPendingSubFilter(''); setShowPending(true);}}>
+                              All Pending
+                              {showPending&&!showPendingSubFilter?
+                                <div><FontAwesomeIcon icon={faCheckCircle}/></div>
+                                :''} 
+                            </div>                                                
+
+                          </Dropdown.Item>
+                          <Dropdown.Item className={showPendingSubFilter==='pending'?'pending-filter-active':''}>
+                            <div className="dropdown_item_container_pending_filter" onClick={()=>{setShowPendingSubFilter('pending'); setShowPending(true);}}>
+                              Pending Review 
+                              {showPendingSubFilter==='pending'?
+                                <div><FontAwesomeIcon icon={faCheckCircle}/></div>:''} 
+
+                            </div>
+                                              
+                          </Dropdown.Item>
+                          <Dropdown.Item className={showPendingSubFilter==='request_review'?'pending-filter-active':''}>
+                            <div className="dropdown_item_container_pending_filter" onClick={()=>{setShowPendingSubFilter('request_review'); setShowPending(true);}}>  
+                              Review Requested 
+                              {showPendingSubFilter==='request_review'?<div><FontAwesomeIcon icon={faCheckCircle}/></div>:''} 
+
+                            </div>
+                      
+                          </Dropdown.Item>
+                          <Dropdown.Item className={showPendingSubFilter==='changes'?'pending-filter-active':''}>
+                            <div className="dropdown_item_container_pending_filter" onClick={()=>{setShowPendingSubFilter('changes'); setShowPending(true);}}>
+                              Changes Requested 
+                              {showPendingSubFilter==='changes'?<div><FontAwesomeIcon icon={faCheckCircle}/></div>:''} 
+                            </div>
+                          </Dropdown.Item>
+                        </Dropdown.Menu>
+                      </Dropdown>
+                    </div>  
+                  :
                   <div className='filter-container' onClick={()=> setShowPending(!showPending)}>
                     <span>Show Pending</span>
                     <input type='checkbox' name='filter' checked={showPending} onChange={()=>setShowPending(!showPending)}/>
                   </div>
-                  <div className='filter-container' onClick={()=> setShowOutdated(!showOutdated)}>
-                    <span>Show Outdated</span>
-                    <input type='checkbox' name='filter' checked={showOutdated} onChange={()=>setShowOutdated(!showOutdated)}/>
-                  </div>
-                  {user.review_restricted?<div className='filter-container' onClick={()=> setShowRequestReview(!showRequestReview)}>
-                    <span>Review Requested</span>
-                    <input type='checkbox' name='filter' checked={showRequestReview} onChange={()=>setShowRequestReview(!showRequestReview)}/>
-                  </div>:null}
+                  }
+                 <OverlayTrigger
+                                placement='top'
+                                overlay={
+                                    <Tooltip id={`tooltip-top`}>
+                                      Show services whose configuration needs to be updated
+                                    </Tooltip>
+                                  }
+                                >
+                    <div className='filter-container' onClick={()=> setShowOutdated(!showOutdated)}>
+                      <span>Show Outdated</span>
+                      <input type='checkbox' name='filter' checked={showOutdated} onChange={()=>setShowOutdated(!showOutdated)}/>
+                    </div>
+                  </OverlayTrigger>
                   {user.view_all?
-                  <div className='filter-container' onClick={()=> setShowOwned(!showOwned)}>
-                    <span>Show Owned by Me</span>
-                    <input type='checkbox' name='filter' checked={showOwned} onChange={()=> setShowOwned(!showOwned)}/>
-                  </div>
+                    <React.Fragment>
+                      <OverlayTrigger
+                                placement='top'
+                                overlay={
+                                    <Tooltip id={`tooltip-top`}>
+                                      Show services having no owner
+                                    </Tooltip>
+                                  }
+                                >
+                       <div className='filter-container' onClick={()=> setShowOrphan(!showOrphan)}>
+                        <span>Show Ownerless</span>
+                        <input type='checkbox' name='filter' checked={showOrphan} onChange={()=>setShowOrphan(!showOrphan)}/>
+                        </div>
+                      </OverlayTrigger>
+                      <div className='filter-container' onClick={()=> setShowOwned(!showOwned)}>
+                        <span>Show Owned by Me</span>
+                        <input type='checkbox' name='filter' checked={showOwned} onChange={()=> setShowOwned(!showOwned)}/>
+                      </div>
+                    </React.Fragment>
+                  
                   :null}
 
                   <div className='select-filter-container'>
@@ -477,7 +559,17 @@ const ServiceList= (props)=> {
 function TableItem(props) {
   // eslint-disable-next-line
   const [tenant,setTenant] = useContext(tenantContext);
+  const [logoUrl,setLogoUrl] = useState(props.service.logo_uri?props.service.logo_uri:process.env.PUBLIC_URL + '/placeholder.png');
 
+
+  useEffect(()=>{
+    if(props.service.logo_uri){
+      var img = new Image();
+      img.onerror = function() { setLogoUrl(process.env.PUBLIC_URL + '/placeholder_not_found.png'); };
+      img.src = props.service.logo_uri;
+
+    }
+  },[])
 
   const {tenant_name} = useParams();
 
@@ -511,7 +603,7 @@ function TableItem(props) {
         </div>
 
         <div className="table-image-container">
-        <Image referrerPolicy="no-referrer" src={props.service.logo_uri?props.service.logo_uri:process.env.PUBLIC_URL + '/placeholder.png'} thumbnail/>
+        <BootstrapImage referrerPolicy="no-referrer" src={logoUrl} thumbnail/>
         </div>
 
       </td>
@@ -612,7 +704,7 @@ function TableItem(props) {
             <DropdownButton
               variant="link"
               alignRight
-              className='drop-container-controls'
+              className='drop-container-controls dropdown-filter'
               title={<React.Fragment>
                 <div className='controls-options-container'>
                   <FontAwesomeIcon icon={faEllipsisV}/>

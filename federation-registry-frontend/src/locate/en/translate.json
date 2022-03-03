@@ -130,7 +130,7 @@
     "form_access_token_validity_seconds":"Access Token Timeout",
     "form_access_token_validity_seconds_desc":"Enter this time in seconds, minutes, or hours (Max value is 1000000 seconds (11.5 days)).",
     "form_id_token_timeout_seconds":"Id Token Timeout",
-    "form_id_token_timeout_seconds_desc":"Enter this time in seconds, minutes, or hours (Max value is 1000000 seconds (11.5 days)).",
+    "form_id_token_timeout_seconds_desc":"Enter this time in seconds, minutes, or hours (Max value is 86400 seconds (1 day)).",
     "form_refresh_token_validity_seconds_desc":"Enter this time in seconds, minutes, or hours (Max value is 34128000 seconds (13 months)).",
     "form_reuse_refresh_token_scope":"Refresh tokens are issued for this client",
     "form_offline_acces_desc":"This will add the offline_access scope to the client's scopes.",

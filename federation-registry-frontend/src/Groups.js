@@ -1,6 +1,6 @@
 import React,{useState,useEffect,useContext} from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {faCheckSquare,faTimes,faSync,faSignOutAlt} from '@fortawesome/free-solid-svg-icons';
+import {faCheckSquare,faTimes,faSync,faSignOutAlt,faExclamationTriangle} from '@fortawesome/free-solid-svg-icons';
 import ServiceForm from "./ServiceForm.js";
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
@@ -402,6 +402,7 @@ const GroupsPage = (props) => {
                               )
 
                           })}
+                          {group.length<1?<tr><td colSpan="4">No Group Members</td></tr>:null}
                           </tbody>
                         </Table>
                         {
@@ -427,6 +428,9 @@ const GroupsPage = (props) => {
                                   Invitation Date
                                 </th>
                                 <th>
+                                  Expired
+                                </th>
+                                <th>
                                   Action
                                 </th>
                               </tr>
@@ -440,6 +444,17 @@ const GroupsPage = (props) => {
                                           <td>{member.group_manager?<FontAwesomeIcon icon={faCheckSquare}/>:null}</td>
                                           <td><a href={'mailto:'+member.invitation_email}>{member.invitation_email}</a></td>
                                           <td>{member.invitation_date.slice(0,10)}</td>
+                                          <td>{member.expired?
+                                          <OverlayTrigger
+                                          placement='top'
+                                          overlay={
+                                            <Tooltip id={`tooltip-top`}>
+                                              {'This invitation has expired, you can renew the invitation by using the resend button.'}
+                                            </Tooltip>
+                                          }
+                                          >
+                                          <FontAwesomeIcon className='warning-red' icon={faExclamationTriangle}/>
+                                          </OverlayTrigger>:null}</td>
                                           <td>
                                             <OverlayTrigger
                                             placement='top'
@@ -496,7 +511,7 @@ const GroupsPage = (props) => {
                                           </td>
                                         </tr>
                                       )
-                                  }):<tr><td colSpan="6">No pending invitations</td></tr>}
+                                  }):<tr><td colSpan="7">No pending invitations</td></tr>}
 
                             </tbody>
                           </Table>

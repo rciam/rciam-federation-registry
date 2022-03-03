@@ -24,7 +24,7 @@ import {ResponseModal,Logout,ConfirmationModal,SimpleModal} from './Modals.js';
    )
  }
 
-const Notifications = () =>{
+const BroadcastNotifications = () =>{
   let {tenant_name} = useParams();
   let initialValues = {
     environments:["production"],
@@ -34,11 +34,12 @@ const Notifications = () =>{
     email_address:"",
     email_subject:"",
     email_body:"",
-    notify_admins:"false"
+    notify_admins:"false",
+    protocols: ['oidc','saml']
   }
 
   useEffect(()=>{
-    getRecipients({contact_types:initialValues.contact_types,environments:initialValues.environments});
+    getRecipients({contact_types:initialValues.contact_types,environments:initialValues.environments,protocols:initialValues.protocols});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
   
@@ -79,7 +80,7 @@ const Notifications = () =>{
 
     })
   const getRecipients = (data) => {
-    fetch(config.host+'tenants/'+tenant_name+'/notifications/recipients?contact_types='+data.contact_types+'&environments='+data.environments, {
+    fetch(config.host+'tenants/'+tenant_name+'/notifications/broadcast/recipients?contact_types='+data.contact_types+'&environments='+data.environments+'&protocols='+data.protocols, {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -105,7 +106,7 @@ const Notifications = () =>{
   }
 
   const sendNotification = (notification)=> {
-    fetch(config.host+'tenants/'+tenant_name+'/notifications', {
+    fetch(config.host+'tenants/'+tenant_name+'/notifications/broadcast', {
       method: 'PUT', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -200,7 +201,7 @@ const Notifications = () =>{
                 setFieldTouched('contact_types');
                 if(e.target.checked){
                   setFieldValue('contact_types',[...tenant[0].form_config.contact_types])
-                  getRecipients({contact_types:[...tenant[0].form_config.contact_types],environments:values.environments});
+                  getRecipients({contact_types:[...tenant[0].form_config.contact_types],environments:values.environments,protocols:values.protocols});
 
                 }
                 else{
@@ -229,7 +230,7 @@ const Notifications = () =>{
                       removeItemOnce(contact_types,e.target.name);
                     }
                     setFieldTouched('contact_types');
-                    getRecipients({contact_types:contact_types,environments:values.environments});
+                    getRecipients({contact_types:contact_types,environments:values.environments,protocols:values.protocols});
                     setFieldValue('contact_types',contact_types);
                   }}
                   className={"col-form-label checkbox"}
@@ -238,6 +239,48 @@ const Notifications = () =>{
             })}
             <Error error={errors.contact_types} show={hasSubmitted||touched.contact_types} />
      
+            <hr/>
+            <h3>Select Service Protocol</h3>
+            <div className="notifications-help">Only service contacts of the selected protocol will receive the notification</div>
+            <hr/>
+            <Form.Check
+                  name='oidc'
+                  label='OIDC'
+                  checked={values.protocols.includes('oidc')}
+                  disabled={false}
+                  onChange={(e)=>{
+                    let protocols = values.protocols
+                    if(e.target.checked){
+                      protocols.push(e.target.name);
+                    }
+                    else{
+                      removeItemOnce(protocols,e.target.name);
+                    }
+                    setFieldValue('protocols',protocols);
+                    getRecipients({contact_types:values.contact_types,environments:values.environments,protocols:protocols});
+                    setFieldTouched('protocols')                    
+                  }}
+                  className={"col-form-label checkbox"}
+                />
+            <Form.Check
+                  name='saml'
+                  label='SAML'
+                  checked={values.protocols.includes('saml')}
+                  disabled={false}
+                  onChange={(e)=>{
+                    let protocols = values.protocols
+                    if(e.target.checked){
+                      protocols.push(e.target.name);
+                    }
+                    else{
+                      removeItemOnce(protocols,e.target.name);
+                    }
+                    setFieldValue('protocols',protocols);
+                    getRecipients({contact_types:values.contact_types,environments:values.environments,protocols:protocols});
+                    setFieldTouched('protocols')                    
+                  }}
+                  className={"col-form-label checkbox"}
+                />
             <hr/>
             <h3>Select Service Environment</h3>
             <div className="notifications-help">Only services integrated in the selected environments will receive the notification</div>
@@ -250,7 +293,7 @@ const Notifications = () =>{
               onChange={(e)=>{
                 setFieldTouched('environments');
                 if(e.target.checked){
-                  getRecipients({contact_types:values.contact_types,environments:[...tenant[0].form_config.integration_environment]});
+                  getRecipients({contact_types:values.contact_types,environments:[...tenant[0].form_config.integration_environment],protocols:values.protocols});
                   setFieldValue('environments',[...tenant[0].form_config.integration_environment])
                 }
                 else{
@@ -278,7 +321,7 @@ const Notifications = () =>{
                       removeItemOnce(environments,e.target.name);
                     }
                     setFieldValue('environments',environments);
-                    getRecipients({contact_types:values.contact_types,environments:environments});
+                    getRecipients({contact_types:values.contact_types,environments:environments,protocols:values.protocols});
                     setFieldTouched('environments')                    
                   }}
                   className={"col-form-label checkbox"}
@@ -487,4 +530,4 @@ function capitalWords(array) {
    return return_array
 }
 
-export default Notifications
+export default BroadcastNotifications

@@ -134,11 +134,14 @@ export const Footer =(props) =>{
               <div className="ssp-footer__item__powered">
                 <a href={'https://federation.rciam.grnet.gr/docs'}>Documentation</a>
               </div>
-              <div className="ssp-footer__item__powered">
-                Powered by <a href="https://github.com/rciam">RCIAM</a>
-              </div>
             </div>
           </Col>
+        </Row>
+        <Row>
+          <div className='copyright-funding-footer'>
+            Copyright ©2016-2022 | Check-in is an EGI service provided by GRNET, receiving funding from the <a href="https://www.egi.eu/about/egi-foundation/" target="_blank" rel="noreferrer"> EGI Foundation (EGI.eu) </a> and the <a href="https://www.egi.eu/projects/egi/ace/" target="_blank" rel="noreferrer">EGI-ACE project </a> (Horizon 2020) under Grant number 101017567 | Powered by <a href="https://rciam.github.io/rciam-docs/" target="_blank" rel="noreferrer"> RCIAM</a>
+
+          </div>
         </Row>
       </div>
     </footer>

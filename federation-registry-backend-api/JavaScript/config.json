@@ -33,7 +33,7 @@
       "id_token_timeout_seconds":86400,
       "code_challenge_method":[null,"plain","S256"],
       "protocol":["oidc","saml"],
-      "integration_environment": ["development","demo","production"],
+      "integration_environment": ["production","development","demo"],
       "grant_types":["authorization_code","client_credentials","urn:ietf:params:oauth:grant-type:token-exchange","urn:ietf:params:oauth:grant-type:device_code","implicit","refresh_token"],
       "contact_requirements":[
         {
@@ -138,7 +138,7 @@
       "id_token_timeout_seconds":86400,
       "code_challenge_method":[null,"plain","S256"],
       "protocol":["oidc","saml"],
-      "integration_environment": ["demo","production"],
+      "integration_environment": ["production","demo"],
       "grant_types":["implicit","authorization_code","refresh_token","client_credentials","urn:ietf:params:oauth:grant_type:redelegate","urn:ietf:params:oauth:grant-type:token-exchange","urn:ietf:params:oauth:grant-type:device_code","urn:ietf:params:oauth:grant-type:jwt-bearer"],
       "contact_requirements":[
         {

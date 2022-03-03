@@ -14,7 +14,7 @@ const outdatedNotificationsWorker =  async(interval_seconds) =>{
   const sendNotif = () =>{
   //  console.log(db);
     
-    db.service_state.getOutdatedOwners().then(async users=>{
+    db.service_state.getOutdatedOwners('egi',null).then(async users=>{
       if(users){
         console.log('Sending notication to the users');
         // Save last succesfull notification
@@ -138,5 +138,6 @@ const sendOutdatedNotification = async (data) => {
 
 
 module.exports = {
-  outdatedNotificationsWorker
+  outdatedNotificationsWorker,
+  sendOutdatedNotification
 }

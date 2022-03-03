@@ -14,6 +14,8 @@ import {Logout,NotFound} from './Components/Modals';
 import { diff } from 'deep-diff';
 import { useTranslation } from 'react-i18next';
 import {tenantContext,userContext} from './context.js';
+import {calcDiff} from './helpers.js'
+
 
 const EditService = (props) => {
     // eslint-disable-next-line
@@ -41,52 +43,17 @@ const EditService = (props) => {
     useEffect(()=>{
         // eslint-disable-next-line react-hooks/exhaustive-deps
       if(petitionData&&service&&props.review&&!editPetition){
-        const changes = diff(service,petitionData.petition);
-        let helper = {
-          grant_types: {
-            D:[],
-            N:[],
-          },
-          scope: {
-            D:[],
-            N:[]
-          },
-          contacts: {
-            D:[],
-            N:[]
-          },
-          redirect_uris: {
-            D:[],
-            N:[]
+
+        let helper = calcDiff(service,petitionData.petition,tenant[0].form_config,diff);
+        let multivalue_attributes = [];
+        for (const service_property in service) service[service_property]&&typeof(service[service_property])==='object'&&multivalue_attributes.push(service_property); 
+        for (const service_property in petitionData.petition) petitionData.petition[service_property]&&typeof(petitionData.petition[service_property])==='object'&&!multivalue_attributes.includes(service_property)&&multivalue_attributes.push(service_property);
+        multivalue_attributes.forEach(item=>{
+          if(helper[item].D){
+            petitionData.petition[item].push(...helper[item].D);
           }
-        };
-
-        let attributes = ['contacts'];
-        
-        if(petitionData.petition.protocol==='oidc'){
-          attributes.push('grant_types','scope','redirect_uris');
-        }
-
-        for(let i=0;i<changes.length;i++){
-          if(! ['grant_types','scope','contacts','redirect_uris'].includes(changes[i].path[0])){
-              helper[changes[i].path[0]]=changes[i].kind;
-            }
-        }
-
-        helper = calculateMultivalueDiff(service,petitionData.petition,helper);
-
-        attributes.forEach(item=>{
-          petitionData.petition[item].push(...helper[item].D);
         });
-        
-        for(var property in tenant[0].form_config.code_of_condact){
-          delete helper[property];
-          if(petitionData.petition[property]!==service[property]&&!(!service[property]&&petitionData.petition[property]===false)){
-            helper[property] = 'N'; 
-          }
-        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-
         setEditPetition(petitionData.petition);
         setChanges(helper);
       }
@@ -524,66 +491,6 @@ const NewService = (props)=>{
   )
 }
 
-function calculateMultivalueDiff(old_values,new_values,edits){
-  let new_cont = [];
-  let old_cont = [];
-  let items;
-  if(!old_values.contacts){
-    old_values.contacts = [];
-  }
-  if(!new_values.contacts){
-    new_values.contacts = [];
-  }
-
-  new_values.contacts.forEach(item=>{
-    new_cont.push(item.email+' '+item.type);
-  });
-  old_values.contacts.forEach(item=>{
-    old_cont.push(item.email+' '+item.type);
-  });
-  edits.contacts.N = new_cont.filter(x=>!old_cont.includes(x));
-  edits.contacts.D = old_cont.filter(x=>!new_cont.includes(x));
-  if(edits.contacts.D.length>0){
-      edits.contacts.D.forEach((item,index)=>{
-        items = item.split(' ');
-        edits.contacts.D[index] = {email:items[0],type:items[1]};
-      })
-  }
-  if(edits.contacts.N.length>0){
-      edits.contacts.N.forEach((item,index)=>{
-        items = item.split(' ');
-        edits.contacts.N[index] = {email:items[0],type:items[1]};
-    })
-  }
-  if(new_values.protocol==='oidc'){
-    if(!old_values.redirect_uris){
-      old_values.redirect_uris = [];
-    }
-    if(!new_values.redirect_uris){
-      new_values.redirect_uris = [];
-    }
-    if(!old_values.scope){
-      old_values.scope = [];
-    }
-    if(!new_values.scope){
-      new_values.scope = [];
-    }
-    if(!old_values.grant_types){
-      old_values.scope = [];
-    }
-    if(!new_values.grant_types){
-      new_values.scope = [];
-    }
-
-    edits.grant_types.N = new_values.grant_types.filter(x=>!old_values.grant_types.includes(x));
-    edits.grant_types.D = old_values.grant_types.filter(x=>!new_values.grant_types.includes(x));
-    edits.scope.N = new_values.scope.filter(x=>!old_values.scope.includes(x));
-    edits.scope.D = old_values.scope.filter(x=>!new_values.scope.includes(x));
-    edits.redirect_uris.N = new_values.redirect_uris.filter(x=>!old_values.redirect_uris.includes(x));
-    edits.redirect_uris.D = old_values.redirect_uris.filter(x=>!new_values.redirect_uris.includes(x));
-  }
-  return edits
-}
 
 export {
    EditService,

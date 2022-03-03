@@ -34,7 +34,9 @@ class ServiceListRepository {
       pending_filter:'',
       outdated_diable_petitions:'',
       outdated_services:'',
-      request_review_filter:''
+      pending_sub_filter:'',
+      orphan_filter_services:'',
+      orphan_filter_petitions:''
     };
     if(req.query.outdated){
       params.outdated_diable_petitions = outdated_diable_petitions;
@@ -51,8 +53,12 @@ class ServiceListRepository {
       params.integration_environment_filter = "AND integration_environment='" + req.query.env + "'"
     }
 
-    if(req.query.request_review){
-      params.request_review_filter = "AND status='request_review'";
+    if(req.query.pending_sub){
+      params.pending_sub_filter = "AND status='"+ req.query.pending_sub+"'";
+    }
+    if(req.query.orphan){
+      params.orphan_filter_services = ' AND orphan=true';
+      params.orphan_filter_petitions = params.search_filter_petitions?' AND orphan=true':' WHERE orphan=true';
     }
 
     if(req.query.owned){
@@ -82,7 +88,6 @@ class ServiceListRepository {
     const query = this.pgp.as.format(sql.getList,params);
     return await this.db.any(query);
 
-//    return this.db.any(sql.getList,params);
 
   }
 

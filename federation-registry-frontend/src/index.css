@@ -19,6 +19,9 @@ html {
   display:flex;
 }
 
+.ssp-footer__item__lang .dropdown-toggle::after {
+  content:none!important;
+}
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
@@ -39,6 +42,13 @@ code {
   flex:1 1;
   margin: 0 2em;
 }
+
+.copyright-funding-footer {
+  text-align: center;
+  margin-top: 0.5rem;
+  letter-spacing:0.03rem;
+}
+
 /* Template */
 
 
@@ -92,7 +102,22 @@ code {
   border-color: rgb(89, 154, 219)!important;
   padding: .2rem .75rem!important;
 }
-
+.outdated-notifications-container {
+  padding-top:1rem;
+}
+.outdated-notifications-input-container svg {
+  margin-right:0.5rem;
+}
+.outdated-notifications-services-container {
+  margin-top:2rem;
+}
+.outdated-notifications-container p {
+  margin-top: 1rem!important;
+}
+.outdated-notifications-services-container table {
+  width:auto!important;
+  margin-top:1.4rem;
+}
 .log-button:hover {
   color:white!important;
 }
@@ -354,6 +379,26 @@ code {
 
 
 }
+.big-test {
+  padding-right:1rem;
+  }
+.testing {
+  position:absolute;
+  top:1rem;
+  z-index:-1;
+}
+.pending-filter-active {
+  background-color: #D1E7DD;
+}
+
+.pending-filter-container svg {
+  margin-left: 0.5rem;
+}
+.dropdown_item_container_pending_filter div {
+  display:inline-block;
+  width:auto;  
+
+}
 
 .filter-container input {
   vertical-align: top;
@@ -361,8 +406,28 @@ code {
   margin-left:0.4rem;
 }
 
-.dropdown-toggle::after {
+.drop-container-controls .dropdown-toggle::after {
   content:none!important;
+}
+
+.filters-col .btn {
+  margin-right: 0!important;
+}
+
+.pending-filter-container .dropdown-menu {
+  padding: 0.25rem 0;
+}
+.pending-filter-container .dropdown-item {
+  padding: 0.25rem 0.8rem;
+}
+
+
+.pending-filter-container {
+  display:inline-block;
+}
+.pending-filter-container input {
+  margin-left:0.5rem;
+
 }
 
 .dropdown-item:hover {
@@ -698,9 +763,8 @@ form {
 }
 
 .nav-side {
-  padding-right:1rem;
+  
   width:20vw!important;
-  height:13rem;
   background-color:rgb(245, 245, 245);
 
   font-family:'Manrope';
@@ -710,15 +774,31 @@ form {
   text-align: left;
   min-width: 8rem;
   margin-bottom: 1rem;
-  padding-bottom: 0.5rem;
 }
 .nav-side a:hover, .nav-side a:active {
     background: #f2f2f2;
     text-decoration: none;
     height:auto;
 }
-.nav-side a , .nav-side div {
+.nav-side a {
+  display:block;
+  margin-top: 0!important;
+  padding:0.2rem 0;
+  padding-left: 1.3rem;
+}
+
+.nav-side-category div {
   margin-left: 1rem;
+}
+
+.nav-side-category {
+  padding-bottom:0.5rem;
+  border-bottom:1px solid rgb(227, 227, 227);
+}
+
+
+.nav-side-category:last-child {
+  border:none;
 }
 
 .nav-side-notification .fa-exclamation {
@@ -736,14 +816,16 @@ form {
   color:red;
 }
 
-.nav-side-notification svg {
 
-}
 .nav-side-notification {
   position: absolute;
   margin-left:0rem!important;
   display: inline-block;
 
+}
+
+.outdated-notifications-main-row {
+  padding-left:1rem;
 }
 
 .nav-title {
@@ -1112,6 +1194,10 @@ html:lang(gr) .home-container h1 {
   margin-top:1rem;
 }
 
+.warning-red {
+  margin-top:0.4rem;
+  color:#DC3545;
+}
 .groups-table {
   width:auto;
   margin-top:1rem;
@@ -1119,7 +1205,7 @@ html:lang(gr) .home-container h1 {
   max-width: 40rem;
 }
 .groups-table td,.groups-table th{
-    padding-left: 0.7rem;
+    padding: 0.5rem;
     width:auto;
     white-space: nowrap;
 }
@@ -1323,6 +1409,19 @@ html:lang(gr) .home-container h1 {
 
 
 /* Notifications */
+
+.outdated-notifications-container {
+  padding-left:0.5rem;
+}
+.outdated-notifications-input-container {
+  width:20rem;
+}
+
+.outdated-notifications-container h1 {
+  margin-top:1rem;
+  color: #035081;  
+  font-weight:700;
+}
 
 .notifications-main-row {
   height:100%;

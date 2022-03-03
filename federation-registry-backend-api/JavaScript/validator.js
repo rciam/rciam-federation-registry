@@ -48,7 +48,9 @@ const getServiceListValidation = () => {
     query('env').optional({checkFalsy:true}).isString().custom((value,{req,location,path})=> {   if(config.form[req.params.tenant].integration_environment.includes(value)){return true}else{return false}}).withMessage('Integration environment value not supported'),
     query('protocol').optional({checkFalsy:true}).isString().custom((value,{req,location,path})=> {if(config.form[req.params.tenant].protocol.includes(value)){return true}else{return false}}).withMessage('Protocol not supported'),
     query('owned').optional({checkFalsy:true}).isBoolean().toBoolean(),
+    query('orphan').optional({checkFalsy:true}).isBoolean().toBoolean(),
     query('pending').optional({checkFalsy:true}).isBoolean().toBoolean(),
+    query('pending_sub').optional({checkFalsy:true}).isString().custom((value,{req,location,path})=> {if(['pending','changes','request_review'].includes(value)){return true}else{return false}}).withMessage('Value is not supported'),
     query('search_string').optional({checkFalsy:true}).isString(),
   ]
 }
@@ -109,8 +111,87 @@ const putBannerAlertValidation = () =>{
   ]
 }
 
+const getRecipientsBroadcastNotifications = () => {
+  return [
+    param('tenant').custom((value,{req,location,path})=>{if(value in config.form){return true}else{return false}}).withMessage('Invalid Tenant in the url'),
+    query('contact_types').custom((value,{req,location,path})=>{
+      try{
+        let contact_types = value.split(',');
+        if(contact_types.length>1){
+          contact_types.forEach(contact_type=>{
+            if(!config.form[req.params.tenant].contact_types.includes(contact_type)){
+              throw new Error(contact_type + ' is not a supported contact type, supported contact types (' + config.form[req.params.tenant].contact_types + ')');            
+            }
+          })
+        }
+        else{
+          throw new Error('No contact types provided');
+        } 
+        return true 
+      }
+      catch(err){
+        throw new Error(err);
+      }
+    }),
+    query('environments').custom((value,{req,location,path})=>{
+      try{
+        let environments = value.split(',');
+        if(environments.length>1){
+          environments.forEach(environment=>{
+            if(!config.form[req.params.tenant].integration_environment.includes(environment)){
+              throw new Error(environment + ' is not a supported environment, supported environments (' + config.form[req.params.tenant].integration_environment + ')');            
+            }
+          })
+        }
+        else{
+          throw new Error('No environments provided');
+        }  
+        return true
+      }
+      catch(err){
+        throw new Error(err);
+      }
+    }),
+    query('protocols').custom((value,{req,location,path})=>{
+      try{
+        let protocols = value.split(',');
+        if(protocols.length>1){
+          protocols.forEach(protocol=>{
+            if(!config.form[req.params.tenant].protocol.includes(protocol)){
+              throw new Error(protocol + ' is not a supported protocol, supported protocols (' + config.form[req.params.tenant].protocol + ')');            
+            }
+          })
+        }
+        else{
+          throw new Error('No protocols provided');
+        }  
+        return true
+      }
+      catch(err){
+        throw new Error(err);
+      }
+    })
+  ]
+}
 
-const putNotificationsValidation = () => {
+const outdatedNotificationsValidation = () => {
+  return [
+    body('integration_environment').exists().withMessage('Required Field').bail().isString().withMessage('name must be a string').bail().custom((value,{req,location,path})=>{
+      try{
+        if(!config.form[req.params.tenant].integration_environment.includes(value)){
+          throw new Error(value + ' is not a supported integration_environment, supported values (' + config.form[req.params.tenant].integration_environment+ ')')
+        }
+        
+      }
+      catch(err){
+        throw new Error(err);
+      }
+      return true;
+    })
+  ]
+}
+
+const broadcastNotificationsValidation = () => {
   return [
     body('name').exists().withMessage('Required Field').bail().isString().withMessage('name must be a string').isLength({min:4, max:36}).withMessage('name must be from 4 up to 36 characters'),
     body('email_body').exists().withMessage('Required Field').bail().isString().withMessage('email_body must be a string').isLength({min:4, max:4064}).withMessage('email_subject must be from 4 up to 4064 characters'),
@@ -145,6 +226,17 @@ const putNotificationsValidation = () => {
         value.forEach(type=>{
           if(!config.form[req.params.tenant].contact_types.includes(type)){
             throw new Error(type +" is not a valid contact type");
+          }
+        });
+      }
+      return true;
+      }),
+    body('protocols').exists().withMessage('Required Field').isArray().bail().custom((value,{req,location,path})=> {   
+    
+      if(value.length>0){
+        value.forEach(protocol=>{
+          if(!['oidc','saml'].includes(protocol)){
+            throw new Error(protocol +" is not a valid protocol");
           }
         });
       }
@@ -880,7 +972,9 @@ module.exports = {
   changeContacts,
   validateInternal,
   formatCocForValidation,
-  putNotificationsValidation,
+  broadcastNotificationsValidation,
   postBannerAlertValidation,
-  putBannerAlertValidation
+  putBannerAlertValidation,
+  outdatedNotificationsValidation,
+  getRecipientsBroadcastNotifications
 }
