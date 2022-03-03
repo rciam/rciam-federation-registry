@@ -354,6 +354,26 @@ code {
 
 
 }
+.big-test {
+  padding-right:1rem;
+  }
+.testing {
+  position:absolute;
+  top:1rem;
+  z-index:-1;
+}
+.pending-filter-active {
+  background-color: #D1E7DD;
+}
+
+.pending-filter-container svg {
+  margin-left: 0.5rem;
+}
+.dropdown_item_container_pending_filter div {
+  display:inline-block;
+  width:auto;  
+
+}
 
 .filter-container input {
   vertical-align: top;
@@ -361,8 +381,28 @@ code {
   margin-left:0.4rem;
 }
 
-.dropdown-toggle::after {
+.drop-container-controls .dropdown-toggle::after {
   content:none!important;
+}
+
+.filters-col .btn {
+  margin-right: 0!important;
+}
+
+.pending-filter-container .dropdown-menu {
+  padding: 0.25rem 0;
+}
+.pending-filter-container .dropdown-item {
+  padding: 0.25rem 0.8rem;
+}
+
+
+.pending-filter-container {
+  display:inline-block;
+}
+.pending-filter-container input {
+  margin-left:0.5rem;
+
 }
 
 .dropdown-item:hover {

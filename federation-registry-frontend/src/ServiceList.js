@@ -55,31 +55,40 @@ const ServiceList= (props)=> {
   const [integrationEnvironment,setIntegrationEnvironment] = useState();
   const [showOutdated,setShowOutdated] = useState(false);
   const [showRequestReview,setShowRequestReview] = useState(false);
+  const [showPendingSubFilter,setShowPendingSubFilter] = useState('');
   const [paginationItems,setPaginationItems] = useState([]);
   const [initialLoading,setInitialLoading] = useState(true);
-
-
+  const [showOrphan,setShowOrphan] = useState(false);
   const [showNotification,setShowNotification] = useState(true);
 
   const pageSize = 10;
+  
 
   useEffect(()=>{
     localStorage.removeItem('url');
     getInvites();
-    //setUser(localStorage.getItem(user));
+    if(query.integration_environment){
+      setExpandFilters(true);
+
+      setIntegrationEnvironment(query.integration_environment);
+    }
+    if(query.outdated==='true'){
+      setExpandFilters(true);
+      setShowOutdated(true);
+    }    
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
 
   useEffect(()=>{
      getServices();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[searchString,showOwned,showPending,integrationEnvironment,activePage,showOutdated,showRequestReview]);
+  },[searchString,showOwned,showPending,integrationEnvironment,activePage,showOutdated,showPendingSubFilter,showRequestReview,showOrphan]);
 
   useEffect(()=>{
     setActivePage(1);
-  },[searchString,showOwned,showPending,integrationEnvironment,showOutdated,setShowRequestReview]);
+  },[searchString,showOwned,showPending,integrationEnvironment,showOutdated,showPendingSubFilter,setShowRequestReview,showOrphan]);
 
-
+  
 
 
   const generateFilerString = ()=> {
@@ -99,8 +108,11 @@ const ServiceList= (props)=> {
     if(showOutdated){
       filterString = filterString + '&outdated=' +true;
     }
-    if(showRequestReview){
-      filterString = filterString + '&request_review=' +true
+    if(showPendingSubFilter){
+      filterString = filterString + '&pending_sub=' +showPendingSubFilter;
+    }
+    if(showOrphan){
+      filterString = filterString + '&orphan=' +true;
     }
 
     return filterString;
@@ -229,7 +241,6 @@ const ServiceList= (props)=> {
 
 
 
-
   const deleteService = (service_id,petition_id)=>{
     setAsyncResponse(true);
     if(petition_id){
@@ -319,12 +330,12 @@ const ServiceList= (props)=> {
  }
 
 
+
   return(
     <React.Fragment>
       <Logout logout={logout}/>
       <NotFound notFound={notFound?true:false} setNotFound={setNotFound}/>
       <ListResponseModal message={message} modalTitle={responseTitle} setMessage={setMessage}/>
-
       <ConfirmationModal active={confirmationData.action?true:false} setActive={setConfirmationData} action={()=>{if(confirmationData.action==='delete_service'){deleteService(...confirmationData.args)}else{deletePetition(...confirmationData.args)}}} title={confirmationData.title} accept={'Yes'} decline={'No'}/>
       <div>
         <LoadingBar loading={initialLoading}>
@@ -404,23 +415,89 @@ const ServiceList= (props)=> {
           <Row className="filters-row">
               <Col>
                 <div className="filters-col">
+                  {user.actions.includes('review_petition')||user.actions.includes('review_restricted')?
+                    <div className='pending-filter-container'>
+                      <Dropdown as={ButtonGroup}>
+                        <Button variant="secondary" className="split-button" onClick={()=> {if(showPending){setShowPendingSubFilter('');} setShowPending(!showPending)} }>Show Pending <input type="checkbox" readOnly checked={showPending}/></Button>
+
+                        <Dropdown.Toggle split variant="secondary" id="dropdown-split-basic" />
+
+                        <Dropdown.Menu>
+                          <Dropdown.Item className={showPending&&!showPendingSubFilter?'pending-filter-active':''}>
+                            <div className="dropdown_item_container_pending_filter" onClick={()=>{setShowPendingSubFilter(''); setShowPending(true);}}>
+                              All Pending
+                              {showPending&&!showPendingSubFilter?
+                                <div><FontAwesomeIcon icon={faCheckCircle}/></div>
+                                :''} 
+                            </div>                                                
+
+                          </Dropdown.Item>
+                          <Dropdown.Item className={showPendingSubFilter==='pending'?'pending-filter-active':''}>
+                            <div className="dropdown_item_container_pending_filter" onClick={()=>{setShowPendingSubFilter('pending'); setShowPending(true);}}>
+                              Pending Review 
+                              {showPendingSubFilter==='pending'?
+                                <div><FontAwesomeIcon icon={faCheckCircle}/></div>:''} 
+
+                            </div>
+                                              
+                          </Dropdown.Item>
+                          <Dropdown.Item className={showPendingSubFilter==='request_review'?'pending-filter-active':''}>
+                            <div className="dropdown_item_container_pending_filter" onClick={()=>{setShowPendingSubFilter('request_review'); setShowPending(true);}}>  
+                              Review Requested 
+                              {showPendingSubFilter==='request_review'?<div><FontAwesomeIcon icon={faCheckCircle}/></div>:''} 
+
+                            </div>
+                      
+                          </Dropdown.Item>
+                          <Dropdown.Item className={showPendingSubFilter==='changes'?'pending-filter-active':''}>
+                            <div className="dropdown_item_container_pending_filter" onClick={()=>{setShowPendingSubFilter('changes'); setShowPending(true);}}>
+                              Changes Requested 
+                              {showPendingSubFilter==='changes'?<div><FontAwesomeIcon icon={faCheckCircle}/></div>:''} 
+                            </div>
+                          </Dropdown.Item>
+                        </Dropdown.Menu>
+                      </Dropdown>
+                    </div>  
+                  :
                   <div className='filter-container' onClick={()=> setShowPending(!showPending)}>
                     <span>Show Pending</span>
                     <input type='checkbox' name='filter' checked={showPending} onChange={()=>setShowPending(!showPending)}/>
                   </div>
-                  <div className='filter-container' onClick={()=> setShowOutdated(!showOutdated)}>
-                    <span>Show Outdated</span>
-                    <input type='checkbox' name='filter' checked={showOutdated} onChange={()=>setShowOutdated(!showOutdated)}/>
-                  </div>
-                  {user.review_restricted?<div className='filter-container' onClick={()=> setShowRequestReview(!showRequestReview)}>
-                    <span>Review Requested</span>
-                    <input type='checkbox' name='filter' checked={showRequestReview} onChange={()=>setShowRequestReview(!showRequestReview)}/>
-                  </div>:null}
+                  }
+                 <OverlayTrigger
+                                placement='top'
+                                overlay={
+                                    <Tooltip id={`tooltip-top`}>
+                                      Show services whose configuration needs to be updated
+                                    </Tooltip>
+                                  }
+                                >
+                    <div className='filter-container' onClick={()=> setShowOutdated(!showOutdated)}>
+                      <span>Show Outdated</span>
+                      <input type='checkbox' name='filter' checked={showOutdated} onChange={()=>setShowOutdated(!showOutdated)}/>
+                    </div>
+                  </OverlayTrigger>
                   {user.view_all?
-                  <div className='filter-container' onClick={()=> setShowOwned(!showOwned)}>
-                    <span>Show Owned by Me</span>
-                    <input type='checkbox' name='filter' checked={showOwned} onChange={()=> setShowOwned(!showOwned)}/>
-                  </div>
+                    <React.Fragment>
+                      <OverlayTrigger
+                                placement='top'
+                                overlay={
+                                    <Tooltip id={`tooltip-top`}>
+                                      Show services having no owner
+                                    </Tooltip>
+                                  }
+                                >
+                       <div className='filter-container' onClick={()=> setShowOrphan(!showOrphan)}>
+                        <span>Show Ownerless</span>
+                        <input type='checkbox' name='filter' checked={showOrphan} onChange={()=>setShowOrphan(!showOrphan)}/>
+                        </div>
+                      </OverlayTrigger>
+                      <div className='filter-container' onClick={()=> setShowOwned(!showOwned)}>
+                        <span>Show Owned by Me</span>
+                        <input type='checkbox' name='filter' checked={showOwned} onChange={()=> setShowOwned(!showOwned)}/>
+                      </div>
+                    </React.Fragment>
+                  
                   :null}
 
                   <div className='select-filter-container'>
