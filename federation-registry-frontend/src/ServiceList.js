@@ -5,7 +5,7 @@ import DropdownButton from 'react-bootstrap/DropdownButton';
 import Dropdown from 'react-bootstrap/Dropdown';
 import Collapse from 'react-bootstrap/Collapse';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {faSync,faPlus,faTimes,faEdit,faExclamation,faCircle,faEllipsisV,faEye,faSortDown,faSortUp,faFilter} from '@fortawesome/free-solid-svg-icons';
+import {faSync,faPlus,faTimes,faEdit,faExclamation,faCircle,faCheckCircle,faEllipsisV,faEye,faSortDown,faSortUp,faFilter} from '@fortawesome/free-solid-svg-icons';
 import InputGroup from 'react-bootstrap/InputGroup';
 import FormControl from 'react-bootstrap/FormControl';
 import Button from 'react-bootstrap/Button';
@@ -13,7 +13,7 @@ import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import Table from 'react-bootstrap/Table';
 import config from './config.json';
-import Image from 'react-bootstrap/Image';
+import BootstrapImage from 'react-bootstrap/Image';
 import {Link,useParams} from "react-router-dom";
 import Badge from 'react-bootstrap/Badge';
 import Pagination from 'react-bootstrap/Pagination';
@@ -23,11 +23,16 @@ import CopyDialog from './Components/CopyDialog.js';
 import { useTranslation } from 'react-i18next';
 import Alert from 'react-bootstrap/Alert';import {ConfirmationModal} from './Components/Modals';
 import {userContext,tenantContext} from './context.js';
+import ButtonGroup from 'react-bootstrap/ButtonGroup'
 const {capitalWords} = require('./helpers.js');
 var filterTimeout;
 
 
 const ServiceList= (props)=> {
+
+  const query = new Proxy(new URLSearchParams(window.location.search), {
+    get: (searchParams, prop) => searchParams.get(prop),
+  });
   // eslint-disable-next-line
   const [tenant,setTeanant] = useContext(tenantContext);
   const {tenant_name} = useParams();
@@ -554,7 +559,17 @@ const ServiceList= (props)=> {
 function TableItem(props) {
   // eslint-disable-next-line
   const [tenant,setTenant] = useContext(tenantContext);
+  const [logoUrl,setLogoUrl] = useState(props.service.logo_uri?props.service.logo_uri:process.env.PUBLIC_URL + '/placeholder.png');
 
+
+  useEffect(()=>{
+    if(props.service.logo_uri){
+      var img = new Image();
+      img.onerror = function() { setLogoUrl(process.env.PUBLIC_URL + '/placeholder_not_found.png'); };
+      img.src = props.service.logo_uri;
+
+    }
+  },[])
 
   const {tenant_name} = useParams();
 
@@ -588,7 +603,7 @@ function TableItem(props) {
         </div>
 
         <div className="table-image-container">
-        <Image referrerPolicy="no-referrer" src={props.service.logo_uri?props.service.logo_uri:process.env.PUBLIC_URL + '/placeholder.png'} thumbnail/>
+        <BootstrapImage referrerPolicy="no-referrer" src={logoUrl} thumbnail/>
         </div>
 
       </td>
@@ -689,7 +704,7 @@ function TableItem(props) {
             <DropdownButton
               variant="link"
               alignRight
-              className='drop-container-controls'
+              className='drop-container-controls dropdown-filter'
               title={<React.Fragment>
                 <div className='controls-options-container'>
                   <FontAwesomeIcon icon={faEllipsisV}/>

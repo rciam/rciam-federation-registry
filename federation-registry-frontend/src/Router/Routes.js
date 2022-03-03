@@ -12,7 +12,9 @@ import InvitationsPage from '../Invitations.js'
 import {tenantContext,userContext} from '../context.js';
 import {PageNotFound,TenantHandler} from '../Components/TenantHandler.js';
 import UserHandler from '../Components/UserHandler.js';
-import Notifications from '../Components/Notifications.js'; 
+import BroadcastNotifications from '../Components/BrodcastNotifications.js'; 
+import OutdatedNotifications from '../Components/OutdatedNotifications.js'; 
+
 //import { useParams } from "react-router-dom";
 
 
@@ -92,13 +94,21 @@ const Routes = (props) => {
         </div>
         <EditService user={props.user}/>
       </ProtectedRoute>
-      <ProtectedRoute user={props.user} exact path="/:tenant_name/notifications" actions={['send_notifications']} >
+      <ProtectedRoute user={props.user} exact path="/:tenant_name/notifications/broadcast" actions={['send_notifications']} >
         <div className="links">
           <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/home"}>{props.t('link_home')}</Link>
           <span className="link-seperator">/</span>
-          Send Notifications
+          Send Broadcast Notifications
         </div>
-        <Notifications user={props.user}/>
+        <BroadcastNotifications user={props.user}/>
+      </ProtectedRoute>
+      <ProtectedRoute user={props.user} exact path="/:tenant_name/notifications/outdated" actions={['send_notifications']} >
+        <div className="links">
+          <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/home"}>{props.t('link_home')}</Link>
+          <span className="link-seperator">/</span>
+          Send Outdated Notifications
+        </div>
+        <OutdatedNotifications user={props.user}/>
       </ProtectedRoute>
       <ProtectedRoute user={props.user} exact path="/:tenant_name/requests/:petition_id/edit">
         <div className="links">

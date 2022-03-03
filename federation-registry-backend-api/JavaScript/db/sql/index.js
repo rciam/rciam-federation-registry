@@ -52,7 +52,8 @@ module.exports = {
     service_state:{
       add:sql('service_state/add.sql'),
       update:sql('service_state/update.sql'),
-      getOutdatedOwners:sql('service_state/getOutdatedOwners.sql')
+      getOutdatedOwners:sql('service_state/getOutdatedOwners.sql'),
+      getOutdatedServices:sql('service_state/getOutdatedServices.sql')
     },
     user:{
       getTenchicalContacts: sql('user/getTenchicalContacts.sql'),

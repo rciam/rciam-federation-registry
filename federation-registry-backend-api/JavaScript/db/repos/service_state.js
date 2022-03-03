@@ -23,8 +23,18 @@ class ServiceStateRepository {
 
   }
 
-  async getOutdatedOwners(){
-    return await this.db.any(sql.getOutdatedOwners);
+  async getOutdatedOwners(tenant,integration_environment){
+
+    let integration_environment_filter = "";
+    if(integration_environment){
+      integration_environment_filter = " AND service_details.integration_environment='"+integration_environment+"'";
+    }
+    return await this.db.any(sql.getOutdatedOwners,{tenant:tenant,integration_environment_filter:integration_environment_filter});
+  }
+
+  async getOutdatedServices(tenant){
+    const query = this.pgp.as.format(sql.getOutdatedServices,{tenant:tenant});
+    return await this.db.any(sql.getOutdatedServices,{tenant:tenant});
   }
 
 

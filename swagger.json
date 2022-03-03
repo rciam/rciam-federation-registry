@@ -187,8 +187,7 @@ paths:
             type: "array"
             items:
               type: "object"
-              additionalProperties:
-                $ref: "#/definitions/PostOrganization"
+              $ref: "#/definitions/PostOrganization"
         "401":
           description: "Unauthenticated request"
         "422":
@@ -342,7 +341,7 @@ paths:
           description: "Internal Error"
       security:
       - access_tokenAuth: []
-  /tenants/{name}/notifications/recipients:
+  /tenants/{name}/notifications/broadcast/recipients:
     get:
       tags:
       - "Notifications"
@@ -383,7 +382,7 @@ paths:
           description: "Internal Error"
       security:
       - access_tokenAuth: []
-  /tenants/{name}/notifications:
+  /tenants/{name}/notifications/broadcast:
     put:
       tags:
       - "Notifications"
@@ -433,10 +432,15 @@ paths:
               type: "array"
               items:
                 type: "string"
-              description: "Environments that will be affected by the notification"
+              description: "Environments that will be targeted by the notification"
             notify_admins:
               type: "boolean"
               description: "Also add administrators as CC to the notification email"
+            protocols:
+              type: "array"
+              items:
+                type: "string"
+              description: "Protocols of services that will be targeted by the notification"
       responses:
         "200":
           description: "successful"
@@ -446,6 +450,49 @@ paths:
               notified_users:
                 type: "number"
                 description: "Number of users the notification was sent to"
+        "401":
+          description: "Unauthenticated request"
+        "500":
+          description: "Internal Error"
+      security:
+      - access_tokenAuth: []
+  /tenants/{name}/notifications/outdated:
+    put:
+      tags:
+      - "Notifications"
+      summary: "Send Outdated Alert Notifications"
+      description: "Sends Notifications to the owners of outdated services"
+      operationId: "sendOutdatedNotif"
+      produces:
+      - "application/json"
+      parameters:
+      - in: path
+        type: string
+        required: true
+        name: name
+        description: "Tenant that the request is targeting"
+      - in: "body"
+        name: "body"
+        description: "Notification data"
+        required: true
+        schema:
+          type: "object"
+          properties:
+            integration_environment:
+              type: "string"
+              description: "Integration environment to send outdated alert notifications"
+      responses:
+        "200":
+          description: "successful"
+          schema:
+            type: "object"
+            properties: 
+              user_count:
+                type: "number"
+                description: "Number of users the notification was sent to"
+              service_count:
+                type: "number"
+                description: "Number of outdated service in integration envronment provided as parameter"
         "401":
           description: "Unauthenticated request"
         "500":
@@ -479,8 +526,7 @@ paths:
             type: "array"
             items:
               type: "object"
-              additionalProperties:
-                $ref: "#/definitions/Service"
+              $ref: "#/definitions/BannerAlert"
         "401":
           description: "Unauthenticated request"
         "500":
@@ -504,7 +550,7 @@ paths:
       - in: "body"
         name: "body"
         schema:     
-          $ref: "#/definitions/Service"
+          $ref: "#/definitions/BannerAlert"
       responses:
         "200":
           description: "successful"
@@ -538,7 +584,7 @@ paths:
       - in: "body"
         name: "body"
         schema:     
-          $ref: "#/definitions/Service"
+          $ref: "#/definitions/BannerAlert"
       responses:
         "200":
           description: "successful"
@@ -568,10 +614,6 @@ paths:
         format: "int64"
         required: true
         description: "Id of Banner Alert to delete"
-      - in: "body"
-        name: "body"
-        schema:     
-          $ref: "#/definitions/Service"
       responses:
         "200":
           description: "successful"
@@ -711,8 +753,7 @@ paths:
             type: "array"
             items:
               type: "object"
-              additionalProperties:
-                $ref: "#/definitions/Services"
+              $ref: "#/definitions/Services"
         "401":
           description: "Unauthenticated request"
         "500":
@@ -741,8 +782,7 @@ paths:
             type: "array"
             items:
               type: "object"
-              additionalProperties:
-                $ref: "#/definitions/Service"
+              $ref: "#/definitions/Service"
         "401":
           description: "Unauthenticated request"
         "500":
@@ -1515,8 +1555,7 @@ definitions:
         - protocol
         - client_id
         - metadata_url
-      additionalProperties:
-                $ref: "#/definitions/Service"
+      $ref: "#/definitions/Service"
   Agent:
     type: "object"
     properties:
@@ -2192,8 +2231,7 @@ definitions:
         items:
           type: "object"
           properties:
-            additionalProperties:
-              $ref: "#/definitions/Petition"
+          $ref: "#/definitions/Petition"
   BannerAlert:
     type: "object"
     properties:
