@@ -13,13 +13,13 @@ SELECT  json_agg(json_build_object('outdated',foo.outdated,'service_id',foo.serv
     LEFT JOIN
       (SELECT id AS petition_id,status,type, service_id,comment,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification,last_edited
         FROM service_petition_details WHERE reviewed_at IS NULL) AS petitions USING (service_id)
-    WHERE deleted=false ${pending_filter:raw} ${pending_sub_filter:raw} ${search_filter_services:raw} ${orphan_filter_services:raw}
+    WHERE deleted=false ${pending_filter:raw} ${pending_sub_filter:raw} ${search_filter_services:raw} ${orphan_filter_services:raw} ${error_filter_services:raw}
     UNION
     SELECT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,CASE WHEN group_subs.sub=${sub} THEN true ELSE false END AS owned,status,type,state,CASE WHEN group_manager IS NULL THEN false ELSE group_manager END,notification,comment,petitions.group_id,deployment_type,last_edited,outdated,client_id, created_at,orphan
       FROM
       (SELECT service_id,id AS petition_id,comment,service_description,logo_uri,service_name,integration_environment,CASE WHEN service_petition_details.comment IS NOT NULL THEN true ELSE false END AS notification,status,type,null AS deployment_type,null AS state,group_id,last_edited,false as outdated,null::timestamp as created_at,CASE WHEN (SELECT json_agg((v.sub))
 						 		FROM group_subs v WHERE service_petition_details.group_id = v.group_id) IS NULL THEN true ELSE false END as orphan 
-        FROM service_petition_details WHERE reviewed_at IS NULL AND type='create' AND tenant=${tenant_name} ${protocol_filter:raw} ${integration_environment_filter:raw} ${outdated_diable_petitions:raw} ${pending_sub_filter:raw})  as petitions
+        FROM service_petition_details WHERE reviewed_at IS NULL AND type='create' AND tenant=${tenant_name} ${protocol_filter:raw} ${integration_environment_filter:raw} ${outdated_disable_petitions:raw} ${pending_sub_filter:raw} ${error_filter_petitions:raw})  as petitions
       LEFT JOIN service_petition_details_oidc ON petitions.petition_id=service_petition_details_oidc.id
       LEFT JOIN group_subs ON petitions.group_id= group_subs.group_id AND group_subs.sub=${sub}
     ${select_own_petition:raw} 
