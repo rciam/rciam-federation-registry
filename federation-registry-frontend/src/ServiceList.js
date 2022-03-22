@@ -66,6 +66,7 @@ const ServiceList= (props)=> {
   const [showOrphan,setShowOrphan] = useState(false);
   const [showNotification,setShowNotification] = useState(true);
   const [errorFilter,setErrorFilter] = useState(false);
+  const [serviceCount,setServiceCount] = useState(0);
 
   const pageSize = 10;
   
@@ -84,6 +85,7 @@ const ServiceList= (props)=> {
     }    
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
+
 
   useEffect(()=>{
      getServices();
@@ -197,6 +199,7 @@ const ServiceList= (props)=> {
             setOutdatedCount(response.outdated_count);
           }
           setRequestReviewCount(response.request_review_count);
+          setServiceCount(response.full_count);
           createPaginationItems(response.full_count);
           setReset(!reset);
         }
@@ -557,8 +560,9 @@ const ServiceList= (props)=> {
 
             </tbody>
           </Table>
-
+          <div className='service-count'>{'('+serviceCount+ " Total Services)"}</div>
           <Pagination>{paginationItems}</Pagination>
+          
         </LoadingBar>
         <ProcessingRequest active={asyncResponse}/>
       </div>
@@ -708,6 +712,16 @@ function TableItem(props) {
               }}><Button variant="success" disabled={props.service.status==="request_review"&&!user.review_restricted}><FontAwesomeIcon icon={faEdit}/>{t('button_review')}</Button></Link>
               </React.Fragment>
               :null}
+              {(user.actions.includes('review_petition')&&props.service.status==='changes'&&!props.service.owned)||(!user.actions.includes('review_restricted')&&props.service.status==='request_review'&&!props.service.owned)?
+                <React.Fragment>
+                  <Link
+                className='button-link'
+                to={{
+                pathname:'/'+tenant_name+(props.service.service_id?"/services/"+props.service.service_id:"")+ (props.service.petition_id?"/requests/"+props.service.petition_id:"") + "/view_request"
+              }}><Button variant="warning" ><FontAwesomeIcon icon={faEye}/>View Request</Button></Link>
+                </React.Fragment>
+                :null
+              }
 
             </Col>
             <Col className='controls-col' md="auto">
