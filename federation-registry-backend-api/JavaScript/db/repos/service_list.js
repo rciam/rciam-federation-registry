@@ -4,7 +4,7 @@ const select_own_service_1 = "(SELECT id AS group_id,true AS owned,CASE WHEN gro
 const select_own_service_2 = "') AS group_ids LEFT JOIN";
 const select_all_1 = "LEFT JOIN (SELECT id AS group_id,true AS owned,CASE WHEN group_manager IS NULL then false ELSE group_manager END FROM groups LEFT JOIN group_subs ON groups.id=group_subs.group_id WHERE sub='"
 const select_all_2 = "') AS group_ids";
-const outdated_diable_petitions = 'AND 0=1'
+const outdated_disable_petitions = 'AND 0=1'
 const outdated_services = 'AND service_state.outdated = true'
 const request_review_filter = "AND status='request_review'"
 
@@ -32,14 +32,16 @@ class ServiceListRepository {
       integration_environment_filter:'',
       select_own_petition:'',
       pending_filter:'',
-      outdated_diable_petitions:'',
+      outdated_disable_petitions:'',
       outdated_services:'',
       pending_sub_filter:'',
       orphan_filter_services:'',
-      orphan_filter_petitions:''
+      orphan_filter_petitions:'',
+      error_filter_services:'',
+      error_filter_petitions:''
     };
     if(req.query.outdated){
-      params.outdated_diable_petitions = outdated_diable_petitions;
+      params.outdated_disable_petitions = outdated_disable_petitions;
       params.outdated_services = outdated_services;
     }
     if(req.query.protocol){
@@ -51,6 +53,10 @@ class ServiceListRepository {
      }
     if(req.query.env){
       params.integration_environment_filter = "AND integration_environment='" + req.query.env + "'"
+    }
+    if(req.query.error){
+      params.error_filter_petitions = "AND false";
+      params.error_filter_services = "AND state='error'";
     }
 
     if(req.query.pending_sub){

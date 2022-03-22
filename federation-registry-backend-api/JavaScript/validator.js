@@ -52,6 +52,7 @@ const getServiceListValidation = () => {
     query('pending').optional({checkFalsy:true}).isBoolean().toBoolean(),
     query('pending_sub').optional({checkFalsy:true}).isString().custom((value,{req,location,path})=> {if(['pending','changes','request_review'].includes(value)){return true}else{return false}}).withMessage('Value is not supported'),
     query('search_string').optional({checkFalsy:true}).isString(),
+    query('error').optional({checkFalsy:true}).isBoolean().toBoolean(),    
   ]
 }
 
@@ -117,7 +118,7 @@ const getRecipientsBroadcastNotifications = () => {
     query('contact_types').custom((value,{req,location,path})=>{
       try{
         let contact_types = value.split(',');
-        if(contact_types.length>1){
+        if(contact_types.length>0){
           contact_types.forEach(contact_type=>{
             if(!config.form[req.params.tenant].contact_types.includes(contact_type)){
               throw new Error(contact_type + ' is not a supported contact type, supported contact types (' + config.form[req.params.tenant].contact_types + ')');            
@@ -136,7 +137,7 @@ const getRecipientsBroadcastNotifications = () => {
     query('environments').custom((value,{req,location,path})=>{
       try{
         let environments = value.split(',');
-        if(environments.length>1){
+        if(environments.length>0){
           environments.forEach(environment=>{
             if(!config.form[req.params.tenant].integration_environment.includes(environment)){
               throw new Error(environment + ' is not a supported environment, supported environments (' + config.form[req.params.tenant].integration_environment + ')');            
@@ -155,7 +156,7 @@ const getRecipientsBroadcastNotifications = () => {
     query('protocols').custom((value,{req,location,path})=>{
       try{
         let protocols = value.split(',');
-        if(protocols.length>1){
+        if(protocols.length>0){
           protocols.forEach(protocol=>{
             if(!config.form[req.params.tenant].protocol.includes(protocol)){
               throw new Error(protocol + ' is not a supported protocol, supported protocols (' + config.form[req.params.tenant].protocol + ')');            

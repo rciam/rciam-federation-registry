@@ -65,6 +65,7 @@ const ServiceList= (props)=> {
   const [initialLoading,setInitialLoading] = useState(true);
   const [showOrphan,setShowOrphan] = useState(false);
   const [showNotification,setShowNotification] = useState(true);
+  const [errorFilter,setErrorFilter] = useState(false);
 
   const pageSize = 10;
   
@@ -87,11 +88,11 @@ const ServiceList= (props)=> {
   useEffect(()=>{
      getServices();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[searchString,showOwned,showPending,integrationEnvironment,activePage,showOutdated,showPendingSubFilter,showRequestReview,showOrphan]);
+  },[searchString,showOwned,showPending,integrationEnvironment,activePage,showOutdated,showPendingSubFilter,showRequestReview,showOrphan,errorFilter]);
 
   useEffect(()=>{
     setActivePage(1);
-  },[searchString,showOwned,showPending,integrationEnvironment,showOutdated,showPendingSubFilter,setShowRequestReview,showOrphan]);
+  },[searchString,showOwned,showPending,integrationEnvironment,showOutdated,showPendingSubFilter,setShowRequestReview,showOrphan,errorFilter]);
 
   
 
@@ -118,6 +119,9 @@ const ServiceList= (props)=> {
     }
     if(showOrphan){
       filterString = filterString + '&orphan=' +true;
+    }
+    if(errorFilter){
+      filterString = filterString + '&error=' + true;
     }
 
     return filterString;
@@ -503,6 +507,12 @@ const ServiceList= (props)=> {
                       </div>
                     </React.Fragment>
                   
+                  :null}
+                  {user.actions.includes('error_action')?
+                    <div className='filter-container' onClick={()=> setErrorFilter(!errorFilter)}>
+                      <span>Show Malfunctioned</span>
+                      <input type='checkbox' name='filter' checked={errorFilter} onChange={()=>setErrorFilter(!errorFilter)}/>
+                    </div>
                   :null}
 
                   <div className='select-filter-container'>
