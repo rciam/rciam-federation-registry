@@ -191,6 +191,14 @@ code {
 
 
 /* Service List */
+
+.service-count {
+  display:inline-block;
+  font-weight: bold;
+  margin-left: 0.3rem;
+  margin-top:0.5rem;
+  margin-bottom: 0.5rem;
+}
 .options-bar .row {
   width:100%!important;
   margin-left: 0!important;
@@ -240,6 +248,7 @@ code {
   font-weight:300;
   table-layout: fixed;
   width:100%;
+  margin-bottom: 0;
 }
 
 .petitions-table tr td:first-child{
@@ -437,6 +446,14 @@ code {
 
 /* Service Form */
 
+.pkce-tooltip {
+  margin-top:0.4rem;
+  color:#D89C46;
+  font-size: 80%;
+}
+.pkce-tooltip svg {
+  margin-right:0.3rem;
+}
 .mb-3 .text-muted {
   margin-top: -0.6rem;
 }

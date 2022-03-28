@@ -13,7 +13,7 @@
   "client_id":"",
   "allow_introspection":false,
   "token_endpoint_auth_method":"client_secret_basic",
-  "code_challenge_method":"S256",
+  "code_challenge_method":"",
   "device_code_validity_seconds":"1800",
   "access_token_validity_seconds":"3600",
   "refresh_token_validity_seconds":"28800",

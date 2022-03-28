@@ -10,7 +10,7 @@ import Tab from 'react-bootstrap/Tab';
 import Alert from 'react-bootstrap/Alert';
 import Jumbotron from 'react-bootstrap/Jumbotron';
 import Container from 'react-bootstrap/Container';
-import {Logout,NotFound} from './Components/Modals';
+import {Logout,NotFound,ResponseModal} from './Components/Modals';
 import { diff } from 'deep-diff';
 import { useTranslation } from 'react-i18next';
 import {tenantContext,userContext} from './context.js';
@@ -32,6 +32,7 @@ const EditService = (props) => {
     const tenant = useContext(tenantContext);
     const [user] = useContext(userContext);
     const [owned,setOwned] = useState(true);
+    const [modalMessage,setModalMessage] = useState();
     
     useEffect(()=>{
       
@@ -39,6 +40,18 @@ const EditService = (props) => {
       getData();
       // eslint-disable-next-line react-hooks/exhaustive-deps
     },[]);
+
+    useEffect(()=>{
+      if(petitionData&&props.review){
+        if(petitionData.metadata.status==='changes'){
+          setModalMessage('This request has already been reviewed and changes have been requested from the service owners');
+        }
+        if(petitionData.metadata.status==='request_review'&&!user.actions.includes('review_restricted')){
+          setModalMessage('This request is under review from a different user group')
+        }
+
+      }
+    },[petitionData,user,props.review])
 
     useEffect(()=>{
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -132,6 +145,7 @@ const EditService = (props) => {
     <React.Fragment>
       <Logout logout={logout}/>
       <NotFound notFound={notFound}/>
+      <ResponseModal return_url={'/'+tenant_name+'/services'} message={modalMessage} modalTitle={'Review is not available for this request'}/>
     {!((petitionData||!petition_id)&&(!service_id||service))?<LoadingBar loading={true}/>:
       <React.Fragment>
        {props.review?
@@ -145,7 +159,7 @@ const EditService = (props) => {
                 </Alert>
                 {editPetition&&changes?
                   <React.Fragment>
-                    <RequestedReviewAlert comment={petitionData.metadata.comment} />
+                    <CommentsAlert alert={"An Operator has requested reviewal for the following request"} comment={petitionData.metadata.comment} />
                     <ServiceForm disableEnvironment={true} initialValues={editPetition} changes={changes} {...petitionData.metadata} {...props}/>
                   </React.Fragment>
                     :<LoadingBar loading={true}/>
@@ -159,7 +173,7 @@ const EditService = (props) => {
                 </Alert>
                 {petitionData?
                   <React.Fragment>
-                    <RequestedReviewAlert comment={petitionData.metadata.comment} />
+                    <CommentsAlert alert={"An Operator has requested reviewal for the following request"} comment={petitionData.metadata.comment} />
                     <ServiceForm initialValues={petitionData.petition} {...petitionData.metadata} {...props}/>
                   </React.Fragment>:<LoadingBar loading={true}/>}
               </React.Fragment>
@@ -170,7 +184,7 @@ const EditService = (props) => {
                 </Alert>
                 {service?
                   <React.Fragment>
-                    <RequestedReviewAlert comment={petitionData.metadata.comment} />
+                    <CommentsAlert alert={"An Operator has requested reviewal for the following request"} comment={petitionData.metadata.comment} />
                     <ServiceForm copy={true} initialValues={service} {...petitionData.metadata} {...props}/>
                   </React.Fragment>:<LoadingBar loading={true}/>}
               </React.Fragment>
@@ -223,6 +237,165 @@ const EditService = (props) => {
 
     </React.Fragment>
   )
+}
+
+
+const ViewRequest = (props) => {
+  // eslint-disable-next-line
+  const { t, i18n } = useTranslation();
+  const [petitionData,setPetitionData] = useState();
+  const [editPetition,setEditPetition] = useState();
+  const [changes,setChanges] = useState();
+  const {tenant_name} = useParams();
+  const {service_id} = useParams();
+  const {petition_id} = useParams();
+  const [logout,setLogout] = useState(false);
+  const [notFound,setNotFound] = useState(false);
+  const tenant = useContext(tenantContext);
+  const [service,setService] = useState();
+  
+  useEffect(()=>{
+    
+    localStorage.removeItem('url');
+    getData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[]);
+
+  useEffect(()=>{
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    if(petitionData&&service&&!editPetition){
+
+      let helper = calcDiff(service,petitionData.petition,tenant[0].form_config,diff);
+      let multivalue_attributes = [];
+      for (const service_property in service) service[service_property]&&typeof(service[service_property])==='object'&&multivalue_attributes.push(service_property); 
+      for (const service_property in petitionData.petition) petitionData.petition[service_property]&&typeof(petitionData.petition[service_property])==='object'&&!multivalue_attributes.includes(service_property)&&multivalue_attributes.push(service_property);
+      multivalue_attributes.forEach(item=>{
+        if(helper[item].D){
+          petitionData.petition[item].push(...helper[item].D);
+        }
+      });
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      setEditPetition(petitionData.petition);
+      setChanges(helper);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[petitionData, service, editPetition]);
+
+  const getData = async () => {
+    if(service_id){
+      fetch(config.host+'tenants/'+tenant_name+'/services/'+service_id, {
+        method: 'GET', // *GET, POST, PUT, DELETE, etc.
+        credentials: 'include', // include, *same-origin, omit
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': localStorage.getItem('token')
+        }
+      }).then(response=>{
+        if(response.status===200){
+          return response.json();
+        }else if(response.status===401){
+          setLogout(true);
+          return false
+        }
+        if(response.status===404){
+          
+          setNotFound(true);
+          return false;
+        }
+        else {
+          return false
+        }
+        }).then(response=> {
+        if(response){
+          console.log(response.service);
+          setService(response.service);
+        }
+      });
+    }
+    if(petition_id){
+      fetch(config.host+'tenants/'+tenant_name+'/petitions/'+petition_id+'?type=open', {
+        method: 'GET', // *GET, POST, PUT, DELETE, etc.
+        credentials: 'include', // include, *same-origin, omit
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': localStorage.getItem('token')
+        }
+      }).then(response=>{
+        if(response.status===200){
+          return response.json();
+        }else if(response.status===401){
+          setLogout(true);
+          return false;
+        }
+        else if(response.status===404){
+          setNotFound(true);
+          return false;
+        }
+        else {
+          return false
+        }
+      }).then(response=> {
+        if(response){
+          if(!response){
+            setNotFound(true);
+          }
+          else{
+            // console.log(...response.metadata)
+            setPetitionData(response);
+          }
+        }
+      });
+    }
+  }
+
+return (
+  <React.Fragment>
+    <Logout logout={logout}/>
+    <NotFound notFound={notFound}/>
+  {!((petitionData||!petition_id)&&(!service_id||service))?<LoadingBar loading={true}/>:
+    <React.Fragment>        
+        {
+          petitionData.metadata.type==='edit'?
+            <React.Fragment>
+              <Alert variant='warning' className='form-alert'>
+                {t('reconfiguration_info')} It was submitted on {petitionData.metadata.submitted_at.slice(12,19)}(GMT+3) at {petitionData.metadata.submitted_at.slice(0,10).split('-').join('/')}.
+              </Alert>
+              {editPetition&&changes?
+                <React.Fragment>
+                  <CommentsAlert alert={petitionData.metadata.status==='changes'?"A Reviewer has requested changes from the owners of the following request":"An Operator has requested reviewal for the following request"} comment={petitionData.metadata.comment} />
+                  <ServiceForm disableEnvironment={true} disabled={true} initialValues={editPetition} changes={changes} {...petitionData.metadata} {...props}/>
+                </React.Fragment>
+                  :<LoadingBar loading={true}/>
+
+              }
+            </React.Fragment>
+          :petitionData.metadata.type==='create'?
+            <React.Fragment>
+              <Alert variant='warning' className='form-alert'>
+                {t('edit_create_info')} It was submitted on {petitionData.metadata.submitted_at.slice(12,19)}(GMT+3) at {petitionData.metadata.submitted_at.slice(0,10).split('-').join('/')}.
+              </Alert>
+              {petitionData?
+                <React.Fragment>
+                  <CommentsAlert alert={petitionData.metadata.status==='changes'?"A Reviewer has requested changes from the owners of the following request":"An Operator has requested reviewal for the following request"} comment={petitionData.metadata.comment} />
+                  <ServiceForm initialValues={petitionData.petition} disabled={true} {...petitionData.metadata} {...props}/>
+                </React.Fragment>:<LoadingBar loading={true}/>}
+            </React.Fragment>
+          :
+            <React.Fragment>
+              <Alert variant='warning' className='form-alert'>
+                {t('edit_delete_info')} It was submitted on {petitionData.metadata.submitted_at.slice(12,19)}(GMT+3) at {petitionData.metadata.submitted_at.slice(0,10).split('-').join('/')}.
+              </Alert>
+              {service?
+                <React.Fragment>
+                  <CommentsAlert alert={petitionData.metadata.status==='changes'?"A Reviewer has requested changes from the owners of the following request":"An Operator has requested reviewal for the following request"} comment={petitionData.metadata.comment} />
+                  <ServiceForm copy={true} initialValues={service} disabled={true} {...petitionData.metadata} {...props}/>
+                </React.Fragment>:<LoadingBar loading={true}/>}
+            </React.Fragment>
+          }
+      </React.Fragment> 
+  }
+  </React.Fragment>
+)
 }
 
 
@@ -367,7 +540,7 @@ const ViewService = (props)=>{
   )
 }
 
-const RequestedReviewAlert = (props) => {
+const CommentsAlert = (props) => {
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
 
@@ -376,7 +549,7 @@ const RequestedReviewAlert = (props) => {
         {props.comment?
             <React.Fragment>
               <Alert variant='warning' className='form-alert'>
-                An Operator has requested reviewal for the following request
+                {props.alert}
               </Alert>
               <Jumbotron fluid className="jumbotron-comment">
                 <Container>
@@ -496,5 +669,6 @@ export {
    EditService,
    NewService,
    ViewService,
-   CopyService
+   CopyService,
+   ViewRequest
 }
