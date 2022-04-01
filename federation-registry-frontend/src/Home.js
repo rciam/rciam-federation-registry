@@ -249,7 +249,7 @@ const ServiceTable = ({services}) => {
     data, 
     defaultColumn, // Be sure to pass the defaultColumn option
     filterTypes,
-    initialState: { pageIndex: 2 } },
+    initialState: { pageIndex: 0 } },
     useFilters,
     useSortBy,
     usePagination)
