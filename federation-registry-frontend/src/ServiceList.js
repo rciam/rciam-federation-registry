@@ -573,17 +573,6 @@ const ServiceList= (props)=> {
 function TableItem(props) {
   // eslint-disable-next-line
   const [tenant,setTenant] = useContext(tenantContext);
-  const [logoUrl,setLogoUrl] = useState(props.service.logo_uri?props.service.logo_uri:process.env.PUBLIC_URL + '/placeholder.png');
-
-
-  useEffect(()=>{
-    if(props.service.logo_uri){
-      var img = new Image();
-      img.onerror = function() { setLogoUrl(process.env.PUBLIC_URL + '/placeholder_not_found.png'); };
-      img.src = props.service.logo_uri;
-
-    }
-  },[props.service.logo_uri])
 
   const {tenant_name} = useParams();
 
@@ -617,7 +606,11 @@ function TableItem(props) {
         </div>
 
         <div className="table-image-container">
-        <BootstrapImage referrerPolicy="no-referrer" src={logoUrl} thumbnail/>
+        <BootstrapImage referrerPolicy="no-referrer" src={props.service.logo_uri?props.service.logo_uri:process.env.PUBLIC_URL + '/placeholder.png'}
+          onError={({ currentTarget }) => {
+            currentTarget.onerror = null; // prevents looping
+            currentTarget.src=process.env.PUBLIC_URL + '/placeholder_not_found.png';
+          }} thumbnail/>
         </div>
 
       </td>
