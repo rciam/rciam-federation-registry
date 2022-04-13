@@ -86,6 +86,7 @@ router.put('/tenants/:tenant/services/validate',adminAuth,getData,serviceValidat
 // GET ALL SERVICES
 router.get('/tenants/:tenant/services',getServicesValidation(),validate,authenticate_allow_unauthorised, (req,res,next)=>{
   try{
+    let authorised = !!(req.user && req.user.role && req.user.role.actions.includes('get_services'));
     if(req.query.outdated==='true'){
       db.service_state.getOutdatedServices(req.params.tenant).then(async outdated_services=>{
         if(outdated_services){
