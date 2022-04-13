@@ -5,13 +5,12 @@ import { useHistory,useParams } from "react-router-dom";
 import {LoadingPage} from './Components/LoadingPage.js';
 import config from './config.json';
 import { useTable ,useFilters,useSortBy,usePagination} from 'react-table';
-import Image from 'react-bootstrap/Image';
 import Pagination from 'react-bootstrap/Pagination';
 import FormControl from 'react-bootstrap/FormControl';
 import Table from 'react-bootstrap/Table';
 import Badge from 'react-bootstrap/Badge';
+import LogoContainer from './Components/LogoContainer.js';
 const {capitalWords} = require('./helpers.js');
-
 
 const Home = ()=> {
 
@@ -177,12 +176,7 @@ const ServiceTable = ({services}) => {
                                   {capitalWords(props.row.original.integration_environment==='development'?'dev':props.row.original.integration_environment==='production'?'prod':props.row.original.integration_environment)}
                                 </Badge>
                               </h5>
-                              <Image referrerPolicy="no-referrer" src={props.value?props.value:process.env.PUBLIC_URL + '/placeholder.png'}
-                              className="home-service-logo img-thumbnail"
-                              onError={({ currentTarget }) => {
-                                currentTarget.onerror = null; // prevents looping
-                                currentTarget.src=process.env.PUBLIC_URL + '/placeholder_not_found.png';
-                              }} thumbnail/>
+                              <LogoContainer url={props.value}/>
 
                             </div>
             </React.Fragment>

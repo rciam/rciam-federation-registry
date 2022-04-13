@@ -13,7 +13,6 @@ import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import Table from 'react-bootstrap/Table';
 import config from './config.json';
-import BootstrapImage from 'react-bootstrap/Image';
 import {Link,useParams} from "react-router-dom";
 import Badge from 'react-bootstrap/Badge';
 import Pagination from 'react-bootstrap/Pagination';
@@ -23,7 +22,8 @@ import CopyDialog from './Components/CopyDialog.js';
 import { useTranslation } from 'react-i18next';
 import Alert from 'react-bootstrap/Alert';import {ConfirmationModal} from './Components/Modals';
 import {userContext,tenantContext} from './context.js';
-import ButtonGroup from 'react-bootstrap/ButtonGroup'
+import ButtonGroup from 'react-bootstrap/ButtonGroup';
+import LogoContainer from './Components/LogoContainer.js';
 const {capitalWords} = require('./helpers.js');
 var filterTimeout;
 
@@ -606,11 +606,7 @@ function TableItem(props) {
         </div>
 
         <div className="table-image-container">
-        <BootstrapImage referrerPolicy="no-referrer" src={props.service.logo_uri?props.service.logo_uri:process.env.PUBLIC_URL + '/placeholder.png'}
-          onError={({ currentTarget }) => {
-            currentTarget.onerror = null; // prevents looping
-            currentTarget.src=process.env.PUBLIC_URL + '/placeholder_not_found.png';
-          }} thumbnail/>
+          <LogoContainer url={props.service.logo_uri}/>
         </div>
 
       </td>
