@@ -86,6 +86,7 @@ router.put('/tenants/:tenant/services/validate',adminAuth,getData,serviceValidat
 // GET ALL SERVICES
 router.get('/tenants/:tenant/services',getServicesValidation(),validate,authenticate_allow_unauthorised, (req,res,next)=>{
   try{
+    let authorised = !!(req.user && req.user.role && req.user.role.actions.includes('get_services'));
     if(req.query.outdated==='true'){
       db.service_state.getOutdatedServices(req.params.tenant).then(async outdated_services=>{
         if(outdated_services){
@@ -96,47 +97,13 @@ router.get('/tenants/:tenant/services',getServicesValidation(),validate,authenti
         }
       });
     }
-    else if(req.user && req.user.role && req.user.role.actions.includes('get_services')){
-      if(req.query && Object.keys(req.query).length > 0 && req.query.constructor === Object && req.query.integration_environment && req.query.protocol_id){
-        db.service.getByProtocolId(req.query.integration_environment,req.query.protocol_id,req.params.tenant).then(result=>{
-          if(result){
-            res.status(200).send(result);
-          }
-          else{
-            res.status(404).end();
-          }
-        }).catch(err=> {
-          next(err);
-        });
-      }
-      else{
-        db.service.getAll(req.params.tenant).then(result=>{
-          res.status(200).send(result);
-        }).catch(err=> {
-          next(err);
-        });;
-      }
-    }
-    else{
-      if(req.query && Object.keys(req.query).length > 0 && req.query.constructor === Object && req.query.integration_environment && req.query.protocol_id){
-        db.service.getByProtocolIdPublic(req.query.integration_environment,req.query.protocol_id,req.params.tenant).then(result=>{
-          if(result){
-            res.status(200).send(result);
-          }
-          else{
-            res.status(404).end();
-          }
-        }).catch(err=> {
-          next(err);
-        });
-      }
-      else{
-        db.service.getAllPublic(req.params.tenant).then(result=>{
-          res.status(200).send(result);
-        }).catch(err=> {
-          next(err);
-        });;
-      }
+    else {
+      db.service.getAll(req.params.tenant,req.query,authorised).then(result=>{
+        res.status(200).send(result);
+      }).catch(err=> {
+        next(err);
+      });
+        
     }
   }
   catch(err){

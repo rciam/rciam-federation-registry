@@ -134,8 +134,36 @@ class ServiceRepository {
   }
 
 
-  async getAll(tenant){
-    const query = this.pgp.as.format(sql.getAll,{tenant:tenant});
+  async getAll(tenant,filters,authorized){
+    console.log(filters);
+    let filter_strings = {
+      integration_environment_filter : "",
+      protocol_id_filter: "",
+      protocol_filter: "",
+      all_properties_filter:"'client_id',sd.client_id,'allow_introspection',sd.allow_introspection,\
+      'code_challenge_method',sd.code_challenge_method, 'device_code_validity_seconds',sd.device_code_validity_seconds,\
+      'access_token_validity_seconds',sd.access_token_validity_seconds,'refresh_token_validity_seconds',sd.refresh_token_validity_seconds,'refresh_token_validity_seconds',sd.refresh_token_validity_seconds,'client_secret',sd.client_secret,\
+      'reuse_refresh_token',sd.reuse_refresh_token,'jwks',sd.jwks,'jwks_uri',sd.jwks_uri,\
+      'token_endpoint_auth_method',sd.token_endpoint_auth_method,'token_endpoint_auth_signing_alg',sd.token_endpoint_auth_signing_alg,\
+      'clear_access_tokens_on_refresh',sd.clear_access_tokens_on_refresh,'id_token_timeout_seconds',sd.id_token_timeout_seconds,\
+      'metadata_url',sd.metadata_url,'entity_id',sd.entity_id,\
+      'grant_types',(SELECT json_agg((v.value)) FROM service_oidc_grant_types v WHERE sd.id = v.owner_id),\
+      'scope',(SELECT json_agg((v.value)) FROM service_oidc_scopes v WHERE sd.id = v.owner_id),\
+      'redirect_uris',(SELECT json_agg((v.value)) FROM service_oidc_redirect_uris v WHERE sd.id = v.owner_id),"
+    }
+    if(filters.integration_environment){
+      filter_strings.integration_environment_filter = "AND integration_environment='" + filters.integration_environment+ "'";
+    }
+    if(filters.protocol){
+      filter_strings.protocol_filter = "AND protocol='" + filters.protocol+ "'";
+    }
+    if(!authorized){
+      filter_strings.all_properties_filter = ""
+    }
+    if(filters.protocol_id){
+      filter_strings.protocol_id_filter = "AND (entity_id='"+ filters.protocol_id + "' OR client_id='" +filters.protocol_id+ "')"
+    }
+    const query = this.pgp.as.format(sql.getAll,{tenant:tenant,...filter_strings});
     return await this.db.any(query).then(services=>{
       if(services){        
         const res = [];
@@ -150,41 +178,7 @@ class ServiceRepository {
     });
   }
 
-  async getAllPublic(tenant){
-    return this.db.any(sql.getAllPublic,{tenant:tenant}).then(services=>{
-      if(services){
-
-        const res = [];
-        for (let i = 0; i < services.length; i++) {
-          res.push(services[i].json);
-        }
-        return res;
-      }
-      else{
-        return null;
-      }
-    });
-  }
-
-  async getByProtocolIdPublic(integration_environment,protocol_id,tenant){
-    return this.db.oneOrNone(sql.getByProtocolIdPublic,{integration_environment:integration_environment,protocol_id:protocol_id,tenant:tenant}).then(service=>{
-      if(service){
-        return service.json;
-      }else{
-        return null
-      }
-    })
-  }
-
-  async getByProtocolId(integration_environment,protocol_id,tenant){
-    return this.db.oneOrNone(sql.getByProtocolId,{integration_environment:integration_environment,protocol_id:protocol_id,tenant:tenant}).then(service=>{
-      if(service){
-        return service.json;
-      }else{
-        return null
-      }
-    })
-  }
+ 
 
   async getPending(){
     const query = this.pgp.as.format(sql.getPending);

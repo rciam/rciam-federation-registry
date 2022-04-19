@@ -830,7 +830,7 @@ const ServiceForm = (props)=> {
                       </InputRow>
                       {tenant.form_config.extra_fields.organization.active.includes(values.integration_environment)?
                       <React.Fragment>
-                        <InputRow  moreInfo={tenant.form_config.more_info.organization_name} required={tenant.form_config.extra_fields.organization.required.includes(values.integration_environment)} title="Organization" description="Search for your orginization" error={errors.organization_name} touched={touched.organization_name}>
+                        <InputRow  moreInfo={tenant.form_config.more_info.organization_name} required={tenant.form_config.extra_fields.organization.required.includes(values.integration_environment)} title="Organization" description="Search for your organization" error={errors.organization_name} touched={touched.organization_name}>
                             <OrganizationField
                               name='organization_name'
                               placeholder='Type the name of your organization'
