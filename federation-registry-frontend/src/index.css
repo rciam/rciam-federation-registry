@@ -92,6 +92,10 @@ code {
   height:8rem;
 }
 
+.table-image-container .logo-loader-container {
+  height:6rem!important;
+}
+
 
 .logo-loader {
   
@@ -102,6 +106,16 @@ code {
   height: 40px;
   animation: spin 2s linear infinite;
 }
+
+.table-image-container .logo-loader {
+
+  border: 0.2rem solid #f3f3f3; /* Light grey */
+  border-top: 0.2rem solid #3498db; /* Blue */
+  width: 35px;
+  height: 35px;
+}
+
+
 
 @keyframes spin {
   0% { transform: rotate(0deg); }
