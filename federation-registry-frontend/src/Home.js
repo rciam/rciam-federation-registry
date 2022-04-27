@@ -51,7 +51,7 @@ const Home = ()=> {
     },[])
 
    const getServices = () => {
-    fetch(config.host+'tenants/'+tenant_name+'/services', {
+    fetch(config.host+'tenants/'+tenant_name+'/services?integration_environment=production', {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
