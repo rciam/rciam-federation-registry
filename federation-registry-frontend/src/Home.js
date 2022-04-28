@@ -205,12 +205,38 @@ const ServiceTable = ({services}) => {
        }
       },
       { 
-        Header: "Policy Url",
+        Header: "Privacy Policy",
         accessor: 'policy_uri',
         disableFilters: true,
         disableSortBy: true,
         Cell: props => {
-          return props.value === null||props.value === "" ? "(not available)" : <a href={props.value} rel="noreferrer" target="_blank">{props.value}</a>;
+          return (
+            <React.Fragment>
+              {(props.value === null||props.value === "")&&(props.row.original.aup_uri === null||props.row.original.aup_uri === "")?
+                <div style={{marginTop:"0.5rem"}}>
+                  (not available)
+                </div>
+              :
+                <React.Fragment>
+                  <div style={{marginTop:"0.5rem"}}>
+                    {props.value === null||props.value === "" ?
+                      "Policy Url (not available)" 
+                    : 
+                      <a href={props.value} rel="noreferrer" target="_blank">Policy Url</a>
+                    }
+                  </div>
+                  <div style={{marginTop:"0.5rem"}}>
+                    {props.row.original.aup_uri === null||props.row.original.aup_uri === "" ? 
+                      "Aup Url (not available)"
+                    :
+                      <a href={props.row.original.aup_uri} rel="noreferrer" target="_blank">Aup Url</a>
+                    }
+                  </div>
+
+                </React.Fragment>
+              }
+            </React.Fragment>
+            );
        }
       }
     ],

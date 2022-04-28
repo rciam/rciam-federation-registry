@@ -55,6 +55,24 @@ code {
 
 
 /* Home Page */
+.home-services-table {
+  table-layout: fixed;
+}
+
+.home-services-table td {
+  overflow-wrap: break-word;
+}
+.home-services-table tr th:first-child , .home-services-table tr td:first-child {
+  width:10rem;
+}
+.home-services-table tr th:nth-child(2) , .home-services-table tr td:nth-last-child(2) {
+  /* min-width: 8rem; */
+  width:20rem;
+}
+.home-services-table tr th:last-child , .home-services-table tr td:last-child {
+  width:14rem;
+}
+
 .pagination {
   padding-left: 0.2rem;
   padding-bottom: 0.2rem;

@@ -94,7 +94,7 @@ const outdatedNotificationsWorker =  async(interval_seconds) =>{
 const sendOutdatedNotification = async (data) => {
 
   return new Promise(resolve=>{
-    if(process.env.NODE_ENV!=='test-docker'&& process.env.NODE_ENV!=='test'){
+    if(process.env.NODE_ENV!=='test-docker'&& process.env.NODE_ENV!=='test' &&!config.disable_emails){
       var currentDate = new Date();
       readHTMLFile(path.join(__dirname, '../html/outdated_notif.hbs'), function(err, html) {
         let transporter = createTransport();
