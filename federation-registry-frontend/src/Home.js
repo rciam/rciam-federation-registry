@@ -8,9 +8,9 @@ import { useTable ,useFilters,useSortBy,usePagination} from 'react-table';
 import Pagination from 'react-bootstrap/Pagination';
 import FormControl from 'react-bootstrap/FormControl';
 import Table from 'react-bootstrap/Table';
-import Badge from 'react-bootstrap/Badge';
+// import Badge from 'react-bootstrap/Badge';
 import LogoContainer from './Components/LogoContainer.js';
-const {capitalWords} = require('./helpers.js');
+// const {capitalWords} = require('./helpers.js');
 
 const Home = ()=> {
 
@@ -168,14 +168,14 @@ const ServiceTable = ({services}) => {
           return (
             <React.Fragment>
                             <div>
-                              <h5>
+                              {/* <h5>
                                 <Badge 
                                   className="status-badge"
                                   variant={props.row.original.integration_environment==='development'?'secondary':props.row.original.integration_environment==='demo'?'dark':props.row.original.integration_environment==='production'?'info':'warning'}
                                 >
                                   {capitalWords(props.row.original.integration_environment==='development'?'dev':props.row.original.integration_environment==='production'?'prod':props.row.original.integration_environment)}
                                 </Badge>
-                              </h5>
+                              </h5> */}
                               <LogoContainer url={props.value}/>
 
                             </div>
@@ -205,7 +205,7 @@ const ServiceTable = ({services}) => {
        }
       },
       { 
-        Header: "Privacy Policy",
+        Header: "Policies",
         accessor: 'policy_uri',
         disableFilters: true,
         disableSortBy: true,
@@ -220,16 +220,16 @@ const ServiceTable = ({services}) => {
                 <React.Fragment>
                   <div style={{marginTop:"0.5rem"}}>
                     {props.value === null||props.value === "" ?
-                      "Policy Url (not available)" 
+                      "Privacy Policy (not available)" 
                     : 
-                      <a href={props.value} rel="noreferrer" target="_blank">Policy Url</a>
+                      <a href={props.value} rel="noreferrer" target="_blank">Privacy Policy</a>
                     }
                   </div>
-                  <div style={{marginTop:"0.5rem"}}>
+                  <div style={{marginTop:"0.5rem",marginBottom:"0.5rem"}}>
                     {props.row.original.aup_uri === null||props.row.original.aup_uri === "" ? 
-                      "Aup Url (not available)"
+                      "Acceptable Use Policy (not available)"
                     :
-                      <a href={props.row.original.aup_uri} rel="noreferrer" target="_blank">Aup Url</a>
+                      <a href={props.row.original.aup_uri} rel="noreferrer" target="_blank">Acceptable Use Policy</a>
                     }
                   </div>
 
