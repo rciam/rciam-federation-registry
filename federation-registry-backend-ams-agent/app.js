@@ -1,6 +1,7 @@
 
 const axios = require('axios');
 const base64 = require('base-64');
+var config = require('./config');
 var envPath = __dirname + "/.env";
 require('dotenv').config({path:envPath});
 const options = {
@@ -23,7 +24,7 @@ let topics = [];
 let setStateArray = [];
 let subscriptions = {};
 let agents;
-let acl = {"authorized_users": ["andreas-koz"]};
+let acl = {"authorized_users":config.authorized_users};
 var intervalID;
 var setStateTask;
 
@@ -86,7 +87,13 @@ async function setupSub(sub,topic){
 }
 async function setupSubAcl(sub){
   return await axios.get(amsBaseUrl+ '/subscriptions/'+sub+':acl'+amsKey).then(async response =>{
-    if(!response.data.authorized_users.includes(acl.authorized_users[0])){
+    modify_acl = false;
+    acl.authorized_users.forEach(autorised_user=>{
+      if(!response.data.authorized_users.includes(autorised_user)){
+        modify_acl = true;
+      }
+    })  
+    if(modify_acl){
       console.log('\t'+"Modifying Acl for Subscription: "+ sub);
       return await axios.post(amsBaseUrl + "/subscriptions/"+ sub + ":modifyAcl" + amsKey, acl).then(response => {
         console.log(response.status===200?"\t"+"\t"+"Modified Acl for Subscription: "+sub:"\t"+"\t"+"Failed to Modify Acl for Subscription: " + topic);
@@ -104,7 +111,14 @@ async function setupSubAcl(sub){
 async function setupTopicAcl(topic){
   return await axios.get(amsBaseUrl+'/topics/'+topic+':acl'+amsKey).then(async response=>{
     if(response.status===200){
-      if(!response.data.authorized_users.includes(acl.authorized_users[0])){
+      modify_acl = false;
+      acl.authorized_users.forEach(autorised_user=>{
+        if(!response.data.authorized_users.includes(autorised_user)){
+          modify_acl = true;
+        }
+      })
+      
+      if(modify_acl){
         console.log('\t'+"Modifying Acl for Topic: "+ topic);
         return await axios.post(amsBaseUrl + "/topics/"+ topic + ":modifyAcl" + amsKey, acl).then(response => {
           console.log(response.status===200?"\t"+"\t"+"Modified Acl for Topic: "+topic:"\t"+"\t"+"Failed to Modify Acl for Topic: " + topic);
