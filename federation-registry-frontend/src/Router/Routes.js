@@ -14,7 +14,7 @@ import {PageNotFound,TenantHandler} from '../Components/TenantHandler.js';
 import UserHandler from '../Components/UserHandler.js';
 import BroadcastNotifications from '../Components/BrodcastNotifications.js'; 
 import OutdatedNotifications from '../Components/OutdatedNotifications.js'; 
-
+import ServicePreviewPage from '../SerivcePreviewPage.js';
 //import { useParams } from "react-router-dom";
 
 
@@ -31,6 +31,9 @@ const Routes = (props) => {
       </Route>
       <TenantRoute path="/:tenant_name/home">
         <Home/>
+      </TenantRoute>
+      <TenantRoute path="/:tenant_name/service_preview">
+        <ServicePreviewPage/>
       </TenantRoute>
       <Route path="/:tenant_name/invitation/:code">
         <InvitationRoute/>

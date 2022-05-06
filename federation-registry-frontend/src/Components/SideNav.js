@@ -17,6 +17,7 @@ export const SideNav = (props) => {
         <div className="nav-side-category">
           <div className="nav-title">MAIN</div>
           <Link to={"/"+props.tenant_name+"/services"}>{t('nav_link_petitions')}</Link>
+          <Link to={"/"+props.tenant_name+"/service_preview"}>View Services</Link>
         </div>
         <div className="nav-side-category">
           <div className="nav-title">PERSONAL</div>
