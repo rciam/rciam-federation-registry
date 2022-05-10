@@ -2,9 +2,9 @@ import React,{useEffect,useState} from 'react';
 import {useParams } from "react-router-dom";
 import {LoadingPage} from './Components/LoadingPage.js';
 import config from './config.json';
-import ServicePreviewTable from './Components/ServicePreviewTable.js'
+import ServiceOverviewTable from './Components/ServiceOverviewTable.js'
 
-const ServicePreviewPage = ()=> {
+const ServiceOverviewPage = ()=> {
 
   // eslint-disable-next-line
   let {tenant_name} = useParams();
@@ -41,10 +41,10 @@ const ServicePreviewPage = ()=> {
     <React.Fragment>
       {loading?<LoadingPage  loading={loading}/>:null}
       
-      <ServicePreviewTable services={services}/>
+      <ServiceOverviewTable services={services}/>
     </React.Fragment>
   )
 }
 
 
-export default ServicePreviewPage;
+export default ServiceOverviewPage;

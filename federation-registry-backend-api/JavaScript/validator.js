@@ -65,6 +65,7 @@ const getServiceListValidation = () => {
     query('pending').optional({checkFalsy:true}).isBoolean().toBoolean(),
     query('pending_sub').optional({checkFalsy:true}).isString().custom((value,{req,location,path})=> {if(['pending','changes','request_review'].includes(value)){return true}else{return false}}).withMessage('Value is not supported'),
     query('search_string').optional({checkFalsy:true}).isString(),
+    query('owner').optional({checkFalsy:true}).isString(),
     query('error').optional({checkFalsy:true}).isBoolean().toBoolean(),    
   ]
 }

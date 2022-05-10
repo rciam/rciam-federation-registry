@@ -4,7 +4,7 @@ import {userContext,tenantContext} from './context.js';
 import { useHistory,useParams } from "react-router-dom";
 import {LoadingPage} from './Components/LoadingPage.js';
 import config from './config.json';
-import ServicePreviewTable from './Components/ServicePreviewTable.js'
+import ServiceOverviewTable from './Components/ServiceOverviewTable.js'
 
 const Home = ()=> {
 
@@ -96,7 +96,7 @@ const Home = ()=> {
         <p>{localStorage.getItem('invitation')?t('invitation_landing_page_message'):tenant.description}</p>
         
       </div>
-      {services.length>0&&!user?<ServicePreviewTable services={services}/>:null}
+      {services.length>0&&!user?<ServiceOverviewTable services={services}/>:null}
     </React.Fragment>
   )
 }

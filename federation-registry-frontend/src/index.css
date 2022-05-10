@@ -282,7 +282,16 @@ code {
 
 
 /* Service List */
-
+.more_info_container {
+  display: flex;
+  margin: 0 0.5rem 0 0 ;
+  justify-content: center;
+  align-items: center;
+}
+.more_info_container .more_info_field {
+  padding: 0!important;
+  flex-shrink: 0;
+}
 .service-count {
   display:inline-block;
   font-weight: bold;

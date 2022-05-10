@@ -5,7 +5,7 @@ import DropdownButton from 'react-bootstrap/DropdownButton';
 import Dropdown from 'react-bootstrap/Dropdown';
 import Collapse from 'react-bootstrap/Collapse';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {faSync,faPlus,faTimes,faEdit,faExclamation,faCircle,faCheckCircle,faEllipsisV,faEye,faSortDown,faSortUp,faFilter} from '@fortawesome/free-solid-svg-icons';
+import {faSync,faPlus,faTimes,faEdit,faExclamation,faQuestionCircle,faCircle,faCheckCircle,faEllipsisV,faEye,faSortDown,faSortUp,faFilter} from '@fortawesome/free-solid-svg-icons';
 import InputGroup from 'react-bootstrap/InputGroup';
 import FormControl from 'react-bootstrap/FormControl';
 import Button from 'react-bootstrap/Button';
@@ -48,6 +48,7 @@ const ServiceList= (props)=> {
   const [message,setMessage] = useState();
   const [responseTitle,setResponseTitle] = useState(null);
   const [searchString,setSearchString] = useState();
+  const [searchOwnerString,setSearchOwnerString] = useState();
   const [expandFilters,setExpandFilters] = useState();
   const [confirmationData,setConfirmationData] = useState({});
   const [reset,setReset] = useState(false);
@@ -90,11 +91,11 @@ const ServiceList= (props)=> {
   useEffect(()=>{
      getServices();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[searchString,showOwned,showPending,integrationEnvironment,activePage,showOutdated,showPendingSubFilter,showRequestReview,showOrphan,errorFilter]);
+  },[searchString,showOwned,showPending,integrationEnvironment,activePage,showOutdated,showPendingSubFilter,showRequestReview,showOrphan,errorFilter,searchOwnerString]);
 
   useEffect(()=>{
     setActivePage(1);
-  },[searchString,showOwned,showPending,integrationEnvironment,showOutdated,showPendingSubFilter,setShowRequestReview,showOrphan,errorFilter]);
+  },[searchString,showOwned,showPending,integrationEnvironment,showOutdated,showPendingSubFilter,setShowRequestReview,showOrphan,errorFilter,searchOwnerString]);
 
   
 
@@ -124,6 +125,9 @@ const ServiceList= (props)=> {
     }
     if(errorFilter){
       filterString = filterString + '&error=' + true;
+    }
+    if(searchOwnerString){
+      filterString= filterString + '&owner=' + searchOwnerString;
     }
 
     return filterString;
@@ -409,13 +413,40 @@ const ServiceList= (props)=> {
             </Col>
             <Col className="options-search" md={3}>
               <InputGroup className="md-12">
+                {user.actions.includes('get_services')?
+                  <div className='more_info_container'>
+                    <OverlayTrigger
+                      placement='top'
+                      overlay={
+                        <Tooltip id={`tooltip-top`}>
+                          Search by service owners using the :user=username|email query in the Search Input 
+                        </Tooltip>
+                      }
+                    >
+                      <Col md="auto" className='more_info_field'>
+                        <FontAwesomeIcon icon={faQuestionCircle} /> 
+                      </Col>
+                    </OverlayTrigger>
+                  </div>
+                :null}
                 <FormControl
                 placeholder={t('search')}
                 onChange={(e)=>{
                   clearTimeout(filterTimeout);
                   setLoadingList(true);
                   let value = e.target.value;
-                  filterTimeout = setTimeout(function(){setSearchString(value);} ,1000)}}
+                  let regex_1 = /:user *= *\S*/g;
+                  let regex_2 = /( )|:user *=/g;
+                  let userString = "";
+                  let arr = regex_1.exec(value);
+                  value = value.replace(regex_1, '');
+                  value = value.replace(/ +/g,' ');
+                  value = value.replace(/ *$/g,'');
+                  value = value.replace(/^ */g,'');
+                  if(arr &&arr.length>0){
+                    userString = arr[0].replace(regex_2,'');
+                  }
+                  filterTimeout = setTimeout(function(){setSearchString(value); setSearchOwnerString(userString)} ,1000)}}
                 />
                 <InputGroup.Append onClick={()=>{setSearchString('')}}>
                   <InputGroup.Text><FontAwesomeIcon icon={faTimes}/></InputGroup.Text>
