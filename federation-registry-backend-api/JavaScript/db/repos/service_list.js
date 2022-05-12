@@ -38,8 +38,13 @@ class ServiceListRepository {
       orphan_filter_services:'',
       orphan_filter_petitions:'',
       error_filter_services:'',
-      error_filter_petitions:''
+      error_filter_petitions:'',
+      owner_filter_petition:'',
+      owner_filter_services:''
     };
+    if(req.query.owner){
+      params.owner_filter_services = "AND (preferred_username ILIKE '%"+req.query.owner +"%'  OR email ILIKE '%"+ req.query.owner +"%')";
+    }
     if(req.query.outdated){
       params.outdated_disable_petitions = outdated_disable_petitions;
       params.outdated_services = outdated_services;
@@ -49,8 +54,8 @@ class ServiceListRepository {
     }
     if(req.query.search_string){
       params.search_filter_services = "AND (service_name ILIKE '%"+req.query.search_string +"%' OR client_id ILIKE '%"+req.query.search_string +"%')";
-      params.search_filter_petitions = "WHERE service_name ILIKE '%"+req.query.search_string +"%' OR client_id ILIKE '%"+req.query.search_string +"%'";
-     }
+      params.search_filter_petitions = "WHERE (service_name ILIKE '%"+req.query.search_string +"%' OR client_id ILIKE '%"+req.query.search_string +"%')";
+    }
     if(req.query.env){
       params.integration_environment_filter = "AND integration_environment='" + req.query.env + "'"
     }
@@ -70,8 +75,14 @@ class ServiceListRepository {
     if(req.query.owned){
       params.select_own_service = select_own_service_1 + req.user.sub + select_own_service_2;
       params.select_own_petition = "WHERE group_subs.sub = '"+ req.user.sub +"'";
+      if(req.query.owner){
+        params.owner_filter_petition = "AND (preferred_username ILIKE '%"+req.query.owner +"%'  OR email ILIKE '%"+ req.query.owner +"%')"
+      }
     }
     else{
+      if(req.query.owner){
+        params.owner_filter_petition = "WHERE (preferred_username ILIKE '%"+req.query.owner +"%'  OR email ILIKE '%"+ req.query.owner +"%')"
+      }
       params.select_all = select_all_1 + req.user.sub + select_all_2
     }
     if(req.query.pending){

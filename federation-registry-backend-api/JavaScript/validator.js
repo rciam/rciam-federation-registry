@@ -19,7 +19,20 @@ const amsIngestValidation = () => {
     body('decoded_messages').exists().withMessage('No agents found').bail().isArray({min:1}).withMessage('No agents found').bail().toArray(),
     body('decoded_messages.*.id').exists().withMessage('Required Field').bail().isInt({gt:0}).withMessage('Id must be a positive integer'),
     body('decoded_messages.*.agent_id').exists().withMessage('Required Field').bail().isInt({gt:0}).withMessage('Agent id must be a positive integer'),
-    body('decoded_messages.*.external_id').optional({checkFalsy:true}).isInt({gt:0}).withMessage('External id must be a positive integer'),
+    body('decoded_messages.*.external_id').optional({checkFalsy:true}).customSanitizer(value => {
+      try{
+        if (typeof value === 'string' || value instanceof String){
+          return value
+        }
+        else {
+          return value.toString();
+        }
+      }
+      catch(err){
+        return "";
+      }
+    })
+    .isString().withMessage('Must be a string').isLength({min:1, max:36}).bail(),
     body('decoded_messages.*.client_id').optional({checkFalsy:true}).isString().withMessage('Must be a string').bail().isLength({min:2, max:128}).bail()
   ]
 }
@@ -52,6 +65,7 @@ const getServiceListValidation = () => {
     query('pending').optional({checkFalsy:true}).isBoolean().toBoolean(),
     query('pending_sub').optional({checkFalsy:true}).isString().custom((value,{req,location,path})=> {if(['pending','changes','request_review'].includes(value)){return true}else{return false}}).withMessage('Value is not supported'),
     query('search_string').optional({checkFalsy:true}).isString(),
+    query('owner').optional({checkFalsy:true}).isString(),
     query('error').optional({checkFalsy:true}).isBoolean().toBoolean(),    
   ]
 }

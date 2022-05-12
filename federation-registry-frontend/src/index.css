@@ -55,6 +55,24 @@ code {
 
 
 /* Home Page */
+.home-services-table {
+  table-layout: fixed;
+}
+
+.home-services-table td {
+  overflow-wrap: break-word;
+}
+.home-services-table tr th:first-child , .home-services-table tr td:first-child {
+  width:10rem;
+}
+.home-services-table tr th:nth-child(2) , .home-services-table tr td:nth-last-child(2) {
+  /* min-width: 8rem; */
+  width:20rem;
+}
+.home-services-table tr th:last-child , .home-services-table tr td:last-child {
+  width:13rem;
+}
+
 .pagination {
   padding-left: 0.2rem;
   padding-bottom: 0.2rem;
@@ -264,7 +282,16 @@ code {
 
 
 /* Service List */
-
+.more_info_container {
+  display: flex;
+  margin: 0 0.5rem 0 0 ;
+  justify-content: center;
+  align-items: center;
+}
+.more_info_container .more_info_field {
+  padding: 0!important;
+  flex-shrink: 0;
+}
 .service-count {
   display:inline-block;
   font-weight: bold;

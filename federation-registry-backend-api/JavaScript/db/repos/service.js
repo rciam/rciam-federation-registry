@@ -135,7 +135,6 @@ class ServiceRepository {
 
 
   async getAll(tenant,filters,authorized){
-    console.log(filters);
     let filter_strings = {
       integration_environment_filter : "",
       protocol_id_filter: "",
