@@ -19,7 +19,20 @@ const amsIngestValidation = () => {
     body('decoded_messages').exists().withMessage('No agents found').bail().isArray({min:1}).withMessage('No agents found').bail().toArray(),
     body('decoded_messages.*.id').exists().withMessage('Required Field').bail().isInt({gt:0}).withMessage('Id must be a positive integer'),
     body('decoded_messages.*.agent_id').exists().withMessage('Required Field').bail().isInt({gt:0}).withMessage('Agent id must be a positive integer'),
-    body('decoded_messages.*.external_id').optional({checkFalsy:true}).isInt({gt:0}).withMessage('External id must be a positive integer'),
+    body('decoded_messages.*.external_id').optional({checkFalsy:true}).customSanitizer(value => {
+      try{
+        if (typeof value === 'string' || value instanceof String){
+          return value
+        }
+        else {
+          return value.toString();
+        }
+      }
+      catch(err){
+        return "";
+      }
+    })
+    .isString().withMessage('Must be a string').isLength({min:1, max:36}).bail(),
     body('decoded_messages.*.client_id').optional({checkFalsy:true}).isString().withMessage('Must be a string').bail().isLength({min:2, max:128}).bail()
   ]
 }
@@ -52,6 +65,8 @@ const getServiceListValidation = () => {
     query('pending').optional({checkFalsy:true}).isBoolean().toBoolean(),
     query('pending_sub').optional({checkFalsy:true}).isString().custom((value,{req,location,path})=> {if(['pending','changes','request_review'].includes(value)){return true}else{return false}}).withMessage('Value is not supported'),
     query('search_string').optional({checkFalsy:true}).isString(),
+    query('owner').optional({checkFalsy:true}).isString(),
+    query('error').optional({checkFalsy:true}).isBoolean().toBoolean(),    
   ]
 }
 
@@ -117,7 +132,7 @@ const getRecipientsBroadcastNotifications = () => {
     query('contact_types').custom((value,{req,location,path})=>{
       try{
         let contact_types = value.split(',');
-        if(contact_types.length>1){
+        if(contact_types.length>0){
           contact_types.forEach(contact_type=>{
             if(!config.form[req.params.tenant].contact_types.includes(contact_type)){
               throw new Error(contact_type + ' is not a supported contact type, supported contact types (' + config.form[req.params.tenant].contact_types + ')');            
@@ -136,7 +151,7 @@ const getRecipientsBroadcastNotifications = () => {
     query('environments').custom((value,{req,location,path})=>{
       try{
         let environments = value.split(',');
-        if(environments.length>1){
+        if(environments.length>0){
           environments.forEach(environment=>{
             if(!config.form[req.params.tenant].integration_environment.includes(environment)){
               throw new Error(environment + ' is not a supported environment, supported environments (' + config.form[req.params.tenant].integration_environment + ')');            
@@ -155,7 +170,7 @@ const getRecipientsBroadcastNotifications = () => {
     query('protocols').custom((value,{req,location,path})=>{
       try{
         let protocols = value.split(',');
-        if(protocols.length>1){
+        if(protocols.length>0){
           protocols.forEach(protocol=>{
             if(!config.form[req.params.tenant].protocol.includes(protocol)){
               throw new Error(protocol + ' is not a supported protocol, supported protocols (' + config.form[req.params.tenant].protocol + ')');            
@@ -258,7 +273,9 @@ const broadcastNotificationsValidation = () => {
 
 const getServicesValidation = () => {
   return [
-    query('integration_environment').optional({checkFalsy:true}).isString().custom((value,{req,location,path})=> { if(config.form[req.params.tenant].integration_environment.includes(value)){return true}else{return false}}).withMessage('Integration environment value not supported'),
+    query('integration_environment').optional({checkFalsy:true}).isString().custom((value,{req,location,path})=> { if(config.form[req.params.tenant].integration_environment.includes(value)){return true}else{return false}}).withMessage('integration_environment value not supported'),
+    query('protocol').optional({checkFalsy:true}).isString().custom((value,{req,location,path})=> { if(config.form[req.params.tenant].protocol.includes(value)){return true}else{return false}}).withMessage('protocol value not supported'),
+    query('protocol_id').optional({checkFalsy:true}).isString().withMessage('protocol_id must be a string').if((value)=>{return(value.constructor === stringConstructor)}).isLength({min:2, max:128}).withMessage('protocol_id must be between 2 and 128 characters'),
     param('tenant').custom((value,{req,location,path})=>{if(value in config.form){return true}else{return false}}).withMessage('Invalid Tenant in the url'),
   ]
 }

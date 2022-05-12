@@ -1,7 +1,7 @@
 import React,{useState,useEffect,useContext,useRef} from 'react';
 import mapValues from 'lodash/mapValues';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {faCheckCircle,faBan,faSortDown} from '@fortawesome/free-solid-svg-icons';
+import {faCheckCircle,faBan,faSortDown,faExclamationTriangle} from '@fortawesome/free-solid-svg-icons';
 import Tabs from 'react-bootstrap/Tabs';
 import Tab from 'react-bootstrap/Tab';
 import CopyDialog from './Components/CopyDialog.js'
@@ -830,7 +830,7 @@ const ServiceForm = (props)=> {
                       </InputRow>
                       {tenant.form_config.extra_fields.organization.active.includes(values.integration_environment)?
                       <React.Fragment>
-                        <InputRow  moreInfo={tenant.form_config.more_info.organization_name} required={tenant.form_config.extra_fields.organization.required.includes(values.integration_environment)} title="Organization" description="Search for your orginization" error={errors.organization_name} touched={touched.organization_name}>
+                        <InputRow  moreInfo={tenant.form_config.more_info.organization_name} required={tenant.form_config.extra_fields.organization.required.includes(values.integration_environment)} title="Organization" description="Search for your organization" error={errors.organization_name} touched={touched.organization_name}>
                             <OrganizationField
                               name='organization_name'
                               placeholder='Type the name of your organization'
@@ -1109,6 +1109,10 @@ const ServiceForm = (props)=> {
                               default={values.code_challenge_method?values.code_challenge_method:''}
                               changed={props.changes?props.changes.code_challenge_method:null}
                             />
+                            <div className='pkce-tooltip'>
+                              <FontAwesomeIcon icon={faExclamationTriangle}/>
+                              Enabling PKCE is highly recommended to avoid code injection and code replay attacks. If enabled, you need to make sure that your client uses PKCE to prevent errors
+                            </div>
                           </InputRow>
                           <InputRow  moreInfo={tenant.form_config.more_info.allow_introspection} title={t('form_allow_introspection')}>
                             <SimpleCheckbox

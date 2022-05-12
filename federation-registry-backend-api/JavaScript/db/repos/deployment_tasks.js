@@ -24,7 +24,7 @@ class DeploymentTasksRepository {
   }
 
   async resolveTask(service_id,agent_id,state){
-      return await this.db.oneOrNone('DELETE FROM deployment_tasks WHERE service_id=$1 AND agent_id=$2 RETURNING *',[+service_id,+agent_id]).catch(err=>{throw 'Task not found'});    
+      return await this.db.oneOrNone('DELETE FROM deployment_tasks WHERE service_id=$1 AND agent_id=$2 RETURNING *',[+service_id,+agent_id]).then(res=>{if(res){return true}else{return false}}).catch(err=>{ return false; throw 'Task not found'});    
       //return await this.db.oneOrNone('DELETE FROM deployment_tasks WHERE service_id=$1 RETURNING *',[+service_id]).catch(err=>{throw 'Task not found'});
     
   }

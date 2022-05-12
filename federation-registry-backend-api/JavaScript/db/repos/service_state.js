@@ -76,15 +76,15 @@ class ServiceStateRepository {
         let done = await t.deployment_tasks.resolveTask(decoded_message.id,decoded_message.agent_id,decoded_message.state);
         let deployed = await t.deployment_tasks.isDeploymentFinished(decoded_message.id);
         // If we have a an error or if the deployment has finished we have to update the service state
-        if(deployed || decoded_message.state==='error'){
+        if(decoded_message.external_id){
+          updateExternalId.push({id:decoded_message.id,external_id:decoded_message.external_id});
+        }
+        if(decoded_message.client_id){
+          updateClientId.push({id:decoded_message.id,client_id:decoded_message.client_id});
+        }
+        if((deployed || decoded_message.state==='error')&&done){
           updateState.push({id:decoded_message.id,state:decoded_message.state,outdated:false});
           if(deployed){
-            if(decoded_message.external_id){
-              updateExternalId.push({id:decoded_message.id,external_id:decoded_message.external_id});
-            }
-            if(decoded_message.client_id){
-              updateClientId.push({id:decoded_message.id,client_id:decoded_message.client_id});
-            }
             ids.push(decoded_message.id); 
           }
           if(decoded_message.state==='error'){

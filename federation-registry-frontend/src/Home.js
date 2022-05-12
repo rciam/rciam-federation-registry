@@ -4,9 +4,10 @@ import {userContext,tenantContext} from './context.js';
 import { useHistory,useParams } from "react-router-dom";
 import {LoadingPage} from './Components/LoadingPage.js';
 import config from './config.json';
-
+import ServiceOverviewTable from './Components/ServiceOverviewTable.js'
 
 const Home = ()=> {
+
   // eslint-disable-next-line
   let history = useHistory();
   let {tenant_name} = useParams();
@@ -17,6 +18,7 @@ const Home = ()=> {
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   const [loading,setLoading] = useState(false);
+  const [services,setServices] = useState([]);
 
    useEffect(()=>{
     if(user&&user.name){
@@ -34,13 +36,31 @@ const Home = ()=> {
         }
       }
     }
-      
-
      // eslint-disable-next-line
    },[user]);
 
+   useEffect(()=>{
+     getServices();
+      // eslint-disable-next-line
+    },[])
 
-
+   const getServices = () => {
+    fetch(config.host+'tenants/'+tenant_name+'/services?integration_environment=production', {
+      method: 'GET', // *GET, POST, PUT, DELETE, etc.
+      credentials: 'include', // include, *same-origin, omit
+      headers: {
+      'Content-Type': 'application/json'}
+    }).then( response=>{
+          if(response.status===200||response.status===200){return response.json();}
+          else if(response.status!==200){return true}
+          else {return false}
+        }).then(response=>{
+          setLoading(false);
+          if(response){
+            setServices(response);
+          }
+    })
+   }
 
    const activateInvitation = () => {
      fetch(config.host+'tenants/'+tenant_name+'/invitations/activate_by_code', {
@@ -74,9 +94,12 @@ const Home = ()=> {
       <div className="home-container">
         <h1>{t('main_greeting')}</h1>
         <p>{localStorage.getItem('invitation')?t('invitation_landing_page_message'):tenant.description}</p>
+        
       </div>
+      {services.length>0&&!user?<ServiceOverviewTable services={services}/>:null}
     </React.Fragment>
   )
 }
+
 
 export default Home;

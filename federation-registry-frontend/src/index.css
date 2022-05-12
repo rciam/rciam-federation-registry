@@ -55,6 +55,97 @@ code {
 
 
 /* Home Page */
+.home-services-table {
+  table-layout: fixed;
+}
+
+.home-services-table td {
+  overflow-wrap: break-word;
+}
+.home-services-table tr th:first-child , .home-services-table tr td:first-child {
+  width:10rem;
+}
+.home-services-table tr th:nth-child(2) , .home-services-table tr td:nth-last-child(2) {
+  /* min-width: 8rem; */
+  width:20rem;
+}
+.home-services-table tr th:last-child , .home-services-table tr td:last-child {
+  width:13rem;
+}
+
+.pagination {
+  padding-left: 0.2rem;
+  padding-bottom: 0.2rem;
+}
+.home-search-input {
+  margin-top:2rem;
+  width:15rem;
+  margin-bottom:1rem;
+  float:right;
+  margin-right: 0.1rem;
+}
+.pagination .pagination-text-container{
+  display: inline!important;
+  line-height:2.4rem;
+  padding: 0 0.3rem;
+  text-align: center;
+  vertical-align: middle;
+}
+.home-pagination-select {
+  margin-left:0.5rem;
+  width:10rem;
+}
+
+
+.service-table-logo-contianer {
+  width:7rem;
+  height:7rem;
+  background-color:red;
+}
+.service-hide-logo {
+  display:none;
+}
+.logo-loader-container {
+  width:8rem;
+  height:8rem;
+}
+
+.table-image-container .logo-loader-container {
+  height:6rem!important;
+}
+
+
+.logo-loader {
+  
+  border: 0.3rem solid #f3f3f3; /* Light grey */
+  border-top: 0.3rem solid #3498db; /* Blue */
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 2s linear infinite;
+}
+
+.table-image-container .logo-loader {
+
+  border: 0.2rem solid #f3f3f3; /* Light grey */
+  border-top: 0.2rem solid #3498db; /* Blue */
+  width: 35px;
+  height: 35px;
+}
+
+
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.home-service-logo {
+  width: 8rem!important;
+}
+
+.home-table-service-name {
+  font-size: 1.75rem;
+}
 
 .home-container {
   background-color:rgb(245, 245, 245);
@@ -191,6 +282,23 @@ code {
 
 
 /* Service List */
+.more_info_container {
+  display: flex;
+  margin: 0 0.5rem 0 0 ;
+  justify-content: center;
+  align-items: center;
+}
+.more_info_container .more_info_field {
+  padding: 0!important;
+  flex-shrink: 0;
+}
+.service-count {
+  display:inline-block;
+  font-weight: bold;
+  margin-left: 0.3rem;
+  margin-top:0.5rem;
+  margin-bottom: 0.5rem;
+}
 .options-bar .row {
   width:100%!important;
   margin-left: 0!important;
@@ -240,6 +348,7 @@ code {
   font-weight:300;
   table-layout: fixed;
   width:100%;
+  margin-bottom: 0;
 }
 
 .petitions-table tr td:first-child{
@@ -437,6 +546,14 @@ code {
 
 /* Service Form */
 
+.pkce-tooltip {
+  margin-top:0.4rem;
+  color:#D89C46;
+  font-size: 80%;
+}
+.pkce-tooltip svg {
+  margin-right:0.3rem;
+}
 .mb-3 .text-muted {
   margin-top: -0.6rem;
 }
@@ -1696,5 +1813,3 @@ html:lang(gr) .home-container h1 {
   }
     
 }
-
-

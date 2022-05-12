@@ -103,7 +103,7 @@ const OutdatedNotifications = () =>{
       if(response){
         setResponseTitle('Thank your for submitting your request.')
         if(response&&response.user_count>0){
-          setResponseMessage('We found '+response.service_count+ ' outdated service'+ (response.service_count>1?'s':'')+' and sent ' + response.user_count + ' notification'+ (response.user_count>1?'s':'')+' to service owners.');
+          setResponseMessage(response.user_count + ' notification'+(response.user_count>1?'s where ':' was ')+'sent to service owners');
         }
         else if(response&&response.user_count===0){
           setResponseMessage('We could not find any service owners for outdated services in the ' + integrationEnvironment + ' environment');          
