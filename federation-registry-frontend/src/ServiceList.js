@@ -419,7 +419,7 @@ const ServiceList= (props)=> {
                       placement='top'
                       overlay={
                         <Tooltip id={`tooltip-top`}>
-                          Search by service owners using the :user=username|email query in the Search Input 
+                          Search by service owners using the :owner=username|email query in the Search Input 
                         </Tooltip>
                       }
                     >
@@ -435,8 +435,8 @@ const ServiceList= (props)=> {
                   clearTimeout(filterTimeout);
                   setLoadingList(true);
                   let value = e.target.value;
-                  let regex_1 = /:user *= *\S*/g;
-                  let regex_2 = /( )|:user *=/g;
+                  let regex_1 = /:owner *= *\S*/g;
+                  let regex_2 = /( )|:owner *=/g;
                   let userString = "";
                   let arr = regex_1.exec(value);
                   value = value.replace(regex_1, '');
