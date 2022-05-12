@@ -16,7 +16,7 @@ class BannerAlerts {
   
   async getAll(tenant,active){
     let active_selector = active?"AND active=true":"";
-    const query = this.pgp.as.format('SELECT alert_message,type,priority,active,id from banner_alerts WHERE tenant=$1 $2:raw ORDER BY priority DESC',[tenant,active_selector])
+    const query = this.pgp.as.format('SELECT alert_message,type,priority,active from banner_alerts WHERE tenant=$1 $2:raw ORDER BY priority DESC',[tenant,active_selector])
     return await this.db.any(query);
   }
   async update(id,tenant,body){

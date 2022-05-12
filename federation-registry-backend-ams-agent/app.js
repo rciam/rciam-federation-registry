@@ -1,7 +1,6 @@
 
 const axios = require('axios');
 const base64 = require('base-64');
-var config = require('./config');
 var envPath = __dirname + "/.env";
 require('dotenv').config({path:envPath});
 const options = {
@@ -17,8 +16,6 @@ const options_ams = {
 const amsBaseUrl = process.env.AMS_BASE_URL + '/projects/' + process.env.AMS_PROJECT;
 const amsProject = 'projects/' + process.env.AMS_PROJECT;
 const amsKey = "?key=" +process.env.AMS_USER_TOKEN;
-const amsKeyAdmin = "?key=" +process.env.AMS_ADMIN_TOKEN;
-
 
 let tenants = [];
 let pubUrls = {};
@@ -26,7 +23,7 @@ let topics = [];
 let setStateArray = [];
 let subscriptions = {};
 let agents;
-let acl = {"authorized_users":config.authorized_users};
+let acl = {"authorized_users": ["andreas-koz"]};
 var intervalID;
 var setStateTask;
 
@@ -66,10 +63,10 @@ axios.get(process.env.EXPRESS_URL+'/agent/get_agents',options)
 }).catch(err=> {console.log(err)})
 
 async function setupSub(sub,topic){
-  const done = await axios.get(amsBaseUrl+ "/topics/"+topic+"/subscriptions"+amsKeyAdmin).then(async response =>{
+  const done = await axios.get(amsBaseUrl+ "/topics/"+topic+"/subscriptions"+amsKey).then(async response =>{
     if(!response.data.subscriptions.includes('/'+amsProject+'/subscriptions/'+sub)){
       console.log('\t'+"Creating Subscription...");
-      return await axios.put(amsBaseUrl+"/subscriptions/"+sub+amsKeyAdmin,{"topic":amsProject+'/topics/'+topic,"ackDeadlineSeconds":10}).then(async response => {
+      return await axios.put(amsBaseUrl+"/subscriptions/"+sub+amsKey,{"topic":amsProject+'/topics/'+topic,"ackDeadlineSeconds":10}).then(async response => {
         if(response.status===200){
           console.log(response.status===200?'\t'+'\t'+"Created Subscription: "+sub:"Failed to Create Subsctiption: " + sub);
           return true
@@ -88,16 +85,10 @@ async function setupSub(sub,topic){
 
 }
 async function setupSubAcl(sub){
-  return await axios.get(amsBaseUrl+ '/subscriptions/'+sub+':acl'+amsKeyAdmin).then(async response =>{
-    modify_acl = false;
-    acl.authorized_users.forEach(autorised_user=>{
-      if(!response.data.authorized_users.includes(autorised_user)){
-        modify_acl = true;
-      }
-    })  
-    if(modify_acl){
+  return await axios.get(amsBaseUrl+ '/subscriptions/'+sub+':acl'+amsKey).then(async response =>{
+    if(!response.data.authorized_users.includes(acl.authorized_users[0])){
       console.log('\t'+"Modifying Acl for Subscription: "+ sub);
-      return await axios.post(amsBaseUrl + "/subscriptions/"+ sub + ":modifyAcl" + amsKeyAdmin, acl).then(response => {
+      return await axios.post(amsBaseUrl + "/subscriptions/"+ sub + ":modifyAcl" + amsKey, acl).then(response => {
         console.log(response.status===200?"\t"+"\t"+"Modified Acl for Subscription: "+sub:"\t"+"\t"+"Failed to Modify Acl for Subscription: " + topic);
         return (response.status === 200);
       }).catch(err => {
@@ -111,18 +102,11 @@ async function setupSubAcl(sub){
 }
 
 async function setupTopicAcl(topic){
-  return await axios.get(amsBaseUrl+'/topics/'+topic+':acl'+amsKeyAdmin).then(async response=>{
+  return await axios.get(amsBaseUrl+'/topics/'+topic+':acl'+amsKey).then(async response=>{
     if(response.status===200){
-      modify_acl = false;
-      acl.authorized_users.forEach(autorised_user=>{
-        if(!response.data.authorized_users.includes(autorised_user)){
-          modify_acl = true;
-        }
-      })
-      
-      if(modify_acl){
+      if(!response.data.authorized_users.includes(acl.authorized_users[0])){
         console.log('\t'+"Modifying Acl for Topic: "+ topic);
-        return await axios.post(amsBaseUrl + "/topics/"+ topic + ":modifyAcl" + amsKeyAdmin, acl).then(response => {
+        return await axios.post(amsBaseUrl + "/topics/"+ topic + ":modifyAcl" + amsKey, acl).then(response => {
           console.log(response.status===200?"\t"+"\t"+"Modified Acl for Topic: "+topic:"\t"+"\t"+"Failed to Modify Acl for Topic: " + topic);
           return (response.status === 200);
         }).catch(err => {
@@ -137,12 +121,12 @@ async function setupTopicAcl(topic){
 }
 async function setupTopic(topic) {
   console.log('setting ' + topic);
-  const done = await axios.get(amsBaseUrl + "/topics/"+ topic + amsKeyAdmin).then(async response=> {
+  const done = await axios.get(amsBaseUrl + "/topics/"+ topic + amsKey).then(async response=> {
     return(response.status===200);
   }).catch(async err => {
     if(err.response.status===404){
       console.log("\t"+"Creating Topic: "+topic)
-      return await axios.put(amsBaseUrl + "/topics/"+ topic + amsKeyAdmin).then( async response=> {
+      return await axios.put(amsBaseUrl + "/topics/"+ topic + amsKey).then( async response=> {
         console.log(response.status===200?"\t"+"\t"+"Created Topic: "+topic:"\t"+"\t"+"Failed to Create Topic: " + topic);
         return (response.status===200)
       }).catch(err => {

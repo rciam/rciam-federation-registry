@@ -5,7 +5,7 @@ import DropdownButton from 'react-bootstrap/DropdownButton';
 import Dropdown from 'react-bootstrap/Dropdown';
 import Collapse from 'react-bootstrap/Collapse';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {faSync,faPlus,faTimes,faEdit,faExclamation,faQuestionCircle,faCircle,faCheckCircle,faEllipsisV,faEye,faSortDown,faSortUp,faFilter} from '@fortawesome/free-solid-svg-icons';
+import {faSync,faPlus,faTimes,faEdit,faExclamation,faCircle,faCheckCircle,faEllipsisV,faEye,faSortDown,faSortUp,faFilter} from '@fortawesome/free-solid-svg-icons';
 import InputGroup from 'react-bootstrap/InputGroup';
 import FormControl from 'react-bootstrap/FormControl';
 import Button from 'react-bootstrap/Button';
@@ -13,6 +13,7 @@ import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import Table from 'react-bootstrap/Table';
 import config from './config.json';
+import BootstrapImage from 'react-bootstrap/Image';
 import {Link,useParams} from "react-router-dom";
 import Badge from 'react-bootstrap/Badge';
 import Pagination from 'react-bootstrap/Pagination';
@@ -22,8 +23,7 @@ import CopyDialog from './Components/CopyDialog.js';
 import { useTranslation } from 'react-i18next';
 import Alert from 'react-bootstrap/Alert';import {ConfirmationModal} from './Components/Modals';
 import {userContext,tenantContext} from './context.js';
-import ButtonGroup from 'react-bootstrap/ButtonGroup';
-import LogoContainer from './Components/LogoContainer.js';
+import ButtonGroup from 'react-bootstrap/ButtonGroup'
 const {capitalWords} = require('./helpers.js');
 var filterTimeout;
 
@@ -48,7 +48,6 @@ const ServiceList= (props)=> {
   const [message,setMessage] = useState();
   const [responseTitle,setResponseTitle] = useState(null);
   const [searchString,setSearchString] = useState();
-  const [searchOwnerString,setSearchOwnerString] = useState();
   const [expandFilters,setExpandFilters] = useState();
   const [confirmationData,setConfirmationData] = useState({});
   const [reset,setReset] = useState(false);
@@ -66,8 +65,6 @@ const ServiceList= (props)=> {
   const [initialLoading,setInitialLoading] = useState(true);
   const [showOrphan,setShowOrphan] = useState(false);
   const [showNotification,setShowNotification] = useState(true);
-  const [errorFilter,setErrorFilter] = useState(false);
-  const [serviceCount,setServiceCount] = useState(0);
 
   const pageSize = 10;
   
@@ -87,15 +84,14 @@ const ServiceList= (props)=> {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
 
-
   useEffect(()=>{
      getServices();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[searchString,showOwned,showPending,integrationEnvironment,activePage,showOutdated,showPendingSubFilter,showRequestReview,showOrphan,errorFilter,searchOwnerString]);
+  },[searchString,showOwned,showPending,integrationEnvironment,activePage,showOutdated,showPendingSubFilter,showRequestReview,showOrphan]);
 
   useEffect(()=>{
     setActivePage(1);
-  },[searchString,showOwned,showPending,integrationEnvironment,showOutdated,showPendingSubFilter,setShowRequestReview,showOrphan,errorFilter,searchOwnerString]);
+  },[searchString,showOwned,showPending,integrationEnvironment,showOutdated,showPendingSubFilter,setShowRequestReview,showOrphan]);
 
   
 
@@ -122,12 +118,6 @@ const ServiceList= (props)=> {
     }
     if(showOrphan){
       filterString = filterString + '&orphan=' +true;
-    }
-    if(errorFilter){
-      filterString = filterString + '&error=' + true;
-    }
-    if(searchOwnerString){
-      filterString= filterString + '&owner=' + searchOwnerString;
     }
 
     return filterString;
@@ -203,7 +193,6 @@ const ServiceList= (props)=> {
             setOutdatedCount(response.outdated_count);
           }
           setRequestReviewCount(response.request_review_count);
-          setServiceCount(response.full_count);
           createPaginationItems(response.full_count);
           setReset(!reset);
         }
@@ -413,40 +402,13 @@ const ServiceList= (props)=> {
             </Col>
             <Col className="options-search" md={3}>
               <InputGroup className="md-12">
-                {user.actions.includes('get_services')?
-                  <div className='more_info_container'>
-                    <OverlayTrigger
-                      placement='top'
-                      overlay={
-                        <Tooltip id={`tooltip-top`}>
-                          Search by service owners using the :user=username|email query in the Search Input 
-                        </Tooltip>
-                      }
-                    >
-                      <Col md="auto" className='more_info_field'>
-                        <FontAwesomeIcon icon={faQuestionCircle} /> 
-                      </Col>
-                    </OverlayTrigger>
-                  </div>
-                :null}
                 <FormControl
                 placeholder={t('search')}
                 onChange={(e)=>{
                   clearTimeout(filterTimeout);
                   setLoadingList(true);
                   let value = e.target.value;
-                  let regex_1 = /:user *= *\S*/g;
-                  let regex_2 = /( )|:user *=/g;
-                  let userString = "";
-                  let arr = regex_1.exec(value);
-                  value = value.replace(regex_1, '');
-                  value = value.replace(/ +/g,' ');
-                  value = value.replace(/ *$/g,'');
-                  value = value.replace(/^ */g,'');
-                  if(arr &&arr.length>0){
-                    userString = arr[0].replace(regex_2,'');
-                  }
-                  filterTimeout = setTimeout(function(){setSearchString(value); setSearchOwnerString(userString)} ,1000)}}
+                  filterTimeout = setTimeout(function(){setSearchString(value);} ,1000)}}
                 />
                 <InputGroup.Append onClick={()=>{setSearchString('')}}>
                   <InputGroup.Text><FontAwesomeIcon icon={faTimes}/></InputGroup.Text>
@@ -542,12 +504,6 @@ const ServiceList= (props)=> {
                     </React.Fragment>
                   
                   :null}
-                  {user.actions.includes('error_action')?
-                    <div className='filter-container' onClick={()=> setErrorFilter(!errorFilter)}>
-                      <span>Show Malfunctioned</span>
-                      <input type='checkbox' name='filter' checked={errorFilter} onChange={()=>setErrorFilter(!errorFilter)}/>
-                    </div>
-                  :null}
 
                   <div className='select-filter-container'>
                       <select value={integrationEnvironment} onChange={(e)=>{
@@ -591,9 +547,8 @@ const ServiceList= (props)=> {
 
             </tbody>
           </Table>
-          <div className='service-count'>{'('+serviceCount+ " Total Services)"}</div>
+
           <Pagination>{paginationItems}</Pagination>
-          
         </LoadingBar>
         <ProcessingRequest active={asyncResponse}/>
       </div>
@@ -604,6 +559,17 @@ const ServiceList= (props)=> {
 function TableItem(props) {
   // eslint-disable-next-line
   const [tenant,setTenant] = useContext(tenantContext);
+  const [logoUrl,setLogoUrl] = useState(props.service.logo_uri?props.service.logo_uri:process.env.PUBLIC_URL + '/placeholder.png');
+
+
+  useEffect(()=>{
+    if(props.service.logo_uri){
+      var img = new Image();
+      img.onerror = function() { setLogoUrl(process.env.PUBLIC_URL + '/placeholder_not_found.png'); };
+      img.src = props.service.logo_uri;
+
+    }
+  },[props.service.logo_uri])
 
   const {tenant_name} = useParams();
 
@@ -637,7 +603,7 @@ function TableItem(props) {
         </div>
 
         <div className="table-image-container">
-          <LogoContainer url={props.service.logo_uri}/>
+        <BootstrapImage referrerPolicy="no-referrer" src={logoUrl} thumbnail/>
         </div>
 
       </td>
@@ -732,16 +698,6 @@ function TableItem(props) {
               }}><Button variant="success" disabled={props.service.status==="request_review"&&!user.review_restricted}><FontAwesomeIcon icon={faEdit}/>{t('button_review')}</Button></Link>
               </React.Fragment>
               :null}
-              {(user.actions.includes('review_petition')&&props.service.status==='changes'&&!props.service.owned)||(!user.actions.includes('review_restricted')&&props.service.status==='request_review'&&!props.service.owned)?
-                <React.Fragment>
-                  <Link
-                className='button-link'
-                to={{
-                pathname:'/'+tenant_name+(props.service.service_id?"/services/"+props.service.service_id:"")+ (props.service.petition_id?"/requests/"+props.service.petition_id:"") + "/view_request"
-              }}><Button variant="warning" ><FontAwesomeIcon icon={faEye}/>View Request</Button></Link>
-                </React.Fragment>
-                :null
-              }
 
             </Col>
             <Col className='controls-col' md="auto">

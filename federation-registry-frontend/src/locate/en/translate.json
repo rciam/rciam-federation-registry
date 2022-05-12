@@ -63,7 +63,7 @@
     "edit_delete_info":"User requested to deregister the following service.",
     "edit_changes_info":"An administrator has reviewed your registration request and has requested changes.",
     "edit_create_pending_info":"This is a registration request which is currently pending approval from an administrator. You can modify or cancel it here.",
-    "view_create_info":"This service is not registered yet",
+    "view_create_info":"This service is not registered yet, it is currently pending approval from an administrator",
     "changes_info_1_1":"An administrator has reviewed your ",
     "changes_info_1_2":" request and has requested changes.",
     "changes_title":"Comment from Reviewer:",
