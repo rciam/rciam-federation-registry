@@ -277,6 +277,7 @@ const getServicesValidation = () => {
     query('protocol').optional({checkFalsy:true}).isString().custom((value,{req,location,path})=> { if(config.form[req.params.tenant].protocol.includes(value)){return true}else{return false}}).withMessage('protocol value not supported'),
     query('protocol_id').optional({checkFalsy:true}).isString().withMessage('protocol_id must be a string').if((value)=>{return(value.constructor === stringConstructor)}).isLength({min:2, max:128}).withMessage('protocol_id must be between 2 and 128 characters'),
     param('tenant').custom((value,{req,location,path})=>{if(value in config.form){return true}else{return false}}).withMessage('Invalid Tenant in the url'),
+    query('tags').optional({checkFalase:true}).isString().isLength({min:1, max:128}).withMessage('Tags attribute must be between 1 and 128 characters')
   ]
 }
 

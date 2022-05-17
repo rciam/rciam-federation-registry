@@ -148,7 +148,18 @@ class ServiceRepository {
       'metadata_url',sd.metadata_url,'entity_id',sd.entity_id,\
       'grant_types',(SELECT json_agg((v.value)) FROM service_oidc_grant_types v WHERE sd.id = v.owner_id),\
       'scope',(SELECT json_agg((v.value)) FROM service_oidc_scopes v WHERE sd.id = v.owner_id),\
-      'redirect_uris',(SELECT json_agg((v.value)) FROM service_oidc_redirect_uris v WHERE sd.id = v.owner_id),"
+      'redirect_uris',(SELECT json_agg((v.value)) FROM service_oidc_redirect_uris v WHERE sd.id = v.owner_id),",
+      tags_filter:""
+    }
+    if(filters.tags){
+      filter_strings.tags_filter= "AND ("
+      filters.tags.forEach((tag,index)=>{
+        if(index>0){
+          filter_strings.tags_filter = filter_strings.tags_filter + " OR"  
+        }
+        filter_strings.tags_filter = filter_strings.tags_filter + " '"+ tag +"' = ANY(tags)"
+      })
+      filter_strings.tags_filter = filter_strings.tags_filter + ')' 
     }
     if(filters.integration_environment){
       filter_strings.integration_environment_filter = "AND integration_environment='" + filters.integration_environment+ "'";

@@ -21,7 +21,7 @@ SELECT json_build_object('service_name', sd.service_name,'service_description',s
 						 'contacts',
 						 	(SELECT CASE WHEN array_agg(json_build_object('email',v.value,'type',v.type)) IS NULL THEN Array[]::json[] ELSE array_agg(json_build_object('email',v.value,'type',v.type)) END
 							 FROM service_contacts v WHERE sd.id = v.owner_id)
-						 ,'created_at',created_at) json
+						 ,'created_at',created_at,'tags',CASE WHEN (SELECT array_agg((v.tag)) FROM service_tags v WHERE sd.id=v.service_id) IS NULL THEN ARRAY[]::varchar[] ELSE (SELECT array_agg((v.tag)) FROM service_tags v WHERE sd.id=v.service_id) END) json
     FROM (SELECT *
 	FROM (SELECT * FROM service_details WHERE id=${id} AND deleted = FALSE AND tenant=${tenant}) AS foo
 	LEFT JOIN service_details_oidc USING (id)

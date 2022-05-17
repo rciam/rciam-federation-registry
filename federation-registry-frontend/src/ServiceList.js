@@ -24,10 +24,35 @@ import Alert from 'react-bootstrap/Alert';import {ConfirmationModal} from './Com
 import {userContext,tenantContext} from './context.js';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import LogoContainer from './Components/LogoContainer.js';
+import Modal from 'react-bootstrap/Modal';
+
 const {capitalWords} = require('./helpers.js');
 var filterTimeout;
 
+const ManageTags = (props) => {
+  let {tenant_name} = useParams();
+  const handleClose = () => {
+    props.setManageTags(false);
+  }
 
+  return(
+    <React.Fragment>
+      <Modal show={props.manageTags} onHide={handleClose}>
+        <Modal.Header >
+          <Modal.Title>Manage Service Tags</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+        <FormControl
+                placeholder={'Add a custom tag'}
+                onChange={(e)=>{
+                  props.setManageTags(false);
+                }}
+                />
+        </Modal.Body>
+      </Modal>
+    </React.Fragment>
+  )
+}
 const ServiceList= (props)=> {
 
   const query = new Proxy(new URLSearchParams(window.location.search), {
@@ -68,6 +93,7 @@ const ServiceList= (props)=> {
   const [showNotification,setShowNotification] = useState(true);
   const [errorFilter,setErrorFilter] = useState(false);
   const [serviceCount,setServiceCount] = useState(0);
+  
 
   const pageSize = 10;
   
@@ -129,6 +155,7 @@ const ServiceList= (props)=> {
     if(searchOwnerString){
       filterString= filterString + '&owner=' + searchOwnerString;
     }
+    //filterString=filterString + '&tags=test,egi';
 
     return filterString;
   }
@@ -604,7 +631,7 @@ const ServiceList= (props)=> {
 function TableItem(props) {
   // eslint-disable-next-line
   const [tenant,setTenant] = useContext(tenantContext);
-
+  const [manageTags,setManageTags] = useState(false);
   const {tenant_name} = useParams();
 
   const [showCopyDialog,setShowCopyDialog] = useState(false);
@@ -622,6 +649,7 @@ function TableItem(props) {
       <td className="petition-details">
 
         <div className="integration-environment-container">
+          <ManageTags manageTags={manageTags} setManageTags={setManageTags}/>
           <h5>
           <OverlayTrigger
             placement='top'
@@ -793,7 +821,15 @@ function TableItem(props) {
                   </div>
                 </Dropdown.Item>
               :null}
-
+              {user.actions.includes('set_tag')?
+                <Dropdown.Item as='span'>
+                  <div onClick={()=>{
+                    setManageTags(true);
+                  }}>
+                    Manage Tags
+                  </div>
+                </Dropdown.Item>
+              :null}
               <Dropdown.Item as='span'>
                 <div>
                   <Link to={{

@@ -10,10 +10,10 @@ SELECT json_build_object('id',sd.id,'service_name', sd.service_name,'service_des
 							 'owners',
 							 (SELECT json_agg((v.sub))
 						 		FROM group_subs v WHERE sd.group_id = v.group_id)
-							) json
+							,'tags',tags) json
     FROM (SELECT *
-	FROM ((SELECT id,created_at,state FROM service_state WHERE state!='deleted') AS bar LEFT JOIN service_details USING (id)) AS foo
+	FROM ((SELECT *,CASE WHEN (SELECT json_agg((v.tag)) FROM service_tags v WHERE service_details.id=v.service_id) IS NULL THEN ARRAY[]::varchar[] ELSE (SELECT array_agg((v.tag)) FROM service_tags v WHERE service_details.id=v.service_id) END as tags FROM service_details WHERE deleted=false ${integration_environment_filter:raw} ${protocol_filter:raw}) AS bar LEFT JOIN service_state USING (id)) AS foo
 	LEFT JOIN service_details_oidc USING (id)
 	LEFT JOIN service_details_saml USING (id)
-	LEFT JOIN organizations USING(organization_id) WHERE tenant=${tenant}) as sd 
-WHERE state!='deleted' ${integration_environment_filter:raw} ${protocol_filter:raw} ${protocol_id_filter:raw}
+	LEFT JOIN organizations USING(organization_id) WHERE tenant=${tenant}) as sd
+WHERE deleted=false ${protocol_id_filter:raw} ${tags_filter:raw}

@@ -7,7 +7,7 @@ const LogoContainer = (props) => {
           {!imageLoaded?
             <div className={'logo-loader-container img-thumbnail ' + (props.small?'service-logo-small':'')}>
               <div  style={{ backgroundColor: '#C8C8C8' , height:'100%',alignItems:'center',display:'flex',justifyContent: 'center' }}>
-                <div class="logo-loader"></div>
+                <div className="logo-loader"></div>
               </div>
             </div>
           :null}
