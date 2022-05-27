@@ -42,14 +42,17 @@ class ServiceListRepository {
       owner_filter_petition:'',
       owner_filter_services:'',
       tags_filter_services:'',
-      tags_filter_petitions:''
+      tags_filter_petitions:'',
+      get_tags_filter:'',
     };
 
-    if(req.query.tags){
+    if(req.user.role.actions.includes('manage_tags')){
+      params.get_tags_filter = ",'tags',foo.tags"
+    }
+    if(req.query.tags&&req.user.role.actions.includes('manage_tags')){
       req.query.tags = req.query.tags.split(',');
       params.tags_filter_services = ' AND ('
       req.query.tags.forEach((tag,index)=>{
-        console.log(tag)
         if(index>0){
           params.tags_filter_services = params.tags_filter_services + " OR"  
         }
@@ -115,7 +118,7 @@ class ServiceListRepository {
       petition_filter = true;
     }
 
-    if(req.query.tags){
+    if(req.query.tags&&req.user.role.actions.includes('manage_tags') ){
       if(petition_filter){
         params.tags_filter_petitions = ' AND false'
       }

@@ -19,40 +19,17 @@ import Pagination from 'react-bootstrap/Pagination';
 import {LoadingBar,ProcessingRequest} from './Components/LoadingBar';
 import {ListResponseModal,Logout,NotFound} from './Components/Modals.js';
 import CopyDialog from './Components/CopyDialog.js';
+import ManageTags from './Components/ManageTags.js';
 import { useTranslation } from 'react-i18next';
-import Alert from 'react-bootstrap/Alert';import {ConfirmationModal} from './Components/Modals';
+import Alert from 'react-bootstrap/Alert';
+import {ConfirmationModal} from './Components/Modals';
 import {userContext,tenantContext} from './context.js';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import LogoContainer from './Components/LogoContainer.js';
-import Modal from 'react-bootstrap/Modal';
-
 const {capitalWords} = require('./helpers.js');
 var filterTimeout;
 
-const ManageTags = (props) => {
-  let {tenant_name} = useParams();
-  const handleClose = () => {
-    props.setManageTags(false);
-  }
 
-  return(
-    <React.Fragment>
-      <Modal show={props.manageTags} onHide={handleClose}>
-        <Modal.Header >
-          <Modal.Title>Manage Service Tags</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-        <FormControl
-                placeholder={'Add a custom tag'}
-                onChange={(e)=>{
-                  props.setManageTags(false);
-                }}
-                />
-        </Modal.Body>
-      </Modal>
-    </React.Fragment>
-  )
-}
 const ServiceList= (props)=> {
 
   const query = new Proxy(new URLSearchParams(window.location.search), {
@@ -93,7 +70,9 @@ const ServiceList= (props)=> {
   const [showNotification,setShowNotification] = useState(true);
   const [errorFilter,setErrorFilter] = useState(false);
   const [serviceCount,setServiceCount] = useState(0);
-  
+  const [tagString,setTagString] = useState();
+  const [showTags,setShowTags] = useState(false);
+  const [searchInputString,setSearchInputString] = useState();
 
   const pageSize = 10;
   
@@ -117,11 +96,11 @@ const ServiceList= (props)=> {
   useEffect(()=>{
      getServices();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[searchString,showOwned,showPending,integrationEnvironment,activePage,showOutdated,showPendingSubFilter,showRequestReview,showOrphan,errorFilter,searchOwnerString]);
+  },[searchString,showOwned,showPending,integrationEnvironment,activePage,showOutdated,showPendingSubFilter,showRequestReview,showOrphan,errorFilter,searchOwnerString,tagString]);
 
   useEffect(()=>{
     setActivePage(1);
-  },[searchString,showOwned,showPending,integrationEnvironment,showOutdated,showPendingSubFilter,setShowRequestReview,showOrphan,errorFilter,searchOwnerString]);
+  },[searchString,showOwned,showPending,integrationEnvironment,showOutdated,showPendingSubFilter,setShowRequestReview,showOrphan,errorFilter,searchOwnerString,tagString]);
 
   
 
@@ -154,6 +133,9 @@ const ServiceList= (props)=> {
     }
     if(searchOwnerString){
       filterString= filterString + '&owner=' + searchOwnerString;
+    }
+    if(tagString){
+      filterString= filterString + '&tags=' + tagString;
     }
     //filterString=filterString + '&tags=test,egi';
 
@@ -202,7 +184,7 @@ const ServiceList= (props)=> {
       'Content-Type': 'application/json',
       'Authorization': localStorage.getItem('token')
     }}).then(response=>{
-      if(response.status===200){
+      if(response.status===200||response.status===304){
         return response.json();
       }
       else if(response.status===401){
@@ -440,13 +422,13 @@ const ServiceList= (props)=> {
             </Col>
             <Col className="options-search" md={3}>
               <InputGroup className="md-12">
-                {user.actions.includes('get_services')?
+                {user.actions.includes('get_services')||user.actions.includes('manage_tags')?
                   <div className='more_info_container'>
                     <OverlayTrigger
                       placement='top'
                       overlay={
                         <Tooltip id={`tooltip-top`}>
-                          Search by service owners using the :owner=username|email query in the Search Input 
+                          Use :owner=username|email to search by owner {user.actions.includes('manage_tags')?'and :tag=tag to search by service tag':''} in the Search Input.
                         </Tooltip>
                       }
                     >
@@ -458,24 +440,45 @@ const ServiceList= (props)=> {
                 :null}
                 <FormControl
                 placeholder={t('search')}
+                value={searchInputString}
                 onChange={(e)=>{
                   clearTimeout(filterTimeout);
                   setLoadingList(true);
+                  setSearchInputString(e.target.value);
                   let value = e.target.value;
                   let regex_1 = /:owner *= *\S*/g;
+                  let regex_tag_1 = /:tag *= *\S*/g;
+                  let regex_tag_2 = /( )|:tag *=/g;
                   let regex_2 = /( )|:owner *=/g;
                   let userString = "";
+                  let tagString_1 = "";
+                  let tag_arr = [];
                   let arr = regex_1.exec(value);
                   value = value.replace(regex_1, '');
+                  if(user.actions.includes('manage_tags') ){
+                    let tag_arr= regex_tag_1.exec(value);
+                    value = value.replace(regex_tag_1)
+
+                  }
                   value = value.replace(/ +/g,' ');
                   value = value.replace(/ *$/g,'');
                   value = value.replace(/^ */g,'');
                   if(arr &&arr.length>0){
                     userString = arr[0].replace(regex_2,'');
                   }
-                  filterTimeout = setTimeout(function(){setSearchString(value); setSearchOwnerString(userString)} ,1000)}}
+                  if(tag_arr && tag_arr.length>0){
+                    setShowTags(true);
+                    tagString_1 = tag_arr[0].replace(regex_tag_2,'');
+                  }
+                  else{
+                    setShowTags(false);
+                  }
+                  if(value==='undefined'||!value){
+                    value='';
+                  }
+                  filterTimeout = setTimeout(function(){setSearchString(value); setTagString(tagString_1); setSearchOwnerString(userString)} ,1000)}}
                 />
-                <InputGroup.Append onClick={()=>{setSearchString('')}}>
+                <InputGroup.Append role="button" onClick={()=>{setSearchInputString('')}}>
                   <InputGroup.Text><FontAwesomeIcon icon={faTimes}/></InputGroup.Text>
                 </InputGroup.Append>
               </InputGroup>
@@ -605,7 +608,7 @@ const ServiceList= (props)=> {
 
                 {services.length>=1?services.map((item,index)=>{
                     return(
-                      <TableItem service={item} key={index}  setConfirmationData={setConfirmationData} />
+                      <TableItem service={item} key={index}  setConfirmationData={setConfirmationData} getServices={getServices} showTags={showTags} setShowTags={setShowTags} setSearchInputString={setSearchInputString} setTagString={setTagString}/>
                     )
                 }):<tr><td></td><td>{t('no_services')}</td><td></td></tr>}
                 {loadingList?
@@ -633,6 +636,13 @@ function TableItem(props) {
   const [tenant,setTenant] = useContext(tenantContext);
   const [manageTags,setManageTags] = useState(false);
   const {tenant_name} = useParams();
+  const [showTag,setShowTag] = useState(props.showTags);
+
+  useEffect(()=>{
+    setShowTag(props.showTags);
+   // eslint-disable-next-line react-hooks/exhaustive-deps
+ },[props.showTags]);
+
 
   const [showCopyDialog,setShowCopyDialog] = useState(false);
   const toggleCopyDialog = () => {
@@ -649,7 +659,7 @@ function TableItem(props) {
       <td className="petition-details">
 
         <div className="integration-environment-container">
-          <ManageTags manageTags={manageTags} setManageTags={setManageTags}/>
+          <ManageTags manageTags={manageTags} setManageTags={setManageTags} tags={props.service.tags?props.service.tags:[]} service_id={props.service.service_id} getServices={props.getServices}/>
           <h5>
           <OverlayTrigger
             placement='top'
@@ -681,8 +691,50 @@ function TableItem(props) {
             {props.service.status==='changes'?<Badge className="status-badge" variant="info">{t('badge_changes_requested')}</Badge>:null}
             {props.service.status==='request_review'?<Badge className="status-badge" variant="info">Review Requested</Badge>:null}
           </div>
+          <div className="tags-arrow" onClick={()=>{setShowTag(!showTag)}}>
+            {!user.actions.includes('manage_tags')||!props.service.service_id||props.service.tags.length===0?null:showTag?
+              <OverlayTrigger
+                placement='top'
+                overlay={
+                  <Tooltip id={`tooltip-top`}>
+                    Hide Service Tags
+                  </Tooltip>
+                }
+              >
+                <FontAwesomeIcon className='fa-arrow-up' icon={faSortUp}/>
+              </OverlayTrigger>
+              :
+              <OverlayTrigger
+                placement='top'
+                overlay={
+                  <Tooltip id={`tooltip-top`}>
+                    Show Service Tags
+                  </Tooltip>
+                }
+              >
+                <FontAwesomeIcon className='fa-arrow-down' icon={faSortDown}/>
+              </OverlayTrigger>
+              }
+          </div>
+          {user.actions.includes('manage_tags')&&props.service.tags?
+          <Collapse in={user.actions.includes('manage_tags')&&showTag}>
+            <div className="tags-container-servicelist">
+              {props.service.tags.map(tag=>{
+                return (
+                  <Badge onClick={()=>{
+                    props.setSearchInputString(':tag='+tag);
+                    props.setTagString(tag);
+                  }} pill variant="dark">{tag}</Badge>
+                )
+              })}
+
+            </div>
+          </Collapse>:null
+          }
           <p>{props.service.service_description}</p>
+          
         </div>
+        
       </td>
       <td>
         <div className="petition-actions">
@@ -821,8 +873,8 @@ function TableItem(props) {
                   </div>
                 </Dropdown.Item>
               :null}
-              {user.actions.includes('set_tag')?
-                <Dropdown.Item as='span'>
+              {user.actions.includes('manage_tags')&&props.service.service_id?
+                <Dropdown.Item >
                   <div onClick={()=>{
                     setManageTags(true);
                   }}>

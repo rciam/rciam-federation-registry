@@ -111,7 +111,7 @@ export function OrganizationField(props){
                 return false;
               }
               else if(response.status===404){
-                setNotFound('No invitations found');
+                setNotFound('No Organizations found');
                 return false;
               }
               else{

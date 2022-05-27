@@ -67,8 +67,28 @@ const getServiceListValidation = () => {
     query('search_string').optional({checkFalsy:true}).isString(),
     query('owner').optional({checkFalsy:true}).isString(),
     query('error').optional({checkFalsy:true}).isBoolean().toBoolean(),    
+    query('tags').optional({checkFalsy:true}).custom((value,{req,location,path})=>{
+      try{
+        if(value){
+          let tags = value.split(',');
+          if(tags.length>0){
+            tags.forEach(tag=>{
+              if(tag.length>36){
+                throw new Error('The Tag value is not suppported because it is too long (' +tag +'), max 36 characters');            
+              }
+            })
+          } 
+        }
+        return true 
+      }
+      catch(err){
+        throw new Error(err);
+      }
+    })
   ]
 }
+
+
 
 
 const postAgentValidation = () => {
@@ -110,7 +130,7 @@ const postBannerAlertValidation = () => {
 const putBannerAlertValidation = () =>{
   return [
     param('tenant').custom((value,{req,location,path})=>{if(value in config.form){return true}else{return false}}).withMessage('Invalid Tenant in the url'),
-    param('id').exists().isInt({gt:0}).withMessage('id parametes must be a possitive integer'),
+    param('id').exists().isInt({gt:0}).withMessage('id parameter must be a possitive integer'),
     body('alert_message').optional().isString().withMessage('alert_message must be a string').isLength({min:4,max:1024}).withMessage('alert_message must be from 4 to 1024 characters long'),
     body('type').optional().bail().custom((value)=>{
       let supported_types = ['warning','error','info'];
@@ -277,7 +297,42 @@ const getServicesValidation = () => {
     query('protocol').optional({checkFalsy:true}).isString().custom((value,{req,location,path})=> { if(config.form[req.params.tenant].protocol.includes(value)){return true}else{return false}}).withMessage('protocol value not supported'),
     query('protocol_id').optional({checkFalsy:true}).isString().withMessage('protocol_id must be a string').if((value)=>{return(value.constructor === stringConstructor)}).isLength({min:2, max:128}).withMessage('protocol_id must be between 2 and 128 characters'),
     param('tenant').custom((value,{req,location,path})=>{if(value in config.form){return true}else{return false}}).withMessage('Invalid Tenant in the url'),
-    query('tags').optional({checkFalase:true}).isString().isLength({min:1, max:128}).withMessage('Tags attribute must be between 1 and 128 characters')
+    query('tags').optional({checkFalsy:true}).custom((value,{req,location,path})=>{
+      try{
+        if(value){
+          let tags = value.split(',');
+          if(tags.length>0){
+            tags.forEach(tag=>{
+              if(tag.length>36){
+                throw new Error('The Tag value is not suppported because it is too long +(' +tag +') max 36 characters');            
+              }
+            })
+          } 
+        }
+        return true 
+      }
+      catch(err){
+        throw new Error(err);
+      }
+    }),
+    query('exclude_tags').optional({checkFalsy:true}).custom((value,{req,location,path})=>{
+      try{
+        if(value){
+          let tags = value.split(',');
+          if(tags.length>0){
+            tags.forEach(tag=>{
+              if(tag.length>36){
+                throw new Error('The Tag value is not suppported because it is too long +(' +tag +') max 36 characters');            
+              }
+            })
+          } 
+        }
+        return true 
+      }
+      catch(err){
+        throw new Error(err);
+      }
+    })
   ]
 }
 

@@ -1,4 +1,4 @@
-const sql = require('../sql').tags;
+const sql = require('../sql').service_tags;
 //const {calcDiff,extractCoc} = require('../../functions/helpers.js');
 const cs = {}; // Reusable ColumnSet objects.
 
@@ -8,45 +8,48 @@ const cs = {}; // Reusable ColumnSet objects.
 
 
 
-class SearviceTags {
+class ServiceTags {
   constructor(db, pgp) {
       this.db = db;
       this.pgp = pgp;
       // set-up all ColumnSet objects, if needed:
-      cs.insert = new pgp.helpers.ColumnSet(['service_id','tag']);
+      cs.insert = new pgp.helpers.ColumnSet(['service_id','tag','tenant']);
   }
-  async getByServiceId(service_id){
-    return this.db.any(sql.getByServiceId,{service_id:+service_id}).then(tags=>{
-      return tags;
+  async getByServiceId(tenant,service_id){
+    return this.db.any(sql.getByServiceId,{service_id:+service_id,tenant:tenant}).then(result=>{
+      return result[0].tags;
     });
   }
 
-  async getAll(search_string){
+  async getAll(tenant_name,search_string){
       if(search_string){
-        search_string = " WHERE LOWER(tag) ILIKE '%"+search_string.toLowerCase() +"%'";
+        search_string = " AND LOWER(tag) ILIKE '%"+search_string.toLowerCase() +"%'";
       }
       else{
           search_string = ""
       }
-      return this.db.any(sql.getAll,{search_string})
+      const query = this.pgp.as.format(sql.getAll,{tenant_name:tenant_name,search_string});
+      return this.db.any(query).then(response=>{
+        return response[0].tags;
+      })
   }
 
-  async addTags(tags,service_id){
+  async addTags(tenant,service_id,tags){
     let data = [];
     tags.forEach(tag=>{
-        data.push({tag:tag,service_id:service_id})
+        data.push({tenant:tenant,tag:tag,service_id:service_id});
     })
-    const query = this.pgp.helpers.insert(data,cs.multi,'service_tags');
+    const query = this.pgp.helpers.insert(data,cs.insert,'service_tags');
     return this.db.none(query).then(data => {
-        return true
+      return true
     })
     .catch(error => {
         throw error
     });
   }
 
-  async removeTags(tags,service_id){
-      this.db.any('DELETE from serivce_tags WHERE service_id=$1 AND tag IN ($2:csv)',[+service_id,tags])
+  async deleteTags(tenant,service_id,tags){
+     return this.db.any('DELETE from service_tags WHERE service_id=$1 AND tag IN ($2:csv) AND tenant=$3',[+service_id,tags,tenant])
   }
 
 }
@@ -59,4 +62,4 @@ class SearviceTags {
 
 
 
-module.exports = SearviceTags;
+module.exports = ServiceTags;

@@ -78,7 +78,7 @@ export const NavbarTop = (props)=>{
             </Dropdown.Item>
             <Dropdown.Item onClick={()=>{
               localStorage.removeItem('token');
-              window.location.assign(tenant[0].issuer_url+ 'saml/logout?redirect='+ window.location.protocol+ "//" + window.location.hostname + (window.location.port?":"+window.location.port:"") + (config.basename==="/"?"/":config.basename+"/") +tenant[0].name);
+              window.location.assign(tenant[0].logout_uri);
             }}>
               {t('logout')}<FontAwesomeIcon icon={faSignOutAlt}/>
             </Dropdown.Item>

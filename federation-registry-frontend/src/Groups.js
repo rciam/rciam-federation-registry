@@ -570,7 +570,7 @@ const GroupsPage = (props) => {
 
                   </Tab>
                   <Tab eventKey="service" title="View Service">
-                    {service?<ServiceForm initialValues={service} disabled={true} {...props}/>:<LoadingBar/>}
+                    {service?<ServiceForm user={user[0]} initialValues={service} disabled={true} {...props}/>:<LoadingBar/>}
                   </Tab>
       </Tabs>
       </React.Fragment>

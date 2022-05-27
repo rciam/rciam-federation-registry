@@ -997,6 +997,70 @@ describe('Service registry API Integration Tests', function() {
         done();});
     })
 
+  });
+  describe('# Test Tags', function(){
+    userToken = setUser(users.egi.manager_user);
+    it('Should delete tags for service',function(done){
+      var req = request(server).delete('/tenants/egi/tags/services/2').set({Authorization: userToken}).send(['test','custom2','custom',"custom4","egi"]);
+      req.set('Accept','application/json')
+      .expect('Content-Type',/json/)
+      .expect(200)
+      .end(function(err,res){
+        expect(res.statusCode).to.equal(200);
+        done();
+      });
+    }),
+    it('Should get available tags for service',function(done){
+      var req = request(server).get('/tenants/egi/tags/services/1').set({Authorization: userToken});
+      req.set('Accept','application/json')
+      .expect('Content-Type',/json/)
+      .expect(200)
+      .end(function(err,res){
+        let body = res.body;
+        expect(body.length).to.equal(2);
+        expect(body.includes('egi')).to.equal(true);
+        expect(body.includes('test')).to.equal(true);
+        expect(res.statusCode).to.equal(200);
+        done();
+      });
+    });
+    it('Should create tags for service',function(done){
+      var req = request(server).post('/tenants/egi/tags/services/2').set({Authorization: userToken}).send(['test','custom2','custom',"custom4","egi"]);
+      req.set('Accept','application/json')
+      .expect('Content-Type',/json/)
+      .expect(200)
+      .end(function(err,res){
+        expect(res.statusCode).to.equal(200);
+        done();
+      });
+    });
+    it('Should delete tags for service',function(done){
+      var req = request(server).delete('/tenants/egi/tags/services/2').set({Authorization: userToken}).send(['test','egi','custom']);
+      req.set('Accept','application/json')
+      .expect('Content-Type',/json/)
+      .expect(200)
+      .end(function(err,res){
+        expect(res.statusCode).to.equal(200);
+        done();
+      });
+    });
+    it('Should get all available tags for Egi',function(done){
+      var req = request(server).get('/tenants/egi/tags').set({Authorization: userToken});
+      req.set('Accept','application/json')
+      .expect('Content-Type',/json/)
+      .expect(200)
+      .end(function(err,res){
+        let body = res.body;
+        expect(body.length).to.equal(4);
+        expect(body.includes('egi')).to.equal(true);
+        expect(body.includes('test')).to.equal(true);
+        expect(body.includes('custom2')).to.equal(true);
+        expect(body.includes('custom4')).to.equal(true);
+        expect(res.statusCode).to.equal(200);
+        done();
+      });
+    })
+
   })
   
 });

@@ -16,4 +16,4 @@ SELECT json_build_object('id',sd.id,'service_name', sd.service_name,'service_des
 	LEFT JOIN service_details_oidc USING (id)
 	LEFT JOIN service_details_saml USING (id)
 	LEFT JOIN organizations USING(organization_id) WHERE tenant=${tenant}) as sd
-WHERE deleted=false ${protocol_id_filter:raw} ${tags_filter:raw}
+WHERE deleted=false ${protocol_id_filter:raw} ${tags_filter:raw} ${exclude_tags_filter:raw}

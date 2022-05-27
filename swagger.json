@@ -30,9 +30,128 @@ tags:
   description: "Manage Tenant Deployer Agents"
 - name: "Banner Alerts"
   description: "Banner notification alerts"
+- name: "Service Tags"
+  description: "Managing Service Rags"
 schemes:
 - "https"
 paths:
+  /tenants/{name}/tags:
+    get:
+      tags:
+      - Service Tags
+      summary: "Get all tags"
+      description: "Get all available tags for a given tenant"
+      parameters:
+        - in: query
+          name: tag
+          type: string
+          description: "Search string to filter tags result"
+          required: false
+        - in: path
+          name: name
+          type: string
+          description: "Tenant that the request is targeting"
+          required: true
+      responses: 
+        "200":
+          description: "OK"
+          schema: 
+            type: "array"
+            items:
+              type: "string"
+        "401": 
+          description: "Unauthenticated request" 
+        "500":
+          description: "Error"
+  /tenants/{name}/tags/services/{id}:
+    get:
+      tags:
+      - Service Tags
+      summary: "Get all tags of a service"
+      description: "Get all available tags attached to a service"
+      parameters:
+        - in: path
+          name: id
+          type: integer
+          description: "Id of the requested service"
+          required: true
+        - in: path
+          name: name
+          type: string
+          description: "Tenant that the request is targeting"
+          required: true
+      responses: 
+        "200":
+          description: "OK"
+          schema: 
+            type: "array"
+            items:
+              type: "string"
+        "401": 
+          description: "Unauthenticated request" 
+        "500":
+          description: "Error"
+    post:
+      tags:
+      - Service Tags
+      summary: "Create new tags for a service"
+      description: "Create new tags for a service"
+      parameters:
+        - in: path
+          name: id
+          type: integer
+          description: "Id of the requested service"
+          required: true
+        - in: path
+          name: name
+          type: string
+          description: "Tenant that the request is targeting"
+          required: true
+        - in: body
+          name: body
+          schema:
+            type: "array"
+            description: "Array of string tags"
+            items: 
+              type: "string"
+      responses: 
+        "200":
+          description: "OK"
+        "401": 
+          description: "Unauthenticated request" 
+        "500":
+          description: "Error"
+    delete:
+      tags:
+      - Service Tags
+      summary: "Delete serivce tags"
+      description: "Delete tags for a service"
+      parameters:
+        - in: path
+          name: id
+          type: integer
+          description: "Id of the requested service"
+          required: true
+        - in: path
+          name: name
+          type: string
+          description: "Tenant that the request is targeting"
+          required: true
+        - in: body
+          name: body
+          schema:
+            type: "array"
+            description: "Array of string tags"
+            items: 
+              type: "string"
+      responses: 
+        "200":
+          description: "OK"
+        "401": 
+          description: "Unauthenticated request" 
+        "500":
+          description: "Error"
+    
   /tenants/{name}/login:
     get:
       tags:
@@ -2230,7 +2349,6 @@ definitions:
         type: "array"
         items:
           type: "object"
-          properties:
           $ref: "#/definitions/Petition"
   BannerAlert:
     type: "object"

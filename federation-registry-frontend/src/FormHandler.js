@@ -160,7 +160,7 @@ const EditService = (props) => {
                 {editPetition&&changes?
                   <React.Fragment>
                     <CommentsAlert alert={"An Operator has requested reviewal for the following request"} comment={petitionData.metadata.comment} />
-                    <ServiceForm disableEnvironment={true} initialValues={editPetition} changes={changes} {...petitionData.metadata} {...props}/>
+                    <ServiceForm disableEnvironment={true} initialValues={editPetition} user={user} changes={changes} {...petitionData.metadata} {...props}/>
                   </React.Fragment>
                     :<LoadingBar loading={true}/>
   
@@ -174,7 +174,7 @@ const EditService = (props) => {
                 {petitionData?
                   <React.Fragment>
                     <CommentsAlert alert={"An Operator has requested reviewal for the following request"} comment={petitionData.metadata.comment} />
-                    <ServiceForm initialValues={petitionData.petition} {...petitionData.metadata} {...props}/>
+                    <ServiceForm initialValues={petitionData.petition} user={user} {...petitionData.metadata} {...props}/>
                   </React.Fragment>:<LoadingBar loading={true}/>}
               </React.Fragment>
             :
@@ -185,7 +185,7 @@ const EditService = (props) => {
                 {service?
                   <React.Fragment>
                     <CommentsAlert alert={"An Operator has requested reviewal for the following request"} comment={petitionData.metadata.comment} />
-                    <ServiceForm copy={true} initialValues={service} {...petitionData.metadata} {...props}/>
+                    <ServiceForm copy={true} initialValues={service} user={user} {...petitionData.metadata} {...props}/>
                   </React.Fragment>:<LoadingBar loading={true}/>}
               </React.Fragment>
             }
@@ -253,11 +253,14 @@ const ViewRequest = (props) => {
   const [notFound,setNotFound] = useState(false);
   const tenant = useContext(tenantContext);
   const [service,setService] = useState();
-  
+  const [user] = useContext(userContext);
+
+
   useEffect(()=>{
     
     localStorage.removeItem('url');
     getData();
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
 
@@ -280,6 +283,7 @@ const ViewRequest = (props) => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[petitionData, service, editPetition]);
+
 
   const getData = async () => {
     if(service_id){
@@ -307,7 +311,6 @@ const ViewRequest = (props) => {
         }
         }).then(response=> {
         if(response){
-          console.log(response.service);
           setService(response.service);
         }
       });
@@ -363,7 +366,7 @@ return (
               {editPetition&&changes?
                 <React.Fragment>
                   <CommentsAlert alert={petitionData.metadata.status==='changes'?"A Reviewer has requested changes from the owners of the following request":"An Operator has requested reviewal for the following request"} comment={petitionData.metadata.comment} />
-                  <ServiceForm disableEnvironment={true} disabled={true} initialValues={editPetition} changes={changes} {...petitionData.metadata} {...props}/>
+                  <ServiceForm disableEnvironment={true} user={user} disabled={true} initialValues={editPetition} changes={changes} {...petitionData.metadata} {...props}/>
                 </React.Fragment>
                   :<LoadingBar loading={true}/>
 
@@ -377,7 +380,7 @@ return (
               {petitionData?
                 <React.Fragment>
                   <CommentsAlert alert={petitionData.metadata.status==='changes'?"A Reviewer has requested changes from the owners of the following request":"An Operator has requested reviewal for the following request"} comment={petitionData.metadata.comment} />
-                  <ServiceForm initialValues={petitionData.petition} disabled={true} {...petitionData.metadata} {...props}/>
+                  <ServiceForm initialValues={petitionData.petition} user={user} disabled={true} {...petitionData.metadata} {...props}/>
                 </React.Fragment>:<LoadingBar loading={true}/>}
             </React.Fragment>
           :
@@ -388,7 +391,7 @@ return (
               {service?
                 <React.Fragment>
                   <CommentsAlert alert={petitionData.metadata.status==='changes'?"A Reviewer has requested changes from the owners of the following request":"An Operator has requested reviewal for the following request"} comment={petitionData.metadata.comment} />
-                  <ServiceForm copy={true} initialValues={service} disabled={true} {...petitionData.metadata} {...props}/>
+                  <ServiceForm copy={true} initialValues={service} user={user} disabled={true} {...petitionData.metadata} {...props}/>
                 </React.Fragment>:<LoadingBar loading={true}/>}
             </React.Fragment>
           }
@@ -523,7 +526,7 @@ const ViewService = (props)=>{
             <Alert variant='primary' className='form-alert'>
               Service was registered at: <b>{service.created_at.slice(0,10).split('-').join('/')+ ' ' + service.created_at.slice(11,19).split('-').join('/')}</b>
             </Alert>:null}
-          <ServiceForm initialValues={service} disabled={true} copyButton={true} owned={owned} {...props}/>
+          <ServiceForm initialValues={service} user={user} disabled={true} copyButton={true} owned={owned} {...props}/>
         </React.Fragment>
         :service_id?<LoadingBar loading={true}/>:petitionData?
         <React.Fragment>
@@ -532,7 +535,7 @@ const ViewService = (props)=>{
           </Alert>
           
           
-          <ServiceForm initialValues={petitionData.petition} copyButton={true} owned={owned} disabled={true} {...petitionData.metadata} {...props}/>
+          <ServiceForm initialValues={petitionData.petition} user={user} copyButton={true} owned={owned} disabled={true} {...petitionData.metadata} {...props}/>
         </React.Fragment>
       :petition_id?<LoadingBar loading={true}/>:null
       }
@@ -543,6 +546,7 @@ const ViewService = (props)=>{
 const CommentsAlert = (props) => {
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
+  const [user] = useContext(userContext);
 
   return(
     <React.Fragment>
@@ -567,6 +571,8 @@ const CommentsAlert = (props) => {
 }
 
 const RequestedChangesAlert = (props) => {
+  const [user] = useContext(userContext);
+
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
 
@@ -594,10 +600,10 @@ const RequestedChangesAlert = (props) => {
               </Alert>
           :null
           }
-          {props.tab1?<ServiceForm disableEnvironment={true} initialValues={props.tab1} {...props}/>:<LoadingBar loading={true}/>}
+          {props.tab1?<ServiceForm user={user} disableEnvironment={true} initialValues={props.tab1} {...props}/>:<LoadingBar loading={true}/>}
         </Tab>
       <Tab eventKey="service" title="View Deployed Service">
-        {props.tab2?<ServiceForm initialValues={props.tab2} disabled={true} {...props} />:<LoadingBar loading={true}/>}
+        {props.tab2?<ServiceForm user={user} initialValues={props.tab2} disabled={true} {...props} />:<LoadingBar loading={true}/>}
       </Tab>
     </Tabs>
     </React.Fragment>
@@ -612,6 +618,8 @@ const CopyService = (props)=> {
   const [notFound,setNotFound] = useState(false);
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
+  const [user] = useContext(userContext);
+
 
   useEffect(()=>{
     getData();
@@ -650,7 +658,7 @@ const CopyService = (props)=> {
     <React.Fragment>
       <NotFound notFound={notFound}/>
       <Logout logout={logout}/>
-      {service?<ServiceForm initialValues={service} copy={true} />:<LoadingBar loading={true}/>}
+      {service?<ServiceForm user={user} initialValues={service} copy={true} />:<LoadingBar loading={true}/>}
     </React.Fragment>
   )
 }
