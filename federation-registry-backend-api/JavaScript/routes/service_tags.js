@@ -25,14 +25,19 @@ router.get('',authenticate,actionAuthorization('manage_tags'), (req,res,next)=>{
 
 router.post('/services/:service_id',authenticate,actionAuthorization('manage_tags'),validatePostTags(),validate,(req,res,next)=>{
   try{
-    db.service_tags.addTags(req.params.tenant,req.params.service_id,req.body).then(response=>{
-      if(response){
-        res.status(200).end();
-      }
-      else {
-        res.status(409).end()
-      }
-    })
+    if(Array.isArray(req.body)&&req.body.length>0){
+      db.service_tags.addTags(req.params.tenant,req.params.service_id,req.body).then(response=>{
+        if(response){
+          res.status(200).end();
+        }
+        else {
+          res.status(409).end()
+        }
+      })
+    }
+    else{
+      res.status(422).send('Invalid body format')
+    }
   }
   catch(err){
     next(err)

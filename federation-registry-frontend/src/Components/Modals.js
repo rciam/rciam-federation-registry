@@ -1,4 +1,4 @@
-import React,{useContext} from 'react';
+import React,{useContext,useState} from 'react';
 import Modal from 'react-bootstrap/Modal';
 import config from '../config.json';
 import {useHistory,useParams} from "react-router-dom";
@@ -38,15 +38,17 @@ export const Logout = (props) => {
 
 export const NotFound = (props) => {
   const history = useHistory();
+  const [close,setClose] = useState(false);
   const tenant = useContext(tenantContext);
   const handleClose = () => {
+    setClose(true);
     history.push('/'+(tenant&&tenant[0]?tenant[0].name:null)+'/services');
   }
   return (
     <Translation>
       {t=> {
         return(
-          <Modal show={props.notFound||props.notAuthorised} onHide={handleClose}>
+          <Modal show={props.notFound||props.notAuthorised||close} onHide={handleClose}>
             <Modal.Header >
               <Modal.Title>{props.notFound?"Resourse requested was not found":props.notAuthorised?"Resourse not authorised":null}</Modal.Title>
             </Modal.Header>

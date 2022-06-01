@@ -51,7 +51,7 @@ db.tenants.getInit().then(async tenants => {
         client_id: tenant.client_id,
         client_secret: tenant.client_secret,
         redirect_uris: process.env.REDIRECT_URI + tenant.name,
-        logout_uri: issuer.end_session_endpoint + '?redirect_uri=' + tenant.base_url         
+        logout_uri: issuer.end_session_endpoint + '?post_logout_redirect_uri=' + encodeURIComponent(tenant.base_url)+ '&redirect=' + encodeURIComponent(tenant.base_url)         
       });
 
       clients[tenant.name].client_id = tenant.client_id;

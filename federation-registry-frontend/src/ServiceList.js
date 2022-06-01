@@ -719,9 +719,9 @@ function TableItem(props) {
           {user.actions.includes('manage_tags')&&props.service.tags?
           <Collapse in={user.actions.includes('manage_tags')&&showTag}>
             <div className="tags-container-servicelist">
-              {props.service.tags.map(tag=>{
+              {props.service.tags.map((tag,index)=>{
                 return (
-                  <Badge onClick={()=>{
+                  <Badge key={index} onClick={()=>{
                     props.setSearchInputString(':tag='+tag);
                     props.setTagString(tag);
                   }} pill variant="dark">{tag}</Badge>
