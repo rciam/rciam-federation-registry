@@ -760,7 +760,7 @@ const ServiceForm = (props)=> {
       <div className="tab-panel">
               {showCopyDialog?<CopyDialog service_id={service_id} show={showCopyDialog} toggleCopyDialog={toggleCopyDialog} current_environment={props.initialValues.integration_environment} />:null}
               <ProcessingRequest active={asyncResponse}/>
-              {props.user.actions.includes('manage_tags')?
+              {props.user.actions.includes('manage_tags')&&service_id?
                 <div className='service-form-tags-container'>
                   <hr/>
                   <h5>Service Tags </h5>

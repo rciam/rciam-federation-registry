@@ -789,7 +789,14 @@ textarea {
 
 /* Inputs */
 
+.logo-input {
+  max-height: 30rem;
+}
 
+.logo-input {
+  border: 2px solid #ced4da!important;/* Blue */
+  
+}
 .input-edited {
   border: 1px solid #FFC107!important;/* Blue */
   border-radius: 0.3rem;

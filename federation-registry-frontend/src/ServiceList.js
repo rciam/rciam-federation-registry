@@ -723,6 +723,7 @@ function TableItem(props) {
                 return (
                   <Badge key={index} onClick={()=>{
                     props.setSearchInputString(':tag='+tag);
+                    props.setShowTags(true);
                     props.setTagString(tag);
                   }} pill variant="dark">{tag}</Badge>
                 )
