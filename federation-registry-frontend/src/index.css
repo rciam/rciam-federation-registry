@@ -607,6 +607,10 @@ code {
 
 /* Service Form */
 
+.service-form-tags-container small {
+  margin-top:0;
+}
+
 .tag-button-service-form:disabled {
   opacity: 1!important;
 }
@@ -788,6 +792,16 @@ textarea {
 
 
 /* Inputs */
+.application-type-container {
+  margin-left: -0.1rem;
+}
+.application-type-container div {
+  display: inline;
+  margin-right: 0.5rem;
+}
+.application-type-container input {
+  margin-right: 0.2rem;
+}
 
 .logo-input {
   max-height: 30rem;
@@ -1688,9 +1702,7 @@ html:lang(gr) .home-container h1 {
   overflow: hidden;
 }
 .notifications-input-container div {
-  height:2.8rem;
   padding:0.2rem 0.2rem 0 0.2rem; 
-
 }
 .notifications-error-up {
   margin-top: -0.3rem;

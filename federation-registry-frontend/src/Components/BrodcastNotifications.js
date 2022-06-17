@@ -96,6 +96,7 @@ const BroadcastNotifications = () =>{
           return false;
         }
         else {
+          setRecipients([])
           return false
         }
       }).then(response=> {

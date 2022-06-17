@@ -71,7 +71,6 @@ const ServiceList= (props)=> {
   const [errorFilter,setErrorFilter] = useState(false);
   const [serviceCount,setServiceCount] = useState(0);
   const [tagString,setTagString] = useState();
-  const [showTags,setShowTags] = useState(false);
   const [searchInputString,setSearchInputString] = useState();
 
   const pageSize = 10;
@@ -443,7 +442,6 @@ const ServiceList= (props)=> {
                 value={searchInputString}
                 onChange={(e)=>{
                   clearTimeout(filterTimeout);
-                  setLoadingList(true);
                   setSearchInputString(e.target.value);
                   let value = e.target.value;
                   let regex_1 = /:owner *= *\S*/g;
@@ -456,9 +454,8 @@ const ServiceList= (props)=> {
                   let arr = regex_1.exec(value);
                   value = value.replace(regex_1, '');
                   if(user.actions.includes('manage_tags') ){
-                    let tag_arr= regex_tag_1.exec(value);
-                    value = value.replace(regex_tag_1)
-
+                    tag_arr = regex_tag_1.exec(value);
+                    value = value.replace(regex_tag_1,'')
                   }
                   value = value.replace(/ +/g,' ');
                   value = value.replace(/ *$/g,'');
@@ -467,14 +464,13 @@ const ServiceList= (props)=> {
                     userString = arr[0].replace(regex_2,'');
                   }
                   if(tag_arr && tag_arr.length>0){
-                    setShowTags(true);
                     tagString_1 = tag_arr[0].replace(regex_tag_2,'');
-                  }
-                  else{
-                    setShowTags(false);
                   }
                   if(value==='undefined'||!value){
                     value='';
+                  }
+                  if(tagString!==tagString_1||searchOwnerString!==userString||searchString!==value){
+                    setLoadingList(true);
                   }
                   filterTimeout = setTimeout(function(){setSearchString(value); setTagString(tagString_1); setSearchOwnerString(userString)} ,1000)}}
                 />
@@ -492,9 +488,7 @@ const ServiceList= (props)=> {
                     <div className='pending-filter-container'>
                       <Dropdown as={ButtonGroup}>
                         <Button variant="secondary" className="split-button" onClick={()=> {if(showPending){setShowPendingSubFilter('');} setShowPending(!showPending)} }>Show Pending <input type="checkbox" readOnly checked={showPending}/></Button>
-
                         <Dropdown.Toggle split variant="secondary" id="dropdown-split-basic" />
-
                         <Dropdown.Menu>
                           <Dropdown.Item className={showPending&&!showPendingSubFilter?'pending-filter-active':''}>
                             <div className="dropdown_item_container_pending_filter" onClick={()=>{setShowPendingSubFilter(''); setShowPending(true);}}>
@@ -503,24 +497,19 @@ const ServiceList= (props)=> {
                                 <div><FontAwesomeIcon icon={faCheckCircle}/></div>
                                 :''} 
                             </div>                                                
-
                           </Dropdown.Item>
                           <Dropdown.Item className={showPendingSubFilter==='pending'?'pending-filter-active':''}>
                             <div className="dropdown_item_container_pending_filter" onClick={()=>{setShowPendingSubFilter('pending'); setShowPending(true);}}>
                               Pending Review 
                               {showPendingSubFilter==='pending'?
                                 <div><FontAwesomeIcon icon={faCheckCircle}/></div>:''} 
-
                             </div>
-                                              
                           </Dropdown.Item>
                           <Dropdown.Item className={showPendingSubFilter==='request_review'?'pending-filter-active':''}>
                             <div className="dropdown_item_container_pending_filter" onClick={()=>{setShowPendingSubFilter('request_review'); setShowPending(true);}}>  
                               Review Requested 
                               {showPendingSubFilter==='request_review'?<div><FontAwesomeIcon icon={faCheckCircle}/></div>:''} 
-
                             </div>
-                      
                           </Dropdown.Item>
                           <Dropdown.Item className={showPendingSubFilter==='changes'?'pending-filter-active':''}>
                             <div className="dropdown_item_container_pending_filter" onClick={()=>{setShowPendingSubFilter('changes'); setShowPending(true);}}>
@@ -570,7 +559,6 @@ const ServiceList= (props)=> {
                         <input type='checkbox' name='filter' checked={showOwned} onChange={()=> setShowOwned(!showOwned)}/>
                       </div>
                     </React.Fragment>
-                  
                   :null}
                   {user.actions.includes('error_action')?
                     <div className='filter-container' onClick={()=> setErrorFilter(!errorFilter)}>
@@ -578,7 +566,6 @@ const ServiceList= (props)=> {
                       <input type='checkbox' name='filter' checked={errorFilter} onChange={()=>setErrorFilter(!errorFilter)}/>
                     </div>
                   :null}
-
                   <div className='select-filter-container'>
                       <select value={integrationEnvironment} onChange={(e)=>{
                         setIntegrationEnvironment(e.target.value);}}>
@@ -593,7 +580,6 @@ const ServiceList= (props)=> {
             </Row>
           </Collapse>
           </div>
-
           <Table striped bordered hover className="petitions-table">
             <thead>
               <tr>
@@ -603,12 +589,10 @@ const ServiceList= (props)=> {
               </tr>
             </thead>
             <tbody>
-
               <React.Fragment>
-
                 {services.length>=1?services.map((item,index)=>{
                     return(
-                      <TableItem service={item} key={index}  setConfirmationData={setConfirmationData} getServices={getServices} showTags={showTags} setShowTags={setShowTags} setSearchInputString={setSearchInputString} setTagString={setTagString}/>
+                      <TableItem service={item} key={index}  setConfirmationData={setConfirmationData} getServices={getServices} setSearchInputString={setSearchInputString} setTagString={setTagString}/>
                     )
                 }):<tr><td></td><td>{t('no_services')}</td><td></td></tr>}
                 {loadingList?
@@ -616,14 +600,11 @@ const ServiceList= (props)=> {
                     <td></td>
                   </tr>:null
                 }
-
               </React.Fragment>
-
             </tbody>
           </Table>
           <div className='service-count'>{'('+serviceCount+ " Total Services)"}</div>
           <Pagination>{paginationItems}</Pagination>
-          
         </LoadingBar>
         <ProcessingRequest active={asyncResponse}/>
       </div>
@@ -636,12 +617,7 @@ function TableItem(props) {
   const [tenant,setTenant] = useContext(tenantContext);
   const [manageTags,setManageTags] = useState(false);
   const {tenant_name} = useParams();
-  const [showTag,setShowTag] = useState(props.showTags);
 
-  useEffect(()=>{
-    setShowTag(props.showTags);
-   // eslint-disable-next-line react-hooks/exhaustive-deps
- },[props.showTags]);
 
 
   const [showCopyDialog,setShowCopyDialog] = useState(false);
@@ -691,46 +667,19 @@ function TableItem(props) {
             {props.service.status==='changes'?<Badge className="status-badge" variant="info">{t('badge_changes_requested')}</Badge>:null}
             {props.service.status==='request_review'?<Badge className="status-badge" variant="info">Review Requested</Badge>:null}
           </div>
-          <div className="tags-arrow" onClick={()=>{setShowTag(!showTag)}}>
-            {!user.actions.includes('manage_tags')||!props.service.service_id||props.service.tags.length===0?null:showTag?
-              <OverlayTrigger
-                placement='top'
-                overlay={
-                  <Tooltip id={`tooltip-top`}>
-                    Hide Service Tags
-                  </Tooltip>
-                }
-              >
-                <FontAwesomeIcon className='fa-arrow-up' icon={faSortUp}/>
-              </OverlayTrigger>
-              :
-              <OverlayTrigger
-                placement='top'
-                overlay={
-                  <Tooltip id={`tooltip-top`}>
-                    Show Service Tags
-                  </Tooltip>
-                }
-              >
-                <FontAwesomeIcon className='fa-arrow-down' icon={faSortDown}/>
-              </OverlayTrigger>
-              }
-          </div>
+         
           {user.actions.includes('manage_tags')&&props.service.tags?
-          <Collapse in={user.actions.includes('manage_tags')&&showTag}>
             <div className="tags-container-servicelist">
               {props.service.tags.map((tag,index)=>{
                 return (
                   <Badge key={index} onClick={()=>{
                     props.setSearchInputString(':tag='+tag);
-                    props.setShowTags(true);
                     props.setTagString(tag);
                   }} pill variant="dark">{tag}</Badge>
                 )
               })}
-
             </div>
-          </Collapse>:null
+            :null
           }
           <p>{props.service.service_description}</p>
           

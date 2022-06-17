@@ -102,7 +102,6 @@ const calcDiff = (oldState,newState,tenant) => {
         new_values.scope = [];
       }
 
-
       edits.add.oidc_grant_types = new_values.grant_types.filter(x=>!old_values.grant_types.includes(x));
       edits.dlt.oidc_grant_types = old_values.grant_types.filter(x=>!new_values.grant_types.includes(x));
       edits.add.oidc_scopes = new_values.scope.filter(x=>!old_values.scope.includes(x));
@@ -277,24 +276,29 @@ const sendNotifications = (data,template_uri,users) => {
         tenant_signature:config[data.tenant].tenant_signature
       };
       var htmlToSend = template(replacements);
-      var mailOptions = {
-        from: {
-          name: data.sender_name,
-          address: data.sender_email
-        },
-        to : users,
-        subject : data.subject + " ["+config[data.tenant].sender +" Notifications"+"]",
-        html : htmlToSend,
-        cc : data.cc_emails
-      };
-      transporter.sendMail(mailOptions, function (error, response) {
-        if (error) {
-          customLogger(null,null,'error',[{type:'email_log'},{message:'Email not sent'},{template:template_uri},{error:error},{users:users},{data:data}]);
-        }
-        else {
-          customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{template:template_uri},{users:users},{data:data}]);
-        }
+
+      users.forEach(async (user) => {
+        var mailOptions = {
+          from: {
+            name: data.sender_name,
+            address: data.sender_email
+          },
+          to : user,
+          subject : data.subject + " ["+config[data.tenant].sender +" Notifications"+"]",
+          html : htmlToSend,
+          cc : data.cc_emails
+        }; 
+        await delay(400);
+        transporter.sendMail(mailOptions, function (error, response) {
+          if (error) {
+            customLogger(null,null,'error',[{type:'email_log'},{message:'Email not sent'},{template:template_uri},{error:error},{user:user},{data:data}]);
+          }
+          else {
+            customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{template:template_uri},{user:user},{data:data}]);
+          }
+        });
       });
+     
 
 
   });
@@ -387,16 +391,16 @@ const createGgusTickets =  function(data){
                     //to:"koza-sparrow@hotmaIl.com",
                     subject : "Federation Registry: Service integration to "+ ticket_data.integration_environment + " (" + code + ")",
                     text:`A request was made to `+ type +` a service on the `+ env +` environment
-    Service Info
-      service_name: ` + service_name + `
-      service_protocol: ` + protocol + `
-    Submitted by
-      username: `+ requester_username + `
-      email: `+ requester_email + `
-    Approved by
-      username: `+ reviewer_username +`
-      email: `+ reviewer_email +`
-      date_of_approval: `+reviewed_at,
+                          Service Info
+                            service_name: ` + service_name + `
+                            service_protocol: ` + protocol + `
+                          Submitted by
+                            username: `+ requester_username + `
+                            email: `+ requester_email + `
+                          Approved by
+                            username: `+ reviewer_username +`
+                            email: `+ reviewer_email +`
+                            date_of_approval: `+reviewed_at,
                     cc:ticket_data.reviewer_email
                   };
                   transporter.sendMail(mailOptions, function (error, response) {

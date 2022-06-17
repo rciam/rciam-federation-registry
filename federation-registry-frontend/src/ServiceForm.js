@@ -29,7 +29,7 @@ import * as yup from 'yup';
 import { useTranslation } from 'react-i18next';
 import parse from 'html-react-parser';
 import countryData from 'country-region-data';
-import {SimpleInput,CountrySelect,AuthMethRadioList,SelectEnvironment,DeviceCode,Select,PublicKey,ListInput,LogoInput,TextAria,ListInputArray,CheckboxList,SimpleCheckbox,ClientSecret,TimeInput,RefreshToken,Contacts,OrganizationField} from './Components/Inputs.js'// eslint-disable-next-line
+import {SimpleInput,CountrySelect,AuthMethRadioList,SelectEnvironment,DeviceCode,Select,PublicKey,ListInput,LogoInput,TextAria,ListInputArray,CheckboxList,SimpleCheckbox,ClientSecret,TimeInput,RefreshToken,Contacts,OrganizationField,SimpleRadio} from './Components/Inputs.js'// eslint-disable-next-line
 
 
 const {reg} = require('./regex.js');
@@ -68,7 +68,6 @@ const ServiceForm = (props)=> {
   const [manageTags,setManageTags] = useState(false);
 
   useEffect(()=>{
-
     //Get tags 
     if(props.user.actions.includes('manage_tags')&&service_id){
       getTags();
@@ -352,6 +351,10 @@ const ServiceForm = (props)=> {
     token_endpoint_auth_signing_alg:yup.string().nullable().when(['protocol',"token_endpoint_auth_method"],{
       is:(protocol,token_endpoint_auth_method)=> protocol==='oidc'&&(token_endpoint_auth_method==="private_key_jwt"||token_endpoint_auth_method==="client_secret_jwt"),
       then: yup.string().required(t('yup_select_option')).test('testTokenEndpointSigningAlgorithm','Invalid Value',function(value){return tenant.form_config.token_endpoint_auth_signing_alg.includes(value)})
+    }),
+    application_type:yup.string().nullable().when('protocol',{
+      is:'oidc',
+      then: yup.string().nullable().required(t('yup_select_option')).test('testApplicationType','Invalid Value',function(value){return tenant.form_config.application_type.includes(value)})
     }),
     token_endpoint_auth_method:yup.string().nullable().when('protocol',{
       is:'oidc',
@@ -763,7 +766,7 @@ const ServiceForm = (props)=> {
               {props.user.actions.includes('manage_tags')&&service_id?
                 <div className='service-form-tags-container'>
                   <hr/>
-                  <h5>Service Tags </h5>
+                  <h5>Tags</h5>
                   <OverlayTrigger
                     placement='top'
                     overlay={
@@ -774,7 +777,7 @@ const ServiceForm = (props)=> {
                   >
                     <div className="service-form-tags-edit" onClick={()=>{setManageTags(true)}}><FontAwesomeIcon icon={faPen}/></div>
                   </OverlayTrigger>
-                  
+                  <Form.Text className="text-mute"> Tags can be used to filter service search results </Form.Text>
                   <div className="service-form-tags-button-container">
                     {serviceTags.length>0?serviceTags.map((tag,index)=>{
                       return (    
@@ -1016,7 +1019,8 @@ const ServiceForm = (props)=> {
                       </InputRow>
                       {values.protocol==='oidc'?
                         <React.Fragment>
-                          <InputRow  moreInfo={tenant.form_config.more_info.client_id} title={t('form_client_id')} description={t('form_client_id_desc')} error={checkingAvailability?null:errors.client_id} touched={touched.client_id}>
+     
+                           <InputRow  moreInfo={tenant.form_config.more_info.client_id} title={t('form_client_id')} description={t('form_client_id_desc')} error={checkingAvailability?null:errors.client_id} touched={touched.client_id}>
                             <SimpleInput
                               name='client_id'
                               placeholder={t('form_type_prompt')}
@@ -1073,6 +1077,22 @@ const ServiceForm = (props)=> {
 
                             />
                           </InputRow>
+                          <InputRow  moreInfo={tenant.form_config.more_info.application_type} title={'Application Type'} description={""} error={errors.application_type} touched={touched.application_type}>
+                            <SimpleRadio
+                              name='application_type'
+                              onChange={handleChange}
+                              values={values}
+                              radio_items={['NATIVE','WEB']}
+                              setFieldValue={setFieldValue}
+                              radio_items_titles={['Native','Web']}
+                              value={values.application_type}
+                              isInvalid={hasSubmitted?(!!errors.application_type):(!!errors.application_type&&touched.application_type&&!checkingAvailability)}
+                              onBlur={handleBlur}
+                              className={'application-type-container'}
+                              disabled={disabled}
+                              changed={props.changes?props.changes.application_type:null}
+                             />
+                           </InputRow>
                           <InputRow  moreInfo={tenant.form_config.more_info.token_endpoint_auth_method} title="Token Endpoint Authorization Method" required={true} error={errors.token_endpoint_auth_method} touched={touched.token_endpoint_auth_method}>
                             <AuthMethRadioList
                               name='token_endpoint_auth_method'

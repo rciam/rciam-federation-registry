@@ -1,6 +1,6 @@
 DROP TABLE IF EXISTS user_edu_person_entitlement,tokens,user_info, service_petition_contacts, service_petition_oidc_grant_types,service_coc,service_petition_coc, service_petition_oidc_redirect_uris, service_petition_oidc_scopes,
 service_petition_details_oidc,service_petition_details_saml, service_petition_details, service_oidc_scopes,service_contacts,service_oidc_grant_types,service_oidc_redirect_uris,service_details_oidc,
-service_details_saml,service_details,service_state,user_roles,role_actions,role_entitlements,groups,invitations,group_subs,tenant_deployer_agents,banner_alerts,tenants,deployment_tasks,service_errors,organizations;
+service_details_saml,service_details,service_state,user_roles,role_actions,role_entitlements,groups,invitations,group_subs,tenant_deployer_agents,banner_alerts,tenants,deployment_tasks,service_errors,organizations,service_tags;
 
 create table tokens (
   token VARCHAR(1054),
@@ -137,6 +137,7 @@ create table service_details_oidc (
   token_endpoint_auth_signing_alg VARCHAR(256),
   jwks VARCHAR(2048),
   jwks_uri VARCHAR(256),
+  application_type VARCHAR(256),
   FOREIGN KEY (id) REFERENCES service_details(id) ON DELETE CASCADE
 );
 
@@ -256,6 +257,7 @@ create table service_petition_details_oidc (
   clear_access_tokens_on_refresh BOOLEAN,
   id_token_timeout_seconds bigint,
   client_secret VARCHAR(2048),
+  application_type VARCHAR(256),
   FOREIGN KEY (id) REFERENCES service_petition_details(id) ON DELETE CASCADE
 );
 
@@ -331,5 +333,13 @@ create  table deployment_tasks (
   PRIMARY KEY (agent_id,service_id),
   FOREIGN KEY (agent_id) REFERENCES tenant_deployer_agents(id),
   FOREIGN KEY (service_id) REFERENCES service_details(id)
+);
+
+create table service_tags (
+  service_id INTEGER,
+  tag VARCHAR(256),
+  tenant VARCHAR(256),
+  FOREIGN KEY (tenant) REFERENCES tenants(name) ON DELETE CASCADE,
+  PRIMARY KEY (tag,service_id)
 );
 

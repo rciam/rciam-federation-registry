@@ -653,6 +653,15 @@ const serviceValidationRules = (options,req) => {
               return false
             }
           }).withMessage('Invalid Schema for private key'),
+      body('*.application_type').custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Service application_type is missing').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).custom((value,{req,location,path})=>{
+        let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
+        if(!value||config.form[tenant].application_type.includes(value)){
+          return true
+        }
+        else{
+          return false
+        }
+      }).withMessage('Invalid application_type value'),
       body('*.token_endpoint_auth_method').custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Service token_endpoint_auth_method missing').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).custom((value,{req,location,path})=>{
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         if(!value||config.form[tenant].token_endpoint_auth_method.includes(value)){

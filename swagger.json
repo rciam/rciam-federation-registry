@@ -1913,6 +1913,12 @@ definitions:
         - "private_key_jwt"
         - "none"
         description: "Authentication method for token endpoint, oidc specific"
+      application_type:
+        type: "string"
+        enum:
+        - "WEB"
+        - "NATIVE"
+        description: "Application type of the service, oidc specific"
       token_endpoint_auth_signing_alg:
         type: "string"
         enum:
@@ -2064,6 +2070,10 @@ definitions:
             type: "array"
             items:
               type: "string"
+          application_type:
+            type: "array"
+            items:
+              type: "string"
           token_endpoint_auth_signing_alg:
             type: "array"
             items:
@@ -2184,6 +2194,12 @@ definitions:
         - "private_key_jwt"
         - "none"
         description: "Authentication method for token endpoint, oidc specific"
+      application_type:
+        type: "string"
+        enum:
+        - "WEB"
+        - "NATIVE"
+        description: "Application type of the service, oidc specific"
       token_endpoint_auth_signing_alg:
         type: "string"
         enum:

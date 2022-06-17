@@ -168,7 +168,8 @@ const ManageTags = (props) => {
         <ConfirmationModal active={tagToDelete?true:false} setActive={()=>{setTagToDelete()}} action={()=>{deleteTag(tagToDelete);}} title={'Are you sure you want to remove the tag '+ tagToDelete + ' from this service?' } accept={'Yes'} decline={'No'}/>
         <Modal show={props.manageTags} onHide={handleClose}>
           <Modal.Header closeButton>
-            <Modal.Title>Manage Service Tags</Modal.Title>
+            <Modal.Title>Manage Service Tags
+            </Modal.Title>
           </Modal.Header>
           <Modal.Body>
             <Form.Group className='organizations-input'>
@@ -210,11 +211,14 @@ const ManageTags = (props) => {
                   </InputGroup.Append>
                 </InputGroup>
             </Form.Group>  
+            <Form.Text className="text-mute"> Tags can be used to filter service search results </Form.Text>
+
+
             <div className={'manage-tags-container '+(serviceTags.length<1?'manage-tags-container-small ':'')}>
               {serviceTags.length>0?serviceTags.map((tag,index)=>{
                 return <Button key={index} className='tag-button' size='sm' variant='outline-dark' onClick={()=>{setTagToDelete(tag)}}>{tag} <FontAwesomeIcon icon={faTimes}/> </Button>
               }):
-              <small>This service has no active tags</small>
+              <span className="text-muted">No active tags for this service</span>
               }
               
             </div>
