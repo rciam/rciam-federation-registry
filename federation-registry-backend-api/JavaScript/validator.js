@@ -553,16 +553,34 @@ const serviceValidationRules = (options,req) => {
         try{
           if(Array.isArray(value)&&value.length>0){
             value.map((item,index)=>{
-              if(req.body[pos].integration_environment==="production"){
+              let url
+              try {
+                url = new URL(item);
+              } catch (err) {
+                throw new Error("Invalid uri");  
 
-                if(!(item.match(reg.regLocalhostUrl)||item.match(reg.regUrl))){
-                  //reuse_refresh_token(item);
-                  throw new Error("Invalid redirect url, it must be a secure or localhost url");
+              }
+              if(item.includes('#')){
+                throw new Error("Uri can't contain fragments");
+              }
+              if(req.body[pos].application_type==='WEB'){
+                if((req.body[pos].integration_environment==='production'||req.body[pos].integration_environment==='demo')&& url){
+                  if(url.protocol !== 'https:'&&!(url.protocol==='http:'&&url.hostname==='localhost')){
+                    throw new Error("Uri must be a secure url starting with https://");              
+                  }
+                }
+                else{
+                  if(url&&!(url.protocol==='http:'||url.protocol==='https:')){
+                    throw new Error("Uri must be a url starting with http(s):// ");                              
+                  }
                 }
               }
               else{
-                if(!(item.match(reg.regLocalhostUrl)||item.match(reg.regSimpleUrl))) {
-                  throw new Error("Invalid redirect url (" + item + "), it must be a url starting with http(s):// at position ["+index+"]");
+                if(url.protocol==='javascript:'){
+                  throw new Error("Uri can't be of schema 'javascript:'");
+                }
+                else if(url.protocol==='data:'){
+                  throw new Error("Uri can't be of schema 'data:'");              
                 }
               }
             });

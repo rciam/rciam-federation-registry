@@ -337,11 +337,7 @@ export function SimpleRadio(props){
   const setFieldValue = props.setFieldValue;
   const target = useRef(null);
   const [show,setShow] = useState();
-  useEffect(()=>{
-    props.radio_items.forEach(item=>{
-      console.log(item);
-    })
-  },[])
+  
   return (
     <React.Fragment>
       <div 
@@ -1295,7 +1291,7 @@ export function ListInput(props){
                   <br/>
                 </InputGroup>
                 {props.error&&props.error[index]?
-                  <div className="error-message-list-item">{!Array.isArray(props.error)?'':props.integrationEnvironment==='production'||props.integrationEnvironment==='demo'?'Must be a valid url starting with https:// or a http://localhost url':'Must be a valid url stating with http(s)://'}</div>
+                  <div className="error-message-list-item">{props.error[index]}</div>
                 :null}
                 </React.Fragment>
               ))}

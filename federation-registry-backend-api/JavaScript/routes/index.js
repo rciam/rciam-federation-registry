@@ -21,7 +21,7 @@ const {sendOutdatedNotification} = require('../functions/outdated_notif.js');
 
 
 function getData(req,res,next) {
-  db.service.getAll(req.params.tenant).then(services=>{
+  db.service.getAll(req.params.tenant,{},true).then(services=>{
     req.body = services;
     //console.log(services);
     next();

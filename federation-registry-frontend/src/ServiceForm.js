@@ -36,6 +36,7 @@ const {reg} = require('./regex.js');
 var availabilityCheckTimeout;
 var countries;
 let integrationEnvironment;
+let application_type;
 
 const ServiceForm = (props)=> {
   // eslint-disable-next-line
@@ -236,14 +237,41 @@ const ServiceForm = (props)=> {
       is:'oidc',
       then: yup.array().nullable().when('integration_environment',(integration_environment)=>{
         integrationEnvironment = integration_environment;
-      }).of(yup.string().required().test('test_redirect_uri','error',function(value){
+      }).when('application_type',(application_type_value)=>{application_type = application_type_value;}).of(yup.string().required().test('test_redirect_uri','Invalid Redirect Uri',function(value){
         if(value){
-          if(integrationEnvironment==='production'||integrationEnvironment==='demo'){
-            return value.match(reg.regUrl) || value.match(reg.regLocalhostUrl)
+          let url
+          try {
+            url = new URL(value);
+          } catch (err) {
+            return this.createError({ message: "Invalid uri" });  
+          }
+          if(value.includes('#')){
+            return this.createError({ message: "Uri can't contain fragments" });
+          }
+          if(application_type==='WEB'){
+            if((integrationEnvironment==='production'||integrationEnvironment==='demo')&& url){
+              if(url.protocol !== 'https:'&&!(url.protocol==='http:'&&url.hostname==='localhost')){
+                return this.createError({ message: "Uri must be a secure url starting with https://" });              
+              }
+              
+            }
+            else{
+              if(url&&!(url.protocol==='http:'||url.protocol==='https:')){
+                console.log(url.protocol);
+                return this.createError({ message: "Uri must be a url starting with http(s):// " });                              
+              }
+            }
           }
           else{
-            return value.match(reg.regSimpleUrl) || value.match(reg.regLocalhostUrl)
+            // eslint-disable-next-line
+            if(url.protocol==="javascript:"){
+              return this.createError({ message: "Uri can't be of schema 'javascript:'" });
+            }
+            else if(url.protocol==='data:'){
+              return this.createError({ message: "Uri can't be of schema 'data:'" });              
+            }
           }
+          return true
         }
       })).unique(t('yup_redirect_uri_unique')).when('grant_types',{
         is:(grant_types)=> grant_types.includes("implicit")||grant_types.includes("authorization_code"),
