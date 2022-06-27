@@ -1,21 +1,15 @@
 require('dotenv').config();
-const {petitionValidationRules,validate,validateInternal,tenantValidation,changeContacts,formatPetition,getServiceListValidation,postInvitationValidation,serviceValidationRules,putAgentValidation,postAgentValidation,decodeAms,amsIngestValidation,reFormatPetition,getServicesValidation,formatCocForValidation,broadcastNotificationsValidation,outdatedNotificationsValidation,getRecipientsBroadcastNotifications} = require('../validator.js');
-const {validationResult} = require('express-validator');
+const {petitionValidationRules,validate,validateInternal,tenantValidation,formatPetition,getServiceListValidation,postInvitationValidation,serviceValidationRules,putAgentValidation,postAgentValidation,decodeAms,amsIngestValidation,reFormatPetition,getServicesValidation,formatCocForValidation,broadcastNotificationsValidation,outdatedNotificationsValidation,getRecipientsBroadcastNotifications} = require('../validator.js');
 const qs = require('qs');
 const {v1:uuidv1} = require('uuid');
 const axios = require('axios').default;
-const {merge_data,merge_services_and_petitions} = require('../merge_data.js');
-const {addToString,clearPetitionData,sendMail,sendInvitationMail,sendMultipleInvitations,createGgusTickets,delay,sendNotifications,shallowEqual} = require('../functions/helpers.js');
+const {sendMail,sendInvitationMail,sendMultipleInvitations,createGgusTickets,delay,sendNotifications} = require('../functions/helpers.js');
 const {db} = require('../db');
-var diff = require('deep-diff').diff;
 var router = require('express').Router();
-var passport = require('passport');
 var config = require('../config');
 const customLogger = require('../loggers.js');
-const { generators } = require('openid-client');
 const {rejectPetition,approvePetition,changesPetition,getPetition,getOpenPetition,requestReviewPetition} = require('../controllers/main.js');
-const base64url = require('base64url');
-const {adminAuth} = require('./authentication.js'); 
+const {adminAuth,authenticate} = require('./authentication.js'); 
 const {sendOutdatedNotification} = require('../functions/outdated_notif.js');
 
 
@@ -27,7 +21,7 @@ const {sendOutdatedNotification} = require('../functions/outdated_notif.js');
 
 
 function getData(req,res,next) {
-  db.service.getAll(req.params.tenant).then(services=>{
+  db.service.getAll(req.params.tenant,{},true).then(services=>{
     req.body = services;
     //console.log(services);
     next();
@@ -86,6 +80,12 @@ router.put('/tenants/:tenant/services/validate',adminAuth,getData,serviceValidat
 // GET ALL SERVICES
 router.get('/tenants/:tenant/services',getServicesValidation(),validate,authenticate_allow_unauthorised, (req,res,next)=>{
   try{
+    if(req.query.tags){
+      req.query.tags = req.query.tags.split(',');
+    }
+    if(req.query.exclude_tags){
+      req.query.exclude_tags = req.query.exclude_tags.split(',');      
+    }
     let authorised = !!(req.user && req.user.role && req.user.role.actions.includes('get_services'));
     if(req.query.outdated==='true'){
       db.service_state.getOutdatedServices(req.params.tenant).then(async outdated_services=>{
@@ -213,6 +213,7 @@ router.post('/tenants/:tenant/services',adminAuth,tenantValidation(),validate,fo
 // Get tenant info and configuration for form fields
 router.get('/tenants/:tenant',(req,res,next)=>{
   try{
+    var clients = req.app.get('clients');
     db.tenants.getTheme(req.params.tenant).then(tenant=>{
       if(tenant){
         if(config.form[req.params.tenant]){
@@ -224,6 +225,7 @@ router.get('/tenants/:tenant',(req,res,next)=>{
         if(config.restricted_env[req.params.tenant]){
           tenant.restricted_environments = config.restricted_env[req.params.tenant].env;
         }
+        tenant.logout_uri = clients[req.params.tenant].logout_uri
         res.status(200).json(tenant).end();
       }
       else{
@@ -278,7 +280,6 @@ router.get('/callback/:tenant',(req,res,next)=>{
     let code = await db.tokens.addToken(response.access_token);
     clients[req.params.tenant].userinfo(response.access_token).then(usr_info=>{
     saveUser(usr_info,req.params.tenant);
-
   }); // => Promise
     res.redirect(tenant_config[req.params.tenant].base_url+'/code/' + code.code);
   });
@@ -362,7 +363,6 @@ router.get('/tenants/:tenant/user',authenticate,(req,res,next)=>{
   try{
     var clients = req.app.get('clients');
     TokenArray = req.headers.authorization.split(" ");
-
     clients[req.params.tenant].userinfo(TokenArray[1]) // => Promise
     .then(function (userinfo) {
       let user = userinfo;
@@ -389,7 +389,8 @@ router.get('/tenants/:tenant/user',authenticate,(req,res,next)=>{
       user.actions = req.user.role.actions;
       user.role = req.user.role.name;
       res.end(JSON.stringify({user}));
-    }).catch(err=>{next(err)});
+    }).catch(err=>{
+      next(err)});
   }
   catch(err){
     next(err)
@@ -549,6 +550,7 @@ router.get('/tenants/:tenant/services/list', getServiceListValidation(),validate
           }
           return res.status(200).send(response[0]);
         }).catch(err=>{
+          console.log(err)
           return res.status(416).send('Out of range');
         });
       }
@@ -1261,7 +1263,7 @@ function is_group_manager(req,res,next){
 
   try{
     req.body.group_id=req.params.group_id;
-    if(req.user.sub===req.params.sub){
+    if(req.user.role.actions.includes('invite_to_group')||req.user.sub===req.params.sub){
       next();
     }
     else{
@@ -1326,11 +1328,7 @@ function view_group(req,res,next){
 }
 
 
-function decode(jwt) {
-    const [headerB64, payloadB64] = jwt.split('.');
-    const payloadStr = JSON.parse(base64url.decode(payloadB64));
-    return payloadStr.user;
-}
+
 
 function authenticate_allow_unauthorised(req,res,next){
   try{
@@ -1388,89 +1386,6 @@ function authenticate_allow_unauthorised(req,res,next){
   }
 }
 
-// Authentication Middleware
-function authenticate(req,res,next){
-  try{
-    var clients = req.app.get('clients');
-    if(process.env.NODE_ENV==='test-docker'||process.env.NODE_ENV==='test'){
-      let token = req.headers['x-access-token'] || req.headers['authorization']; // Express headers are auto converted to lowercase
-      if (token && token.startsWith('Bearer ')) {
-        // Remove Bearer from string
-        token = token.slice(7, token.length);
-        req.user = decode(token);
-        
-        db.user_role.getRoleActions(req.user.sub,req.params.tenant).then(role=>{
-          if(role){
-            req.user.role = role;
-            next();
-          }
-          else{
-            res.status(401).send('Unauthenticated Request');
-          }
-        }).catch(err=>{
-          next(err)});
-      }
-      else{
-        res.status(500).send("Need userToken");
-      }
-    }
-    else{
-      const data = {'client_secret':clients[req.params.tenant].client_secret}
-      if(req.headers.authorization){
-        TokenArray = req.headers.authorization.split(" ");
-        axios({
-          method:'post',
-          url: clients[req.params.tenant].issuer_url+'introspect',
-          params: {
-            client_id:clients[req.params.tenant].client_id,
-            token:TokenArray[1]
-          },
-          headers: {
-            'Content-Type':'application/x-www-form-urlencoded',
-            'Accept': 'application/json'
-          },
-          data: qs.stringify(data)
-        }).then(result => {
-
-          req.user = {};
-          req.user.sub = result.data.sub;
-
-          req.user.edu_person_entitlement = result.data.eduperson_entitlement;
-          req.user.iss = result.data.iss;
-          req.user.email = result.data.email;
-          if(req.user.sub){
-            db.user_role.getRoleActions(req.user.sub,req.params.tenant).then(role=>{
-              if(role){
-                req.user.role = role;
-                next();
-              }
-              else{
-                res.status(401).send('Unauthenticated Request');
-              }
-            }).catch((err)=> {
-              customLogger(req,res,'warn','Unauthenticated request'+err);
-
-              res.status(401).end();
-            });
-          }
-          else{res.status(401).end();}
-        }, (error) =>{
-          customLogger(req,res,'warn','Unauthenticated request'+ error);
-          res.status(401).end();
-        }).catch(err=>{res.status(401).end();})
-      }
-      else{
-        res.status(401).end();
-      }
-    }
-
-  }
-  catch(err){
-    customLogger(req,res,'warn','Unauthenticated request'+err);
-    next(err);
-  }
-
-}
 
 
 

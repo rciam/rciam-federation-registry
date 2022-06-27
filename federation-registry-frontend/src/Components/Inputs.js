@@ -49,7 +49,7 @@ export function SimpleInput(props){
             ref={target}
             onMouseOver={()=>setShow(true)}
             onMouseOut={()=>setShow(false)}
-            className={props.changed?'col-form-label-sm input-edited':'col-form-label-sm'}
+            className={props.changed?'col-form-label.sm input-edited':'col-form-label.sm'}
           />
           {props.copybutton?<CopyToClipboardComponent value={props.value}/>:null}
         </InputGroup>
@@ -111,7 +111,7 @@ export function OrganizationField(props){
                 return false;
               }
               else if(response.status===404){
-                setNotFound('No invitations found');
+                setNotFound('No Organizations found');
                 return false;
               }
               else{
@@ -332,6 +332,49 @@ export function PublicKey(props){
     </React.Fragment>
   )
 }
+
+export function SimpleRadio(props){
+  const setFieldValue = props.setFieldValue;
+  const target = useRef(null);
+  const [show,setShow] = useState();
+  
+  return (
+    <React.Fragment>
+      <div 
+        className={props.className}
+        onMouseOver={()=>setShow(true)}
+        onMouseOut={()=>setShow(false)}
+      >
+      {props.radio_items.map((item,index)=>{
+        return  <div key={index}>
+          <Field  name={props.name}>
+          {({ field, form }) => (
+            <React.Fragment>
+            <span onClick={()=>{setFieldValue(props.name,item)}}  className={"form_radio_item "+ (props.changed&&props.values[props.name]===item?"input_radio_edited":null)}>
+              <input
+                type="radio"
+                name={field.name}
+                disabled={props.disabled}
+                {...field}
+                value={item}
+                ref={props.values[props.name]===item?target:null}
+                checked={props.values[props.name]===item}         
+              />
+              {props.radio_items_titles[index]}
+              </span>
+            </React.Fragment>
+          )}
+        </Field>
+        </div>
+      }
+      )}
+      </div>
+      <MyOverLay show={props.changed&&show?'string':null} type='Edited' placement='left' target={target}/>
+    </React.Fragment>
+  )
+}
+
+
 export function AuthMethRadioList(props){
   const [show, setShow] = useState(false);
   const authMethod = props.values.token_endpoint_auth_method;
@@ -372,7 +415,7 @@ export function AuthMethRadioList(props){
             </Field>
           </div>
         ))}
-        <MyOverLay show={props.changed&&show?'string':null} type='Edited' target={target}/>
+        <MyOverLay show={props.changed&&show?'string':null} type='Edited' placement='left' target={target}/>
     </React.Fragment>
   )
 }
@@ -1119,7 +1162,7 @@ export  function LogoInput(props){
               overflowX: 'scroll',
             }}
           >
-            <Image referrerPolicy="no-referrer" src={props.value ? props.value:process.env.PUBLIC_URL + '/logo_placeholder.gif'} onError={addDefaultSrc} fluid />
+            <Image className="logo-input" referrerPolicy="no-referrer" src={props.value ? props.value:process.env.PUBLIC_URL + '/logo_placeholder.gif'} onError={addDefaultSrc} fluid />
 
           </pre>
         )}
@@ -1142,7 +1185,7 @@ function MyOverLay(props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[props.show]);
   return (
-    <Overlay target={props.target.current}  show={show} placement="right">
+    <Overlay target={props.target.current}  show={show} placement={props.placement?props.placement:'right'}>
       {propsOv => (
         <Tooltip id="overlay-example" placement={propsOv.placement} arrowProps={propsOv.arrowProps} ref={propsOv.ref} style={propsOv.style} outofboundaries={propsOv.outofboundaries} >
           {props.type==="Added"?t('input_added'):props.type==="Deleted"?t('input_deleted'):props.type==="Edited"?t('input_edited'):null}
@@ -1183,7 +1226,7 @@ function ListSingleInput(props){
       column="true"
       sm="4"
       type="text"
-      className={'col-form-label-sm spacing-bot '+ (type==='Added'?'input-new':!type?'':'input-deleted')}
+      className={'col-form-label.sm '+ (type==='Added'?'input-new':!type?'':'input-deleted')}
       placeholder="https//"
       disabled={props.disabled}
     />
@@ -1231,7 +1274,7 @@ export function ListInput(props){
 
               {props.values && props.values.length > 0 && props.values.map((item,index)=>(
                 <React.Fragment key={index}>
-                <InputGroup className="mb-3" >
+                <InputGroup className="mb-3 spacing-bot-contact" >
                   <Field name={`${props.name}.${index}`}>
                     {({field,form})=>(
                       <React.Fragment>
@@ -1248,7 +1291,7 @@ export function ListInput(props){
                   <br/>
                 </InputGroup>
                 {props.error&&props.error[index]?
-                  <div className="error-message-list-item">{!Array.isArray(props.error)?'':props.integrationEnvironment==='production'||props.integrationEnvironment==='demo'?'Must be a valid url starting with https:// or a http://localhost url':'Must be a valid url stating with http(s)://'}</div>
+                  <div className="error-message-list-item" >{props.error[index]}</div>
                 :null}
                 </React.Fragment>
               ))}

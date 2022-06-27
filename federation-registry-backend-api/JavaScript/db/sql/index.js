@@ -85,6 +85,10 @@ module.exports = {
       delete:(sql('organizations/delete.sql')),
       update:(sql('organizations/update.sql')),
       add:(sql('organizations/add.sql'))
+    },
+    service_tags: {
+      getAll:(sql('service_tags/getAll.sql')),
+      getByServiceId: (sql('service_tags/getByServiceId.sql'))
     }
 };
 

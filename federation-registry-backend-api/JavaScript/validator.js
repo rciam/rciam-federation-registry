@@ -67,8 +67,28 @@ const getServiceListValidation = () => {
     query('search_string').optional({checkFalsy:true}).isString(),
     query('owner').optional({checkFalsy:true}).isString(),
     query('error').optional({checkFalsy:true}).isBoolean().toBoolean(),    
+    query('tags').optional({checkFalsy:true}).custom((value,{req,location,path})=>{
+      try{
+        if(value){
+          let tags = value.split(',');
+          if(tags.length>0){
+            tags.forEach(tag=>{
+              if(tag.length>36){
+                throw new Error('The Tag value is not suppported because it is too long (' +tag +'), max 36 characters');            
+              }
+            })
+          } 
+        }
+        return true 
+      }
+      catch(err){
+        throw new Error(err);
+      }
+    })
   ]
 }
+
+
 
 
 const postAgentValidation = () => {
@@ -110,7 +130,7 @@ const postBannerAlertValidation = () => {
 const putBannerAlertValidation = () =>{
   return [
     param('tenant').custom((value,{req,location,path})=>{if(value in config.form){return true}else{return false}}).withMessage('Invalid Tenant in the url'),
-    param('id').exists().isInt({gt:0}).withMessage('id parametes must be a possitive integer'),
+    param('id').exists().isInt({gt:0}).withMessage('id parameter must be a possitive integer'),
     body('alert_message').optional().isString().withMessage('alert_message must be a string').isLength({min:4,max:1024}).withMessage('alert_message must be from 4 to 1024 characters long'),
     body('type').optional().bail().custom((value)=>{
       let supported_types = ['warning','error','info'];
@@ -277,6 +297,42 @@ const getServicesValidation = () => {
     query('protocol').optional({checkFalsy:true}).isString().custom((value,{req,location,path})=> { if(config.form[req.params.tenant].protocol.includes(value)){return true}else{return false}}).withMessage('protocol value not supported'),
     query('protocol_id').optional({checkFalsy:true}).isString().withMessage('protocol_id must be a string').if((value)=>{return(value.constructor === stringConstructor)}).isLength({min:2, max:128}).withMessage('protocol_id must be between 2 and 128 characters'),
     param('tenant').custom((value,{req,location,path})=>{if(value in config.form){return true}else{return false}}).withMessage('Invalid Tenant in the url'),
+    query('tags').optional({checkFalsy:true}).custom((value,{req,location,path})=>{
+      try{
+        if(value){
+          let tags = value.split(',');
+          if(tags.length>0){
+            tags.forEach(tag=>{
+              if(tag.length>36){
+                throw new Error('The Tag value is not suppported because it is too long +(' +tag +') max 36 characters');            
+              }
+            })
+          } 
+        }
+        return true 
+      }
+      catch(err){
+        throw new Error(err);
+      }
+    }),
+    query('exclude_tags').optional({checkFalsy:true}).custom((value,{req,location,path})=>{
+      try{
+        if(value){
+          let tags = value.split(',');
+          if(tags.length>0){
+            tags.forEach(tag=>{
+              if(tag.length>36){
+                throw new Error('The Tag value is not suppported because it is too long +(' +tag +') max 36 characters');            
+              }
+            })
+          } 
+        }
+        return true 
+      }
+      catch(err){
+        throw new Error(err);
+      }
+    })
   ]
 }
 
@@ -497,16 +553,34 @@ const serviceValidationRules = (options,req) => {
         try{
           if(Array.isArray(value)&&value.length>0){
             value.map((item,index)=>{
-              if(req.body[pos].integration_environment==="production"){
+              let url
+              try {
+                url = new URL(item);
+              } catch (err) {
+                throw new Error("Invalid uri");  
 
-                if(!(item.match(reg.regLocalhostUrl)||item.match(reg.regUrl))){
-                  //reuse_refresh_token(item);
-                  throw new Error("Invalid redirect url, it must be a secure or localhost url");
+              }
+              if(item.includes('#')){
+                throw new Error("Uri can't contain fragments");
+              }
+              if(req.body[pos].application_type==='WEB'){
+                if((req.body[pos].integration_environment==='production'||req.body[pos].integration_environment==='demo')&& url){
+                  if(url.protocol !== 'https:'&&!(url.protocol==='http:'&&url.hostname==='localhost')){
+                    throw new Error("Uri must be a secure url starting with https://");              
+                  }
+                }
+                else{
+                  if(url&&!(url.protocol==='http:'||url.protocol==='https:')){
+                    throw new Error("Uri must be a url starting with http(s):// ");                              
+                  }
                 }
               }
               else{
-                if(!(item.match(reg.regLocalhostUrl)||item.match(reg.regSimpleUrl))) {
-                  throw new Error("Invalid redirect url (" + item + "), it must be a url starting with http(s):// at position ["+index+"]");
+                if(url.protocol==='javascript:'){
+                  throw new Error("Uri can't be of schema 'javascript:'");
+                }
+                else if(url.protocol==='data:'){
+                  throw new Error("Uri can't be of schema 'data:'");              
                 }
               }
             });
@@ -597,6 +671,15 @@ const serviceValidationRules = (options,req) => {
               return false
             }
           }).withMessage('Invalid Schema for private key'),
+      body('*.application_type').custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Service application_type is missing').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).custom((value,{req,location,path})=>{
+        let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
+        if(!value||config.form[tenant].application_type.includes(value)){
+          return true
+        }
+        else{
+          return false
+        }
+      }).withMessage('Invalid application_type value'),
       body('*.token_endpoint_auth_method').custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Service token_endpoint_auth_method missing').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).custom((value,{req,location,path})=>{
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         if(!value||config.form[tenant].token_endpoint_auth_method.includes(value)){

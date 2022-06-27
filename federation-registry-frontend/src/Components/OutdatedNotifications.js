@@ -132,7 +132,7 @@ const OutdatedNotifications = () =>{
                 setIntegrationEnvironment(e.target.value)
               }}>
             >              
-              {tenant[0].form_config.integration_environment.map((environment,index)=>{return <option key={index} selected={environment===integrationEnvironment} value={environment}>{capitalize(environment)}</option>})}
+              {tenant[0].form_config.integration_environment.map((environment,index)=>{return <option key={index} value={environment}>{capitalize(environment)}</option>})}
             </Form.Control>
             <InputGroup.Append>
               <Button variant="primary" onClick={()=>{setConfirmationData({active:true})}}><FontAwesomeIcon icon={faPaperPlane}/> Send</Button>

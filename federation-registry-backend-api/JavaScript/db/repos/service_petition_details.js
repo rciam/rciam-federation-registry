@@ -35,7 +35,7 @@ class ServicePetitionDetailsRepository {
         type:body.type,
         status:(body.status?body.status:"pending"),
         service_id:body.service_id,
-        comment:body.comment,
+        comment:body.comment
       })
     }
 
@@ -54,7 +54,6 @@ class ServicePetitionDetailsRepository {
           status:"pending",
           aup_uri:body.aup_uri,
           organization_id:body.organization_id
-
         })
     }
 

@@ -1,9 +1,11 @@
 import React,{useState,useEffect,useContext,useRef} from 'react';
 import mapValues from 'lodash/mapValues';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {faCheckCircle,faBan,faSortDown,faExclamationTriangle} from '@fortawesome/free-solid-svg-icons';
+import {faCheckCircle,faBan,faSortDown,faExclamationTriangle,faPen} from '@fortawesome/free-solid-svg-icons';
 import Tabs from 'react-bootstrap/Tabs';
 import Tab from 'react-bootstrap/Tab';
+import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
+import Tooltip from 'react-bootstrap/Tooltip';
 import CopyDialog from './Components/CopyDialog.js'
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Row from 'react-bootstrap/Row';
@@ -22,17 +24,19 @@ import {Formik} from 'formik';
 import config from './config.json';
 import InputRow from './Components/InputRow.js';
 import Button from 'react-bootstrap/Button';
+import ManageTags from './Components/ManageTags.js';
 import * as yup from 'yup';
 import { useTranslation } from 'react-i18next';
 import parse from 'html-react-parser';
 import countryData from 'country-region-data';
-import {SimpleInput,CountrySelect,AuthMethRadioList,SelectEnvironment,DeviceCode,Select,PublicKey,ListInput,LogoInput,TextAria,ListInputArray,CheckboxList,SimpleCheckbox,ClientSecret,TimeInput,RefreshToken,Contacts,OrganizationField} from './Components/Inputs.js'// eslint-disable-next-line
+import {SimpleInput,CountrySelect,AuthMethRadioList,SelectEnvironment,DeviceCode,Select,PublicKey,ListInput,LogoInput,TextAria,ListInputArray,CheckboxList,SimpleCheckbox,ClientSecret,TimeInput,RefreshToken,Contacts,OrganizationField,SimpleRadio} from './Components/Inputs.js'// eslint-disable-next-line
 
 
 const {reg} = require('./regex.js');
 var availabilityCheckTimeout;
 var countries;
 let integrationEnvironment;
+let application_type;
 
 const ServiceForm = (props)=> {
   // eslint-disable-next-line
@@ -61,8 +65,14 @@ const ServiceForm = (props)=> {
   const [showCopyDialog,setShowCopyDialog] = useState(false);
   const [showInitErrors,setShowInitErrors] = useState(false);
   const [logoWarning,setLogoWarning] = useState(false);
+  const [serviceTags,setServiceTags] = useState([]);
+  const [manageTags,setManageTags] = useState(false);
 
   useEffect(()=>{
+    //Get tags 
+    if(props.user.actions.includes('manage_tags')&&service_id){
+      getTags();
+    }
 
     countries = [];
     if(service_id||petition_id){
@@ -227,14 +237,41 @@ const ServiceForm = (props)=> {
       is:'oidc',
       then: yup.array().nullable().when('integration_environment',(integration_environment)=>{
         integrationEnvironment = integration_environment;
-      }).of(yup.string().required().test('test_redirect_uri','error',function(value){
+      }).when('application_type',(application_type_value)=>{application_type = application_type_value;}).of(yup.string().required("Uri can't be an empty string").test('test_redirect_uri','Invalid Redirect Uri',function(value){
         if(value){
-          if(integrationEnvironment==='production'||integrationEnvironment==='demo'){
-            return value.match(reg.regUrl) || value.match(reg.regLocalhostUrl)
+          let url
+          try {
+            url = new URL(value);
+          } catch (err) {
+            return this.createError({ message: "Invalid uri" });  
+          }
+          if(value.includes('#')){
+            return this.createError({ message: "Uri can't contain fragments" });
+          }
+          if(application_type==='WEB'){
+            if((integrationEnvironment==='production'||integrationEnvironment==='demo')&& url){
+              if(url.protocol !== 'https:'&&!(url.protocol==='http:'&&url.hostname==='localhost')){
+                return this.createError({ message: "Uri must be a secure url starting with https://" });              
+              }
+              
+            }
+            else{
+              if(url&&!(url.protocol==='http:'||url.protocol==='https:')){
+                console.log(url.protocol);
+                return this.createError({ message: "Uri must be a url starting with http(s):// " });                              
+              }
+            }
           }
           else{
-            return value.match(reg.regSimpleUrl) || value.match(reg.regLocalhostUrl)
+            // eslint-disable-next-line
+            if(url.protocol==="javascript:"){
+              return this.createError({ message: "Uri can't be of schema 'javascript:'" });
+            }
+            else if(url.protocol==='data:'){
+              return this.createError({ message: "Uri can't be of schema 'data:'" });              
+            }
           }
+          return true
         }
       })).unique(t('yup_redirect_uri_unique')).when('grant_types',{
         is:(grant_types)=> grant_types.includes("implicit")||grant_types.includes("authorization_code"),
@@ -342,6 +379,10 @@ const ServiceForm = (props)=> {
     token_endpoint_auth_signing_alg:yup.string().nullable().when(['protocol',"token_endpoint_auth_method"],{
       is:(protocol,token_endpoint_auth_method)=> protocol==='oidc'&&(token_endpoint_auth_method==="private_key_jwt"||token_endpoint_auth_method==="client_secret_jwt"),
       then: yup.string().required(t('yup_select_option')).test('testTokenEndpointSigningAlgorithm','Invalid Value',function(value){return tenant.form_config.token_endpoint_auth_signing_alg.includes(value)})
+    }),
+    application_type:yup.string().nullable().when('protocol',{
+      is:'oidc',
+      then: yup.string().nullable().required(t('yup_select_option')).test('testApplicationType','Invalid Value',function(value){return tenant.form_config.application_type.includes(value)})
     }),
     token_endpoint_auth_method:yup.string().nullable().when('protocol',{
       is:'oidc',
@@ -583,6 +624,34 @@ const ServiceForm = (props)=> {
     
   }
 
+  const getTags = () =>{
+    fetch(config.host+ 'tenants/' + tenant_name + '/tags/services/' + service_id ,{
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': localStorage.getItem('token')
+      }
+    }).then(response => {
+      if(response.status===200){
+        return response.json();
+      }
+      else if(response.status===401){
+        setLogout(true);
+      }
+      else{
+        return false
+      }
+    }).then((response)=>{
+      if(response){
+        setServiceTags(response);
+      }
+      else{
+        setServiceTags([]);
+      }
+    })
+  }
+
 
   const reviewPetition = (comment,type)=>{
       setModalTitle(t('review_'+props.type+'_title'))
@@ -667,6 +736,7 @@ const ServiceForm = (props)=> {
   return(
     <React.Fragment>
     <Logout logout={logout}/>
+    <ManageTags manageTags={manageTags} setManageTags={setManageTags} tags={serviceTags} service_id={service_id} getServices={()=>{getTags()}}/>
     <NotFound notFound={notFound}/>
     {formValues?
     <Formik
@@ -720,8 +790,31 @@ const ServiceForm = (props)=> {
       isSubmitting})=>(
       <div className="tab-panel">
               {showCopyDialog?<CopyDialog service_id={service_id} show={showCopyDialog} toggleCopyDialog={toggleCopyDialog} current_environment={props.initialValues.integration_environment} />:null}
-
               <ProcessingRequest active={asyncResponse}/>
+              {props.user.actions.includes('manage_tags')&&service_id?
+                <div className='service-form-tags-container'>
+                  <hr/>
+                  <h5>Tags</h5>
+                  <OverlayTrigger
+                    placement='top'
+                    overlay={
+                      <Tooltip id={`tooltip-top`}>
+                        Manage Service Tags
+                      </Tooltip>
+                    }
+                  >
+                    <div className="service-form-tags-edit" onClick={()=>{setManageTags(true)}}><FontAwesomeIcon icon={faPen}/></div>
+                  </OverlayTrigger>
+                  <Form.Text className="text-mute"> Tags can be used to filter service search results </Form.Text>
+                  <div className="service-form-tags-button-container">
+                    {serviceTags.length>0?serviceTags.map((tag,index)=>{
+                      return (    
+                        <Button key={index} className="tag-button-service-form" disabled variant="outline-dark">{tag}</Button>
+                      )
+                    }):<span className="text-muted">No active tags for this service</span>}
+                  </div>
+                  <hr/>
+                </div>:null}
               {showInitErrors&&!Object.keys(errors).length === 0?
                 <Alert variant='warning' className="invitation_alert">
                 The following Service Configuration contains some invalid values or is missing a required field. To fix this issue sumbit a valid reconfiguration request
@@ -954,7 +1047,8 @@ const ServiceForm = (props)=> {
                       </InputRow>
                       {values.protocol==='oidc'?
                         <React.Fragment>
-                          <InputRow  moreInfo={tenant.form_config.more_info.client_id} title={t('form_client_id')} description={t('form_client_id_desc')} error={checkingAvailability?null:errors.client_id} touched={touched.client_id}>
+     
+                           <InputRow  moreInfo={tenant.form_config.more_info.client_id} title={t('form_client_id')} description={t('form_client_id_desc')} error={checkingAvailability?null:errors.client_id} touched={touched.client_id}>
                             <SimpleInput
                               name='client_id'
                               placeholder={t('form_type_prompt')}
@@ -969,6 +1063,22 @@ const ServiceForm = (props)=> {
                               disabled={disabled||service_id}
                               changed={props.changes?props.changes.client_id:null}
                               isloading={values.client_id&&values.client_id!==checkedId&&checkingAvailability?1:0}
+                             />
+                           </InputRow>
+                           <InputRow  moreInfo={tenant.form_config.more_info.application_type} title={'Application Type'} required={true} description={""} error={errors.application_type} touched={touched.application_type}>
+                            <SimpleRadio
+                              name='application_type'
+                              onChange={handleChange}
+                              values={values}
+                              radio_items={['WEB','NATIVE']}
+                              setFieldValue={setFieldValue}
+                              radio_items_titles={['Web','Native']}
+                              value={values.application_type}
+                              isInvalid={hasSubmitted?(!!errors.application_type):(!!errors.application_type&&touched.application_type&&!checkingAvailability)}
+                              onBlur={handleBlur}
+                              className={'application-type-container'}
+                              disabled={disabled}
+                              changed={props.changes?props.changes.application_type:null}
                              />
                            </InputRow>
                            <InputRow  moreInfo={tenant.form_config.more_info.redirect_uris} title={t('form_redirect_uris')} required={values.grant_types.includes("implicit")||values.grant_types.includes("authorization_code")} error={typeof(errors.redirect_uris)==='string'?errors.redirect_uris:null}  touched={touched.redirect_uris} description={t('form_redirect_uris_desc')}>
@@ -1011,6 +1121,7 @@ const ServiceForm = (props)=> {
 
                             />
                           </InputRow>
+                         
                           <InputRow  moreInfo={tenant.form_config.more_info.token_endpoint_auth_method} title="Token Endpoint Authorization Method" required={true} error={errors.token_endpoint_auth_method} touched={touched.token_endpoint_auth_method}>
                             <AuthMethRadioList
                               name='token_endpoint_auth_method'

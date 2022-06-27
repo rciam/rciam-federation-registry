@@ -36,7 +36,7 @@ axios.get(process.env.EXPRESS_URL+'/agent/get_agents',options)
    console.log("Configuring Ams...");
    for(var i=0;i<agents.length;i++){
      let currentTopic = process.env.ENV + '_' + agents[i].tenant+'_'+agents[i].entity_type+'_'+agents[i].type + '_' + agents[i].integration_environment;
-     let agentSub = process.env.ENV + '_' + agents[i].tenant + '_'+agents[i].entity_type + '_' + agents[i].entity_protocol + '_' + agents[i].type + '_' + agents[i].integration_environment + '_' + agents[i].id
+     let agentSub = process.env.ENV + '_' + agents[i].tenant + '_'+agents[i].entity_type + '_' + agents[i].entity_protocol + '_' + agents[i].type + '_' + agents[i].integration_environment + '_' + agents[i].id;
      //console.log(agentSub);
      if(!topics.includes(currentTopic)){
        //console.log(currentTopic);
@@ -184,6 +184,9 @@ async function run() {
 
           let done = await axios.post(pubUrls[service.json.tenant].service[service.json.protocol][service.json.integration_environment],{"messages":messages}, options_ams).then((res) => {
             if(res.status===200){
+              console.log('Successfully Pushed Message to Ams')
+              console.log(pubUrls[service.json.tenant].service[service.json.protocol][service.json.integration_environment]);
+              console.log(service.json);
               setStateArray.push({id:service.json.id,state:'waiting-deployment',protocol:service.json.protocol,tenant:service.json.tenant,integration_environment:service.json.integration_environment});
             }
           }).catch(err => {console.log(err)});

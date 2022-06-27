@@ -36,5 +36,6 @@
   "generate_client_secret":true,
   "token_endpoint_auth_signing_alg":"",
   "jwks":"",
-  "jwks_uri":""
+  "jwks_uri":"",
+  "application_type": "WEB"
 }

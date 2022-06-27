@@ -1,4 +1,4 @@
-import React,{useContext} from 'react';
+import React,{useContext,useState} from 'react';
 import Modal from 'react-bootstrap/Modal';
 import config from '../config.json';
 import {useHistory,useParams} from "react-router-dom";
@@ -9,18 +9,12 @@ import {tenantContext} from '../context.js';
 
 export const Logout = (props) => {
   // const history = useHistory();
-  // const tenant = useContext(tenantContext);
+  const tenant = useContext(tenantContext);
   let {tenant_name} = useParams();
   const handleClose = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    if(tenant_name==='egi'){
-      window.location.assign('https://aai.egi.eu/oidc/saml/logout?redirect='+window.location.protocol+ "//" + window.location.hostname + (window.location.port?":"+window.location.port:"") + (config.basename==="/"?"/":config.basename+"/")+tenant_name);
-    }
-    else{
-      window.location.assign('https://aai-demo.eosc-portal.eu/oidc/saml/logout?redirect='+window.location.protocol+ "//" + window.location.hostname + (window.location.port?":"+window.location.port:"") + (config.basename==="/"?"/":config.basename+"/")+tenant_name);
-    }
-
+    window.location.assign(tenant.logout_uri);
   }
   return (
     <Translation>
@@ -40,21 +34,21 @@ export const Logout = (props) => {
       }}
     </Translation>
   )
-
-
 }
 
 export const NotFound = (props) => {
   const history = useHistory();
+  const [close,setClose] = useState(false);
   const tenant = useContext(tenantContext);
   const handleClose = () => {
+    setClose(true);
     history.push('/'+(tenant&&tenant[0]?tenant[0].name:null)+'/services');
   }
   return (
     <Translation>
       {t=> {
         return(
-          <Modal show={props.notFound||props.notAuthorised} onHide={handleClose}>
+          <Modal show={props.notFound||props.notAuthorised||close} onHide={handleClose}>
             <Modal.Header >
               <Modal.Title>{props.notFound?"Resourse requested was not found":props.notAuthorised?"Resourse not authorised":null}</Modal.Title>
             </Modal.Header>
@@ -178,6 +172,40 @@ export function ResponseModal(props){
     </Modal>
   )
 }
+
+export function MessageModal(props){
+  // eslint-disable-next-line
+  const { t, i18n } = useTranslation();
+  const handleClose = () => {
+    props.close();
+  }
+  return (
+    <Modal show={props.active?true:false} onHide={handleClose}>
+        <Modal.Header closeButton>
+          {props.title?
+            <Modal.Title>
+                {props.title}
+            </Modal.Title>
+            :null
+          }
+        </Modal.Header>
+        {props.message?
+          <Modal.Body >
+            {props.message}
+          </Modal.Body>
+          :null
+        } 
+        <Modal.Footer>
+
+          <Button variant="secondary" onClick={handleClose}>
+            {t('modal_continue')}
+          </Button>
+
+        </Modal.Footer>
+    </Modal>
+  )
+}
+
 export function ListResponseModal(props){
 
   // eslint-disable-next-line
