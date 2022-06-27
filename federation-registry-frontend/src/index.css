@@ -1702,7 +1702,7 @@ html:lang(gr) .home-container h1 {
   overflow: hidden;
 }
 .notifications-input-container div {
-  padding:0.2rem 0.2rem 0 0.2rem; 
+  padding:0.2rem 0.2rem 0.2rem 0.2rem; 
 }
 .notifications-error-up {
   margin-top: -0.3rem;
@@ -1722,8 +1722,9 @@ html:lang(gr) .home-container h1 {
   overflow: hidden;
   max-width:400px;
   margin-left:1.2rem;
-    
+  padding-bottom: 0.5rem;    
 }
+
 
 .notifications-error {
   height:auto!important;

@@ -49,7 +49,7 @@ export function SimpleInput(props){
             ref={target}
             onMouseOver={()=>setShow(true)}
             onMouseOut={()=>setShow(false)}
-            className={props.changed?'col-form-label-sm input-edited':'col-form-label-sm'}
+            className={props.changed?'col-form-label.sm input-edited':'col-form-label.sm'}
           />
           {props.copybutton?<CopyToClipboardComponent value={props.value}/>:null}
         </InputGroup>
@@ -1226,7 +1226,7 @@ function ListSingleInput(props){
       column="true"
       sm="4"
       type="text"
-      className={'col-form-label-sm spacing-bot '+ (type==='Added'?'input-new':!type?'':'input-deleted')}
+      className={'col-form-label.sm '+ (type==='Added'?'input-new':!type?'':'input-deleted')}
       placeholder="https//"
       disabled={props.disabled}
     />
@@ -1274,7 +1274,7 @@ export function ListInput(props){
 
               {props.values && props.values.length > 0 && props.values.map((item,index)=>(
                 <React.Fragment key={index}>
-                <InputGroup className="mb-3" >
+                <InputGroup className="mb-3 spacing-bot-contact" >
                   <Field name={`${props.name}.${index}`}>
                     {({field,form})=>(
                       <React.Fragment>
@@ -1291,7 +1291,7 @@ export function ListInput(props){
                   <br/>
                 </InputGroup>
                 {props.error&&props.error[index]?
-                  <div className="error-message-list-item">{props.error[index]}</div>
+                  <div className="error-message-list-item" >{props.error[index]}</div>
                 :null}
                 </React.Fragment>
               ))}

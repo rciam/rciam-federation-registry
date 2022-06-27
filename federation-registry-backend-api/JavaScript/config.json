@@ -74,6 +74,9 @@
         "scope": {
           "description": "OAuth scopes this client is allowed to request. See <a href='https://docs.egi.eu/providers/check-in/sp/#claims' target='_blank' rel='noopener noreferrer'>here</a> for more information."
         },
+        "redirect_uris":{
+          "description": "URIs that the client can be redirected to. Different URI validation rules apply depending on the application type."
+        },
         "contacts": {
           "description": "List of contacts for administrators of this service. (Technical and Support Contacts will be shown in the Consent Page)"
         },
@@ -85,6 +88,9 @@
         },
         "logo_uri": {
           "description": "URL that points to a logo image. (Logo will be displayed in the Consent Page)"
+        },
+        "application_type": {
+          "description": "Kind of the application. Web Clients MUST only register URLs using the https scheme as redirect_uris; they MAY use the http scheme when using localhost as the hostname. Native Clients MUST only register redirect_uris using custom URI schemes or URLs using the http scheme with localhost as the hostname."
         }
       },
       "extra_fields":{
@@ -182,6 +188,9 @@
         },
         "logo_uri": {
           "description": "URL that points to a logo image. (Logo will be displayed in the Consent Page)"
+        },
+        "application_type": {
+          "description": "Kind of the application. Web Clients MUST only register URLs using the https scheme as redirect_uris; they MAY use the http scheme when using localhost as the hostname. Native Clients MUST only register redirect_uris using custom URI schemes or URLs using the http scheme with localhost as the hostname."
         }
     },
     "extra_fields":{

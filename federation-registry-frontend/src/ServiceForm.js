@@ -237,7 +237,7 @@ const ServiceForm = (props)=> {
       is:'oidc',
       then: yup.array().nullable().when('integration_environment',(integration_environment)=>{
         integrationEnvironment = integration_environment;
-      }).when('application_type',(application_type_value)=>{application_type = application_type_value;}).of(yup.string().required().test('test_redirect_uri','Invalid Redirect Uri',function(value){
+      }).when('application_type',(application_type_value)=>{application_type = application_type_value;}).of(yup.string().required("Uri can't be an empty string").test('test_redirect_uri','Invalid Redirect Uri',function(value){
         if(value){
           let url
           try {
@@ -1065,6 +1065,22 @@ const ServiceForm = (props)=> {
                               isloading={values.client_id&&values.client_id!==checkedId&&checkingAvailability?1:0}
                              />
                            </InputRow>
+                           <InputRow  moreInfo={tenant.form_config.more_info.application_type} title={'Application Type'} required={true} description={""} error={errors.application_type} touched={touched.application_type}>
+                            <SimpleRadio
+                              name='application_type'
+                              onChange={handleChange}
+                              values={values}
+                              radio_items={['WEB','NATIVE']}
+                              setFieldValue={setFieldValue}
+                              radio_items_titles={['Web','Native']}
+                              value={values.application_type}
+                              isInvalid={hasSubmitted?(!!errors.application_type):(!!errors.application_type&&touched.application_type&&!checkingAvailability)}
+                              onBlur={handleBlur}
+                              className={'application-type-container'}
+                              disabled={disabled}
+                              changed={props.changes?props.changes.application_type:null}
+                             />
+                           </InputRow>
                            <InputRow  moreInfo={tenant.form_config.more_info.redirect_uris} title={t('form_redirect_uris')} required={values.grant_types.includes("implicit")||values.grant_types.includes("authorization_code")} error={typeof(errors.redirect_uris)==='string'?errors.redirect_uris:null}  touched={touched.redirect_uris} description={t('form_redirect_uris_desc')}>
                              <ListInput
                                values={values.redirect_uris}
@@ -1105,22 +1121,7 @@ const ServiceForm = (props)=> {
 
                             />
                           </InputRow>
-                          <InputRow  moreInfo={tenant.form_config.more_info.application_type} title={'Application Type'} description={""} error={errors.application_type} touched={touched.application_type}>
-                            <SimpleRadio
-                              name='application_type'
-                              onChange={handleChange}
-                              values={values}
-                              radio_items={['NATIVE','WEB']}
-                              setFieldValue={setFieldValue}
-                              radio_items_titles={['Native','Web']}
-                              value={values.application_type}
-                              isInvalid={hasSubmitted?(!!errors.application_type):(!!errors.application_type&&touched.application_type&&!checkingAvailability)}
-                              onBlur={handleBlur}
-                              className={'application-type-container'}
-                              disabled={disabled}
-                              changed={props.changes?props.changes.application_type:null}
-                             />
-                           </InputRow>
+                         
                           <InputRow  moreInfo={tenant.form_config.more_info.token_endpoint_auth_method} title="Token Endpoint Authorization Method" required={true} error={errors.token_endpoint_auth_method} touched={touched.token_endpoint_auth_method}>
                             <AuthMethRadioList
                               name='token_endpoint_auth_method'
