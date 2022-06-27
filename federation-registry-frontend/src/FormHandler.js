@@ -546,7 +546,6 @@ const ViewService = (props)=>{
 const CommentsAlert = (props) => {
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
-  const [user] = useContext(userContext);
 
   return(
     <React.Fragment>
