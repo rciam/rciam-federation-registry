@@ -1,25 +1,14 @@
-import React,{useState,useRef,useEffect,useContext} from 'react';
-import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
-import Tooltip from 'react-bootstrap/Tooltip';
-import DropdownButton from 'react-bootstrap/DropdownButton';
-import Dropdown from 'react-bootstrap/Dropdown';
-import Collapse from 'react-bootstrap/Collapse';
+import React,{useState,useRef,useEffect} from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {faSearch,faTimes} from '@fortawesome/free-solid-svg-icons';
 import InputGroup from 'react-bootstrap/InputGroup';
-import FormControl from 'react-bootstrap/FormControl';
 import Button from 'react-bootstrap/Button';
-import Col from 'react-bootstrap/Col';
-import Row from 'react-bootstrap/Row';
-import Table from 'react-bootstrap/Table';
 import config from '../config.json';
-import {Link,useParams} from "react-router-dom";
-import {userContext,tenantContext} from '../context.js';
+import {useParams} from "react-router-dom";
 import Modal from 'react-bootstrap/Modal';
 import Form from 'react-bootstrap/Form';
 import { Typeahead } from 'react-bootstrap-typeahead'; // ES2015
 import 'react-bootstrap-typeahead/css/Typeahead.css';
-import { propTypes } from 'react-bootstrap/esm/Image';
 import {ConfirmationModal,MessageModal} from './Modals';
 
 
@@ -38,6 +27,7 @@ const ManageTags = (props) => {
       if(props.manageTags){
         getTags();
       }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
     },[props.manageTags]);
 
     useEffect(()=>{

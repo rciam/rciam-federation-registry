@@ -1,6 +1,5 @@
 import React,{useContext,useState} from 'react';
 import Modal from 'react-bootstrap/Modal';
-import config from '../config.json';
 import {useHistory,useParams} from "react-router-dom";
 import Button from 'react-bootstrap/Button';
 import { useTranslation } from 'react-i18next';
@@ -10,7 +9,6 @@ import {tenantContext} from '../context.js';
 export const Logout = (props) => {
   // const history = useHistory();
   const tenant = useContext(tenantContext);
-  let {tenant_name} = useParams();
   const handleClose = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
