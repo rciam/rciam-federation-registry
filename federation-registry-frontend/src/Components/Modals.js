@@ -1,6 +1,6 @@
 import React,{useContext,useState} from 'react';
 import Modal from 'react-bootstrap/Modal';
-import {useHistory,useParams} from "react-router-dom";
+import {useHistory} from "react-router-dom";
 import Button from 'react-bootstrap/Button';
 import { useTranslation } from 'react-i18next';
 import { Translation } from 'react-i18next';
