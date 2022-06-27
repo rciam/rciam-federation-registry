@@ -51,6 +51,7 @@ describe('Service registry API Integration Tests', function() {
         checkAvailability(create.oidc.client_id,'oidc','egi',create.oidc.integration_environment,true,done);
       })
       it('should create a new petition and return the id',function(done){
+        userToken = setUser(users.egi.operator_user);
         var req = request(server).post('/tenants/egi/petitions').set({Authorization: userToken})
         .send({
           type:'create',
@@ -90,7 +91,7 @@ describe('Service registry API Integration Tests', function() {
         putPetition(
           {petition:petition,body:{type:'create',...create.saml},tenant: 'egi'},
           {body:{error:'Could not edit petition with id: '+petition},status:403},
-          done
+          done,userToken
         );
       })
       it('should fail to edit petition because of protocol missmatch',function(done){
@@ -98,28 +99,28 @@ describe('Service registry API Integration Tests', function() {
         putPetition(
           {petition:petition,body:{type:'create',...create.saml},tenant: 'egi'},
           {body:{error:'Tried to edit protocol'},status:403},
-          done
+          done,userToken
         );
       });
       it('should fail to edit petition because of type missmatch',function(done){
         putPetition(
           {petition:petition,body:{type:'edit',...edit.oidc,service_id:1},tenant: 'egi'},
           {body:{error:'Tried to edit registration type'},status:403},
-          done
+          done,userToken
         );
       });
       it('should fail to edit petition because client_id is not available',function(done){
         putPetition(
           {petition:petition,body:{type:'create',...edit.oidc,client_id:'client4'},tenant: 'egi'},
           {body:{error:'Protocol id is not available'},status:422},
-          done
+          done,userToken
         );
       });
       it('should fail to edit petition not petition found',function(done){
         putPetition(
           {petition:0,body:{type:'create',...edit.oidc},tenant: 'egi'},
           {body:{error:'Could not edit petition with id: 0'},status:403},
-          done
+          done,userToken
         );
       });
       it('should edit petition that was created',function(done){
@@ -186,7 +187,7 @@ describe('Service registry API Integration Tests', function() {
         putPetition(
           {petition:petition,body:{type:'create',...edit.saml,entity_id:'https://saml-id-1.com'},tenant: 'egi'},
           {body:{error:'Protocol id is not available'},status:422},
-          done
+          done,userToken
         );
       });
       it('should edit petition that was created',function(done){

@@ -139,6 +139,7 @@
         "oidc": ["grant_types","scope","redirect_uris"],
         "saml": []
       },
+      "application_type":["WEB", "NATIVE"],
       "device_code_validity_seconds":30000,
       "refresh_token_validity_seconds":34128000,
       "access_token_validity_seconds":1000000,
@@ -263,7 +264,7 @@
   "outdated_notifications_interval_seconds":604800,
   "send_outdated_notifications":false,
   "invitation_validity_seconds": 5184000,
-  "service_fields":["external_id","tenant","service_name","service_description","logo_uri","policy_uri","integration_environment","protocol","client_id","allow_introspection","code_challenge_method","device_code_validity_seconds","access_token_validity_seconds","refresh_token_validity_seconds","client_secret","reuse_refresh_token","clear_access_tokens_on_refresh","id_token_timeout_seconds","entity_id","metadata_url","grant_types","scope","contacts","redirect_uris","token_endpoint_auth_method","token_endpoint_auth_signing_alg","jwks","jwks_uri","country","website_url","aup_uri","organization_id"],
+  "service_fields":["external_id","tenant","service_name","service_description","logo_uri","policy_uri","integration_environment","protocol","client_id","allow_introspection","code_challenge_method","device_code_validity_seconds","access_token_validity_seconds","refresh_token_validity_seconds","client_secret","reuse_refresh_token","clear_access_tokens_on_refresh","id_token_timeout_seconds","entity_id","metadata_url","grant_types","scope","contacts","redirect_uris","token_endpoint_auth_method","token_endpoint_auth_signing_alg","jwks","jwks_uri","country","website_url","aup_uri","organization_id","application_type"],
   "ggus_email":"checkin-support@mailman.egi.eu",
   "disable_emails":false,
   "deployment_fields":["service_name","service_description","client_id","allow_introspection","code_challenge_method","device_code_validity_seconds","access_token_validity_seconds","refresh_token_validity_seconds","client_secret","reuse_refresh_token","clear_access_tokens_on_refresh","id_token_timeout_seconds","entity_id","metadata_url","grant_types","scope","contacts","redirect_uris","token_endpoint_auth_method","token_endpoint_auth_signing_alg","jwks","jwks_uri","website_url","aup_uri","policy_uri","country","logo_uri","application_type"],
