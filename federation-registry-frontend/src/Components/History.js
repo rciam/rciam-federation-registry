@@ -1,4 +1,4 @@
-import React,{useEffect,useState} from 'react';
+import React,{useEffect,useState,useContext} from 'react';
 import Badge from 'react-bootstrap/Badge';
 import config from '../config.json';
 import {LoadingBar} from './LoadingBar';
@@ -13,7 +13,7 @@ import Jumbotron from 'react-bootstrap/Jumbotron';
 import Container from 'react-bootstrap/Container';
 import { useTranslation } from 'react-i18next';
 import {Logout,NotFound} from './Modals'
-
+import {userContext} from '../context.js';
 
 
 export const HistoryRequest = () =>{
@@ -24,6 +24,8 @@ export const HistoryRequest = () =>{
   const [logout,setLogout] = useState();
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
+  // eslint-disable-next-line
+  const [user] = useContext(userContext);
 
   useEffect(()=>{ 
     getPetition();
@@ -91,7 +93,7 @@ export const HistoryRequest = () =>{
             </Container>
           </Jumbotron>
         :null}
-        <ServiceForm initialValues={petition.petition} disabled={true}/>
+        <ServiceForm initialValues={petition.petition} user={user} disabled={true}/>
       </React.Fragment>
     :<LoadingBar loading={true}/> 
   }
