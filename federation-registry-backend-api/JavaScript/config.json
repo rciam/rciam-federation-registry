@@ -36,6 +36,8 @@
       "protocol":["oidc","saml"],
       "integration_environment": ["production","development","demo"],
       "grant_types":["authorization_code","client_credentials","urn:ietf:params:oauth:grant-type:token-exchange","urn:ietf:params:oauth:grant-type:device_code","implicit","refresh_token"],
+      "dynamic_fields": ["allow_introspection"],
+      "disabled_fields": ["clear_access_tokens_on_refresh"],
       "contact_requirements":[
         {
           "type":"support",
@@ -91,6 +93,9 @@
         },
         "application_type": {
           "description": "Kind of the application. Web Clients MUST only register URLs using the https scheme as redirect_uris; they MAY use the http scheme when using localhost as the hostname. Native Clients MUST only register redirect_uris using custom URI schemes or URLs using the http scheme with localhost as the hostname."
+        },
+        "allow_introspection": {
+          "description": "Access to the Token Introspection endpoint is restricted to confidential clients."
         }
       },
       "extra_fields":{
@@ -148,6 +153,8 @@
       "protocol":["oidc","saml"],
       "integration_environment": ["production","demo"],
       "grant_types":["implicit","authorization_code","refresh_token","client_credentials","urn:ietf:params:oauth:grant_type:redelegate","urn:ietf:params:oauth:grant-type:token-exchange","urn:ietf:params:oauth:grant-type:device_code","urn:ietf:params:oauth:grant-type:jwt-bearer"],
+      "dynamic_fields": [],
+      "disabled_fields": [],
       "contact_requirements":[
         {
           "type":"support technical",

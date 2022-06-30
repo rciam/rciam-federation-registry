@@ -607,6 +607,9 @@ code {
 
 /* Service Form */
 
+.simple_checkbox_container {
+  margin-bottom: -0.7rem;
+}
 .service-form-tags-container small {
   margin-top:0;
 }

@@ -1134,6 +1134,18 @@ const ServiceForm = (props)=> {
                               changed={props.changes?props.changes.token_endpoint_auth_method:null}
                             />
                           </InputRow>
+                          <InputRow  moreInfo={tenant.form_config.more_info.allow_introspection} title={t('form_allow_introspection')}>
+                            <div className='simple_checkbox_container'>
+                              <SimpleCheckbox
+                                name='allow_introspection'
+                                label={t('form_allow_introspection_desc')}
+                                onChange={handleChange}
+                                disabled={disabled||tenant.form_config.dynamic_fields.includes('allow_introspection')}
+                                value={values.allow_introspection}
+                                changed={props.changes?props.changes.allow_introspection:null}
+                              />
+                            </div>
+                          </InputRow>
                           {values.token_endpoint_auth_method==='private_key_jwt'||values.token_endpoint_auth_method==='client_secret_jwt'?
                           <InputRow  moreInfo={tenant.form_config.more_info.token_endpoint_auth_signing_alg} title="Token Endpoint Signing Algorithm" required={true} extraClass='select-col' error={errors.token_endpoint_auth_signing_alg} touched={touched.token_endpoint_auth_signing_alg}>
                             <Select
@@ -1224,16 +1236,6 @@ const ServiceForm = (props)=> {
                               <FontAwesomeIcon icon={faExclamationTriangle}/>
                               Enabling PKCE is highly recommended to avoid code injection and code replay attacks. If enabled, you need to make sure that your client uses PKCE to prevent errors
                             </div>
-                          </InputRow>
-                          <InputRow  moreInfo={tenant.form_config.more_info.allow_introspection} title={t('form_allow_introspection')}>
-                            <SimpleCheckbox
-                              name='allow_introspection'
-                              label={t('form_allow_introspection_desc')}
-                              onChange={handleChange}
-                              disabled={disabled}
-                              value={values.allow_introspection}
-                              changed={props.changes?props.changes.allow_introspection:null}
-                            />
                           </InputRow>
                           <InputRow  moreInfo={tenant.form_config.more_info.access_token_validity_seconds} required={true} title={t('form_access_token_validity_seconds')} extraClass='time-input' error={errors.access_token_validity_seconds} touched={touched.access_token_validity_seconds} description={t('form_access_token_validity_seconds_desc')}>
                             <TimeInput
