@@ -1336,26 +1336,8 @@ function authenticate_allow_unauthorised(req,res,next){
     const data = {'client_secret':clients[req.params.tenant].client_secret}
     if(req.headers.authorization){
       TokenArray = req.headers.authorization.split(" ");
-      axios({
-        method:'post',
-        url: clients[req.params.tenant].issuer_url+'introspect',
-        params: {
-          client_id:clients[req.params.tenant].client_id,
-          token:TokenArray[1]
-        },
-        headers: {
-          'Content-Type':'application/x-www-form-urlencoded',
-          'Accept': 'application/json'
-        },
-        data: qs.stringify(data)
-      }).then(result => {
-        //console.log(result);
-        req.user = {};
-        req.user.sub = result.data.sub;
-
-        req.user.edu_person_entitlement = result.data.eduperson_entitlement;
-        req.user.iss = result.data.iss;
-        req.user.email = result.data.email;
+      clients[req.params.tenant].userinfo(TokenArray[1]).then(userinfo => {
+        req.user = userinfo;
         if(req.user.sub){
           db.user_role.getRoleActions(req.user.sub,req.params.tenant).then(role=>{
             if(role){
@@ -1363,22 +1345,25 @@ function authenticate_allow_unauthorised(req,res,next){
               next();
             }
             else{
-              res.status(401).send('Unauthenticated Request');
+              req.user= null;
+              next();
             }
           }).catch((err)=> {
+            req.user= null;
             next();
           });
         }
         else{
+          req.user= null;
           next();
         }
-      }, (error) =>{
-        next();
-      }).catch(err=>{
+      }).catch(err=> {
+        req.user= null;
         next();
       })
     }
     else{
+      req.user= null;
       next();
     }
   }catch(err){

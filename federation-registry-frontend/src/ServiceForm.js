@@ -825,7 +825,7 @@ const ServiceForm = (props)=> {
                 {props.disabled?null:
                   <div className="form-controls-container">
                     {props.review?
-                      <ReviewComponent errors={errors} reviewPetition={reviewPetition} type={props.type} restrictReview={restrictReview}/>
+                      <ReviewComponent errors={errors} values={values} changes={props.changes}  reviewPetition={reviewPetition} type={props.type} restrictReview={restrictReview}/>
                       :
                       <React.Fragment>
                         <div className="form-submit-cancel-container">
@@ -1301,7 +1301,7 @@ const ServiceForm = (props)=> {
                   {props.disabled?null:
                     <div className="form-controls-container">
                       {props.review?
-                          <ReviewComponent errors={errors} type={props.type} reviewPetition={reviewPetition} restrictReview={restrictReview} />
+                          <ReviewComponent errors={errors} values={values} changes={props.changes} type={props.type} reviewPetition={reviewPetition} restrictReview={restrictReview} />
                         :
                         <React.Fragment>
                         <div className="form-submit-cancel-container">
@@ -1340,8 +1340,21 @@ const ReviewComponent = (props)=>{
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   useEffect(()=>{
-
-    setInvalidPetition(Object.keys(props.errors).length !== 0);
+    let invalid = false;
+    for (const attribute in props.errors) {
+      if(Array.isArray(props.errors[attribute])){
+         props.errors[attribute].forEach((error,index)=>{          
+          if(error&&!props.changes[attribute].D.includes(props.values[attribute][index])){
+            invalid=true;
+          }
+        }
+        )
+      }
+      else{
+        invalid=true
+      }
+    }
+    setInvalidPetition(invalid);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[props.errors]);
 
