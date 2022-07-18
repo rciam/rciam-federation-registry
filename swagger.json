@@ -501,11 +501,73 @@ paths:
           description: "Internal Error"
       security:
       - access_tokenAuth: []
+  /tenants/{name}/notifications/owners:
+    put:
+      tags:
+      - "Notifications"
+      summary: "Send notifications to service owners"
+      description: "Sends notifications to the owners of a service"
+      operationId: "SendOwnerNotif"
+      produces:
+      - "application/json"
+      parameters:
+      - in: path
+        type: string
+        required: true
+        name: name
+        description: "Tenant that the request is targeting"
+      - in: "body"
+        name: "body"
+        description: "Notification data"
+        required: true
+        schema:
+          type: "object"
+          properties:
+            name:
+              type: "string"
+              description: "Name of the notification sender"
+            email_address:
+              type: "string"
+              format: "email"
+              description: "Email address of the notifications sender"
+            email_subject:
+              type: "string"
+              description: "Subject of the notification"
+            email_body:
+              type: "string"
+              description: "Notification Text, replaces (--* Reconfiguration Link *--) string with a button with a link to the reconfiguration page of the service/request"
+            cc_emails:
+              type: "array"
+              items: 
+                type: "string"
+                format: "email"
+              description: "Email addresses that will be added as CC to the notification email"
+            recipients:
+              type: "array"
+              items: 
+                type: "string"
+                format: "email"
+              description: "Email addresses that the notification will be sent"
+      responses:
+        "200":
+          description: "successful"
+          schema:
+            type: "object"
+            properties: 
+              notified_users:
+                type: "number"
+                description: "Number of users the notification was sent to"
+        "401":
+          description: "Unauthenticated request"
+        "500":
+          description: "Internal Error"
+      security:
+      - access_tokenAuth: []
   /tenants/{name}/notifications/broadcast:
     put:
       tags:
       - "Notifications"
-      summary: "Send Notifications"
+      summary: "Send Notifications to service contacts"
       description: "Sends Notifications to the contacts of registered services"
       operationId: "sendNotif"
       produces:
@@ -767,7 +829,12 @@ paths:
         "200":
           description: "successful"
           schema:
-            $ref: "#/definitions/Service"
+            type: "object"
+            properties:
+              service: 
+                $ref: "#/definitions/Service"
+              owned:
+                type: "boolean"
         "401":
           description: "Unauthenticated request"
         "500":
@@ -865,6 +932,26 @@ paths:
           type: string
           name: outdated
           description: "Returns only services that have invalid configuration"
+        - in: query
+          type: string
+          name: protocol
+          description: "Returns only services of the given protocol (oidc,saml)"
+        - in: query
+          type: string
+          enum:
+          - 'pending'
+          - 'changes'
+          - 'request_review'
+          name: pending_sub
+          description: "Sub filter for services with pending requests based on the review state of the request"
+        - in: query
+          type: boolean
+          name: error
+          description: "Returns only services that have a deployment error"
+        - in: query
+          type: string
+          name: 'tag'
+          description: "Filters results based on tags, supports multiple comma seperated values"
       responses:
         "200":
           description: "OK"

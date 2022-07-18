@@ -832,6 +832,13 @@ function TableItem(props) {
                   </div>
                 </Dropdown.Item>
               :null}
+              {user.actions.includes('send_notifications')?
+                <Dropdown.Item as='span'>
+                  <Link to={{
+                    pathname:'/'+tenant_name+(props.service.service_id?"/services/"+props.service.service_id:"/requests/"+props.service.petition_id)+"/groups/"+props.service.group_id+"/contact"
+                  }}>Contact Owners</Link>
+                </Dropdown.Item>
+              :null}
               <Dropdown.Item as='span'>
                 <div>
                   <Link to={{

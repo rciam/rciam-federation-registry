@@ -1648,6 +1648,21 @@ html:lang(gr) .home-container h1 {
 
 /* Notifications */
 
+.email-body-input {
+  height:20rem!important;
+  width: 100%!important;;
+}
+
+
+.email-body-input-container {
+  max-width: 100%!important;
+  width: 100%!important;
+}
+
+.notifications-right-row {
+  margin-left:0!important;
+}
+
 .outdated-notifications-container {
   padding-left:0.5rem;
 }
@@ -1674,10 +1689,13 @@ html:lang(gr) .home-container h1 {
   margin-top:3rem;
   min-width: 100%;
 }
-.notifications-main-row .col , .notifications-main-row .col-sm-4 {
+.notifications-right-col , .notifications-left-col {
   padding-left: 2rem!important;
 }
 
+.notifications-secondary-col {
+  padding-left: 0rem!important;
+}
 .notifications-left-col {
   border-right: 2px solid #DDE1E6;
   min-width: 12rem;
@@ -1703,6 +1721,7 @@ html:lang(gr) .home-container h1 {
   text-align: center;
   vertical-align: middle;
   overflow: hidden;
+  display:block;
 }
 .notifications-input-container div {
   padding:0.2rem 0.2rem 0.2rem 0.2rem; 
@@ -1748,6 +1767,9 @@ html:lang(gr) .home-container h1 {
 
 .split-to-rows div {
   height:auto;
+}
+.email-body-notifications-input-container {
+  margin-top:1rem!important;
 }
 
 .recipients-container div{

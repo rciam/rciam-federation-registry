@@ -416,7 +416,7 @@ const ServiceForm = (props)=> {
     }),
     entity_id:yup.string().matches(reg.regUrl,t('yup_secure_url')).nullable().when('protocol',{
       is:'saml',
-      then: yup.string().min(4,t('yup_char_min') + ' ('+4+')').test('testAvailable',t('yup_entity_id'),function(value){
+      then: yup.string().nullable().required('This is a required field').min(4,t('yup_char_min') + ' ('+4+')').test('testAvailable',t('yup_entity_id'),function(value){
         if(props.initialValues.entity_id===value && !props.copy){
           return true
         }
