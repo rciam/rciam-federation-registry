@@ -321,7 +321,7 @@ const GroupsPage = (props) => {
     <React.Fragment>
     <NotFound notFound={notFound}/>
     <Logout logout={logout}/>
-    <ConfirmationModal active={confirmationData.action?true:false} setActive={setConfirmationData} action={()=>{if(confirmationData.action==='cancel'){cancelInvitation(...confirmationData.args)}else{removeMember(...confirmationData.args)}}} title={confirmationData.title} message={confirmationData.message} accept={'Yes'} decline={'No'}/>
+    <ConfirmationModal active={confirmationData.action?true:false} close={()=>{setConfirmationData(false)}} action={()=>{if(confirmationData.action==='cancel'){cancelInvitation(...confirmationData.args)}else{removeMember(...confirmationData.args)} setConfirmationData(false);}} title={confirmationData.title} message={confirmationData.message} accept={'Yes'} decline={'No'}/>
 
       <ProcessingRequest active={sending}/>
      

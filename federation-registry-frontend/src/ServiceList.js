@@ -360,7 +360,7 @@ const ServiceList= (props)=> {
       <Logout logout={logout}/>
       <NotFound notFound={notFound?true:false} setNotFound={setNotFound}/>
       <ListResponseModal message={message} modalTitle={responseTitle} setMessage={setMessage}/>
-      <ConfirmationModal active={confirmationData.action?true:false} setActive={setConfirmationData} action={()=>{if(confirmationData.action==='delete_service'){deleteService(...confirmationData.args)}else{deletePetition(...confirmationData.args)}}} title={confirmationData.title} accept={'Yes'} decline={'No'}/>
+      <ConfirmationModal active={confirmationData.action?true:false} close={()=>{setConfirmationData({})}} action={()=>{if(confirmationData.action==='delete_service'){deleteService(...confirmationData.args)}else{deletePetition(...confirmationData.args)} setConfirmationData({});}} title={confirmationData.title} accept={'Yes'} decline={'No'}/>
       <div>
         <LoadingBar loading={initialLoading}>
         {requestReviewCount>0&&user.review_restricted?<Collapse in={showNotification}>

@@ -1,6 +1,6 @@
 import React,{useEffect,useState,useContext} from 'react';
 import initialValues from './initialValues';
-import {useParams} from "react-router-dom";
+import {useParams,useHistory} from "react-router-dom";
 import config from './config.json';
 import ServiceForm from "./ServiceForm.js";
 import ErrorComponent from "./Components/Error.js"
@@ -10,7 +10,7 @@ import Tab from 'react-bootstrap/Tab';
 import Alert from 'react-bootstrap/Alert';
 import Jumbotron from 'react-bootstrap/Jumbotron';
 import Container from 'react-bootstrap/Container';
-import {Logout,NotFound,ResponseModal} from './Components/Modals';
+import {Logout,NotFound,ResponseModal,ConfirmationModal} from './Components/Modals';
 import { diff } from 'deep-diff';
 import { useTranslation } from 'react-i18next';
 import {tenantContext,userContext} from './context.js';
@@ -18,6 +18,7 @@ import {calcDiff} from './helpers.js'
 
 
 const EditService = (props) => {
+    let history = useHistory();
     // eslint-disable-next-line
     const { t, i18n } = useTranslation();
     const [petitionData,setPetitionData] = useState();
@@ -33,7 +34,9 @@ const EditService = (props) => {
     const [user] = useContext(userContext);
     const [owned,setOwned] = useState(true);
     const [modalMessage,setModalMessage] = useState();
-    
+    const [petitionIdRedirect,setPetitionIdRedirect] = useState();    
+    const [redirectTitle,setRedirectTitle] = useState();
+
     useEffect(()=>{
       
       localStorage.removeItem('url');
@@ -104,6 +107,52 @@ const EditService = (props) => {
           }
         });
       }
+      if(service_id&&!petition_id&&!props.review){
+        fetch(config.host+'tenants/'+tenant_name+'/services/list?service_id='+service_id, {
+          method: 'GET', // *GET, POST, PUT, DELETE, etc.
+          credentials: 'include', // include, *same-origin, omit
+          headers: {
+          'Content-Type': 'application/json',
+          'Authorization': localStorage.getItem('token')
+        }}).then(response=>{
+          if(response.status===200||response.status===304){
+            return response.json();
+          }
+          else if(response.status===401){
+            setLogout(true);
+            return false;
+          }
+          else if(response.status===416){
+            setNotFound(true);
+            return false;
+          }
+          else {
+            return false
+          }
+        }).then(response=> {
+
+          if(response){
+            try{
+              console.log(response.list_items);
+              if(response.list_items[0].petition_id){
+                if(response.list_items[0].type==='edit'){
+                  setPetitionIdRedirect(response.list_items[0].petition_id);
+                  setRedirectTitle("There is already an open reconfiguration request for this service");
+                }
+                else if(response.list_items[0].type==='delete'){
+                  setPetitionIdRedirect(response.list_items[0].petition_id);
+                  setRedirectTitle('There is an open deregistration request for this service');
+                }
+
+              }
+              
+            }
+            catch(err){
+              
+            }
+          }
+        });
+      }
       if(petition_id){
         fetch(config.host+'tenants/'+tenant_name+'/petitions/'+petition_id+'?type=open', {
           method: 'GET', // *GET, POST, PUT, DELETE, etc.
@@ -145,7 +194,7 @@ const EditService = (props) => {
     <React.Fragment>
       <Logout logout={logout}/>
       <NotFound notFound={notFound}/>
-      <ResponseModal return_url={'/'+tenant_name+'/services'} message={modalMessage} modalTitle={'Review is not available for this request'}/>
+      <ConfirmationModal active={petitionIdRedirect?true:false} close={()=>{history.push('/'+tenant_name+'/services'); setPetitionIdRedirect();}} action={()=>{history.push('/'+tenant_name+ '/services/'+service_id+'/requests/'+petitionIdRedirect+'/edit'); setPetitionIdRedirect(); window.location.reload(false);}} title={"There is already an open reconfiguration request"} message={"Do you want to view it in a new window"} accept={'Yes'} decline={'No'}/>
     {!((petitionData||!petition_id)&&(!service_id||service))?<LoadingBar loading={true}/>:
       <React.Fragment>
        {props.review?

@@ -38,12 +38,13 @@ class ServiceListRepository {
       orphan_filter_services:'',
       orphan_filter_petitions:'',
       error_filter_services:'',
-      error_filter_petitions:'',
+      disable_petitions:'',
       owner_filter_petition:'',
       owner_filter_services:'',
       tags_filter_services:'',
       tags_filter_petitions:'',
       get_tags_filter:'',
+      service_id_filter:''
     };
 
     if(req.user.role.actions.includes('manage_tags')){
@@ -84,8 +85,12 @@ class ServiceListRepository {
     }
 
     if(req.query.error){
-      params.error_filter_petitions = "AND false";
+      params.disable_petitions = "AND false";
       params.error_filter_services = "AND state='error'";
+    }
+    if(req.query.service_id){
+      params.disable_petitions = "AND false";
+      params.service_id_filter = "AND service_id=" + req.query.service_id;
     }
 
     if(req.query.pending_sub){

@@ -133,7 +133,7 @@ const Routes = (props) => {
         </div>
         <EditService user={props.user}/>
       </ProtectedRoute>
-      <ProtectedRoute user={props.user} path="/:tenant_name/requests/:petition_id/groups/:group_id">
+      <ProtectedRoute user={props.user} exact path="/:tenant_name/requests/:petition_id/groups/:group_id">
         <div className="links">
           <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/home"}>{props.t('link_home')}</Link>
           <span className="link-seperator">/</span>
@@ -143,7 +143,7 @@ const Routes = (props) => {
         </div>
         <GroupsPage/>
       </ProtectedRoute>
-      <ProtectedRoute user={props.user} path="/:tenant_name/services/:service_id/groups/:group_id">
+      <ProtectedRoute user={props.user} exact path="/:tenant_name/services/:service_id/groups/:group_id">
         <div className="links">
           <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/home"}>{props.t('link_home')}</Link>
           <span className="link-seperator">/</span>

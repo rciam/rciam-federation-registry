@@ -1343,12 +1343,11 @@ const ReviewComponent = (props)=>{
     let invalid = false;
     for (const attribute in props.errors) {
       if(Array.isArray(props.errors[attribute])){
-         props.errors[attribute].forEach((error,index)=>{          
-          if(error&&!props.changes[attribute].D.includes(props.values[attribute][index])){
+        for(let i=0;i<props.errors[attribute].length;i++){
+          if(props.errors[attribute][i]&&!props.changes[attribute].D.includes(props.values[attribute][i])){
             invalid=true;
           }
         }
-        )
       }
       else{
         invalid=true
