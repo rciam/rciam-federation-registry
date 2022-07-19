@@ -1,6 +1,6 @@
 const { body,query,param } = require('express-validator');
-const {reg} = require('./regex.js');
-var config = require('./config');
+const {reg} = require('../regex.js');
+var config = require('../config');
 
 const getRecipientsBroadcastNotifications = () => {
     return [
