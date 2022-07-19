@@ -40,9 +40,9 @@ const BroadcastNotifications = (props) =>{
   }
   let initialValues_owners = {
     cc_emails:[],
-    name:"Test",
-    email_address:"test@mail.com",
-    email_subject:"Subject",
+    name:"",
+    email_address:"",
+    email_subject:"",
     email_body:"",
     recipients: [],
     service_id: service_id,
@@ -119,7 +119,7 @@ const BroadcastNotifications = (props) =>{
       body: JSON.stringify(values)
     }).then(response=>{
         if(response.status===200){
-          return response.json();
+          return true;
         }
         else if(response.status===401){
           setLogout(true);
@@ -131,7 +131,9 @@ const BroadcastNotifications = (props) =>{
         }
       }).then(response=> {
       if(response){
-        setResponseTitle('Thank your for submitting your request.')
+        
+        setResponseTitle('Thank your for submitting your request.');
+
         if(response){
           setResponseMessage("Notification was successfully sent.");
         }
