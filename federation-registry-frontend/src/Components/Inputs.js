@@ -394,6 +394,7 @@ export function AuthMethRadioList(props){
     if(tenant[0].form_config.dynamic_fields.includes('allow_introspection')){
       setFieldValue('allow_introspection',props.values.token_endpoint_auth_method!=='none');
     } 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   },[])
   return(
     <React.Fragment>
