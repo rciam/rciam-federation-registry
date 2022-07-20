@@ -360,7 +360,7 @@ const ServiceList= (props)=> {
       <Logout logout={logout}/>
       <NotFound notFound={notFound?true:false} setNotFound={setNotFound}/>
       <ListResponseModal message={message} modalTitle={responseTitle} setMessage={setMessage}/>
-      <ConfirmationModal active={confirmationData.action?true:false} setActive={setConfirmationData} action={()=>{if(confirmationData.action==='delete_service'){deleteService(...confirmationData.args)}else{deletePetition(...confirmationData.args)}}} title={confirmationData.title} accept={'Yes'} decline={'No'}/>
+      <ConfirmationModal active={confirmationData.action?true:false} close={()=>{setConfirmationData({})}} action={()=>{if(confirmationData.action==='delete_service'){deleteService(...confirmationData.args)}else{deletePetition(...confirmationData.args)} setConfirmationData({});}} title={confirmationData.title} accept={'Yes'} decline={'No'}/>
       <div>
         <LoadingBar loading={initialLoading}>
         {requestReviewCount>0&&user.review_restricted?<Collapse in={showNotification}>
@@ -830,6 +830,13 @@ function TableItem(props) {
                   }}>
                     Manage Tags
                   </div>
+                </Dropdown.Item>
+              :null}
+              {user.actions.includes('send_notifications')?
+                <Dropdown.Item as='span'>
+                  <Link to={{
+                    pathname:'/'+tenant_name+(props.service.service_id?"/services/"+props.service.service_id:"/requests/"+props.service.petition_id)+"/groups/"+props.service.group_id+"/contact"
+                  }}>Contact Owners</Link>
                 </Dropdown.Item>
               :null}
               <Dropdown.Item as='span'>

@@ -5,6 +5,8 @@ import Button from 'react-bootstrap/Button';
 import { useTranslation } from 'react-i18next';
 import { Translation } from 'react-i18next';
 import {tenantContext} from '../context.js';
+import parse from 'html-react-parser';
+
 
 export const Logout = (props) => {
   // const history = useHistory();
@@ -111,9 +113,9 @@ export class SimpleModal extends React.Component {
 
 
 export const ConfirmationModal = (props) =>{
-  const close = () => {props.setActive({})}
+  
   return (
-    <Modal show={props.active} onHide={close}>
+    <Modal show={props.active} onHide={()=>{props.close()}}>
         <Modal.Header closeButton>
           <Modal.Title>
               {props.title}
@@ -122,17 +124,17 @@ export const ConfirmationModal = (props) =>{
 
           {props.message?
               <Modal.Body>
-                {props.message}
+                {parse(props.message)}
               </Modal.Body>
               :null
           }
 
         <Modal.Footer>
             <React.Fragment>
-              <Button variant="primary" onClick={()=>{props.action(); close();}}>
+              <Button variant="primary" onClick={()=>{props.action();}}>
                 {props.accept}
               </Button>
-              <Button variant="danger" onClick={close}>
+              <Button variant="danger" onClick={()=>{props.close()}}>
                 {props.decline}
               </Button>
             </React.Fragment>
@@ -140,6 +142,8 @@ export const ConfirmationModal = (props) =>{
     </Modal>
   )
 }
+
+
 
 export function ResponseModal(props){
   // eslint-disable-next-line

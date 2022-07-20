@@ -146,150 +146,7 @@ const putBannerAlertValidation = () =>{
   ]
 }
 
-const getRecipientsBroadcastNotifications = () => {
-  return [
-    param('tenant').custom((value,{req,location,path})=>{if(value in config.form){return true}else{return false}}).withMessage('Invalid Tenant in the url'),
-    query('contact_types').custom((value,{req,location,path})=>{
-      try{
-        let contact_types = value.split(',');
-        if(contact_types.length>0){
-          contact_types.forEach(contact_type=>{
-            if(!config.form[req.params.tenant].contact_types.includes(contact_type)){
-              throw new Error(contact_type + ' is not a supported contact type, supported contact types (' + config.form[req.params.tenant].contact_types + ')');            
-            }
-          })
-        }
-        else{
-          throw new Error('No contact types provided');
-        } 
-        return true 
-      }
-      catch(err){
-        throw new Error(err);
-      }
-    }),
-    query('environments').custom((value,{req,location,path})=>{
-      try{
-        let environments = value.split(',');
-        if(environments.length>0){
-          environments.forEach(environment=>{
-            if(!config.form[req.params.tenant].integration_environment.includes(environment)){
-              throw new Error(environment + ' is not a supported environment, supported environments (' + config.form[req.params.tenant].integration_environment + ')');            
-            }
-          })
-        }
-        else{
-          throw new Error('No environments provided');
-        }  
-        return true
-      }
-      catch(err){
-        throw new Error(err);
-      }
-    }),
-    query('protocols').custom((value,{req,location,path})=>{
-      try{
-        let protocols = value.split(',');
-        if(protocols.length>0){
-          protocols.forEach(protocol=>{
-            if(!config.form[req.params.tenant].protocol.includes(protocol)){
-              throw new Error(protocol + ' is not a supported protocol, supported protocols (' + config.form[req.params.tenant].protocol + ')');            
-            }
-          })
-        }
-        else{
-          throw new Error('No protocols provided');
-        }  
-        return true
-      }
-      catch(err){
-        throw new Error(err);
-      }
-    })
-  ]
-}
 
-const outdatedNotificationsValidation = () => {
-  return [
-    body('integration_environment').exists().withMessage('Required Field').bail().isString().withMessage('name must be a string').bail().custom((value,{req,location,path})=>{
-      try{
-        if(!config.form[req.params.tenant].integration_environment.includes(value)){
-          throw new Error(value + ' is not a supported integration_environment, supported values (' + config.form[req.params.tenant].integration_environment+ ')')
-        }
-        
-      }
-      catch(err){
-        throw new Error(err);
-      }
-      return true;
-    })
-  ]
-}
-
-const broadcastNotificationsValidation = () => {
-  return [
-    body('name').exists().withMessage('Required Field').bail().isString().withMessage('name must be a string').isLength({min:4, max:36}).withMessage('name must be from 4 up to 36 characters'),
-    body('email_body').exists().withMessage('Required Field').bail().isString().withMessage('email_body must be a string').isLength({min:4, max:4064}).withMessage('email_subject must be from 4 up to 4064 characters'),
-    body('cc_emails').optional({checkFalsy:true}).isArray().withMessage('cc_emails must be an array').bail().custom((value,{req,location,path})=> {
-      try{
-        if(value.length>0){
-          value.map((email,index)=>{
-            if(!email.toLowerCase().match(reg.regEmail)){
-              throw new Error(email +" is not a valid email address");
-            }
-          }); 
-        }
-      }
-      catch(err){
-        throw new Error(err);
-      }
-      return true
-    }),
-    body('email_subject').exists().withMessage('Required Field').bail().isString().withMessage('email_subject must be a string').isLength({min:4, max:64}).withMessage('email_subject must be from 4 up to 64 characters'),
-    body('notify_admins').customSanitizer(value => {
-      if(value==='true'|| (typeof(value)==="boolean" && value)){
-        return true
-      }
-      else{
-        return false
-      }
-    }).optional({checkFalsy:true}).custom((value)=> typeof(value)==='boolean').withMessage('notify_admins must be a boolean').bail(),
-    body('email_address').exists().withMessage('Required Field').bail().isString().withMessage('Must be a string').bail().custom((value,success=true)=> {if(!value.toLowerCase().match(reg.regEmail)){success=false} return success }).withMessage('Must be a valid email address'),
-    body('contact_types').exists().withMessage('Required Field').isArray().bail().custom((value,{req,location,path})=> {   
-      
-      if(value.length>0){
-        value.forEach(type=>{
-          if(!config.form[req.params.tenant].contact_types.includes(type)){
-            throw new Error(type +" is not a valid contact type");
-          }
-        });
-      }
-      return true;
-      }),
-    body('protocols').exists().withMessage('Required Field').isArray().bail().custom((value,{req,location,path})=> {   
-    
-      if(value.length>0){
-        value.forEach(protocol=>{
-          if(!['oidc','saml'].includes(protocol)){
-            throw new Error(protocol +" is not a valid protocol");
-          }
-        });
-      }
-      return true;
-      }),
-    body('environments').exists().withMessage('Required Field').isArray().bail().custom((value,{req,location,path})=> {   
-    
-      if(value.length>0){
-        value.forEach(environment=>{
-          if(!config.form[req.params.tenant].integration_environment.includes(environment)){
-            throw new Error(environment +" is not a valid environment");
-          }
-        });
-      }
-      return true;
-      })
-  ]
-}
 
 const getServicesValidation = () => {
   return [
@@ -674,6 +531,7 @@ const serviceValidationRules = (options,req) => {
       body('*.application_type').custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Service application_type is missing').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).custom((value,{req,location,path})=>{
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         if(!value||config.form[tenant].application_type.includes(value)){
+          
           return true
         }
         else{
@@ -1072,9 +930,6 @@ module.exports = {
   changeContacts,
   validateInternal,
   formatCocForValidation,
-  broadcastNotificationsValidation,
   postBannerAlertValidation,
-  putBannerAlertValidation,
-  outdatedNotificationsValidation,
-  getRecipientsBroadcastNotifications
+  putBannerAlertValidation
 }

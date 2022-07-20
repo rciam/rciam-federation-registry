@@ -1,16 +1,16 @@
 require('dotenv').config();
-const {petitionValidationRules,validate,validateInternal,tenantValidation,formatPetition,getServiceListValidation,postInvitationValidation,serviceValidationRules,putAgentValidation,postAgentValidation,decodeAms,amsIngestValidation,reFormatPetition,getServicesValidation,formatCocForValidation,broadcastNotificationsValidation,outdatedNotificationsValidation,getRecipientsBroadcastNotifications} = require('../validator.js');
+const {petitionValidationRules,validate,validateInternal,tenantValidation,formatPetition,getServiceListValidation,postInvitationValidation,serviceValidationRules,putAgentValidation,postAgentValidation,decodeAms,amsIngestValidation,reFormatPetition,getServicesValidation,formatCocForValidation} = require('../validator.js');
 const qs = require('qs');
 const {v1:uuidv1} = require('uuid');
 const axios = require('axios').default;
-const {sendMail,sendInvitationMail,sendMultipleInvitations,createGgusTickets,delay,sendNotifications} = require('../functions/helpers.js');
+const {sendMail,sendInvitationMail,sendMultipleInvitations,createGgusTickets,delay} = require('../functions/helpers.js');
 const {db} = require('../db');
 var router = require('express').Router();
 var config = require('../config');
 const customLogger = require('../loggers.js');
 const {rejectPetition,approvePetition,changesPetition,getPetition,getOpenPetition,requestReviewPetition} = require('../controllers/main.js');
 const {adminAuth,authenticate} = require('./authentication.js'); 
-const {sendOutdatedNotification} = require('../functions/outdated_notif.js');
+
 
 
 // ----------------------------------------------------------
@@ -1052,82 +1052,7 @@ router.put('/tenants/:tenant/invitations/activate_by_code',authenticate,(req,res
   }
 })
 
-// Notifications 
 
-router.get('/tenants/:tenant/notifications/broadcast/recipients',authenticate,getRecipientsBroadcastNotifications(),validate,(req,res,next)=>{
-  try{
-    let data = {};
-    data.contact_types = req.query.contact_types.split(',');
-    data.environments = req.query.environments.split(',');
-    data.protocols = req.query.protocols.split(',')
-  db.service.getContacts(data,req.params.tenant).then(async users=>{
-      res.status(200).send(users);
-    }).catch(err=>{
-      next(err)
-    })
-  }
-  catch(e){
-    next(err)
-  }
-});
-
-
-router.put('/tenants/:tenant/notifications/outdated',authenticate,outdatedNotificationsValidation(),validate,(req,res,next)=>{
-  try{
-    if(req.user.role.actions.includes('send_notifications')){
-      db.service_state.getOutdatedOwners(req.params.tenant,req.body.integration_environment).then(async users=>{
-        if(users){
-          let outdated_services = [];
-          if(users.length>0){
-            users.forEach(user=>{
-              if(!outdated_services.includes(user.service_id)){
-                outdated_services.push(user.service_id);
-              }
-            })
-          }
-          res.status(200).send({user_count:users.length,service_count:outdated_services.length});
-          for(const user of users){
-            await delay(400);
-            sendOutdatedNotification(user);
-          }       
-        }
-      }).catch(err=>{customLogger(null,null,'warn','Error when creating and sending invitations: '+err)})
-    }
-    else{
-      res.status(403).end();
-    }
-  }
-  catch(err){
-    next(err);
-  }
-})
-
-router.put('/tenants/:tenant/notifications/broadcast',authenticate,broadcastNotificationsValidation(),validate,(req,res,next)=>{
-  try{
-    if(req.user.role.actions.includes('send_notifications')){
-      db.service.getContacts(req.body,req.params.tenant).then(async users=>{
-        if(req.body.notify_admins){
-          admins = await db.user.getUsersByAction("send_notifications",req.params.tenant);
-          admins.forEach(admin=>{
-            if(!req.body.cc_emails.includes(admin.email)){
-              req.body.cc_emails.push(admin.email);
-            }
-          })
-        }
-        if(users.length>0){
-          sendNotifications({cc_emails:req.body.cc_emails,subject:req.body.email_subject,url:"/",sender_name:req.body.name,sender_email:req.body.email_address,email_body:req.body.email_body,tenant:req.params.tenant},'contacts-notification.hbs',users);
-        }
-        res.status(200).send({notified_users:users.length});
-      })
-    }
-    else{
-      res.status(403).end();
-    }
-  }
-  catch(err){
-    next(err);
-  }
-})
 
 
 // Tenants Deployer Agents
@@ -1336,26 +1261,8 @@ function authenticate_allow_unauthorised(req,res,next){
     const data = {'client_secret':clients[req.params.tenant].client_secret}
     if(req.headers.authorization){
       TokenArray = req.headers.authorization.split(" ");
-      axios({
-        method:'post',
-        url: clients[req.params.tenant].issuer_url+'introspect',
-        params: {
-          client_id:clients[req.params.tenant].client_id,
-          token:TokenArray[1]
-        },
-        headers: {
-          'Content-Type':'application/x-www-form-urlencoded',
-          'Accept': 'application/json'
-        },
-        data: qs.stringify(data)
-      }).then(result => {
-        //console.log(result);
-        req.user = {};
-        req.user.sub = result.data.sub;
-
-        req.user.edu_person_entitlement = result.data.eduperson_entitlement;
-        req.user.iss = result.data.iss;
-        req.user.email = result.data.email;
+      clients[req.params.tenant].userinfo(TokenArray[1]).then(userinfo => {
+        req.user = userinfo;
         if(req.user.sub){
           db.user_role.getRoleActions(req.user.sub,req.params.tenant).then(role=>{
             if(role){
@@ -1363,22 +1270,25 @@ function authenticate_allow_unauthorised(req,res,next){
               next();
             }
             else{
-              res.status(401).send('Unauthenticated Request');
+              req.user= null;
+              next();
             }
           }).catch((err)=> {
+            req.user= null;
             next();
           });
         }
         else{
+          req.user= null;
           next();
         }
-      }, (error) =>{
-        next();
-      }).catch(err=>{
+      }).catch(err=> {
+        req.user= null;
         next();
       })
     }
     else{
+      req.user= null;
       next();
     }
   }catch(err){

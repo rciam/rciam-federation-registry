@@ -37,13 +37,12 @@ function decode(jwt) {
 function authenticate(req,res,next){
   try{
     var clients = req.app.get('clients');
-    if(process.env.NODE_ENV==='test-docker'||process.env.NODE_ENV==='test'){
+    if(process.env.NODE_ENV==='test-docker'||process.env.NODE_ENV==='test'){      
       let token = req.headers['x-access-token'] || req.headers['authorization']; // Express headers are auto converted to lowercase
       if (token && token.startsWith('Bearer ')) {
         // Remove Bearer from string
         token = token.slice(7, token.length);
         req.user = decode(token);
-        
         db.user_role.getRoleActions(req.user.sub,req.params.tenant).then(role=>{
           if(role){
             req.user.role = role;

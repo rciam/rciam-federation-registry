@@ -103,7 +103,7 @@ const Routes = (props) => {
           <span className="link-seperator">/</span>
           Send Broadcast Notifications
         </div>
-        <BroadcastNotifications user={props.user}/>
+        <BroadcastNotifications type="broadcast" user={props.user}/>
       </ProtectedRoute>
       <ProtectedRoute user={props.user} exact path="/:tenant_name/notifications/outdated" actions={['send_notifications']} >
         <div className="links">
@@ -133,7 +133,7 @@ const Routes = (props) => {
         </div>
         <EditService user={props.user}/>
       </ProtectedRoute>
-      <ProtectedRoute user={props.user} path="/:tenant_name/requests/:petition_id/groups/:group_id">
+      <ProtectedRoute user={props.user} exact path="/:tenant_name/requests/:petition_id/groups/:group_id">
         <div className="links">
           <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/home"}>{props.t('link_home')}</Link>
           <span className="link-seperator">/</span>
@@ -143,7 +143,7 @@ const Routes = (props) => {
         </div>
         <GroupsPage/>
       </ProtectedRoute>
-      <ProtectedRoute user={props.user} path="/:tenant_name/services/:service_id/groups/:group_id">
+      <ProtectedRoute user={props.user} exact path="/:tenant_name/services/:service_id/groups/:group_id">
         <div className="links">
           <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/home"}>{props.t('link_home')}</Link>
           <span className="link-seperator">/</span>
@@ -152,6 +152,26 @@ const Routes = (props) => {
           {props.t('group_page')}
         </div>
         <GroupsPage/>
+      </ProtectedRoute>
+      <ProtectedRoute user={props.user} path="/:tenant_name/requests/:petition_id/groups/:group_id/contact">
+        <div className="links">
+          <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/home"}>{props.t('link_home')}</Link>
+          <span className="link-seperator">/</span>
+          <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/services"}>{props.t('link_petitions')}</Link>
+          <span className="link-seperator">/</span>
+          {"Contact Owners"}
+        </div>
+        <BroadcastNotifications type="owners" user={props.user}/>
+      </ProtectedRoute>
+      <ProtectedRoute user={props.user} path="/:tenant_name/services/:service_id/groups/:group_id/contact">
+        <div className="links">
+          <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/home"}>{props.t('link_home')}</Link>
+          <span className="link-seperator">/</span>
+          <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/services"}>{props.t('link_petitions')}</Link>
+          <span className="link-seperator">/</span>
+          {"Contact Owners"}
+        </div>
+        <BroadcastNotifications type="owners" user={props.user}/>
       </ProtectedRoute>
       <ProtectedRoute user={props.user} path='/:tenant_name/services/:service_id/history'>
         <HistoryList user={props.user}/>

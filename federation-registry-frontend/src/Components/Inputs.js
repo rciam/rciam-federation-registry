@@ -381,12 +381,20 @@ export function AuthMethRadioList(props){
   const signingAlg = props.values.token_endpoint_auth_signing_alg;
   const setFieldValue = props.setFieldValue;
   const target = useRef(null);
+  const tenant = useContext(tenantContext);
+
   useEffect(()=>{
     if((authMethod==="client_secret_jwt"||authMethod==="private_key_jwt")&&!signingAlg){
       setFieldValue('token_endpoint_auth_signing_alg', "RS256");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[authMethod]);
+
+  useEffect(()=>{
+    if(tenant[0].form_config.dynamic_fields.includes('allow_introspection')){
+      setFieldValue('allow_introspection',props.values.token_endpoint_auth_method!=='none');
+    } 
+  },[])
   return(
     <React.Fragment>
 
@@ -405,6 +413,11 @@ export function AuthMethRadioList(props){
                     name={field.name}
                     disabled={props.disabled}
                     {...field}
+                    onChange={(e)=>{
+                      if(tenant[0].form_config.dynamic_fields.includes('allow_introspection')){
+                          setFieldValue('allow_introspection',e.target.value!=='none');
+                      } 
+                      props.onChange(e); }}
                     value={item}
                     ref={props.values.token_endpoint_auth_method===item?target:null}
                     checked={props.values.token_endpoint_auth_method===item}
@@ -700,6 +713,7 @@ export function RefreshToken(props){
     const target = useRef(null);
     // eslint-disable-next-line
     const { t, i18n } = useTranslation();
+    const tenant = useContext(tenantContext);
     return(
       <React.Fragment>
         <div
@@ -735,15 +749,16 @@ export function RefreshToken(props){
 
             </div>
             <div className={"checkbox-item "+(props.changed&&props.changed.reuse_refresh_token?"spacing-bot":'')}>
-            <SimpleCheckbox
-              name="clear_access_tokens_on_refresh"
-              label={t('form_clear_access_tokens_on_refresh')}
-              checked={props.values.clear_access_tokens_on_refresh}
-              changed={props.changed?props.changed.clear_access_tokens_on_refresh:null}
-              onChange={props.onChange}
-              disabled={props.disabled}
-
-               />
+            {!tenant[0].form_config.disabled_fields.includes('clear_access_tokens_on_refresh')?
+              <SimpleCheckbox
+                name="clear_access_tokens_on_refresh"
+                label={t('form_clear_access_tokens_on_refresh')}
+                checked={props.values.clear_access_tokens_on_refresh}
+                changed={props.changed?props.changed.clear_access_tokens_on_refresh:null}
+                onChange={props.onChange}
+                disabled={props.disabled}
+              />
+            :null}
 
             </div>
             <TimeInput

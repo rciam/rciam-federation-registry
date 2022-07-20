@@ -416,7 +416,7 @@ const ServiceForm = (props)=> {
     }),
     entity_id:yup.string().matches(reg.regUrl,t('yup_secure_url')).nullable().when('protocol',{
       is:'saml',
-      then: yup.string().min(4,t('yup_char_min') + ' ('+4+')').test('testAvailable',t('yup_entity_id'),function(value){
+      then: yup.string().nullable().required('This is a required field').min(4,t('yup_char_min') + ' ('+4+')').test('testAvailable',t('yup_entity_id'),function(value){
         if(props.initialValues.entity_id===value && !props.copy){
           return true
         }
@@ -825,7 +825,7 @@ const ServiceForm = (props)=> {
                 {props.disabled?null:
                   <div className="form-controls-container">
                     {props.review?
-                      <ReviewComponent errors={errors} reviewPetition={reviewPetition} type={props.type} restrictReview={restrictReview}/>
+                      <ReviewComponent errors={errors} values={values} changes={props.changes}  reviewPetition={reviewPetition} type={props.type} restrictReview={restrictReview}/>
                       :
                       <React.Fragment>
                         <div className="form-submit-cancel-container">
@@ -1134,6 +1134,18 @@ const ServiceForm = (props)=> {
                               changed={props.changes?props.changes.token_endpoint_auth_method:null}
                             />
                           </InputRow>
+                          <InputRow  moreInfo={tenant.form_config.more_info.allow_introspection} title={t('form_allow_introspection')}>
+                            <div className='simple_checkbox_container'>
+                              <SimpleCheckbox
+                                name='allow_introspection'
+                                label={t('form_allow_introspection_desc')}
+                                onChange={handleChange}
+                                disabled={disabled||tenant.form_config.dynamic_fields.includes('allow_introspection')}
+                                value={values.allow_introspection}
+                                changed={props.changes?props.changes.allow_introspection:null}
+                              />
+                            </div>
+                          </InputRow>
                           {values.token_endpoint_auth_method==='private_key_jwt'||values.token_endpoint_auth_method==='client_secret_jwt'?
                           <InputRow  moreInfo={tenant.form_config.more_info.token_endpoint_auth_signing_alg} title="Token Endpoint Signing Algorithm" required={true} extraClass='select-col' error={errors.token_endpoint_auth_signing_alg} touched={touched.token_endpoint_auth_signing_alg}>
                             <Select
@@ -1225,16 +1237,6 @@ const ServiceForm = (props)=> {
                               Enabling PKCE is highly recommended to avoid code injection and code replay attacks. If enabled, you need to make sure that your client uses PKCE to prevent errors
                             </div>
                           </InputRow>
-                          <InputRow  moreInfo={tenant.form_config.more_info.allow_introspection} title={t('form_allow_introspection')}>
-                            <SimpleCheckbox
-                              name='allow_introspection'
-                              label={t('form_allow_introspection_desc')}
-                              onChange={handleChange}
-                              disabled={disabled}
-                              value={values.allow_introspection}
-                              changed={props.changes?props.changes.allow_introspection:null}
-                            />
-                          </InputRow>
                           <InputRow  moreInfo={tenant.form_config.more_info.access_token_validity_seconds} required={true} title={t('form_access_token_validity_seconds')} extraClass='time-input' error={errors.access_token_validity_seconds} touched={touched.access_token_validity_seconds} description={t('form_access_token_validity_seconds_desc')}>
                             <TimeInput
                               name='access_token_validity_seconds'
@@ -1299,7 +1301,7 @@ const ServiceForm = (props)=> {
                   {props.disabled?null:
                     <div className="form-controls-container">
                       {props.review?
-                          <ReviewComponent errors={errors} type={props.type} reviewPetition={reviewPetition} restrictReview={restrictReview} />
+                          <ReviewComponent errors={errors} values={values} changes={props.changes} type={props.type} reviewPetition={reviewPetition} restrictReview={restrictReview} />
                         :
                         <React.Fragment>
                         <div className="form-submit-cancel-container">
@@ -1338,8 +1340,20 @@ const ReviewComponent = (props)=>{
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   useEffect(()=>{
-
-    setInvalidPetition(Object.keys(props.errors).length !== 0);
+    let invalid = false;
+    for (const attribute in props.errors) {
+      if(Array.isArray(props.errors[attribute])){
+        for(let i=0;i<props.errors[attribute].length;i++){
+          if(props.errors[attribute][i]&&!props.changes[attribute].D.includes(props.values[attribute][i])){
+            invalid=true;
+          }
+        }
+      }
+      else{
+        invalid=true
+      }
+    }
+    setInvalidPetition(invalid);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[props.errors]);
 
