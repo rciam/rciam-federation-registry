@@ -10,7 +10,7 @@ import Tab from 'react-bootstrap/Tab';
 import Alert from 'react-bootstrap/Alert';
 import Jumbotron from 'react-bootstrap/Jumbotron';
 import Container from 'react-bootstrap/Container';
-import {Logout,NotFound,ResponseModal,ConfirmationModal} from './Components/Modals';
+import {Logout,NotFound,ConfirmationModal,ResponseModal} from './Components/Modals';
 import { diff } from 'deep-diff';
 import { useTranslation } from 'react-i18next';
 import {tenantContext,userContext} from './context.js';
@@ -194,7 +194,8 @@ const EditService = (props) => {
     <React.Fragment>
       <Logout logout={logout}/>
       <NotFound notFound={notFound}/>
-      <ConfirmationModal active={petitionIdRedirect?true:false} close={()=>{history.push('/'+tenant_name+'/services'); setPetitionIdRedirect();}} action={()=>{history.push('/'+tenant_name+ '/services/'+service_id+'/requests/'+petitionIdRedirect+'/edit'); setPetitionIdRedirect(); window.location.reload(false);}} title={"There is already an open reconfiguration request"} message={"Do you want to view it in a new window"} accept={'Yes'} decline={'No'}/>
+      <ResponseModal return_url={'/'+tenant_name+'/services'} message={modalMessage} modalTitle={'Review is not available for this request'}/>
+      <ConfirmationModal active={petitionIdRedirect?true:false} close={()=>{history.push('/'+tenant_name+'/services'); setPetitionIdRedirect();}} action={()=>{history.push('/'+tenant_name+ '/services/'+service_id+'/requests/'+petitionIdRedirect+'/edit'); setPetitionIdRedirect(); window.location.reload(false);}} title={redirectTitle} message={"Do you want to view it?"} accept={'Yes'} decline={'No'}/>
     {!((petitionData||!petition_id)&&(!service_id||service))?<LoadingBar loading={true}/>:
       <React.Fragment>
        {props.review?
