@@ -238,6 +238,65 @@ const ServiceList= (props)=> {
   }
 
 
+  const exportServicesToCsv = ()=> {
+    fetch(config.host+'tenants/'+tenant_name+'/services/list?'+(generateFilerString().length>0?generateFilerString().slice(1):""), {
+      method: 'GET', // *GET, POST, PUT, DELETE, etc.
+      credentials: 'include', // include, *same-origin, omit
+      headers: {
+      'Content-Type': 'application/json',
+      'Authorization': localStorage.getItem('token')
+    }}).then(response=>{
+      if(response.status===200||response.status===304){
+        return response.json();
+      }
+      else if(response.status===401){
+        setLogout(true);
+        return false;
+      }
+      else if(response.status===416){
+        return false;
+      }
+      else {
+        return false
+      }
+    }).then(response=> {
+      if(response){
+        try{
+          createCsv(response.list_items)
+        }
+        catch(err){
+          
+        }
+      }
+    });
+  }
+
+
+  const createCsv = (exportedServices) => {
+    var csv =
+      "Country,Organization,Service Name, Service Url, Service Managers, Integration Date, Last Update Date\n";
+      exportedServices.forEach((service) => {
+      csv += service.country + ",";
+      csv += service.organization_name + ",";
+      csv += service.service_name + ",";
+      csv += service.website_url + ",";
+      csv += service.owners.join(" ") + ",";
+      csv += service.created_at + ",";
+      csv += service.last_edited + ",";
+      csv += "\n";
+    });
+
+    var hiddenElement = document.createElement("a");
+    hiddenElement.href = "data:text/csv;charset=utf-8," + encodeURI(csv);
+    hiddenElement.target = "_blank";
+
+    //provide the name for the CSV file to be downloaded
+    hiddenElement.download = "ServiceExport.csv";
+    hiddenElement.click();
+    console.log(csv);
+  };
+
+
 
 
   const createPaginationItems = (full_count)=>{
@@ -418,6 +477,20 @@ const ServiceList= (props)=> {
             <Col>
               <Button variant="light" onClick={getServices} ><FontAwesomeIcon icon={faSync} />{t('petitions_refresh')}</Button>
               <Link to={'/'+tenant_name+"/form/new"}><Button style={{background:tenant.color,borderColor:tenant.color}}><FontAwesomeIcon icon={faPlus}/>{t('petitions_new')}</Button></Link>
+              {user.actions.includes('export_services')?
+                <OverlayTrigger
+                  placement='top'
+                  overlay={
+                    <Tooltip id={`tooltip-top`}>
+                      Export filtered Services to a CSV file 
+                    </Tooltip>
+                  }
+                > 
+                  <Button variant="dark" onClick={exportServicesToCsv} >
+                    <FontAwesomeIcon icon={faFileDownload} /> Export
+                  </Button>
+                </OverlayTrigger>
+              :null}
             </Col>
             <Col>
               <Button variant="light" className='filter-button' style={{color:tenant.color}} onClick={()=>setExpandFilters(!expandFilters)}><FontAwesomeIcon icon={faFilter} />
