@@ -474,32 +474,6 @@ const ViewService = (props)=>{
 
   const getData = () => {
     if(service_id){
-      fetch(config.host+'tenants/'+tenant_name+'/services/'+service_id +'/error', {
-        method: 'GET', // *GET, POST, PUT, DELETE, etc.
-        credentials: 'include', // include, *same-origin, omit
-        headers: {
-        'Content-Type': 'application/json',
-        'Authorization': localStorage.getItem('token')
-        }
-      }).then(response=> {
-        if(response.status===200){
-          return response.json();
-        }else if(response.status===401){
-          setLogout(true);
-          return false;
-        }
-        else if(response.status===404){
-          return false;
-        }
-        else {
-          return false
-        }
-      }).then(response=> {
-        if(response){
-          setDeploymentError(response.error)
-        }
-      });
-      
       fetch(config.host+'tenants/'+tenant_name+'/services/'+service_id, {
         method: 'GET', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit

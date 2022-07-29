@@ -594,10 +594,15 @@ router.get('/tenants/:tenant/services/:id',authenticate,(req,res,next)=>{
       return db.task('find-service-data',async t=>{
         await t.service_details.getProtocol(req.params.id,req.user.sub,req.params.tenant).then(async exists=>{
           if(exists||req.user.role.actions.includes('get_service')){
-            await t.service.get(req.params.id,req.params.tenant).then(result=>{
-              if(result){
-                res.status(200).json({service:result.service_data,owned:(exists?true:false)});
-              }
+            await t.service.get(req.params.id,req.params.tenant).then(async service=>{
+              if(service){
+                await t.service_state.getState(req.params.id).then(async service_state=>{
+                  await t.service_errors.getErrorByServiceId(req.params.id).then(service_error=>{
+                    delete service_state.id;
+                    res.status(200).json({service:service.service_data,owned:(exists?true:false),...service_state,error:service_error});
+                  });
+                })
+                }
               else {
                   res.status(404).end();
               }

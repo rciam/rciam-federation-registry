@@ -58,6 +58,8 @@ const ServiceList= (props)=> {
   const [requestReviewCount,setRequestReviewCount] = useState(0);
   // eslint-disable-next-line
   const [user,setUser] = useContext(userContext);
+  const [createdAfterString,setCreatedAfterString] = useState();
+  const [createdBeforeString,setCreatedBeforeString] = useState();
   const [showPending,setShowPending] = useState(false);
   const [showOwned,setShowOwned] = useState(false);
   const [integrationEnvironment,setIntegrationEnvironment] = useState();
@@ -71,8 +73,9 @@ const ServiceList= (props)=> {
   const [errorFilter,setErrorFilter] = useState(false);
   const [serviceCount,setServiceCount] = useState(0);
   const [tagString,setTagString] = useState();
-  const [searchInputString,setSearchInputString] = useState();
-
+  const [searchInputString,setSearchInputString] = useState("");
+  const [protocolFilter,setProtocolFilter] = useState();
+  const [waitingDeploymentFilter,setWaitingDeploymentFilter] = useState();
   const pageSize = 10;
   
 
@@ -95,11 +98,11 @@ const ServiceList= (props)=> {
   useEffect(()=>{
      getServices();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[searchString,showOwned,showPending,integrationEnvironment,activePage,showOutdated,showPendingSubFilter,showRequestReview,showOrphan,errorFilter,searchOwnerString,tagString]);
+  },[searchString,showOwned,showPending,integrationEnvironment,activePage,showOutdated,showPendingSubFilter,showRequestReview,showOrphan,errorFilter,searchOwnerString,tagString,createdAfterString,createdBeforeString,protocolFilter,waitingDeploymentFilter]);
 
   useEffect(()=>{
     setActivePage(1);
-  },[searchString,showOwned,showPending,integrationEnvironment,showOutdated,showPendingSubFilter,setShowRequestReview,showOrphan,errorFilter,searchOwnerString,tagString]);
+  },[searchString,showOwned,showPending,integrationEnvironment,showOutdated,showPendingSubFilter,setShowRequestReview,showOrphan,errorFilter,searchOwnerString,tagString,createdAfterString,createdBeforeString,protocolFilter,waitingDeploymentFilter]);
 
   
 
@@ -135,6 +138,18 @@ const ServiceList= (props)=> {
     }
     if(tagString){
       filterString= filterString + '&tags=' + tagString;
+    }
+    if(createdAfterString){
+      filterString = filterString + '&created_after=' + createdAfterString
+    }
+    if(createdBeforeString){
+      filterString = filterString + '&created_before=' + createdBeforeString
+    }
+    if(protocolFilter){
+      filterString = filterString + '&protocol=' + protocolFilter;
+    }
+    if(waitingDeploymentFilter){
+      filterString = filterString + '&waiting_deployment=' +true; 
     }
     //filterString=filterString + '&tags=test,egi';
 
@@ -427,7 +442,7 @@ const ServiceList= (props)=> {
                       placement='top'
                       overlay={
                         <Tooltip id={`tooltip-top`}>
-                          Use :owner=username|email to search by owner {user.actions.includes('manage_tags')?'and :tag=tag to search by service tag':''} in the Search Input.
+                          Use :owner=username|email to search by owner {user.actions.includes('manage_tags')?'and :tag=tag to search by service tag':''} and (:created_after or :created_before) =yyyy/mm/dd   in the Search Input.
                         </Tooltip>
                       }
                     >
@@ -449,10 +464,32 @@ const ServiceList= (props)=> {
                   let regex_tag_1 = /:tag *= *\S*/g;
                   let regex_tag_2 = /( )|:tag *=/g;
                   let regex_2 = /( )|:owner *=/g;
+                  let regex_created_after_1 = /:created_after *= *\S*/g;
+                  let regex_created_after_2 = /( )|:created_after *=/g;
+                  let regex_created_before_1 = /:created_before *= *\S*/g;
+                  let regex_created_before_2 = /( )|:created_before *=/g;
                   let userString = "";
                   let tagString_1 = "";
                   let tag_arr = [];
                   let arr = regex_1.exec(value);
+                  let created_after = '';
+                  let created_before = '';
+                  let created_after_arr = regex_created_after_1.exec(value);
+                  let created_before_arr = regex_created_before_1.exec(value);
+                  value= value.replace(regex_created_after_1,'');
+                  value= value.replace(regex_created_before_1,'');
+                  if(created_after_arr){
+                    created_after = created_after_arr[0].replace(regex_created_after_2,'');
+                    if(created_after.length!==10){
+                      created_after= "";
+                    }
+                  }
+                  if(created_before_arr){
+                    created_before = created_before_arr[0].replace(regex_created_before_2,'');
+                    if(created_before.length!==10){
+                      created_before= "";
+                    }
+                  }
                   value = value.replace(regex_1, '');
                   if(user.actions.includes('manage_tags') ){
                     tag_arr = regex_tag_1.exec(value);
@@ -470,10 +507,10 @@ const ServiceList= (props)=> {
                   if(value==='undefined'||!value){
                     value='';
                   }
-                  if(tagString!==tagString_1||searchOwnerString!==userString||searchString!==value){
+                  if(tagString!==tagString_1||searchOwnerString!==userString||searchString!==value||createdBeforeString!==created_before||createdAfterString!==created_after){
                     setLoadingList(true);
                   }
-                  filterTimeout = setTimeout(function(){setSearchString(value); setTagString(tagString_1); setSearchOwnerString(userString)} ,1000)}}
+                  filterTimeout = setTimeout(function(){setSearchString(value); setTagString(tagString_1); setSearchOwnerString(userString); setCreatedAfterString(created_after); setCreatedBeforeString(created_before) } ,1000)}}
                 />
                 <InputGroup.Append role="button" onClick={()=>{setSearchInputString('')}}>
                   <InputGroup.Text><FontAwesomeIcon icon={faTimes}/></InputGroup.Text>
@@ -488,11 +525,11 @@ const ServiceList= (props)=> {
                   {user.actions.includes('review_petition')||user.actions.includes('review_restricted')?
                     <div className='pending-filter-container'>
                       <Dropdown as={ButtonGroup}>
-                        <Button variant="secondary" className="split-button" onClick={()=> {if(showPending){setShowPendingSubFilter('');} setShowPending(!showPending)} }>Show Pending <input type="checkbox" readOnly checked={showPending}/></Button>
+                        <Button variant="secondary" className="split-button" onClick={()=> {if(showPending){setShowPendingSubFilter('');} setWaitingDeploymentFilter(true); setShowPending(!showPending)} }>Show Pending <input type="checkbox" readOnly checked={showPending||waitingDeploymentFilter}/></Button>
                         <Dropdown.Toggle split variant="secondary" id="dropdown-split-basic" />
                         <Dropdown.Menu>
                           <Dropdown.Item className={showPending&&!showPendingSubFilter?'pending-filter-active':''}>
-                            <div className="dropdown_item_container_pending_filter" onClick={()=>{setShowPendingSubFilter(''); setShowPending(true);}}>
+                            <div className="dropdown_item_container_pending_filter" onClick={()=>{setShowPendingSubFilter(''); setWaitingDeploymentFilter(true); setShowPending(true);}}>
                               All Pending
                               {showPending&&!showPendingSubFilter?
                                 <div><FontAwesomeIcon icon={faCheckCircle}/></div>
@@ -500,22 +537,28 @@ const ServiceList= (props)=> {
                             </div>                                                
                           </Dropdown.Item>
                           <Dropdown.Item className={showPendingSubFilter==='pending'?'pending-filter-active':''}>
-                            <div className="dropdown_item_container_pending_filter" onClick={()=>{setShowPendingSubFilter('pending'); setShowPending(true);}}>
+                            <div className="dropdown_item_container_pending_filter" onClick={()=>{setShowPendingSubFilter('pending'); setWaitingDeploymentFilter(false); setShowPending(true);}}>
                               Pending Review 
                               {showPendingSubFilter==='pending'?
                                 <div><FontAwesomeIcon icon={faCheckCircle}/></div>:''} 
                             </div>
                           </Dropdown.Item>
                           <Dropdown.Item className={showPendingSubFilter==='request_review'?'pending-filter-active':''}>
-                            <div className="dropdown_item_container_pending_filter" onClick={()=>{setShowPendingSubFilter('request_review'); setShowPending(true);}}>  
+                            <div className="dropdown_item_container_pending_filter" onClick={()=>{setShowPendingSubFilter('request_review'); setWaitingDeploymentFilter(false); setShowPending(true);}}>  
                               Review Requested 
                               {showPendingSubFilter==='request_review'?<div><FontAwesomeIcon icon={faCheckCircle}/></div>:''} 
                             </div>
                           </Dropdown.Item>
                           <Dropdown.Item className={showPendingSubFilter==='changes'?'pending-filter-active':''}>
-                            <div className="dropdown_item_container_pending_filter" onClick={()=>{setShowPendingSubFilter('changes'); setShowPending(true);}}>
+                            <div className="dropdown_item_container_pending_filter" onClick={()=>{setShowPendingSubFilter('changes'); setWaitingDeploymentFilter(false); setShowPending(true);}}>
                               Changes Requested 
                               {showPendingSubFilter==='changes'?<div><FontAwesomeIcon icon={faCheckCircle}/></div>:''} 
+                            </div>
+                          </Dropdown.Item>
+                          <Dropdown.Item className={waitingDeploymentFilter&&!showPendingSubFilter&&!showPending?'pending-filter-active':''}>
+                            <div className="dropdown_item_container_pending_filter" onClick={()=>{setWaitingDeploymentFilter(true); setShowPendingSubFilter(); setShowPending(false);}}>
+                              Pending Deployment 
+                              {waitingDeploymentFilter&&!showPendingSubFilter&&!showPending?<div><FontAwesomeIcon icon={faCheckCircle}/></div>:''} 
                             </div>
                           </Dropdown.Item>
                         </Dropdown.Menu>
@@ -567,6 +610,15 @@ const ServiceList= (props)=> {
                       <input type='checkbox' name='filter' checked={errorFilter} onChange={()=>setErrorFilter(!errorFilter)}/>
                     </div>
                   :null}
+                  <div className='select-filter-container'>
+                      <select value={protocolFilter} onChange={(e)=>{
+                        setProtocolFilter(e.target.value);}}>
+                        <option value=''>All Protocols</option>
+                        {tenant.form_config.protocol.map((item,index)=>{
+                          return <option value={item} key={index}>{item.toUpperCase()}</option>
+                        })}
+                      </select>
+                  </div>
                   <div className='select-filter-container'>
                       <select value={integrationEnvironment} onChange={(e)=>{
                         setIntegrationEnvironment(e.target.value);}}>
