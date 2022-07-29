@@ -1,6 +1,6 @@
 import React,{useContext,useState} from 'react';
 import Modal from 'react-bootstrap/Modal';
-import {useHistory} from "react-router-dom";
+import {useHistory,useLocation} from "react-router-dom";
 import Button from 'react-bootstrap/Button';
 import { useTranslation } from 'react-i18next';
 import { Translation } from 'react-i18next';
@@ -38,11 +38,17 @@ export const Logout = (props) => {
 
 export const NotFound = (props) => {
   const history = useHistory();
+  const location = useLocation();
   const [close,setClose] = useState(false);
   const tenant = useContext(tenantContext);
   const handleClose = () => {
     setClose(true);
-    history.push('/'+(tenant&&tenant[0]?tenant[0].name:null)+'/services');
+    if(location.pathname==='/'+(tenant&&tenant[0]?tenant[0].name:null)+'/services'){
+      window.location.reload(false);
+    }else
+    {
+      history.push('/'+(tenant&&tenant[0]?tenant[0].name:null)+'/services');
+    }
   }
   return (
     <Translation>

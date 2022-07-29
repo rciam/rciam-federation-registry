@@ -26,7 +26,7 @@ class ServiceErrorsRepository {
     }
 
     async archive(id){
-      return this.db.one('UPDATE service_errors SET archived=true WHERE service_id=$1 and archived=false RETURNING service_id',+id);
+      return this.db.oneOrNone('UPDATE service_errors SET archived=true WHERE service_id=$1 and archived=false RETURNING service_id',+id);
     }
 
 

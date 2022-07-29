@@ -5,7 +5,7 @@ import DropdownButton from 'react-bootstrap/DropdownButton';
 import Dropdown from 'react-bootstrap/Dropdown';
 import Collapse from 'react-bootstrap/Collapse';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {faSync,faPlus,faTimes,faEdit,faExclamation,faQuestionCircle,faCircle,faCheckCircle,faEllipsisV,faEye,faSortDown,faSortUp,faFilter} from '@fortawesome/free-solid-svg-icons';
+import {faSync,faPlus,faTimes,faEdit,faExclamation,faQuestionCircle,faCircle,faCheckCircle,faEllipsisV,faEye,faSortDown,faSortUp,faFilter,faFileDownload} from '@fortawesome/free-solid-svg-icons';
 import InputGroup from 'react-bootstrap/InputGroup';
 import FormControl from 'react-bootstrap/FormControl';
 import Button from 'react-bootstrap/Button';
@@ -440,6 +440,7 @@ const ServiceList= (props)=> {
                 <FormControl
                 placeholder={t('search')}
                 value={searchInputString}
+                type='text'
                 onChange={(e)=>{
                   clearTimeout(filterTimeout);
                   setSearchInputString(e.target.value);

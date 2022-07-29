@@ -73,6 +73,7 @@ code {
 
 
 /* Home Page */
+
 .home-services-table {
   table-layout: fixed;
 }
@@ -1567,6 +1568,16 @@ html:lang(gr) .home-container h1 {
 .error-action-alert-hidden {
   border:none!important;
   background-color: #F8D7DA!important;
+  margin-bottom:0rem!important;
+}
+
+.warning-action-alert {
+  border-color: #ffeeba!important;
+  border-width: thin!important;
+}
+.warning-action-alert-hidden {
+  border:none!important;
+  background-color: #FFF3CD!important;
   margin-bottom:0rem!important;
 }
 .leave-group-button{

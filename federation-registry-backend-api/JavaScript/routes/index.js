@@ -334,17 +334,21 @@ router.get('/tenants/:tenant/services/:id/error',authenticate,(req,res,next)=>{
 });
 
 // Handle Deployment Error
-router.put('/tenants/:tenant/services/:id/error',authenticate,(req,res,next)=> {
+router.put('/tenants/:tenant/services/:id/deployment',authenticate,(req,res,next)=> {
   try{
     if(req.user.role.actions.includes('error_action')){
       if(req.query.action==='resend'){
         db.tx('accept-invite',async t =>{
               let done = await t.batch([
                 t.service_state.resend(req.params.id),
+                t.deployment_tasks.resolveAllTasks(req.params.id),
                 t.service_errors.archive(req.params.id),
               ]).catch(err=>{next(err)});
               res.status(200).end();
         }).catch(err=>{next(err)})
+      }
+      else{
+        res.status(400).send('Unsupported Action');
       }
     }
     else{

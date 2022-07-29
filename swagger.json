@@ -835,8 +835,79 @@ paths:
                 $ref: "#/definitions/Service"
               owned:
                 type: "boolean"
+              state:
+                type: "string"
+                description: "The deployment state of the service"
+                enum:
+                - error
+                - pending
+                - deployed
+                - waiting-deployment
+              deployment_type:
+                type: "string"
+                description: "Type of the pending deployment"
+                enum:
+                - edit
+                - create
+                - delete
+              last_edited:
+                type: string
+                description: "Timestamp of the last successful deployment of the service"
+              create_at:
+                type: string
+                description: "Timestamp of the registration of the service"
+              error:
+                type: object
+                properties:
+                  error_date: 
+                    type: string
+                    description: "Timestamp of the deployment error"
+                  error_code:
+                    type: string
+                    description: "Error status code returned by the deployment process"
+                  error_description:
+                    type: string
+                    description: "Description of the deploymen error"
         "401":
           description: "Unauthenticated request"
+        "500":
+          description: "Internal Error"
+      security:
+      - access_tokenAuth: []
+  /tenants/{name}/services/{id}/deployment:
+    put:
+      tags:
+      - "Services"
+      summary: "Troubleshoot Deployment"
+      description: "Troubleshoot Deployment of a Service Request"
+      operationId: "putServiceDeployment"
+      produces:
+      - "application/json"
+      parameters:
+      - in: path
+        type: string
+        name: name
+        description: "Tenant that the request is targeting"
+        required: true
+      - name: "id"
+        in: "path"
+        description: "ID of the service"
+        required: true
+        type: "integer"
+        format: "int64"
+      - name: "action"
+        in: "query"
+        type: "string"
+        enum:
+        - "resend"
+        description: "Troubleshoot action selected by user"
+      responses:
+        "200":
+          description: "successful"
+        "401":
+          description: "Unauthenticated request"
+        "403":
+          description: "Unauthorised user"
         "500":
           description: "Internal Error"
       security:
@@ -916,10 +987,13 @@ paths:
           type: string
           name: search_string
           description: "Returns only services and petitions that contain the provided string"
-        # - in: query
-        #   type: string
-        #   name: protocol
-        #   description: "Returns only services of the selected protocol"
+        - in: query
+          type: string
+          name: protocol
+          enum:
+          - saml
+          - oidc
+          description: "Returns only services of the selected protocol"
         - in: query
           type: string
           name: env
@@ -932,10 +1006,6 @@ paths:
           type: string
           name: outdated
           description: "Returns only services that have invalid configuration"
-        - in: query
-          type: string
-          name: protocol
-          description: "Returns only services of the given protocol (oidc,saml)"
         - in: query
           type: string
           enum:
@@ -952,6 +1022,14 @@ paths:
           type: string
           name: 'tag'
           description: "Filters results based on tags, supports multiple comma seperated values"
+        - in: query
+          type: string
+          name: created_after
+          description: "Filter results based on creation/registration date, returns services created after given date. Format:(yyyy/mm/dd)"
+        - in: query
+          type: string
+          name: created_before
+          description: "Filter results based on creation/registration date, returns services created before given date. Format:(yyyy/mm/dd)"
       responses:
         "200":
           description: "OK"
@@ -2030,7 +2108,7 @@ definitions:
         description: "Uri containing public key for the token endpoint, oidc specific"
       country:
         type: "string"
-        description: "Country of the organisation of the service"
+        description: "Country of the service"
       website_url:
         type: "string"
         description: "Website Url containing information about the service"
@@ -2395,6 +2473,20 @@ definitions:
             owned:
               type: "boolean"
               description: "True if user is a member of the service owners group"
+            owners:
+              type: "array"
+              items: 
+                type: "string"
+              description: "An array containing the email of the owners of the service"
+            organization_name:
+              type: "string"
+              description: "The name of the organization the service blongs to."
+            country:
+              type: string
+              description: "The country of the service"
+            website_url:
+              type: "string"
+              description: "Website Url containing information about the service"
             notification:
               type: "boolean"
               description: "True if there is a nitification for the service"

@@ -1,11 +1,9 @@
 const countryData = require('country-region-data');
-const { body,query, validationResult,param,check } = require('express-validator');
+const { body,query, validationResult,param } = require('express-validator');
 const {reg} = require('./regex.js');
-const {v1:uuidv1} = require('uuid');
 const customLogger = require('./loggers.js');
 var config = require('./config');
 const {db} = require('./db');
-const { runInNewContext } = require('vm');
 const e = require('express');
 let countryCodes =[];
 var stringConstructor = "test".constructor;
