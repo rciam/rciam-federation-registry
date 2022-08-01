@@ -281,6 +281,7 @@ const ServiceList= (props)=> {
       csv += service.service_name + ",";
       csv += service.website_url + ",";
       csv += service.owners.join(" ") + ",";
+      //csv += Array.isArray(service.owners)?(service.owners.join(" ") + ","):[];
       csv += service.created_at + ",";
       csv += service.last_edited + ",";
       csv += "\n";
@@ -598,7 +599,7 @@ const ServiceList= (props)=> {
                   {user.actions.includes('review_petition')||user.actions.includes('review_restricted')?
                     <div className='pending-filter-container'>
                       <Dropdown as={ButtonGroup}>
-                        <Button variant="secondary" className="split-button" onClick={()=> {if(showPending){setShowPendingSubFilter('');} setWaitingDeploymentFilter(true); setShowPending(!showPending)} }>Show Pending <input type="checkbox" readOnly checked={showPending||waitingDeploymentFilter}/></Button>
+                        <Button variant="secondary" className="split-button" onClick={()=> {if(showPending||waitingDeploymentFilter){setShowPendingSubFilter(''); setWaitingDeploymentFilter(false); setShowPending(false); }else{setWaitingDeploymentFilter(true); setShowPending(true);}  } }>Show Pending <input type="checkbox" readOnly checked={showPending||waitingDeploymentFilter}/></Button>
                         <Dropdown.Toggle split variant="secondary" id="dropdown-split-basic" />
                         <Dropdown.Menu>
                           <Dropdown.Item className={showPending&&!showPendingSubFilter?'pending-filter-active':''}>
