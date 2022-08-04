@@ -44,7 +44,9 @@ class ServiceListRepository {
       tags_filter_services:'',
       tags_filter_petitions:'',
       get_tags_filter:'',
-      service_id_filter:''
+      service_id_filter:'',
+      created_before_filter:'',
+      created_after_filter:''
     };
 
     if(req.user.role.actions.includes('manage_tags')){
@@ -60,6 +62,16 @@ class ServiceListRepository {
         params.tags_filter_services = params.tags_filter_services + " '"+ tag +"' = ANY(tags)"
       });
       params.tags_filter_services = params.tags_filter_services + ')'
+    }
+
+    if(req.query.created_before){
+      params.created_before_filter = "AND created_at < '" + req.query.created_before + "'";
+      params.disable_petitions = "AND false";
+
+    }
+    if(req.query.created_after){
+      params.created_after_filter = "AND created_at > '" + req.query.created_after + "'";
+      params.disable_petitions = "AND false";      
     }
 
     if(req.query.owner){
@@ -125,7 +137,7 @@ class ServiceListRepository {
 
     if(req.query.tags&&req.user.role.actions.includes('manage_tags') ){
       if(petition_filter){
-        params.tags_filter_petitions = ' AND false'
+        params.tags_filter_petitions = ' AND false';
       }
       else{
         params.tags_filter_petitions = ' WHERE false'
@@ -134,8 +146,21 @@ class ServiceListRepository {
     }
 
     if(req.query.pending){
-      params.pending_filter= 'AND petition_id IS NOT NULL'
+      if(req.query.waiting_deployment){
+        params.pending_filter= "AND (petition_id IS NOT NULL OR state='waiting-deployment')"
+
+      }
+      else{
+        params.pending_filter= 'AND petition_id IS NOT NULL'                
+      }
     }
+    else {
+      if(req.query.waiting_deployment){
+        params.pending_filter= "AND state='waiting-deployment'"
+        params.disable_petitions = "AND false";
+      }
+    }
+    
     params.tenant_name = req.params.tenant;
     params.sub = req.user.sub;
     if(req.query.limit){

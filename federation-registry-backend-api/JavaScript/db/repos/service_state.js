@@ -149,6 +149,10 @@ class ServiceStateRepository {
     })
   }
 
+  async getState(id){
+    return this.db.oneOrNone("SELECT * from service_state where id=$1",+id);
+  }
+
 
   async updateMultiple(updateData){
     // updateData = [{id:1,state:'deployed'},{id:2,state:'deployed'},{id:3,state:'failed'}];

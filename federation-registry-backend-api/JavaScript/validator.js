@@ -1,11 +1,9 @@
 const countryData = require('country-region-data');
-const { body,query, validationResult,param,check } = require('express-validator');
+const { body,query, validationResult,param } = require('express-validator');
 const {reg} = require('./regex.js');
-const {v1:uuidv1} = require('uuid');
 const customLogger = require('./loggers.js');
 var config = require('./config');
 const {db} = require('./db');
-const { runInNewContext } = require('vm');
 const e = require('express');
 let countryCodes =[];
 var stringConstructor = "test".constructor;
@@ -61,6 +59,9 @@ const getServiceListValidation = () => {
     query('env').optional({checkFalsy:true}).isString().custom((value,{req,location,path})=> {   if(config.form[req.params.tenant].integration_environment.includes(value)){return true}else{return false}}).withMessage('Integration environment value not supported'),
     query('protocol').optional({checkFalsy:true}).isString().custom((value,{req,location,path})=> {if(config.form[req.params.tenant].protocol.includes(value)){return true}else{return false}}).withMessage('Protocol not supported'),
     query('owned').optional({checkFalsy:true}).isBoolean().toBoolean(),
+    query('waiting_deployment').optional({checkFalsy:true}).isBoolean().toBoolean(),
+    query('created_after').optional({checkFalsy:true}).isString().isDate(),
+    query('created_before').optional({checkFalsy:true}).isString().isDate(),
     query('orphan').optional({checkFalsy:true}).isBoolean().toBoolean(),
     query('pending').optional({checkFalsy:true}).isBoolean().toBoolean(),
     query('pending_sub').optional({checkFalsy:true}).isString().custom((value,{req,location,path})=> {if(['pending','changes','request_review'].includes(value)){return true}else{return false}}).withMessage('Value is not supported'),

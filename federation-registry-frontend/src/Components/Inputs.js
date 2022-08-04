@@ -396,6 +396,13 @@ export function AuthMethRadioList(props){
     } 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[])
+
+  useEffect(()=>{
+    if(props.values.grant_types.includes('authorization_code')&&authMethod==='none'){
+      setFieldValue('token_endpoint_auth_method','client_secret_basic');
+    }
+  },[authMethod,props.values.grant_types,setFieldValue])
+
   return(
     <React.Fragment>
 
@@ -412,7 +419,7 @@ export function AuthMethRadioList(props){
                   <input
                     type="radio"
                     name={field.name}
-                    disabled={props.disabled}
+                    disabled={props.disabled||(props.values.grant_types.includes('authorization_code')&&item==='none')}
                     {...field}
                     onChange={(e)=>{
                       if(tenant[0].form_config.dynamic_fields.includes('allow_introspection')){
@@ -423,7 +430,7 @@ export function AuthMethRadioList(props){
                     ref={props.values.token_endpoint_auth_method===item?target:null}
                     checked={props.values.token_endpoint_auth_method===item}
                   />
-                  {props.radio_items_titles[index]}
+                  {props.radio_items_titles[index]}{props.values.grant_types.includes('authorization_code')&&item==='none'?<span className='disabled-token-auth-method text-muted text-left form-text small'> Unavailable when authorization code Grant Type is selected</span>:null}
                 </React.Fragment>
               )}
             </Field>
@@ -580,6 +587,11 @@ export function SelectEnvironment(props){
 export function Select(props){
   const [show, setShow] = useState(false);
   const target = useRef(null);
+  useEffect(()=>{
+    if(props.disabled_option===props.values[props.name]){
+      props.setFieldValue(props.recommended)
+    }
+  },[props,props.disabled_option,props.values])
 
   return(
     <React.Fragment>
@@ -597,7 +609,7 @@ export function Select(props){
       disabled={props.disabled}
       placeholder="Select..countryName.">
         {props.options.map((item,index)=>(
-          <option key={index} value={props.options[index]}>{props.optionsTitle[index]}</option>
+          <option key={index} value={props.options[index]} selected={props.options[index]===props.values[props.name]} disabled={props.disabled_option===props.options[index]}>{props.optionsTitle[index]}</option>
         ))}
       </Field>
     </div>
@@ -693,7 +705,7 @@ export function CheckboxList(props){
                     return(
                       <div className="checkboxList" key={index}>
                       <Checkbox name={props.name} disabled={props.disabled} value={item}/>
-                      {item.length>33&&(item.substr(0,33)==="urn:ietf:params:oauth:grant-type:"||item.substr(0,33)==="urn:ietf:params:oauth:grant_type:")?item.substr(33).replace("_"," "):item.replace("_"," ")}
+                      {item.length>33&&(item.substr(0,33)==="urn:ietf:params:oauth:grant-type:"||item.substr(0,33)==="urn:ietf:params:oauth:grant_type:")?item.substr(33).replace("_"," "):item.replace("_"," ")}{props.depricated_options.includes(item)? ' (depricated)':''}
                       </div>
                     );
 

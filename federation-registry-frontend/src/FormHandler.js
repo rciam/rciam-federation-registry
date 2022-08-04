@@ -3,7 +3,7 @@ import initialValues from './initialValues';
 import {useParams,useHistory} from "react-router-dom";
 import config from './config.json';
 import ServiceForm from "./ServiceForm.js";
-import ErrorComponent from "./Components/Error.js"
+import DeploymentTroubleshooting from "./Components/DeploymentTroubleshooting.js"
 import {LoadingBar} from './Components/LoadingBar';
 import Tabs from 'react-bootstrap/Tabs';
 import Tab from 'react-bootstrap/Tab';
@@ -461,10 +461,10 @@ const ViewService = (props)=>{
   const {petition_id} = useParams();
   const {service_id} = useParams();
   const [petitionData,setPetitionData] = useState();
-  const [owned,setOwned] = useState(false);
   const [logout,setLogout] = useState(false);
   const [notFound,setNotFound] = useState(false);
   const [user] = useContext(userContext);
+  const [serviceState,setServiceState] = useState({owned:false,state:""});
 
   useEffect(()=>{
     localStorage.removeItem('url');
@@ -474,32 +474,6 @@ const ViewService = (props)=>{
 
   const getData = () => {
     if(service_id){
-      fetch(config.host+'tenants/'+tenant_name+'/services/'+service_id +'/error', {
-        method: 'GET', // *GET, POST, PUT, DELETE, etc.
-        credentials: 'include', // include, *same-origin, omit
-        headers: {
-        'Content-Type': 'application/json',
-        'Authorization': localStorage.getItem('token')
-        }
-      }).then(response=> {
-        if(response.status===200){
-          return response.json();
-        }else if(response.status===401){
-          setLogout(true);
-          return false;
-        }
-        else if(response.status===404){
-          return false;
-        }
-        else {
-          return false
-        }
-      }).then(response=> {
-        if(response){
-          setDeploymentError(response.error)
-        }
-      });
-      
       fetch(config.host+'tenants/'+tenant_name+'/services/'+service_id, {
         method: 'GET', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
@@ -524,8 +498,11 @@ const ViewService = (props)=>{
         }
       }).then(response=> {
         if(response.service){
-          setOwned(response.owned);
           setService(response.service);
+          delete response.service;
+          setDeploymentError(response.error);
+          delete response.error;
+          setServiceState(response);
         }
       });
     }
@@ -569,14 +546,20 @@ const ViewService = (props)=>{
         The deployment for the following request could not be completed due to an error. Our technical team will handle this issue and you will be notified when it is resolved. Thank you for your patience.
       </Alert>
       :null}
-    <ErrorComponent deploymentError={deploymentError} user={user} setDeploymentError={setDeploymentError} service_id={service_id} setLogout={setLogout}/>
+    {serviceState.state==='waiting-deployment'||serviceState.state==='pending'?
+      <Alert variant='primary' className='form-alert'>
+      The deployment of the following {serviceState.deployment_type==='create'?'registration':serviceState.deployment_type==='edit'?'reconfiguration':serviceState.deployment_type==='delete'?'deregistation':null} request is pending.
+      </Alert>
+    :null}
+    
+    <DeploymentTroubleshooting deploymentState={serviceState}  deploymentError={deploymentError} user={user} setDeploymentError={setDeploymentError} service_id={service_id} setLogout={setLogout}/>
       {service?
         <React.Fragment>        
           {service.created_at?
             <Alert variant='primary' className='form-alert'>
               Service was registered at: <b>{service.created_at.slice(0,10).split('-').join('/')+ ' ' + service.created_at.slice(11,19).split('-').join('/')}</b>
             </Alert>:null}
-          <ServiceForm initialValues={service} user={user} disabled={true} copyButton={true} owned={owned} {...props}/>
+          <ServiceForm initialValues={service} user={user} disabled={true} copyButton={true} owned={serviceState.owned} {...props}/>
         </React.Fragment>
         :service_id?<LoadingBar loading={true}/>:petitionData?
         <React.Fragment>
@@ -585,7 +568,7 @@ const ViewService = (props)=>{
           </Alert>
           
           
-          <ServiceForm initialValues={petitionData.petition} user={user} copyButton={true} owned={owned} disabled={true} {...petitionData.metadata} {...props}/>
+          <ServiceForm initialValues={petitionData.petition} user={user} copyButton={true} owned={serviceState.owned} disabled={true} {...petitionData.metadata} {...props}/>
         </React.Fragment>
       :petition_id?<LoadingBar loading={true}/>:null
       }

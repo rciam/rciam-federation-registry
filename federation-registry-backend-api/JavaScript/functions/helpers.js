@@ -16,6 +16,12 @@ hbs.registerHelper('ifEquals', function(arg1, arg2, options) {
   return (arg1 == arg2) ? options.fn(this) : options.inverse(this);
 });
 
+hbs.registerHelper('breaklines', function(text) {
+  text = hbs.Utils.escapeExpression(text);
+  text = text.replace(/(\r\n|\n|\r)/gm, '<br>');
+  return new hbs.SafeString(text);
+});
+
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
 const sendMultipleInvitations = function (data,t) {
