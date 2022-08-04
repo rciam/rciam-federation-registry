@@ -796,6 +796,12 @@ textarea {
 
 
 /* Inputs */
+
+.disabled-token-auth-method {
+  margin-top:0!important;
+}
+
+
 .application-type-container {
   margin-left: -0.1rem;
 }

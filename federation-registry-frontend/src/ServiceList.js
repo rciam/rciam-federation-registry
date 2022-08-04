@@ -516,7 +516,7 @@ const ServiceList= (props)=> {
                       placement='top'
                       overlay={
                         <Tooltip id={`tooltip-top`}>
-                          Use :owner=username|email to search by owner {user.actions.includes('manage_tags')?'and :tag=tag to search by service tag':''} and (:created_after or :created_before) =yyyy/mm/dd   in the Search Input.
+                          Use :owner=username|email to search by owner {user.actions.includes('manage_tags')?'and :tag=tag to search by service tag':''} and (:reg_after or :reg_before) =yyyy/mm/dd   in the Search Input.
                         </Tooltip>
                       }
                     >
@@ -538,10 +538,10 @@ const ServiceList= (props)=> {
                   let regex_tag_1 = /:tag *= *\S*/g;
                   let regex_tag_2 = /( )|:tag *=/g;
                   let regex_2 = /( )|:owner *=/g;
-                  let regex_created_after_1 = /:created_after *= *\S*/g;
-                  let regex_created_after_2 = /( )|:created_after *=/g;
-                  let regex_created_before_1 = /:created_before *= *\S*/g;
-                  let regex_created_before_2 = /( )|:created_before *=/g;
+                  let regex_created_after_1 = /:reg_after *= *\S*/g;
+                  let regex_created_after_2 = /( )|:reg_after *=/g;
+                  let regex_created_before_1 = /:reg_before *= *\S*/g;
+                  let regex_created_before_2 = /( )|:reg_before *=/g;
                   let userString = "";
                   let tagString_1 = "";
                   let tag_arr = [];

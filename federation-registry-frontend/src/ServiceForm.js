@@ -1117,6 +1117,7 @@ const ServiceForm = (props)=> {
                               values={values.grant_types}
                               listItems={tenant.form_config.grant_types}
                               disabled={disabled}
+                              depricated_options={tenant.form_config.grant_types_depricated}
                               changed={props.changes?props.changes.grant_types:null}
 
                             />
@@ -1222,12 +1223,15 @@ const ServiceForm = (props)=> {
                           <InputRow  moreInfo={tenant.form_config.more_info.code_challenge_method} required={true} title={t('form_code_challenge_method')} extraClass='select-col' error={errors.code_challenge_method} touched={touched.code_challenge_method}>
                             <Select
                               onBlur={handleBlur}
-                              optionsTitle={['PKCE will not be used for this service','Plain code challenge','SHA-256 hash algorithm (recomended)']}
+                              optionsTitle={['PKCE will not be used for this service '+(values.grant_types.includes('authorization_code')?'(disabled)':''),'Plain code challenge (depricated)','SHA-256 hash algorithm (recommended)']}
                               options={['','plain','S256']}
                               name="code_challenge_method"
                               values={values}
                               isInvalid={hasSubmitted?!!errors.code_challenge_method:(!!errors.code_challenge_method&&touched.code_challenge_method)}
                               onChange={handleChange}
+                              setFieldValue={(value)=>{setFieldValue('code_challenge_method',value); console.log(value); }}
+                              disabled_option={values.grant_types.includes('authorization_code')?'':null}
+                              recommended={'S256'}
                               disabled={disabled}
                               default={values.code_challenge_method?values.code_challenge_method:''}
                               changed={props.changes?props.changes.code_challenge_method:null}
@@ -1541,20 +1545,19 @@ function gennerateValues(data){
 
 
   if(data.generate_client_secret&&data.protocol==='oidc'){
-    data.client_secret= hex(16);
+    data.client_secret= hex(87);
     data.generate_client_secret = false;
   }
   return data
 }
 
 function hex(n){
- n = n || 16;
- var result = '';
- while (n--){
-  result += Math.floor(Math.random()*16).toString(16).toUpperCase();
- }
- return result;
-}
+  const validChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-';
+  let array = new Uint8Array(n||87);
+  window.crypto.getRandomValues(array);
+  array = array.map(x => validChars.charCodeAt(x % validChars.length));
+  const randomState = String.fromCharCode.apply(null, array);
+  return randomState;}
 
 const  generateInput = (props)=>  {
   return (
