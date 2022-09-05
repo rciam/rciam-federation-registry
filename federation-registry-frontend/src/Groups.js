@@ -331,7 +331,7 @@ const GroupsPage = (props) => {
                     <LoadingBar loading={loading}>
                       
                       
-                      <h2 className="group_page_main_title">{isGroupManager?"Owners Group Managment Page":"Owners Group Page"}</h2>
+                      <h2 className="group_page_main_title">{isGroupManager?"Owners Group Management Page":"Owners Group Page"}</h2>
                         <p>Owner group members can view, edit and create service requests for this service. Owner group managers can also manage the members of this owners group by inviting or removing users.</p>
                     
                       <h4 className="group_title">Group Members</h4>

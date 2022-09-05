@@ -366,7 +366,7 @@ const ServiceList= (props)=> {
           return false;
         }
         else{
-          setMessage(t('request_submit_failled_msg') + response.status);
+          setMessage(t('request_submit_failed_msg') + response.status);
         }
       });
     }
@@ -394,7 +394,7 @@ const ServiceList= (props)=> {
           return false;
         }
         else{
-          setMessage(t('request_submit_failled_msg') + response.status);
+          setMessage(t('request_submit_failed_msg') + response.status);
         }
       });
     }
@@ -454,7 +454,7 @@ const ServiceList= (props)=> {
             <Alert variant='warning' className="invitation_alert">
 
               <span>{outdatedCount}</span>{' '}
-               of the services you own are not up to date with the lastest requirements. Click{' '}
+               of the services you own are not up to date with the latest requirements. Click{' '}
                <span className="alert_fake_link" onClick={()=>{setExpandFilters(!expandFilters); setShowOutdated(true); setShowOwned(true); setShowNotification(false);}}>here</span>
                 {' '}to find {outdatedCount>1?'them':'it'} using the outdated filter and reconfigure them following the instructions.
             </Alert>

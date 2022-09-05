@@ -705,7 +705,7 @@ export function CheckboxList(props){
                     return(
                       <div className="checkboxList" key={index}>
                       <Checkbox name={props.name} disabled={props.disabled} value={item}/>
-                      {item.length>33&&(item.substr(0,33)==="urn:ietf:params:oauth:grant-type:"||item.substr(0,33)==="urn:ietf:params:oauth:grant_type:")?item.substr(33).replace("_"," "):item.replace("_"," ")}{props.depricated_options.includes(item)? ' (depricated)':''}
+                      {item.length>33&&(item.substr(0,33)==="urn:ietf:params:oauth:grant-type:"||item.substr(0,33)==="urn:ietf:params:oauth:grant_type:")?item.substr(33).replace("_"," "):item.replace("_"," ")}{props.deprecated_options.includes(item)? ' (deprecated)':''}
                       </div>
                     );
 

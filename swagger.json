@@ -7,7 +7,7 @@ info:
   contact:
     email: "apiteam@swagger.io"
   license:
-    name: "Rciam"
+    name: "RCIAM"
     url: "https://github.com/rciam"
 host: "swagger.io"
 basePath: "/v2"
@@ -23,9 +23,9 @@ tags:
 - name: "Groups and Invitations"
   description: "Manage owners group"
 - name: "AMS"
-  description: "Commmunication with the Argo Messenging Service"
+  description: "Communication with the ARGO Messaging Service"
 - name: "Agent"
-  description: "Deditated endpoints for the ams-agent"
+  description: "Dedicated endpoints for the ams-agent"
 - name: "Deployer Agents"
   description: "Manage Tenant Deployer Agents"
 - name: "Banner Alerts"
@@ -124,7 +124,7 @@ paths:
     delete:
       tags:
       - Service Tags
-      summary: "Delete serivce tags"
+      summary: "Delete service tags"
       description: "Delete tags for a service"
       parameters:
         - in: path
@@ -298,7 +298,7 @@ paths:
       - in: query
         type: boolean
         name: ror
-        description: "If true returns only orgnanization registered at ror.org"
+        description: "If true returns only organization registered at ror.org"
       responses: 
         "200":
           description: "OK"
@@ -379,7 +379,7 @@ paths:
           format: "int64"
       responses:
         "200":
-          description: "Succesfull"
+          description: "Successful"
           schema:
             $ref: "#/definitions/Petition"
         "401":
@@ -414,7 +414,7 @@ paths:
         format: "int64"
       - in: "body"
         name: "body"
-        description: "Petition object that needs to be added to the regisrtry may be empty if type is delete"
+        description: "Petition object that needs to be added to the registry may be empty if type is delete"
         required: false
         schema:
           $ref: "#/definitions/Petition"
@@ -673,7 +673,7 @@ paths:
                 description: "Number of users the notification was sent to"
               service_count:
                 type: "number"
-                description: "Number of outdated service in integration envronment provided as parameter"
+                description: "Number of outdated service in integration environment provided as parameter"
         "401":
           description: "Unauthenticated request"
         "500":
@@ -867,7 +867,7 @@ paths:
                     description: "Error status code returned by the deployment process"
                   error_description:
                     type: string
-                    description: "Description of the deploymen error"
+                    description: "Description of the deployment error"
         "401":
           description: "Unauthenticated request"
         "500":
@@ -970,7 +970,7 @@ paths:
         - in: query
           type: integer
           name: page
-          description: "The page number of the respone"
+          description: "The page number of the response"
         - in: query
           type: integer
           name: limit
@@ -1021,7 +1021,7 @@ paths:
         - in: query
           type: string
           name: 'tag'
-          description: "Filters results based on tags, supports multiple comma seperated values"
+          description: "Filters results based on tags, supports multiple comma separated values"
         - in: query
           type: string
           name: created_after
@@ -1104,7 +1104,7 @@ paths:
     get:
       tags:
       - "Agent"
-      summary: "Get new Congigurations"
+      summary: "Get new Configurations"
       description: "Route used from ams-agent to get all service configuration awaiting deployment and push them to the ams topic"
       operationId: "getPendingServices"
       produces:
@@ -1132,7 +1132,7 @@ paths:
       parameters:
       - in: "body"
         name: "body"
-        description: "Ams formated messages containing results for deployment requests"
+        description: "Ams formatted messages containing results for deployment requests"
         required: true
         schema:
           $ref: "#/definitions/AmsPending"
@@ -2146,7 +2146,7 @@ definitions:
         minimum: 0
         maximum: 3600
         description: "oidc specific"
-      code_of_condact_field:
+      code_of_conduct_field:
         type: "boolean"
         description: "There could be multiple code of contact fields with different depending on the tenant some of them might be required to be true."
   Tenants:
@@ -2179,7 +2179,7 @@ definitions:
       form_config:
         type: "object"
         properties:
-          code_of_condact:
+          code_of_conduct:
             type: "object"
             properties:
               title:
@@ -2427,7 +2427,7 @@ definitions:
         minimum: 0
         maximum: 3600
         description: "oidc specific"
-      code_of_condact_field:
+      code_of_conduct_field:
         type: "boolean"
         description: "There could be multiple code of contact fields with different depending on the tenant some of them might be required to be true."
   Services:
