@@ -923,7 +923,7 @@ const ServiceForm = (props)=> {
                       </InputRow>
                       {tenant.form_config.extra_fields.organization.active.includes(values.integration_environment)?
                       <React.Fragment>
-                        <InputRow  moreInfo={tenant.form_config.more_info.organization_name} required={tenant.form_config.extra_fields.organization.required.includes(values.integration_environment)} title="Organization" description="Search for your organization" error={errors.organization_name} touched={touched.organization_name}>
+                        <InputRow  moreInfo={tenant.form_config.more_info.organization_name} required={tenant.form_config.extra_fields.organization.required.includes(values.integration_environment)} title="Organisation" description="Search for your organisation" error={errors.organization_name} touched={touched.organization_name}>
                             <OrganizationField
                               name='organization_name'
                               placeholder='Type the name of your organization'
@@ -939,7 +939,7 @@ const ServiceForm = (props)=> {
                               changed={props.changes?props.changes.organization_name:null}
                             />
                           </InputRow>
-                          <InputRow  moreInfo={tenant.form_config.more_info.organization_url} title="Organization Website Url" required={tenant.form_config.extra_fields.organization.required.includes(values.integration_environment)} description="Link to the organization's website" error={errors.organization_url} touched={touched.organization_url}>
+                          <InputRow  moreInfo={tenant.form_config.more_info.organization_url} title="Organisation Website URL" required={tenant.form_config.extra_fields.organization.required.includes(values.integration_environment)} description="Link to the organization's website" error={errors.organization_url} touched={touched.organization_url}>
                             <SimpleInput
                               name='organization_url'
                               placeholder={t('form_type_prompt')}
