@@ -746,7 +746,7 @@ export function RefreshToken(props){
           <MyOverLay show={props.changed&&(props.changed.scope.D.includes('offline_access')||props.changed.scope.N.includes('offline_access'))&&show} type='Edited' target={target}/>
         </div>
         <Form.Text className="text-muted text-left label-checkbox" id="uri-small-desc">
-          {t('form_offline_acces_desc')}
+          {t('form_offline_access_desc')}
         </Form.Text>
         {props.values.scope.includes('offline_access')?(
           <React.Fragment>
@@ -875,7 +875,7 @@ export function ClientSecret(props){
             disabled={props.disabled}
           />
           <Form.Text className="text-muted text-left label-checkbox" id="uri-small-desc">
-            {t('imput_client_secret_info')}
+            {t('input_client_secret_info')}
           </Form.Text>
         </React.Fragment>
         :null}

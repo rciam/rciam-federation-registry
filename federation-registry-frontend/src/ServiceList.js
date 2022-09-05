@@ -465,7 +465,7 @@ const ServiceList= (props)=> {
           <Alert variant='primary' className="invitation_alert">
             {t('invitation_alert_1')}
             <span>{invites.length}</span>
-            {invites.length>1?t('invitation_alert_mult'):t('invitation_alert_single')}
+            {invites.length>1?t('invitation_alert_multiple'):t('invitation_alert_single')}
             <Link to={{pathname:'/'+tenant_name+"/invitations", state:{invitations:invites}}}>
               {t('invitation_alert_link')}
             </Link>

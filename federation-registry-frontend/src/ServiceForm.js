@@ -541,7 +541,7 @@ const ServiceForm = (props)=> {
         body: JSON.stringify(petition) // body data type must match "Content-Type" header
       }).then(response=> {
         setAsyncResponse(false);
-        setModalTitle(t('edit_petition_tilte'));
+        setModalTitle(t('edit_petition_title'));
         if(response.status===200){
           setMessage(t('petition_success_msg'));
         }
