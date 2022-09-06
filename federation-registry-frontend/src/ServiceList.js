@@ -523,15 +523,9 @@ const ServiceList= (props)=> {
         {outdatedCount>0?<Collapse in={showNotification}>
           <div>
             <Alert variant='warning' className="invitation_alert">
-
               <span>{outdatedCount}</span>{' '}
-<<<<<<< HEAD
-               of the services you own are not up to date with the latest requirements. Click{' '}
-               <span className="alert_fake_link" onClick={()=>{setExpandFilters(!expandFilters); setShowOutdated(true); setShowOwned(true); setShowNotification(false);}}>here</span>
-=======
                of the services you own are not up to date with the lastest requirements. Click{' '}
                <span className="alert_fake_link" onClick={()=>{setExpandFilters(!expandFilters); setFilters({...filters,showOutdated:true,showOwned:true}); setShowNotification(false);}}>here</span>
->>>>>>> RCIAM-1022, RCIAM-1082, RCIAM-1087, RCIAM-1110
                 {' '}to find {outdatedCount>1?'them':'it'} using the outdated filter and reconfigure them following the instructions.
             </Alert>
           </div>

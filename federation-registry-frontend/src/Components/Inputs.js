@@ -377,8 +377,8 @@ export function SimpleRadio(props){
 
 export function AuthMethRadioList(props){
   const [show, setShow] = useState(false);
-  const authMethod = props.values.token_endpoint_auth_method;
-  const signingAlg = props.values.token_endpoint_auth_signing_alg;
+  // const authMethod = props.values.token_endpoint_auth_method;
+  // const signingAlg = props.values.token_endpoint_auth_signing_alg;
   const setFieldValue = props.setFieldValue;
   const target = useRef(null);
   const tenant = useContext(tenantContext);

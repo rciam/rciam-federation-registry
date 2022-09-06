@@ -764,8 +764,9 @@ router.delete('/tenants/:tenant/petitions/:id',authenticate,(req,res,next)=>{
 
 
 // PUT Petition Endpoint
-router.put('/tenants/:tenant/petitions/:id',authenticate,formatPetition,formatCocForValidation,serviceValidationRules({optional:false,tenant_param:true,check_available:false,sanitize:false,null_client_id:true}),validate,reFormatPetition,asyncPetitionValidation, (req,res,next)=>{
+router.put('/tenants/:tenant/petitions/:id',authenticate,formatPetition,formatServiceBooleanForValidation,serviceValidationRules({optional:false,tenant_param:true,check_available:false,sanitize:false,null_client_id:true}),validate,reFormatPetition,asyncPetitionValidation, (req,res,next)=>{
   if(req.user.role.actions.includes('update_own_petition')){
+    console.log(req.body);
     return db.task('update-petition',async t =>{
       try{
         if(req.body.type==='delete'){

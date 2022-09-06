@@ -991,32 +991,6 @@ const ServiceForm = (props)=> {
                           })}
                       </React.Fragment>:null)                    
                       })
-<<<<<<< HEAD
-
-                      
-                      
-                      // Object.keys(tenant.form_config.code_of_conduct).map((name,index)=>{
-                      //   return(
-                      //     <InputRow  moreInfo={tenant.form_config.more_info[name]} title={tenant.form_config.code_of_conduct[name].title} key={index} required={
-                      //       tenant.form_config.code_of_conduct[name].required.includes(values.integration_environment)} error={errors[name]?errors[name]:null} touched={touched[name]}>
-                      //       <SimpleCheckbox
-                      //       name= {name}
-                      //       label={
-                      //         <React.Fragment>
-                      //           {parse(tenant.form_config.code_of_conduct[name].desc)}
-                      //         </React.Fragment>
-                      //       }
-                      //       onChange={handleChange}
-                      //       disabled={disabled}
-                      //       value={values[name]}
-                      //       onBlur={handleBlur}
-                      //       changed={props.changes?props.changes[name]:null}
-                      //       />
-                      //     </InputRow>
-                      //   )
-                      // })
-=======
->>>>>>> RCIAM-1022, RCIAM-1082, RCIAM-1087, RCIAM-1110
                     }
                 
 
