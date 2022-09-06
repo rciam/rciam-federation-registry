@@ -2,9 +2,9 @@
 
 The federation registry provides a secure web interface through which service operators can register and manage their
 OpenID Connect and SAML based service. A federation registry instance can serve multiple tenants and supports different
-AAI proxy technologies([SimpleSAMLphp](https://simplesamlphp.org/), [MITREid Connect](https://github.com/mitreid-connect/),
-[SATOSA](https://daasi.de/en/satosa-a-modular-proxy/), [Keycloak](https://www.keycloak.org/)). Services can be managed
-through the portal and are deployed by sending configuration messages to [deployment agents](https://github.com/rciam/rciam-federation-registry-agent)
+AAI proxy technologies([Keycloak](https://www.keycloak.org/), [SimpleSAMLphp](https://simplesamlphp.org/), [SATOSA](https://daasi.de/en/satosa-a-modular-proxy/)
+(TODO), [MITREid Connect](https://github.com/mitreid-connect/)). Services can be managed through the portal and are
+deployed by sending configuration messages to [deployment agents](https://github.com/rciam/rciam-federation-registry-agent)
 that run in parallel with this project. Messages are exchanged using [ARGO Messaging Service](https://grnet.gr/en/services/computing-and-storage-services/argo-messaging-service/).
 
 Federation registry is consisted of three node.js projects:
