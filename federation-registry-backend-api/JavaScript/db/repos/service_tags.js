@@ -1,5 +1,4 @@
 const sql = require('../sql').service_tags;
-//const {calcDiff,extractCoc} = require('../../functions/helpers.js');
 const cs = {}; // Reusable ColumnSet objects.
 
 /*

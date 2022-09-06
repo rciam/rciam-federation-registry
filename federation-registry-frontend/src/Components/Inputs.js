@@ -383,12 +383,12 @@ export function AuthMethRadioList(props){
   const target = useRef(null);
   const tenant = useContext(tenantContext);
 
-  useEffect(()=>{
-    if((authMethod==="client_secret_jwt"||authMethod==="private_key_jwt")&&!signingAlg){
-      setFieldValue('token_endpoint_auth_signing_alg', "RS256");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[authMethod]);
+  // useEffect(()=>{
+  //   if((authMethod==="client_secret_jwt"||authMethod==="private_key_jwt")&&!signingAlg){
+  //     setFieldValue('token_endpoint_auth_signing_alg', "RS256");
+  //   }
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // },[authMethod]);
 
   useEffect(()=>{
     if(tenant[0].form_config.dynamic_fields.includes('allow_introspection')){
@@ -397,11 +397,11 @@ export function AuthMethRadioList(props){
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[])
 
-  useEffect(()=>{
-    if(props.values.grant_types.includes('authorization_code')&&authMethod==='none'){
-      setFieldValue('token_endpoint_auth_method','client_secret_basic');
-    }
-  },[authMethod,props.values.grant_types,setFieldValue])
+  // useEffect(()=>{
+  //   if(props.values.grant_types.includes('authorization_code')&&authMethod==='none'){
+  //     setFieldValue('token_endpoint_auth_method','client_secret_basic');
+  //   }
+  // },[authMethod,props.values.grant_types,setFieldValue])
 
   return(
     <React.Fragment>
@@ -419,7 +419,7 @@ export function AuthMethRadioList(props){
                   <input
                     type="radio"
                     name={field.name}
-                    disabled={props.disabled||(props.values.grant_types.includes('authorization_code')&&item==='none')}
+                    disabled={props.disabled}
                     {...field}
                     onChange={(e)=>{
                       if(tenant[0].form_config.dynamic_fields.includes('allow_introspection')){
@@ -430,7 +430,7 @@ export function AuthMethRadioList(props){
                     ref={props.values.token_endpoint_auth_method===item?target:null}
                     checked={props.values.token_endpoint_auth_method===item}
                   />
-                  {props.radio_items_titles[index]}{props.values.grant_types.includes('authorization_code')&&item==='none'?<span className='disabled-token-auth-method text-muted text-left form-text small'> Unavailable when authorization code Grant Type is selected</span>:null}
+                  {props.radio_items_titles[index]}
                 </React.Fragment>
               )}
             </Field>
@@ -609,7 +609,7 @@ export function Select(props){
       disabled={props.disabled}
       placeholder="Select..countryName.">
         {props.options.map((item,index)=>(
-          <option key={index} value={props.options[index]} selected={props.options[index]===props.values[props.name]} disabled={props.disabled_option===props.options[index]}>{props.optionsTitle[index]}</option>
+          <option key={index} value={props.options[index]} disabled={props.disabled_option===props.options[index]}>{props.optionsTitle[index]}</option>
         ))}
       </Field>
     </div>

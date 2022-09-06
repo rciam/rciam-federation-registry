@@ -662,6 +662,7 @@ describe('Service registry API Integration Tests', function() {
         let sendData = create.oidc;
         userToken = setUser(users.egi.end_user);
          sendData.integration_environment = 'production';
+         sendData.assurance_checkbox = true;
         var req = request(server).post('/tenants/egi/petitions').set({Authorization: userToken}).send({
           type:'create',
           ...create.oidc

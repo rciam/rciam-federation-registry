@@ -8,26 +8,26 @@ class ServiceMultiValuedRepository {
     this.pgp = pgp;
     // set-up all ColumnSet objects, if needed:
     cs.multi = new pgp.helpers.ColumnSet(['owner_id','value']);
-    cs.cocPet = new pgp.helpers.ColumnSet(['petition_id','name','value']);
-    cs.cocSer = new pgp.helpers.ColumnSet(['service_id','name','value']);
-    cs.cocSerUpd = new pgp.helpers.ColumnSet(['?service_id','?name','value'],{table:'service_coc'});
-    cs.cocPetUpd = new pgp.helpers.ColumnSet(['?petition_id','?name','value'],{table:'service_petition_coc'});
+    cs.serviceBooleanPet = new pgp.helpers.ColumnSet(['petition_id','name','value']);
+    cs.serviceBooleanSer = new pgp.helpers.ColumnSet(['service_id','name','value']);
+    cs.serviceBooleanSerUpd = new pgp.helpers.ColumnSet(['?service_id','?name','value'],{table:'service_boolean'});
+    cs.serviceBooleanPetUpd = new pgp.helpers.ColumnSet(['?petition_id','?name','value'],{table:'service_petition_boolean'});
   }
 
-  async updateCoc(type,service,id){
+  async updateServiceBoolean(type,service,id){
     // updateData = [{id:1,state:'deployed'},{id:2,state:'deployed'},{id:3,state:'failed'}];
     let data = [];
     let upd_cs;
     id = parseInt(id);
     for(const property in service){
-      if(Object.keys(config.form[service.tenant].extra_fields).includes(property) && config.form[service.tenant].extra_fields[property].tag==='coc'){
+      if(Object.keys(config.form[service.tenant].extra_fields).includes(property) && (config.form[service.tenant].extra_fields[property].tag==='coc'||(config.form[service.tenant].extra_fields[property].tag==='once'&&(service[property] === 'true'||service[property]===true)))){
         if(type==='petition'){
           data.push({petition_id:id,name:property,value:(service[property] === 'true'||service[property]===true)});
-          upd_cs = cs.cocPetUpd;
+          upd_cs = cs.serviceBooleanPetUpd;
         }
         else{
           data.push({service_id:id,name:property,value:(service[property] === 'true'||service[property]===true)});
-          upd_cs = cs.cocSerUpd;
+          upd_cs = cs.serviceBooleanSerUpd;
         }
       }
     }
@@ -43,21 +43,23 @@ class ServiceMultiValuedRepository {
   }
 
 
-  async addCoc(type,service,id){
+  async addServiceBoolean(type,service,id){
     let data = [];
     let add_cs = {};
     let table_name;
     for(const property in service){
-      if(Object.keys(config.form[service.tenant].extra_fields).includes(property) && config.form[service.tenant].extra_fields[property].tag==='coc'){
-        if(type==='petition'){
-          data.push({petition_id:id,name:property,value:(service[property] === 'true'||service[property]===true)});
-          add_cs = cs.cocPet;
-          table_name = "service_petition_coc";
-        }
-        else{
-          data.push({service_id:id,name:property,value:(service[property] === 'true'||service[property]===true)});
-          add_cs = cs.cocSer;
-          table_name = "service_coc";
+      if(Object.keys(config.form[service.tenant].extra_fields).includes(property)){
+        if(config.form[service.tenant].extra_fields[property].tag==='coc'||config.form[service.tenant].extra_fields[property].tag==='once'){
+          if(type==='petition'){
+            data.push({petition_id:id,name:property,value:(service[property] === 'true'||service[property]===true)});
+            add_cs = cs.serviceBooleanPet;
+            table_name = "service_petition_boolean";
+          }
+          else{
+            data.push({service_id:id,name:property,value:(service[property] === 'true'||service[property]===true)});
+            add_cs = cs.serviceBooleanSer;
+            table_name = "service_boolean";
+          }
         }
       }
     }

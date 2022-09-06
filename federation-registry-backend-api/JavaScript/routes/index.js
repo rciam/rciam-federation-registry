@@ -1,5 +1,5 @@
 require('dotenv').config();
-const {petitionValidationRules,validate,validateInternal,tenantValidation,formatPetition,getServiceListValidation,postInvitationValidation,serviceValidationRules,putAgentValidation,postAgentValidation,decodeAms,amsIngestValidation,reFormatPetition,getServicesValidation,formatCocForValidation} = require('../validator.js');
+const {petitionValidationRules,validate,validateInternal,tenantValidation,formatPetition,getServiceListValidation,postInvitationValidation,serviceValidationRules,putAgentValidation,postAgentValidation,decodeAms,amsIngestValidation,reFormatPetition,getServicesValidation,formatServiceBooleanForValidation} = require('../validator.js');
 const qs = require('qs');
 const {v1:uuidv1} = require('uuid');
 const axios = require('axios').default;
@@ -118,7 +118,7 @@ router.get('/tenants/:tenant/services',getServicesValidation(),validate,authenti
 
 // Endpoint used to bootstrap a teant or generaly to import multiple services
 // Add changeContacts to alter contacts
-router.post('/tenants/:tenant/services',adminAuth,tenantValidation(),validate,formatCocForValidation,serviceValidationRules({optional:true,tenant_param:true,check_available:true,sanitize:true,null_client_id:false}),validate,(req,res,next)=> {
+router.post('/tenants/:tenant/services',adminAuth,tenantValidation(),validate,formatServiceBooleanForValidation,serviceValidationRules({optional:true,tenant_param:true,check_available:true,sanitize:true,null_client_id:false}),validate,(req,res,next)=> {
   let services = req.body;
   // Populate json objects with all necessary fields
   services.forEach((service,index) => {
@@ -677,7 +677,7 @@ router.get('/tenants/:tenant/petitions/:id',authenticate,(req,res,next)=>{
 
 // Add a new client/petition
 // Post petition endpoint
-router.post('/tenants/:tenant/petitions',authenticate,petitionValidationRules(),validate,formatPetition,formatCocForValidation,serviceValidationRules({optional:false,tenant_param:true,check_available:false,sanitize:false,null_client_id:true}),validate,reFormatPetition,asyncPetitionValidation,(req,res,next)=>{
+router.post('/tenants/:tenant/petitions',authenticate,petitionValidationRules(),validate,formatPetition,formatServiceBooleanForValidation,serviceValidationRules({optional:false,tenant_param:true,check_available:false,sanitize:false,null_client_id:true}),validate,reFormatPetition,asyncPetitionValidation,(req,res,next)=>{
   res.setHeader('Content-Type', 'application/json');
   if(req.user.role.actions.includes('add_own_petition')){
     try{

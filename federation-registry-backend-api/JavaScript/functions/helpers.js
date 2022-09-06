@@ -53,11 +53,11 @@ const calcDiff = (oldState,newState,tenant) => {
     let items;
     var edits = {
       add:{
-        coc:{}
+        service_boolean:{}
       },
       dlt:{},
       update:{
-        coc:{}
+        service_boolean:{}
       },
       details:{}
     };
@@ -116,13 +116,13 @@ const calcDiff = (oldState,newState,tenant) => {
       edits.dlt.oidc_redirect_uris = old_values.redirect_uris.filter(x=>!new_values.redirect_uris.includes(x));
     }
     for(var property in formConfig.form[tenant].extra_fields){
-      if(formConfig.form[tenant].extra_fields[property].tag==="coc"){
+      if(formConfig.form[tenant].extra_fields[property].tag==="coc"||formConfig.form[tenant].extra_fields[property].tag==="once"){
         if(property in new_values){
           if(property in old_values && old_values[property]!==new_values[property]){
-            edits.update.coc[property]=new_values[property];
+            edits.update.service_boolean[property]=new_values[property];
           }
           else{
-            edits.add.coc[property]=new_values[property];
+            edits.add.service_boolean[property]=new_values[property];
           }
         }
 
@@ -146,7 +146,6 @@ const calcDiff = (oldState,newState,tenant) => {
     if(diff(old_values,new_values)){
       edits.details = new_values;
     }
-
     return edits
 }
 
@@ -271,7 +270,6 @@ const sendNotifications = (data,template_uri,users) => {
   if(process.env.NODE_ENV!=='test'&&process.env.NODE_ENV!=='test-docker'&&!config.disable_emails){
   readHTMLFile(path.join(__dirname, '../html/', template_uri), function(err, html) {
       let transporter = createTransport();
-
       var template = hbs.compile(html);
       //var replacements = {username: "John Doe",name:"The name"};
       var replacements = {
@@ -282,7 +280,6 @@ const sendNotifications = (data,template_uri,users) => {
         tenant_signature:config[data.tenant].tenant_signature
       };
       var htmlToSend = template(replacements);
-
       users.forEach(async (user) => {
         var mailOptions = {
           from: {
@@ -471,15 +468,15 @@ var readHTMLFile = function(path, callback) {
     });
 };
 
-const extractCoc = (service) => {
-  if(service.coc){
-    service.coc.map(item=>{
+const extractServiceBoolean = (service) => {
+  if(service.service_boolean){
+    service.service_boolean.map(item=>{
       for(const name in item){
         service[name] = item[name];
       }
     });
   }
-  delete service.coc;
+  delete service.service_boolean;
   return service;
 }
 
@@ -518,7 +515,7 @@ module.exports = {
   newMemberNotificationMail,
   sendMultipleInvitations,
   readHTMLFile,
-  extractCoc,
+  extractServiceBoolean,
   createGgusTickets,
   delay,
   sendNotif,

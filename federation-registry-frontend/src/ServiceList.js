@@ -13,7 +13,7 @@ import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import Table from 'react-bootstrap/Table';
 import config from './config.json';
-import {Link,useParams} from "react-router-dom";
+import {Link,useParams,useLocation,useHistory} from "react-router-dom";
 import Badge from 'react-bootstrap/Badge';
 import Pagination from 'react-bootstrap/Pagination';
 import {LoadingBar,ProcessingRequest} from './Components/LoadingBar';
@@ -31,10 +31,33 @@ var filterTimeout;
 
 
 const ServiceList= (props)=> {
+  const  history  = useHistory();
+  const  location  = useLocation();
+
+
+  
 
   const query = new Proxy(new URLSearchParams(window.location.search), {
     get: (searchParams, prop) => searchParams.get(prop),
   });
+
+  const [filters,setFilters] = useState({
+    searchString:query.search_string||"",
+    searchOwnerString:query.owner||"",
+    createdAfterString:query.created_after||"",
+    createdBeforeString:query.created_before||"",
+    showPending:!!query.pending,
+    showOwned:!!query.owned,
+    integrationEnvironment:query.integration_environment||"",
+    showOutdated:!!query.outdated,
+    showRequestReview:query.pending_sub==='request_review',
+    showPendingSubFilter:query.pending_sub||"",
+    showOrphan:!!query.orphan,
+    errorFilter:!!query.error,
+    tagString:query.tags||"",
+    protocolFilter:query.protocol||"",
+    waitingDeploymentFilter:!!query.waiting_deployment
+  })
   // eslint-disable-next-line
   const [tenant,setTeanant] = useContext(tenantContext);
   const {tenant_name} = useParams();
@@ -49,8 +72,6 @@ const ServiceList= (props)=> {
   const [invites,setInvites] = useState();
   const [message,setMessage] = useState();
   const [responseTitle,setResponseTitle] = useState(null);
-  const [searchString,setSearchString] = useState();
-  const [searchOwnerString,setSearchOwnerString] = useState();
   const [expandFilters,setExpandFilters] = useState();
   const [confirmationData,setConfirmationData] = useState({});
   const [reset,setReset] = useState(false);
@@ -58,97 +79,147 @@ const ServiceList= (props)=> {
   const [requestReviewCount,setRequestReviewCount] = useState(0);
   // eslint-disable-next-line
   const [user,setUser] = useContext(userContext);
-  const [createdAfterString,setCreatedAfterString] = useState();
-  const [createdBeforeString,setCreatedBeforeString] = useState();
-  const [showPending,setShowPending] = useState(false);
-  const [showOwned,setShowOwned] = useState(false);
-  const [integrationEnvironment,setIntegrationEnvironment] = useState();
-  const [showOutdated,setShowOutdated] = useState(false);
-  const [showRequestReview,setShowRequestReview] = useState(false);
-  const [showPendingSubFilter,setShowPendingSubFilter] = useState('');
+ 
   const [paginationItems,setPaginationItems] = useState([]);
   const [initialLoading,setInitialLoading] = useState(true);
-  const [showOrphan,setShowOrphan] = useState(false);
   const [showNotification,setShowNotification] = useState(true);
-  const [errorFilter,setErrorFilter] = useState(false);
   const [serviceCount,setServiceCount] = useState(0);
-  const [tagString,setTagString] = useState();
-  const [searchInputString,setSearchInputString] = useState("");
-  const [protocolFilter,setProtocolFilter] = useState();
-  const [waitingDeploymentFilter,setWaitingDeploymentFilter] = useState();
+  const [searchInputString,setSearchInputString] = useState((query.tags?(":tag="+ query.tags):'')+(query.created_after?(":reg_after="+query.created_after):"")+(query.created_before?(":owner="+query.created_before):"")+(query.owner?(":owner="+query.owner):"")+(query.search_string||""))
   const pageSize = 10;
+  const [showResetButton,setShowResetButton] = useState(false);
   
+
+
 
   useEffect(()=>{
     localStorage.removeItem('url');
     getInvites();
-    if(query.integration_environment){
+    if(query.integration_environment||query.outdated==='true'||query.owned||query.pending||query.outdated||query.pending_sub||query.orphan||query.error||query.protocol||query.waiting_deployment){
       setExpandFilters(true);
-
-      setIntegrationEnvironment(query.integration_environment);
     }
-    if(query.outdated==='true'){
-      setExpandFilters(true);
-      setShowOutdated(true);
-    }    
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
 
 
   useEffect(()=>{
+     generateFilerString();
      getServices();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[searchString,showOwned,showPending,integrationEnvironment,activePage,showOutdated,showPendingSubFilter,showRequestReview,showOrphan,errorFilter,searchOwnerString,tagString,createdAfterString,createdBeforeString,protocolFilter,waitingDeploymentFilter]);
+  },[activePage,filters]);
 
   useEffect(()=>{
     setActivePage(1);
-  },[searchString,showOwned,showPending,integrationEnvironment,showOutdated,showPendingSubFilter,setShowRequestReview,showOrphan,errorFilter,searchOwnerString,tagString,createdAfterString,createdBeforeString,protocolFilter,waitingDeploymentFilter]);
+    setSearchParams();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[filters]);
 
-  
+  const resetFilters = () => {
 
+    setFilters({
+      searchString:"",
+      searchOwnerString:"",
+      createdAfterString:"",
+      createdBeforeString:"",
+      showPending:false,
+      showOwned:false,
+      integrationEnvironment:"",
+      showOutdated:false,
+      showRequestReview:false,
+      showPendingSubFilter:"",
+      showOrphan:false,
+      errorFilter:false,
+      tagString:"",
+      protocolFilter:"",
+      waitingDeploymentFilter:false
+    })
+    setSearchInputString('');
+    setSearchParams();
+  }
+  const setSearchParams = () => {
+    let params = new URLSearchParams(location.search);
+
+    let filter_mapper = {
+      search_string: filters.searchString,
+      owned: filters.showOwned,
+      pending:filters.showPending,
+      integration_environment:filters.integrationEnvironment,
+      outdated:filters.showOutdated,
+      pending_sub:filters.showPendingSubFilter,
+      orphan:filters.showOrphan,
+      error:filters.errorFilter,
+      owner:filters.searchOwnerString,
+      tags:filters.tagString,
+      created_after:filters.createdAfterString,
+      created_before:filters.createdBeforeString,
+      protocol:filters.protocolFilter,
+      waiting_deployment:filters.waitingDeploymentFilter
+    }
+    let expandable_filters = ["created_after","tags","owned","pending","integration_environment","outdated","pending_sub","orphan","error","protocol","waiting_deployment","search_string"]
+    
+    let active_expandable_filters;
+    for(const filter in filter_mapper){
+      if(filter_mapper[filter]){
+        if(expandable_filters.includes(filter)){
+          active_expandable_filters=true;
+          setShowResetButton(true);
+        }
+        params.set(filter,filter_mapper[filter]);
+      }
+      else{
+        params.delete(filter,filter_mapper[filter]);
+      }
+      if(!active_expandable_filters){
+        setShowResetButton(false);
+      }
+      
+    }
+
+    history.replace({ pathname: location.pathname, search: params.toString() });    
+    
+  }
 
   const generateFilerString = ()=> {
     let filterString='';
-    if(searchString){
-      filterString = filterString + '&search_string=' + searchString;
+    if(filters.searchString){
+      filterString = filterString + '&search_string=' + filters.searchString;
     }
-    if(showOwned){
+    if(filters.showOwned){
       filterString = filterString + '&owned=' + true;
     }
-    if(integrationEnvironment){
-      filterString = filterString + '&env=' + integrationEnvironment;
+    if(filters.integrationEnvironment){
+      filterString = filterString + '&env=' + filters.integrationEnvironment;
     }
-    if(showPending){
+    if(filters.showPending){
       filterString = filterString + '&pending=' + true;
     }
-    if(showOutdated){
+    if(filters.showOutdated){
       filterString = filterString + '&outdated=' +true;
     }
-    if(showPendingSubFilter){
-      filterString = filterString + '&pending_sub=' +showPendingSubFilter;
+    if(filters.showPendingSubFilter){
+      filterString = filterString + '&pending_sub=' +filters.showPendingSubFilter;
     }
-    if(showOrphan){
+    if(filters.showOrphan){
       filterString = filterString + '&orphan=' +true;
     }
-    if(errorFilter){
+    if(filters.errorFilter){
       filterString = filterString + '&error=' + true;
     }
-    if(searchOwnerString){
-      filterString= filterString + '&owner=' + searchOwnerString;
+    if(filters.searchOwnerString){
+      filterString= filterString + '&owner=' + filters.searchOwnerString;
     }
-    if(tagString){
-      filterString= filterString + '&tags=' + tagString;
+    if(filters.tagString){
+      filterString= filterString + '&tags=' + filters.tagString;
     }
-    if(createdAfterString){
-      filterString = filterString + '&created_after=' + createdAfterString
+    if(filters.createdAfterString){
+      filterString = filterString + '&created_after=' + filters.createdAfterString
     }
-    if(createdBeforeString){
-      filterString = filterString + '&created_before=' + createdBeforeString
+    if(filters.createdBeforeString){
+      filterString = filterString + '&created_before=' + filters.createdBeforeString
     }
-    if(protocolFilter){
-      filterString = filterString + '&protocol=' + protocolFilter;
+    if(filters.protocolFilter){
+      filterString = filterString + '&protocol=' + filters.protocolFilter;
     }
-    if(waitingDeploymentFilter){
+    if(filters.waitingDeploymentFilter){
       filterString = filterString + '&waiting_deployment=' +true; 
     }
     //filterString=filterString + '&tags=test,egi';
@@ -222,7 +293,7 @@ const ServiceList= (props)=> {
               setActivePage(1);
           }
           setServices(response.list_items);
-          if(!showOwned&&!showPending&!showOutdated&&!searchString){
+          if(!filters.showOwned&&!filters.showPending&!filters.showOutdated&&!filters.searchString){
             setOutdatedCount(response.outdated_count);
           }
           setRequestReviewCount(response.request_review_count);
@@ -444,7 +515,7 @@ const ServiceList= (props)=> {
               {requestReviewCount>1?'There are ':'There is '} <span>{requestReviewCount}</span>{' '}
               request{requestReviewCount>1?'s':''} awaiting reviewal click
                 Click{' '}
-               <span className="alert_fake_link_primary" onClick={()=>{setExpandFilters(!expandFilters); setShowRequestReview(true); setShowNotification(false);}}>here</span>
+               <span className="alert_fake_link_primary" onClick={()=>{setExpandFilters(!expandFilters); setFilters({...filters,showRequestReview:true}); setShowNotification(false);}}>here</span>
                 {' '}to find {requestReviewCount>1?'them':'it'} using the requested review filter and submit your review.
             </Alert>
           </div>
@@ -454,8 +525,13 @@ const ServiceList= (props)=> {
             <Alert variant='warning' className="invitation_alert">
 
               <span>{outdatedCount}</span>{' '}
+<<<<<<< HEAD
                of the services you own are not up to date with the latest requirements. Click{' '}
                <span className="alert_fake_link" onClick={()=>{setExpandFilters(!expandFilters); setShowOutdated(true); setShowOwned(true); setShowNotification(false);}}>here</span>
+=======
+               of the services you own are not up to date with the lastest requirements. Click{' '}
+               <span className="alert_fake_link" onClick={()=>{setExpandFilters(!expandFilters); setFilters({...filters,showOutdated:true,showOwned:true}); setShowNotification(false);}}>here</span>
+>>>>>>> RCIAM-1022, RCIAM-1082, RCIAM-1087, RCIAM-1110
                 {' '}to find {outdatedCount>1?'them':'it'} using the outdated filter and reconfigure them following the instructions.
             </Alert>
           </div>
@@ -494,6 +570,21 @@ const ServiceList= (props)=> {
               :null}
             </Col>
             <Col>
+            <div className="expand-reset-filters-container">
+              {showResetButton?
+                <OverlayTrigger
+                 placement='top'
+                 overlay={
+                   <Tooltip id={`tooltip-top`}>
+                     Reset Active Filters 
+                   </Tooltip>
+                 }
+                 > 
+                  <Button className="reset-filter-button" variant="danger" onClick={resetFilters}>
+                    <FontAwesomeIcon icon={faTimes}/>
+                  </Button>
+                </OverlayTrigger> 
+                :null}
               <Button variant="light" className='filter-button' style={{color:tenant.color}} onClick={()=>setExpandFilters(!expandFilters)}><FontAwesomeIcon icon={faFilter} />
                 {expandFilters?
                   <React.Fragment>
@@ -507,6 +598,7 @@ const ServiceList= (props)=> {
                   </React.Fragment>
                 }
               </Button>
+            </div>
             </Col>
             <Col className="options-search" md={3}>
               <InputGroup className="md-12">
@@ -581,10 +673,10 @@ const ServiceList= (props)=> {
                   if(value==='undefined'||!value){
                     value='';
                   }
-                  if(tagString!==tagString_1||searchOwnerString!==userString||searchString!==value||createdBeforeString!==created_before||createdAfterString!==created_after){
+                  if(filters.tagString!==tagString_1||filters.searchOwnerString!==userString||filters.searchString!==value||filters.createdBeforeString!==created_before||filters.createdAfterString!==created_after){
                     setLoadingList(true);
                   }
-                  filterTimeout = setTimeout(function(){setSearchString(value); setTagString(tagString_1); setSearchOwnerString(userString); setCreatedAfterString(created_after); setCreatedBeforeString(created_before) } ,1000)}}
+                  filterTimeout = setTimeout(function(){setFilters({...filters,searchString:value,tagString:tagString_1,searchOwnerString:userString,createdAfterString:created_after,createdBeforeString:created_before}); } ,1000)}}
                 />
                 <InputGroup.Append role="button" onClick={()=>{setSearchInputString('')}}>
                   <InputGroup.Text><FontAwesomeIcon icon={faTimes}/></InputGroup.Text>
@@ -599,49 +691,49 @@ const ServiceList= (props)=> {
                   {user.actions.includes('review_petition')||user.actions.includes('review_restricted')?
                     <div className='pending-filter-container'>
                       <Dropdown as={ButtonGroup}>
-                        <Button variant="secondary" className="split-button" onClick={()=> {if(showPending||waitingDeploymentFilter){setShowPendingSubFilter(''); setWaitingDeploymentFilter(false); setShowPending(false); }else{setWaitingDeploymentFilter(true); setShowPending(true);}  } }>Show Pending <input type="checkbox" readOnly checked={showPending||waitingDeploymentFilter}/></Button>
+                        <Button variant="secondary" className="split-button" onClick={()=> {if(filters.showPending||filters.waitingDeploymentFilter){setFilters({...filters,showPendingSubFilter:'',waitingDeploymentFilter:false, showPending:false}); }else{ setFilters({...filters,waitingDeploymentFilter:true, showPending:true});}  } }>Show Pending <input type="checkbox" readOnly checked={filters.showPending||filters.waitingDeploymentFilter}/></Button>
                         <Dropdown.Toggle split variant="secondary" id="dropdown-split-basic" />
                         <Dropdown.Menu>
-                          <Dropdown.Item className={showPending&&!showPendingSubFilter?'pending-filter-active':''}>
-                            <div className="dropdown_item_container_pending_filter" onClick={()=>{setShowPendingSubFilter(''); setWaitingDeploymentFilter(true); setShowPending(true);}}>
+                          <Dropdown.Item className={filters.showPending&&!filters.showPendingSubFilter?'pending-filter-active':''}>
+                            <div className="dropdown_item_container_pending_filter" onClick={()=>{setFilters({...filters, showPendingSubFilter:'', waitingDeploymentFilter:true, showPending:true});}}>
                               All Pending
-                              {showPending&&!showPendingSubFilter?
+                              {filters.showPending&&!filters.showPendingSubFilter?
                                 <div><FontAwesomeIcon icon={faCheckCircle}/></div>
                                 :''} 
                             </div>                                                
                           </Dropdown.Item>
-                          <Dropdown.Item className={showPendingSubFilter==='pending'?'pending-filter-active':''}>
-                            <div className="dropdown_item_container_pending_filter" onClick={()=>{setShowPendingSubFilter('pending'); setWaitingDeploymentFilter(false); setShowPending(true);}}>
+                          <Dropdown.Item className={filters.showPendingSubFilter==='pending'?'pending-filter-active':''}>
+                            <div className="dropdown_item_container_pending_filter" onClick={()=>{ setFilters({...filters, showPendingSubFilter:'pending', waitingDeploymentFilter:false, showPending:true});}}>
                               Pending Review 
-                              {showPendingSubFilter==='pending'?
+                              {filters.showPendingSubFilter==='pending'?
                                 <div><FontAwesomeIcon icon={faCheckCircle}/></div>:''} 
                             </div>
                           </Dropdown.Item>
-                          <Dropdown.Item className={showPendingSubFilter==='request_review'?'pending-filter-active':''}>
-                            <div className="dropdown_item_container_pending_filter" onClick={()=>{setShowPendingSubFilter('request_review'); setWaitingDeploymentFilter(false); setShowPending(true);}}>  
+                          <Dropdown.Item className={filters.showPendingSubFilter==='request_review'?'pending-filter-active':''}>
+                            <div className="dropdown_item_container_pending_filter" onClick={()=>{ setFilters({...filters,showPendingSubFilter:'request_review', waitingDeploymentFilter:false, showPending:true});}}>  
                               Review Requested 
-                              {showPendingSubFilter==='request_review'?<div><FontAwesomeIcon icon={faCheckCircle}/></div>:''} 
+                              {filters.showPendingSubFilter==='request_review'?<div><FontAwesomeIcon icon={faCheckCircle}/></div>:''} 
                             </div>
                           </Dropdown.Item>
-                          <Dropdown.Item className={showPendingSubFilter==='changes'?'pending-filter-active':''}>
-                            <div className="dropdown_item_container_pending_filter" onClick={()=>{setShowPendingSubFilter('changes'); setWaitingDeploymentFilter(false); setShowPending(true);}}>
+                          <Dropdown.Item className={filters.showPendingSubFilter==='changes'?'pending-filter-active':''}>
+                            <div className="dropdown_item_container_pending_filter" onClick={()=>{ setFilters({...filters, showPendingSubFilter:'changes', waitingDeploymentFilter:false, showPending:true});}}>
                               Changes Requested 
-                              {showPendingSubFilter==='changes'?<div><FontAwesomeIcon icon={faCheckCircle}/></div>:''} 
+                              {filters.showPendingSubFilter==='changes'?<div><FontAwesomeIcon icon={faCheckCircle}/></div>:''} 
                             </div>
                           </Dropdown.Item>
-                          <Dropdown.Item className={waitingDeploymentFilter&&!showPendingSubFilter&&!showPending?'pending-filter-active':''}>
-                            <div className="dropdown_item_container_pending_filter" onClick={()=>{setWaitingDeploymentFilter(true); setShowPendingSubFilter(); setShowPending(false);}}>
+                          <Dropdown.Item className={filters.waitingDeploymentFilter&&!filters.showPendingSubFilter&&!filters.showPending?'pending-filter-active':''}>
+                            <div className="dropdown_item_container_pending_filter" onClick={()=>{setFilters({...filters,waitingDeploymentFilter:true, showPendingSubFilter:'', showPending:false});}}>
                               Pending Deployment 
-                              {waitingDeploymentFilter&&!showPendingSubFilter&&!showPending?<div><FontAwesomeIcon icon={faCheckCircle}/></div>:''} 
+                              {filters.waitingDeploymentFilter&&!filters.showPendingSubFilter&&!filters.showPending?<div><FontAwesomeIcon icon={faCheckCircle}/></div>:''} 
                             </div>
                           </Dropdown.Item>
                         </Dropdown.Menu>
                       </Dropdown>
                     </div>  
                   :
-                  <div className='filter-container' onClick={()=> setShowPending(!showPending)}>
+                  <div className='filter-container' onClick={()=> setFilters({...filters,showPending:!filters.showPending})}>
                     <span>Show Pending</span>
-                    <input type='checkbox' name='filter' checked={showPending} onChange={()=>setShowPending(!showPending)}/>
+                    <input type='checkbox' name='filter' checked={filters.showPending} onChange={()=> setFilters({...filters,showPending:!filters.showPending})}/>
                   </div>
                   }
                  <OverlayTrigger
@@ -652,9 +744,9 @@ const ServiceList= (props)=> {
                                     </Tooltip>
                                   }
                                 >
-                    <div className='filter-container' onClick={()=> setShowOutdated(!showOutdated)}>
+                    <div className='filter-container' onClick={()=> setFilters({...filters,showOutdated:!filters.showOutdated})}>
                       <span>Show Outdated</span>
-                      <input type='checkbox' name='filter' checked={showOutdated} onChange={()=>setShowOutdated(!showOutdated)}/>
+                      <input type='checkbox' name='filter' checked={filters.showOutdated} onChange={()=> setFilters({...filters,showOutdated:!filters.showOutdated})}/>
                     </div>
                   </OverlayTrigger>
                   {user.view_all?
@@ -667,35 +759,35 @@ const ServiceList= (props)=> {
                                     </Tooltip>
                                   }
                                 >
-                       <div className='filter-container' onClick={()=> setShowOrphan(!showOrphan)}>
+                       <div className='filter-container' onClick={()=> setFilters({...filters,showOrphan:!filters.showOrphan})}>
                         <span>Show Ownerless</span>
-                        <input type='checkbox' name='filter' checked={showOrphan} onChange={()=>setShowOrphan(!showOrphan)}/>
+                        <input type='checkbox' name='filter' checked={filters.showOrphan} onChange={()=> setFilters({...filters,showOrphan:!filters.showOrphan})}/>
                         </div>
                       </OverlayTrigger>
-                      <div className='filter-container' onClick={()=> setShowOwned(!showOwned)}>
+                      <div className='filter-container' onClick={()=> setFilters({...filters,showOwned:!filters.showOwned})}>
                         <span>Show Owned by Me</span>
-                        <input type='checkbox' name='filter' checked={showOwned} onChange={()=> setShowOwned(!showOwned)}/>
+                        <input type='checkbox' name='filter' checked={filters.showOwned} onChange={()=> setFilters({...filters,showOwned:!filters.showOwned})}/>
                       </div>
                     </React.Fragment>
                   :null}
                   {user.actions.includes('error_action')?
-                    <div className='filter-container' onClick={()=> setErrorFilter(!errorFilter)}>
+                    <div className='filter-container' onClick={()=> setFilters({...filters,errorFilter:!filters.errorFilter})}>
                       <span>Show Malfunctioned</span>
-                      <input type='checkbox' name='filter' checked={errorFilter} onChange={()=>setErrorFilter(!errorFilter)}/>
+                      <input type='checkbox' name='filter' checked={filters.errorFilter} onChange={()=>setFilters({...filters,errorFilter:!filters.errorFilter})}/>
                     </div>
                   :null}
                   <div className='select-filter-container'>
-                      <select value={protocolFilter} onChange={(e)=>{
-                        setProtocolFilter(e.target.value);}}>
-                        <option value=''>All Protocols</option>
+                      <select value={filters.protocolFilter} onChange={(e)=>{
+                          setFilters({...filters,protocolFilter:e.target.value});}}>
+                        <option defaultValue=''>All Protocols</option>
                         {tenant.form_config.protocol.map((item,index)=>{
                           return <option value={item} key={index}>{item.toUpperCase()}</option>
                         })}
                       </select>
                   </div>
                   <div className='select-filter-container'>
-                      <select value={integrationEnvironment} onChange={(e)=>{
-                        setIntegrationEnvironment(e.target.value);}}>
+                      <select value={filters.integrationEnvironment} onChange={(e)=>{
+                        setFilters({...filters,integrationEnvironment:e.target.value});}}>
                         <option value=''>{t('all_environments_filter')}</option>
                         {tenant.form_config.integration_environment.map((item,index)=>{
                           return <option value={item} key={index}>{capitalWords(item)}</option>
@@ -719,7 +811,7 @@ const ServiceList= (props)=> {
               <React.Fragment>
                 {services.length>=1?services.map((item,index)=>{
                     return(
-                      <TableItem service={item} key={index}  setConfirmationData={setConfirmationData} getServices={getServices} setSearchInputString={setSearchInputString} setTagString={setTagString}/>
+                      <TableItem service={item} key={index}  setConfirmationData={setConfirmationData} getServices={getServices} setSearchInputString={setSearchInputString} setTagString={(value)=>{setFilters({...filters,tagString:value })}}/>
                     )
                 }):<tr><td></td><td>{t('no_services')}</td><td></td></tr>}
                 {loadingList?

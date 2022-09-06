@@ -305,6 +305,19 @@ code {
 
 
 /* Service List */
+
+.expand-reset-filters-container {
+  text-align:right!important;
+}
+
+.reset-filter-button svg {
+  margin-right: 0!important;
+}
+.reset-filter-button {
+  margin:0.4rem;
+  font-size: 0.9rem;
+  padding: .175rem .55rem!important;
+}
 .fa-arrow-down {
   margin:0 0 0.1rem 0.4rem!important;
 }

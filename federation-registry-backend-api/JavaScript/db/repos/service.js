@@ -1,5 +1,5 @@
 const sql = require('../sql').service;
-const {calcDiff,extractCoc} = require('../../functions/helpers.js');
+const {calcDiff,extractServiceBoolean} = require('../../functions/helpers.js');
 const {requiredDeployment} = require('../../functions/requiredDeployment.js');
 const cs = {}; // Reusable ColumnSet objects.
 
@@ -23,7 +23,7 @@ class ServiceRepository {
           if(result){
             let data = {};
             result.json.generate_client_secret = false;
-            data.service_data = extractCoc(result.json);
+            data.service_data = extractServiceBoolean(result.json);
             return data
           }
           else {
@@ -59,7 +59,7 @@ class ServiceRepository {
               queries.push(t.service_details_protocol.add('service',service,result.id));
               queries.push(t.service_contacts.add('service',service.contacts,result.id));
               queries.push(t.service_state.add(result.id,'pending','create'));
-              queries.push(t.service_multi_valued.addCoc('service',service,result.id));
+              queries.push(t.service_multi_valued.addServiceBoolean('service',service,result.id));
               if(service.protocol==='oidc'){
                 if(service.grant_types&&service.grant_types.length>0){
                   queries.push(t.service_multi_valued.add('service','oidc_grant_types',service.grant_types,result.id));
@@ -99,11 +99,11 @@ class ServiceRepository {
                queries.push(t.service_details.update(edits.details,targetId));
                queries.push(t.service_details_protocol.update('service',edits.details,targetId));               
             }
-            if(Object.keys(edits.update.coc).length >0){
-              queries.push(t.service_multi_valued.updateCoc('service',{...edits.update.coc,tenant:tenant},targetId));
+            if(Object.keys(edits.update.service_boolean).length >0){
+              queries.push(t.service_multi_valued.updateServiceBoolean('service',{...edits.update.service_boolean,tenant:tenant},targetId));
             }
-            if(Object.keys(edits.add.coc).length >0){
-              queries.push(t.service_multi_valued.addCoc('service',{...edits.add.coc,tenant:tenant},targetId));
+            if(Object.keys(edits.add.service_boolean).length >0){
+              queries.push(t.service_multi_valued.addServiceBoolean('service',{...edits.add.service_boolean,tenant:tenant},targetId));
             }
             queries.push(t.service_state.update(targetId,(startDeployment?'pending':'deployed'),'edit'));
             for (var key in edits.add){
