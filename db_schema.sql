@@ -224,7 +224,7 @@ create table service_petition_details (
   FOREIGN KEY (service_id) REFERENCES service_details(id) ON DELETE SET NULL
 );
 
-create table service_coc (
+create table service_boolean (
   id SERIAL PRIMARY KEY,
   service_id bigint,
   name VARCHAR(256),
@@ -232,7 +232,7 @@ create table service_coc (
   FOREIGN KEY (service_id) REFERENCES service_details(id) ON DELETE CASCADE
 );
 
-create table service_petition_coc (
+create table service_petition_boolean (
   id SERIAL PRIMARY KEY,
   petition_id bigint,
   name VARCHAR(256),

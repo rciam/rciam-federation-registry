@@ -73,7 +73,7 @@ const DeploymentTroubleshooting = (props) => {
 
   return (
     <React.Fragment >
-    {props.deploymentError||props.deploymentState.state==='waiting-deployment'?
+    {props.user.actions.includes('error_action')&&(props.deploymentError||props.deploymentState.state==='waiting-deployment')?
       <React.Fragment>
         <ConfirmationModal active={confirmation} close={()=>{setConfirmation();}}
           action={()=>{if(action==='resend'){
@@ -102,7 +102,7 @@ const DeploymentTroubleshooting = (props) => {
               </React.Fragment>          
             }
           </p>
-          {props.user.actions.includes('error_action')?
+          
             <React.Fragment>
               <hr/>
               <Alert show={true} variant="light" style={{color:tenant.color}} className={expand?(props.deploymentError?"error":"warning")+"-action-alert":(props.deploymentError?"error":"warning")+"-action-alert-hidden"}>
@@ -183,7 +183,6 @@ const DeploymentTroubleshooting = (props) => {
               </Collapse>
               </Alert>
             </React.Fragment>
-          :null}
           
         </Alert>
       </React.Fragment>:null
@@ -191,8 +190,6 @@ const DeploymentTroubleshooting = (props) => {
     <Alert show={response} variant={response==='success'?'success':'danger'} style={{marginTop:'1rem'}}>
       {response==='success'?'Deployment has been reset and is currently pending':'Request Failed please try again'}
     </Alert>
-
-
     </React.Fragment>
   )
 }

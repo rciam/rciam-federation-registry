@@ -346,6 +346,9 @@ const ServiceForm = (props)=> {
           return tenant.form_config.code_challenge_method.includes(value)
         }
       })
+    }).when(['token_endpoint_auth_method','grant_types'],{
+      is:(token_endpoint_auth_method,grant_types)=> token_endpoint_auth_method==='none'&&grant_types.includes('authorization_code'),
+      then: yup.string().test('extra_validation',"No PKCE can't be combined with no authorization option when authorization code grant type is selected.",function(value){return value})
     }),
     allow_introspection:yup.boolean().nullable().when('protocol',{
       is:'oidc',
@@ -972,9 +975,10 @@ const ServiceForm = (props)=> {
 
                       {Object.entries(tenant.form_config.extra_fields).map(([name,field_data])=>{
                         field_data.name = name;                    
-                        return (field_data.tab==='general'?<React.Fragment key={name}>
+                        return (field_data.tab==='general'&&field_data.tag!=='once'?<React.Fragment key={name}>
                           {generateInput({
                             field_data,
+                            initialValues:props.initialValues,
                             values,
                             errors,
                             touched,
@@ -987,31 +991,8 @@ const ServiceForm = (props)=> {
                           })}
                       </React.Fragment>:null)                    
                       })
-
-                      
-                      
-                      // Object.keys(tenant.form_config.code_of_conduct).map((name,index)=>{
-                      //   return(
-                      //     <InputRow  moreInfo={tenant.form_config.more_info[name]} title={tenant.form_config.code_of_conduct[name].title} key={index} required={
-                      //       tenant.form_config.code_of_conduct[name].required.includes(values.integration_environment)} error={errors[name]?errors[name]:null} touched={touched[name]}>
-                      //       <SimpleCheckbox
-                      //       name= {name}
-                      //       label={
-                      //         <React.Fragment>
-                      //           {parse(tenant.form_config.code_of_conduct[name].desc)}
-                      //         </React.Fragment>
-                      //       }
-                      //       onChange={handleChange}
-                      //       disabled={disabled}
-                      //       value={values[name]}
-                      //       onBlur={handleBlur}
-                      //       changed={props.changes?props.changes[name]:null}
-                      //       />
-                      //     </InputRow>
-                      //   )
-                      // })
                     }
-
+                
 
 
 
@@ -1030,6 +1011,27 @@ const ServiceForm = (props)=> {
                           changed={props.changes?props.changes.contacts:null}
                         />
                       </InputRow>
+
+
+                      {Object.entries(tenant.form_config.extra_fields).map(([name,field_data])=>{
+                        field_data.name = name;                    
+                        return (field_data.tab==='general'&&field_data.tag==='once'?<React.Fragment key={name}>
+                          {generateInput({
+                            field_data,
+                            initialValues:props.initialValues,
+                            values,
+                            errors,
+                            touched,
+                            changes:props.changes,
+                            handleChange,
+                            hasSubmitted,
+                            disabled,
+                            handleBlur,
+                            tenant
+                          })}
+                          </React.Fragment>:null)                    
+                        })
+                      }
                     </Tab>
                     <Tab eventKey="protocol" title={t('form_tab_protocol')}>
                       <InputRow title={t('form_protocol')} required={true} extraClass='select-col' error={errors.protocol} touched={touched.protocol}>
@@ -1119,11 +1121,10 @@ const ServiceForm = (props)=> {
                               disabled={disabled}
                               deprecated_options={tenant.form_config.grant_types_deprecated}
                               changed={props.changes?props.changes.grant_types:null}
-
                             />
                           </InputRow>
                          
-                          <InputRow  moreInfo={tenant.form_config.more_info.token_endpoint_auth_method} title="Token Endpoint Authorization Method" required={true} error={errors.token_endpoint_auth_method} touched={touched.token_endpoint_auth_method}>
+                          <InputRow  moreInfo={tenant.form_config.more_info.token_endpoint_auth_method} title="Token Endpoint Authorization Method" required={true} error={errors.token_endpoint_auth_method||errors.code_challenge_method} touched={touched.token_endpoint_auth_method}>
                             <AuthMethRadioList
                               name='token_endpoint_auth_method'
                               values={values}
@@ -1163,6 +1164,7 @@ const ServiceForm = (props)=> {
                             />
                           </InputRow>
                         :null}
+                        
                         {values.token_endpoint_auth_method==='private_key_jwt'?
                           <InputRow  moreInfo={tenant.form_config.more_info.jwks} title="Public Key Set" required={true} extraClass='select-col' description="URL for the client's JSON Web Key set (must be reachable by the server)" error={errors.jwks?errors.jwks:errors.jwks_uri} touched={touched.jwks||touched.jwks_uri}>
                             <PublicKey
@@ -1229,8 +1231,7 @@ const ServiceForm = (props)=> {
                               values={values}
                               isInvalid={hasSubmitted?!!errors.code_challenge_method:(!!errors.code_challenge_method&&touched.code_challenge_method)}
                               onChange={handleChange}
-                              setFieldValue={(value)=>{setFieldValue('code_challenge_method',value); console.log(value); }}
-                              disabled_option={values.grant_types.includes('authorization_code')?'':null}
+                              setFieldValue={(value)=>{setFieldValue('code_challenge_method',value);}}
                               recommended={'S256'}
                               disabled={disabled}
                               default={values.code_challenge_method?values.code_challenge_method:''}
@@ -1579,7 +1580,7 @@ const  generateInput = (props)=>  {
         </React.Fragment>
       }
       onChange={props.handleChange}
-      disabled={props.disabled}
+      disabled={props.disabled||(props.field_data.tag==='once'&&props.initialValues[props.field_data.name])}
       value={props.values[props.field_data.name]}
       onBlur={props.handleBlur}
       changed={props.changes?props.changes[props.field_data.name]:null}

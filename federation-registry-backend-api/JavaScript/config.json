@@ -96,7 +96,8 @@
           "description": "Kind of the application. Web Clients MUST only register URLs using the https scheme as redirect_uris; they MAY use the http scheme when using localhost as the hostname. Native Clients MUST only register redirect_uris using custom URI schemes or URLs using the http scheme with localhost as the hostname."
         },
         "allow_introspection": {
-          "description": "Access to the Token Introspection endpoint is restricted to confidential clients."
+          "description": "Access to the Token Introspection endpoint is restricted to confidential clients.",
+          "tooltip": "This is a dynamic field based on Authorization Method selected for the token endpoint."
         }
       },
       "extra_fields":{
@@ -115,6 +116,16 @@
             "tag": "org",
             "active": ["production","demo"],
             "required": ["production","demo"]
+        },
+        "assurance_checkbox":{
+            "title": "Service Provider Guidelines",
+            "desc": "I have read the guide for Service Providers on the <a href='https://docs.egi.eu/providers/check-in/sp/#general-information' target='_blank' rel='noopener noreferrer'>EGI documentation</a>",
+            "type": "boolean",
+            "required": ["production"],
+            "tag": "once",
+            "tab": "general",
+            "default": false,
+            "error": "You must read the guidlines for security reasons"
         },
         "egi_policy":{
           "title": "EGI Policies",

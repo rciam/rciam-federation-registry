@@ -723,7 +723,7 @@ const serviceValidationRules = (options,req) => {
           }
         }
       }),
-      body('*.service_coc').custom((value,{req,location,path})=>{
+      body('*.service_boolean').custom((value,{req,location,path})=>{
         let pos = path.match(/\[(.*?)\]/)[1];
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         let integration_environment = req.body[path.match(/\[(.*?)\]/)[1]].integration_environment;
@@ -732,13 +732,13 @@ const serviceValidationRules = (options,req) => {
         let error = false; 
         for(const extra_field in extra_fields){
           // If coc field is required 
-          if(extra_fields[extra_field].tag==='coc'&&extra_fields[extra_field].required.includes(integration_environment)){
+          if((extra_fields[extra_field].tag==='coc'||extra_fields[extra_field].tag==='once')&&extra_fields[extra_field].required.includes(integration_environment)){
             if(value&& !(value[extra_field]==='true'||value[extra_field]===true)){
               optionalError(extra_field+ " field should be enabled",req,pos);
             }
           }
         }
-        delete req.body[path.match(/\[(.*?)\]/)[1]].service_coc;
+        delete req.body[path.match(/\[(.*?)\]/)[1]].service_boolean;
         return true;
       }),
       body('*.organization_id').customSanitizer((value,{req,location,path})=>{
@@ -864,18 +864,18 @@ const validateInternal = (req,res,next) =>{
   next();
 }
 
-const formatCocForValidation = (req,res,next) => {
+const formatServiceBooleanForValidation = (req,res,next) => {
   try{
     if(Array.isArray(req.body)&&req.body[0].service_name){
       // Group Code of contact properties into one property service_coc
       req.body.forEach((service,index)=>{
         if(typeof service === 'object' && service !== null){
-          req.body[index].service_coc = {};
+          req.body[index].service_boolean = {};
           let tenant = req.params.tenant?req.params.tenant:service.tenant;
           let extra_fields = config.form[tenant].extra_fields;
           for(const extra_field in extra_fields){
-            if(extra_fields[extra_field].tag==='coc'){
-              req.body[index].service_coc[extra_field] = req.body[index][extra_field]=== 'true'||req.body[index][extra_field]=== true?true:false;
+            if(extra_fields[extra_field].tag==='coc'||extra_fields[extra_field].tag==='once'){
+              req.body[index].service_boolean[extra_field] = req.body[index][extra_field]=== 'true'||req.body[index][extra_field]=== true?true:false;
             }
           } 
         }
@@ -930,7 +930,7 @@ module.exports = {
   getServicesValidation,
   changeContacts,
   validateInternal,
-  formatCocForValidation,
+  formatServiceBooleanForValidation,
   postBannerAlertValidation,
   putBannerAlertValidation
 }

@@ -105,11 +105,12 @@ class ServicePetitionDetailsRepository {
     }
 
     async canBeEditedByRequester(petition_id,sub,tenant){
-        return this.db.oneOrNone(sql.canBeEditedByRequester,{
+      const query = this.pgp.as.format(sql.canBeEditedByRequester,{
           id:+petition_id,
           sub:sub,
           tenant:tenant
-        })
+        });
+      return this.db.oneOrNone(query);
     }
 
 
