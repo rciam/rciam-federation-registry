@@ -175,7 +175,7 @@ const ServiceForm = (props)=> {
 
   const schema = yup.object({
     service_name:yup.string().nullable().min(4,t('yup_char_min') + ' ('+2+')').max(256,t('yup_char_max') + ' ('+256+')').required(t('yup_required')),
-    // Everytime client_id changes we make a fetch request to see if it is available.
+    // Every time client_id changes we make a fetch request to see if it is available.
     policy_uri:yup.string().nullable().when('integration_environment',{
       is:'production',
       then: yup.string().nullable().required(t('yup_required')).matches(reg.regSimpleUrl,t('yup_url')),
@@ -541,7 +541,7 @@ const ServiceForm = (props)=> {
         body: JSON.stringify(petition) // body data type must match "Content-Type" header
       }).then(response=> {
         setAsyncResponse(false);
-        setModalTitle(t('edit_petition_tilte'));
+        setModalTitle(t('edit_petition_title'));
         if(response.status===200){
           setMessage(t('petition_success_msg'));
         }
@@ -686,7 +686,7 @@ const ServiceForm = (props)=> {
 
 
   const postApi= async (data)=>{
-    data = gennerateValues(data);
+    data = generateValues(data);
     let organization_id;
     if(tenant.form_config.extra_fields.organization.active.includes(data.integration_environment)){
       organization_id = await addOrganization(data);
@@ -817,7 +817,7 @@ const ServiceForm = (props)=> {
                 </div>:null}
               {showInitErrors&&!Object.keys(errors).length === 0?
                 <Alert variant='warning' className="invitation_alert">
-                The following Service Configuration contains some invalid values or is missing a required field. To fix this issue sumbit a valid reconfiguration request
+                The following Service Configuration contains some invalid values or is missing a required field. To fix this issue submit a valid reconfiguration request
                 </Alert>
               :null
               }
@@ -923,7 +923,7 @@ const ServiceForm = (props)=> {
                       </InputRow>
                       {tenant.form_config.extra_fields.organization.active.includes(values.integration_environment)?
                       <React.Fragment>
-                        <InputRow  moreInfo={tenant.form_config.more_info.organization_name} required={tenant.form_config.extra_fields.organization.required.includes(values.integration_environment)} title="Organization" description="Search for your organization" error={errors.organization_name} touched={touched.organization_name}>
+                        <InputRow  moreInfo={tenant.form_config.more_info.organization_name} required={tenant.form_config.extra_fields.organization.required.includes(values.integration_environment)} title="Organisation" description="Search for your organisation" error={errors.organization_name} touched={touched.organization_name}>
                             <OrganizationField
                               name='organization_name'
                               placeholder='Type the name of your organization'
@@ -939,7 +939,7 @@ const ServiceForm = (props)=> {
                               changed={props.changes?props.changes.organization_name:null}
                             />
                           </InputRow>
-                          <InputRow  moreInfo={tenant.form_config.more_info.organization_url} title="Organization Website Url" required={tenant.form_config.extra_fields.organization.required.includes(values.integration_environment)} description="Link to the organization's website" error={errors.organization_url} touched={touched.organization_url}>
+                          <InputRow  moreInfo={tenant.form_config.more_info.organization_url} title="Organisation Website URL" required={tenant.form_config.extra_fields.organization.required.includes(values.integration_environment)} description="Link to the organization's website" error={errors.organization_url} touched={touched.organization_url}>
                             <SimpleInput
                               name='organization_url'
                               placeholder={t('form_type_prompt')}
@@ -990,15 +990,15 @@ const ServiceForm = (props)=> {
 
                       
                       
-                      // Object.keys(tenant.form_config.code_of_condact).map((name,index)=>{
+                      // Object.keys(tenant.form_config.code_of_conduct).map((name,index)=>{
                       //   return(
-                      //     <InputRow  moreInfo={tenant.form_config.more_info[name]} title={tenant.form_config.code_of_condact[name].title} key={index} required={
-                      //       tenant.form_config.code_of_condact[name].required.includes(values.integration_environment)} error={errors[name]?errors[name]:null} touched={touched[name]}>
+                      //     <InputRow  moreInfo={tenant.form_config.more_info[name]} title={tenant.form_config.code_of_conduct[name].title} key={index} required={
+                      //       tenant.form_config.code_of_conduct[name].required.includes(values.integration_environment)} error={errors[name]?errors[name]:null} touched={touched[name]}>
                       //       <SimpleCheckbox
                       //       name= {name}
                       //       label={
                       //         <React.Fragment>
-                      //           {parse(tenant.form_config.code_of_condact[name].desc)}
+                      //           {parse(tenant.form_config.code_of_conduct[name].desc)}
                       //         </React.Fragment>
                       //       }
                       //       onChange={handleChange}
@@ -1117,7 +1117,7 @@ const ServiceForm = (props)=> {
                               values={values.grant_types}
                               listItems={tenant.form_config.grant_types}
                               disabled={disabled}
-                              depricated_options={tenant.form_config.grant_types_depricated}
+                              deprecated_options={tenant.form_config.grant_types_deprecated}
                               changed={props.changes?props.changes.grant_types:null}
 
                             />
@@ -1223,7 +1223,7 @@ const ServiceForm = (props)=> {
                           <InputRow  moreInfo={tenant.form_config.more_info.code_challenge_method} required={true} title={t('form_code_challenge_method')} extraClass='select-col' error={errors.code_challenge_method} touched={touched.code_challenge_method}>
                             <Select
                               onBlur={handleBlur}
-                              optionsTitle={['PKCE will not be used for this service '+(values.grant_types.includes('authorization_code')?'(disabled)':''),'Plain code challenge (depricated)','SHA-256 hash algorithm (recommended)']}
+                              optionsTitle={['PKCE will not be used for this service '+(values.grant_types.includes('authorization_code')?'(disabled)':''),'Plain code challenge (deprecated)','SHA-256 hash algorithm (recommended)']}
                               options={['','plain','S256']}
                               name="code_challenge_method"
                               values={values}
@@ -1541,7 +1541,7 @@ const ReviewComponent = (props)=>{
   );
 }
 
-function gennerateValues(data){
+function generateValues(data){
 
 
   if(data.generate_client_secret&&data.protocol==='oidc'){

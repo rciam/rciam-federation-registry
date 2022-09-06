@@ -366,7 +366,7 @@ const ServiceList= (props)=> {
           return false;
         }
         else{
-          setMessage(t('request_submit_failled_msg') + response.status);
+          setMessage(t('request_submit_failed_msg') + response.status);
         }
       });
     }
@@ -394,7 +394,7 @@ const ServiceList= (props)=> {
           return false;
         }
         else{
-          setMessage(t('request_submit_failled_msg') + response.status);
+          setMessage(t('request_submit_failed_msg') + response.status);
         }
       });
     }
@@ -454,7 +454,7 @@ const ServiceList= (props)=> {
             <Alert variant='warning' className="invitation_alert">
 
               <span>{outdatedCount}</span>{' '}
-               of the services you own are not up to date with the lastest requirements. Click{' '}
+               of the services you own are not up to date with the latest requirements. Click{' '}
                <span className="alert_fake_link" onClick={()=>{setExpandFilters(!expandFilters); setShowOutdated(true); setShowOwned(true); setShowNotification(false);}}>here</span>
                 {' '}to find {outdatedCount>1?'them':'it'} using the outdated filter and reconfigure them following the instructions.
             </Alert>
@@ -465,7 +465,7 @@ const ServiceList= (props)=> {
           <Alert variant='primary' className="invitation_alert">
             {t('invitation_alert_1')}
             <span>{invites.length}</span>
-            {invites.length>1?t('invitation_alert_mult'):t('invitation_alert_single')}
+            {invites.length>1?t('invitation_alert_multiple'):t('invitation_alert_single')}
             <Link to={{pathname:'/'+tenant_name+"/invitations", state:{invitations:invites}}}>
               {t('invitation_alert_link')}
             </Link>

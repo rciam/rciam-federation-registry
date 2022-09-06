@@ -75,7 +75,7 @@ const getServiceListValidation = () => {
           if(tags.length>0){
             tags.forEach(tag=>{
               if(tag.length>36){
-                throw new Error('The Tag value is not suppported because it is too long (' +tag +'), max 36 characters');            
+                throw new Error('The Tag value is not supported because it is too long (' +tag +'), max 36 characters');            
               }
             })
           } 
@@ -109,7 +109,7 @@ const postAgentValidation = () => {
 // email_subject: yup.string().nullable().min(4,t('yup_char_min') + ' ('+4+')').max(64,t('yup_char_max') + ' ('+64+')').required(t('yup_required')),
 // notify_admins: yup.boolean().nullable().required(t('yup_required')),
 // email_address: yup.string().nullable().email().required(t('yup_required')),
-// contact_types: yup.array().nullable().min(1,t('yup_select_option')).of(yup.string().test("Test contact types","Pleace select one of the available options",function(contact_type){
+// contact_types: yup.array().nullable().min(1,t('yup_select_option')).of(yup.string().test("Test contact types","Please select one of the available options",function(contact_type){
 
 const postBannerAlertValidation = () => {
   return [
@@ -131,7 +131,7 @@ const postBannerAlertValidation = () => {
 const putBannerAlertValidation = () =>{
   return [
     param('tenant').custom((value,{req,location,path})=>{if(value in config.form){return true}else{return false}}).withMessage('Invalid Tenant in the url'),
-    param('id').exists().isInt({gt:0}).withMessage('id parameter must be a possitive integer'),
+    param('id').exists().isInt({gt:0}).withMessage('id parameter must be a positive integer'),
     body('alert_message').optional().isString().withMessage('alert_message must be a string').isLength({min:4,max:1024}).withMessage('alert_message must be from 4 to 1024 characters long'),
     body('type').optional().bail().custom((value)=>{
       let supported_types = ['warning','error','info'];
@@ -162,7 +162,7 @@ const getServicesValidation = () => {
           if(tags.length>0){
             tags.forEach(tag=>{
               if(tag.length>36){
-                throw new Error('The Tag value is not suppported because it is too long +(' +tag +') max 36 characters');            
+                throw new Error('The Tag value is not supported because it is too long +(' +tag +') max 36 characters');            
               }
             })
           } 
@@ -180,7 +180,7 @@ const getServicesValidation = () => {
           if(tags.length>0){
             tags.forEach(tag=>{
               if(tag.length>36){
-                throw new Error('The Tag value is not suppported because it is too long +(' +tag +') max 36 characters');            
+                throw new Error('The Tag value is not supported because it is too long +(' +tag +') max 36 characters');            
               }
             })
           } 
@@ -352,7 +352,7 @@ const serviceValidationRules = (options,req) => {
           }),
       body('*.protocol').exists({checkFalsy:true}).withMessage('Protocol missing').if(value=>{return value}).custom((value,{req,location,path})=> {
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
-        if(config.form[tenant].protocol.includes(value)){return true}else{return false}}).withMessage('Invalid Prorocol value'),
+        if(config.form[tenant].protocol.includes(value)){return true}else{return false}}).withMessage('Invalid Protocol value'),
       body('*.client_id').if((value,{req,location,path})=>{
         let skip;
         if(options.null_client_id&&!value){
@@ -640,7 +640,7 @@ const serviceValidationRules = (options,req) => {
         }else{
           return value;
         }
-      }).custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Allow introspection mising').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).custom((value)=> typeof(value)==='boolean').withMessage('Allow introspection must be a boolean').bail(),
+      }).custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Allow introspection missing').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).custom((value)=> typeof(value)==='boolean').withMessage('Allow introspection must be a boolean').bail(),
       body('*.generate_client_secret').optional({checkFalsy:true}).custom((value)=> typeof(value)==='boolean').withMessage('Generate client secret must be a boolean'),
       body('*.reuse_refresh_token').customSanitizer(value => {
         if((typeof(value)!=="boolean")){
@@ -666,7 +666,7 @@ const serviceValidationRules = (options,req) => {
           return value;
         }
       }).if((value,{req,location,path})=>{return ((value||!req.body[path.match(/\[(.*?)\]/)[1]].generate_client_secret)&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'&&["client_secret_basic","client_secret_post","client_secret_jwt"].includes(req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method))}).exists({checkFalsy:true}).withMessage('Client secret is missing').if((value)=>{return value}).isString().withMessage('Client Secret must be a string').isLength({min:4,max:256}).withMessage('Out of range'),
-      body('*.entity_id').custom((value,{req,location,path})=>{return requiredSaml(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Entity id mising').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='saml'}).isString().withMessage('Entity id must be a string').custom((value)=> {
+      body('*.entity_id').custom((value,{req,location,path})=>{return requiredSaml(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Entity ID is missing').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='saml'}).isString().withMessage('Entity id must be a string').custom((value)=> {
         try{
           if(value.constructor === stringConstructor){
             if(value.length<4||value.length>256){
@@ -728,7 +728,7 @@ const serviceValidationRules = (options,req) => {
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         let integration_environment = req.body[path.match(/\[(.*?)\]/)[1]].integration_environment;
         let extra_fields = config.form[tenant].extra_fields;
-        // Iterrate through extra fields for code of condact fields
+        // Iterate through extra fields for code of conduct fields
         let error = false; 
         for(const extra_field in extra_fields){
           // If coc field is required 

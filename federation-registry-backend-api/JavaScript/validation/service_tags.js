@@ -4,7 +4,7 @@ var config = require('../config');
 const validatePostTags = () => {
     return [
       param('tenant').custom((value,{req,location,path})=>{if(value in config.form){return true}else{return false}}).withMessage('Invalid Tenant in the url'),
-      param('service_id').exists().isInt({gt:0}).withMessage('id parameter must be a possitive integer'),
+      param('service_id').exists().isInt({gt:0}).withMessage('ID parameter must be a positive integer'),
       body('*').exists().custom((value)=>{
         if(typeof value === 'string' || value instanceof String){
           if(value.length>0 && value.length<=36){
@@ -25,8 +25,8 @@ const validatePostTags = () => {
   
   const validateTagsBasic = () => {
     return [
-      param('tenant').custom((value,{req,location,path})=>{if(value in config.form){return true}else{return false}}).withMessage('Invalid Tenant in the url'),
-      param('service_id').exists().isInt({gt:0}).withMessage('id parameter must be a possitive integer')
+      param('tenant').custom((value,{req,location,path})=>{if(value in config.form){return true}else{return false}}).withMessage('Invalid Tenant in the URL'),
+      param('service_id').exists().isInt({gt:0}).withMessage('ID parameter must be a positive integer')
     ]
   }
 

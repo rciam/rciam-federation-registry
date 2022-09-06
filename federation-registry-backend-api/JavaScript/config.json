@@ -36,7 +36,7 @@
       "protocol":["oidc","saml"],
       "integration_environment": ["production","development","demo"],
       "grant_types":["authorization_code","client_credentials","urn:ietf:params:oauth:grant-type:token-exchange","urn:ietf:params:oauth:grant-type:device_code","implicit","refresh_token"],
-      "grant_types_depricated":["implicit"],
+      "grant_types_deprecated":["implicit"],
       "dynamic_fields": ["allow_introspection"],
       "disabled_fields": ["clear_access_tokens_on_refresh"],
       "contact_requirements":[
@@ -50,7 +50,7 @@
         },
         {
           "type":"technical",
-          "error":"The Serrvice must have Technical contact information"
+          "error":"The Service must have Technical contact information"
         },
         {
           "type":"admin",
@@ -154,7 +154,7 @@
       "protocol":["oidc","saml"],
       "integration_environment": ["production","demo"],
       "grant_types":["implicit","authorization_code","refresh_token","client_credentials","urn:ietf:params:oauth:grant_type:redelegate","urn:ietf:params:oauth:grant-type:token-exchange","urn:ietf:params:oauth:grant-type:device_code","urn:ietf:params:oauth:grant-type:jwt-bearer"],
-      "grant_types_depricated":["implicit"],      
+      "grant_types_deprecated":["implicit"],      
       "dynamic_fields": [],
       "disabled_fields": [],
       "contact_requirements":[
