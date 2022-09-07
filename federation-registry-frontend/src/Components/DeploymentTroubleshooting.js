@@ -78,6 +78,7 @@ const DeploymentTroubleshooting = (props) => {
         <ConfirmationModal active={confirmation} close={()=>{setConfirmation();}}
           action={()=>{if(action==='resend'){
                 resendDeployment();
+                setConfirmation();
               }
           }}
           title={"Are you sure you want to coninue with this action?"} message={"By selecting yes you will retrigger the deployment of the service request"} accept={'Yes'} decline={'No'}/>
