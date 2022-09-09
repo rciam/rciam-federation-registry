@@ -257,7 +257,6 @@ const ServiceForm = (props)=> {
             }
             else{
               if(url&&!(url.protocol==='http:'||url.protocol==='https:')){
-                console.log(url.protocol);
                 return this.createError({ message: "Uri must be a url starting with http(s):// " });                              
               }
             }
@@ -899,7 +898,9 @@ const ServiceForm = (props)=> {
                           disabled={disabled}
                           changed={props.changes?props.changes.website_url:null}
                         />
+                        <UrlWarning url={values.website_url} touched={hasSubmitted||touched.website_url}/> 
                      </InputRow>
+
                       <InputRow  moreInfo={tenant.form_config.more_info.service_description} title={t('form_description')} required={true} description={t('form_description_desc')} error={errors.service_description} touched={touched.service_description}>
                         <TextAria
                           value={values.service_description?values.service_description:''}
@@ -953,7 +954,9 @@ const ServiceForm = (props)=> {
                               disabled={disabled||disabledOrganizationFields.includes('organization_url')}
                               changed={props.changes?props.changes.organization_url:null}
                             />
+                            <UrlWarning url={values.organization_url} touched={hasSubmitted||touched.organization_url}/>
                           </InputRow>
+                          
                         </React.Fragment>
                         :null
                       }
@@ -968,6 +971,7 @@ const ServiceForm = (props)=> {
                           disabled={disabled}
                           changed={props.changes?props.changes.policy_uri:null}
                         />
+                        <UrlWarning url={values.policy_uri} touched={hasSubmitted||touched.policy_uri}/>
                       </InputRow>
 
 
@@ -1297,6 +1301,7 @@ const ServiceForm = (props)=> {
                              disabled={disabled}
                              changed={props.changes?props.changes.metadata_url:null}
                             />
+                            <UrlWarning url={values.metadata_url} touched={hasSubmitted||touched.metadata_url}/>
                           </InputRow>
                        </React.Fragment>
                      :null}
@@ -1541,7 +1546,42 @@ const ReviewComponent = (props)=>{
     </React.Fragment>
   );
 }
+const UrlWarning = (props) => {
+  const [active,setActive] = useState(false);
 
+  useEffect(()=>{
+    if (props.touched&&props.url&&reg.regSimpleUrl.test(props.url)){
+      setActive(false);
+      var iframe = document.createElement('iframe');
+      var iframeError; // Store the iframe timeout
+      iframe.onload = function () {
+        clearTimeout(iframeError);
+        setActive(false);
+      }
+      
+      iframeError = setTimeout(function () {
+        setActive(true);
+      }, 3000);
+      
+      iframe.src = props.url;
+    }  
+    else{
+      setActive(false);
+    }    
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[props.url,props.touched]);
+
+  return (
+    <React.Fragment>
+      {active?
+        <div className='pkce-tooltip'>
+          <FontAwesomeIcon icon={faExclamationTriangle}/>
+          Url is not available, make sure you have provided a valid url.
+        </div>:null
+      }
+    </React.Fragment>
+  )
+}
 function generateValues(data){
 
 
@@ -1606,6 +1646,8 @@ const  generateInput = (props)=>  {
         disabled={props.disabled}
         changed={props.changes?props.changes[props.field_data.name]:null}
       />
+      {props.field_data.tag==='url'?
+       <UrlWarning url={props.values[props.field_data.name]} touched={props.hasSubmitted||props.touched[props.field_data.name]}/>:null}
     </InputRow>
       :null
       }
@@ -1627,6 +1669,7 @@ function capitalWords(array) {
     })
    return return_array
 }
+
 
 
 export default ServiceForm

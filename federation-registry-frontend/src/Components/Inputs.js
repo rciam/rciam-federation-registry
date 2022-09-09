@@ -761,6 +761,10 @@ export function RefreshToken(props){
               />
 
             </div>
+            <div className='pkce-tooltip reuse-warning'>
+              <FontAwesomeIcon icon={faExclamationTriangle}/>
+              Enabling re-use of Refresh Tokens is not recommended. Public clients in particular should have this option disabled and use refresh token rotation as described in <a href='https://datatracker.ietf.org/doc/html/rfc6749#section-4.13' target='_blank' rel='noopener noreferrer'>Section 4.13 of  RFC6749</a>
+            </div>
             <div className={"checkbox-item "+(props.changed&&props.changed.reuse_refresh_token?"spacing-bot":'')}>
             {!tenant[0].form_config.disabled_fields.includes('clear_access_tokens_on_refresh')?
               <SimpleCheckbox

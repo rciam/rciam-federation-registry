@@ -665,6 +665,14 @@ router.get('/tenants/:tenant/petitions/:id',authenticate,(req,res,next)=>{
     if(req.query.type==='open'){
       getOpenPetition(req,res,next,db);
     }
+    if(req.query.previous_state){
+      db.tx('get-history-for-petition', async t =>{
+        await t.petition.getLastStateId(req.params.id).then(last_id=>{
+          req.params.id=last_id;
+          getPetition(req,res,next,db);
+        })
+      })
+    }
     else{
       getPetition(req,res,next,db);
     }
@@ -766,7 +774,6 @@ router.delete('/tenants/:tenant/petitions/:id',authenticate,(req,res,next)=>{
 // PUT Petition Endpoint
 router.put('/tenants/:tenant/petitions/:id',authenticate,formatPetition,formatServiceBooleanForValidation,serviceValidationRules({optional:false,tenant_param:true,check_available:false,sanitize:false,null_client_id:true}),validate,reFormatPetition,asyncPetitionValidation, (req,res,next)=>{
   if(req.user.role.actions.includes('update_own_petition')){
-    console.log(req.body);
     return db.task('update-petition',async t =>{
       try{
         if(req.body.type==='delete'){

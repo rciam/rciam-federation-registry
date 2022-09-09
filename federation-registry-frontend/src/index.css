@@ -672,6 +672,14 @@ code {
 .pkce-tooltip svg {
   margin-right:0.3rem;
 }
+
+.reuse-warning {
+  margin-top:0rem;
+  margin-bottom:0.5rem;
+}
+.reuse-warning a {
+  color:#775a03;
+}
 .mb-3 .text-muted {
   margin-top: -0.6rem;
 }

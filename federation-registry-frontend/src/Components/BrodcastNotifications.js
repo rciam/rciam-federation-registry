@@ -107,8 +107,6 @@ const BroadcastNotifications = (props) =>{
   const sendOwnerNotification = (values) =>{
     values.email_body =  values.email_body.replace(/\/\*[\s\S]*?\*\//g,'');
     values.email_body =  values.email_body.replace(/((\n)|(\\n)|( *\\n)|( *\n)){3,}/g,'\n\n');
-    console.log(values.email_body);
-    console.log(values.email_body);
     fetch(config.host+'tenants/'+tenant_name+'/notifications/owners', {
       method: 'PUT', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit

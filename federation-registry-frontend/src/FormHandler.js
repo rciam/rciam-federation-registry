@@ -133,7 +133,7 @@ const EditService = (props) => {
 
           if(response){
             try{
-              console.log(response.list_items);
+              // console.log(response.list_items);
               if(response.list_items[0].petition_id){
                 if(response.list_items[0].type==='edit'){
                   setPetitionIdRedirect(response.list_items[0].petition_id);

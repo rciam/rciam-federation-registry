@@ -64,7 +64,8 @@ module.exports = {
       getOwnPetition:sql('petition/getOwnPetition.sql'),
       canReviewOwn:sql('petition/canReviewOwn.sql'),
       getOldOwnPetition:sql('petition/getOldOwnPetition.sql'),
-      getOldPetition:sql('petition/getOldPetition.sql')
+      getOldPetition:sql('petition/getOldPetition.sql'),
+      getLastStateId:sql('petition/getLastStateId.sql')
     },
     service_list: {
       getList:sql('service_list/getList.sql')
