@@ -40,6 +40,7 @@ const DeploymentTroubleshooting = (props) => {
 
       if(res.status===200){
         setResponse('success')
+        props.setDeploymentState('pending');
         props.setDeploymentError();
 
       }else if(res.status===401){
@@ -85,7 +86,6 @@ const DeploymentTroubleshooting = (props) => {
         <Alert show={true} variant={props.deploymentError?"danger":"warning"} style={{marginTop:'1rem'}}>
           <Alert.Heading><b>{props.deploymentError?("Deployment Error: "+props.deploymentError.error_code):"Troubleshoot Deployment"}</b></Alert.Heading>
           <p style={{marginTop:'1rem'}}>
-            
             {props.deploymentError?
               <React.Fragment>
                 <b>Error Description: </b>{props.deploymentError.error_description}
@@ -95,11 +95,11 @@ const DeploymentTroubleshooting = (props) => {
               :
               <React.Fragment>
                 
-                <p>
+                
                 <b>
                  WARNING:
                 </b> The following actions should only be performed by or after contacting the technical team of Federation Registry as it might create issues for the target service.
-                </p>
+                
               </React.Fragment>          
             }
           </p>
@@ -188,7 +188,7 @@ const DeploymentTroubleshooting = (props) => {
         </Alert>
       </React.Fragment>:null
     }
-    <Alert show={response} variant={response==='success'?'success':'danger'} style={{marginTop:'1rem'}}>
+    <Alert show={response?true:false} variant={response==='success'?'success':'danger'} className="deployment-troubleshooting-alert" >
       {response==='success'?'Deployment has been reset and is currently pending':'Request Failed please try again'}
     </Alert>
     </React.Fragment>

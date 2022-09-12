@@ -459,7 +459,7 @@ export function SimpleCheckbox(props){
           checked={props.checked?true:props.value?true:false}
 
           disabled={props.disabled}
-          className={"col-form-label checkbox " + (props.changed?"input-edited checkbox-edited":"")}
+          className={"col-form-label checkbox " + (props.changed?"input-edited checkbox-edited":"")+ (props.changed&&props.moreinfo?" checkbox-more-info-changed":"")}
          />
          <MyOverLay show={props.changed&&show?'string':null} type='Edited' target={target}/>
        </div>

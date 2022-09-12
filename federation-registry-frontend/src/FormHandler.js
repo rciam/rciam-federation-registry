@@ -552,7 +552,7 @@ const ViewService = (props)=>{
       </Alert>
     :null}
     
-    <DeploymentTroubleshooting deploymentState={serviceState}  deploymentError={deploymentError} user={user} setDeploymentError={setDeploymentError} service_id={service_id} setLogout={setLogout}/>
+    <DeploymentTroubleshooting deploymentState={serviceState} setDeploymentState={setServiceState}  deploymentError={deploymentError} user={user} setDeploymentError={setDeploymentError} service_id={service_id} setLogout={setLogout}/>
       {service?
         <React.Fragment>        
           {service.created_at?

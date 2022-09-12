@@ -34,6 +34,7 @@ import {SimpleInput,CountrySelect,AuthMethRadioList,SelectEnvironment,DeviceCode
 
 const {reg} = require('./regex.js');
 var availabilityCheckTimeout;
+var urlCheckTimeout;
 var countries;
 let integrationEnvironment;
 let application_type;
@@ -110,6 +111,7 @@ const ServiceForm = (props)=> {
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
+
 
 
   // Returns true
@@ -347,7 +349,7 @@ const ServiceForm = (props)=> {
       })
     }).when(['token_endpoint_auth_method','grant_types'],{
       is:(token_endpoint_auth_method,grant_types)=> token_endpoint_auth_method==='none'&&grant_types.includes('authorization_code'),
-      then: yup.string().test('extra_validation',"No PKCE can't be combined with no authorization option when authorization code grant type is selected.",function(value){return value})
+      then: yup.string().test('extra_validation',"PKCE must be enabled when no authentication is selected for the authorization code grant type.",function(value){return value})
     }),
     allow_introspection:yup.boolean().nullable().when('protocol',{
       is:'oidc',
@@ -1146,6 +1148,7 @@ const ServiceForm = (props)=> {
                                 name='allow_introspection'
                                 label={t('form_allow_introspection_desc')}
                                 onChange={handleChange}
+                                moreinfo={tenant.form_config.more_info.allow_introspection}
                                 disabled={disabled||tenant.form_config.dynamic_fields.includes('allow_introspection')}
                                 value={values.allow_introspection}
                                 changed={props.changes?props.changes.allow_introspection:null}
@@ -1546,28 +1549,32 @@ const ReviewComponent = (props)=>{
     </React.Fragment>
   );
 }
+
+
+
+
+
 const UrlWarning = (props) => {
   const [active,setActive] = useState(false);
+  
 
   useEffect(()=>{
-    if (props.touched&&props.url&&reg.regSimpleUrl.test(props.url)){
-      setActive(false);
-      var iframe = document.createElement('iframe');
-      var iframeError; // Store the iframe timeout
-      iframe.onload = function () {
-        clearTimeout(iframeError);
-        setActive(false);
-      }
-      
-      iframeError = setTimeout(function () {
-        setActive(true);
-      }, 3000);
-      
-      iframe.src = props.url;
+    setActive(false);
+    clearTimeout(urlCheckTimeout);
+    if (props.touched&&props.url&&reg.regSimpleUrl.test(props.url)){      
+      const exists = async (url) => {
+        const result = await fetch(url, { 
+          method: 'HEAD',mode:'no-cors' });
+        return result.ok;      
+      } 
+      urlCheckTimeout = setTimeout(()=>{
+        exists(props.url).then(result=>{
+          setActive(false);
+        }).catch(err=>{        
+          setActive(true)
+        });
+      },3000)
     }  
-    else{
-      setActive(false);
-    }    
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[props.url,props.touched]);
 
@@ -1576,7 +1583,7 @@ const UrlWarning = (props) => {
       {active?
         <div className='pkce-tooltip'>
           <FontAwesomeIcon icon={faExclamationTriangle}/>
-          Url is not available, make sure you have provided a valid url.
+          Url could not be reached, make sure you have provided a valid url.
         </div>:null
       }
     </React.Fragment>
@@ -1619,6 +1626,7 @@ const  generateInput = (props)=>  {
           {parse(props.field_data.desc)}
         </React.Fragment>
       }
+      moreinfo={props.tenant.form_config.more_info[props.field_data.name]}
       onChange={props.handleChange}
       disabled={props.disabled||(props.field_data.tag==='once'&&props.initialValues[props.field_data.name])}
       value={props.values[props.field_data.name]}

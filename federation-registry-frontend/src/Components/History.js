@@ -56,7 +56,7 @@ export const HistoryRequest = () =>{
       setPetition(petition);
       setChanges(helper);
     }
-  },[petition,oldPetition])
+  },[petition,oldPetition,tenant])
 
   const getPetition = ()=> {
     fetch(config.host+'tenants/'+tenant_name+'/petitions/'+petition_id, {
@@ -133,7 +133,7 @@ export const HistoryRequest = () =>{
     </div>
     <Logout logout={logout}/>
     <NotFound notFound={notFound}/>
-    {petition?
+    {petition&&(petition.metadata.type!=='edit'||changes)?
       <React.Fragment>
         <Alert variant='warning' className='form-alert'>
          {petition.metadata.status==='approved_with_changes'?"The Reviewer has requested changes to the following":t('history_info_1')}  {petition.metadata.type==='create'?t('registration'):petition.metadata.type==='edit'?t('reconfiguration'):t('deregistration')} {t('history_info_2')}{petition.metadata.status==='approved'?t('history_info_approved'):petition.metadata.status==='reject'?t('history_info_rejected'):petition.metadata.status==='pending'?t('history_info_pending'):""}.

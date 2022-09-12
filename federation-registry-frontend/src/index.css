@@ -856,6 +856,12 @@ textarea {
 .checkbox-edited {
   padding-left:1.9rem!important;
 }
+.checkbox-more-info-changed {
+  margin-bottom: 1rem;
+}
+.deployment-troubleshooting-alert {
+  margin-top:1rem;
+}
 
 .select-container {
   display: inline-block;
