@@ -383,12 +383,12 @@ export function AuthMethRadioList(props){
   const target = useRef(null);
   const tenant = useContext(tenantContext);
 
-  // useEffect(()=>{
-  //   if((authMethod==="client_secret_jwt"||authMethod==="private_key_jwt")&&!signingAlg){
-  //     setFieldValue('token_endpoint_auth_signing_alg', "RS256");
-  //   }
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // },[authMethod]);
+  useEffect(()=>{
+    if((props.values.token_endpoint_auth_method==="client_secret_jwt"||props.values.token_endpoint_auth_method==="private_key_jwt")&&!props.values.token_endpoint_auth_signing_alg){
+      setFieldValue('token_endpoint_auth_signing_alg', "RS256");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[props.values.token_endpoint_auth_method]);
 
   useEffect(()=>{
     if(tenant[0].form_config.dynamic_fields.includes('allow_introspection')){
@@ -955,7 +955,7 @@ export function ListInputArray(props){
 
 
   return (
-        <Table striped bordered hover size="sm" className='input-list-table'>
+        <Table striped bordered hover size="sm" className={'input-list-table'+ (props.disabled?" input-list-table-disabled":"")}>
           <thead>
             {!props.disabled?
               <React.Fragment>
