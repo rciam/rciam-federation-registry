@@ -102,7 +102,7 @@ const ServiceList= (props)=> {
 
 
   useEffect(()=>{
-     generateFilerString();
+     generateFilterString();
      getServices();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[activePage,filters]);
@@ -135,6 +135,21 @@ const ServiceList= (props)=> {
     setSearchInputString('');
     setSearchParams();
   }
+
+  const resetSearchFilter = () => {
+    setFilters({
+      ...filters,
+      searchString:"",
+      searchOwnerString:"",
+      createdAfterString:"",
+      createdBeforeString:"",
+      tagString:""
+    });
+    setSearchInputString('');
+    setSearchParams();
+  }
+
+  
   const setSearchParams = () => {
     let params = new URLSearchParams(location.search);
 
@@ -178,7 +193,7 @@ const ServiceList= (props)=> {
     
   }
 
-  const generateFilerString = ()=> {
+  const generateFilterString = ()=> {
     let filterString='';
     if(filters.searchString){
       filterString = filterString + '&search_string=' + filters.searchString;
@@ -262,7 +277,7 @@ const ServiceList= (props)=> {
   // Get data, to create Service List
   const getServices = ()=> {
     setLoadingList(true);
-    fetch(config.host+'tenants/'+tenant_name+'/services/list?page='+activePage+'&limit='+pageSize+generateFilerString(), {
+    fetch(config.host+'tenants/'+tenant_name+'/services/list?page='+activePage+'&limit='+pageSize+generateFilterString(), {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -310,7 +325,7 @@ const ServiceList= (props)=> {
 
 
   const exportServicesToCsv = ()=> {
-    fetch(config.host+'tenants/'+tenant_name+'/services/list?'+(generateFilerString().length>0?generateFilerString().slice(1):""), {
+    fetch(config.host+'tenants/'+tenant_name+'/services/list?'+(generateFilterString().length>0?generateFilterString().slice(1):""), {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -672,7 +687,7 @@ const ServiceList= (props)=> {
                   }
                   filterTimeout = setTimeout(function(){setFilters({...filters,searchString:value,tagString:tagString_1,searchOwnerString:userString,createdAfterString:created_after,createdBeforeString:created_before}); } ,1000)}}
                 />
-                <InputGroup.Append role="button" onClick={()=>{setSearchInputString('')}}>
+                <InputGroup.Append role="button" onClick={()=>{resetSearchFilter()}}>
                   <InputGroup.Text><FontAwesomeIcon icon={faTimes}/></InputGroup.Text>
                 </InputGroup.Append>
               </InputGroup>

@@ -349,7 +349,7 @@ const ServiceForm = (props)=> {
       })
     }).when(['token_endpoint_auth_method','grant_types'],{
       is:(token_endpoint_auth_method,grant_types)=> token_endpoint_auth_method==='none'&&grant_types.includes('authorization_code'),
-      then: yup.string().test('extra_validation',"PKCE must be enabled when no authentication is selected for the authorization code grant type.",function(value){return value})
+      then: yup.string().nullable().test('extra_validation',"PKCE must be enabled when no authentication is selected for the authorization code grant type.",function(value){return value})
     }),
     allow_introspection:yup.boolean().nullable().when('protocol',{
       is:'oidc',
