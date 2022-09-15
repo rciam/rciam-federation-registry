@@ -49,7 +49,7 @@ export function SimpleInput(props){
             ref={target}
             onMouseOver={()=>setShow(true)}
             onMouseOut={()=>setShow(false)}
-            className={props.changed?'col-form-label-sm input-edited':'col-form-label-sm'}
+            className={props.changed?'col-form-label.sm input-edited':'col-form-label.sm'}
           />
           {props.copybutton?<CopyToClipboardComponent value={props.value}/>:null}
         </InputGroup>
@@ -111,7 +111,7 @@ export function OrganizationField(props){
                 return false;
               }
               else if(response.status===404){
-                setNotFound('No invitations found');
+                setNotFound('No Organizations found');
                 return false;
               }
               else{
@@ -332,18 +332,77 @@ export function PublicKey(props){
     </React.Fragment>
   )
 }
-export function AuthMethRadioList(props){
-  const [show, setShow] = useState(false);
-  const authMethod = props.values.token_endpoint_auth_method;
-  const signingAlg = props.values.token_endpoint_auth_signing_alg;
+
+export function SimpleRadio(props){
   const setFieldValue = props.setFieldValue;
   const target = useRef(null);
+  const [show,setShow] = useState();
+  
+  return (
+    <React.Fragment>
+      <div 
+        className={props.className}
+        onMouseOver={()=>setShow(true)}
+        onMouseOut={()=>setShow(false)}
+      >
+      {props.radio_items.map((item,index)=>{
+        return  <div key={index}>
+          <Field  name={props.name}>
+          {({ field, form }) => (
+            <React.Fragment>
+            <span onClick={()=>{setFieldValue(props.name,item)}}  className={"form_radio_item "+ (props.changed&&props.values[props.name]===item?"input_radio_edited":null)}>
+              <input
+                type="radio"
+                name={field.name}
+                disabled={props.disabled}
+                {...field}
+                value={item}
+                ref={props.values[props.name]===item?target:null}
+                checked={props.values[props.name]===item}         
+              />
+              {props.radio_items_titles[index]}
+              </span>
+            </React.Fragment>
+          )}
+        </Field>
+        </div>
+      }
+      )}
+      </div>
+      <MyOverLay show={props.changed&&show?'string':null} type='Edited' placement='left' target={target}/>
+    </React.Fragment>
+  )
+}
+
+
+export function AuthMethRadioList(props){
+  const [show, setShow] = useState(false);
+  // const authMethod = props.values.token_endpoint_auth_method;
+  // const signingAlg = props.values.token_endpoint_auth_signing_alg;
+  const setFieldValue = props.setFieldValue;
+  const target = useRef(null);
+  const tenant = useContext(tenantContext);
+
   useEffect(()=>{
-    if((authMethod==="client_secret_jwt"||authMethod==="private_key_jwt")&&!signingAlg){
+    if((props.values.token_endpoint_auth_method==="client_secret_jwt"||props.values.token_endpoint_auth_method==="private_key_jwt")&&!props.values.token_endpoint_auth_signing_alg){
       setFieldValue('token_endpoint_auth_signing_alg', "RS256");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[authMethod]);
+  },[props.values.token_endpoint_auth_method]);
+
+  useEffect(()=>{
+    if(tenant[0].form_config.dynamic_fields.includes('allow_introspection')){
+      setFieldValue('allow_introspection',props.values.token_endpoint_auth_method!=='none');
+    } 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[])
+
+  // useEffect(()=>{
+  //   if(props.values.grant_types.includes('authorization_code')&&authMethod==='none'){
+  //     setFieldValue('token_endpoint_auth_method','client_secret_basic');
+  //   }
+  // },[authMethod,props.values.grant_types,setFieldValue])
+
   return(
     <React.Fragment>
 
@@ -362,6 +421,11 @@ export function AuthMethRadioList(props){
                     name={field.name}
                     disabled={props.disabled}
                     {...field}
+                    onChange={(e)=>{
+                      if(tenant[0].form_config.dynamic_fields.includes('allow_introspection')){
+                          setFieldValue('allow_introspection',e.target.value!=='none');
+                      } 
+                      props.onChange(e); }}
                     value={item}
                     ref={props.values.token_endpoint_auth_method===item?target:null}
                     checked={props.values.token_endpoint_auth_method===item}
@@ -372,7 +436,7 @@ export function AuthMethRadioList(props){
             </Field>
           </div>
         ))}
-        <MyOverLay show={props.changed&&show?'string':null} type='Edited' target={target}/>
+        <MyOverLay show={props.changed&&show?'string':null} type='Edited' placement='left' target={target}/>
     </React.Fragment>
   )
 }
@@ -395,7 +459,7 @@ export function SimpleCheckbox(props){
           checked={props.checked?true:props.value?true:false}
 
           disabled={props.disabled}
-          className={"col-form-label checkbox " + (props.changed?"input-edited checkbox-edited":"")}
+          className={"col-form-label checkbox " + (props.changed?"input-edited checkbox-edited":"")+ (props.changed&&props.moreinfo?" checkbox-more-info-changed":"")}
          />
          <MyOverLay show={props.changed&&show?'string':null} type='Edited' target={target}/>
        </div>
@@ -523,6 +587,11 @@ export function SelectEnvironment(props){
 export function Select(props){
   const [show, setShow] = useState(false);
   const target = useRef(null);
+  useEffect(()=>{
+    if(props.disabled_option===props.values[props.name]){
+      props.setFieldValue(props.recommended)
+    }
+  },[props,props.disabled_option,props.values])
 
   return(
     <React.Fragment>
@@ -540,7 +609,7 @@ export function Select(props){
       disabled={props.disabled}
       placeholder="Select..countryName.">
         {props.options.map((item,index)=>(
-          <option key={index} value={props.options[index]}>{props.optionsTitle[index]}</option>
+          <option key={index} value={props.options[index]} disabled={props.disabled_option===props.options[index]}>{props.optionsTitle[index]}</option>
         ))}
       </Field>
     </div>
@@ -636,7 +705,7 @@ export function CheckboxList(props){
                     return(
                       <div className="checkboxList" key={index}>
                       <Checkbox name={props.name} disabled={props.disabled} value={item}/>
-                      {item.length>33&&(item.substr(0,33)==="urn:ietf:params:oauth:grant-type:"||item.substr(0,33)==="urn:ietf:params:oauth:grant_type:")?item.substr(33).replace("_"," "):item.replace("_"," ")}
+                      {item.length>33&&(item.substr(0,33)==="urn:ietf:params:oauth:grant-type:"||item.substr(0,33)==="urn:ietf:params:oauth:grant_type:")?item.substr(33).replace("_"," "):item.replace("_"," ")}{props.deprecated_options.includes(item)? ' (deprecated)':''}
                       </div>
                     );
 
@@ -657,6 +726,7 @@ export function RefreshToken(props){
     const target = useRef(null);
     // eslint-disable-next-line
     const { t, i18n } = useTranslation();
+    const tenant = useContext(tenantContext);
     return(
       <React.Fragment>
         <div
@@ -676,7 +746,7 @@ export function RefreshToken(props){
           <MyOverLay show={props.changed&&(props.changed.scope.D.includes('offline_access')||props.changed.scope.N.includes('offline_access'))&&show} type='Edited' target={target}/>
         </div>
         <Form.Text className="text-muted text-left label-checkbox" id="uri-small-desc">
-          {t('form_offline_acces_desc')}
+          {t('form_offline_access_desc')}
         </Form.Text>
         {props.values.scope.includes('offline_access')?(
           <React.Fragment>
@@ -691,16 +761,21 @@ export function RefreshToken(props){
               />
 
             </div>
+            <div className='pkce-tooltip reuse-warning'>
+              <FontAwesomeIcon icon={faExclamationTriangle}/>
+              Enabling re-use of Refresh Tokens is not recommended. Public clients in particular should have this option disabled and use refresh token rotation as described in <a href='https://datatracker.ietf.org/doc/html/rfc6749#section-4.13' target='_blank' rel='noopener noreferrer'>Section 4.13 of  RFC6749</a>
+            </div>
             <div className={"checkbox-item "+(props.changed&&props.changed.reuse_refresh_token?"spacing-bot":'')}>
-            <SimpleCheckbox
-              name="clear_access_tokens_on_refresh"
-              label={t('form_clear_access_tokens_on_refresh')}
-              checked={props.values.clear_access_tokens_on_refresh}
-              changed={props.changed?props.changed.clear_access_tokens_on_refresh:null}
-              onChange={props.onChange}
-              disabled={props.disabled}
-
-               />
+            {!tenant[0].form_config.disabled_fields.includes('clear_access_tokens_on_refresh')?
+              <SimpleCheckbox
+                name="clear_access_tokens_on_refresh"
+                label={t('form_clear_access_tokens_on_refresh')}
+                checked={props.values.clear_access_tokens_on_refresh}
+                changed={props.changed?props.changed.clear_access_tokens_on_refresh:null}
+                onChange={props.onChange}
+                disabled={props.disabled}
+              />
+            :null}
 
             </div>
             <TimeInput
@@ -804,7 +879,7 @@ export function ClientSecret(props){
             disabled={props.disabled}
           />
           <Form.Text className="text-muted text-left label-checkbox" id="uri-small-desc">
-            {t('imput_client_secret_info')}
+            {t('input_client_secret_info')}
           </Form.Text>
         </React.Fragment>
         :null}
@@ -880,7 +955,7 @@ export function ListInputArray(props){
 
 
   return (
-        <Table striped bordered hover size="sm" className='input-list-table'>
+        <Table striped bordered hover size="sm" className={'input-list-table'+ (props.disabled?" input-list-table-disabled":"")}>
           <thead>
             {!props.disabled?
               <React.Fragment>
@@ -1119,7 +1194,7 @@ export  function LogoInput(props){
               overflowX: 'scroll',
             }}
           >
-            <Image referrerPolicy="no-referrer" src={props.value ? props.value:process.env.PUBLIC_URL + '/logo_placeholder.gif'} onError={addDefaultSrc} fluid />
+            <Image className="logo-input" referrerPolicy="no-referrer" src={props.value ? props.value:process.env.PUBLIC_URL + '/logo_placeholder.gif'} onError={addDefaultSrc} fluid />
 
           </pre>
         )}
@@ -1142,7 +1217,7 @@ function MyOverLay(props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[props.show]);
   return (
-    <Overlay target={props.target.current}  show={show} placement="right">
+    <Overlay target={props.target.current}  show={show} placement={props.placement?props.placement:'right'}>
       {propsOv => (
         <Tooltip id="overlay-example" placement={propsOv.placement} arrowProps={propsOv.arrowProps} ref={propsOv.ref} style={propsOv.style} outofboundaries={propsOv.outofboundaries} >
           {props.type==="Added"?t('input_added'):props.type==="Deleted"?t('input_deleted'):props.type==="Edited"?t('input_edited'):null}
@@ -1183,7 +1258,7 @@ function ListSingleInput(props){
       column="true"
       sm="4"
       type="text"
-      className={'col-form-label-sm spacing-bot '+ (type==='Added'?'input-new':!type?'':'input-deleted')}
+      className={'col-form-label.sm '+ (type==='Added'?'input-new':!type?'':'input-deleted')}
       placeholder="https//"
       disabled={props.disabled}
     />
@@ -1231,7 +1306,7 @@ export function ListInput(props){
 
               {props.values && props.values.length > 0 && props.values.map((item,index)=>(
                 <React.Fragment key={index}>
-                <InputGroup className="mb-3" >
+                <InputGroup className="mb-3 spacing-bot-contact" >
                   <Field name={`${props.name}.${index}`}>
                     {({field,form})=>(
                       <React.Fragment>
@@ -1248,7 +1323,7 @@ export function ListInput(props){
                   <br/>
                 </InputGroup>
                 {props.error&&props.error[index]?
-                  <div className="error-message-list-item">{!Array.isArray(props.error)?'':props.integrationEnvironment==='production'||props.integrationEnvironment==='demo'?'Must be a valid url starting with https:// or a http://localhost url':'Must be a valid url stating with http(s)://'}</div>
+                  <div className="error-message-list-item" >{props.error[index]}</div>
                 :null}
                 </React.Fragment>
               ))}

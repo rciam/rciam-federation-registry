@@ -35,7 +35,7 @@ class ServicePetitionDetailsRepository {
         type:body.type,
         status:(body.status?body.status:"pending"),
         service_id:body.service_id,
-        comment:body.comment,
+        comment:body.comment
       })
     }
 
@@ -54,7 +54,6 @@ class ServicePetitionDetailsRepository {
           status:"pending",
           aup_uri:body.aup_uri,
           organization_id:body.organization_id
-
         })
     }
 
@@ -106,11 +105,12 @@ class ServicePetitionDetailsRepository {
     }
 
     async canBeEditedByRequester(petition_id,sub,tenant){
-        return this.db.oneOrNone(sql.canBeEditedByRequester,{
+      const query = this.pgp.as.format(sql.canBeEditedByRequester,{
           id:+petition_id,
           sub:sub,
           tenant:tenant
-        })
+        });
+      return this.db.oneOrNone(query);
     }
 
 

@@ -1,5 +1,5 @@
 const sql = require('../sql').petition;
-const {calcDiff,extractCoc} = require('../../functions/helpers.js');
+const {calcDiff,extractServiceBoolean} = require('../../functions/helpers.js');
 const cs = {}; // Reusable ColumnSet objects.
 const {sendMail} = require('../../functions/helpers.js');
 /*
@@ -64,7 +64,16 @@ class PetitionRepository {
     })
   }
 
-
+  async getLastStateId(id){
+    return this.db.oneOrNone(sql.getLastStateId,{id:+id}).then(result=>{
+      if(result){
+        return result.id
+      }
+      else{
+        return null;
+      }
+    })
+  }
 
   async getOwn(id,sub,tenant){
     return this.db.oneOrNone(sql.getOwnPetition,{
@@ -93,7 +102,7 @@ class PetitionRepository {
               if(result){
                 queries.push(t.service_details_protocol.add('petition',petition,result.id));
                 queries.push(t.service_contacts.add('petition',petition.contacts,result.id));
-                queries.push(t.service_multi_valued.addCoc('petition',petition,result.id));
+                queries.push(t.service_multi_valued.addServiceBoolean('petition',petition,result.id));
                 if(petition.protocol==='oidc'){
                   queries.push(t.service_multi_valued.add('petition','oidc_grant_types',petition.grant_types,result.id));
                   queries.push(t.service_multi_valued.add('petition','oidc_scopes',petition.scope,result.id));
@@ -111,7 +120,7 @@ class PetitionRepository {
               if(result){
                 queries.push(t.service_details_protocol.add('petition',petition,result.id));
                 queries.push(t.service_contacts.add('petition',petition.contacts,result.id));
-                queries.push(t.service_multi_valued.addCoc('petition',petition,result.id));
+                queries.push(t.service_multi_valued.addServiceBoolean('petition',petition,result.id));
                 if(petition.protocol==='oidc'){
                   queries.push(t.service_multi_valued.add('petition','oidc_grant_types',petition.grant_types,result.id));
                   queries.push(t.service_multi_valued.add('petition','oidc_scopes',petition.scope,result.id));
@@ -135,7 +144,6 @@ class PetitionRepository {
           if(oldState){
             let edits = calcDiff(oldState.service_data,newState,tenant);
             if(Object.keys(edits.details).length !== 0){
-               queries.push(t.service_multi_valued.updateCoc('petition',{...edits.details,tenant:tenant},targetId));
                queries.push(t.service_petition_details.update(edits.details,targetId));
                queries.push(t.service_details_protocol.update('petition',edits.details,targetId));
             }
@@ -143,8 +151,16 @@ class PetitionRepository {
               if(key==='contacts') {
                 queries.push(t.service_contacts.add('petition',edits.add[key],targetId));
               }
+              else if(key === 'service_boolean'){
+                queries.push(t.service_multi_valued.addServiceBoolean('petition',{...edits.add[key],tenant:tenant},targetId));
+              }
               else {
                 queries.push(t.service_multi_valued.add('petition',key,edits.add[key],targetId));
+              } 
+            }
+            for (var key in edits.update){
+              if(key === 'service_boolean'){
+                queries.push(t.service_multi_valued.updateServiceBoolean('petition',{...edits.update[key],tenant:tenant},targetId));                
               }
             }
             for (var key in edits.dlt){
@@ -194,7 +210,7 @@ const fixPetition = (result) => {
   delete result.json.requester;
   delete result.json.comment;
   delete result.json.submitted_at;
-  data.service_data = extractCoc(result.json);
+  data.service_data = extractServiceBoolean(result.json);
   return data
 }
 

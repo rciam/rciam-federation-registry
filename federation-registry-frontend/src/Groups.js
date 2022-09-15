@@ -321,7 +321,7 @@ const GroupsPage = (props) => {
     <React.Fragment>
     <NotFound notFound={notFound}/>
     <Logout logout={logout}/>
-    <ConfirmationModal active={confirmationData.action?true:false} setActive={setConfirmationData} action={()=>{if(confirmationData.action==='cancel'){cancelInvitation(...confirmationData.args)}else{removeMember(...confirmationData.args)}}} title={confirmationData.title} message={confirmationData.message} accept={'Yes'} decline={'No'}/>
+    <ConfirmationModal active={confirmationData.action?true:false} close={()=>{setConfirmationData(false)}} action={()=>{if(confirmationData.action==='cancel'){cancelInvitation(...confirmationData.args)}else{removeMember(...confirmationData.args)} setConfirmationData(false);}} title={confirmationData.title} message={confirmationData.message} accept={'Yes'} decline={'No'}/>
 
       <ProcessingRequest active={sending}/>
      
@@ -331,7 +331,7 @@ const GroupsPage = (props) => {
                     <LoadingBar loading={loading}>
                       
                       
-                      <h2 className="group_page_main_title">{isGroupManager?"Owners Group Managment Page":"Owners Group Page"}</h2>
+                      <h2 className="group_page_main_title">{isGroupManager?"Owners Group Management Page":"Owners Group Page"}</h2>
                         <p>Owner group members can view, edit and create service requests for this service. Owner group managers can also manage the members of this owners group by inviting or removing users.</p>
                     
                       <h4 className="group_title">Group Members</h4>
@@ -570,7 +570,7 @@ const GroupsPage = (props) => {
 
                   </Tab>
                   <Tab eventKey="service" title="View Service">
-                    {service?<ServiceForm initialValues={service} disabled={true} {...props}/>:<LoadingBar/>}
+                    {service?<ServiceForm user={user[0]} initialValues={service} disabled={true} {...props}/>:<LoadingBar/>}
                   </Tab>
       </Tabs>
       </React.Fragment>

@@ -3,26 +3,18 @@ var logPath = __dirname + "/logs/logs.log";
 require('dotenv').config({path:envPath});
 const express = require('express');
 const {db} = require('./db');
-var https = require('https');
-var fs = require('fs');
 var config = require('./config');
 const cors = require('cors');
 var winston = require('winston');
 var expressWinston = require('express-winston');
-const {check,validationResult,body}= require('express-validator');
-const {petitionValitationRules,validate} = require('./validator.js');
-const {merge_data} = require('./merge_data.js');
-const {Issuer,Strategy,custom} = require('openid-client');
+const {Issuer,custom} = require('openid-client');
 const routes= require('./routes/index');
-const MockStrategy = require('passport-mock-strategy');
 var cookieParser = require('cookie-parser');
-const {sendNotif,delay} = require('./functions/helpers.js');
 var passport = require('passport');
-const { generators } = require('openid-client');
-const code_verifier = generators.codeVerifier();
 const {outdatedNotificationsWorker} = require('./functions/outdated_notif.js');
 const bannerAlertRoutes = require('./routes/banner_alerts.js');
-
+const serviceTagRoutes = require('./routes/service_tags.js');
+const notificationRoutes = require('./routes/notifications.js');
 
 let clients= {};
 let tenant_config = {};
@@ -55,11 +47,11 @@ db.tenants.getInit().then(async tenants => {
       base_url:tenant.base_url
     }
     await Issuer.discover(tenant.issuer_url).then((issuer)=>{
-    
       clients[tenant.name] = new issuer.Client({
         client_id: tenant.client_id,
         client_secret: tenant.client_secret,
-        redirect_uris: process.env.REDIRECT_URI + tenant.name
+        redirect_uris: process.env.REDIRECT_URI + tenant.name,
+        logout_uri: issuer.end_session_endpoint + '?post_logout_redirect_uri=' + encodeURIComponent(tenant.base_url)+ '&redirect=' + encodeURIComponent(tenant.base_url)         
       });
 
       clients[tenant.name].client_id = tenant.client_id;
@@ -143,6 +135,9 @@ app.use(express.urlencoded({extended: true}));
 app.use(express.json({ limit: '50mb' }));
 
 app.use('/tenants/:tenant/banner_alert', bannerAlertRoutes);
+app.use('/tenants/:tenant/tags', serviceTagRoutes);
+app.use('/tenants/:tenant/notifications',notificationRoutes);
+
 app.use('/', routes.router);
 
 

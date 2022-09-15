@@ -51,6 +51,7 @@ describe('Service registry API Integration Tests', function() {
         checkAvailability(create.oidc.client_id,'oidc','egi',create.oidc.integration_environment,true,done);
       })
       it('should create a new petition and return the id',function(done){
+        userToken = setUser(users.egi.operator_user);
         var req = request(server).post('/tenants/egi/petitions').set({Authorization: userToken})
         .send({
           type:'create',
@@ -90,7 +91,7 @@ describe('Service registry API Integration Tests', function() {
         putPetition(
           {petition:petition,body:{type:'create',...create.saml},tenant: 'egi'},
           {body:{error:'Could not edit petition with id: '+petition},status:403},
-          done
+          done,userToken
         );
       })
       it('should fail to edit petition because of protocol missmatch',function(done){
@@ -98,28 +99,28 @@ describe('Service registry API Integration Tests', function() {
         putPetition(
           {petition:petition,body:{type:'create',...create.saml},tenant: 'egi'},
           {body:{error:'Tried to edit protocol'},status:403},
-          done
+          done,userToken
         );
       });
       it('should fail to edit petition because of type missmatch',function(done){
         putPetition(
           {petition:petition,body:{type:'edit',...edit.oidc,service_id:1},tenant: 'egi'},
           {body:{error:'Tried to edit registration type'},status:403},
-          done
+          done,userToken
         );
       });
       it('should fail to edit petition because client_id is not available',function(done){
         putPetition(
           {petition:petition,body:{type:'create',...edit.oidc,client_id:'client4'},tenant: 'egi'},
           {body:{error:'Protocol id is not available'},status:422},
-          done
+          done,userToken
         );
       });
       it('should fail to edit petition not petition found',function(done){
         putPetition(
           {petition:0,body:{type:'create',...edit.oidc},tenant: 'egi'},
           {body:{error:'Could not edit petition with id: 0'},status:403},
-          done
+          done,userToken
         );
       });
       it('should edit petition that was created',function(done){
@@ -186,7 +187,7 @@ describe('Service registry API Integration Tests', function() {
         putPetition(
           {petition:petition,body:{type:'create',...edit.saml,entity_id:'https://saml-id-1.com'},tenant: 'egi'},
           {body:{error:'Protocol id is not available'},status:422},
-          done
+          done,userToken
         );
       });
       it('should edit petition that was created',function(done){
@@ -661,6 +662,7 @@ describe('Service registry API Integration Tests', function() {
         let sendData = create.oidc;
         userToken = setUser(users.egi.end_user);
          sendData.integration_environment = 'production';
+         sendData.assurance_checkbox = true;
         var req = request(server).post('/tenants/egi/petitions').set({Authorization: userToken}).send({
           type:'create',
           ...create.oidc
@@ -995,6 +997,70 @@ describe('Service registry API Integration Tests', function() {
       .end(function(err,res){
         expect(res.statusCode).to.equal(200);
         done();});
+    })
+
+  });
+  describe('# Test Tags', function(){
+    userToken = setUser(users.egi.manager_user);
+    it('Should delete tags for service',function(done){
+      var req = request(server).delete('/tenants/egi/tags/services/2').set({Authorization: userToken}).send(['test','custom2','custom',"custom4","egi"]);
+      req.set('Accept','application/json')
+      .expect('Content-Type',/json/)
+      .expect(200)
+      .end(function(err,res){
+        expect(res.statusCode).to.equal(200);
+        done();
+      });
+    }),
+    it('Should get available tags for service',function(done){
+      var req = request(server).get('/tenants/egi/tags/services/1').set({Authorization: userToken});
+      req.set('Accept','application/json')
+      .expect('Content-Type',/json/)
+      .expect(200)
+      .end(function(err,res){
+        let body = res.body;
+        expect(body.length).to.equal(2);
+        expect(body.includes('egi')).to.equal(true);
+        expect(body.includes('test')).to.equal(true);
+        expect(res.statusCode).to.equal(200);
+        done();
+      });
+    });
+    it('Should create tags for service',function(done){
+      var req = request(server).post('/tenants/egi/tags/services/2').set({Authorization: userToken}).send(['test','custom2','custom',"custom4","egi"]);
+      req.set('Accept','application/json')
+      .expect('Content-Type',/json/)
+      .expect(200)
+      .end(function(err,res){
+        expect(res.statusCode).to.equal(200);
+        done();
+      });
+    });
+    it('Should delete tags for service',function(done){
+      var req = request(server).delete('/tenants/egi/tags/services/2').set({Authorization: userToken}).send(['test','egi','custom']);
+      req.set('Accept','application/json')
+      .expect('Content-Type',/json/)
+      .expect(200)
+      .end(function(err,res){
+        expect(res.statusCode).to.equal(200);
+        done();
+      });
+    });
+    it('Should get all available tags for Egi',function(done){
+      var req = request(server).get('/tenants/egi/tags').set({Authorization: userToken});
+      req.set('Accept','application/json')
+      .expect('Content-Type',/json/)
+      .expect(200)
+      .end(function(err,res){
+        let body = res.body;
+        expect(body.length).to.equal(4);
+        expect(body.includes('egi')).to.equal(true);
+        expect(body.includes('test')).to.equal(true);
+        expect(body.includes('custom2')).to.equal(true);
+        expect(body.includes('custom4')).to.equal(true);
+        expect(res.statusCode).to.equal(200);
+        done();
+      });
     })
 
   })

@@ -1,5 +1,5 @@
 const sql = require('../sql').service;
-const {calcDiff,extractCoc} = require('../../functions/helpers.js');
+const {calcDiff,extractServiceBoolean} = require('../../functions/helpers.js');
 const {requiredDeployment} = require('../../functions/requiredDeployment.js');
 const cs = {}; // Reusable ColumnSet objects.
 
@@ -23,7 +23,7 @@ class ServiceRepository {
           if(result){
             let data = {};
             result.json.generate_client_secret = false;
-            data.service_data = extractCoc(result.json);
+            data.service_data = extractServiceBoolean(result.json);
             return data
           }
           else {
@@ -59,7 +59,7 @@ class ServiceRepository {
               queries.push(t.service_details_protocol.add('service',service,result.id));
               queries.push(t.service_contacts.add('service',service.contacts,result.id));
               queries.push(t.service_state.add(result.id,'pending','create'));
-              queries.push(t.service_multi_valued.addCoc('service',service,result.id));
+              queries.push(t.service_multi_valued.addServiceBoolean('service',service,result.id));
               if(service.protocol==='oidc'){
                 if(service.grant_types&&service.grant_types.length>0){
                   queries.push(t.service_multi_valued.add('service','oidc_grant_types',service.grant_types,result.id));
@@ -99,11 +99,11 @@ class ServiceRepository {
                queries.push(t.service_details.update(edits.details,targetId));
                queries.push(t.service_details_protocol.update('service',edits.details,targetId));               
             }
-            if(Object.keys(edits.update.coc).length >0){
-              queries.push(t.service_multi_valued.updateCoc('service',{...edits.update.coc,tenant:tenant},targetId));
+            if(Object.keys(edits.update.service_boolean).length >0){
+              queries.push(t.service_multi_valued.updateServiceBoolean('service',{...edits.update.service_boolean,tenant:tenant},targetId));
             }
-            if(Object.keys(edits.add.coc).length >0){
-              queries.push(t.service_multi_valued.addCoc('service',{...edits.add.coc,tenant:tenant},targetId));
+            if(Object.keys(edits.add.service_boolean).length >0){
+              queries.push(t.service_multi_valued.addServiceBoolean('service',{...edits.add.service_boolean,tenant:tenant},targetId));
             }
             queries.push(t.service_state.update(targetId,(startDeployment?'pending':'deployed'),'edit'));
             for (var key in edits.add){
@@ -139,8 +139,8 @@ class ServiceRepository {
       integration_environment_filter : "",
       protocol_id_filter: "",
       protocol_filter: "",
-      all_properties_filter:"'client_id',sd.client_id,'allow_introspection',sd.allow_introspection,\
-      'code_challenge_method',sd.code_challenge_method, 'device_code_validity_seconds',sd.device_code_validity_seconds,\
+      all_properties_filter:"'client_id',sd.client_id,'external_id',sd.external_id,'allow_introspection',sd.allow_introspection,\
+      'code_challenge_method',sd.code_challenge_method, 'device_code_validity_seconds',sd.device_code_validity_seconds,'application_type',sd.application_type,\
       'access_token_validity_seconds',sd.access_token_validity_seconds,'refresh_token_validity_seconds',sd.refresh_token_validity_seconds,'refresh_token_validity_seconds',sd.refresh_token_validity_seconds,'client_secret',sd.client_secret,\
       'reuse_refresh_token',sd.reuse_refresh_token,'jwks',sd.jwks,'jwks_uri',sd.jwks_uri,\
       'token_endpoint_auth_method',sd.token_endpoint_auth_method,'token_endpoint_auth_signing_alg',sd.token_endpoint_auth_signing_alg,\
@@ -148,10 +148,32 @@ class ServiceRepository {
       'metadata_url',sd.metadata_url,'entity_id',sd.entity_id,\
       'grant_types',(SELECT json_agg((v.value)) FROM service_oidc_grant_types v WHERE sd.id = v.owner_id),\
       'scope',(SELECT json_agg((v.value)) FROM service_oidc_scopes v WHERE sd.id = v.owner_id),\
-      'redirect_uris',(SELECT json_agg((v.value)) FROM service_oidc_redirect_uris v WHERE sd.id = v.owner_id),"
+      'redirect_uris',(SELECT json_agg((v.value)) FROM service_oidc_redirect_uris v WHERE sd.id = v.owner_id),",
+      tags_filter:"",
+      exclude_tags_filter:""
+    }
+    if(filters.tags){
+      filter_strings.tags_filter= "AND ("
+      filters.tags.forEach((tag,index)=>{
+        if(index>0){
+          filter_strings.tags_filter = filter_strings.tags_filter + " OR"  
+        }
+        filter_strings.tags_filter = filter_strings.tags_filter + " '"+ tag +"' = ANY(tags)"
+      })
+      filter_strings.tags_filter = filter_strings.tags_filter + ')' 
     }
     if(filters.integration_environment){
       filter_strings.integration_environment_filter = "AND integration_environment='" + filters.integration_environment+ "'";
+    }
+    if(filters.exclude_tags){
+      filter_strings.exclude_tags_filter= "AND NOT ("
+      filters.exclude_tags.forEach((tag,index)=>{
+        if(index>0){
+          filter_strings.exclude_tags_filter = filter_strings.exclude_tags_filter + " OR"  
+        }
+        filter_strings.exclude_tags_filter = filter_strings.exclude_tags_filter + " '"+ tag +"' = ANY(tags)"
+      })
+      filter_strings.exclude_tags_filter = filter_strings.exclude_tags_filter + ')'
     }
     if(filters.protocol){
       filter_strings.protocol_filter = "AND protocol='" + filters.protocol+ "'";

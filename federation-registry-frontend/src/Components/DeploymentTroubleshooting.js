@@ -13,21 +13,23 @@ import Button from 'react-bootstrap/Button';
 //import { useTranslation } from 'react-i18next';
 import {useParams } from "react-router-dom";
 import {tenantContext} from '../context.js';
+import {ConfirmationModal} from './Modals.js';
 
-const ErrorComponent = (props) => {
+
+const DeploymentTroubleshooting = (props) => {
   const [action,setAction] = useState();
   const [expand,setExpand] = useState(false);
   // eslint-disable-next-line
   const [tenant,setTeanant] = useContext(tenantContext);
   const [loading,setLoading] = useState(false);
-
+  const [confirmation,setConfirmation] = useState();
   const [response,setResponse] = useState(false);
   //const { t, i18n } = useTranslation();
   let {tenant_name} = useParams();
   const [error,setError] = useState();
   const resendDeployment = () => {
     setLoading(true);
-    fetch(config.host+'tenants/'+tenant_name+'/services/'+props.service_id +'/error?action=resend', {
+    fetch(config.host+'tenants/'+tenant_name+'/services/'+props.service_id +'/deployment?action=resend', {
       method: 'PUT', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -38,6 +40,7 @@ const ErrorComponent = (props) => {
 
       if(res.status===200){
         setResponse('success')
+        props.setDeploymentState('pending');
         props.setDeploymentError();
 
       }else if(res.status===401){
@@ -57,9 +60,8 @@ const ErrorComponent = (props) => {
       if(expand){
         if(action){
           if(action==='resend'){
-            resendDeployment();
+            setConfirmation(true);
           }
-          console.log("Take action: " + action);
         }
         else {
           setError('Select action to take');
@@ -72,19 +74,39 @@ const ErrorComponent = (props) => {
 
   return (
     <React.Fragment >
-    {props.deploymentError?
+    {props.user.actions.includes('error_action')&&(props.deploymentError||props.deploymentState.state==='waiting-deployment')?
       <React.Fragment>
-        <Alert show={true} variant="danger" style={{marginTop:'1rem'}}>
-          <Alert.Heading><b>Deployment Error: {props.deploymentError.error_code}</b></Alert.Heading>
+        <ConfirmationModal active={confirmation} close={()=>{setConfirmation();}}
+          action={()=>{if(action==='resend'){
+                resendDeployment();
+                setConfirmation();
+              }
+          }}
+          title={"Are you sure you want to coninue with this action?"} message={"By selecting yes you will retrigger the deployment of the service request"} accept={'Yes'} decline={'No'}/>
+        <Alert show={true} variant={props.deploymentError?"danger":"warning"} style={{marginTop:'1rem'}}>
+          <Alert.Heading><b>{props.deploymentError?("Deployment Error: "+props.deploymentError.error_code):"Troubleshoot Deployment"}</b></Alert.Heading>
           <p style={{marginTop:'1rem'}}>
-            <b>Error Description: </b>{props.deploymentError.error_description}
-            <br style={{marginBottom:'0.3rem'}}/>
-            <b>Date</b>: {props.deploymentError.error_date.slice(0,10)} {props.deploymentError.error_date.slice(11,20)}
+            {props.deploymentError?
+              <React.Fragment>
+                <b>Error Description: </b>{props.deploymentError.error_description}
+                <br style={{marginBottom:'0.3rem'}}/>
+                <b>Date</b>: {props.deploymentError.error_date.slice(0,10)} {props.deploymentError.error_date.slice(11,20)}
+              </React.Fragment>
+              :
+              <React.Fragment>
+                
+                
+                <b>
+                 WARNING:
+                </b> The following actions should only be performed by or after contacting the technical team of Federation Registry as it might create issues for the target service.
+                
+              </React.Fragment>          
+            }
           </p>
-          {props.user.actions.includes('error_action')?
+          
             <React.Fragment>
               <hr/>
-              <Alert show={true} variant="light" style={{color:tenant.color}} className={expand?"error-action-alert":"error-action-alert-hidden"}>
+              <Alert show={true} variant="light" style={{color:tenant.color}} className={expand?(props.deploymentError?"error":"warning")+"-action-alert":(props.deploymentError?"error":"warning")+"-action-alert-hidden"}>
               <div className="d-flex justify-content-end">
               {error&&expand?
                 <div className="review-error" style={{marginRight:'0.5rem',color:'#721c24'}}>
@@ -162,17 +184,14 @@ const ErrorComponent = (props) => {
               </Collapse>
               </Alert>
             </React.Fragment>
-          :null}
           
         </Alert>
       </React.Fragment>:null
     }
-    <Alert show={response} variant={response==='success'?'success':'danger'} style={{marginTop:'1rem'}}>
+    <Alert show={response?true:false} variant={response==='success'?'success':'danger'} className="deployment-troubleshooting-alert" >
       {response==='success'?'Deployment has been reset and is currently pending':'Request Failed please try again'}
     </Alert>
-
-
     </React.Fragment>
   )
 }
-export default ErrorComponent
+export default DeploymentTroubleshooting

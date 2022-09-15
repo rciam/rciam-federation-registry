@@ -1,26 +1,20 @@
-import React,{useContext} from 'react';
+import React,{useContext,useState} from 'react';
 import Modal from 'react-bootstrap/Modal';
-import config from '../config.json';
-import {useHistory,useParams} from "react-router-dom";
+import {useHistory,useLocation} from "react-router-dom";
 import Button from 'react-bootstrap/Button';
 import { useTranslation } from 'react-i18next';
 import { Translation } from 'react-i18next';
 import {tenantContext} from '../context.js';
+import parse from 'html-react-parser';
+
 
 export const Logout = (props) => {
   // const history = useHistory();
-  // const tenant = useContext(tenantContext);
-  let {tenant_name} = useParams();
+  const tenant = useContext(tenantContext);
   const handleClose = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    if(tenant_name==='egi'){
-      window.location.assign('https://aai.egi.eu/oidc/saml/logout?redirect='+window.location.protocol+ "//" + window.location.hostname + (window.location.port?":"+window.location.port:"") + (config.basename==="/"?"/":config.basename+"/")+tenant_name);
-    }
-    else{
-      window.location.assign('https://aai-demo.eosc-portal.eu/oidc/saml/logout?redirect='+window.location.protocol+ "//" + window.location.hostname + (window.location.port?":"+window.location.port:"") + (config.basename==="/"?"/":config.basename+"/")+tenant_name);
-    }
-
+    window.location.assign(tenant.logout_uri);
   }
   return (
     <Translation>
@@ -40,21 +34,27 @@ export const Logout = (props) => {
       }}
     </Translation>
   )
-
-
 }
 
 export const NotFound = (props) => {
   const history = useHistory();
+  const location = useLocation();
+  const [close,setClose] = useState(false);
   const tenant = useContext(tenantContext);
   const handleClose = () => {
-    history.push('/'+(tenant&&tenant[0]?tenant[0].name:null)+'/services');
+    setClose(true);
+    if(location.pathname==='/'+(tenant&&tenant[0]?tenant[0].name:null)+'/services'){
+      window.location.reload(false);
+    }else
+    {
+      history.push('/'+(tenant&&tenant[0]?tenant[0].name:null)+'/services');
+    }
   }
   return (
     <Translation>
       {t=> {
         return(
-          <Modal show={props.notFound||props.notAuthorised} onHide={handleClose}>
+          <Modal show={props.notFound||props.notAuthorised||close} onHide={handleClose}>
             <Modal.Header >
               <Modal.Title>{props.notFound?"Resourse requested was not found":props.notAuthorised?"Resourse not authorised":null}</Modal.Title>
             </Modal.Header>
@@ -119,9 +119,9 @@ export class SimpleModal extends React.Component {
 
 
 export const ConfirmationModal = (props) =>{
-  const close = () => {props.setActive({})}
+  
   return (
-    <Modal show={props.active} onHide={close}>
+    <Modal show={props.active} onHide={()=>{props.close()}}>
         <Modal.Header closeButton>
           <Modal.Title>
               {props.title}
@@ -130,17 +130,17 @@ export const ConfirmationModal = (props) =>{
 
           {props.message?
               <Modal.Body>
-                {props.message}
+                {parse(props.message)}
               </Modal.Body>
               :null
           }
 
         <Modal.Footer>
             <React.Fragment>
-              <Button variant="primary" onClick={()=>{props.action(); close();}}>
+              <Button variant="primary" onClick={()=>{props.action();}}>
                 {props.accept}
               </Button>
-              <Button variant="danger" onClick={close}>
+              <Button variant="danger" onClick={()=>{props.close()}}>
                 {props.decline}
               </Button>
             </React.Fragment>
@@ -148,6 +148,8 @@ export const ConfirmationModal = (props) =>{
     </Modal>
   )
 }
+
+
 
 export function ResponseModal(props){
   // eslint-disable-next-line
@@ -178,6 +180,40 @@ export function ResponseModal(props){
     </Modal>
   )
 }
+
+export function MessageModal(props){
+  // eslint-disable-next-line
+  const { t, i18n } = useTranslation();
+  const handleClose = () => {
+    props.close();
+  }
+  return (
+    <Modal show={props.active?true:false} onHide={handleClose}>
+        <Modal.Header closeButton>
+          {props.title?
+            <Modal.Title>
+                {props.title}
+            </Modal.Title>
+            :null
+          }
+        </Modal.Header>
+        {props.message?
+          <Modal.Body >
+            {props.message}
+          </Modal.Body>
+          :null
+        } 
+        <Modal.Footer>
+
+          <Button variant="secondary" onClick={handleClose}>
+            {t('modal_continue')}
+          </Button>
+
+        </Modal.Footer>
+    </Modal>
+  )
+}
+
 export function ListResponseModal(props){
 
   // eslint-disable-next-line

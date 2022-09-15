@@ -5,15 +5,17 @@
 // you could handle event 'error' within initialization options yourself,
 // which may be a little better performing, but lacks all the nice formatting
 // provided by pg-monitor.
-
+const path = require('path')
 const os = require('os');
 const fs = require('fs');
 const monitor = require('pg-monitor');
-
+const filePath = path.resolve(__dirname+'/errors.log');
 monitor.setTheme('matrix'); // changing the default theme;
 
 // Flag to indicate whether we are in a DEV environment:
 const $DEV = process.env.NODE_ENV === 'development';
+
+
 
 // Log file for database-related errors:
 const logFile = './db/errors.log';
@@ -38,7 +40,12 @@ monitor.setLog((msg, info) => {
             // and not an additional error line;
             logText = os.EOL + logText; // add another line break in front;
         }
-        fs.appendFileSync(logFile, logText); // add error handling as required;
+        try{
+            fs.appendFileSync(logFile, logText) 
+        }
+        catch(e){
+            fs.appendFileSync(filePath, logText)
+        }; // add error handling as required;
     }
 
     // We absolutely must not let the monitor write anything into the console

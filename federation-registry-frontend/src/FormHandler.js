@@ -1,16 +1,16 @@
 import React,{useEffect,useState,useContext} from 'react';
 import initialValues from './initialValues';
-import {useParams} from "react-router-dom";
+import {useParams,useHistory} from "react-router-dom";
 import config from './config.json';
 import ServiceForm from "./ServiceForm.js";
-import ErrorComponent from "./Components/Error.js"
+import DeploymentTroubleshooting from "./Components/DeploymentTroubleshooting.js"
 import {LoadingBar} from './Components/LoadingBar';
 import Tabs from 'react-bootstrap/Tabs';
 import Tab from 'react-bootstrap/Tab';
 import Alert from 'react-bootstrap/Alert';
 import Jumbotron from 'react-bootstrap/Jumbotron';
 import Container from 'react-bootstrap/Container';
-import {Logout,NotFound,ResponseModal} from './Components/Modals';
+import {Logout,NotFound,ConfirmationModal,ResponseModal} from './Components/Modals';
 import { diff } from 'deep-diff';
 import { useTranslation } from 'react-i18next';
 import {tenantContext,userContext} from './context.js';
@@ -18,6 +18,7 @@ import {calcDiff} from './helpers.js'
 
 
 const EditService = (props) => {
+    let history = useHistory();
     // eslint-disable-next-line
     const { t, i18n } = useTranslation();
     const [petitionData,setPetitionData] = useState();
@@ -33,7 +34,9 @@ const EditService = (props) => {
     const [user] = useContext(userContext);
     const [owned,setOwned] = useState(true);
     const [modalMessage,setModalMessage] = useState();
-    
+    const [petitionIdRedirect,setPetitionIdRedirect] = useState();    
+    const [redirectTitle,setRedirectTitle] = useState();
+
     useEffect(()=>{
       
       localStorage.removeItem('url');
@@ -104,6 +107,52 @@ const EditService = (props) => {
           }
         });
       }
+      if(service_id&&!petition_id&&!props.review){
+        fetch(config.host+'tenants/'+tenant_name+'/services/list?service_id='+service_id, {
+          method: 'GET', // *GET, POST, PUT, DELETE, etc.
+          credentials: 'include', // include, *same-origin, omit
+          headers: {
+          'Content-Type': 'application/json',
+          'Authorization': localStorage.getItem('token')
+        }}).then(response=>{
+          if(response.status===200||response.status===304){
+            return response.json();
+          }
+          else if(response.status===401){
+            setLogout(true);
+            return false;
+          }
+          else if(response.status===416){
+            setNotFound(true);
+            return false;
+          }
+          else {
+            return false
+          }
+        }).then(response=> {
+
+          if(response){
+            try{
+              // console.log(response.list_items);
+              if(response.list_items[0].petition_id){
+                if(response.list_items[0].type==='edit'){
+                  setPetitionIdRedirect(response.list_items[0].petition_id);
+                  setRedirectTitle("There is already an open reconfiguration request for this service");
+                }
+                else if(response.list_items[0].type==='delete'){
+                  setPetitionIdRedirect(response.list_items[0].petition_id);
+                  setRedirectTitle('There is an open deregistration request for this service');
+                }
+
+              }
+              
+            }
+            catch(err){
+              
+            }
+          }
+        });
+      }
       if(petition_id){
         fetch(config.host+'tenants/'+tenant_name+'/petitions/'+petition_id+'?type=open', {
           method: 'GET', // *GET, POST, PUT, DELETE, etc.
@@ -146,6 +195,7 @@ const EditService = (props) => {
       <Logout logout={logout}/>
       <NotFound notFound={notFound}/>
       <ResponseModal return_url={'/'+tenant_name+'/services'} message={modalMessage} modalTitle={'Review is not available for this request'}/>
+      <ConfirmationModal active={petitionIdRedirect?true:false} close={()=>{history.push('/'+tenant_name+'/services'); setPetitionIdRedirect();}} action={()=>{history.push('/'+tenant_name+ '/services/'+service_id+'/requests/'+petitionIdRedirect+'/edit'); setPetitionIdRedirect(); window.location.reload(false);}} title={redirectTitle} message={"Do you want to view it?"} accept={'Yes'} decline={'No'}/>
     {!((petitionData||!petition_id)&&(!service_id||service))?<LoadingBar loading={true}/>:
       <React.Fragment>
        {props.review?
@@ -160,7 +210,7 @@ const EditService = (props) => {
                 {editPetition&&changes?
                   <React.Fragment>
                     <CommentsAlert alert={"An Operator has requested reviewal for the following request"} comment={petitionData.metadata.comment} />
-                    <ServiceForm disableEnvironment={true} initialValues={editPetition} changes={changes} {...petitionData.metadata} {...props}/>
+                    <ServiceForm disableEnvironment={true} initialValues={editPetition} user={user} changes={changes} {...petitionData.metadata} {...props}/>
                   </React.Fragment>
                     :<LoadingBar loading={true}/>
   
@@ -174,7 +224,7 @@ const EditService = (props) => {
                 {petitionData?
                   <React.Fragment>
                     <CommentsAlert alert={"An Operator has requested reviewal for the following request"} comment={petitionData.metadata.comment} />
-                    <ServiceForm initialValues={petitionData.petition} {...petitionData.metadata} {...props}/>
+                    <ServiceForm initialValues={petitionData.petition} user={user} {...petitionData.metadata} {...props}/>
                   </React.Fragment>:<LoadingBar loading={true}/>}
               </React.Fragment>
             :
@@ -185,7 +235,7 @@ const EditService = (props) => {
                 {service?
                   <React.Fragment>
                     <CommentsAlert alert={"An Operator has requested reviewal for the following request"} comment={petitionData.metadata.comment} />
-                    <ServiceForm copy={true} initialValues={service} {...petitionData.metadata} {...props}/>
+                    <ServiceForm copy={true} initialValues={service} user={user} {...petitionData.metadata} {...props}/>
                   </React.Fragment>:<LoadingBar loading={true}/>}
               </React.Fragment>
             }
@@ -253,11 +303,14 @@ const ViewRequest = (props) => {
   const [notFound,setNotFound] = useState(false);
   const tenant = useContext(tenantContext);
   const [service,setService] = useState();
-  
+  const [user] = useContext(userContext);
+
+
   useEffect(()=>{
     
     localStorage.removeItem('url');
     getData();
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
 
@@ -280,6 +333,7 @@ const ViewRequest = (props) => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[petitionData, service, editPetition]);
+
 
   const getData = async () => {
     if(service_id){
@@ -307,7 +361,6 @@ const ViewRequest = (props) => {
         }
         }).then(response=> {
         if(response){
-          console.log(response.service);
           setService(response.service);
         }
       });
@@ -363,7 +416,7 @@ return (
               {editPetition&&changes?
                 <React.Fragment>
                   <CommentsAlert alert={petitionData.metadata.status==='changes'?"A Reviewer has requested changes from the owners of the following request":"An Operator has requested reviewal for the following request"} comment={petitionData.metadata.comment} />
-                  <ServiceForm disableEnvironment={true} disabled={true} initialValues={editPetition} changes={changes} {...petitionData.metadata} {...props}/>
+                  <ServiceForm disableEnvironment={true} user={user} disabled={true} initialValues={editPetition} changes={changes} {...petitionData.metadata} {...props}/>
                 </React.Fragment>
                   :<LoadingBar loading={true}/>
 
@@ -377,7 +430,7 @@ return (
               {petitionData?
                 <React.Fragment>
                   <CommentsAlert alert={petitionData.metadata.status==='changes'?"A Reviewer has requested changes from the owners of the following request":"An Operator has requested reviewal for the following request"} comment={petitionData.metadata.comment} />
-                  <ServiceForm initialValues={petitionData.petition} disabled={true} {...petitionData.metadata} {...props}/>
+                  <ServiceForm initialValues={petitionData.petition} user={user} disabled={true} {...petitionData.metadata} {...props}/>
                 </React.Fragment>:<LoadingBar loading={true}/>}
             </React.Fragment>
           :
@@ -388,7 +441,7 @@ return (
               {service?
                 <React.Fragment>
                   <CommentsAlert alert={petitionData.metadata.status==='changes'?"A Reviewer has requested changes from the owners of the following request":"An Operator has requested reviewal for the following request"} comment={petitionData.metadata.comment} />
-                  <ServiceForm copy={true} initialValues={service} disabled={true} {...petitionData.metadata} {...props}/>
+                  <ServiceForm copy={true} initialValues={service} user={user} disabled={true} {...petitionData.metadata} {...props}/>
                 </React.Fragment>:<LoadingBar loading={true}/>}
             </React.Fragment>
           }
@@ -408,10 +461,10 @@ const ViewService = (props)=>{
   const {petition_id} = useParams();
   const {service_id} = useParams();
   const [petitionData,setPetitionData] = useState();
-  const [owned,setOwned] = useState(false);
   const [logout,setLogout] = useState(false);
   const [notFound,setNotFound] = useState(false);
   const [user] = useContext(userContext);
+  const [serviceState,setServiceState] = useState({owned:false,state:""});
 
   useEffect(()=>{
     localStorage.removeItem('url');
@@ -421,32 +474,6 @@ const ViewService = (props)=>{
 
   const getData = () => {
     if(service_id){
-      fetch(config.host+'tenants/'+tenant_name+'/services/'+service_id +'/error', {
-        method: 'GET', // *GET, POST, PUT, DELETE, etc.
-        credentials: 'include', // include, *same-origin, omit
-        headers: {
-        'Content-Type': 'application/json',
-        'Authorization': localStorage.getItem('token')
-        }
-      }).then(response=> {
-        if(response.status===200){
-          return response.json();
-        }else if(response.status===401){
-          setLogout(true);
-          return false;
-        }
-        else if(response.status===404){
-          return false;
-        }
-        else {
-          return false
-        }
-      }).then(response=> {
-        if(response){
-          setDeploymentError(response.error)
-        }
-      });
-      
       fetch(config.host+'tenants/'+tenant_name+'/services/'+service_id, {
         method: 'GET', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
@@ -471,8 +498,11 @@ const ViewService = (props)=>{
         }
       }).then(response=> {
         if(response.service){
-          setOwned(response.owned);
           setService(response.service);
+          delete response.service;
+          setDeploymentError(response.error);
+          delete response.error;
+          setServiceState(response);
         }
       });
     }
@@ -516,14 +546,20 @@ const ViewService = (props)=>{
         The deployment for the following request could not be completed due to an error. Our technical team will handle this issue and you will be notified when it is resolved. Thank you for your patience.
       </Alert>
       :null}
-    <ErrorComponent deploymentError={deploymentError} user={user} setDeploymentError={setDeploymentError} service_id={service_id} setLogout={setLogout}/>
+    {serviceState.state==='waiting-deployment'||serviceState.state==='pending'?
+      <Alert variant='primary' className='form-alert'>
+      The deployment of the following {serviceState.deployment_type==='create'?'registration':serviceState.deployment_type==='edit'?'reconfiguration':serviceState.deployment_type==='delete'?'deregistation':null} request is pending.
+      </Alert>
+    :null}
+    
+    <DeploymentTroubleshooting deploymentState={serviceState} setDeploymentState={setServiceState}  deploymentError={deploymentError} user={user} setDeploymentError={setDeploymentError} service_id={service_id} setLogout={setLogout}/>
       {service?
         <React.Fragment>        
           {service.created_at?
             <Alert variant='primary' className='form-alert'>
               Service was registered at: <b>{service.created_at.slice(0,10).split('-').join('/')+ ' ' + service.created_at.slice(11,19).split('-').join('/')}</b>
             </Alert>:null}
-          <ServiceForm initialValues={service} disabled={true} copyButton={true} owned={owned} {...props}/>
+          <ServiceForm initialValues={service} user={user} disabled={true} copyButton={true} owned={serviceState.owned} {...props}/>
         </React.Fragment>
         :service_id?<LoadingBar loading={true}/>:petitionData?
         <React.Fragment>
@@ -532,7 +568,7 @@ const ViewService = (props)=>{
           </Alert>
           
           
-          <ServiceForm initialValues={petitionData.petition} copyButton={true} owned={owned} disabled={true} {...petitionData.metadata} {...props}/>
+          <ServiceForm initialValues={petitionData.petition} user={user} copyButton={true} owned={serviceState.owned} disabled={true} {...petitionData.metadata} {...props}/>
         </React.Fragment>
       :petition_id?<LoadingBar loading={true}/>:null
       }
@@ -567,6 +603,8 @@ const CommentsAlert = (props) => {
 }
 
 const RequestedChangesAlert = (props) => {
+  const [user] = useContext(userContext);
+
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
 
@@ -594,10 +632,10 @@ const RequestedChangesAlert = (props) => {
               </Alert>
           :null
           }
-          {props.tab1?<ServiceForm disableEnvironment={true} initialValues={props.tab1} {...props}/>:<LoadingBar loading={true}/>}
+          {props.tab1?<ServiceForm user={user} disableEnvironment={true} initialValues={props.tab1} {...props}/>:<LoadingBar loading={true}/>}
         </Tab>
       <Tab eventKey="service" title="View Deployed Service">
-        {props.tab2?<ServiceForm initialValues={props.tab2} disabled={true} {...props} />:<LoadingBar loading={true}/>}
+        {props.tab2?<ServiceForm user={user} initialValues={props.tab2} disabled={true} {...props} />:<LoadingBar loading={true}/>}
       </Tab>
     </Tabs>
     </React.Fragment>
@@ -612,6 +650,8 @@ const CopyService = (props)=> {
   const [notFound,setNotFound] = useState(false);
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
+  const [user] = useContext(userContext);
+
 
   useEffect(()=>{
     getData();
@@ -650,7 +690,7 @@ const CopyService = (props)=> {
     <React.Fragment>
       <NotFound notFound={notFound}/>
       <Logout logout={logout}/>
-      {service?<ServiceForm initialValues={service} copy={true} />:<LoadingBar loading={true}/>}
+      {service?<ServiceForm user={user} initialValues={service} copy={true} />:<LoadingBar loading={true}/>}
     </React.Fragment>
   )
 }

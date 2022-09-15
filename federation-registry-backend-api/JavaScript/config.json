@@ -27,6 +27,7 @@
         "oidc": ["grant_types","scope","redirect_uris"],
         "saml": []
       },
+      "application_type":["WEB", "NATIVE"],
       "device_code_validity_seconds":30000,
       "refresh_token_validity_seconds":34128000,
       "access_token_validity_seconds":1000000,
@@ -35,6 +36,9 @@
       "protocol":["oidc","saml"],
       "integration_environment": ["production","development","demo"],
       "grant_types":["authorization_code","client_credentials","urn:ietf:params:oauth:grant-type:token-exchange","urn:ietf:params:oauth:grant-type:device_code","implicit","refresh_token"],
+      "grant_types_deprecated":["implicit"],
+      "dynamic_fields": ["allow_introspection"],
+      "disabled_fields": ["clear_access_tokens_on_refresh"],
       "contact_requirements":[
         {
           "type":"support",
@@ -46,7 +50,7 @@
         },
         {
           "type":"technical",
-          "error":"The Serrvice must have Technical contact information"
+          "error":"The Service must have Technical contact information"
         },
         {
           "type":"admin",
@@ -73,6 +77,9 @@
         "scope": {
           "description": "OAuth scopes this client is allowed to request. See <a href='https://docs.egi.eu/providers/check-in/sp/#claims' target='_blank' rel='noopener noreferrer'>here</a> for more information."
         },
+        "redirect_uris":{
+          "description": "URIs that the client can be redirected to. Different URI validation rules apply depending on the application type."
+        },
         "contacts": {
           "description": "List of contacts for administrators of this service. (Technical and Support Contacts will be shown in the Consent Page)"
         },
@@ -84,6 +91,13 @@
         },
         "logo_uri": {
           "description": "URL that points to a logo image. (Logo will be displayed in the Consent Page)"
+        },
+        "application_type": {
+          "description": "Kind of the application. Web Clients MUST only register URLs using the https scheme as redirect_uris; they MAY use the http scheme when using localhost as the hostname. Native Clients MUST only register redirect_uris using custom URI schemes or URLs using the http scheme with localhost as the hostname."
+        },
+        "allow_introspection": {
+          "description": "Access to the Token Introspection endpoint is restricted to confidential clients.",
+          "tooltip": "This is a dynamic field based on Authorization Method selected for the token endpoint."
         }
       },
       "extra_fields":{
@@ -102,6 +116,16 @@
             "tag": "org",
             "active": ["production","demo"],
             "required": ["production","demo"]
+        },
+        "assurance_checkbox":{
+            "title": "Service Provider Guidelines",
+            "desc": "I have read the guide for Service Providers on the <a href='https://docs.egi.eu/providers/check-in/sp/#general-information' target='_blank' rel='noopener noreferrer'>EGI documentation</a>",
+            "type": "boolean",
+            "required": ["production"],
+            "tag": "once",
+            "tab": "general",
+            "default": false,
+            "error": "You must read the guidlines for security reasons"
         },
         "egi_policy":{
           "title": "EGI Policies",
@@ -132,6 +156,7 @@
         "oidc": ["grant_types","scope","redirect_uris"],
         "saml": []
       },
+      "application_type":["WEB", "NATIVE"],
       "device_code_validity_seconds":30000,
       "refresh_token_validity_seconds":34128000,
       "access_token_validity_seconds":1000000,
@@ -140,6 +165,9 @@
       "protocol":["oidc","saml"],
       "integration_environment": ["production","demo"],
       "grant_types":["implicit","authorization_code","refresh_token","client_credentials","urn:ietf:params:oauth:grant_type:redelegate","urn:ietf:params:oauth:grant-type:token-exchange","urn:ietf:params:oauth:grant-type:device_code","urn:ietf:params:oauth:grant-type:jwt-bearer"],
+      "grant_types_deprecated":["implicit"],      
+      "dynamic_fields": [],
+      "disabled_fields": [],
       "contact_requirements":[
         {
           "type":"support technical",
@@ -181,6 +209,9 @@
         },
         "logo_uri": {
           "description": "URL that points to a logo image. (Logo will be displayed in the Consent Page)"
+        },
+        "application_type": {
+          "description": "Kind of the application. Web Clients MUST only register URLs using the https scheme as redirect_uris; they MAY use the http scheme when using localhost as the hostname. Native Clients MUST only register redirect_uris using custom URI schemes or URLs using the http scheme with localhost as the hostname."
         }
     },
     "extra_fields":{
@@ -253,10 +284,10 @@
   "outdated_notifications_interval_seconds":604800,
   "send_outdated_notifications":false,
   "invitation_validity_seconds": 5184000,
-  "service_fields":["external_id","tenant","service_name","service_description","logo_uri","policy_uri","integration_environment","protocol","client_id","allow_introspection","code_challenge_method","device_code_validity_seconds","access_token_validity_seconds","refresh_token_validity_seconds","client_secret","reuse_refresh_token","clear_access_tokens_on_refresh","id_token_timeout_seconds","entity_id","metadata_url","grant_types","scope","contacts","redirect_uris","token_endpoint_auth_method","token_endpoint_auth_signing_alg","jwks","jwks_uri","country","website_url","aup_uri","organization_id"],
+  "service_fields":["external_id","tenant","service_name","service_description","logo_uri","policy_uri","integration_environment","protocol","client_id","allow_introspection","code_challenge_method","device_code_validity_seconds","access_token_validity_seconds","refresh_token_validity_seconds","client_secret","reuse_refresh_token","clear_access_tokens_on_refresh","id_token_timeout_seconds","entity_id","metadata_url","grant_types","scope","contacts","redirect_uris","token_endpoint_auth_method","token_endpoint_auth_signing_alg","jwks","jwks_uri","country","website_url","aup_uri","organization_id","application_type"],
   "ggus_email":"checkin-support@mailman.egi.eu",
   "disable_emails":false,
-  "deployment_fields":["service_name","service_description","client_id","allow_introspection","code_challenge_method","device_code_validity_seconds","access_token_validity_seconds","refresh_token_validity_seconds","client_secret","reuse_refresh_token","clear_access_tokens_on_refresh","id_token_timeout_seconds","entity_id","metadata_url","grant_types","scope","contacts","redirect_uris","token_endpoint_auth_method","token_endpoint_auth_signing_alg","jwks","jwks_uri","website_url","aup_uri","policy_uri","country"],
+  "deployment_fields":["service_name","service_description","client_id","allow_introspection","code_challenge_method","device_code_validity_seconds","access_token_validity_seconds","refresh_token_validity_seconds","client_secret","reuse_refresh_token","clear_access_tokens_on_refresh","id_token_timeout_seconds","entity_id","metadata_url","grant_types","scope","contacts","redirect_uris","token_endpoint_auth_method","token_endpoint_auth_signing_alg","jwks","jwks_uri","website_url","aup_uri","policy_uri","country","logo_uri","application_type"],
   "multivalue_fields": ["grant_types","scope","contacts","redirect_uris"],
   "send_notifications_on_startup":false
 }

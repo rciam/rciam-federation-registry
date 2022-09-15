@@ -217,7 +217,7 @@ const ServiceTable = ({services}) => {
             ))}
           </thead>
           <tbody {...getTableBodyProps()}>
-            {page.map((row,row_index) => {
+            {page.length>0?page.map((row,row_index) => {
               prepareRow(row)
               return (
                 <tr {...row.getRowProps()}>
@@ -233,7 +233,9 @@ const ServiceTable = ({services}) => {
                   })}
                 </tr>
               )
-            })}
+            }):
+              <tr><td colSpan={4}><span className='service-overview-no-services'>No services to display...</span></td></tr>
+            }
           </tbody>
         </Table>
         <div className="pagination">

@@ -7,7 +7,7 @@ info:
   contact:
     email: "apiteam@swagger.io"
   license:
-    name: "Rciam"
+    name: "RCIAM"
     url: "https://github.com/rciam"
 host: "swagger.io"
 basePath: "/v2"
@@ -23,16 +23,135 @@ tags:
 - name: "Groups and Invitations"
   description: "Manage owners group"
 - name: "AMS"
-  description: "Commmunication with the Argo Messenging Service"
+  description: "Communication with the ARGO Messaging Service"
 - name: "Agent"
-  description: "Deditated endpoints for the ams-agent"
+  description: "Dedicated endpoints for the ams-agent"
 - name: "Deployer Agents"
   description: "Manage Tenant Deployer Agents"
 - name: "Banner Alerts"
   description: "Banner notification alerts"
+- name: "Service Tags"
+  description: "Managing Service Rags"
 schemes:
 - "https"
 paths:
+  /tenants/{name}/tags:
+    get:
+      tags:
+      - Service Tags
+      summary: "Get all tags"
+      description: "Get all available tags for a given tenant"
+      parameters:
+        - in: query
+          name: tag
+          type: string
+          description: "Search string to filter tags result"
+          required: false
+        - in: path
+          name: name
+          type: string
+          description: "Tenant that the request is targeting"
+          required: true
+      responses: 
+        "200":
+          description: "OK"
+          schema: 
+            type: "array"
+            items:
+              type: "string"
+        "401": 
+          description: "Unauthenticated request" 
+        "500":
+          description: "Error"
+  /tenants/{name}/tags/services/{id}:
+    get:
+      tags:
+      - Service Tags
+      summary: "Get all tags of a service"
+      description: "Get all available tags attached to a service"
+      parameters:
+        - in: path
+          name: id
+          type: integer
+          description: "Id of the requested service"
+          required: true
+        - in: path
+          name: name
+          type: string
+          description: "Tenant that the request is targeting"
+          required: true
+      responses: 
+        "200":
+          description: "OK"
+          schema: 
+            type: "array"
+            items:
+              type: "string"
+        "401": 
+          description: "Unauthenticated request" 
+        "500":
+          description: "Error"
+    post:
+      tags:
+      - Service Tags
+      summary: "Create new tags for a service"
+      description: "Create new tags for a service"
+      parameters:
+        - in: path
+          name: id
+          type: integer
+          description: "Id of the requested service"
+          required: true
+        - in: path
+          name: name
+          type: string
+          description: "Tenant that the request is targeting"
+          required: true
+        - in: body
+          name: body
+          schema:
+            type: "array"
+            description: "Array of string tags"
+            items: 
+              type: "string"
+      responses: 
+        "200":
+          description: "OK"
+        "401": 
+          description: "Unauthenticated request" 
+        "500":
+          description: "Error"
+    delete:
+      tags:
+      - Service Tags
+      summary: "Delete service tags"
+      description: "Delete tags for a service"
+      parameters:
+        - in: path
+          name: id
+          type: integer
+          description: "Id of the requested service"
+          required: true
+        - in: path
+          name: name
+          type: string
+          description: "Tenant that the request is targeting"
+          required: true
+        - in: body
+          name: body
+          schema:
+            type: "array"
+            description: "Array of string tags"
+            items: 
+              type: "string"
+      responses: 
+        "200":
+          description: "OK"
+        "401": 
+          description: "Unauthenticated request" 
+        "500":
+          description: "Error"
+    
   /tenants/{name}/login:
     get:
       tags:
@@ -179,7 +298,7 @@ paths:
       - in: query
         type: boolean
         name: ror
-        description: "If true returns only orgnanization registered at ror.org"
+        description: "If true returns only organization registered at ror.org"
       responses: 
         "200":
           description: "OK"
@@ -260,7 +379,7 @@ paths:
           format: "int64"
       responses:
         "200":
-          description: "Succesfull"
+          description: "Successful"
           schema:
             $ref: "#/definitions/Petition"
         "401":
@@ -295,7 +414,7 @@ paths:
         format: "int64"
       - in: "body"
         name: "body"
-        description: "Petition object that needs to be added to the regisrtry may be empty if type is delete"
+        description: "Petition object that needs to be added to the registry may be empty if type is delete"
         required: false
         schema:
           $ref: "#/definitions/Petition"
@@ -382,11 +501,73 @@ paths:
           description: "Internal Error"
       security:
       - access_tokenAuth: []
+  /tenants/{name}/notifications/owners:
+    put:
+      tags:
+      - "Notifications"
+      summary: "Send notifications to service owners"
+      description: "Sends notifications to the owners of a service"
+      operationId: "SendOwnerNotif"
+      produces:
+      - "application/json"
+      parameters:
+      - in: path
+        type: string
+        required: true
+        name: name
+        description: "Tenant that the request is targeting"
+      - in: "body"
+        name: "body"
+        description: "Notification data"
+        required: true
+        schema:
+          type: "object"
+          properties:
+            name:
+              type: "string"
+              description: "Name of the notification sender"
+            email_address:
+              type: "string"
+              format: "email"
+              description: "Email address of the notifications sender"
+            email_subject:
+              type: "string"
+              description: "Subject of the notification"
+            email_body:
+              type: "string"
+              description: "Notification Text, replaces (--* Reconfiguration Link *--) string with a button with a link to the reconfiguration page of the service/request"
+            cc_emails:
+              type: "array"
+              items: 
+                type: "string"
+                format: "email"
+              description: "Email addresses that will be added as CC to the notification email"
+            recipients:
+              type: "array"
+              items: 
+                type: "string"
+                format: "email"
+              description: "Email addresses that the notification will be sent"
+      responses:
+        "200":
+          description: "successful"
+          schema:
+            type: "object"
+            properties: 
+              notified_users:
+                type: "number"
+                description: "Number of users the notification was sent to"
+        "401":
+          description: "Unauthenticated request"
+        "500":
+          description: "Internal Error"
+      security:
+      - access_tokenAuth: []
   /tenants/{name}/notifications/broadcast:
     put:
       tags:
       - "Notifications"
-      summary: "Send Notifications"
+      summary: "Send Notifications to service contacts"
       description: "Sends Notifications to the contacts of registered services"
       operationId: "sendNotif"
       produces:
@@ -492,7 +673,7 @@ paths:
                 description: "Number of users the notification was sent to"
               service_count:
                 type: "number"
-                description: "Number of outdated service in integration envronment provided as parameter"
+                description: "Number of outdated service in integration environment provided as parameter"
         "401":
           description: "Unauthenticated request"
         "500":
@@ -648,9 +829,85 @@ paths:
         "200":
           description: "successful"
           schema:
-            $ref: "#/definitions/Service"
+            type: "object"
+            properties:
+              service: 
+                $ref: "#/definitions/Service"
+              owned:
+                type: "boolean"
+              state:
+                type: "string"
+                description: "The deployment state of the service"
+                enum:
+                - error
+                - pending
+                - deployed
+                - waiting-deployment
+              deployment_type:
+                type: "string"
+                description: "Type of the pending deployment"
+                enum:
+                - edit
+                - create
+                - delete
+              last_edited:
+                type: string
+                description: "Timestamp of the last successful deployment of the service"
+              create_at:
+                type: string
+                description: "Timestamp of the registration of the service"
+              error:
+                type: object
+                properties:
+                  error_date: 
+                    type: string
+                    description: "Timestamp of the deployment error"
+                  error_code:
+                    type: string
+                    description: "Error status code returned by the deployment process"
+                  error_description:
+                    type: string
+                    description: "Description of the deployment error"
         "401":
           description: "Unauthenticated request"
+        "500":
+          description: "Internal Error"
+      security:
+      - access_tokenAuth: []
+  /tenants/{name}/services/{id}/deployment:
+    put:
+      tags:
+      - "Services"
+      summary: "Troubleshoot Deployment"
+      description: "Troubleshoot Deployment of a Service Request"
+      operationId: "putServiceDeployment"
+      produces:
+      - "application/json"
+      parameters:
+      - in: path
+        type: string
+        name: name
+        description: "Tenant that the request is targeting"
+        required: true
+      - name: "id"
+        in: "path"
+        description: "ID of the service"
+        required: true
+        type: "integer"
+        format: "int64"
+      - name: "action"
+        in: "query"
+        type: "string"
+        enum:
+        - "resend"
+        description: "Troubleshoot action selected by user"
+      responses:
+        "200":
+          description: "successful"
+        "401":
+          description: "Unauthenticated request"
+        "403":
+          description: "Unauthorised user"
         "500":
           description: "Internal Error"
       security:
@@ -713,7 +970,7 @@ paths:
         - in: query
           type: integer
           name: page
-          description: "The page number of the respone"
+          description: "The page number of the response"
         - in: query
           type: integer
           name: limit
@@ -730,10 +987,13 @@ paths:
           type: string
           name: search_string
           description: "Returns only services and petitions that contain the provided string"
-        # - in: query
-        #   type: string
-        #   name: protocol
-        #   description: "Returns only services of the selected protocol"
+        - in: query
+          type: string
+          name: protocol
+          enum:
+          - saml
+          - oidc
+          description: "Returns only services of the selected protocol"
         - in: query
           type: string
           name: env
@@ -746,6 +1006,30 @@ paths:
           type: string
           name: outdated
           description: "Returns only services that have invalid configuration"
+        - in: query
+          type: string
+          enum:
+          - 'pending'
+          - 'changes'
+          - 'request_review'
+          name: pending_sub
+          description: "Sub filter for services with pending requests based on the review state of the request"
+        - in: query
+          type: boolean
+          name: error
+          description: "Returns only services that have a deployment error"
+        - in: query
+          type: string
+          name: 'tag'
+          description: "Filters results based on tags, supports multiple comma separated values"
+        - in: query
+          type: string
+          name: created_after
+          description: "Filter results based on creation/registration date, returns services created after given date. Format:(yyyy/mm/dd)"
+        - in: query
+          type: string
+          name: created_before
+          description: "Filter results based on creation/registration date, returns services created before given date. Format:(yyyy/mm/dd)"
       responses:
         "200":
           description: "OK"
@@ -820,7 +1104,7 @@ paths:
     get:
       tags:
       - "Agent"
-      summary: "Get new Congigurations"
+      summary: "Get new Configurations"
       description: "Route used from ams-agent to get all service configuration awaiting deployment and push them to the ams topic"
       operationId: "getPendingServices"
       produces:
@@ -848,7 +1132,7 @@ paths:
       parameters:
       - in: "body"
         name: "body"
-        description: "Ams formated messages containing results for deployment requests"
+        description: "Ams formatted messages containing results for deployment requests"
         required: true
         schema:
           $ref: "#/definitions/AmsPending"
@@ -1794,6 +2078,12 @@ definitions:
         - "private_key_jwt"
         - "none"
         description: "Authentication method for token endpoint, oidc specific"
+      application_type:
+        type: "string"
+        enum:
+        - "WEB"
+        - "NATIVE"
+        description: "Application type of the service, oidc specific"
       token_endpoint_auth_signing_alg:
         type: "string"
         enum:
@@ -1818,7 +2108,7 @@ definitions:
         description: "Uri containing public key for the token endpoint, oidc specific"
       country:
         type: "string"
-        description: "Country of the organisation of the service"
+        description: "Country of the service"
       website_url:
         type: "string"
         description: "Website Url containing information about the service"
@@ -1856,7 +2146,7 @@ definitions:
         minimum: 0
         maximum: 3600
         description: "oidc specific"
-      code_of_condact_field:
+      code_of_conduct_field:
         type: "boolean"
         description: "There could be multiple code of contact fields with different depending on the tenant some of them might be required to be true."
   Tenants:
@@ -1889,7 +2179,7 @@ definitions:
       form_config:
         type: "object"
         properties:
-          code_of_condact:
+          code_of_conduct:
             type: "object"
             properties:
               title:
@@ -1942,6 +2232,10 @@ definitions:
             items:
               type: "string"
           token_endpoint_auth_method:
+            type: "array"
+            items:
+              type: "string"
+          application_type:
             type: "array"
             items:
               type: "string"
@@ -2065,6 +2359,12 @@ definitions:
         - "private_key_jwt"
         - "none"
         description: "Authentication method for token endpoint, oidc specific"
+      application_type:
+        type: "string"
+        enum:
+        - "WEB"
+        - "NATIVE"
+        description: "Application type of the service, oidc specific"
       token_endpoint_auth_signing_alg:
         type: "string"
         enum:
@@ -2127,7 +2427,7 @@ definitions:
         minimum: 0
         maximum: 3600
         description: "oidc specific"
-      code_of_condact_field:
+      code_of_conduct_field:
         type: "boolean"
         description: "There could be multiple code of contact fields with different depending on the tenant some of them might be required to be true."
   Services:
@@ -2173,6 +2473,20 @@ definitions:
             owned:
               type: "boolean"
               description: "True if user is a member of the service owners group"
+            owners:
+              type: "array"
+              items: 
+                type: "string"
+              description: "An array containing the email of the owners of the service"
+            organization_name:
+              type: "string"
+              description: "The name of the organization the service blongs to."
+            country:
+              type: string
+              description: "The country of the service"
+            website_url:
+              type: "string"
+              description: "Website Url containing information about the service"
             notification:
               type: "boolean"
               description: "True if there is a nitification for the service"
@@ -2230,7 +2544,6 @@ definitions:
         type: "array"
         items:
           type: "object"
-          properties:
           $ref: "#/definitions/Petition"
   BannerAlert:
     type: "object"

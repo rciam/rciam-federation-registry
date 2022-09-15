@@ -32,7 +32,7 @@ export const ProcessingRequest = (props) => {
       <React.Fragment>
       {props.active?
         <div className="loader-container">
-          <h3>{t('proccessing_request')}</h3>
+          <h3>{t('processing_request')}</h3>
           <Spinner animation="border" variant="primary" />
         </div>
       :null}
