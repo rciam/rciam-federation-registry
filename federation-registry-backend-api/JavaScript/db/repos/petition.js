@@ -64,7 +64,16 @@ class PetitionRepository {
     })
   }
 
-
+  async getLastStateId(id){
+    return this.db.oneOrNone(sql.getLastStateId,{id:+id}).then(result=>{
+      if(result){
+        return result.id
+      }
+      else{
+        return null;
+      }
+    })
+  }
 
   async getOwn(id,sub,tenant){
     return this.db.oneOrNone(sql.getOwnPetition,{

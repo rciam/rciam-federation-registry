@@ -133,7 +133,7 @@ const EditService = (props) => {
 
           if(response){
             try{
-              console.log(response.list_items);
+              // console.log(response.list_items);
               if(response.list_items[0].petition_id){
                 if(response.list_items[0].type==='edit'){
                   setPetitionIdRedirect(response.list_items[0].petition_id);
@@ -552,7 +552,7 @@ const ViewService = (props)=>{
       </Alert>
     :null}
     
-    <DeploymentTroubleshooting deploymentState={serviceState}  deploymentError={deploymentError} user={user} setDeploymentError={setDeploymentError} service_id={service_id} setLogout={setLogout}/>
+    <DeploymentTroubleshooting deploymentState={serviceState} setDeploymentState={setServiceState}  deploymentError={deploymentError} user={user} setDeploymentError={setDeploymentError} service_id={service_id} setLogout={setLogout}/>
       {service?
         <React.Fragment>        
           {service.created_at?

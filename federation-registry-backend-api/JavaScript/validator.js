@@ -626,14 +626,27 @@ const serviceValidationRules = (options,req) => {
         }
         
         }).withMessage('Must be an integer in specified range'),
-      body('*.code_challenge_method').optional({checkFalsy:true}).isString().withMessage('Device Code must be a string').custom((value)=> {
-        try{
-          return value.match(reg.regCodeChalMeth)
+      body('*.code_challenge_method').optional().if((value,{req,location,path})=> {return req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).custom((value,{req,location,path})=> {
+        try{          
+          return (!value||value.match(reg.regCodeChalMeth))
         }
         catch(err){
-          return true
+          return false
         }
-      }).withMessage('Device Code invalid value'),
+      }).withMessage('Device Code invalid value').custom((value,{req,location,path})=>{
+        try{
+          let pos = path.match(/\[(.*?)\]/)[1];
+          if(req.body[pos].token_endpoint_auth_method === 'none' && req.body[pos].grant_types.includes('authorization_code')&&!value){
+            return false;
+          }
+          else{
+            return true;
+          }
+        }
+        catch(err){
+          return false;
+        }
+      }).withMessage('PKCE must be enabled when no authentication is selected for the authorization code grant type'),
       body('*.allow_introspection').customSanitizer(value => {
         if((typeof(value)!=="boolean")){
           return false;

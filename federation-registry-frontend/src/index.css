@@ -672,6 +672,14 @@ code {
 .pkce-tooltip svg {
   margin-right:0.3rem;
 }
+
+.reuse-warning {
+  margin-top:0rem;
+  margin-bottom:0.5rem;
+}
+.reuse-warning a {
+  color:#775a03;
+}
 .mb-3 .text-muted {
   margin-top: -0.6rem;
 }
@@ -848,16 +856,70 @@ textarea {
 .checkbox-edited {
   padding-left:1.9rem!important;
 }
+.checkbox-more-info-changed {
+  margin-bottom: 1rem;
+}
+.deployment-troubleshooting-alert {
+  margin-top:1rem;
+}
 
 .select-container {
   display: inline-block;
 }
 
+.input-list-table thead {
+  border-top-left-radius: 25rem;
+}
 
 
+.input-list-table {
+  border:1px solid #9e9e9e!important;
+  border-radius:6px;
+}
 
+.input-list-table td, .input-list-table th {
+  border-left:1px solid #9e9e9e!important;
+  border-top:1px solid #9e9e9e!important;
+}
 
+.input-list-table th {
+  border-top: none;
+}
 
+.input-list-table thead {
+  border:none!important;
+}
+.input-list-table thead th:first-child {
+  border-left:none!important;
+
+}
+.input-list-table thead th {
+  border-top:none!important;
+}
+.input-list-table thead th:last-child {
+  border-right: none!important;
+}
+.input-list-table td:first-child, .input-list-table th:first-child {
+   border-left: none;
+}
+.input-list-table tbody tr:last-child td:first-child {
+  border-left:none!important;
+}
+
+.input-list-table tbody tr td:first-child {
+  border-left:none!important;
+  
+}
+.input-list-table tbody tr td:last-child {
+  border-right:none!important;
+}
+.input-list-table tbody tr:last-child td {
+  border-bottom:none!important;
+}
+
+.input-list-table-disabled tr:first-child td {
+  border-top:none!important;
+}
 
 
 
@@ -1394,6 +1456,9 @@ tbody tr td:last-child {
   cursor: pointer;
   color: #007bff;
   text-decoration: none;
+}
+.cursor-pointer {
+  cursor: pointer!important;
 }
 
 .edit-tabs {

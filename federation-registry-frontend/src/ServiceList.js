@@ -102,7 +102,7 @@ const ServiceList= (props)=> {
 
 
   useEffect(()=>{
-     generateFilerString();
+     generateFilterString();
      getServices();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[activePage,filters]);
@@ -135,6 +135,21 @@ const ServiceList= (props)=> {
     setSearchInputString('');
     setSearchParams();
   }
+
+  const resetSearchFilter = () => {
+    setFilters({
+      ...filters,
+      searchString:"",
+      searchOwnerString:"",
+      createdAfterString:"",
+      createdBeforeString:"",
+      tagString:""
+    });
+    setSearchInputString('');
+    setSearchParams();
+  }
+
+  
   const setSearchParams = () => {
     let params = new URLSearchParams(location.search);
 
@@ -178,7 +193,7 @@ const ServiceList= (props)=> {
     
   }
 
-  const generateFilerString = ()=> {
+  const generateFilterString = ()=> {
     let filterString='';
     if(filters.searchString){
       filterString = filterString + '&search_string=' + filters.searchString;
@@ -262,7 +277,7 @@ const ServiceList= (props)=> {
   // Get data, to create Service List
   const getServices = ()=> {
     setLoadingList(true);
-    fetch(config.host+'tenants/'+tenant_name+'/services/list?page='+activePage+'&limit='+pageSize+generateFilerString(), {
+    fetch(config.host+'tenants/'+tenant_name+'/services/list?page='+activePage+'&limit='+pageSize+generateFilterString(), {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -310,7 +325,7 @@ const ServiceList= (props)=> {
 
 
   const exportServicesToCsv = ()=> {
-    fetch(config.host+'tenants/'+tenant_name+'/services/list?'+(generateFilerString().length>0?generateFilerString().slice(1):""), {
+    fetch(config.host+'tenants/'+tenant_name+'/services/list?'+(generateFilterString().length>0?generateFilterString().slice(1):""), {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -513,9 +528,8 @@ const ServiceList= (props)=> {
           <div>
             <Alert variant='primary' className="invitation_alert">
               {requestReviewCount>1?'There are ':'There is '} <span>{requestReviewCount}</span>{' '}
-              request{requestReviewCount>1?'s':''} awaiting reviewal click
-                Click{' '}
-               <span className="alert_fake_link_primary" onClick={()=>{setExpandFilters(!expandFilters); setFilters({...filters,showRequestReview:true}); setShowNotification(false);}}>here</span>
+              request{requestReviewCount>1?'s':''} awaiting reviewal click{' '}
+               <span className="alert_fake_link_primary" onClick={()=>{setExpandFilters(!expandFilters); setFilters({...filters,showRequestReview:true,showPendingSubFilter:'request_review', waitingDeploymentFilter:false, showPending:true}); setShowNotification(false);}}>here</span>
                 {' '}to find {requestReviewCount>1?'them':'it'} using the requested review filter and submit your review.
             </Alert>
           </div>
@@ -602,7 +616,7 @@ const ServiceList= (props)=> {
                       placement='top'
                       overlay={
                         <Tooltip id={`tooltip-top`}>
-                          Use :owner=username|email to search by owner {user.actions.includes('manage_tags')?'and :tag=tag to search by service tag':''} and (:reg_after or :reg_before) =yyyy/mm/dd   in the Search Input.
+                          Use :owner=username|email to search by owner {user.actions.includes('manage_tags')?'and :tag=tag to search by service tag':''} and (:reg_after or :reg_before) =yyyy/mm/dd to search by registration date in the Search Input.
                         </Tooltip>
                       }
                     >
@@ -672,7 +686,7 @@ const ServiceList= (props)=> {
                   }
                   filterTimeout = setTimeout(function(){setFilters({...filters,searchString:value,tagString:tagString_1,searchOwnerString:userString,createdAfterString:created_after,createdBeforeString:created_before}); } ,1000)}}
                 />
-                <InputGroup.Append role="button" onClick={()=>{setSearchInputString('')}}>
+                <InputGroup.Append role="button" onClick={()=>{resetSearchFilter()}}>
                   <InputGroup.Text><FontAwesomeIcon icon={faTimes}/></InputGroup.Text>
                 </InputGroup.Append>
               </InputGroup>
@@ -773,7 +787,7 @@ const ServiceList= (props)=> {
                   <div className='select-filter-container'>
                       <select value={filters.protocolFilter} onChange={(e)=>{
                           setFilters({...filters,protocolFilter:e.target.value});}}>
-                        <option defaultValue=''>All Protocols</option>
+                        <option defaultValue='' value=''>All Protocols</option>
                         {tenant.form_config.protocol.map((item,index)=>{
                           return <option value={item} key={index}>{item.toUpperCase()}</option>
                         })}
@@ -805,7 +819,7 @@ const ServiceList= (props)=> {
               <React.Fragment>
                 {services.length>=1?services.map((item,index)=>{
                     return(
-                      <TableItem service={item} key={index}  setConfirmationData={setConfirmationData} getServices={getServices} setSearchInputString={setSearchInputString} setTagString={(value)=>{setFilters({...filters,tagString:value })}}/>
+                      <TableItem service={item} key={index}  setConfirmationData={setConfirmationData} getServices={getServices} filters={filters} setFilters={setFilters} setFilter={(filter,value)=>{let temp_filters={...filters}; temp_filters[filter]=value;  setFilters({...temp_filters})}} setSearchInputString={setSearchInputString} setExpandFilters={setExpandFilters} setTagString={(value)=>{setFilters({...filters,tagString:value })}}/>
                     )
                 }):<tr><td></td><td>{t('no_services')}</td><td></td></tr>}
                 {loadingList?
@@ -858,7 +872,7 @@ function TableItem(props) {
               </Tooltip>
             }
           >
-            <Badge className="status-badge" variant={props.service.integration_environment==='development'?'secondary':props.service.integration_environment==='demo'?'dark':props.service.integration_environment==='production'?'info':'warning'}>{capitalWords(props.service.integration_environment==='development'?'dev':props.service.integration_environment==='production'?'prod':props.service.integration_environment)}</Badge>
+            <Badge className="status-badge cursor-pointer" onClick={()=>{props.setFilter('integrationEnvironment',props.service.integration_environment); props.setExpandFilters(true);}} variant={props.service.integration_environment==='development'?'secondary':props.service.integration_environment==='demo'?'dark':props.service.integration_environment==='production'?'info':'warning'}>{capitalWords(props.service.integration_environment==='development'?'dev':props.service.integration_environment==='production'?'prod':props.service.integration_environment)}</Badge>
           </OverlayTrigger>
           </h5>
         </div>
@@ -872,13 +886,22 @@ function TableItem(props) {
         <div className="flex-column">
           <h3 className="petition-title">{props.service.service_name?props.service.service_name:props.service.client_id?props.service.client_id:props.service.metadata_url}</h3>
           <div className="badge-container">
-            {props.service.hasOwnProperty('state')&&props.service.state!==null?<Badge className="status-badge" style={props.service.state==='deployed'?{background:tenant.color}:null} variant={props.service.state==='deployed'?'primary':'danger'}>{props.service.state==='deployed'?t('badge_deployed'):props.service.state==='error'?t('badge_error'):props.service.deployment_type==='delete'?t('badge_deleting'):t('badge_pending')}</Badge>:null}
-            {props.service.type?<Badge className="status-badge" variant="warning">
+            {props.service.hasOwnProperty('state')&&props.service.state==='deployed'?<Badge className="status-badge" style={{background:tenant.color}} variant={'primary'}>{t('badge_deployed')}</Badge>:null}
+            {props.service.hasOwnProperty('state')&&props.service.state==='error'?<Badge className="status-badge cursor-pointer" onClick={()=>{props.setFilter('errorFilter',true); props.setExpandFilters(true);}} variant={'danger'}>{t('badge_error')}</Badge>:null}
+            {props.service.hasOwnProperty('state')&&(props.service.state==='pending'||props.service.state==='waiting-deployment')?
+              <Badge 
+                className="status-badge cursor-pointer" 
+                onClick={()=>{props.setFilters({...props.filters,showPending:false,waitingDeploymentFilter:true}); props.setExpandFilters(true);}} 
+                variant={'danger'}
+              >
+                {props.service.deployment_type==='delete'?t('badge_deleting'):t('badge_pending')}
+              </Badge>:null}
+            {props.service.type?<Badge className="status-badge cursor-pointer" onClick={()=>{props.setFilters({...props.filters,showPending:true,showPendingSubFilter:'pending'}); props.setExpandFilters(true);}} variant="warning">
               {props.service.type==='edit'?t('badge_edit_pending'):props.service.type==='create'?t('badge_create_pending'):t('badge_delete_pending')}
               </Badge>:null}
-            {props.service.outdated&&!props.service.petition_id&&props.service.state==='deployed'?<Badge className="status-badge" variant="danger">Update Required</Badge>:null}
-            {props.service.status==='changes'?<Badge className="status-badge" variant="info">{t('badge_changes_requested')}</Badge>:null}
-            {props.service.status==='request_review'?<Badge className="status-badge" variant="info">Review Requested</Badge>:null}
+            {props.service.outdated&&!props.service.petition_id&&props.service.state==='deployed'?<Badge className="status-badge cursor-pointer"  onClick={()=>{props.setFilter('showOutdated',true); props.setExpandFilters(true); }} variant="danger">Update Required</Badge>:null}
+            {props.service.status==='changes'?<Badge className="status-badge cursor-pointer" variant="info" onClick={()=>{props.setFilters({...props.filters,showPending:true,showPendingSubFilter:'changes'}); props.setExpandFilters(true);}}>{t('badge_changes_requested')}</Badge>:null}
+            {props.service.status==='request_review'?<Badge className="status-badge cursor-pointer" onClick={()=>{props.setFilters({...props.filters,showRequestReview:true,showPendingSubFilter:'request_review',showPending:true}); props.setExpandFilters(true);}} variant="info">Review Requested</Badge>:null}
           </div>
          
           {user.actions.includes('manage_tags')&&props.service.tags?

@@ -34,6 +34,8 @@ import {SimpleInput,CountrySelect,AuthMethRadioList,SelectEnvironment,DeviceCode
 
 const {reg} = require('./regex.js');
 var availabilityCheckTimeout;
+var urlCheckTimeout;
+var urlCheckTimeoutResponse;
 var countries;
 let integrationEnvironment;
 let application_type;
@@ -110,6 +112,7 @@ const ServiceForm = (props)=> {
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
+
 
 
   // Returns true
@@ -257,7 +260,6 @@ const ServiceForm = (props)=> {
             }
             else{
               if(url&&!(url.protocol==='http:'||url.protocol==='https:')){
-                console.log(url.protocol);
                 return this.createError({ message: "Uri must be a url starting with http(s):// " });                              
               }
             }
@@ -348,7 +350,7 @@ const ServiceForm = (props)=> {
       })
     }).when(['token_endpoint_auth_method','grant_types'],{
       is:(token_endpoint_auth_method,grant_types)=> token_endpoint_auth_method==='none'&&grant_types.includes('authorization_code'),
-      then: yup.string().test('extra_validation',"No PKCE can't be combined with no authorization option when authorization code grant type is selected.",function(value){return value})
+      then: yup.string().nullable().test('extra_validation',"PKCE must be enabled when no authentication is selected for the authorization code grant type.",function(value){return value})
     }),
     allow_introspection:yup.boolean().nullable().when('protocol',{
       is:'oidc',
@@ -899,7 +901,9 @@ const ServiceForm = (props)=> {
                           disabled={disabled}
                           changed={props.changes?props.changes.website_url:null}
                         />
+                        <UrlWarning url={values.website_url} touched={hasSubmitted||touched.website_url}/> 
                      </InputRow>
+
                       <InputRow  moreInfo={tenant.form_config.more_info.service_description} title={t('form_description')} required={true} description={t('form_description_desc')} error={errors.service_description} touched={touched.service_description}>
                         <TextAria
                           value={values.service_description?values.service_description:''}
@@ -954,6 +958,7 @@ const ServiceForm = (props)=> {
                               changed={props.changes?props.changes.organization_url:null}
                             />
                           </InputRow>
+                          
                         </React.Fragment>
                         :null
                       }
@@ -968,6 +973,7 @@ const ServiceForm = (props)=> {
                           disabled={disabled}
                           changed={props.changes?props.changes.policy_uri:null}
                         />
+                        <UrlWarning url={values.policy_uri} touched={hasSubmitted||touched.policy_uri}/>
                       </InputRow>
 
 
@@ -1142,6 +1148,7 @@ const ServiceForm = (props)=> {
                                 name='allow_introspection'
                                 label={t('form_allow_introspection_desc')}
                                 onChange={handleChange}
+                                moreinfo={tenant.form_config.more_info.allow_introspection}
                                 disabled={disabled||tenant.form_config.dynamic_fields.includes('allow_introspection')}
                                 value={values.allow_introspection}
                                 changed={props.changes?props.changes.allow_introspection:null}
@@ -1297,6 +1304,7 @@ const ServiceForm = (props)=> {
                              disabled={disabled}
                              changed={props.changes?props.changes.metadata_url:null}
                             />
+                            <UrlWarning url={values.metadata_url} touched={hasSubmitted||touched.metadata_url}/>
                           </InputRow>
                        </React.Fragment>
                      :null}
@@ -1542,6 +1550,51 @@ const ReviewComponent = (props)=>{
   );
 }
 
+
+
+
+
+const UrlWarning = (props) => {
+  const [active,setActive] = useState(false);
+  
+
+  useEffect(()=>{
+    setActive(false);
+    clearTimeout(urlCheckTimeout);
+    if (props.touched&&props.url&&reg.regSimpleUrl.test(props.url)){      
+      const exists = async (url) => {
+        const result = await fetch(url, { 
+          method: 'HEAD',mode:'no-cors' });
+        return result.ok;      
+      } 
+      urlCheckTimeout = setTimeout(()=>{
+        urlCheckTimeoutResponse = setTimeout(()=>{
+          setActive(true);
+          clearTimeout(urlCheckTimeout);
+        },3000)
+        exists(props.url).then(result=>{
+          clearTimeout(urlCheckTimeoutResponse);
+          setActive(false);
+        }).catch(err=>{        
+          clearTimeout(urlCheckTimeoutResponse);
+          setActive(true)
+        });
+      },3000)
+    }  
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  },[props.url,props.touched]);
+
+  return (
+    <React.Fragment>
+      {active?
+        <div className='pkce-tooltip'>
+          <FontAwesomeIcon icon={faExclamationTriangle}/>
+          Url could not be reached, make sure you have provided a valid url.
+        </div>:null
+      }
+    </React.Fragment>
+  )
+}
 function generateValues(data){
 
 
@@ -1579,6 +1632,7 @@ const  generateInput = (props)=>  {
           {parse(props.field_data.desc)}
         </React.Fragment>
       }
+      moreinfo={props.tenant.form_config.more_info[props.field_data.name]}
       onChange={props.handleChange}
       disabled={props.disabled||(props.field_data.tag==='once'&&props.initialValues[props.field_data.name])}
       value={props.values[props.field_data.name]}
@@ -1606,6 +1660,8 @@ const  generateInput = (props)=>  {
         disabled={props.disabled}
         changed={props.changes?props.changes[props.field_data.name]:null}
       />
+      {props.field_data.tag==='url'?
+       <UrlWarning url={props.values[props.field_data.name]} touched={props.hasSubmitted||props.touched[props.field_data.name]}/>:null}
     </InputRow>
       :null
       }
@@ -1627,6 +1683,7 @@ function capitalWords(array) {
     })
    return return_array
 }
+
 
 
 export default ServiceForm
