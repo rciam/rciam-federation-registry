@@ -1457,6 +1457,9 @@ tbody tr td:last-child {
   color: #007bff;
   text-decoration: none;
 }
+.cursor-pointer {
+  cursor: pointer!important;
+}
 
 .edit-tabs {
   margin-top:1rem

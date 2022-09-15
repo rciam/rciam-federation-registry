@@ -35,6 +35,7 @@ import {SimpleInput,CountrySelect,AuthMethRadioList,SelectEnvironment,DeviceCode
 const {reg} = require('./regex.js');
 var availabilityCheckTimeout;
 var urlCheckTimeout;
+var urlCheckTimeoutResponse;
 var countries;
 let integrationEnvironment;
 let application_type;
@@ -956,7 +957,6 @@ const ServiceForm = (props)=> {
                               disabled={disabled||disabledOrganizationFields.includes('organization_url')}
                               changed={props.changes?props.changes.organization_url:null}
                             />
-                            <UrlWarning url={values.organization_url} touched={hasSubmitted||touched.organization_url}/>
                           </InputRow>
                           
                         </React.Fragment>
@@ -1568,9 +1568,15 @@ const UrlWarning = (props) => {
         return result.ok;      
       } 
       urlCheckTimeout = setTimeout(()=>{
+        urlCheckTimeoutResponse = setTimeout(()=>{
+          setActive(true);
+          clearTimeout(urlCheckTimeout);
+        },3000)
         exists(props.url).then(result=>{
+          clearTimeout(urlCheckTimeoutResponse);
           setActive(false);
         }).catch(err=>{        
+          clearTimeout(urlCheckTimeoutResponse);
           setActive(true)
         });
       },3000)
