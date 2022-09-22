@@ -739,9 +739,21 @@ const ServiceList= (props)=> {
                       </Dropdown>
                     </div>  
                   :
-                  <div className='filter-container' onClick={()=> setFilters({...filters,showPending:!filters.showPending})}>
+                  <div className='filter-container' onClick={()=> {
+                      if(filters.showPending){
+                        setFilters({...filters,showPendingSubFilter:'',waitingDeploymentFilter:false, showPending:false}); }
+                      else{
+                        setFilters({...filters,waitingDeploymentFilter:true,showPendingSubFilter:'', showPending:true});
+                      }
+                    }}>
                     <span>Show Pending</span>
-                    <input type='checkbox' name='filter' checked={filters.showPending} onChange={()=> setFilters({...filters,showPending:!filters.showPending})}/>
+                    <input type='checkbox' name='filter' checked={filters.showPending} onChange={()=> {
+                      if(filters.showPending){
+                        setFilters({...filters,showPendingSubFilter:'',waitingDeploymentFilter:false, showPending:false}); }
+                      else{
+                        setFilters({...filters,waitingDeploymentFilter:true,showPendingSubFilter:'', showPending:true});
+                      }
+                    }}/>
                   </div>
                   }
                  <OverlayTrigger
@@ -887,7 +899,11 @@ function TableItem(props) {
           <h3 className="petition-title">{props.service.service_name?props.service.service_name:props.service.client_id?props.service.client_id:props.service.metadata_url}</h3>
           <div className="badge-container">
             {props.service.hasOwnProperty('state')&&props.service.state==='deployed'?<Badge className="status-badge" style={{background:tenant.color}} variant={'primary'}>{t('badge_deployed')}</Badge>:null}
-            {props.service.hasOwnProperty('state')&&props.service.state==='error'?<Badge className="status-badge cursor-pointer" onClick={()=>{props.setFilter('errorFilter',true); props.setExpandFilters(true);}} variant={'danger'}>{t('badge_error')}</Badge>:null}
+            {props.service.hasOwnProperty('state')&&props.service.state==='error'?<Badge className={"status-badge "+ (user.actions.includes('error_action')?"cursor-pointer":"")} onClick={()=>{
+              if(user.actions.includes('error_action')){
+                props.setFilter('errorFilter',true); props.setExpandFilters(true);
+              }
+            }} variant={'danger'}>{t('badge_error')}</Badge>:null}
             {props.service.hasOwnProperty('state')&&(props.service.state==='pending'||props.service.state==='waiting-deployment')?
               <Badge 
                 className="status-badge cursor-pointer" 
