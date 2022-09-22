@@ -7,6 +7,9 @@ const {db} = require('./db');
 const e = require('express');
 let countryCodes =[];
 var stringConstructor = "test".constructor;
+const fs = require('fs');
+var util = require('util');
+const logFile = './validation/validation.log';
 countryData.forEach(country=>{
   countryCodes.push(country.countryShortCode.toLowerCase());
 });
@@ -103,13 +106,6 @@ const postAgentValidation = () => {
   ]
 }
 
-// name :yup.string().nullable().min(4,t('yup_char_min') + ' ('+4+')').max(36,t('yup_char_max') + ' ('+36+')').required(t('yup_required')),
-// email_body: yup.string().nullable().min(4,t('yup_char_min') + ' ('+4+')').max(4064,t('yup_char_max') + ' ('+4064+')').required(t('yup_required')),
-// cc_emails: yup.array().nullable().of(yup.string().email(object=>{return object.value})),
-// email_subject: yup.string().nullable().min(4,t('yup_char_min') + ' ('+4+')').max(64,t('yup_char_max') + ' ('+64+')').required(t('yup_required')),
-// notify_admins: yup.boolean().nullable().required(t('yup_required')),
-// email_address: yup.string().nullable().email().required(t('yup_required')),
-// contact_types: yup.array().nullable().min(1,t('yup_select_option')).of(yup.string().test("Test contact types","Please select one of the available options",function(contact_type){
 
 const postBannerAlertValidation = () => {
   return [
@@ -209,10 +205,21 @@ const isEmpty = (value) => {
 }
 
 const serviceValidationRules = (options,req) => {
-  const required = (value,req,pos)=>{
+  const append_error = (value,req,pos,field,error) => {
+    req.outdated_errors.push({
+      value:value,
+      msg: error,
+      param: '[' + pos + '].' + field,
+      location: 'body',
+      service_id: req.body[pos].id
+    });
+  }
+
+  const required = (value,req,pos,field)=>{
+    
     if(options.optional){
       if(isEmpty(value)){
-    
+        append_error(value,req,pos,field,field + " is a required attribute");
         req.body[pos].outdated = true;
       }
       return true
@@ -222,9 +229,12 @@ const serviceValidationRules = (options,req) => {
     }
   }
 
-  const requiredOidc = (value,req,pos) => {
+
+
+  const requiredOidc = (value,req,pos,field) => {
       if(options.optional||req.body[pos].protocol!=='oidc'){
         if(isEmpty(value) && req.body[pos].protocol==='oidc'){
+          append_error(value,req,pos,field,field + " is a required attribute");
           req.body[pos].outdated = true;
         }
       return true
@@ -233,19 +243,21 @@ const serviceValidationRules = (options,req) => {
       return isNotEmpty(value) &&(req.body[pos].protocol==='oidc');
       }
   }
-  const optionalError = (error,req,pos) => {
+  const optionalError = (value,req,pos,field,error) => {
     if(options.optional){      
       req.body[pos].outdated = true;
+      append_error(typeof value === 'object'?JSON.stringify(value):value,req,pos,field,error);
     }
     else{
       throw new Error(error);
     }
   }
 
-  const requiredSaml = (value,req,pos) => {
+  const requiredSaml = (value,req,pos,field) => {
     if(options.optional||req.body[pos].protocol!=='saml'){
       if(isEmpty(value)&& req.body[pos].protocol==='saml'){
         req.body[pos].outdated = true;
+        append_error(value,req,pos,field,field + " is a required attribute");
       }
       return true;
     }
@@ -253,12 +265,13 @@ const serviceValidationRules = (options,req) => {
       return isNotEmpty(value)&&(req.body[pos].protocol==='saml');
     }
   }
-  const requiredProduction = (value,env,req,pos) =>{
+  const requiredProduction = (value,env,req,pos,field) =>{
     let error = false;
 
     if(env==="production"&&isEmpty(value)){
       if(options.optional){
         req.body[pos].outdated = true;
+        append_error(value,req,pos,field,field + " is a required attribute for the production environment");
         error = false;
       }else{
         error = true;
@@ -289,9 +302,9 @@ const serviceValidationRules = (options,req) => {
     return [
       body().isArray({min:1}).withMessage('Body must be an array containing at least one service'),
       body('*.tenant').custom((value,{req,location,path})=>{if(options.tenant_param||req.body[path.match(/\[(.*?)\]/)[1]].tenant in config.form){return true}else{return false}}).withMessage('Invalid Tenant'),
-      body('*.service_name').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Service name missing').if((value)=> {return value}).isString().withMessage('Service name must be a string').isLength({min:2, max:256}).withMessage('Service name must be from 2 up to 256 characters'),
+      body('*.service_name').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1],'service_name')}).withMessage('Service name missing').if((value)=> {return value}).isString().withMessage('Service name must be a string').isLength({min:2, max:256}).withMessage('Service name must be from 2 up to 256 characters'),
       body('*.country').custom((value,{req,location,path})=>{
-        return required(value,req,path.match(/\[(.*?)\]/)[1])
+        return required(value,req,path.match(/\[(.*?)\]/)[1],'country')
       }).withMessage('Country code missing').
       customSanitizer(value => {
         if(value){
@@ -307,10 +320,10 @@ const serviceValidationRules = (options,req) => {
           return false
         }
       }).withMessage('Invalid Country Code'),
-      body('*.service_description').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Service Description missing').if((value)=> {return value}).isString().withMessage('Service Description must be a string').isLength({min:1}).withMessage("Service description can't be empty"),
+      body('*.service_description').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1],'service_description')}).withMessage('Service Description missing').if((value)=> {return value}).isString().withMessage('Service Description must be a string').isLength({min:1}).withMessage("Service description can't be empty"),
       body('*.logo_uri').optional({checkFalsy:true}).isString().withMessage('Service Logo must be a string').custom((value)=> value.match(reg.regUrl)).withMessage('Service Logo must be a secure url https://').isLength({max:256}).withMessage("Service logo cant exceed character limit (6000)"),
-      body('*.policy_uri').custom((value,{req,location,path})=>{return requiredProduction(value,req.body[path.match(/\[(.*?)\]/)[1]].integration_environment,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Service Policy Uri missing').if((value)=> {return value}).isString().withMessage('Service Policy Uri must be a string').custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Service Policy Uri must be a url'),
-      body('*.contacts').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Service Contacts missing').if((value)=> {
+      body('*.policy_uri').custom((value,{req,location,path})=>{return requiredProduction(value,req.body[path.match(/\[(.*?)\]/)[1]].integration_environment,req,path.match(/\[(.*?)\]/)[1],'policy_uri')}).withMessage('Service Policy Uri missing').if((value)=> {return value}).isString().withMessage('Service Policy Uri must be a string').custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Service Policy Uri must be a url'),
+      body('*.contacts').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1],'contacts')}).withMessage('Service Contacts missing').if((value)=> {
         return value&&(Array.isArray(value)&&value.length!==0)
       }).isArray({min:1}).withMessage('Service Contacts must be an array').custom((value,{req,location,path})=> {
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
@@ -344,7 +357,7 @@ const serviceValidationRules = (options,req) => {
           }
         }
         if(!success){          
-          optionalError("Contact type missing",req,pos);
+          optionalError(value,req,pos,'contact',"Contact type missing");
           return true;
         }else{
           return true;
@@ -362,7 +375,14 @@ const serviceValidationRules = (options,req) => {
             skip = !(req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc')
         }
         return !skip
-        }).exists({checkFalsy:true}).withMessage('client_id is missing').if(value=>{return value}).isString().withMessage('client_id must be a string').if((value)=>{return(value.constructor === stringConstructor)}).isLength({min:2, max:128}).withMessage('client_id must be between 2 and 128 characters').if(()=>{return options.check_available}).custom((value,{req,location,path})=> {
+        }).exists({checkFalsy:true}).withMessage('client_id is missing').if(value=>{return value}).isString().withMessage('client_id must be a string').if((value)=>{return(value.constructor === stringConstructor)}).isLength({min:2, max:128}).withMessage('client_id must be between 2 and 128 characters').custom((value,{req,location,path})=> {
+          try{          
+            return (!value||value.match(reg.regClientId))
+          }
+          catch(err){
+            return false
+          }
+        }).withMessage('Client Id can contain only numbers, letters and the special characters  \"$-_.+!*\'(),\"').if(()=>{return options.check_available}).custom((value,{req,location,path})=> {
           let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
           return db.service_details_protocol.checkClientId(value,0,0,tenant,req.body[path.match(/\[(.*?)\]/)[1]].integration_environment).then(available=> {
             if(!available){
@@ -452,7 +472,7 @@ const serviceValidationRules = (options,req) => {
           throw new Error(err);
         }
       }),
-      body('*.scope').custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Service redirect_uri missing').if((value,{req,location,path})=> {return value&&value.length>0&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).isArray({min:1}).withMessage('Must be an array').custom((value,success=true)=> {
+      body('*.scope').custom((value,{req,location,path})=>{ return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1],'scope')}).withMessage('Service redirect_uri missing').if((value,{req,location,path})=> {return value&&value.length>0&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).isArray({min:1}).withMessage('Must be an array').custom((value,success=true)=> {
         try{
           value.map((item,index)=>{if(!item.match(reg.regScope)){
             reuse_refresh_token('Invalid Scope Value')
@@ -468,7 +488,7 @@ const serviceValidationRules = (options,req) => {
           }
         }
         return success }).withMessage('Invalid Scope value'),
-      body('*.grant_types').custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Service grant_types missing').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).isArray({min:1}).withMessage('grant_types must be an array').custom((value,{req,location,path})=> {
+      body('*.grant_types').custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1],'grant_types')}).withMessage('Service grant_types missing').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).isArray({min:1}).withMessage('grant_types must be an array').custom((value,{req,location,path})=> {
         let success=true;
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         try{
@@ -529,7 +549,7 @@ const serviceValidationRules = (options,req) => {
               return false
             }
           }).withMessage('Invalid Schema for private key'),
-      body('*.application_type').custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Service application_type is missing').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).custom((value,{req,location,path})=>{
+      body('*.application_type').custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1],'application_type')}).withMessage('Service application_type is missing').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).custom((value,{req,location,path})=>{
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         if(!value||config.form[tenant].application_type.includes(value)){
           
@@ -539,7 +559,7 @@ const serviceValidationRules = (options,req) => {
           return false
         }
       }).withMessage('Invalid application_type value'),
-      body('*.token_endpoint_auth_method').custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Service token_endpoint_auth_method missing').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).custom((value,{req,location,path})=>{
+      body('*.token_endpoint_auth_method').custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1],'token_endpoint_auth_method')}).withMessage('Service token_endpoint_auth_method missing').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).custom((value,{req,location,path})=>{
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         if(!value||config.form[tenant].token_endpoint_auth_method.includes(value)){
           return true;
@@ -551,13 +571,13 @@ const serviceValidationRules = (options,req) => {
           return '';}
           else{return value}
         }).if((value,{req,location,path})=>{
-          return (['private_key_jwt','client_secret_jwt'].includes(req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method))}).custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Service token_endpoint_auth_method missing').if((value,{req,location,path})=> {return isNotEmpty(value)&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).
+          return (['private_key_jwt','client_secret_jwt'].includes(req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method))}).custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1],'token_endpoint_auth_signing_alg')}).withMessage('Service token_endpoint_auth_method missing').if((value,{req,location,path})=> {return isNotEmpty(value)&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).
           custom((value,{req,location,path})=>{
             return config.form[req.params.tenant].token_endpoint_auth_signing_alg.includes(value)}).
             withMessage('Invalid Token Endpoint Signing Algorithm'),
       body('*.id_token_timeout_seconds').customSanitizer(value => {
         return sanitizeInteger(value);
-        }).custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('id_token_timeout_seconds missing').if((value,{req,location,path})=> {return isNotEmpty(value)&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).custom((value,{req,location,path})=> {
+        }).custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1],'id_token_timeout_seconds')}).withMessage('id_token_timeout_seconds missing').if((value,{req,location,path})=> {return isNotEmpty(value)&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).custom((value,{req,location,path})=> {
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         let max = config.form[tenant].id_token_timeout_seconds;
         if(isEmpty(value)||(value<=max&&value>=1)){return true}else{
@@ -565,7 +585,7 @@ const serviceValidationRules = (options,req) => {
         }}),
       body('*.access_token_validity_seconds').customSanitizer(value => {
         return sanitizeInteger(value);
-        }).custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('access_token_validity_seconds missing').if((value,{req,location,path})=> {return isNotEmpty(value)&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).custom((value,{req,location,path})=> {
+        }).custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1],'access_token_validity_seconds')}).withMessage('access_token_validity_seconds missing').if((value,{req,location,path})=> {return isNotEmpty(value)&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).custom((value,{req,location,path})=> {
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         let max = config.form[tenant].access_token_validity_seconds;
         if(isNotEmpty(value)&&value<=max&&value>=1){return true}else{
@@ -653,7 +673,7 @@ const serviceValidationRules = (options,req) => {
         }else{
           return value;
         }
-      }).custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Allow introspection missing').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).custom((value)=> typeof(value)==='boolean').withMessage('Allow introspection must be a boolean').bail(),
+      }).custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1],'allow_introspection')}).withMessage('Allow introspection missing').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).custom((value)=> typeof(value)==='boolean').withMessage('Allow introspection must be a boolean').bail(),
       body('*.generate_client_secret').optional({checkFalsy:true}).custom((value)=> typeof(value)==='boolean').withMessage('Generate client secret must be a boolean'),
       body('*.reuse_refresh_token').customSanitizer(value => {
         if((typeof(value)!=="boolean")){
@@ -679,7 +699,7 @@ const serviceValidationRules = (options,req) => {
           return value;
         }
       }).if((value,{req,location,path})=>{return ((value||!req.body[path.match(/\[(.*?)\]/)[1]].generate_client_secret)&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'&&["client_secret_basic","client_secret_post","client_secret_jwt"].includes(req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method))}).exists({checkFalsy:true}).withMessage('Client secret is missing').if((value)=>{return value}).isString().withMessage('Client Secret must be a string').isLength({min:4,max:256}).withMessage('Out of range'),
-      body('*.entity_id').custom((value,{req,location,path})=>{return requiredSaml(value,req,path.match(/\[(.*?)\]/)[1])}).withMessage('Entity ID is missing').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='saml'}).isString().withMessage('Entity id must be a string').custom((value)=> {
+      body('*.entity_id').custom((value,{req,location,path})=>{return requiredSaml(value,req,path.match(/\[(.*?)\]/)[1],'entity_id')}).withMessage('Entity ID is missing').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='saml'}).isString().withMessage('Entity id must be a string').custom((value)=> {
         try{
           if(value.constructor === stringConstructor){
             if(value.length<4||value.length>256){
@@ -702,7 +722,7 @@ const serviceValidationRules = (options,req) => {
           }
         });
       }),
-      body('*.external_id').optional({checkFalsy:true}).custom((value)=>{if(parseInt(value)){return true}else{return false}}).withMessage('External id must be an integer'),
+      body('*.external_id').optional({checkFalsy:true}).isString().withMessage('Must be a string').isLength({min:1, max:36}),
       body('*.website_url').optional({checkFalsy:true}).isString().withMessage('Website Url must be a string').custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Website Url must be a valid url'),
       body('*.aup_uri').custom((value,{req,location,path})=>{
         let pos = path.match(/\[(.*?)\]/)[1];
@@ -719,7 +739,7 @@ const serviceValidationRules = (options,req) => {
             }
           }
           else if (aup_uri_config.required.includes(integration_environment)){
-            optionalError("aup_uri is missing",req,pos);
+            optionalError(value,req,pos,'aup_uri',"aup_uri is missing");
             return true;
             //throw new Error();
           }
@@ -747,7 +767,7 @@ const serviceValidationRules = (options,req) => {
           // If coc field is required 
           if((extra_fields[extra_field].tag==='coc'||extra_fields[extra_field].tag==='once')&&extra_fields[extra_field].required.includes(integration_environment)){
             if(value&& !(value[extra_field]==='true'||value[extra_field]===true)){
-              optionalError(extra_field+ " field should be enabled",req,pos);
+              optionalError(value,req,pos,extra_field,extra_field+ " field should be enabled");
             }
           }
         }
@@ -776,7 +796,7 @@ const serviceValidationRules = (options,req) => {
         }
         else{
           if(isEmpty(value)){
-            optionalError("organization_id is missing",req,pos);
+            optionalError(value,req,pos,'organization_id',"organization_id is missing");
           }
           else{
             if(typeof(value)==='number'||typeof(parseInt(value))==='number'){
@@ -865,14 +885,30 @@ const changeContacts = (req,res,next) => {
 }
 const validateInternal = (req,res,next) =>{
   const errors = validationResult(req);
-  console.log(errors);
+  let service_ids = [];
   if(!errors.isEmpty()){
+    errors.errors = [...errors.errors,...req.outdated_errors]; 
     errors.errors.forEach((error,index)=>{
+      
       var matches = error.param.match(/\[(.*?)\]/);
       if(typeof(parseInt(matches[1]))=='number'){
+        !service_ids.includes(req.body[matches[1]].id)&&service_ids.push(req.body[matches[1]].id);
+        errors.errors[index].service_id = req.body[matches[1]].id; 
         req.body[matches[1]].outdated = true;
-      }      
+      }  
     });
+    
+    
+
+    let date = new Date(Date.now());
+    fs.appendFileSync(logFile,"\n------------------------------------------------\n");    
+    fs.appendFileSync(logFile, util.inspect(date,{ maxArrayLength: null }));
+    fs.appendFileSync(logFile,"\nTotal Flagged Services: " + service_ids.length );
+    fs.appendFileSync(logFile,"\n------------------------------------------------\n");    
+    fs.appendFileSync(logFile, util.inspect(errors.errors,{ maxArrayLength: null })); 
+    fs.appendFileSync(logFile,"\n");    
+    fs.appendFileSync(logFile,"\n");
+    //console.log(errors);
   }
   next();
 }

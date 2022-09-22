@@ -23,6 +23,7 @@ const {adminAuth,authenticate} = require('./authentication.js');
 function getData(req,res,next) {
   db.service.getAll(req.params.tenant,{},true).then(services=>{
     req.body = services;
+    req.outdated_errors = [];
     //console.log(services);
     next();
   });
@@ -90,7 +91,7 @@ router.get('/tenants/:tenant/services',getServicesValidation(),validate,authenti
     if(req.query.outdated==='true'){
       db.service_state.getOutdatedServices(req.params.tenant).then(async outdated_services=>{
         if(outdated_services){
-          res.status(200).send(outdated_services);
+          res.status(200).send(outdated_services?outdated_services:[]);
           }
         else{
           res.status(200).send([]);
@@ -99,7 +100,7 @@ router.get('/tenants/:tenant/services',getServicesValidation(),validate,authenti
     }
     else {
       db.service.getAll(req.params.tenant,req.query,authorised).then(result=>{
-        res.status(200).send(result);
+        res.status(200).send(result?result:[]);
       }).catch(err=> {
         next(err);
       });
