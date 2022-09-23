@@ -205,7 +205,12 @@ const isEmpty = (value) => {
 }
 
 const serviceValidationRules = (options,req) => {
+  
   const append_error = (value,req,pos,field,error) => {
+    if(!Array.isArray(req.outdated_errors)){
+      req.outdated_errors = [];
+    }
+
     req.outdated_errors.push({
       value:value,
       msg: error,
@@ -216,13 +221,17 @@ const serviceValidationRules = (options,req) => {
   }
 
   const required = (value,req,pos,field)=>{
-    
     if(options.optional){
-      if(isEmpty(value)){
-        append_error(value,req,pos,field,field + " is a required attribute");
-        req.body[pos].outdated = true;
+      try{
+        if(isEmpty(value)){
+          append_error(value,req,pos,field,field + " is a required attribute");
+          req.body[pos].outdated = true;
+        }
+        return true
       }
-      return true
+      catch(err){
+        console.log(err);
+      }
     }
     else{
       return isNotEmpty(value)
@@ -302,7 +311,7 @@ const serviceValidationRules = (options,req) => {
     return [
       body().isArray({min:1}).withMessage('Body must be an array containing at least one service'),
       body('*.tenant').custom((value,{req,location,path})=>{if(options.tenant_param||req.body[path.match(/\[(.*?)\]/)[1]].tenant in config.form){return true}else{return false}}).withMessage('Invalid Tenant'),
-      body('*.service_name').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1],'service_name')}).withMessage('Service name missing').if((value)=> {return value}).isString().withMessage('Service name must be a string').isLength({min:2, max:256}).withMessage('Service name must be from 2 up to 256 characters'),
+      body('*.service_name').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1],'service_name')}).withMessage('Service name missing').if((value,{req,location,path})=> { return value}).isString().withMessage('Service name must be a string').isLength({min:2, max:256}).withMessage('Service name must be from 2 up to 256 characters'),
       body('*.country').custom((value,{req,location,path})=>{
         return required(value,req,path.match(/\[(.*?)\]/)[1],'country')
       }).withMessage('Country code missing').
@@ -722,7 +731,13 @@ const serviceValidationRules = (options,req) => {
           }
         });
       }),
-      body('*.external_id').optional({checkFalsy:true}).isString().withMessage('Must be a string').isLength({min:1, max:36}),
+      body('*.external_id').customSanitizer((value)=>{
+        if(options.sanitize&&typeof value == 'number'){
+          return value.toString();
+        }else{
+          return value;
+        }
+      }).optional({checkFalsy:true}).isString().withMessage('Must be a string').isLength({min:1, max:36}),
       body('*.website_url').optional({checkFalsy:true}).isString().withMessage('Website Url must be a string').custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Website Url must be a valid url'),
       body('*.aup_uri').custom((value,{req,location,path})=>{
         let pos = path.match(/\[(.*?)\]/)[1];
@@ -954,6 +969,7 @@ const validate = (req, res, next) => {
     const extractedErrors = []
     errors.array().map(err => extractedErrors.push({ [err.param]: err.msg }));
     var log ={};
+    console.log(extractedErrors);
     customLogger(req,res,'warn','Failed schema validation',extractedErrors);
     res.status(422).send(extractedErrors);
     return res.end();
