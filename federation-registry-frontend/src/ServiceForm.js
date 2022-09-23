@@ -187,7 +187,7 @@ const ServiceForm = (props)=> {
     website_url:yup.string().nullable().matches(reg.regSimpleUrl,t('yup_url')),
     client_id:yup.string().nullable().when('protocol',{
       is:'oidc',
-      then: yup.string().nullable().min(2,t('yup_char_min') + ' ('+2+')').max(128,t('yup_char_max') + ' ('+128+')').matches(reg.regClientId,'Client Id can contain only numbers, letters and the special characters  \"$-_.+!*\'(),\"').test('testAvailable',t('yup_client_id_available'),function(value){
+      then: yup.string().nullable().min(2,t('yup_char_min') + ' ('+2+')').max(128,t('yup_char_max') + ' ('+128+')').matches(reg.regClientId,'Client Id can contain only numbers, letters and the special characters  "$-_.+!*\'(),"').test('testAvailable',t('yup_client_id_available'),function(value){
         if(props.initialValues.client_id===value && !props.copy){
           return true
         }

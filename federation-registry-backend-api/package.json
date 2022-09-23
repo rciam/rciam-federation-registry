@@ -38,7 +38,7 @@
     "handlebars": "^4.7.7",
     "mz": "^2.7.0",
     "nodemailer": "^6.6.0",
-    "nodemailer-express-handlebars": "^4.0.0",
+    "nodemailer-express-handlebars": "^5.0.0",
     "nodemon": "^2.0.19",
     "openid-client": "^5.0.2",
     "passport": "^0.6.0",
