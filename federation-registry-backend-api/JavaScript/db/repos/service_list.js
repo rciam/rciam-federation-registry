@@ -88,8 +88,8 @@ class ServiceListRepository {
     }
 
     if(req.query.search_string){
-      params.search_filter_services = "AND (service_name ILIKE '%"+req.query.search_string +"%' OR client_id ILIKE '%"+req.query.search_string +"%')";
-      params.search_filter_petitions = "WHERE (service_name ILIKE '%"+req.query.search_string +"%' OR client_id ILIKE '%"+req.query.search_string +"%')";
+      params.search_filter_services = "AND (service_name ILIKE '%"+req.query.search_string +"%' OR client_id ILIKE '%"+req.query.search_string +"%' OR entity_id ILIKE '%"+req.query.search_string+"%')";
+      params.search_filter_petitions = "WHERE (service_name ILIKE '%"+req.query.search_string +"%' OR client_id ILIKE '%"+req.query.search_string +"%' OR entity_id ILIKE '%"+req.query.search_string+"%')";
     }
 
     if(req.query.env){
