@@ -207,8 +207,7 @@ const ServiceForm = (props)=> {
                       method:'GET',
                       credentials:'include',
                       headers:{
-                        'Content-Type':'application/json',
-                        'Authorization': localStorage.getItem('token')
+                        'Content-Type':'application/json'
                       }}).then(response=>{
                         if(response.status===200||response.status===304){
                           return response.json();
@@ -444,8 +443,7 @@ const ServiceForm = (props)=> {
                       method:'GET',
                       credentials:'include',
                       headers:{
-                        'Content-Type':'application/json',
-                        'Authorization': localStorage.getItem('token')
+                        'Content-Type':'application/json'
                       }}).then(response=>{
                         if(response.status===200){
 
@@ -502,9 +500,7 @@ const ServiceForm = (props)=> {
         method: 'POST', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
-        'Content-Type': 'application/json',
-        'Authorization': localStorage.getItem('token')
-        },
+        'Content-Type': 'application/json'  },
         body: JSON.stringify(petition)
       }).then(response=> {
         setAsyncResponse(false);
@@ -540,9 +536,7 @@ const ServiceForm = (props)=> {
         method: 'PUT', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
-        'Content-Type': 'application/json',
-        'Authorization': localStorage.getItem('token')
-        },
+        'Content-Type': 'application/json'  },
         body: JSON.stringify(petition) // body data type must match "Content-Type" header
       }).then(response=> {
         setAsyncResponse(false);
@@ -573,9 +567,7 @@ const ServiceForm = (props)=> {
       method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json',
-      'Authorization': localStorage.getItem('token')
-    }}).then(response=> {
+      'Content-Type': 'application/json'}}).then(response=> {
       setModalTitle(t('request_submit_title'));
       setAsyncResponse(false);
       if(response.status===200){
@@ -599,9 +591,7 @@ const ServiceForm = (props)=> {
           method: 'POST', // *GET, POST, PUT, DELETE, etc.
           credentials: 'include', // include, *same-origin, omit
           headers: {
-          'Content-Type': 'application/json',
-          'Authorization': localStorage.getItem('token')
-          },
+          'Content-Type': 'application/json'},
           body:JSON.stringify({organization_name:data.organization_name,organization_url:data.organization_url,ror_id:data.ror_id})
       }).then(response=>{
         if(response.status===200||response.status===409){
@@ -634,9 +624,7 @@ const ServiceForm = (props)=> {
       method: 'GET',
       credentials: 'include',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': localStorage.getItem('token')
-      }
+        'Content-Type': 'application/json'}
     }).then(response => {
       if(response.status===200){
         return response.json();
@@ -665,9 +653,7 @@ const ServiceForm = (props)=> {
         method: 'PUT', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
-        'Content-Type': 'application/json',
-        'Authorization': localStorage.getItem('token')
-        },
+        'Content-Type': 'application/json'  },
         body:JSON.stringify({comment:comment,type:type})
     }).then(response=> {
         setAsyncResponse(false);

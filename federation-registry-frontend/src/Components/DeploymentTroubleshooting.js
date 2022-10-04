@@ -33,9 +33,7 @@ const DeploymentTroubleshooting = (props) => {
       method: 'PUT', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json',
-      'Authorization': localStorage.getItem('token')
-      }
+      'Content-Type': 'application/json'  }
     }).then(res=> {
 
       if(res.status===200){

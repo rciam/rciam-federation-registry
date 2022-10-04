@@ -10,7 +10,7 @@ var config = require('../config');
 const customLogger = require('../loggers.js');
 const {rejectPetition,approvePetition,changesPetition,getPetition,getOpenPetition,requestReviewPetition} = require('../controllers/main.js');
 const {adminAuth,authenticate} = require('./authentication.js'); 
-
+var CryptoJS = require("crypto-js");
 
 
 // ----------------------------------------------------------
@@ -272,13 +272,25 @@ router.get('/tenants/:tenant/login',(req,res)=>{
   }
 })
 
+// router.get('/tenants/:tenant/logout',(req,res)=>{
+//   var clients = req.app.get('clients');
+//   if(clients[req.params.tenant]){
+//     let id_token = req.cookies.id_token;
+//     res.clearCookie("id_token");
+//     res.clearCookie('access_token');
+//     res.redirect(clients[req.params.tenant].logout_uri+ "&id_token_hint="+ id_token);
+//   }else{
+//     res.redirect(tenant_config[Object.keys(tenant_config)[0]].base_url.split("/"+Object.keys(tenant_config)[0])[0]+'/404');
+//   }
+// })
+
 
 
 // Callback Route
 router.get('/callback/:tenant',(req,res,next)=>{
   var clients = req.app.get('clients');
   clients[req.params.tenant].callback(process.env.REDIRECT_URI+req.params.tenant,{code:req.query.code}).then(async response => {
-    let code = await db.tokens.addToken(response.access_token);
+    let code = await db.tokens.addToken(response.access_token,response.id_token);
     clients[req.params.tenant].userinfo(response.access_token).then(usr_info=>{
     saveUser(usr_info,req.params.tenant);
   }); // => Promise
@@ -303,9 +315,16 @@ router.get('/tokens/:code',(req,res,next)=>{
         if(res){
           await t.tokens.deleteToken(req.params.code).then(deleted=>{
             if(deleted){
-              res.status(200).json({token:response.token});
+              let hash = req.app.get('hash');
+              let access_token_encrypted  = CryptoJS.AES.encrypt(response.token, hash).toString();
+                      
+              res.cookie('access_token',access_token_encrypted, {path:'/',sameSite:'strict',secure:true, httpOnly: true });
+              res.cookie('id_token',response.id_token, {path:'/',sameSite:'strict',secure:true});
+              res.status(200).json({token:response.token,id_token:response.id_token});
             }
-          }).catch(err=>{next(err);})
+          }).catch(err=>{
+            console.log(err);
+            next(err);})
         }
       }).catch(err=>{next(err);})
     })
@@ -367,8 +386,9 @@ router.put('/tenants/:tenant/services/:id/deployment',authenticate,(req,res,next
 router.get('/tenants/:tenant/user',authenticate,(req,res,next)=>{
   try{
     var clients = req.app.get('clients');
-    TokenArray = req.headers.authorization.split(" ");
-    clients[req.params.tenant].userinfo(TokenArray[1]) // => Promise
+
+    let access_token = req.cookies.access_token||req.headers.authorization.split(" ")[1]
+    clients[req.params.tenant].userinfo(access_token) // => Promise
     .then(function (userinfo) {
       let user = userinfo;
       user = generatePreferredUsername(user);
@@ -395,9 +415,13 @@ router.get('/tenants/:tenant/user',authenticate,(req,res,next)=>{
       user.role = req.user.role.name;
       res.end(JSON.stringify({user}));
     }).catch(err=>{
+      res.clearCookie('access_token');
+      res.clearCookie('id_token');
       next(err)});
   }
   catch(err){
+    res.clearCookie('access_token');
+    res.clearCookie('id_token');
     next(err)
   }
 });

@@ -6,15 +6,14 @@ import { useTranslation } from 'react-i18next';
 import { Translation } from 'react-i18next';
 import {tenantContext} from '../context.js';
 import parse from 'html-react-parser';
-
+import { useCookies } from 'react-cookie';
 
 export const Logout = (props) => {
   // const history = useHistory();
+  const [cookies] = useCookies(['access_token', 'id_token']);
   const tenant = useContext(tenantContext);
   const handleClose = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    window.location.assign(tenant.logout_uri);
+    window.location.assign(tenant[0].logout_uri + "&id_token_hint="+cookies.id_token);
   }
   return (
     <Translation>

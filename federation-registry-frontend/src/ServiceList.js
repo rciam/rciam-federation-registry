@@ -247,9 +247,7 @@ const ServiceList= (props)=> {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json',
-      'Authorization': localStorage.getItem('token')
-    }}).then(response=>{
+      'Content-Type': 'application/json'}}).then(response=>{
       if(response.status===200){
         return response.json();
       }else if(response.status===401){
@@ -281,9 +279,7 @@ const ServiceList= (props)=> {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json',
-      'Authorization': localStorage.getItem('token')
-    }}).then(response=>{
+      'Content-Type': 'application/json'}}).then(response=>{
       if(response.status===200||response.status===304){
         return response.json();
       }
@@ -329,9 +325,7 @@ const ServiceList= (props)=> {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json',
-      'Authorization': localStorage.getItem('token')
-    }}).then(response=>{
+      'Content-Type': 'application/json'}}).then(response=>{
       if(response.status===200||response.status===304){
         return response.json();
       }
@@ -433,8 +427,7 @@ const ServiceList= (props)=> {
         method: 'PUT', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': localStorage.getItem('token')
+          'Content-Type': 'application/json'
         },
         body:JSON.stringify({service_id:service_id,type:'delete'})
       }).then(response=> {
@@ -461,8 +454,7 @@ const ServiceList= (props)=> {
         method: 'POST', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': localStorage.getItem('token')
+          'Content-Type': 'application/json'
         },
         body:JSON.stringify({service_id:service_id,type:'delete'})
       }).then(response=> {
@@ -492,9 +484,7 @@ const ServiceList= (props)=> {
       method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json',
-      'Authorization': localStorage.getItem('token')
-    }}).then(response=> {
+      'Content-Type': 'application/json'}}).then(response=> {
       setResponseTitle(t('request_cancel_title'));
       setAsyncResponse(false);
       getServices();

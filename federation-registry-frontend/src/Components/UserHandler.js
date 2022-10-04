@@ -28,21 +28,19 @@ export const UserHandler = () => {
         method: 'GET', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
-        'Content-Type': 'application/json',
-        'Authorization': localStorage.getItem('token')
+        'Content-Type': 'application/json'
       }}).then( response=>{
             if(response.status===200){return response.json();}
             else {return false}
           }).then(response=> {
-           //localStorage.setItem('user', response.user);  
           if(response){
             setUser(response.user);           
           }
           else{
             
             if(location.pathname.split('/')[2]==='home'){
-              localStorage.removeItem('token');
-              history.push("/"+tenant_name+'/home')
+              history.push("/"+tenant_name+'/home');    
+              history.go();
             }
             else{
               setLogout(true);

@@ -12,9 +12,12 @@ import Dropdown from 'react-bootstrap/Dropdown';
 import { useTranslation } from 'react-i18next';
 import {useHistory} from "react-router-dom";
 import {userContext,tenantContext} from './context.js';
+import { useCookies } from 'react-cookie';
+
 
 export const Header= (props)=> {
     const tenant = useContext(tenantContext);
+
     return(
 
       <div className={"header" + (props.alertBar?' alert_bar_displacement':'')}>
@@ -41,6 +44,7 @@ export const NavbarTop = (props)=>{
   const { t, i18n } = useTranslation();
   const [admin,setAdmin] = useState(false);
   const tenant = useContext(tenantContext);
+  const [cookies] = useCookies(['access_token', 'id_token']);
 
 
   useEffect(()=>{
@@ -49,6 +53,9 @@ export const NavbarTop = (props)=>{
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[user]);
+
+  
+
   return (
     <React.Fragment>
     {tenant[0]?
@@ -77,9 +84,8 @@ export const NavbarTop = (props)=>{
             {t('nav_link_userinfo')}
             </Dropdown.Item>
             <Dropdown.Item onClick={()=>{
-              localStorage.removeItem('token');
-              window.location.assign(tenant[0].logout_uri);
-            }}>
+              window.location.assign(tenant[0].logout_uri + "&id_token_hint="+cookies.id_token);
+              }}>
               {t('logout')}<FontAwesomeIcon icon={faSignOutAlt}/>
             </Dropdown.Item>
           </DropdownButton>):(
