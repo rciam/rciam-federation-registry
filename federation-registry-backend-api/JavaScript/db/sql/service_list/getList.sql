@@ -35,5 +35,5 @@ SELECT  json_agg(json_build_object('outdated',foo.outdated,'service_id',foo.serv
       LEFT JOIN organizations USING (organization_id)
     ${select_own_petition:raw} ${owner_filter_petition:raw} ${tags_filter_petitions:raw}
   ) as bar ${search_filter_petitions:raw} ${orphan_filter_petitions:raw} 
-  ORDER BY last_edited DESC LIMIT ${limit} OFFSET ${offset}
+  ORDER BY last_edited DESC ${limit:raw} OFFSET ${offset}
 ) AS foo GrOup By full_count,outdated_count,request_review_count

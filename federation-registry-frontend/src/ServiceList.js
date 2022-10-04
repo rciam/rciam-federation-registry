@@ -355,22 +355,29 @@ const ServiceList= (props)=> {
   const createCsv = (exportedServices) => {
     var csv =
       "Country,Organization,Service Name, Service Url, Service Managers, Integration Date, Last Update Date\n";
-      exportedServices.forEach((service) => {
-      csv += service.country + ",";
-      csv += service.organization_name + ",";
-      csv += service.service_name + ",";
-      csv += service.website_url + ",";
-      csv += service.owners.join(" ") + ",";
-      //csv += Array.isArray(service.owners)?(service.owners.join(" ") + ","):[];
-      csv += service.created_at + ",";
-      csv += service.last_edited + ",";
-      csv += "\n";
+      console.log(exportedServices.length);
+      exportedServices.forEach((service,index) => {
+        console.log(index);
+      try{
+        csv += '"' + (service.country?service.country:' ') + '",';
+        csv += '"' + (service.organization_name?service.organization_name:' ') + '",';
+        csv += '"' + (service.service_name?service.service_name:' ') + '",';
+        csv += '"' + (service.website_url?service.website_url:' ') + '",';
+        csv += '"' + (Array.isArray(service.owners)?service.owners.join(" "):'Ownerless') + '",';
+        csv += '"' + (service.created_at?service.created_at:' ') + '",';
+        csv += '"' + (service.last_edited?service.last_edited:' ') + '",';
+        csv += "\n";
+      }
+      catch(err){
+        console.log(err);
+      }
+      
     });
 
     var hiddenElement = document.createElement("a");
-    hiddenElement.href = "data:text/csv;charset=utf-8," + encodeURI(csv);
+    hiddenElement.href = "data:text/csv;charset=utf-8," + encodeURI(csv).replaceAll('#', '%23');
     hiddenElement.target = "_blank";
-
+    console.log("data:text/csv;charset=utf-8," + encodeURI(csv));
     //provide the name for the CSV file to be downloaded
     hiddenElement.download = "ServiceExport.csv";
     hiddenElement.click();

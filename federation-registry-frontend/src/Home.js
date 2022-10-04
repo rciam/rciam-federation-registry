@@ -67,7 +67,8 @@ const Home = ()=> {
        method: 'PUT', // *GET, POST, PUT, DELETE, etc.
        credentials: 'include', // include, *same-origin, omit
        headers: {
-       'Content-Type': 'application/json'}
+       'Content-Type': 'application/json'},
+       body: JSON.stringify({code:localStorage.getItem('invitation')})
      }).then( response=>{
            if(response.status===406){return response.json();}
            else if(response.status!==200){return true}
