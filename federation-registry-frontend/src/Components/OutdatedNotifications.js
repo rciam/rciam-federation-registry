@@ -42,8 +42,7 @@ const OutdatedNotifications = () =>{
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json',
-      'Authorization': localStorage.getItem('token'),
+      'Content-Type': 'application/json'
       }
     }).then(response=>{
         if(response.status===200){
@@ -80,8 +79,7 @@ const OutdatedNotifications = () =>{
       method: 'PUT', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json',
-      'Authorization': localStorage.getItem('token'),
+      'Content-Type': 'application/json'
       },
       body: JSON.stringify({integration_environment:integrationEnvironment})
     }).then(response=>{

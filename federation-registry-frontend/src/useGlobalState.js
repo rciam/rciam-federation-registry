@@ -38,7 +38,6 @@ const useGlobalState = () => {
     dispatch({
       type: SET_LOG_STATE,
       payload: {
-        log_state,
         tenant
       }
     });

@@ -1,7 +1,6 @@
 import React,{useState, useEffect} from 'react';
 import {useParams} from "react-router-dom";
 import config from '../config.json';
-import useGlobalState from '../useGlobalState.js';
 import {LoadingPage} from './LoadingPage.js';
 
 export const Callback = () => {
@@ -9,7 +8,9 @@ export const Callback = () => {
   let {tenant_name} = useParams();
   let {code} = useParams();
   const [loading,setLoading] = useState(true);
-  const globalState = useGlobalState();
+
+
+
 
   useEffect(()=>{
     getToken(code);
@@ -32,12 +33,7 @@ export const Callback = () => {
       }
     }).then(response=>{
       if(response){
-        localStorage.setItem('token','Bearer '+response.token);
-        globalState.setLogState({
-          log_state:true
-        });
         setLoading(false);
-
       }
     });
   }

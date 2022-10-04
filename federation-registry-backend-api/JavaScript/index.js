@@ -5,6 +5,7 @@ const express = require('express');
 const {db} = require('./db');
 var config = require('./config');
 const cors = require('cors');
+var CryptoJS = require("crypto-js");
 var winston = require('winston');
 var expressWinston = require('express-winston');
 const {Issuer,custom} = require('openid-client');
@@ -22,6 +23,7 @@ custom.setHttpOptionsDefaults({
   timeout: 20000,
 });
 
+var hash = CryptoJS.SHA256(process.env.TOKEN_KEY).toString(CryptoJS.enc.Base64);
 let whitelist = process.env.CORS.split(' ');
 var corsOptions = {
     origin: function (origin, callback) {
@@ -39,6 +41,9 @@ var corsOptions = {
 }
 
 const app = express();
+
+
+app.set('hash',hash);
 
 db.tenants.getInit().then(async tenants => {
   for (const tenant of tenants){

@@ -63,9 +63,7 @@ export const HistoryRequest = () =>{
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json',
-      'Authorization': localStorage.getItem('token')
-    }}).then(response=>{
+      'Content-Type': 'application/json'}}).then(response=>{
         if(response.status===200){
           return response.json();
         }
@@ -88,8 +86,7 @@ export const HistoryRequest = () =>{
             method: 'GET', // *GET, POST, PUT, DELETE, etc.
             credentials: 'include', // include, *same-origin, omit
             headers: {
-            'Content-Type': 'application/json',
-            'Authorization': localStorage.getItem('token')
+            'Content-Type': 'application/json'
           }}).then(response=>{
               if(response.status===200){
                 return response.json();
@@ -179,9 +176,7 @@ export const HistoryList = (props) => {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json',
-      'Authorization': localStorage.getItem('token')
-    }}).then(response=>{
+      'Content-Type': 'application/json'}}).then(response=>{
       if(response.status===200){
         return response.json();
       }

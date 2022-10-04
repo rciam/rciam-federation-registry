@@ -99,8 +99,7 @@ export function OrganizationField(props){
               method:'GET',
               credentials:'include',
               headers:{
-                'Content-Type':'application/json',
-                'Authorization': localStorage.getItem('token')
+                'Content-Type':'application/json'
               }
             }).then(response=>{
               if(response.status===200||response.status===304){
@@ -175,7 +174,7 @@ export function OrganizationField(props){
 
             
           }
-        ).catch((err)=>{console.log(err); alert('Error')});
+        ).catch((err)=>{console.log(err);});
     }
   }
 

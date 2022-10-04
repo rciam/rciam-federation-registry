@@ -46,8 +46,7 @@ const ManageTags = (props) => {
         method: 'POST', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
-        'Content-Type': 'application/json',
-        'Authorization': localStorage.getItem('token')
+        'Content-Type': 'application/json'
         },
         body:JSON.stringify([singleSelections[0]])
       }).then(response=>{
@@ -80,8 +79,7 @@ const ManageTags = (props) => {
         method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
-        'Content-Type': 'application/json',
-        'Authorization': localStorage.getItem('token')
+        'Content-Type': 'application/json'
         },
         body:JSON.stringify([tagToDelete])
       }).then(response=>{
@@ -113,8 +111,7 @@ const ManageTags = (props) => {
             method:'GET',
             credentials:'include',
             headers:{
-              'Content-Type':'application/json',
-              'Authorization': localStorage.getItem('token')
+              'Content-Type':'application/json'
             }
           }).then(response=>{
             if(response.status===200||response.status===304){

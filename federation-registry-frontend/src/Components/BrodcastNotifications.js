@@ -111,8 +111,7 @@ const BroadcastNotifications = (props) =>{
       method: 'PUT', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json',
-      'Authorization': localStorage.getItem('token'),
+      'Content-Type': 'application/json'
       },
       body: JSON.stringify(values)
     }).then(response=>{
@@ -147,8 +146,7 @@ const BroadcastNotifications = (props) =>{
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json',
-      'Authorization': localStorage.getItem('token'),
+      'Content-Type': 'application/json'
       }
     }).then(response=>{
         if(response.status===200){
@@ -181,8 +179,7 @@ const BroadcastNotifications = (props) =>{
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json',
-      'Authorization': localStorage.getItem('token'),
+      'Content-Type': 'application/json'
       }
     }).then(response=>{
         if(response.status===200){
@@ -208,8 +205,7 @@ const BroadcastNotifications = (props) =>{
       method: 'PUT', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json',
-      'Authorization': localStorage.getItem('token'),
+      'Content-Type': 'application/json'
       },
       body: JSON.stringify(notification)
     }).then(response=>{

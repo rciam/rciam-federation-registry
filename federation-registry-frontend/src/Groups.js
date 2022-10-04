@@ -57,9 +57,7 @@ const GroupsPage = (props) => {
         method: 'GET', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': localStorage.getItem('token')
-        }
+          'Content-Type': 'application/json'}
       }).then(response=>{
 
         if(response.status===200){
@@ -87,9 +85,7 @@ const GroupsPage = (props) => {
         method: 'GET', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': localStorage.getItem('token')
-        }
+          'Content-Type': 'application/json'}
       }).then(response=>{
         if(response.status===200){
           return response.json();
@@ -120,9 +116,7 @@ const GroupsPage = (props) => {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json',
-      'Authorization': localStorage.getItem('token')
-      }}).then(response=>{
+      'Content-Type': 'application/json'}}).then(response=>{
         if(response.status===200){
           return response.json();
         }
@@ -162,9 +156,7 @@ const GroupsPage = (props) => {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json',
-      'Authorization': localStorage.getItem('token')
-      }}).then(response=>{
+      'Content-Type': 'application/json'}}).then(response=>{
         if(response.status===200){
           return response.json();
         }
@@ -193,9 +185,7 @@ const GroupsPage = (props) => {
       method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': localStorage.getItem('token')
-      }
+        'Content-Type': 'application/json'}
     }).then(response=> {
       setSending(false);
       getData()
@@ -208,9 +198,7 @@ const GroupsPage = (props) => {
       method: 'PUT', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': localStorage.getItem('token')
-      }
+        'Content-Type': 'application/json'}
     }).then(response=>{
       if(response.status===200){
         return true;
@@ -239,9 +227,7 @@ const GroupsPage = (props) => {
       method: 'POST', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': localStorage.getItem('token')
-      },
+        'Content-Type': 'application/json'},
       body:JSON.stringify(invitation)
     }).then(response=>{
       if(response.status===200){
@@ -271,9 +257,7 @@ const GroupsPage = (props) => {
       method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': localStorage.getItem('token')
-      },
+        'Content-Type': 'application/json'},
       body:JSON.stringify({sub:sub,group_id:group_id})
     }).then(response=> {
       setSending(false);

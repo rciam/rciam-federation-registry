@@ -5,6 +5,8 @@ const {db} = require('../db');
 const { ResultWithContext } = require('express-validator/src/chain');
 const e = require('express');
 const base64url = require('base64url');
+var CryptoJS = require("crypto-js");
+
 
 function adminAuth(req,res,next){
     if(req.header('X-Api-Key')===process.env.ADMIN_AUTH_KEY){
@@ -61,9 +63,14 @@ function authenticate(req,res,next){
     else{
 
       const data = {'client_secret':clients[req.params.tenant].client_secret}
-      if(req.headers.authorization){
-        TokenArray = req.headers.authorization.split(" ");
-        clients[req.params.tenant].userinfo(TokenArray[1]).then(userinfo => {
+      if(req.headers.authorization||req.cookies.access_token){
+        let access_token = req.cookies.access_token||req.headers.authorization.split(" ")[1];  
+        if(req.cookies.access_token){
+          let hash = req.app.get('hash');
+          access_token = CryptoJS.AES.decrypt(access_token,hash).toString(CryptoJS.enc.Utf8);
+          req.cookies.access_token = access_token 
+        }
+        clients[req.params.tenant].userinfo(access_token).then(userinfo => {
           req.user = userinfo;
           if(req.user.sub){
             db.user_role.getRoleActions(req.user.sub,req.params.tenant).then(role=>{
@@ -72,26 +79,38 @@ function authenticate(req,res,next){
                 next();
               }
               else{
+                res.clearCookie('id_token');
+                res.clearCookie('access_token');
                 res.status(401).send('Unauthenticated Request');
               }
             }).catch((err)=> {
+              res.clearCookie('id_token');
+              res.clearCookie('access_token');
               customLogger(req,res,'warn','Unauthenticated request'+err);
               res.status(401).end();
             });
           }
-          else{res.status(401).end();}
+          else{
+            res.clearCookie('id_token');
+            res.clearCookie('access_token');
+            res.status(401).end();}
         }).catch(err=> {
-          console.log(err);
+          res.clearCookie('id_token');
+          res.clearCookie('access_token');
           res.status(401).end();
         })
       }
       else{
+        res.clearCookie('id_token');
+        res.clearCookie('access_token');
         res.status(401).end();
       }
     }
 
   }
   catch(err){
+    res.clearCookie('id_token');
+    res.clearCookie('access_token');
     customLogger(req,res,'warn','Unauthenticated request'+err);
     next(err);
   }
