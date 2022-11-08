@@ -44,7 +44,6 @@ class UserEduPersonEntitlementRepository {
               return 'success'
           })
           .catch(error => {
-            console.log(error);
               return 'error'
           });
         }else{

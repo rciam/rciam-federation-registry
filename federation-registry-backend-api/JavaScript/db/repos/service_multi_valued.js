@@ -7,12 +7,15 @@ class ServiceMultiValuedRepository {
     this.db = db;
     this.pgp = pgp;
     // set-up all ColumnSet objects, if needed:
+    cs.serviceSamlAttributes = new pgp.helpers.ColumnSet(['owner_id','friendly_name','name','required','name_format']); 
+    cs.updateSamlAttributes = new pgp.helpers.ColumnSet(['?owner_id','friendly_name','name','required','name_format']);
     cs.multi = new pgp.helpers.ColumnSet(['owner_id','value']);
     cs.serviceBooleanPet = new pgp.helpers.ColumnSet(['petition_id','name','value']);
     cs.serviceBooleanSer = new pgp.helpers.ColumnSet(['service_id','name','value']);
     cs.serviceBooleanSerUpd = new pgp.helpers.ColumnSet(['?service_id','?name','value'],{table:'service_boolean'});
     cs.serviceBooleanPetUpd = new pgp.helpers.ColumnSet(['?petition_id','?name','value'],{table:'service_petition_boolean'});
   }
+
 
   async updateServiceBoolean(type,service,id){
     // updateData = [{id:1,state:'deployed'},{id:2,state:'deployed'},{id:3,state:'failed'}];
@@ -42,6 +45,7 @@ class ServiceMultiValuedRepository {
     }
   }
 
+  
 
   async addServiceBoolean(type,service,id){
     let data = [];
@@ -72,6 +76,58 @@ class ServiceMultiValuedRepository {
       return true;
     }
   }
+
+
+async updateSamlAttributes(type,data,service_id){
+  for(const item of data) {
+    item.owner_id = parseInt(service_id);
+   }
+   const query = this.pgp.helpers.update(data,cs.updateSamlAttributes,type==='petition'?'service_petition_saml_attributes':'service_saml_attributes') + ' WHERE v.owner_id = t.owner_id';
+   return this.db.none(query).then(res=>{
+    return true
+   }).catch(error=>{
+    throw error
+   });
+}
+
+
+  async addSamlAttributes(type,data,service_id){
+  
+    for(const item of data) {
+      item.owner_id = service_id;
+     }
+    //console.log(data);
+    const query = this.pgp.helpers.insert(data,cs.serviceSamlAttributes,type==='petition'?'service_petition_saml_attributes':'service_saml_attributes');
+    return this.db.none(query).then(data => {
+        return true
+    })
+    .catch(error => {
+        throw error
+    });
+  }
+
+  async deleteSamlAttributes(type,data,service_id){
+    let attribute_values = [];
+    data.forEach(attribute=>{
+      attribute_values.push(attribute.friendly_name)
+    })
+    
+    if(data&&data.length>0){
+      try{
+        const query = this.pgp.as.format('DELETE FROM ' + (type==='petition'?'service_petition_saml_attributes':'service_saml_attributes') +' WHERE owner_id=$1 AND friendly_name IN ($2:csv)',[+service_id,attribute_values]);
+        return this.db.any(query).then(result =>{
+
+          return result
+        });
+
+      }
+      catch(err){
+        console.log(err);
+      }
+    }
+
+  }
+
 
   async addMultiple(data,table){
     const query = this.pgp.helpers.insert(data,cs.multi,table);

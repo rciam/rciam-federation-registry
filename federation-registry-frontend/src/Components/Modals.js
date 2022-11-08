@@ -1,11 +1,11 @@
-import React,{useContext,useState} from 'react';
+import React,{useContext,useState,useEffect} from 'react';
 import Modal from 'react-bootstrap/Modal';
 import {useHistory,useLocation} from "react-router-dom";
 import Button from 'react-bootstrap/Button';
 import { useTranslation } from 'react-i18next';
 import { Translation } from 'react-i18next';
 import {tenantContext} from '../context.js';
-import parse from 'html-react-parser';
+import Spinner from 'react-bootstrap/Spinner';
 import { useCookies } from 'react-cookie';
 
 export const Logout = (props) => {
@@ -115,10 +115,22 @@ export class SimpleModal extends React.Component {
     )
   }
 }
-
+export const LoadingModal = (props)=>{
+  return (
+    <Modal show={props.active}>
+        <Modal.Header>
+          <Modal.Title>
+              {props.title}
+          </Modal.Title>
+        </Modal.Header>
+              <Modal.Body>
+                <Spinner animation="border" variant="primary" />
+              </Modal.Body>
+    </Modal>
+  )
+}
 
 export const ConfirmationModal = (props) =>{
-  
   return (
     <Modal show={props.active} onHide={()=>{props.close()}}>
         <Modal.Header closeButton>
@@ -129,9 +141,9 @@ export const ConfirmationModal = (props) =>{
 
           {props.message?
               <Modal.Body>
-                {parse(props.message)}
+                {props.message}
               </Modal.Body>
-              :null
+              :""
           }
 
         <Modal.Footer>

@@ -57,7 +57,8 @@ const calcDiff = (oldState,newState,tenant) => {
       },
       dlt:{},
       update:{
-        service_boolean:{}
+        service_boolean:{},
+        requested_attributes:[]
       },
       details:{}
     };
@@ -115,6 +116,18 @@ const calcDiff = (oldState,newState,tenant) => {
       edits.add.oidc_redirect_uris = new_values.redirect_uris.filter(x=>!old_values.redirect_uris.includes(x));
       edits.dlt.oidc_redirect_uris = old_values.redirect_uris.filter(x=>!new_values.redirect_uris.includes(x));
     }
+    if(new_values.protocol==='saml'){
+      if(!old_values.requested_attributes){
+        old_values.requested_attributes = [];
+      }
+      if(!new_values.requested_attributes){
+        new_values.requested_attributes = [];
+      }
+      edits.add.requested_attributes = new_values.requested_attributes.filter(x=> !old_values.requested_attributes.some(e=> e.friendly_name === x.friendly_name));
+      edits.dlt.requested_attributes = old_values.requested_attributes.filter(x=> !new_values.requested_attributes.some(e=> e.friendly_name === x.friendly_name));
+      edits.update.requested_attributes = new_values.requested_attributes.filter(x=> old_values.requested_attributes.some(e=> e.friendly_name === x.friendly_name&&(e.required!==x.required||e.name!==x.name)));
+    }
+
     for(var property in formConfig.form[tenant].extra_fields){
       if(formConfig.form[tenant].extra_fields[property].tag==="coc"||formConfig.form[tenant].extra_fields[property].tag==="once"){
         if(property in new_values){

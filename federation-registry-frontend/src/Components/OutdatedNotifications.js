@@ -118,7 +118,7 @@ const OutdatedNotifications = () =>{
       <div className="outdated-notifications-container">
         <Logout logout={logout}/>
         
-        <ConfirmationModal active={confirmationData.active?true:false} close={()=>{setConfirmationData()}} action={()=>{sendNotification(integrationEnvironment); setConfirmationData();}} title={"Are you sure you want to send this notification"} message={"This notification is targeting the owners of outdated services registered in the " +capitalize(integrationEnvironment) + ' environment'} accept={'Yes'} decline={'No'}/>
+        <ConfirmationModal active={confirmationData.active?true:false} close={()=>{setConfirmationData({active:false})}} action={()=>{sendNotification(integrationEnvironment); setConfirmationData({active:false});}} title={"Are you sure you want to send this notification"} message={"This notification is targeting the owners of outdated services registered in the " +capitalize(integrationEnvironment) + ' environment'} accept={'Yes'} decline={'No'}/>
         <ResponseModal return_url={'/'+tenant_name+'/home'} message={responseMessage} modalTitle={responseTitle}/>
         <h1>Send Alert for Outdated Services</h1>
         <p>Send alert to owners of services with oudated configuration of the selected environment.</p>

@@ -1,6 +1,8 @@
 {
-  "host": "http://localhost:5000/",
-  "react": "http://localhost:3000/",
+  "host": {
+    "egi":"http://localhost:5000/",
+    "eosc":"http://localhost:5000/"
+  },
   "basename": "/",
   "testing_instance": true
 }

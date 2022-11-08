@@ -88,8 +88,6 @@ import {faTimes} from '@fortawesome/free-solid-svg-icons';
               </div>
             :null}
             
-            {/* <Header alertBar={showAlertBar} />
-            <NavbarTop alertBar={showAlertBar}/> */}
             <Header alertBar={bannerAlertInfo.length>0} />
             <NavbarTop alertBar={bannerAlertInfo.length>0} />
             <div className="ssp-container main">
