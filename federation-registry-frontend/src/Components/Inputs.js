@@ -1202,7 +1202,7 @@ export  function LogoInput(props){
   )
 }
 
-function MyOverLay(props) {
+export function MyOverLay(props) {
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   const [show,setShow] = useState(false);

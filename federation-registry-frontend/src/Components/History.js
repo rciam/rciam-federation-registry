@@ -59,7 +59,7 @@ export const HistoryRequest = () =>{
   },[petition,oldPetition,tenant])
 
   const getPetition = ()=> {
-    fetch(config.host+'tenants/'+tenant_name+'/petitions/'+petition_id, {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/petitions/'+petition_id, {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -82,7 +82,7 @@ export const HistoryRequest = () =>{
       if(response){
         setPetition(response);
         if(response.metadata.type==='edit'){
-          fetch(config.host+'tenants/'+tenant_name+'/petitions/'+petition_id+'?previous_state=true', {
+          fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/petitions/'+petition_id+'?previous_state=true', {
             method: 'GET', // *GET, POST, PUT, DELETE, etc.
             credentials: 'include', // include, *same-origin, omit
             headers: {
@@ -172,7 +172,7 @@ export const HistoryList = (props) => {
   
 
   const getHistory = ()=> {
-    fetch(config.host+'tenants/'+tenant_name+'/services/'+service_id+'/petitions', {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/services/'+service_id+'/petitions', {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {

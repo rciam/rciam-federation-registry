@@ -243,7 +243,7 @@ const ServiceList= (props)=> {
   }
   const getInvites = () => {
 
-    fetch(config.host+'tenants/'+tenant_name+'/invitations', {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/invitations', {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -275,7 +275,7 @@ const ServiceList= (props)=> {
   // Get data, to create Service List
   const getServices = ()=> {
     setLoadingList(true);
-    fetch(config.host+'tenants/'+tenant_name+'/services/list?page='+activePage+'&limit='+pageSize+generateFilterString(), {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/services/list?page='+activePage+'&limit='+pageSize+generateFilterString(), {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -321,7 +321,7 @@ const ServiceList= (props)=> {
 
 
   const exportServicesToCsv = ()=> {
-    fetch(config.host+'tenants/'+tenant_name+'/services/list?'+(generateFilterString().length>0?generateFilterString().slice(1):""), {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/services/list?'+(generateFilterString().length>0?generateFilterString().slice(1):""), {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -428,7 +428,7 @@ const ServiceList= (props)=> {
   const deleteService = (service_id,petition_id)=>{
     setAsyncResponse(true);
     if(petition_id){
-      fetch(config.host+'tenants/'+tenant_name+'/petitions/'+petition_id, {
+      fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/petitions/'+petition_id, {
         method: 'PUT', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
@@ -455,7 +455,7 @@ const ServiceList= (props)=> {
       });
     }
     else {
-      fetch(config.host+'tenants/'+tenant_name+'/petitions', {
+      fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/petitions', {
         method: 'POST', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
@@ -485,7 +485,7 @@ const ServiceList= (props)=> {
 
   const deletePetition = (id)=>{
     setAsyncResponse(true);
-    fetch(config.host+'tenants/'+tenant_name+'/petitions/'+id, {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/petitions/'+id, {
       method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {

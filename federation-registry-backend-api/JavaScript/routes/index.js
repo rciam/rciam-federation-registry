@@ -10,8 +10,8 @@ var config = require('../config');
 var requested_attributes = require('../tenant_config/requested_attributes.json')
 const customLogger = require('../loggers.js');
 const {rejectPetition,approvePetition,changesPetition,getPetition,getOpenPetition,requestReviewPetition} = require('../controllers/main.js');
-//const {adminAuth,authenticate,clearCookies} = require('./authentication.js'); 
-const {adminAuth,authenticate} = require('./authentication.js'); 
+const {adminAuth,authenticate,clearCookies} = require('./authentication.js'); 
+// const {adminAuth,authenticate} = require('./authentication.js'); 
 var CryptoJS = require("crypto-js");
 
 
@@ -310,9 +310,13 @@ router.get('/tokens/:code',(req,res,next)=>{
             if(deleted){
               let hash = req.app.get('hash');
               let access_token_encrypted  = CryptoJS.AES.encrypt(response.token, hash).toString();
-                      
-              res.cookie('access_token',access_token_encrypted, {path:'/',sameSite:'strict',secure:true, httpOnly: true });
-              res.cookie('id_token',response.id_token, {path:'/',sameSite:'strict',secure:true});
+              try{
+                res.cookie('access_token',access_token_encrypted, {path:'/',domain:req.headers.host.replace( /:[0-9]{0,4}.*/, '' ),sameSite:'Strict',secure:true,httpOnly:true });
+                res.cookie('id_token',response.id_token, {path:'/',domain:req.headers.host.replace( /:[0-9]{0,4}.*/, '' ),sameSite:'Strict',secure:true});
+              }
+              catch(err){
+                console.log(err);
+              }
               res.status(200).json({token:response.token,id_token:response.id_token});
             }
           }).catch(err=>{
@@ -408,13 +412,11 @@ router.get('/tenants/:tenant/user',authenticate,(req,res,next)=>{
       user.role = req.user.role.name;
       res.end(JSON.stringify({user}));
     }).catch(err=>{
-      res.clearCookie('access_token');
-      res.clearCookie('id_token');
+      res = clearCookies(res,req.headers.host);
       next(err)});
   }
   catch(err){
-    res.clearCookie('access_token');
-    res.clearCookie('id_token');
+    res = clearCookies(res,req.headers.host);
     next(err)
   }
 });

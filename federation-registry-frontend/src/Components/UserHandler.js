@@ -24,7 +24,7 @@ export const UserHandler = () => {
   },[]);
 
   const getUser = async (tenant_name)=>{
-    fetch(config.host+'tenants/'+tenant_name+'/user', {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/user', {
         method: 'GET', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {

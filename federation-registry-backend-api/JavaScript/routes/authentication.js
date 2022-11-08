@@ -29,6 +29,12 @@ function actionAuthorization(action){
 
 }
 
+function clearCookies(res,domain){
+  domain = domain.replace( /:[0-9]{0,4}.*/, '' );
+  res.clearCookie('id_token',{domain});
+  res.clearCookie('access_token',{domain});
+  return res;
+}
 
 function decode(jwt) {
   const [headerB64, payloadB64] = jwt.split('.');
@@ -79,38 +85,31 @@ function authenticate(req,res,next){
                 next();
               }
               else{
-                res.clearCookie('id_token');
-                res.clearCookie('access_token');
+                res = clearCookies(res,req.headers.host);                
                 res.status(401).send('Unauthenticated Request');
               }
             }).catch((err)=> {
-              res.clearCookie('id_token');
-              res.clearCookie('access_token');
+              res = clearCookies(res,req.headers.host);
               customLogger(req,res,'warn','Unauthenticated request'+err);
               res.status(401).end();
             });
           }
           else{
-            res.clearCookie('id_token');
-            res.clearCookie('access_token');
+            res = clearCookies(res,req.headers.host);
             res.status(401).end();}
         }).catch(err=> {
-          res.clearCookie('id_token');
-          res.clearCookie('access_token');
+          res = clearCookies(res,req.headers.host);
           res.status(401).end();
         })
       }
       else{
-        res.clearCookie('id_token');
-        res.clearCookie('access_token');
+        res = clearCookies(res,req.headers.host);
         res.status(401).end();
       }
     }
-
   }
   catch(err){
-    res.clearCookie('id_token');
-    res.clearCookie('access_token');
+    res = clearCookies(res,req.headers.host);
     customLogger(req,res,'warn','Unauthenticated request'+err);
     next(err);
   }
@@ -118,4 +117,4 @@ function authenticate(req,res,next){
 }
 
 
-  module.exports = {adminAuth,authenticate,actionAuthorization}
+  module.exports = {adminAuth,authenticate,actionAuthorization,clearCookies}

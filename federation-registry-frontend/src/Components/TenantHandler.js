@@ -16,7 +16,7 @@ export const TenantHandler = () => {
   },[]);
 
   const getTenant = (tenant_name)=>{
-    fetch(config.host+'tenants/'+tenant_name,{
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name,{
       method:'GET',
       credentials:'include',
       headers:{

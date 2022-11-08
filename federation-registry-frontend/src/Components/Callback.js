@@ -18,7 +18,7 @@ export const Callback = () => {
   },[]);
 
   const getToken = (code)=>{
-    fetch(config.host+'tokens/'+code,{
+    fetch(config.host[tenant_name]+'tokens/'+code,{
       method:'GET',
       credentials:'include',
       headers:{

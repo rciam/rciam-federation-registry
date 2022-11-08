@@ -216,7 +216,7 @@ const ServiceForm = (props)=> {
                 else{
                   setCheckingAvailability(true);
                   availabilityCheckTimeout = setTimeout(()=> {
-                    fetch(config.host+'tenants/'+tenant_name+'/check-availability?value='+ value +'&protocol=oidc&environment='+ this.parent.integration_environment+(petition_id?('&petition_id='+petition_id):"")+(service_id?('&service_id='+service_id):""), {
+                    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/check-availability?value='+ value +'&protocol=oidc&environment='+ this.parent.integration_environment+(petition_id?('&petition_id='+petition_id):"")+(service_id?('&service_id='+service_id):""), {
                       method:'GET',
                       credentials:'include',
                       headers:{
@@ -496,7 +496,7 @@ const ServiceForm = (props)=> {
                 }
                 else{
                   availabilityCheckTimeout = setTimeout(()=> {
-                    fetch(config.host+'tenants/'+tenant_name+'/check-availability?value='+ value +'&protocol=saml&environment='+ this.parent.integration_environment+(petition_id?('&petition_id='+petition_id):"")+(service_id?('&service_id='+service_id):""), {
+                    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/check-availability?value='+ value +'&protocol=saml&environment='+ this.parent.integration_environment+(petition_id?('&petition_id='+petition_id):"")+(service_id?('&service_id='+service_id):""), {
                       method:'GET',
                       credentials:'include',
                       headers:{
@@ -553,7 +553,7 @@ const ServiceForm = (props)=> {
     }
     if (diff(petition,props.initialValues)||props.copy){
       setAsyncResponse(true);
-      fetch(config.host+'tenants/'+tenant_name+'/petitions', {
+      fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/petitions', {
         method: 'POST', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
@@ -589,7 +589,7 @@ const ServiceForm = (props)=> {
     }
     if(diff(petition,props.initialValues)){
       setAsyncResponse(true);
-      fetch(config.host+'tenants/'+tenant_name+'/petitions/'+petition_id, {
+      fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/petitions/'+petition_id, {
         method: 'PUT', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
@@ -620,7 +620,7 @@ const ServiceForm = (props)=> {
 
   const deletePetition = ()=>{
     setAsyncResponse(true);
-    fetch(config.host+'tenants/'+tenant_name+'/petitions/'+petition_id, {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/petitions/'+petition_id, {
       method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -644,7 +644,7 @@ const ServiceForm = (props)=> {
 
   const addOrganization = async (data) => {
     if(!data.organization_id){
-      return await fetch(config.host+'tenants/'+tenant_name+'/organizations', {
+      return await fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/organizations', {
           method: 'POST', // *GET, POST, PUT, DELETE, etc.
           credentials: 'include', // include, *same-origin, omit
           headers: {
@@ -677,7 +677,7 @@ const ServiceForm = (props)=> {
   }
 
   const getTags = () =>{
-    fetch(config.host+ 'tenants/' + tenant_name + '/tags/services/' + service_id ,{
+    fetch(config.host[tenant_name]+ 'tenants/' + tenant_name + '/tags/services/' + service_id ,{
       method: 'GET',
       credentials: 'include',
       headers: {
@@ -706,7 +706,7 @@ const ServiceForm = (props)=> {
   const reviewPetition = (comment,type)=>{
       setModalTitle(t('review_'+props.type+'_title'))
       setAsyncResponse(true);
-      fetch(config.host+'tenants/'+tenant_name+'/petitions/'+petition_id+'/review', {
+      fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/petitions/'+petition_id+'/review', {
         method: 'PUT', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
