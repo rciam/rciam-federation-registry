@@ -133,7 +133,10 @@ export const HistoryRequest = () =>{
     {petition&&(petition.metadata.type!=='edit'||changes)?
       <React.Fragment>
         <Alert variant='warning' className='form-alert'>
-         {petition.metadata.status==='approved_with_changes'?"The Reviewer has requested changes to the following":t('history_info_1')}  {petition.metadata.type==='create'?t('registration'):petition.metadata.type==='edit'?t('reconfiguration'):t('deregistration')} {t('history_info_2')}{petition.metadata.status==='approved'?t('history_info_approved'):petition.metadata.status==='reject'?t('history_info_rejected'):petition.metadata.status==='pending'?t('history_info_pending'):""}.
+         {petition.metadata.status==='approved_with_changes'?"The Reviewer has requested changes to the following":t('history_info_1')}
+         {petition.metadata.type==='create'?t('registration'):petition.metadata.type==='edit'?t('reconfiguration'):t('deregistration')} 
+         {t('history_info_2')}
+         {petition.metadata.status==='approved'?t('history_info_approved'):petition.metadata.status==='reject'?t('history_info_rejected'):petition.metadata.status==='pending'?t('history_info_pending'):""}.
         </Alert>
         {petition.metadata.comment?
           <Jumbotron fluid className="jumbotron-comment">
@@ -162,6 +165,8 @@ export const HistoryList = (props) => {
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   let {tenant_name,service_id} = useParams();
+  // eslint-disable-next-line
+  const [user] = useContext(userContext);
 
   useEffect(()=>{
     getHistory();
@@ -225,10 +230,8 @@ export const HistoryList = (props) => {
             <tr key={index}>
               <td>{item.reviewed_at?item.reviewed_at.slice(0,10).split('-').join('/'):t('history_not_reviewed')}</td>
               <td><Badge className="status-badge" variant='info'>{item.type==="create"?t('registration'):item.type==="edit"?t('reconfiguration'):t('deregistration')} {t('history_info_2')}</Badge></td>
-              <td><Badge className="status-badge" variant={item.status==="pending"||item.status==="approved_with_changes"?'warning':item.status==="reject"?'danger':'success'}>{item.status==='reject'?'rejected':item.status}</Badge></td>
-              <td>
-                  <Button variant="secondary" onClick={()=>{history.push("/"+tenant_name+"/services/"+service_id+"/requests/"+item.id+"/history")}}
-                  >
+              <td><Badge className="status-badge" variant={item.status==="pending"||item.status==="approved_with_changes"||item.status==='request_review'?'warning':item.status==="reject"?'danger':'success'}>{item.status==='reject'?'rejected':item.status!=='request_review'?item.status:user.actions.includes('review_petition')?item.status:'pending'}</Badge></td>
+              <td>    <Button variant="secondary" onClick={()=>{history.push("/"+tenant_name+"/services/"+service_id+"/requests/"+item.id+"/history")}}>
                     <FontAwesomeIcon icon={faEye}/>View
                   </Button>
               </td>

@@ -912,7 +912,7 @@ function TableItem(props) {
               </Badge>:null}
             {props.service.outdated&&!props.service.petition_id&&props.service.state==='deployed'?<Badge className="status-badge cursor-pointer"  onClick={()=>{props.setFilter('showOutdated',true); props.setExpandFilters(true); }} variant="danger">Update Required</Badge>:null}
             {props.service.status==='changes'?<Badge className="status-badge cursor-pointer" variant="info" onClick={()=>{props.setFilters({...props.filters,showPending:true,showPendingSubFilter:'changes'}); props.setExpandFilters(true);}}>{t('badge_changes_requested')}</Badge>:null}
-            {props.service.status==='request_review'?<Badge className="status-badge cursor-pointer" onClick={()=>{props.setFilters({...props.filters,showRequestReview:true,showPendingSubFilter:'request_review',showPending:true}); props.setExpandFilters(true);}} variant="info">Review Requested</Badge>:null}
+            {props.service.status==='request_review'&&user.actions.includes('review_petition')?<Badge className="status-badge cursor-pointer" onClick={()=>{props.setFilters({...props.filters,showRequestReview:true,showPendingSubFilter:'request_review',showPending:true}); props.setExpandFilters(true);}} variant="info">Review Requested</Badge>:null}
           </div>
          
           {user.actions.includes('manage_tags')&&props.service.tags?
