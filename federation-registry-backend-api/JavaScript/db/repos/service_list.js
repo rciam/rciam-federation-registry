@@ -169,8 +169,8 @@ class ServiceListRepository {
     else{
       params.limit= "";
     }
-    if(req.query.page&&req.query.page!=1){
-      params.offset = (req.query.page-1) * params.limit;
+    if(req.query.page&&req.query.page!=1&&req.query.limit&&parseInt(req.query.limit)){
+      params.offset = (req.query.page-1) * parseInt(req.query.limit);
     }
     else {
       params.offset = 0;
