@@ -37,7 +37,7 @@ const InvitationsPage = (props) => {
 
   const getInvitations = () => {
     setLoading(true)
-    fetch(config.host+'tenants/'+tenant_name+'/invitations', {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/invitations', {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -70,7 +70,7 @@ const InvitationsPage = (props) => {
 
   const invitationResponse =  (id,action) => {
     setSending(true);
-    fetch(config.host+'tenants/'+tenant_name+'/invitations/'+id+'/'+action, {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/invitations/'+id+'/'+action, {
       method: 'PUT', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {

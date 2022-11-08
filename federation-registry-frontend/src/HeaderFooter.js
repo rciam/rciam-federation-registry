@@ -89,7 +89,7 @@ export const NavbarTop = (props)=>{
             </Dropdown.Item>
           </DropdownButton>):(
           <React.Fragment>
-            <a href={config.host+"tenants/"+(tenant[0]?tenant[0].name:null)+"/login"}><Button className="log-button" variant="outline-primary">{t('login')}</Button></a>
+            <a href={config.host[tenant[0].name]+"tenants/"+(tenant[0]?tenant[0].name:null)+"/login"}><Button className="log-button" variant="outline-primary">{t('login')}</Button></a>
           </React.Fragment>
           )
         }

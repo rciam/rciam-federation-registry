@@ -42,7 +42,7 @@ const ManageTags = (props) => {
 
 
     const addTag = () => {
-      fetch(config.host+'tenants/'+tenant_name+'/tags/services/'+props.service_id , {
+      fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/tags/services/'+props.service_id , {
         method: 'POST', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
@@ -75,7 +75,7 @@ const ManageTags = (props) => {
     
 
     const deleteTag = () => {
-      fetch(config.host+'tenants/'+tenant_name+'/tags/services/'+props.service_id, {
+      fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/tags/services/'+props.service_id, {
         method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
@@ -107,7 +107,7 @@ const ManageTags = (props) => {
     }
 
     const getTags = (searchString) => {
-        fetch(config.host+'tenants/'+tenant_name+'/tags' + (searchString?('?tag='+searchString):''),{
+        fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/tags' + (searchString?('?tag='+searchString):''),{
             method:'GET',
             credentials:'include',
             headers:{

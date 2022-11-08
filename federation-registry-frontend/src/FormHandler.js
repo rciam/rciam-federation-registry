@@ -76,9 +76,10 @@ const EditService = (props) => {
       // eslint-disable-next-line react-hooks/exhaustive-deps
     },[petitionData, service, props.review, editPetition]);
 
+
     const getData = async () => {
       if(service_id){
-        fetch(config.host+'tenants/'+tenant_name+'/services/'+service_id, {
+        fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/services/'+service_id, {
           method: 'GET', // *GET, POST, PUT, DELETE, etc.
           credentials: 'include', // include, *same-origin, omit
           headers: {
@@ -107,7 +108,7 @@ const EditService = (props) => {
         });
       }
       if(service_id&&!petition_id&&!props.review){
-        fetch(config.host+'tenants/'+tenant_name+'/services/list?service_id='+service_id, {
+        fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/services/list?service_id='+service_id, {
           method: 'GET', // *GET, POST, PUT, DELETE, etc.
           credentials: 'include', // include, *same-origin, omit
           headers: {
@@ -152,7 +153,7 @@ const EditService = (props) => {
         });
       }
       if(petition_id){
-        fetch(config.host+'tenants/'+tenant_name+'/petitions/'+petition_id+'?type=open', {
+        fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/petitions/'+petition_id+'?type=open', {
           method: 'GET', // *GET, POST, PUT, DELETE, etc.
           credentials: 'include', // include, *same-origin, omit
           headers: {
@@ -333,7 +334,7 @@ const ViewRequest = (props) => {
 
   const getData = async () => {
     if(service_id){
-      fetch(config.host+'tenants/'+tenant_name+'/services/'+service_id, {
+      fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/services/'+service_id, {
         method: 'GET', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
@@ -360,7 +361,7 @@ const ViewRequest = (props) => {
       });
     }
     if(petition_id){
-      fetch(config.host+'tenants/'+tenant_name+'/petitions/'+petition_id+'?type=open', {
+      fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/petitions/'+petition_id+'?type=open', {
         method: 'GET', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
@@ -466,7 +467,7 @@ const ViewService = (props)=>{
 
   const getData = () => {
     if(service_id){
-      fetch(config.host+'tenants/'+tenant_name+'/services/'+service_id, {
+      fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/services/'+service_id, {
         method: 'GET', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
@@ -497,7 +498,7 @@ const ViewService = (props)=>{
       });
     }
     if(petition_id){
-      fetch(config.host+'tenants/'+tenant_name+'/petitions/'+petition_id+'?type=open', {
+      fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/petitions/'+petition_id+'?type=open', {
         method: 'GET', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
@@ -646,7 +647,7 @@ const CopyService = (props)=> {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
   const getData = () => {
-      fetch(config.host+'tenants/'+tenant_name+'/services/'+props.service_id, {
+      fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/services/'+props.service_id, {
         method: 'GET', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {

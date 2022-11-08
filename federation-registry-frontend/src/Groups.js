@@ -51,9 +51,11 @@ const GroupsPage = (props) => {
     getService();
   }
 
+
+
   const getService = () =>{
     if(!service_id){
-      fetch(config.host+'tenants/'+tenant_name+'/petitions/'+petition_id+'?type=open', {
+      fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/petitions/'+petition_id+'?type=open', {
         method: 'GET', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
@@ -81,7 +83,7 @@ const GroupsPage = (props) => {
       });
     }
     else{      
-      fetch(config.host+'tenants/'+tenant_name+'/services/'+service_id, {
+      fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/services/'+service_id, {
         method: 'GET', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
@@ -112,7 +114,7 @@ const GroupsPage = (props) => {
 
   const getGroupMembers = () => {
     setLoading(true);
-    fetch(config.host+'tenants/'+tenant_name+'/groups/'+group_id+'/members', {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/groups/'+group_id+'/members', {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -152,7 +154,7 @@ const GroupsPage = (props) => {
   }
   const getInvites = () => {
 
-    fetch(config.host+'tenants/'+tenant_name+'/groups/'+group_id+'/invitations', {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/groups/'+group_id+'/invitations', {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -181,7 +183,7 @@ const GroupsPage = (props) => {
 
   const cancelInvitation = (id,group_id)=>{
     setSending(true);
-    fetch(config.host+'tenants/'+tenant_name+'/groups/'+group_id+'/invitations/'+id, {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/groups/'+group_id+'/invitations/'+id, {
       method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -194,7 +196,7 @@ const GroupsPage = (props) => {
 
   const resendInvitation = (id,group_id,email) => {
     setSending(true);
-    fetch(config.host+'tenants/'+tenant_name+'/groups/'+group_id+'/invitations/'+id, {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/groups/'+group_id+'/invitations/'+id, {
       method: 'PUT', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -223,7 +225,7 @@ const GroupsPage = (props) => {
 
   const sendInvitation = (invitation) => {
     setSending(true);
-    fetch(config.host+'tenants/'+tenant_name+'/groups/'+invitation.group_id+'/invitations', {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/groups/'+invitation.group_id+'/invitations', {
       method: 'POST', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -253,7 +255,7 @@ const GroupsPage = (props) => {
 
   const removeMember = (sub,group_id) => {
     setSending(true);
-    fetch(config.host+'tenants/'+tenant_name+'/groups/'+group_id+'/members/'+sub, {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/groups/'+group_id+'/members/'+sub, {
       method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {

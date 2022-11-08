@@ -38,7 +38,7 @@ const OutdatedNotifications = () =>{
   },[]);
 
   const getOutdatedServices = ()=> {
-    fetch(config.host+'tenants/'+tenant_name+'/services?outdated=true', {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/services?outdated=true', {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -75,7 +75,7 @@ const OutdatedNotifications = () =>{
   }
 
   const sendNotification = (notification)=> {
-    fetch(config.host+'tenants/'+tenant_name+'/notifications/outdated', {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/notifications/outdated', {
       method: 'PUT', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
