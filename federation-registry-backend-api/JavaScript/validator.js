@@ -3,6 +3,7 @@ const { body,query, validationResult,param } = require('express-validator');
 const {reg} = require('./regex.js');
 const customLogger = require('./loggers.js');
 var config = require('./config');
+var defaultAttributes = require('./tenant_config/requested_attributes.json');
 const {db} = require('./db');
 const e = require('express');
 let countryCodes =[];
@@ -13,6 +14,7 @@ const logFile = './validation/validation.log';
 countryData.forEach(country=>{
   countryCodes.push(country.countryShortCode.toLowerCase());
 });
+
 
 
 const amsIngestValidation = () => {
@@ -332,6 +334,22 @@ const serviceValidationRules = (options,req) => {
       body('*.service_description').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1],'service_description')}).withMessage('Service Description missing').if((value)=> {return value}).isString().withMessage('Service Description must be a string').isLength({min:1}).withMessage("Service description can't be empty"),
       body('*.logo_uri').optional({checkFalsy:true}).isString().withMessage('Service Logo must be a string').custom((value)=> value.match(reg.regUrl)).withMessage('Service Logo must be a secure url https://').isLength({max:256}).withMessage("Service logo cant exceed character limit (6000)"),
       body('*.policy_uri').custom((value,{req,location,path})=>{return requiredProduction(value,req.body[path.match(/\[(.*?)\]/)[1]].integration_environment,req,path.match(/\[(.*?)\]/)[1],'policy_uri')}).withMessage('Service Policy Uri missing').if((value)=> {return value}).isString().withMessage('Service Policy Uri must be a string').custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Service Policy Uri must be a url'),
+      body('*.requested_attributes').if((value)=> {
+        return value&&(Array.isArray(value)&&value.length!==0)
+      }).isArray().withMessage('Required attributes must be an array').custom((attributes,{req,location,path})=> {
+        try{
+          attributes.map((attribute,index)=>{
+            if(!defaultAttributes.some(e=>e.friendly_name===attribute.friendly_name)){throw new Error("Attribute not supported ("+ attribute.firendly_name+")");}
+            if(attribute.name.length>0){throw new Error("Attribute name must be at least 1 character ("+ attribute.firendly_name+")");}
+            if(attribute.name.length>=512){throw new Error("Attribute name exceeds character limit (512) :("+ attribute.firendly_name+")")}
+            if(typeof(attribute.required)!=='boolean'){throw new Error("Attribute required property must be boolean :("+ attribute.firendly_name+")")}
+            if(attribure.name_format!=="urn:oasis:names:tc:SAML:2.0:attrname-format:uri"){throw new Error("Attribute Name Format property must be 'urn:oasis:names:tc:SAML:2.0:attrname-format:uri' :("+ attribute.firendly_name+")")}
+          });
+        }
+        catch(err){
+          return true
+        }
+      }),
       body('*.contacts').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1],'contacts')}).withMessage('Service Contacts missing').if((value)=> {
         return value&&(Array.isArray(value)&&value.length!==0)
       }).isArray({min:1}).withMessage('Service Contacts must be an array').custom((value,{req,location,path})=> {
@@ -969,7 +987,6 @@ const validate = (req, res, next) => {
     const extractedErrors = []
     errors.array().map(err => extractedErrors.push({ [err.param]: err.msg }));
     var log ={};
-    console.log(extractedErrors);
     customLogger(req,res,'warn','Failed schema validation',extractedErrors);
     res.status(422).send(extractedErrors);
     return res.end();

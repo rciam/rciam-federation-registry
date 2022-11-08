@@ -314,7 +314,6 @@ const ViewRequest = (props) => {
   useEffect(()=>{
       // eslint-disable-next-line react-hooks/exhaustive-deps
     if(petitionData&&service&&!editPetition){
-
       let helper = calcDiff(service,petitionData.petition,tenant[0].form_config,diff);
       let multivalue_attributes = [];
       for (const service_property in service) service[service_property]&&typeof(service[service_property])==='object'&&multivalue_attributes.push(service_property); 

@@ -16,12 +16,20 @@ const {outdatedNotificationsWorker} = require('./functions/outdated_notif.js');
 const bannerAlertRoutes = require('./routes/banner_alerts.js');
 const serviceTagRoutes = require('./routes/service_tags.js');
 const notificationRoutes = require('./routes/notifications.js');
+const utilRoutes = require('./routes/util_routes.js');
+
+
+
+
+
+
 
 let clients= {};
 let tenant_config = {};
 custom.setHttpOptionsDefaults({
   timeout: 20000,
 });
+
 
 var hash = CryptoJS.SHA256(process.env.TOKEN_KEY).toString(CryptoJS.enc.Base64);
 let whitelist = process.env.CORS.split(' ');
@@ -142,6 +150,7 @@ app.use(express.json({ limit: '50mb' }));
 app.use('/tenants/:tenant/banner_alert', bannerAlertRoutes);
 app.use('/tenants/:tenant/tags', serviceTagRoutes);
 app.use('/tenants/:tenant/notifications',notificationRoutes);
+app.use('/util',utilRoutes);
 
 app.use('/', routes.router);
 

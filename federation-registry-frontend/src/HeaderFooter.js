@@ -54,7 +54,6 @@ export const NavbarTop = (props)=>{
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[user]);
 
-  
 
   return (
     <React.Fragment>

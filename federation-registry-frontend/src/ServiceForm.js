@@ -30,10 +30,15 @@ import { useTranslation } from 'react-i18next';
 import parse from 'html-react-parser';
 import countryData from 'country-region-data';
 import {SimpleInput,CountrySelect,AuthMethRadioList,SelectEnvironment,DeviceCode,Select,PublicKey,ListInput,LogoInput,TextAria,ListInputArray,CheckboxList,SimpleCheckbox,ClientSecret,TimeInput,RefreshToken,Contacts,OrganizationField,SimpleRadio} from './Components/Inputs.js'// eslint-disable-next-line
+import { SamlAttributesInput } from './Components/SamlAttributes.js';
+import {ConfirmationModal} from './Components/Modals';
+
+
 
 
 const {reg} = require('./regex.js');
 var availabilityCheckTimeout;
+var metadataUrlLoadTimeout;
 var urlCheckTimeout;
 var urlCheckTimeoutResponse;
 var countries;
@@ -59,8 +64,18 @@ const ServiceForm = (props)=> {
   const [hasSubmitted,setHasSubmitted] = useState(false);
   const [message,setMessage] = useState();
   const [modalTitle,setModalTitle] = useState(null);
+  const [metadataWarning,setMetadataWarning] = useState();
+  const [metadataLoaded,setMetadataLoaded] = useState({
+    supported_attributes:[],
+    unsupported_attributes:[],
+    entity_id:null,
+    metadata_url:null
+  });
+  const [metadataChecked,setMetadataChecked] = useState(props.initialValues.metadata_url);
+  const [metadataLoading,setMetadataLoading] = useState(false)
   const [checkingAvailability,setCheckingAvailability] = useState(false);
   const [checkedId,setCheckedId] = useState(); // Variable containing the last client Id checked for availability to limit check requests
+ // const [loadedMetadata,setLoadedMetadata] = useState(); // Variable containing the last loaded metadata url
   const [checkedEnvironment,setCheckedEnvironment] = useState();
   const [asyncResponse,setAsyncResponse] = useState(false);
   const [formValues,setFormValues] = useState();
@@ -107,9 +122,7 @@ const ServiceForm = (props)=> {
     if(props.initialValues.organization_name){
       setDisabledOrganizationFields(['organization_url']);
     }
-    //console.log(props.initialValues);
     setFormValues(props.initialValues);
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
 
@@ -288,6 +301,12 @@ const ServiceForm = (props)=> {
     }),
     country:yup.string().nullable().test('testCountry','Select one of the available options',function(value){return countries.includes(value)}).required(t('yup_required')),
     service_description:yup.string().nullable().required(t('yup_required')).max(1000,'Exceeded maximum characters (1000)'),
+    requested_attributes: yup.array().nullable().of(yup.object().shape({
+      name:yup.string().nullable().required(t('yup_required')).min(1,t('yup_required')).required(t('yup_required')).max(512,'Exceeded maximum characters (512)'),
+      friendly_name:yup.string().test('testAttributeName','invalid_name',function(friendly_name){
+        return tenant.form_config.requested_attributes.some(e=>e.friendly_name===friendly_name);
+      })
+    })),
     contacts:yup.array().min(1,t('yup_required')).nullable().of(yup.object().shape({
         email:yup.string().email(t('yup_email')).required(t('yup_contact_empty')),
         type:yup.string().required(t('yup_required'))
@@ -319,7 +338,7 @@ const ServiceForm = (props)=> {
           }).required(t('yup_required')),
     scope:yup.array().nullable().when('protocol',{
       is:'oidc',
-      then: yup.array().min(1,t('yup_select_option')).nullable().of(yup.string().min(1,t('yup_scope')).max(256,t('yup_char_max') + ' ('+ 256 +')').matches(reg.regScope,t('yup_scope_reg'))).unique(t('yup_scope_unique')).required(t('yup_required'))
+      then: yup.array().min(1,t('yup_select_option')).nullable().of(yup.string().required("Scope value cannot be empty").min(1,t('yup_scope')).max(256,t('yup_char_max') + ' ('+ 256 +')').matches(reg.regScope,t('yup_scope_reg'))).unique(t('yup_scope_unique')).required(t('yup_required'))
     }),
     grant_types:yup.array().nullable().when('protocol',{
       is:'oidc',
@@ -378,7 +397,45 @@ const ServiceForm = (props)=> {
     }),
     metadata_url:yup.string().nullable().when('protocol',{
       is:'saml',
-      then: yup.string().required(t('yup_required')).matches(reg.regSimpleUrl,'Enter a valid Url')
+      then: yup.string().nullable().required(t('yup_required')).matches(reg.regSimpleUrl,'Enter a valid Url').test('testXml','Invalid Metadata',function(value){
+        // Metadata Url is Already Loaded?
+        setMetadataLoading(false);
+        if(!value||metadataChecked!==value){
+          setMetadataWarning();
+          clearTimeout(metadataUrlLoadTimeout);
+        }        
+        if(value&&value.match(reg.regSimpleUrl)&&metadataChecked!==value&&value!==metadataLoaded.metadata_url){
+          new Promise((resolve,reject)=>{
+            setMetadataLoading(true);
+            setMetadataChecked(value);
+            metadataUrlLoadTimeout = setTimeout(()=> {
+              fetch(config.host[tenant_name]+'util/metadata/'+encodeURIComponent(value), {
+                method:'GET',
+                credentials:'include',
+                headers:{
+                  'Content-Type':'application/json'
+                }}).then(async response=>{
+                  if(response.status===200||response.status===304){
+                    let metadata = await response.json();
+                    setMetadataLoaded(metadata);        
+                  }
+                  else {
+                    setMetadataWarning(response.statusText);
+                  }
+                  setMetadataLoading(false);
+                }).catch(()=>{
+                  setMetadataLoading(false);
+                  resolve(true)});
+            },2000);
+          })
+        }
+        return true
+        
+          
+      
+        
+      })
+    
     }),
     token_endpoint_auth_signing_alg:yup.string().nullable().when(['protocol',"token_endpoint_auth_method"],{
       is:(protocol,token_endpoint_auth_method)=> protocol==='oidc'&&(token_endpoint_auth_method==="private_key_jwt"||token_endpoint_auth_method==="client_secret_jwt"),
@@ -781,6 +838,7 @@ const ServiceForm = (props)=> {
       isSubmitting})=>(
       <div className="tab-panel">
               {showCopyDialog?<CopyDialog service_id={service_id} show={showCopyDialog} toggleCopyDialog={toggleCopyDialog} current_environment={props.initialValues.integration_environment} />:null}
+              
               <ProcessingRequest active={asyncResponse}/>
               {props.user.actions.includes('manage_tags')&&service_id?
                 <div className='service-form-tags-container'>
@@ -1261,6 +1319,37 @@ const ServiceForm = (props)=> {
                     :null}
                     {values.protocol==='saml'?
                       <React.Fragment>
+                        <ConfirmationModal 
+                          active={metadataLoaded.supported_attributes.length>0||(metadataLoaded.entity_id&&(!values.entity_id||values.entity_id!==metadataLoaded.entity_id))?true:false} 
+                          close={()=>{
+                            if(metadataLoaded.supported_attributes.length>0){
+                              setMetadataLoaded({...metadataLoaded,supported_attributes:[]});
+                            }
+                            else if(metadataLoaded.entity_id){
+                              setMetadataLoaded({...metadataLoaded,entity_id:""});
+                            }
+                          }} 
+                          action={()=>{
+                            if(metadataLoaded.supported_attributes.length>0){
+                              setFieldValue('requested_attributes',metadataLoaded.supported_attributes)
+                              setMetadataLoaded({...metadataLoaded,supported_attributes:[]});
+                            }
+                            else{
+                              setFieldValue('entity_id',metadataLoaded.entity_id);
+                              setMetadataLoaded({...metadataLoaded,entity_id:""});
+                            }
+                          }} 
+                          title={
+                            metadataLoaded.supported_attributes.length>0?"Do you wish to load the requested attributes contained in the Metadata Url?":
+                            metadataLoaded.entity_id && !values.entity_id?"Do you wish to use the Entity Id contained in the Metadata Url?":
+                            metadataLoaded.entity_id && metadataLoaded.entity_id!==values.entity_id?"The Metadata Url contains a different Entity Id from the provided, do you wish to replace it?":"" 
+                          } 
+                          message={
+                            metadataLoaded.supported_attributes.length>0&&metadataLoaded.unsupported_attributes.length>0?metadataLoaded.supported_attributes.length+ " out of " + (metadataLoaded.supported_attributes.length+metadataLoaded.unsupported_attributes.length)+ " attributes found are supported and can be added in the service configuration." :
+                            metadataLoaded.entity_id && (!values.entity_id||metadataLoaded.entity_id!==values.entity_id)?"Entity Id: "+metadataLoaded.entity_id:
+                            null } 
+                          accept={'Yes'} 
+                          decline={'No'}/>
                         <InputRow  moreInfo={tenant.form_config.more_info.entity_id} required={true} title={t('form_entity_id')} description={t('form_entity_id_desc')} error={checkingAvailability?null:errors.entity_id} touched={touched.entity_id}>
                           <SimpleInput
                             name='entity_id'
@@ -1289,8 +1378,24 @@ const ServiceForm = (props)=> {
                              onBlur={handleBlur}
                              disabled={disabled}
                              changed={props.changes?props.changes.metadata_url:null}
+                             isloading={values.metadata_url&&metadataLoading?1:0}
                             />
-                            <UrlWarning url={values.metadata_url} touched={hasSubmitted||touched.metadata_url}/>
+                            <UrlWarning url={values.metadata_url} overwriteWarning={metadataWarning} touched={!!values.metadata_url}/>
+                          </InputRow>
+                          <InputRow  moreInfo={tenant.form_config.more_info.scope} title={tenant.form_config.more_info.requested_attributes.label||"Attributes"} required={true} description={"The saml atributes blah blah blah"} error={typeof(errors.scope)==='string'?errors.scope:null} touched={true}>
+                            <SamlAttributesInput
+                              name='requested_attributes'
+                              values={values.requested_attributes?values.requested_attributes:[]}
+                              placeholder={t('form_type_prompt')}
+                              defaultValues= {tenant.form_config.requested_attributes}
+                              errors={errors.requested_attributes}
+                              touched={touched.requested_attributes}
+                              setMetadataLoaded={setMetadataLoaded}
+                              disabled={disabled}
+                              setFieldValue={setFieldValue}
+                              onBlur={handleBlur}
+                              changed={props.changes?props.changes.requested_attributes:null}
+                            />
                           </InputRow>
                        </React.Fragment>
                      :null}
@@ -1541,41 +1646,43 @@ const ReviewComponent = (props)=>{
 
 
 const UrlWarning = (props) => {
-  const [active,setActive] = useState(false);
+  const [active,setActive] = useState(!!props.overwriteWarning);
   
 
   useEffect(()=>{
-    setActive(false);
-    clearTimeout(urlCheckTimeout);
-    if (props.touched&&props.url&&reg.regSimpleUrl.test(props.url)){      
-      const exists = async (url) => {
-        const result = await fetch(url, { 
-          method: 'HEAD',mode:'no-cors' });
-        return result.ok;      
-      } 
-      urlCheckTimeout = setTimeout(()=>{
-        urlCheckTimeoutResponse = setTimeout(()=>{
-          setActive(true);
-          clearTimeout(urlCheckTimeout);
-        },3000)
-        exists(props.url).then(result=>{
-          clearTimeout(urlCheckTimeoutResponse);
-          setActive(false);
-        }).catch(err=>{        
-          clearTimeout(urlCheckTimeoutResponse);
-          setActive(true)
-        });
-      },3000)
-    }  
+    if(!props.overwriteWarning){
+      setActive(false);
+      clearTimeout(urlCheckTimeout);
+      if (props.touched&&props.url&&reg.regSimpleUrl.test(props.url)){      
+        const exists = async (url) => {
+          const result = await fetch(url, { 
+            method: 'HEAD',mode:'no-cors' });
+          return result.ok;      
+        } 
+        urlCheckTimeout = setTimeout(()=>{
+          urlCheckTimeoutResponse = setTimeout(()=>{
+            setActive(true);
+            clearTimeout(urlCheckTimeout);
+          },3000)
+          exists(props.url).then(result=>{
+            clearTimeout(urlCheckTimeoutResponse);
+            setActive(false);
+          }).catch(err=>{        
+            clearTimeout(urlCheckTimeoutResponse);
+            setActive(true)
+          });
+        },1000)
+      }  
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[props.url,props.touched]);
 
   return (
     <React.Fragment>
-      {active?
+      {active||props.overwriteWarning?
         <div className='pkce-tooltip'>
           <FontAwesomeIcon icon={faExclamationTriangle}/>
-          Url could not be reached, make sure you have provided a valid url.
+          {props.overwriteWarning||"Url could not be reached, make sure you have provided a valid url."}
         </div>:null
       }
     </React.Fragment>

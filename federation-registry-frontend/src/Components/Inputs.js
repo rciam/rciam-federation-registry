@@ -95,7 +95,7 @@ export function OrganizationField(props){
             let options = {};
             let exists = false;
             
-            fetch(config.host+'tenants/'+tenant_name+'/organizations?ror=true'+(searchString?("&search_string="+searchString):''),{
+            fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/organizations?ror=true'+(searchString?("&search_string="+searchString):''),{
               method:'GET',
               credentials:'include',
               headers:{
@@ -1219,7 +1219,8 @@ function MyOverLay(props) {
     <Overlay target={props.target.current}  show={show} placement={props.placement?props.placement:'right'}>
       {propsOv => (
         <Tooltip id="overlay-example" placement={propsOv.placement} arrowProps={propsOv.arrowProps} ref={propsOv.ref} style={propsOv.style} outofboundaries={propsOv.outofboundaries} >
-          {props.type==="Added"?t('input_added'):props.type==="Deleted"?t('input_deleted'):props.type==="Edited"?t('input_edited'):null}
+          {props.type==="Added"?t('input_added'):props.type==="Deleted"?t('input_deleted'):props.type==="Edited"?t('input_edited'):props.type}
+
         </Tooltip>
 
       )}
@@ -1280,10 +1281,10 @@ export function ListInput(props){
               <InputGroup className={props.empty&&props.touched?'invalid-input mb-3':'mb-3'}>
                 <Form.Control
                   value={newVal}
-                  onChange={(e)=>{setNewVal(e.target.value)}}
+                  onChange={(e)=>{setNewVal(e.target.value.trim())}}
                   column="true"
                   sm="4"
-                  onBlur={()=>{!props.touched?props.setFieldTouched(props.name,true):console.log('sdf')}}
+                  onBlur={()=>{!props.touched&&props.setFieldTouched(props.name,true)}}
                   type="text"
                   className='col-form-label.sm'
                   placeholder={props.placeholder}
@@ -1352,7 +1353,7 @@ export function Contacts(props){
                       onChange={(e)=>{setNewVal(e.target.value)}}
                       column="true"
                       sm="4"
-                      onBlur={()=>{!props.touched?props.setFieldTouched(props.name,true):console.log('sdf')}}
+                      onBlur={()=>{!props.touched&&props.setFieldTouched(props.name,true)}}
                       type="text"
                       className='col-form-label.sm'
                       placeholder={props.placeholder}

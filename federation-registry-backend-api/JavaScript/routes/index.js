@@ -7,8 +7,10 @@ const {sendMail,sendInvitationMail,sendMultipleInvitations,createGgusTickets,del
 const {db} = require('../db');
 var router = require('express').Router();
 var config = require('../config');
+var requested_attributes = require('../tenant_config/requested_attributes.json')
 const customLogger = require('../loggers.js');
 const {rejectPetition,approvePetition,changesPetition,getPetition,getOpenPetition,requestReviewPetition} = require('../controllers/main.js');
+//const {adminAuth,authenticate,clearCookies} = require('./authentication.js'); 
 const {adminAuth,authenticate} = require('./authentication.js'); 
 var CryptoJS = require("crypto-js");
 
@@ -189,6 +191,9 @@ router.post('/tenants/:tenant/services',adminAuth,tenantValidation(),validate,fo
               if(redirect_uris.length>0){
                 queries.push(t.service_multi_valued.addMultiple(redirect_uris,'service_oidc_redirect_uris'));
               }
+              if(service.protocol==='saml'&&service.requested_attributes&&service.requested_attributes.length>0){
+                queries.push(t.service_multi_values.addSamlAttributes('service',service.requested_attributes,service.id));
+              }
               await t.batch(queries).then(done=>{
                 if(done){
                   if(invitations.length>0){
@@ -226,7 +231,8 @@ router.get('/tenants/:tenant',(req,res,next)=>{
         if(config.restricted_env[req.params.tenant]){
           tenant.restricted_environments = config.restricted_env[req.params.tenant].env;
         }
-        tenant.logout_uri = clients[req.params.tenant].logout_uri
+        tenant.form_config.requested_attributes = requested_attributes;
+        tenant.logout_uri = clients[req.params.tenant].logout_uri;
         res.status(200).json(tenant).end();
       }
       else{
@@ -270,20 +276,7 @@ router.get('/tenants/:tenant/login',(req,res)=>{
   }else{
     res.redirect(tenant_config[Object.keys(tenant_config)[0]].base_url.split("/"+Object.keys(tenant_config)[0])[0]+'/404');
   }
-})
-
-// router.get('/tenants/:tenant/logout',(req,res)=>{
-//   var clients = req.app.get('clients');
-//   if(clients[req.params.tenant]){
-//     let id_token = req.cookies.id_token;
-//     res.clearCookie("id_token");
-//     res.clearCookie('access_token');
-//     res.redirect(clients[req.params.tenant].logout_uri+ "&id_token_hint="+ id_token);
-//   }else{
-//     res.redirect(tenant_config[Object.keys(tenant_config)[0]].base_url.split("/"+Object.keys(tenant_config)[0])[0]+'/404');
-//   }
-// })
-
+});
 
 
 // Callback Route
@@ -690,7 +683,7 @@ router.get('/tenants/:tenant/petitions/:id',authenticate,(req,res,next)=>{
     if(req.query.type==='open'){
       getOpenPetition(req,res,next,db);
     }
-    if(req.query.previous_state){
+    else if(req.query.previous_state){
       db.tx('get-history-for-petition', async t =>{
         await t.petition.getLastStateId(req.params.id).then(last_id=>{
           req.params.id=last_id;

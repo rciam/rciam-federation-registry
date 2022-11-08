@@ -354,23 +354,23 @@ const GroupsPage = (props) => {
                                     args:[member.sub,member.group_id],
                                     message:(member.sub!==user[0].sub?
                                       <React.Fragment>
-                                        <table style={{border:'none'}} className="confirmation-table">
-                                        <tbody>
-                                        <tr>
-                                        <td>username:</td>
-                                        <td>{member.username}</td>
-                                        </tr>
-                                        <tr>
-                                        <td>email:</td>
-                                        <td>{member.email}</td>
-                                        </tr>
-                                        <tr>
-                                        <td>role:</td>
-                                        <td>{member.group_manager?'group_manager':'group_member'}</td>
-                                        </tr>
-                                        </tbody>
-                                        </table>
-                                      </React.Fragment>
+                                          <table style={{border:'none'}} className="confirmation-table">
+                                          <tbody>
+                                          <tr>
+                                          <td>username:</td>
+                                          <td>{member.username}</td>
+                                          </tr>
+                                          <tr>
+                                          <td>email:</td>
+                                          <td>{member.email}</td>
+                                          </tr>
+                                          <tr>
+                                          <td>role:</td>
+                                          <td>{member.group_manager?'Group Manager':'Group Member'}</td>
+                                          </tr>
+                                          </tbody>
+                                          </table>
+                                        </React.Fragment>
                                       :null
                                     ),
                                     title:(member.sub===user[0].sub?'Are you sure you want to leave the owners group?':'Are you sure you want to remove following user from owners group')
@@ -457,21 +457,22 @@ const GroupsPage = (props) => {
                                                     message:
                                                     <React.Fragment>
                                                       <table style={{border:'none'}} className="confirmation-table">
-                                                      {member.username?
-                                                        <tr>
-                                                        <td>username:</td>
-                                                        <td>{member.username}</td>
-                                                        </tr>
-                                                        :null}
-                                                        <tr>
-                                                          <td>email:</td>
-                                                          <td><a href={'mailto:'+(member.email?member.email:member.invitation_email)}>{member.email?member.email:member.invitation_email}</a></td>
-                                                        </tr>
-
-                                                        <tr>
-                                                          <td>role:</td>
-                                                          <td>{member.group_manager?'group_manager':'group_member'}</td>
-                                                        </tr>
+                                                        <tbody>
+                                                          {member.username?
+                                                            <tr>
+                                                            <td>username:</td>
+                                                            <td>{member.username}</td>
+                                                            </tr>
+                                                          :null}
+                                                          <tr>
+                                                            <td>email:</td>
+                                                            <td><a href={'mailto:'+(member.email?member.email:member.invitation_email)}>{member.email?member.email:member.invitation_email}</a></td>
+                                                          </tr>
+                                                          <tr>
+                                                            <td>role:</td>
+                                                            <td>{member.group_manager?'Group Manager':'Group Member'}</td>
+                                                          </tr>
+                                                        </tbody>
                                                       </table>
                                                     </React.Fragment>
                                                     ,
