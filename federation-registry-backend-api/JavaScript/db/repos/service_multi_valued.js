@@ -106,6 +106,18 @@ async updateSamlAttributes(type,data,service_id){
     });
   }
 
+
+  async addSamlAttributesMultiple(data,table){
+    //console.log(data);
+    const query = this.pgp.helpers.insert(data,cs.serviceSamlAttributes,table);
+    return this.db.none(query).then(data => {
+        return true
+    })
+    .catch(error => {
+        throw error
+    });
+  }
+
   async deleteSamlAttributes(type,data,service_id){
     let attribute_values = [];
     data.forEach(attribute=>{

@@ -140,7 +140,6 @@ router.post('/tenants/:tenant/services',adminAuth,tenantValidation(),validate,fo
             services[index].group_id = ids[index].id;
           });
           await t.service_details.addMultiple(services).then(async services =>{
-
             if(services){
               let contacts = [];
               let grant_types = [];
@@ -149,6 +148,7 @@ router.post('/tenants/:tenant/services',adminAuth,tenantValidation(),validate,fo
               let queries = [];
               let service_state = [];
               let invitations = [];
+              let requested_attributes = [];
               services.forEach((service,index)=> {
                 service_state.push({id:service.id,state:'deployed',outdated:(service.outdated?true:false)});
                 if(service.contacts && service.contacts.length>0){
@@ -176,6 +176,13 @@ router.post('/tenants/:tenant/services',adminAuth,tenantValidation(),validate,fo
                     });
                   }
                 }
+                if(service.protocol==='saml'){
+                  if(service.requested_attributes&&service.requested_attributes.length>0){
+                    service.requested_attributes.forEach(attribute=>{
+                      requested_attributes.push({owner_id:service.id,...attribute})
+                    });
+                  }
+                } 
               });
               queries.push(t.service_state.addMultiple(service_state));
               queries.push(t.service_details_protocol.addMultiple(services));
@@ -192,7 +199,7 @@ router.post('/tenants/:tenant/services',adminAuth,tenantValidation(),validate,fo
                 queries.push(t.service_multi_valued.addMultiple(redirect_uris,'service_oidc_redirect_uris'));
               }
               if(service.protocol==='saml'&&service.requested_attributes&&service.requested_attributes.length>0){
-                queries.push(t.service_multi_values.addSamlAttributes('service',service.requested_attributes,service.id));
+                queries.push(t.service_multi_valued.addSamlAttributesMultiple(requested_attributes,'service_saml_attributes'));
               }
               await t.batch(queries).then(done=>{
                 if(done){
