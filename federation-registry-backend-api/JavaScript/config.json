@@ -6,18 +6,11 @@
     "tenant_signature": "EGI AAI team",
     "production_url": "https://aai.egi.eu/federation/egi"
   },
-  "eosc" : {
-    "logo_url":"https://www.eosc-portal.eu/sites/all/themes/theme1/logo.png",
-    "sender":"EOSC Infrastructure Proxy",
-    "contact":"support@example.org",
-    "tenant_signature": "EOSC team",
-    "production_url": null
-  },
-  "grnet": {
-    "logo_url":"https://upload.wikimedia.org/wikipedia/en/e/e8/Grnet-transp.jpg",
+  "ni4os": {
+    "logo_url":"https://agora.ni4os.eu/ui/assets/logo-ni4os.png",
     "sender":"support@example.org",
-    "contact": "check-in@egi.eu",
-    "tenant_signature": "GRNET team",
+    "contact": "aai@ni4os.eu",
+    "tenant_signature": "NI4OS team",
     "production_url": null
   },
   "form" : {
@@ -153,11 +146,11 @@
 
       }
     },
-    "eosc" : {
+    "ni4os" : {
       "multivalue_fields": {
         "general": ["contacts"],
         "oidc": ["grant_types","scope","redirect_uris"],
-        "saml": []
+        "saml": ["required_attributes"]
       },
       "application_type":["WEB", "NATIVE"],
       "device_code_validity_seconds":30000,
@@ -166,7 +159,7 @@
       "id_token_timeout_seconds":86400,
       "code_challenge_method":[null,"plain","S256"],
       "protocol":["oidc","saml"],
-      "integration_environment": ["production","demo"],
+      "integration_environment": ["production"],
       "grant_types":["implicit","authorization_code","refresh_token","client_credentials","urn:ietf:params:oauth:grant_type:redelegate","urn:ietf:params:oauth:grant-type:token-exchange","urn:ietf:params:oauth:grant-type:device_code","urn:ietf:params:oauth:grant-type:jwt-bearer"],
       "grant_types_deprecated":["implicit"],      
       "dynamic_fields": [],
@@ -226,25 +219,25 @@
         "default":"",
         "tab":"general",
         "placeholder":"https://",
-        "required":["production","demo","dev"]
+        "required":["production"]
       },
       "organization":{
         "title": "Organization",
         "tag": "org",
-        "active": ["production","demo"],
-        "required": ["production","demo"]
+        "active": ["production"],
+        "required": ["production"]
       },
-      "eosc_security_policies":{
-        "title": "EOSC Security Policies",
-        "desc":"The service adheres to the EOSC Security Baseline",
-        "required": ["production","demo"],
+      "ni4os_security_policies":{
+        "title": "NI4OS Security Policies",
+        "desc":"The service adheres to the NI4OS Security Baseline",
+        "required": ["production"],
         "type":"boolean",
         "tag":"coc",
         "tab":"general",
         "default": false,
         "error": "The service must comply with this policy"
       },
-      "eosc_data_protection":{
+      "ni4os_data_protection":{
         "title": "Research & Scholarship",
         "desc":"The service is compliant with the <a href='https://refeds.org/category/research-and-scholarship'>REFEDS Research & Scholarship Entity Category</a>",
         "required": [],
@@ -272,10 +265,7 @@
     "egi" : {
       "env":["production"]
     },
-    "eosc": {
-      "env":["production"]
-    },
-    "grnet":{
+    "ni40s":{
       "env":[]
     }
   },
