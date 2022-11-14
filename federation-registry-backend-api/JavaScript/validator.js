@@ -841,6 +841,7 @@ const serviceValidationRules = (options,req) => {
           }
 
         }
+        return true;
       })
         
         
