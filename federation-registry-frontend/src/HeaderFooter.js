@@ -44,7 +44,7 @@ export const NavbarTop = (props)=>{
   const { t, i18n } = useTranslation();
   const [admin,setAdmin] = useState(false);
   const tenant = useContext(tenantContext);
-  const [cookies] = useCookies(['access_token', 'id_token']);
+  const [cookies] = useCookies(['federation_logoutkey']);
 
 
   useEffect(()=>{
@@ -83,7 +83,7 @@ export const NavbarTop = (props)=>{
             {t('nav_link_userinfo')}
             </Dropdown.Item>
             <Dropdown.Item onClick={()=>{
-              window.location.assign(tenant[0].logout_uri + "&id_token_hint="+cookies.id_token);
+              window.location.assign(tenant[0].logout_uri + "&id_token_hint="+cookies.federation_logoutkey);
               }}>
               {t('logout')}<FontAwesomeIcon icon={faSignOutAlt}/>
             </Dropdown.Item>

@@ -10,10 +10,10 @@ import { useCookies } from 'react-cookie';
 
 export const Logout = (props) => {
   // const history = useHistory();
-  const [cookies] = useCookies(['access_token', 'id_token']);
+  const [cookies] = useCookies(['federation_logoutkey']);
   const tenant = useContext(tenantContext);
   const handleClose = () => {
-    window.location.assign(tenant[0].logout_uri + "&id_token_hint="+cookies.id_token);
+    window.location.assign(tenant[0].logout_uri + "&id_token_hint="+cookies.federation_logoutkey);
   }
   return (
     <Translation>
