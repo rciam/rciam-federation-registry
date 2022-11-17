@@ -70,6 +70,7 @@ db.tenants.getInit().then(async tenants => {
       clients[tenant.name].client_id = tenant.client_id;
       clients[tenant.name].client_secret = tenant.client_secret;
       clients[tenant.name].issuer_url = tenant.issuer_url;
+      
     });
   }
   app.set('clients',clients);

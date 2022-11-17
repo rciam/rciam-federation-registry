@@ -31,8 +31,8 @@ function actionAuthorization(action){
 
 function clearCookies(res,domain){
   domain = domain.replace( /:[0-9]{0,4}.*/, '' );
-  res.clearCookie('id_token',{domain});
-  res.clearCookie('access_token',{domain});
+  res.clearCookie('federation_logoutkey',{domain});
+  res.clearCookie('federation_authtoken',{domain});
   return res;
 }
 
@@ -69,14 +69,14 @@ function authenticate(req,res,next){
     else{
 
       const data = {'client_secret':clients[req.params.tenant].client_secret}
-      if(req.headers.authorization||req.cookies.access_token){
-        let access_token = req.cookies.access_token||req.headers.authorization.split(" ")[1];  
-        if(req.cookies.access_token){
+      if(req.headers.authorization||req.cookies.federation_authtoken){
+        let federation_authtoken = req.cookies.federation_authtoken||req.headers.authorization.split(" ")[1];  
+        if(req.cookies.federation_authtoken){
           let hash = req.app.get('hash');
-          access_token = CryptoJS.AES.decrypt(access_token,hash).toString(CryptoJS.enc.Utf8);
-          req.cookies.access_token = access_token 
+          federation_authtoken = CryptoJS.AES.decrypt(federation_authtoken,hash).toString(CryptoJS.enc.Utf8);
+          req.cookies.federation_authtoken = federation_authtoken 
         }
-        clients[req.params.tenant].userinfo(access_token).then(userinfo => {
+        clients[req.params.tenant].userinfo(federation_authtoken).then(userinfo => {
           req.user = userinfo;
           if(req.user.sub){
             db.user_role.getRoleActions(req.user.sub,req.params.tenant).then(role=>{

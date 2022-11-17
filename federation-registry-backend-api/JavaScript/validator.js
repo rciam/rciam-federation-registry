@@ -21,7 +21,7 @@ const amsIngestValidation = () => {
   return [
     body('decoded_messages').exists().withMessage('No agents found').bail().isArray({min:1}).withMessage('No agents found').bail().toArray(),
     body('decoded_messages.*.id').exists().withMessage('Required Field').bail().isInt({gt:0}).withMessage('Id must be a positive integer'),
-    body('decoded_messages.*.agent_id').exists().withMessage('Required Field').bail().isInt({gt:0}).withMessage('Agent id must be a positive integer'),
+    body('decoded_messages.*.deployer_name').optional({checkFalsy:true}).isString().withMessage('Deployer Name must be a String'),
     body('decoded_messages.*.external_id').optional({checkFalsy:true}).customSanitizer(value => {
       try{
         if (typeof value === 'string' || value instanceof String){

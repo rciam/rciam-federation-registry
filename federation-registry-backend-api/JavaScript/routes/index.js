@@ -316,15 +316,15 @@ router.get('/tokens/:code',(req,res,next)=>{
           await t.tokens.deleteToken(req.params.code).then(deleted=>{
             if(deleted){
               let hash = req.app.get('hash');
-              let access_token_encrypted  = CryptoJS.AES.encrypt(response.token, hash).toString();
+              let federation_authtoken_encrypted  = CryptoJS.AES.encrypt(response.token, hash).toString();
               try{
-                res.cookie('access_token',access_token_encrypted, {path:'/',domain:req.headers.host.replace( /:[0-9]{0,4}.*/, '' ),sameSite:'Strict',secure:true,httpOnly:true });
-                res.cookie('id_token',response.id_token, {path:'/',domain:req.headers.host.replace( /:[0-9]{0,4}.*/, '' ),sameSite:'Strict',secure:true});
+                res.cookie('federation_authtoken',federation_authtoken_encrypted, {path:'/',domain:req.headers.host.replace( /:[0-9]{0,4}.*/, '' ),sameSite:'Strict',secure:true,httpOnly:true });
+                res.cookie('federation_logoutkey',response.id_token, {path:'/',domain:req.headers.host.replace( /:[0-9]{0,4}.*/, '' ),sameSite:'Strict',secure:true});
               }
               catch(err){
                 console.log(err);
               }
-              res.status(200).json({token:response.token,id_token:response.id_token});
+              res.status(200).json({token:response.token,federation_logoutkey:response.id_token});
             }
           }).catch(err=>{
             console.log(err);
@@ -391,8 +391,8 @@ router.get('/tenants/:tenant/user',authenticate,(req,res,next)=>{
   try{
     var clients = req.app.get('clients');
 
-    let access_token = req.cookies.access_token||req.headers.authorization.split(" ")[1]
-    clients[req.params.tenant].userinfo(access_token) // => Promise
+    let federation_authtoken = req.cookies.federation_authtoken||req.headers.authorization.split(" ")[1]
+    clients[req.params.tenant].userinfo(federation_authtoken) // => Promise
     .then(function (userinfo) {
       let user = userinfo;
       user = generatePreferredUsername(user);
@@ -523,7 +523,7 @@ router.put('/agent/set_services_state',amsAgentAuth,(req,res,next)=>{
               req.body.forEach(service=> {
                 agents.forEach(agent => {
                   if(agent.tenant===service.tenant && agent.entity_protocol===service.protocol  && agent.entity_type==='service' && agent.integration_environment===service.integration_environment ){
-                    service_pending_agents.push({agent_id:agent.id,service_id:service.id});
+                    service_pending_agents.push({agent_id:agent.id,service_id:service.id,deployer_name:agent.deployer_name});
                   }
                 })
               });
