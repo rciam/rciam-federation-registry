@@ -67,7 +67,7 @@ class ServiceMultiValuedRepository {
         }
       }
     }
-    if(data.length>0){
+    if(data&data.length>0){
       const query = this.pgp.helpers.insert(data,add_cs,table_name);
       return this.db.none(query).then(data => {
         return true;
@@ -79,43 +79,53 @@ class ServiceMultiValuedRepository {
 
 
 async updateSamlAttributes(type,data,service_id){
-  for(const item of data) {
-    item.owner_id = parseInt(service_id);
-   }
-   const query = this.pgp.helpers.update(data,cs.updateSamlAttributes,type==='petition'?'service_petition_saml_attributes':'service_saml_attributes') + ' WHERE v.owner_id = t.owner_id';
-   return this.db.none(query).then(res=>{
-    return true
-   }).catch(error=>{
-    throw error
-   });
+  if(data&data.length>0){
+    for(const item of data) {
+      item.owner_id = parseInt(service_id);
+     }
+     const query = this.pgp.helpers.update(data,cs.updateSamlAttributes,type==='petition'?'service_petition_saml_attributes':'service_saml_attributes') + ' WHERE v.owner_id = t.owner_id';
+     return this.db.none(query).then(res=>{
+      return true
+     }).catch(error=>{
+      throw error
+     });
+  }
+  else{
+    return true;
+  }
 }
 
 
   async addSamlAttributes(type,data,service_id){
-  
-    for(const item of data) {
-      item.owner_id = service_id;
-     }
-    //console.log(data);
-    const query = this.pgp.helpers.insert(data,cs.serviceSamlAttributes,type==='petition'?'service_petition_saml_attributes':'service_saml_attributes');
-    return this.db.none(query).then(data => {
-        return true
-    })
-    .catch(error => {
-        throw error
-    });
+    if(data && data.length>0){
+      for(const item of data) {
+        item.owner_id = service_id;
+       }
+      const query = this.pgp.helpers.insert(data,cs.serviceSamlAttributes,type==='petition'?'service_petition_saml_attributes':'service_saml_attributes');
+      return this.db.none(query).then(data => {
+          return true
+      })
+      .catch(error => {
+          throw error
+      });
+
+    }else{
+      return true
+    }
   }
 
 
   async addSamlAttributesMultiple(data,table){
-    //console.log(data);
-    const query = this.pgp.helpers.insert(data,cs.serviceSamlAttributes,table);
-    return this.db.none(query).then(data => {
-        return true
-    })
-    .catch(error => {
-        throw error
-    });
+    //console.log(data);.
+    if(data&&data.length>0){
+      const query = this.pgp.helpers.insert(data,cs.serviceSamlAttributes,table);
+      return this.db.none(query).then(data => {
+          return true
+      })
+      .catch(error => {
+          throw error
+      });
+    }
   }
 
   async deleteSamlAttributes(type,data,service_id){

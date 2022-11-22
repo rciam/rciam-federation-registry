@@ -102,8 +102,8 @@ const sendOutdatedNotification = async (data) => {
           username:data.username,
           tenant:data.tenant,
           logo_url:config[data.tenant].logo_url,
-          url:tenant_config[data.tenant].base_url+'/services/'+ data.service_id+'/edit',
           integration_environment:data.integration_environment,
+          url:tenant_config[data.tenant].base_url+'/services/'+ data.service_id+'/edit',
           service_name:data.service_name,
           tenant_signature:config[data.tenant].tenant_signature
         }

@@ -143,11 +143,13 @@ const calcDiff = (oldState,newState,tenant) => {
     }
     for(var i in edits){
       for(var key in edits[i]){
-        if(edits[i][key].length===0){
+        if(edits[i][key].length===0&&key!='requested_attributes'){
           delete edits[i][key]
         }
       }
     }
+    delete new_values.requested_attributes;
+    delete old_values.requested_attributes;
     delete new_values.grant_types;
     delete new_values.contacts;
     delete new_values.redirect_uris;

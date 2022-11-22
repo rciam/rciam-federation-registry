@@ -11,8 +11,8 @@ var requested_attributes = require('../tenant_config/requested_attributes.json')
 const customLogger = require('../loggers.js');
 const {rejectPetition,approvePetition,changesPetition,getPetition,getOpenPetition,requestReviewPetition} = require('../controllers/main.js');
 const {adminAuth,authenticate,clearCookies} = require('./authentication.js'); 
-// const {adminAuth,authenticate} = require('./authentication.js'); 
 var CryptoJS = require("crypto-js");
+
 
 
 // ----------------------------------------------------------
@@ -198,7 +198,7 @@ router.post('/tenants/:tenant/services',adminAuth,tenantValidation(),validate,fo
               if(redirect_uris.length>0){
                 queries.push(t.service_multi_valued.addMultiple(redirect_uris,'service_oidc_redirect_uris'));
               }
-              if(service.protocol==='saml'&&service.requested_attributes&&service.requested_attributes.length>0){
+              if(requested_attributes&&requested_attributes.length>0){
                 queries.push(t.service_multi_valued.addSamlAttributesMultiple(requested_attributes,'service_saml_attributes'));
               }
               await t.batch(queries).then(done=>{
