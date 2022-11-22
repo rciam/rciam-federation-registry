@@ -157,7 +157,7 @@ class ServiceRepository {
       'metadata_url',sd.metadata_url,'entity_id',sd.entity_id,\
       'grant_types',(SELECT json_agg((v.value)) FROM service_oidc_grant_types v WHERE sd.id = v.owner_id),\
       'scope',(SELECT json_agg((v.value)) FROM service_oidc_scopes v WHERE sd.id = v.owner_id),\
-      'requested_attributes',(SELECT json_agg(json_build_object('friendly_name',v.friendly_name,'name',v.name,'required',v.required,'name_format',v.name_format))FROM service_saml_attributes v WHERE sd.id=v.owner_id),\
+      'requested_attributes',(SELECT coalesce(json_agg(json_build_object('friendly_name',v.friendly_name,'name',v.name,'required',v.required,'name_format',v.name_format)), '[]'::json) FROM service_saml_attributes v WHERE sd.id=v.owner_id),\
       'redirect_uris',(SELECT json_agg((v.value)) FROM service_oidc_redirect_uris v WHERE sd.id = v.owner_id),",
       tags_filter:"",
       exclude_tags_filter:""
