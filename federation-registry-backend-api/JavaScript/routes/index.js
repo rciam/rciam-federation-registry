@@ -465,7 +465,7 @@ router.post('/ams/ingest',checkCertificate,decodeAms,amsIngestValidation(),valid
           if(ids.length>0){
             await t.user.getServiceOwners(ids).then(async data=>{
               if(data){
-                await t.service_petition_details.getTicketInfo(ids,config.restricted_env.egi.env).then(async ticket_data=>{
+                await t.service_petition_details.getTicketInfo(ids).then(async ticket_data=>{
                   if(ticket_data){
                     createGgusTickets(ticket_data);
                   }
@@ -1360,30 +1360,35 @@ function amsAgentAuth(req,res,next){
 function canReview(req,res,next){
   db.service_petition_details.getEnvironment(req.params.id,req.params.tenant).then(async environment=> {
     // Ckecking if review action is restricted for
-    if(req.body.type==='approve'&&config.restricted_env[req.params.tenant].env.includes(environment)&&!req.user.role.actions.includes('review_restricted')){
-        res.status(401).json({error:'Requested action not authorised'});
-    }
-    else if(req.user.role.actions.includes('review_petition')||req.user.role.actions.includes('review_restricted')){
-        next();
-    }
-    else {
-      await db.petition.canReviewOwn(req.params.id,req.user.sub).then(service=>{
-
-        if(service&&service.integration_environment==='development'){
-          next();
-        }
-        else if(service){
-           if (req.user.role.actions.includes('review_own_petition')){
-             next();
-           }
-           else{
-              res.status(401).json({error:'Requested action not authorised'});
-           }
-        }
-        else{
+    if(environment){
+      if(req.body.type==='approve'&&config[req.params.tenant].restricted_env.includes(environment)&&!req.user.role.actions.includes('review_restricted')){
           res.status(401).json({error:'Requested action not authorised'});
-        }
-      })
+      }
+      else if(req.user.role.actions.includes('review_petition')||req.user.role.actions.includes('review_restricted')){
+          next();
+      }
+      else {
+        await db.petition.canReviewOwn(req.params.id,req.user.sub).then(service=>{
+  
+          if(service&&service.integration_environment==='development'){
+            next();
+          }
+          else if(service){
+             if (req.user.role.actions.includes('review_own_petition')){
+               next();
+             }
+             else{
+                res.status(401).json({error:'Requested action not authorised'});
+             }
+          }
+          else{
+            res.status(401).json({error:'Requested action not authorised'});
+          }
+        })
+      }
+    }
+    else{
+      res.status(401).json({error:'Requested action not authorised'});
     }
   }).catch(err=> {
     res.status(401).json({error:'Requested action not authorised'});

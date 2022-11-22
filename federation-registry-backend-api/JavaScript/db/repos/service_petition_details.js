@@ -146,14 +146,22 @@ class ServicePetitionDetailsRepository {
         });
      }
 
-     async getTicketInfo(ids,envs){
-       if(envs.length>0){
-         const query = this.pgp.as.format(sql.getTicketInfo,{ids:ids,envs:envs});
+     async getTicketInfo(ids){
+      try{
+        let tenant_selector_array = [];
+        for(const tenant in tenant_config){
+          if(config[tenant].service_integration_notification.enabled){
+            tenant_selector_array.push("(tenant='"+tenant+"' AND integration_environment IN ('" + config[tenant].service_integration_notification.integration_environments.join("','") +"'))")
+          }
+         }
+
+         let tenant_selector = " AND ("+tenant_selector_array.join(" OR ") + ") ";
+         const query = this.pgp.as.format(sql.getTicketInfo,{ids:ids,tenant_selector:tenant_selector});
          return this.db.any(query);
-       }
-       else{
-         return null;
-       }
+      }
+      catch(err){
+        console.log(err);
+      }
      }
 
      async getDetails(petition_id,tenant){

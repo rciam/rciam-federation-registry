@@ -148,7 +148,7 @@ async function setupTopic(topic) {
   }).catch(async err => {
     if(err.response.status===404){
       console.log("\t"+"Creating Topic: "+topic)
-      return await axios.put(amsBaseUrl + "/topics/"+ topic, options_ams_admin).then( async response=> {
+      return await axios.put(amsBaseUrl + "/topics/"+ topic, {},options_ams_admin).then( async response=> {
         console.log(response.status===200?"\t"+"\t"+"Created Topic: "+topic:"\t"+"\t"+"Failed to Create Topic: " + topic);
         return (response.status===200)
       }).catch(err => {

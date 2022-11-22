@@ -384,53 +384,52 @@ const sendMail= (data,template_uri,users)=>{
 const createGgusTickets =  function(data){
   if(process.env.NODE_ENV!=='test'&&process.env.NODE_ENV!=='test-docker'&&!config.disable_emails){
     try{
-        if(data){
+        if(data&&data.length>0){
           readHTMLFile(path.join(__dirname, '../html/ticket.html'), async function(err, html) {
             let transporter = createTransport();
 
-                var template = hbs.compile(html);
 
                 data.forEach((ticket_data)=>{
-
-                  let code = makeCode(5);
-                  let type = ticket_data.type==='create'?'register':ticket_data.type==='edit'?'reconfigure':'deregister';
-                  let service_name = ticket_data.service_name;
-                  let requester_email = ticket_data.requester_email;
-                  let requester_username = ticket_data.requester_username;
-                  let reviewer_email = ticket_data.reviewer_email;
-                  let reviewer_username = ticket_data.reviewer_username;
-                  let protocol = ticket_data.protocol;
-                  let reviewed_at = ticket_data.reviewed_at;
-                  let env = ticket_data.integration_environment;
-
-                  var mailOptions = {
-                    from: ticket_data.reviewer_email,
-                    to : config.ggus_email,
-                    //to:"koza-sparrow@hotmaIl.com",
-                    subject : "Federation Registry: Service integration to "+ ticket_data.integration_environment + " (" + code + ")",
-                    text:`A request was made to `+ type +` a service on the `+ env +` environment
-                          Service Info
-                            service_name: ` + service_name + `
-                            service_protocol: ` + protocol + `
-                          Submitted by
-                            username: `+ requester_username + `
-                            email: `+ requester_email + `
-                          Approved by
-                            username: `+ reviewer_username +`
-                            email: `+ reviewer_email +`
-                            date_of_approval: `+reviewed_at,
-                    cc:ticket_data.reviewer_email
-                  };
-                  transporter.sendMail(mailOptions, function (error, response) {
-                    if (error) {
-                      return true;
-                      customLogger(null,null,'error',[{type:'email_log'},{message:'Email not sent'},{error:error},{recipient:'Ggus'},{ticket_data:ticket_data}]);
-                    }
-                    else {
-                      return true;
-                      customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{recipient:'Ggus'},{ticket_data:ticket_data}]);
-                    }
-                  });
+                    let code = makeCode(5);
+                    let type = ticket_data.type==='create'?'register':ticket_data.type==='edit'?'reconfigure':'deregister';
+                    let service_name = ticket_data.service_name;
+                    let requester_email = ticket_data.requester_email;
+                    let requester_username = ticket_data.requester_username;
+                    let reviewer_email = ticket_data.reviewer_email;
+                    let reviewer_username = ticket_data.reviewer_username;
+                    let protocol = ticket_data.protocol;
+                    let reviewed_at = ticket_data.reviewed_at;
+                    let env = ticket_data.integration_environment;
+  
+                    var mailOptions = {
+                      from: ticket_data.reviewer_email,
+                      to : config[ticket_data.tenant].service_integration_notification.email,
+                      //to:"koza-sparrow@hotmaIl.com",
+                      subject : "Federation Registry: Service integration to "+ ticket_data.integration_environment + " (" + code + ")",
+                      text:`A request was made to `+ type +` a service on the `+ env +` environment
+                            Service Info
+                              service_name: ` + service_name + `
+                              service_protocol: ` + protocol + `
+                            Submitted by
+                              username: `+ requester_username + `
+                              email: `+ requester_email + `
+                            Approved by
+                              username: `+ reviewer_username +`
+                              email: `+ reviewer_email +`
+                              date_of_approval: `+reviewed_at,
+                      cc:ticket_data.reviewer_email
+                    };
+                    transporter.sendMail(mailOptions, function (error, response) {
+                      if (error) {
+                        customLogger(null,null,'error',[{type:'email_log'},{message:'Email not sent'},{error:error},{recipient:'Ggus'},{ticket_data:ticket_data}]);
+                        return true;
+                      }
+                      else {
+                        customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{recipient:'Ggus'},{ticket_data:ticket_data}]);
+                        return true;
+                      }
+                    });
+                  
 
                 })
               });
