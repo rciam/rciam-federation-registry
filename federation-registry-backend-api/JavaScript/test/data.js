@@ -646,17 +646,17 @@ const users = {
      edu_person_entitlement: []
    }
  },
- eosc: {
+ ni4os: {
    manager_user: {
-     sub: "test_eosc_manager_user",
-     edu_person_entitlement :['urn:mace:egi.eu:group:service-integration.aai.eosc.eu:role=approver#aai.eosc.eu']
+     sub: "test_ni4os_manager_user",
+     edu_person_entitlement :['urn:mace:egi.eu:group:service-integration.aai.ni4os.eu:role=approver#aai.ni4os.eu']
    },
    operator_user:{
-     sub: "test_eosc_operator_user",
-     edu_person_entitlement : ['urn:mace:egi.eu:group:service-integration.aai.eosc.eu:role=member#aai.eosc.eu']
+     sub: "test_ni4os_operator_user",
+     edu_person_entitlement : ['urn:mace:egi.eu:group:service-integration.aai.ni4os.eu:role=member#aai.ni4os.eu']
    },
    end_user: {
-     sub: "test_eosc_end_user",
+     sub: "test_ni4os_end_user",
      edu_person_entitlement : []
    }
  }

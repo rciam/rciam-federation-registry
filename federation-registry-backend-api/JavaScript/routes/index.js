@@ -229,14 +229,14 @@ router.get('/tenants/:tenant',(req,res,next)=>{
     var clients = req.app.get('clients');
     db.tenants.getTheme(req.params.tenant).then(tenant=>{
       if(tenant){
-        if(config.form[req.params.tenant]){
-          tenant.form_config = config.form[req.params.tenant];
+        if(config[req.params.tenant].form){
+          tenant.form_config = config[req.params.tenant].form;
         }
         if(config[req.params.tenant]){
           tenant.config = config[req.params.tenant];
         }
-        if(config.restricted_env[req.params.tenant]){
-          tenant.restricted_environments = config.restricted_env[req.params.tenant].env;
+        if(config[req.params.tenant].restricted_env){
+          tenant.restricted_environments = config[req.params.tenant].restricted_env;
         }
         tenant.form_config.requested_attributes = requested_attributes;
         tenant.logout_uri = clients[req.params.tenant].logout_uri;
@@ -513,7 +513,6 @@ router.post('/ams/ingest',checkCertificate,decodeAms,amsIngestValidation(),valid
 // updateData = [{id:1,state:'deployed',tenant:'egi',protocol:'oidc'},{id:2,state:'deployed',tenant:'egi',protocol:'saml'},{id:3,state:'failed',tenant:'eosc',protocol:'oidc'}];
 router.put('/agent/set_services_state',amsAgentAuth,(req,res,next)=>{
   try{
-
     return db.task('set_state_and_agents',async t=>{
       let service_pending_agents = [];
       await t.service_state.updateMultiple(req.body).then(async result=>{
@@ -524,6 +523,7 @@ router.put('/agent/set_services_state',amsAgentAuth,(req,res,next)=>{
                 agents.forEach(agent => {
                   if(agent.tenant===service.tenant && agent.entity_protocol===service.protocol  && agent.entity_type==='service' && agent.integration_environment===service.integration_environment ){
                     service_pending_agents.push({agent_id:agent.id,service_id:service.id,deployer_name:agent.deployer_name});
+                    
                   }
                 })
               });
@@ -544,7 +544,7 @@ router.put('/agent/set_services_state',amsAgentAuth,(req,res,next)=>{
         else{
           next('Failed to update state')
         }
-      });
+      }).catch(err=>{console.log(err);});
     });
   }
   catch(err){next(err);}

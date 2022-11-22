@@ -23,7 +23,7 @@ class ServiceMultiValuedRepository {
     let upd_cs;
     id = parseInt(id);
     for(const property in service){
-      if(Object.keys(config.form[service.tenant].extra_fields).includes(property) && (config.form[service.tenant].extra_fields[property].tag==='coc'||(config.form[service.tenant].extra_fields[property].tag==='once'&&(service[property] === 'true'||service[property]===true)))){
+      if(Object.keys(config[service.tenant].form.extra_fields).includes(property) && (config[service.tenant].form.extra_fields[property].tag==='coc'||(config[service.tenant].form.extra_fields[property].tag==='once'&&(service[property] === 'true'||service[property]===true)))){
         if(type==='petition'){
           data.push({petition_id:id,name:property,value:(service[property] === 'true'||service[property]===true)});
           upd_cs = cs.serviceBooleanPetUpd;
@@ -52,8 +52,8 @@ class ServiceMultiValuedRepository {
     let add_cs = {};
     let table_name;
     for(const property in service){
-      if(Object.keys(config.form[service.tenant].extra_fields).includes(property)){
-        if(config.form[service.tenant].extra_fields[property].tag==='coc'||config.form[service.tenant].extra_fields[property].tag==='once'){
+      if(Object.keys(config[service.tenant].form.extra_fields).includes(property)){
+        if(config[service.tenant].form.extra_fields[property].tag==='coc'||config[service.tenant].form.extra_fields[property].tag==='once'){
           if(type==='petition'){
             data.push({petition_id:id,name:property,value:(service[property] === 'true'||service[property]===true)});
             add_cs = cs.serviceBooleanPet;

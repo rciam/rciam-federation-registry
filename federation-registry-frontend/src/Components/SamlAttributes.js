@@ -62,13 +62,13 @@ export function SamlAttributesInput(props){
     };
     useEffect(()=>{
       if(props.changed){
-        if(props.changed.N.some(e=>e.friendly_name===props.item.friendly_name)){
+        if(props.changed.N&&props.changed.N.some(e=>e.friendly_name===props.item.friendly_name)){
           setType('added');
         }
-        else if(props.changed.D.some(e=>e.friendly_name===props.item.friendly_name)){
+        else if(props.changed.D&&props.changed.D.some(e=>e.friendly_name===props.item.friendly_name)){
           setType('deleted');
         }
-        else if(props.changed.U.some(e=>e.friendly_name===props.item.friendly_name)){
+        else if(props.changed.U&&props.changed.U.some(e=>e.friendly_name===props.item.friendly_name)){
           setType('edited');
         }
       }

@@ -92,7 +92,6 @@ const outdatedNotificationsWorker =  async(interval_seconds) =>{
 }
 
 const sendOutdatedNotification = async (data) => {
-
   return new Promise(resolve=>{
     if(process.env.NODE_ENV!=='test-docker'&& process.env.NODE_ENV!=='test' &&!config.disable_emails){
       var currentDate = new Date();

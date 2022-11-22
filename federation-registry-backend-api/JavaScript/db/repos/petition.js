@@ -129,6 +129,7 @@ class PetitionRepository {
                   queries.push(t.service_multi_valued.add('petition','oidc_redirect_uris',petition.redirect_uris,result.id));
                 }
                 if(petition.protocol==='saml'){
+                  
                   queries.push(t.service_multi_valued.addSamlAttributes('petition',petition.requested_attributes,result.id));                  
                 }
                 var result2 = await t.batch(queries);
