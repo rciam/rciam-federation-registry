@@ -128,8 +128,8 @@ const calcDiff = (oldState,newState,tenant) => {
       edits.update.requested_attributes = new_values.requested_attributes.filter(x=> old_values.requested_attributes.some(e=> e.friendly_name === x.friendly_name&&(e.required!==x.required||e.name!==x.name)));
     }
 
-    for(var property in formConfig.form[tenant].extra_fields){
-      if(formConfig.form[tenant].extra_fields[property].tag==="coc"||formConfig.form[tenant].extra_fields[property].tag==="once"){
+    for(var property in formConfig[tenant].form.extra_fields){
+      if(formConfig[tenant].form.extra_fields[property].tag==="coc"||formConfig[tenant].form.extra_fields[property].tag==="once"){
         if(property in new_values){
           if(property in old_values && old_values[property]!==new_values[property]){
             edits.update.service_boolean[property]=new_values[property];

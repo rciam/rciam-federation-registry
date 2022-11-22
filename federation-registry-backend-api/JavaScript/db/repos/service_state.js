@@ -158,6 +158,7 @@ class ServiceStateRepository {
     // updateData = [{id:1,state:'deployed'},{id:2,state:'deployed'},{id:3,state:'failed'}];
     let date = new Date(Date.now());
 
+    
     const update = this.pgp.helpers.update(updateData,(updateData[0].hasOwnProperty('outdated')?cs.update_multi_outdated:cs.update_multi)) + ' WHERE v.id = t.id RETURNING t.id';
     //=> UPDATE "service_data" AS t SET "state"=v."state"
     //   FROM (VALUES(1,'deployed'),(2,'deployed'),(3,'failed'))

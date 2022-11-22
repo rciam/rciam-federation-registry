@@ -1,7 +1,7 @@
 {
   "host": {
     "egi":"http://localhost:5000/",
-    "eosc":"http://localhost:5000/"
+    "ni4os":"http://localhost:5000/"
   },
   "basename": "/",
   "testing_instance": true

@@ -53,6 +53,7 @@ class ServiceContactsRepository {
 
 
   async delete_one_or_many(type,data,owner_id){
+
     let name = 'service_contacts';
     if(type==='petition'){
       name = 'service_petition_contacts'
@@ -75,6 +76,7 @@ class ServiceContactsRepository {
 
 
   async delete(name,owner_id){
+
       const table = new this.pgp.helpers.TableName({table:name});
       return this.db.none('DELETE FROM $1 WHERE owner_id=$2',[table,+owner_id]);
   }

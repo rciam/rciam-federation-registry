@@ -11,7 +11,6 @@ var expressWinston = require('express-winston');
 const {Issuer,custom} = require('openid-client');
 const routes= require('./routes/index');
 var cookieParser = require('cookie-parser');
-var passport = require('passport');
 const {outdatedNotificationsWorker} = require('./functions/outdated_notif.js');
 const bannerAlertRoutes = require('./routes/banner_alerts.js');
 const serviceTagRoutes = require('./routes/service_tags.js');
@@ -66,12 +65,10 @@ db.tenants.getInit().then(async tenants => {
         redirect_uris: process.env.REDIRECT_URI + tenant.name,
         logout_uri: issuer.end_session_endpoint + '?post_logout_redirect_uri=' + encodeURIComponent(tenant.base_url)+ '&redirect=' + encodeURIComponent(tenant.base_url)         
       });
-
       clients[tenant.name].client_id = tenant.client_id;
       clients[tenant.name].client_secret = tenant.client_secret;
       clients[tenant.name].issuer_url = tenant.issuer_url;
-      
-    });
+    })
   }
   app.set('clients',clients);
   global.tenant_config = tenant_config;
@@ -142,7 +139,6 @@ app.use(expressWinston.logger({
 
 
 
-app.use(passport.initialize());
 app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use(express.urlencoded({extended: true})); 
@@ -198,9 +194,9 @@ app.use(function (err, req, res, next) {
 
 const port = 5000;
 
-if(config.send_outdated_notifications){
-  outdatedNotificationsWorker(config.outdated_notifications_interval_seconds);
-}
+// if(config.send_outdated_notifications){
+//   outdatedNotificationsWorker(config.outdated_notifications_interval_seconds);
+// }
 
 var server = app.listen(port, () => {
     console.log('\nReady for GET requests on http://localhost:' + port);

@@ -1,5 +1,5 @@
 const sql = require('../sql').service_petition_details;
-
+var config = require('../../config');
 const cs = {}; // Reusable ColumnSet objects.
 
 /*
