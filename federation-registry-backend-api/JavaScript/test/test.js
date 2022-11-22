@@ -237,15 +237,15 @@ describe('Service registry API Integration Tests', function() {
       });
       describe('# Review Petition',function(){
           it('should fail to approve petition because user is from another tenant',function(done){
-            userToken = setUser(users.eosc.operator_user);
-            var req = request(server).put('/tenants/eosc/petitions/'+petition+'/review').set({Authorization: userToken}).send({type:'approve'});
+            userToken = setUser(users.ni4os.operator_user);
+            var req = request(server).put('/tenants/ni4os/petitions/'+petition+'/review').set({Authorization: userToken}).send({type:'approve'});
             req.set('Accept','application/json')
             .expect('Content-Type',/json/)
-            .expect(404)
+            .expect(401)
             .end(function(err,res){
               let body = JSON.parse(res.text);
-              expect(body.error).to.equal("No petition found");
-              expect(res.statusCode).to.equal(404);
+              expect(body.error).to.equal("Requested action not authorised");
+              expect(res.statusCode).to.equal(401);
               done();
             })
           });
@@ -765,13 +765,14 @@ describe('Service registry API Integration Tests', function() {
   describe('# Admin Actions',function(){
     describe('# Reject Petition',function(){
       it('should create a new petition and return the id',function(done){
-        userToken = setUser(users.eosc.end_user);
+        userToken = setUser(users.ni4os.end_user);
         let dataSend = create.oidc;
         dataSend.integration_environment = "demo";
         dataSend.type = "create";
-        dataSend.eosc_security_policies = true;
-        var req = request(server).post('/tenants/eosc/petitions').set({Authorization: userToken}).send({
-          ...dataSend
+        dataSend.ni4os_security_policies = true;
+        var req = request(server).post('/tenants/ni4os/petitions').set({Authorization: userToken}).send({
+          ...dataSend,
+          integration_environment:'production'
         });
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
@@ -785,7 +786,7 @@ describe('Service registry API Integration Tests', function() {
         })
       });
       it('should fail to reject petition because user no reviewing rights',function(done){
-        var req = request(server).put('/tenants/eosc/petitions/'+petition+'/review').set({Authorization: userToken}).send({type:'reject'});
+        var req = request(server).put('/tenants/ni4os/petitions/'+petition+'/review').set({Authorization: userToken}).send({type:'reject'});
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
         .expect(401)
@@ -796,8 +797,8 @@ describe('Service registry API Integration Tests', function() {
           done();});
       });
       it('should reject petition',function(done){
-        userToken = setUser(users.eosc.operator_user);
-        var req = request(server).put('/tenants/eosc/petitions/'+petition+'/review').set({Authorization: userToken}).send({type:'reject'});
+        userToken = setUser(users.ni4os.operator_user);
+        var req = request(server).put('/tenants/ni4os/petitions/'+petition+'/review').set({Authorization: userToken}).send({type:'reject'});
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
         .expect(200)
@@ -808,9 +809,10 @@ describe('Service registry API Integration Tests', function() {
     });
     describe('# Request Changes Petition',function(){
       it('should create a new petition and return the id',function(done){
-        var req = request(server).post('/tenants/eosc/petitions').set({Authorization: userToken}).send({
+        var req = request(server).post('/tenants/ni4os/petitions').set({Authorization: userToken}).send({
           type:'create',
-          ...create.oidc
+          ...create.oidc,
+          integration_environment:'production'
         });
 
         req.set('Accept','application/json')
@@ -825,7 +827,7 @@ describe('Service registry API Integration Tests', function() {
         })
       });
       it('should request changes petition',function(done){
-        var req = request(server).put('/tenants/eosc/petitions/'+petition+'/review').set({Authorization: userToken}).send({type:'changes',comment:"comment"});
+        var req = request(server).put('/tenants/ni4os/petitions/'+petition+'/review').set({Authorization: userToken}).send({type:'changes',comment:"comment"});
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
         .expect(200)
@@ -838,7 +840,7 @@ describe('Service registry API Integration Tests', function() {
         })
       });
       it('should delete petition',function(done){
-        var req = request(server).delete('/tenants/eosc/petitions/'+petition).set({Authorization: userToken});
+        var req = request(server).delete('/tenants/ni4os/petitions/'+petition).set({Authorization: userToken});
 
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)
