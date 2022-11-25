@@ -51,35 +51,36 @@ class ServiceMultiValuedRepository {
     let data = [];
     let add_cs = {};
     let table_name;
-    for(const property in service){
-      if(Object.keys(config[service.tenant].form.extra_fields).includes(property)){
-        if(config[service.tenant].form.extra_fields[property].tag==='coc'||config[service.tenant].form.extra_fields[property].tag==='once'){
-          if(type==='petition'){
-            data.push({petition_id:id,name:property,value:(service[property] === 'true'||service[property]===true)});
-            add_cs = cs.serviceBooleanPet;
-            table_name = "service_petition_boolean";
-          }
-          else{
-            data.push({service_id:id,name:property,value:(service[property] === 'true'||service[property]===true)});
-            add_cs = cs.serviceBooleanSer;
-            table_name = "service_boolean";
+      for(const property in service){
+        if(Object.keys(config[service.tenant].form.extra_fields).includes(property)){
+          if(config[service.tenant].form.extra_fields[property].tag==='coc'||config[service.tenant].form.extra_fields[property].tag==='once'){
+            if(type==='petition'){
+              data.push({petition_id:id,name:property,value:(service[property] === 'true'||service[property]===true)});
+              add_cs = cs.serviceBooleanPet;
+              table_name = "service_petition_boolean";
+            }
+            else{
+              data.push({service_id:id,name:property,value:(service[property] === 'true'||service[property]===true)});
+              add_cs = cs.serviceBooleanSer;
+              table_name = "service_boolean";
+            }
           }
         }
+  
       }
-    }
-    if(data&data.length>0){
-      const query = this.pgp.helpers.insert(data,add_cs,table_name);
-      return this.db.none(query).then(data => {
+      if(data&&data.length>0){
+          const query = this.pgp.helpers.insert(data,add_cs,table_name);
+          return this.db.none(query).then(data => {
+            return true;
+          })
+      }else{
         return true;
-      })
-    }else{
-      return true;
-    }
+      }
   }
 
 
 async updateSamlAttributes(type,data,service_id){
-  if(data&data.length>0){
+  if(data&&data.length>0){
     for(const item of data) {
       item.owner_id = parseInt(service_id);
      }

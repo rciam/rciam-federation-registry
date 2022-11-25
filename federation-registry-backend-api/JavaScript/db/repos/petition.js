@@ -93,9 +93,9 @@ class PetitionRepository {
   async add(petition,requester){
         return this.db.tx('add-service',async t =>{
           let queries = [];
-          if(petition.type==='create'){
-            if(!petition.group_id){
-              petition.group_id = await t.group.addGroup(requester)
+          
+            if(!petition.group_id&&petition.type==='create'){
+              petition.group_id = await t.group.addGroup(requester);
             }
             return await t.service_petition_details.add(petition,requester).then(async result=>{
               if(result){
@@ -116,29 +116,7 @@ class PetitionRepository {
                 }
               }
             });
-          }
-          else{
-            return await t.service_petition_details.add(petition,requester).then(async result=>{
-              if(result){
-                queries.push(t.service_details_protocol.add('petition',petition,result.id));
-                queries.push(t.service_contacts.add('petition',petition.contacts,result.id));
-                queries.push(t.service_multi_valued.addServiceBoolean('petition',petition,result.id));
-                if(petition.protocol==='oidc'){
-                  queries.push(t.service_multi_valued.add('petition','oidc_grant_types',petition.grant_types,result.id));
-                  queries.push(t.service_multi_valued.add('petition','oidc_scopes',petition.scope,result.id));
-                  queries.push(t.service_multi_valued.add('petition','oidc_redirect_uris',petition.redirect_uris,result.id));
-                }
-                if(petition.protocol==='saml'){
-                  
-                  queries.push(t.service_multi_valued.addSamlAttributes('petition',petition.requested_attributes,result.id));                  
-                }
-                var result2 = await t.batch(queries);
-                if(result2){
-                  return result.id
-                }
-              }
-            });
-          }
+          
         });
     }
 
