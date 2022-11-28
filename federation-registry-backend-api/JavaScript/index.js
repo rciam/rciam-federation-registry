@@ -5,16 +5,23 @@ const express = require('express');
 const {db} = require('./db');
 var config = require('./config');
 const cors = require('cors');
+var CryptoJS = require("crypto-js");
 var winston = require('winston');
 var expressWinston = require('express-winston');
 const {Issuer,custom} = require('openid-client');
 const routes= require('./routes/index');
 var cookieParser = require('cookie-parser');
-var passport = require('passport');
 const {outdatedNotificationsWorker} = require('./functions/outdated_notif.js');
 const bannerAlertRoutes = require('./routes/banner_alerts.js');
 const serviceTagRoutes = require('./routes/service_tags.js');
 const notificationRoutes = require('./routes/notifications.js');
+const utilRoutes = require('./routes/util_routes.js');
+
+
+
+
+
+
 
 let clients= {};
 let tenant_config = {};
@@ -22,6 +29,8 @@ custom.setHttpOptionsDefaults({
   timeout: 20000,
 });
 
+
+var hash = CryptoJS.SHA256(process.env.TOKEN_KEY).toString(CryptoJS.enc.Base64);
 let whitelist = process.env.CORS.split(' ');
 var corsOptions = {
     origin: function (origin, callback) {
@@ -40,6 +49,9 @@ var corsOptions = {
 
 const app = express();
 
+
+app.set('hash',hash);
+
 db.tenants.getInit().then(async tenants => {
   for (const tenant of tenants){
 
@@ -53,11 +65,10 @@ db.tenants.getInit().then(async tenants => {
         redirect_uris: process.env.REDIRECT_URI + tenant.name,
         logout_uri: issuer.end_session_endpoint + '?post_logout_redirect_uri=' + encodeURIComponent(tenant.base_url)+ '&redirect=' + encodeURIComponent(tenant.base_url)         
       });
-
       clients[tenant.name].client_id = tenant.client_id;
       clients[tenant.name].client_secret = tenant.client_secret;
       clients[tenant.name].issuer_url = tenant.issuer_url;
-    });
+    })
   }
   app.set('clients',clients);
   global.tenant_config = tenant_config;
@@ -128,7 +139,6 @@ app.use(expressWinston.logger({
 
 
 
-app.use(passport.initialize());
 app.use(cors(corsOptions));
 app.use(cookieParser());
 app.use(express.urlencoded({extended: true})); 
@@ -137,6 +147,7 @@ app.use(express.json({ limit: '50mb' }));
 app.use('/tenants/:tenant/banner_alert', bannerAlertRoutes);
 app.use('/tenants/:tenant/tags', serviceTagRoutes);
 app.use('/tenants/:tenant/notifications',notificationRoutes);
+app.use('/util',utilRoutes);
 
 app.use('/', routes.router);
 
@@ -183,9 +194,9 @@ app.use(function (err, req, res, next) {
 
 const port = 5000;
 
-if(config.send_outdated_notifications){
-  outdatedNotificationsWorker(config.outdated_notifications_interval_seconds);
-}
+// if(config.send_outdated_notifications){
+//   outdatedNotificationsWorker(config.outdated_notifications_interval_seconds);
+// }
 
 var server = app.listen(port, () => {
     console.log('\nReady for GET requests on http://localhost:' + port);

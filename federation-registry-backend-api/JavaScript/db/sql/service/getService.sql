@@ -20,7 +20,10 @@ SELECT json_build_object('service_name', sd.service_name,'service_description',s
 							 FROM service_oidc_redirect_uris v WHERE sd.id = v.owner_id),
 						 'contacts',
 						 	(SELECT CASE WHEN array_agg(json_build_object('email',v.value,'type',v.type)) IS NULL THEN Array[]::json[] ELSE array_agg(json_build_object('email',v.value,'type',v.type)) END
-							 FROM service_contacts v WHERE sd.id = v.owner_id)
+							 FROM service_contacts v WHERE sd.id = v.owner_id),
+				  		 'requested_attributes',
+						 	(SELECT coalesce(json_agg(json_build_object('friendly_name',v.friendly_name,'name',v.name,'required',v.required,'name_format',v.name_format)), '[]'::json) 
+							 FROM service_saml_attributes v WHERE sd.id=v.owner_id)
 						 ,'created_at',created_at) json
     FROM (SELECT *
 	FROM (SELECT * FROM service_details WHERE id=${id} AND deleted = FALSE AND tenant=${tenant}) AS foo

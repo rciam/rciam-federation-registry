@@ -107,12 +107,11 @@ const BroadcastNotifications = (props) =>{
   const sendOwnerNotification = (values) =>{
     values.email_body =  values.email_body.replace(/\/\*[\s\S]*?\*\//g,'');
     values.email_body =  values.email_body.replace(/((\n)|(\\n)|( *\\n)|( *\n)){3,}/g,'\n\n');
-    fetch(config.host+'tenants/'+tenant_name+'/notifications/owners', {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/notifications/owners', {
       method: 'PUT', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json',
-      'Authorization': localStorage.getItem('token'),
+      'Content-Type': 'application/json'
       },
       body: JSON.stringify(values)
     }).then(response=>{
@@ -143,12 +142,11 @@ const BroadcastNotifications = (props) =>{
   }
 
   const getOwners = () => {
-    fetch(config.host+'tenants/'+tenant_name+'/groups/'+group_id+'/members', {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/groups/'+group_id+'/members', {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json',
-      'Authorization': localStorage.getItem('token'),
+      'Content-Type': 'application/json'
       }
     }).then(response=>{
         if(response.status===200){
@@ -177,12 +175,11 @@ const BroadcastNotifications = (props) =>{
     });
   }
   const getRecipients = (data) => {
-    fetch(config.host+'tenants/'+tenant_name+'/notifications/broadcast/recipients?contact_types='+data.contact_types+'&environments='+data.environments+'&protocols='+data.protocols, {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/notifications/broadcast/recipients?contact_types='+data.contact_types+'&environments='+data.environments+'&protocols='+data.protocols, {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json',
-      'Authorization': localStorage.getItem('token'),
+      'Content-Type': 'application/json'
       }
     }).then(response=>{
         if(response.status===200){
@@ -204,12 +201,11 @@ const BroadcastNotifications = (props) =>{
   }
 
   const sendNotification = (notification)=> {
-    fetch(config.host+'tenants/'+tenant_name+'/notifications/broadcast', {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/notifications/broadcast', {
       method: 'PUT', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json',
-      'Authorization': localStorage.getItem('token'),
+      'Content-Type': 'application/json'
       },
       body: JSON.stringify(notification)
     }).then(response=>{

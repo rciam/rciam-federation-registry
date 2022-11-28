@@ -71,6 +71,11 @@ class ServiceRepository {
                   queries.push(t.service_multi_valued.add('service','oidc_redirect_uris',service.redirect_uris,result.id));
                 }
               }
+              if(service.protocol==='saml'){
+                if(service.requested_attributes&&service.requested_attributes.length>0){
+                  queries.push(t.service_multi_valued.addSamlAttributes('service',service.requested_attributes,result.id));                  
+                }
+              }
               return t.batch(queries);
             }
           });
@@ -78,7 +83,6 @@ class ServiceRepository {
         }).then(data => {
           return service_id;
         }).catch(stuff=>{
-
           throw 'error'
         });
       }
@@ -102,6 +106,9 @@ class ServiceRepository {
             if(Object.keys(edits.update.service_boolean).length >0){
               queries.push(t.service_multi_valued.updateServiceBoolean('service',{...edits.update.service_boolean,tenant:tenant},targetId));
             }
+            if(Object.keys(edits.update.requested_attributes).length >0){
+              queries.push(t.service_multi_valued.updateSamlAttributes('petition',edits.update[key],targetId))              
+            }
             if(Object.keys(edits.add.service_boolean).length >0){
               queries.push(t.service_multi_valued.addServiceBoolean('service',{...edits.add.service_boolean,tenant:tenant},targetId));
             }
@@ -110,12 +117,14 @@ class ServiceRepository {
               if(key==='contacts') {
                 queries.push(t.service_contacts.add('service',edits.add[key],targetId));
               }
+              else if(key==='requested_attributes'){queries.push(t.service_multi_valued.addSamlAttributes('service',edits.add[key],targetId))}
               else {
                 queries.push(t.service_multi_valued.add('service',key,edits.add[key],targetId));
               }
             }
             for (var key in edits.dlt){
               if(key==='contacts'){queries.push(t.service_contacts.delete_one_or_many('service',edits.dlt[key],targetId));}
+              else if(key==='requested_attributes'){queries.push(t.service_multi_valued.deleteSamlAttributes('service',edits.dlt[key],targetId))}
               else {queries.push(t.service_multi_valued.delete_one_or_many('service',key,edits.dlt[key],targetId));}
             }
             var result = await t.batch(queries);
@@ -148,6 +157,7 @@ class ServiceRepository {
       'metadata_url',sd.metadata_url,'entity_id',sd.entity_id,\
       'grant_types',(SELECT json_agg((v.value)) FROM service_oidc_grant_types v WHERE sd.id = v.owner_id),\
       'scope',(SELECT json_agg((v.value)) FROM service_oidc_scopes v WHERE sd.id = v.owner_id),\
+      'requested_attributes',(SELECT coalesce(json_agg(json_build_object('friendly_name',v.friendly_name,'name',v.name,'required',v.required,'name_format',v.name_format)), '[]'::json) FROM service_saml_attributes v WHERE sd.id=v.owner_id),\
       'redirect_uris',(SELECT json_agg((v.value)) FROM service_oidc_redirect_uris v WHERE sd.id = v.owner_id),",
       tags_filter:"",
       exclude_tags_filter:""

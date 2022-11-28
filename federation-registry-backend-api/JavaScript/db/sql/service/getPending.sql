@@ -18,7 +18,10 @@ SELECT json_build_object('id',sd.id,'service_name', sd.service_name,'service_des
 							 FROM service_oidc_redirect_uris v WHERE sd.id = v.owner_id),
 						 'contacts',
 						 	(SELECT json_agg(json_build_object('email',v.value,'type',v.type))
-							 FROM service_contacts v WHERE sd.id = v.owner_id)
+							 FROM service_contacts v WHERE sd.id = v.owner_id),
+						 'requested_attributes',
+						 	(SELECT coalesce(json_agg(json_build_object('friendly_name',v.friendly_name,'name',v.name,'required',v.required,'name_format',v.name_format)), '[]'::json) 
+							 FROM service_saml_attributes v WHERE sd.id=v.owner_id)
 							) json
     FROM (SELECT *
 	FROM ((SELECT id,deployment_type,created_at FROM service_state WHERE state='pending') AS bar LEFT JOIN service_details USING (id)) AS foo

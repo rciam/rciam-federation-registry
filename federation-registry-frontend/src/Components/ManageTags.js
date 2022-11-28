@@ -42,12 +42,11 @@ const ManageTags = (props) => {
 
 
     const addTag = () => {
-      fetch(config.host+'tenants/'+tenant_name+'/tags/services/'+props.service_id , {
+      fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/tags/services/'+props.service_id , {
         method: 'POST', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
-        'Content-Type': 'application/json',
-        'Authorization': localStorage.getItem('token')
+        'Content-Type': 'application/json'
         },
         body:JSON.stringify([singleSelections[0]])
       }).then(response=>{
@@ -76,12 +75,11 @@ const ManageTags = (props) => {
     
 
     const deleteTag = () => {
-      fetch(config.host+'tenants/'+tenant_name+'/tags/services/'+props.service_id, {
+      fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/tags/services/'+props.service_id, {
         method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
-        'Content-Type': 'application/json',
-        'Authorization': localStorage.getItem('token')
+        'Content-Type': 'application/json'
         },
         body:JSON.stringify([tagToDelete])
       }).then(response=>{
@@ -109,12 +107,11 @@ const ManageTags = (props) => {
     }
 
     const getTags = (searchString) => {
-        fetch(config.host+'tenants/'+tenant_name+'/tags' + (searchString?('?tag='+searchString):''),{
+        fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/tags' + (searchString?('?tag='+searchString):''),{
             method:'GET',
             credentials:'include',
             headers:{
-              'Content-Type':'application/json',
-              'Authorization': localStorage.getItem('token')
+              'Content-Type':'application/json'
             }
           }).then(response=>{
             if(response.status===200||response.status===304){

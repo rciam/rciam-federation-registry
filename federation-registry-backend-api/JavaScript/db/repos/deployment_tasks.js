@@ -5,7 +5,7 @@ class DeploymentTasksRepository {
     this.db = db;
     this.pgp = pgp;
     // set-up all ColumnSet objects, if needed:
-     cs = new pgp.helpers.ColumnSet(['agent_id','service_id']);
+     cs = new pgp.helpers.ColumnSet(['agent_id','service_id','deployer_name']);
   }
 
   async setDeploymentTasks(postData){
@@ -23,8 +23,8 @@ class DeploymentTasksRepository {
     });
   }
 
-  async resolveTask(service_id,agent_id,state){
-      return await this.db.oneOrNone('DELETE FROM deployment_tasks WHERE service_id=$1 AND agent_id=$2 RETURNING *',[+service_id,+agent_id]).then(res=>{if(res){return true}else{return false}}).catch(err=>{ return false;});    
+  async resolveTask(service_id,deployer_name){
+      return await this.db.oneOrNone('DELETE FROM deployment_tasks WHERE service_id=$1 AND deployer_name'+ (deployer_name?"='"+deployer_name+"'":' IS NULL ') + ' RETURNING *',[+service_id]).then(res=>{if(res){return true}else{return false}}).catch(err=>{ return false;});    
       //return await this.db.oneOrNone('DELETE FROM deployment_tasks WHERE service_id=$1 RETURNING *',[+service_id]).catch(err=>{throw 'Task not found'});
     
   }

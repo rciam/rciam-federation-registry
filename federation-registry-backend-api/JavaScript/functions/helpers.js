@@ -57,7 +57,8 @@ const calcDiff = (oldState,newState,tenant) => {
       },
       dlt:{},
       update:{
-        service_boolean:{}
+        service_boolean:{},
+        requested_attributes:[]
       },
       details:{}
     };
@@ -115,8 +116,20 @@ const calcDiff = (oldState,newState,tenant) => {
       edits.add.oidc_redirect_uris = new_values.redirect_uris.filter(x=>!old_values.redirect_uris.includes(x));
       edits.dlt.oidc_redirect_uris = old_values.redirect_uris.filter(x=>!new_values.redirect_uris.includes(x));
     }
-    for(var property in formConfig.form[tenant].extra_fields){
-      if(formConfig.form[tenant].extra_fields[property].tag==="coc"||formConfig.form[tenant].extra_fields[property].tag==="once"){
+    if(new_values.protocol==='saml'){
+      if(!old_values.requested_attributes){
+        old_values.requested_attributes = [];
+      }
+      if(!new_values.requested_attributes){
+        new_values.requested_attributes = [];
+      }
+      edits.add.requested_attributes = new_values.requested_attributes.filter(x=> !old_values.requested_attributes.some(e=> e.friendly_name === x.friendly_name));
+      edits.dlt.requested_attributes = old_values.requested_attributes.filter(x=> !new_values.requested_attributes.some(e=> e.friendly_name === x.friendly_name));
+      edits.update.requested_attributes = new_values.requested_attributes.filter(x=> old_values.requested_attributes.some(e=> e.friendly_name === x.friendly_name&&(e.required!==x.required||e.name!==x.name)));
+    }
+
+    for(var property in formConfig[tenant].form.extra_fields){
+      if(formConfig[tenant].form.extra_fields[property].tag==="coc"||formConfig[tenant].form.extra_fields[property].tag==="once"){
         if(property in new_values){
           if(property in old_values && old_values[property]!==new_values[property]){
             edits.update.service_boolean[property]=new_values[property];
@@ -130,11 +143,13 @@ const calcDiff = (oldState,newState,tenant) => {
     }
     for(var i in edits){
       for(var key in edits[i]){
-        if(edits[i][key].length===0){
+        if(edits[i][key].length===0&&key!='requested_attributes'){
           delete edits[i][key]
         }
       }
     }
+    delete new_values.requested_attributes;
+    delete old_values.requested_attributes;
     delete new_values.grant_types;
     delete new_values.contacts;
     delete new_values.redirect_uris;
@@ -369,53 +384,52 @@ const sendMail= (data,template_uri,users)=>{
 const createGgusTickets =  function(data){
   if(process.env.NODE_ENV!=='test'&&process.env.NODE_ENV!=='test-docker'&&!config.disable_emails){
     try{
-        if(data){
+        if(data&&data.length>0){
           readHTMLFile(path.join(__dirname, '../html/ticket.html'), async function(err, html) {
             let transporter = createTransport();
 
-                var template = hbs.compile(html);
 
                 data.forEach((ticket_data)=>{
-
-                  let code = makeCode(5);
-                  let type = ticket_data.type==='create'?'register':ticket_data.type==='edit'?'reconfigure':'deregister';
-                  let service_name = ticket_data.service_name;
-                  let requester_email = ticket_data.requester_email;
-                  let requester_username = ticket_data.requester_username;
-                  let reviewer_email = ticket_data.reviewer_email;
-                  let reviewer_username = ticket_data.reviewer_username;
-                  let protocol = ticket_data.protocol;
-                  let reviewed_at = ticket_data.reviewed_at;
-                  let env = ticket_data.integration_environment;
-
-                  var mailOptions = {
-                    from: ticket_data.reviewer_email,
-                    to : config.ggus_email,
-                    //to:"koza-sparrow@hotmaIl.com",
-                    subject : "Federation Registry: Service integration to "+ ticket_data.integration_environment + " (" + code + ")",
-                    text:`A request was made to `+ type +` a service on the `+ env +` environment
-                          Service Info
-                            service_name: ` + service_name + `
-                            service_protocol: ` + protocol + `
-                          Submitted by
-                            username: `+ requester_username + `
-                            email: `+ requester_email + `
-                          Approved by
-                            username: `+ reviewer_username +`
-                            email: `+ reviewer_email +`
-                            date_of_approval: `+reviewed_at,
-                    cc:ticket_data.reviewer_email
-                  };
-                  transporter.sendMail(mailOptions, function (error, response) {
-                    if (error) {
-                      return true;
-                      customLogger(null,null,'error',[{type:'email_log'},{message:'Email not sent'},{error:error},{recipient:'Ggus'},{ticket_data:ticket_data}]);
-                    }
-                    else {
-                      return true;
-                      customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{recipient:'Ggus'},{ticket_data:ticket_data}]);
-                    }
-                  });
+                    let code = makeCode(5);
+                    let type = ticket_data.type==='create'?'register':ticket_data.type==='edit'?'reconfigure':'deregister';
+                    let service_name = ticket_data.service_name;
+                    let requester_email = ticket_data.requester_email;
+                    let requester_username = ticket_data.requester_username;
+                    let reviewer_email = ticket_data.reviewer_email;
+                    let reviewer_username = ticket_data.reviewer_username;
+                    let protocol = ticket_data.protocol;
+                    let reviewed_at = ticket_data.reviewed_at;
+                    let env = ticket_data.integration_environment;
+  
+                    var mailOptions = {
+                      from: ticket_data.reviewer_email,
+                      to : config[ticket_data.tenant].service_integration_notification.email,
+                      //to:"koza-sparrow@hotmaIl.com",
+                      subject : "Federation Registry: Service integration to "+ ticket_data.integration_environment + " (" + code + ")",
+                      text:`A request was made to `+ type +` a service on the `+ env +` environment
+                            Service Info
+                              service_name: ` + service_name + `
+                              service_protocol: ` + protocol + `
+                            Submitted by
+                              username: `+ requester_username + `
+                              email: `+ requester_email + `
+                            Approved by
+                              username: `+ reviewer_username +`
+                              email: `+ reviewer_email +`
+                              date_of_approval: `+reviewed_at,
+                      cc:ticket_data.reviewer_email
+                    };
+                    transporter.sendMail(mailOptions, function (error, response) {
+                      if (error) {
+                        customLogger(null,null,'error',[{type:'email_log'},{message:'Email not sent'},{error:error},{recipient:'Ggus'},{ticket_data:ticket_data}]);
+                        return true;
+                      }
+                      else {
+                        customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{recipient:'Ggus'},{ticket_data:ticket_data}]);
+                        return true;
+                      }
+                    });
+                  
 
                 })
               });

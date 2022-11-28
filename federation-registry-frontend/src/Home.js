@@ -45,7 +45,7 @@ const Home = ()=> {
     },[])
 
    const getServices = () => {
-    fetch(config.host+'tenants/'+tenant_name+'/services?integration_environment=production&exclude_tags=test', {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/services?integration_environment=production&exclude_tags=test', {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -63,13 +63,11 @@ const Home = ()=> {
    }
 
    const activateInvitation = () => {
-     fetch(config.host+'tenants/'+tenant_name+'/invitations/activate_by_code', {
+     fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/invitations/activate_by_code', {
        method: 'PUT', // *GET, POST, PUT, DELETE, etc.
        credentials: 'include', // include, *same-origin, omit
        headers: {
-       'Content-Type': 'application/json',
-       'Authorization': localStorage.getItem('token')
-       },
+       'Content-Type': 'application/json'},
        body: JSON.stringify({code:localStorage.getItem('invitation')})
      }).then( response=>{
            if(response.status===406){return response.json();}

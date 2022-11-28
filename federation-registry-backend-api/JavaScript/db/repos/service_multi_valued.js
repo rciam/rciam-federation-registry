@@ -7,6 +7,8 @@ class ServiceMultiValuedRepository {
     this.db = db;
     this.pgp = pgp;
     // set-up all ColumnSet objects, if needed:
+    cs.serviceSamlAttributes = new pgp.helpers.ColumnSet(['owner_id','friendly_name','name','required','name_format']); 
+    cs.updateSamlAttributes = new pgp.helpers.ColumnSet(['?owner_id','friendly_name','name','required','name_format']);
     cs.multi = new pgp.helpers.ColumnSet(['owner_id','value']);
     cs.serviceBooleanPet = new pgp.helpers.ColumnSet(['petition_id','name','value']);
     cs.serviceBooleanSer = new pgp.helpers.ColumnSet(['service_id','name','value']);
@@ -14,13 +16,14 @@ class ServiceMultiValuedRepository {
     cs.serviceBooleanPetUpd = new pgp.helpers.ColumnSet(['?petition_id','?name','value'],{table:'service_petition_boolean'});
   }
 
+
   async updateServiceBoolean(type,service,id){
     // updateData = [{id:1,state:'deployed'},{id:2,state:'deployed'},{id:3,state:'failed'}];
     let data = [];
     let upd_cs;
     id = parseInt(id);
     for(const property in service){
-      if(Object.keys(config.form[service.tenant].extra_fields).includes(property) && (config.form[service.tenant].extra_fields[property].tag==='coc'||(config.form[service.tenant].extra_fields[property].tag==='once'&&(service[property] === 'true'||service[property]===true)))){
+      if(Object.keys(config[service.tenant].form.extra_fields).includes(property) && (config[service.tenant].form.extra_fields[property].tag==='coc'||(config[service.tenant].form.extra_fields[property].tag==='once'&&(service[property] === 'true'||service[property]===true)))){
         if(type==='petition'){
           data.push({petition_id:id,name:property,value:(service[property] === 'true'||service[property]===true)});
           upd_cs = cs.serviceBooleanPetUpd;
@@ -42,36 +45,112 @@ class ServiceMultiValuedRepository {
     }
   }
 
+  
 
   async addServiceBoolean(type,service,id){
     let data = [];
     let add_cs = {};
     let table_name;
-    for(const property in service){
-      if(Object.keys(config.form[service.tenant].extra_fields).includes(property)){
-        if(config.form[service.tenant].extra_fields[property].tag==='coc'||config.form[service.tenant].extra_fields[property].tag==='once'){
-          if(type==='petition'){
-            data.push({petition_id:id,name:property,value:(service[property] === 'true'||service[property]===true)});
-            add_cs = cs.serviceBooleanPet;
-            table_name = "service_petition_boolean";
-          }
-          else{
-            data.push({service_id:id,name:property,value:(service[property] === 'true'||service[property]===true)});
-            add_cs = cs.serviceBooleanSer;
-            table_name = "service_boolean";
+      for(const property in service){
+        if(Object.keys(config[service.tenant].form.extra_fields).includes(property)){
+          if(config[service.tenant].form.extra_fields[property].tag==='coc'||config[service.tenant].form.extra_fields[property].tag==='once'){
+            if(type==='petition'){
+              data.push({petition_id:id,name:property,value:(service[property] === 'true'||service[property]===true)});
+              add_cs = cs.serviceBooleanPet;
+              table_name = "service_petition_boolean";
+            }
+            else{
+              data.push({service_id:id,name:property,value:(service[property] === 'true'||service[property]===true)});
+              add_cs = cs.serviceBooleanSer;
+              table_name = "service_boolean";
+            }
           }
         }
+  
       }
-    }
-    if(data.length>0){
-      const query = this.pgp.helpers.insert(data,add_cs,table_name);
-      return this.db.none(query).then(data => {
+      if(data&&data.length>0){
+          const query = this.pgp.helpers.insert(data,add_cs,table_name);
+          return this.db.none(query).then(data => {
+            return true;
+          })
+      }else{
         return true;
+      }
+  }
+
+
+async updateSamlAttributes(type,data,service_id){
+  if(data&&data.length>0){
+    for(const item of data) {
+      item.owner_id = parseInt(service_id);
+     }
+     const query = this.pgp.helpers.update(data,cs.updateSamlAttributes,type==='petition'?'service_petition_saml_attributes':'service_saml_attributes') + ' WHERE v.owner_id = t.owner_id';
+     return this.db.none(query).then(res=>{
+      return true
+     }).catch(error=>{
+      throw error
+     });
+  }
+  else{
+    return true;
+  }
+}
+
+
+  async addSamlAttributes(type,data,service_id){
+    if(data && data.length>0){
+      for(const item of data) {
+        item.owner_id = service_id;
+       }
+      const query = this.pgp.helpers.insert(data,cs.serviceSamlAttributes,type==='petition'?'service_petition_saml_attributes':'service_saml_attributes');
+      return this.db.none(query).then(data => {
+          return true
       })
+      .catch(error => {
+          throw error
+      });
+
     }else{
-      return true;
+      return true
     }
   }
+
+
+  async addSamlAttributesMultiple(data,table){
+    //console.log(data);.
+    if(data&&data.length>0){
+      const query = this.pgp.helpers.insert(data,cs.serviceSamlAttributes,table);
+      return this.db.none(query).then(data => {
+          return true
+      })
+      .catch(error => {
+          throw error
+      });
+    }
+  }
+
+  async deleteSamlAttributes(type,data,service_id){
+    let attribute_values = [];
+    data.forEach(attribute=>{
+      attribute_values.push(attribute.friendly_name)
+    })
+    
+    if(data&&data.length>0){
+      try{
+        const query = this.pgp.as.format('DELETE FROM ' + (type==='petition'?'service_petition_saml_attributes':'service_saml_attributes') +' WHERE owner_id=$1 AND friendly_name IN ($2:csv)',[+service_id,attribute_values]);
+        return this.db.any(query).then(result =>{
+
+          return result
+        });
+
+      }
+      catch(err){
+        console.log(err);
+      }
+    }
+
+  }
+
 
   async addMultiple(data,table){
     const query = this.pgp.helpers.insert(data,cs.multi,table);

@@ -15,14 +15,14 @@ import {faTimes} from '@fortawesome/free-solid-svg-icons';
       const user = useContext(userContext);
       // eslint-disable-next-line
       const { t, i18n } = useTranslation();
-      
+
 
 
 
       const [bannerAlertInfo,setBannerAlertInfo] = useState([]);
       const getBannerAlerts = () => {
         if(tenant[0]){
-          fetch(config.host+'tenants/'+tenant[0].name+'/banner_alert?active=true', {
+          fetch(config.host[tenant[0].name]+'tenants/'+tenant[0].name+'/banner_alert?active=true', {
             method: 'GET', // *GET, POST, PUT, DELETE, etc.
             credentials: 'include', // include, *same-origin, omit
             headers: {
@@ -88,8 +88,6 @@ import {faTimes} from '@fortawesome/free-solid-svg-icons';
               </div>
             :null}
             
-            {/* <Header alertBar={showAlertBar} />
-            <NavbarTop alertBar={showAlertBar}/> */}
             <Header alertBar={bannerAlertInfo.length>0} />
             <NavbarTop alertBar={bannerAlertInfo.length>0} />
             <div className="ssp-container main">

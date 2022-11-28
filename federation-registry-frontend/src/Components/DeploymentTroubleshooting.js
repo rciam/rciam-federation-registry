@@ -29,13 +29,11 @@ const DeploymentTroubleshooting = (props) => {
   const [error,setError] = useState();
   const resendDeployment = () => {
     setLoading(true);
-    fetch(config.host+'tenants/'+tenant_name+'/services/'+props.service_id +'/deployment?action=resend', {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/services/'+props.service_id +'/deployment?action=resend', {
       method: 'PUT', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json',
-      'Authorization': localStorage.getItem('token')
-      }
+      'Content-Type': 'application/json'  }
     }).then(res=> {
 
       if(res.status===200){

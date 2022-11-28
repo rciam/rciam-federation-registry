@@ -15,6 +15,7 @@ import UserHandler from '../Components/UserHandler.js';
 import BroadcastNotifications from '../Components/BrodcastNotifications.js'; 
 import OutdatedNotifications from '../Components/OutdatedNotifications.js'; 
 import ServiceOverviewPage from '../ServiceOverviewPage.js';
+import { useCookies } from 'react-cookie';
 //import { useParams } from "react-router-dom";
 
 
@@ -274,6 +275,7 @@ const Routes = (props) => {
 const TenantRoute = (props) => {
   const tenant = useContext(tenantContext);
   const user = useContext(userContext);
+  const [cookies] = useCookies(['federation_logoutkey']);
 
   const childrenWithProps = React.Children.map(props.children, child =>
       React.cloneElement(child, {...props.location.state})
@@ -286,7 +288,7 @@ const TenantRoute = (props) => {
         !(tenant && tenant[0] && (props.computedMatch.params.tenant_name === tenant[0].name)) ?(
           <TenantHandler/>
         ) :
-        localStorage.getItem('token')&&!(user&&user[0])? 
+        cookies.federation_logoutkey&&!(user&&user[0])? 
         <UserHandler/>:
         (
           childrenWithProps
@@ -302,6 +304,7 @@ const ProtectedRoute= (props)=> {
   const user = useContext(userContext);
   const tenant = useContext(tenantContext);
   //let {tenant_name} = useParams();
+  const [cookies] = useCookies(['federation_logoutkey']);
 
   useEffect(()=>{
     if(!(tenant&&tenant[0]&&tenant[0].name)||!(user&&user[0])){
@@ -332,9 +335,9 @@ const ProtectedRoute= (props)=> {
         <TenantHandler/>:
         //localStorage.getItem('user')
         // user && user[0] && (!(props.admin && !user[0].review)||props.location.state.integration_environment==='development')
-        localStorage.getItem('token')&&!(user&&user[0])? 
+        cookies.federation_logoutkey&&!(user&&user[0])? 
           <UserHandler/>:
-        localStorage.getItem('token')&&(user&&user[0])&&(!props.actions||authorisedActions(user[0].actions))?
+        cookies.federation_logoutkey&&(user&&user[0])&&(!props.actions||authorisedActions(user[0].actions))?
         (
           childrenWithProps
         ) : (

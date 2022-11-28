@@ -243,13 +243,11 @@ const ServiceList= (props)=> {
   }
   const getInvites = () => {
 
-    fetch(config.host+'tenants/'+tenant_name+'/invitations', {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/invitations', {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json',
-      'Authorization': localStorage.getItem('token')
-    }}).then(response=>{
+      'Content-Type': 'application/json'}}).then(response=>{
       if(response.status===200){
         return response.json();
       }else if(response.status===401){
@@ -277,13 +275,11 @@ const ServiceList= (props)=> {
   // Get data, to create Service List
   const getServices = ()=> {
     setLoadingList(true);
-    fetch(config.host+'tenants/'+tenant_name+'/services/list?page='+activePage+'&limit='+pageSize+generateFilterString(), {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/services/list?page='+activePage+'&limit='+pageSize+generateFilterString(), {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json',
-      'Authorization': localStorage.getItem('token')
-    }}).then(response=>{
+      'Content-Type': 'application/json'}}).then(response=>{
       if(response.status===200||response.status===304){
         return response.json();
       }
@@ -325,13 +321,11 @@ const ServiceList= (props)=> {
 
 
   const exportServicesToCsv = ()=> {
-    fetch(config.host+'tenants/'+tenant_name+'/services/list?'+(generateFilterString().length>0?generateFilterString().slice(1):""), {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/services/list?'+(generateFilterString().length>0?generateFilterString().slice(1):""), {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json',
-      'Authorization': localStorage.getItem('token')
-    }}).then(response=>{
+      'Content-Type': 'application/json'}}).then(response=>{
       if(response.status===200||response.status===304){
         return response.json();
       }
@@ -361,22 +355,27 @@ const ServiceList= (props)=> {
   const createCsv = (exportedServices) => {
     var csv =
       "Country,Organization,Service Name, Service Url, Service Managers, Integration Date, Last Update Date\n";
-      exportedServices.forEach((service) => {
-      csv += service.country + ",";
-      csv += service.organization_name + ",";
-      csv += service.service_name + ",";
-      csv += service.website_url + ",";
-      csv += service.owners.join(" ") + ",";
-      //csv += Array.isArray(service.owners)?(service.owners.join(" ") + ","):[];
-      csv += service.created_at + ",";
-      csv += service.last_edited + ",";
-      csv += "\n";
+      exportedServices.forEach((service,index) => {
+      try{
+        csv += '"' + (service.country?service.country:' ') + '",';
+        csv += '"' + (service.organization_name?service.organization_name:' ') + '",';
+        csv += '"' + (service.service_name?service.service_name:' ') + '",';
+        csv += '"' + (service.website_url?service.website_url:' ') + '",';
+        csv += '"' + (Array.isArray(service.owners)?service.owners.join(" "):'Ownerless') + '",';
+        csv += '"' + (service.created_at?service.created_at:' ') + '",';
+        csv += '"' + (service.last_edited?service.last_edited:' ') + '",';
+        csv += "\n";
+      }
+      catch(err){
+        console.log(err);
+      }
+      
     });
 
     var hiddenElement = document.createElement("a");
-    hiddenElement.href = "data:text/csv;charset=utf-8," + encodeURI(csv);
+    hiddenElement.href = "data:text/csv;charset=utf-8," + encodeURI(csv).replaceAll('#', '%23');
     hiddenElement.target = "_blank";
-
+    console.log("data:text/csv;charset=utf-8," + encodeURI(csv));
     //provide the name for the CSV file to be downloaded
     hiddenElement.download = "ServiceExport.csv";
     hiddenElement.click();
@@ -429,12 +428,11 @@ const ServiceList= (props)=> {
   const deleteService = (service_id,petition_id)=>{
     setAsyncResponse(true);
     if(petition_id){
-      fetch(config.host+'tenants/'+tenant_name+'/petitions/'+petition_id, {
+      fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/petitions/'+petition_id, {
         method: 'PUT', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': localStorage.getItem('token')
+          'Content-Type': 'application/json'
         },
         body:JSON.stringify({service_id:service_id,type:'delete'})
       }).then(response=> {
@@ -457,12 +455,11 @@ const ServiceList= (props)=> {
       });
     }
     else {
-      fetch(config.host+'tenants/'+tenant_name+'/petitions', {
+      fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/petitions', {
         method: 'POST', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': localStorage.getItem('token')
+          'Content-Type': 'application/json'
         },
         body:JSON.stringify({service_id:service_id,type:'delete'})
       }).then(response=> {
@@ -488,13 +485,11 @@ const ServiceList= (props)=> {
 
   const deletePetition = (id)=>{
     setAsyncResponse(true);
-    fetch(config.host+'tenants/'+tenant_name+'/petitions/'+id, {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/petitions/'+id, {
       method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json',
-      'Authorization': localStorage.getItem('token')
-    }}).then(response=> {
+      'Content-Type': 'application/json'}}).then(response=> {
       setResponseTitle(t('request_cancel_title'));
       setAsyncResponse(false);
       getServices();
@@ -917,7 +912,7 @@ function TableItem(props) {
               </Badge>:null}
             {props.service.outdated&&!props.service.petition_id&&props.service.state==='deployed'?<Badge className="status-badge cursor-pointer"  onClick={()=>{props.setFilter('showOutdated',true); props.setExpandFilters(true); }} variant="danger">Update Required</Badge>:null}
             {props.service.status==='changes'?<Badge className="status-badge cursor-pointer" variant="info" onClick={()=>{props.setFilters({...props.filters,showPending:true,showPendingSubFilter:'changes'}); props.setExpandFilters(true);}}>{t('badge_changes_requested')}</Badge>:null}
-            {props.service.status==='request_review'?<Badge className="status-badge cursor-pointer" onClick={()=>{props.setFilters({...props.filters,showRequestReview:true,showPendingSubFilter:'request_review',showPending:true}); props.setExpandFilters(true);}} variant="info">Review Requested</Badge>:null}
+            {props.service.status==='request_review'&&user.actions.includes('review_petition')?<Badge className="status-badge cursor-pointer" onClick={()=>{props.setFilters({...props.filters,showRequestReview:true,showPendingSubFilter:'request_review',showPending:true}); props.setExpandFilters(true);}} variant="info">Review Requested</Badge>:null}
           </div>
          
           {user.actions.includes('manage_tags')&&props.service.tags?

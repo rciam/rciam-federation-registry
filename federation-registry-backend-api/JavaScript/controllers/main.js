@@ -138,7 +138,6 @@ const approvePetition = (req,res,next,db) => {
           ]);
         }
         else if(petition.meta_data.type==='create'){
-
           await t.service.add(petition.service_data,petition.meta_data.requester,petition.meta_data.group_id).then(async id=>{
             if(id){
               service_id = id;
@@ -220,12 +219,12 @@ const getPetition = (req,res,next,db) => {
         if(petition){
           await t.service_petition_details.belongsToRequester(req.params.id,req.user.sub).then(owned=>{
             res.status(200).json({petition:petition.service_data,metadata:{...petition.meta_data,owned:  owned}});
-          })
+          }).catch(err=>{console.log(err); next(err)})
         }
         else{
           return res.status(404).end();
         }
-      }).catch(err=>{next(err)});
+      }).catch(err=>{console.log(err); next(err)});
     })
     
   }
