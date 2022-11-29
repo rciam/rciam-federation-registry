@@ -87,7 +87,9 @@
           "description": "Kind of the application. Web Clients MUST only register URLs using the https scheme as redirect_uris; they MAY use the http scheme when using localhost as the hostname. Native Clients MUST only register redirect_uris using custom URI schemes or URLs using the http scheme with localhost as the hostname."
         },
         "requested_attributes": {
-          "label": "Requested attributes <br/>(see <a href='https://docs.egi.eu/providers/check-in/sp/#user-attributes' target='_blank' rel='noopener noreferrer'>here</a>)"
+          "label": "Requested attributes <br/>(see <a href='https://docs.egi.eu/providers/check-in/sp/#user-attributes' target='_blank' rel='noopener noreferrer'>here</a>)",
+          "description": "List of SAML attributes this SAML service is allowed to receive. See <a href='https://docs.egi.eu/providers/check-in/sp/#user-attributes' target='_blank' rel='noopener noreferrer'>here</a> for more information",
+          "required":false
         },
         "allow_introspection": {
           "description": "Access to the Token Introspection endpoint is restricted to confidential clients.",
@@ -221,6 +223,11 @@
         },
         "application_type": {
           "description": "Kind of the application. Web Clients MUST only register URLs using the https scheme as redirect_uris; they MAY use the http scheme when using localhost as the hostname. Native Clients MUST only register redirect_uris using custom URI schemes or URLs using the http scheme with localhost as the hostname."
+        },
+        "requested_attributes": {
+          "label": "Requested attributes <br/>(see <a href='https://docs.egi.eu/providers/check-in/sp/#user-attributes' target='_blank' rel='noopener noreferrer'>here</a>)",
+          "description": "List of SAML attributes this SAML service is allowed to receive. See <a href='https://docs.egi.eu/providers/check-in/sp/#user-attributes' target='_blank' rel='noopener noreferrer'>here</a> for more information",
+          "required":false
         }
       },
       "extra_fields":{

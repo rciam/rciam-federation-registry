@@ -1382,7 +1382,7 @@ const ServiceForm = (props)=> {
                             />
                             <UrlWarning url={values.metadata_url} overwriteWarning={metadataWarning} touched={!!values.metadata_url}/>
                           </InputRow>
-                          <InputRow  moreInfo={tenant.form_config.more_info.scope} title={tenant.form_config.more_info.requested_attributes.label||"Attributes"} required={true} description={"The saml atributes blah blah blah"} error={typeof(errors.scope)==='string'?errors.scope:null} touched={true}>
+                          <InputRow  moreInfo={tenant.form_config.more_info.requested_attributes} title={tenant.form_config.more_info.requested_attributes.label||"Attributes"} required={true} description={tenant.form_config.more_info.requested_attributes.description} error={typeof(errors.scope)==='string'?errors.scope:null} touched={true}>
                             <SamlAttributesInput
                               name='requested_attributes'
                               values={values.requested_attributes?values.requested_attributes:[]}
