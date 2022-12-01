@@ -89,7 +89,7 @@
         "requested_attributes": {
           "label": "Requested attributes <br/>(see <a href='https://docs.egi.eu/providers/check-in/sp/#user-attributes' target='_blank' rel='noopener noreferrer'>here</a>)",
           "description": "List of SAML attributes this SAML service is allowed to receive. See <a href='https://docs.egi.eu/providers/check-in/sp/#user-attributes' target='_blank' rel='noopener noreferrer'>here</a> for more information",
-          "required":false
+          "disabled": false
         },
         "allow_introspection": {
           "description": "Access to the Token Introspection endpoint is restricted to confidential clients.",
