@@ -1382,21 +1382,24 @@ const ServiceForm = (props)=> {
                             />
                             <UrlWarning url={values.metadata_url} overwriteWarning={metadataWarning} touched={!!values.metadata_url}/>
                           </InputRow>
-                          <InputRow  moreInfo={tenant.form_config.more_info.requested_attributes} title={tenant.form_config.more_info.requested_attributes.label||"Attributes"} required={true} description={tenant.form_config.more_info.requested_attributes.description} error={typeof(errors.scope)==='string'?errors.scope:null} touched={true}>
-                            <SamlAttributesInput
-                              name='requested_attributes'
-                              values={values.requested_attributes?values.requested_attributes:[]}
-                              placeholder={t('form_type_prompt')}
-                              defaultValues= {tenant.form_config.requested_attributes}
-                              errors={errors.requested_attributes}
-                              touched={touched.requested_attributes}
-                              setMetadataLoaded={setMetadataLoaded}
-                              disabled={disabled}
-                              setFieldValue={setFieldValue}
-                              onBlur={handleBlur}
-                              changed={props.changes?props.changes.requested_attributes:null}
-                            />
-                          </InputRow>
+                          {!tenant.form_config.more_info.requested_attributes.disabled?
+                            <InputRow  moreInfo={tenant.form_config.more_info.requested_attributes} title={tenant.form_config.more_info.requested_attributes.label||"Attributes"} required={false} description={tenant.form_config.more_info.requested_attributes.description} error={typeof(errors.scope)==='string'?errors.scope:null} touched={true}>
+                              <SamlAttributesInput
+                                name='requested_attributes'
+                                values={values.requested_attributes?values.requested_attributes:[]}
+                                placeholder={t('form_type_prompt')}
+                                defaultValues= {tenant.form_config.requested_attributes}
+                                errors={errors.requested_attributes}
+                                touched={touched.requested_attributes}
+                                setMetadataLoaded={setMetadataLoaded}
+                                disabled={disabled}
+                                setFieldValue={setFieldValue}
+                                onBlur={handleBlur}
+                                changed={props.changes?props.changes.requested_attributes:null}
+                              />
+                            </InputRow>
+                            :null
+                          }
                        </React.Fragment>
                      :null}
                     </Tab>
