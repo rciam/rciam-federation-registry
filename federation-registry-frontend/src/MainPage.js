@@ -57,19 +57,16 @@ import {faTimes} from '@fortawesome/free-solid-svg-icons';
       },[tenant])
       
       useEffect(() => {
-        const faviconUpdate = async () => {
-          //grab favicon element by ID
-          const favicon = document.getElementById("favicon");
-          if (tenant&&tenant[0]&&tenant[0].name==='egi') {
-            favicon.href = "/favicon.ico?v=2";
+        if(tenant&&tenant[0]){
+          const faviconUpdate = async () => {
+            console.log(tenant[0].config.icon);
+            //grab favicon element by ID
+            const favicon = document.getElementById("favicon");
+            favicon.href = "/"+tenant[0].config.icon+"?v=2";
           }
-          //if above 0, we set back to green
-          else if (tenant&&tenant[0]&&tenant[0].name==='eosc'){
-            favicon.href = "/eosc.ico?v=2";
-          }
-        };
-        //run our function here
-        faviconUpdate();
+          //run our function here
+          faviconUpdate();
+        }
         
         //2nd paramenter passed to useEffect is dependency array so that this effect only runs on changes to count
       }, [tenant]);
