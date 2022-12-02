@@ -1,10 +1,12 @@
 {
   "egi" :{
+    "icon": "egi.ico",
     "logo_url":"https://aai-dev.egi.eu/proxy/module.php/themeegi/resources/images/logo.svg",
     "sender":"EGI Check-in",
     "contact":"koza-sparrow@hotmail.com",
     "tenant_signature": "EGI AAI team",
     "production_url": "https://aai.egi.eu/federation/egi",
+    "footer_description": "Copyright ©2016-2022 | Check-in is an EGI service provided by GRNET, receiving funding from the <a href='https://www.egi.eu/egi-foundation/' target='_blank' rel='noopener noreferrer'>EGI Foundation (EGI.eu)</a> and the <a href='https://www.egi.eu/project/egi-ace/' target='_blank' rel='noopener noreferrer'>EGI-ACE project</a> (Horizon 2020) under Grant number 101017567",
     "service_integration_notification": {
       "enabled": true,
       "email": "checkin-support@mailman.egi.eu",
@@ -149,11 +151,13 @@
 
   },
   "ni4os": {
-    "logo_url":"https://agora.ni4os.eu/ui/assets/logo-ni4os.png",
-    "sender":"andreaskoza@admin.grnet.gr",
-    "contact": "aai@ni4os.eu",
-    "tenant_signature": "NI4OS team",
-    "production_url": null,
+    "icon": "ni4os.png",
+    "logo_url":"https://aai.ni4os.eu/proxy/module.php/themevanilla/resources/images/logo.jpg",
+    "sender":"NI4OS-Europe Federation Registry Notifications",
+    "contact": "mailto:aai-support@ni4os.eu",
+    "tenant_signature": "NI4OS-Europe Login team",
+    "production_url": "https://aai.ni4os.eu/federation/ni4os",
+    "footer_description": "The NI4OS-Europe project is funded by the European Commission under the Horizon 2020 European research infrastructures grant agreement no.857645",
     "service_integration_notification": {
       "enabled": true,
       "email": " aai@ni4os.eu",
@@ -246,26 +250,6 @@
           "tag": "org",
           "active": ["production"],
           "required": ["production"]
-        },
-        "ni4os_security_policies":{
-          "title": "NI4OS Security Policies",
-          "desc":"The service adheres to the NI4OS Security Baseline",
-          "required": ["production"],
-          "type":"boolean",
-          "tag":"coc",
-          "tab":"general",
-          "default": false,
-          "error": "The service must comply with this policy"
-        },
-        "ni4os_data_protection":{
-          "title": "Research & Scholarship",
-          "desc":"The service is compliant with the <a href='https://refeds.org/category/research-and-scholarship'>REFEDS Research & Scholarship Entity Category</a>",
-          "required": [],
-          "type":"boolean",
-          "tag":"coc",
-          "tab":"general",
-          "default": false,
-          "error": "The service must comply with this policy"
         },
         "dpcoco":{
           "title": "Data Protection Code of Conduct",
