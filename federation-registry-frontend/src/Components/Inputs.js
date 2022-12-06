@@ -199,10 +199,10 @@ export function OrganizationField(props){
     else{
       props.setDisabledOrganizationFields([]);
     }
-     props.setFieldValue('organization_url',(organizations[selected[0]]&&organizations[selected[0]].url?organizations[selected[0]].url:''),false).then(()=>{
+    props.setFieldValue('organization_url',(organizations[selected[0]]&&organizations[selected[0]].url?organizations[selected[0]].url:selected[0]&&selected[0].contains(' (Add New Organization)')?props.values.organization_url:''),false).then(()=>{
       props.validateField('organization_url');       
-     });
-     setSingleSelections(selected);
+    });
+    setSingleSelections(selected);
 
   } 
   
