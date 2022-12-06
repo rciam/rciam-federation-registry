@@ -17,18 +17,18 @@ import parse from 'html-react-parser';
 
 export const Header= (props)=> {
     const tenant = useContext(tenantContext);
-
+    
     return(
 
       <div className={"header" + (props.alertBar?' alert_bar_displacement':'')}>
         {/*<div className="corner-ribbon red">Devel</div>*/}
         <div className="text-center ssp-logo">
           <a href="https://www.egi.eu/" >
-            <Image src={tenant[0]?tenant[0].logo:null} fluid />
+            <Image src={tenant[0]?tenant[0].config.logo_url:null} fluid />
           </a>
         </div>
         <h1 className="text-center">
-          {tenant[0]?tenant[0].main_title:null}
+          {tenant[0]?tenant[0].config.home_page_title:null}
         </h1>
       </div>
     );
@@ -66,7 +66,7 @@ export const NavbarTop = (props)=>{
             alignRight
             className='drop-menu drop-container-header'
             title={<React.Fragment>
-              <span style={tenant&&tenant[0]?{color:tenant[0].color}:null}>
+              <span style={tenant&&tenant[0]?{color:tenant[0].config.theme_color}:null}>
               {user?user.name:'login'}
               <span className="user-role">{user?' ('+user.role+')':null}</span>
               <FontAwesomeIcon icon={admin?faUserShield:faUser}/>
