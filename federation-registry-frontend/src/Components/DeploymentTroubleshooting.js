@@ -104,7 +104,7 @@ const DeploymentTroubleshooting = (props) => {
           
             <React.Fragment>
               <hr/>
-              <Alert show={true} variant="light" style={{color:tenant.color}} className={expand?(props.deploymentError?"error":"warning")+"-action-alert":(props.deploymentError?"error":"warning")+"-action-alert-hidden"}>
+              <Alert show={true} variant="light" style={{color:tenant.config.theme_color}} className={expand?(props.deploymentError?"error":"warning")+"-action-alert":(props.deploymentError?"error":"warning")+"-action-alert-hidden"}>
               <div className="d-flex justify-content-end">
               {error&&expand?
                 <div className="review-error" style={{marginRight:'0.5rem',color:'#721c24'}}>
