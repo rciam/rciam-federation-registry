@@ -172,6 +172,9 @@ async function run() {
         // fix format of the data
         for(let index=0;index<response.data.services.length;index++){
           service = response.data.services[index];
+          if(service.json.post_logout_redirect_uris&&service.json.post_logout_redirect_uris.length>0){
+            service.json.redirect_uris = [...service.json.redirect_uris,...service.json.post_logout_redirect_uris]
+          }
           for (var propName in service.json) {
             if (service.json[propName] === null || service.json[propName] === undefined) {
               delete service.json[propName];

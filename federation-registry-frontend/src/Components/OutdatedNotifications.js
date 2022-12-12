@@ -60,6 +60,7 @@ const OutdatedNotifications = () =>{
         }
       }).then(response=> {
       if(response){
+
         let outdated_services  = {...outdatedServices};
         for(const integration_environment in outdated_services){
           outdated_services[integration_environment] = 0;

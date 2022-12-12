@@ -144,6 +144,7 @@ router.post('/tenants/:tenant/services',adminAuth,tenantValidation(),validate,fo
               let contacts = [];
               let grant_types = [];
               let redirect_uris = [];
+              let post_logout_redirect_uris = [];
               let scopes = [];
               let queries = [];
               let service_state = [];
@@ -197,6 +198,9 @@ router.post('/tenants/:tenant/services',adminAuth,tenantValidation(),validate,fo
               }
               if(redirect_uris.length>0){
                 queries.push(t.service_multi_valued.addMultiple(redirect_uris,'service_oidc_redirect_uris'));
+              }
+              if(post_logout_redirect_uris.length>0){
+                queries.push(t.service_multi_valued.addMultiple(post_logout_redirect_uris,'service_oidc_post_logout_redirect_uris'));
               }
               if(requested_attributes&&requested_attributes.length>0){
                 queries.push(t.service_multi_valued.addSamlAttributesMultiple(requested_attributes,'service_saml_attributes'));
