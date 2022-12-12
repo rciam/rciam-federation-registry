@@ -108,6 +108,12 @@ const calcDiff = (oldState,newState,tenant) => {
       if(!new_values.grant_types){
         new_values.scope = [];
       }
+      if(!old_values.post_logout_redirect_uris){
+        old_values.post_logout_redirect_uris = [];
+      }
+      if(!new_values.post_logout_redirect_uris){
+        new_values.post_logout_redirect_uris = [];
+      }
 
       edits.add.oidc_grant_types = new_values.grant_types.filter(x=>!old_values.grant_types.includes(x));
       edits.dlt.oidc_grant_types = old_values.grant_types.filter(x=>!new_values.grant_types.includes(x));
@@ -115,6 +121,8 @@ const calcDiff = (oldState,newState,tenant) => {
       edits.dlt.oidc_scopes = old_values.scope.filter(x=>!new_values.scope.includes(x));
       edits.add.oidc_redirect_uris = new_values.redirect_uris.filter(x=>!old_values.redirect_uris.includes(x));
       edits.dlt.oidc_redirect_uris = old_values.redirect_uris.filter(x=>!new_values.redirect_uris.includes(x));
+      edits.add.oidc_post_logout_redirect_uris = new_values.post_logout_redirect_uris.filter(x=>!old_values.post_logout_redirect_uris.includes(x));
+      edits.dlt.oidc_post_logout_redirect_uris = old_values.post_logout_redirect_uris.filter(x=>!new_values.post_logout_redirect_uris.includes(x));
     }
     if(new_values.protocol==='saml'){
       if(!old_values.requested_attributes){

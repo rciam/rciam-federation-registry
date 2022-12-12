@@ -106,6 +106,8 @@ class PetitionRepository {
                   queries.push(t.service_multi_valued.add('petition','oidc_grant_types',petition.grant_types,result.id));
                   queries.push(t.service_multi_valued.add('petition','oidc_scopes',petition.scope,result.id));
                   queries.push(t.service_multi_valued.add('petition','oidc_redirect_uris',petition.redirect_uris,result.id));
+                  queries.push(t.service_multi_valued.add('petition','oidc_post_logout_redirect_uris',petition.post_logout_redirect_uris,result.id));
+
                 }
                 if(petition.protocol==='saml'){
                   queries.push(t.service_multi_valued.addSamlAttributes('petition',petition.requested_attributes,result.id));                  

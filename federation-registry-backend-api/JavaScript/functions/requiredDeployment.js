@@ -22,6 +22,10 @@ function requiredDeployment(old_values,new_values){
     redirect_uris: {
       D:[],
       N:[]
+    },
+    post_logout_redirect_uris: {
+      D:[],
+      N:[]
     }
   };
 
@@ -80,6 +84,12 @@ function requiredDeployment(old_values,new_values){
       if(!new_values.redirect_uris){
         new_values.redirect_uris = [];
       }
+      if(!old_values.post_logout_redirect_uris){
+        old_values.post_logout_redirect_uris = [];
+      }
+      if(!new_values.post_logout_redirect_uris){
+        new_values.post_logout_redirect_uris = [];
+      }
       if(!old_values.scope){
         old_values.scope = [];
       }
@@ -100,6 +110,8 @@ function requiredDeployment(old_values,new_values){
 
       edits.redirect_uris.N = new_values.redirect_uris.filter(x=>!old_values.redirect_uris.includes(x));
       edits.redirect_uris.D = old_values.redirect_uris.filter(x=>!new_values.redirect_uris.includes(x));
+      edits.post_logout_redirect_uris.N = new_values.post_logout_redirect_uris.filter(x=>!old_values.post_logout_redirect_uris.includes(x));
+      edits.post_logout_redirect_uris.D = old_values.post_logout_redirect_uris.filter(x=>!new_values.post_logout_redirect_uris.includes(x));
 
       
 
@@ -114,12 +126,18 @@ function requiredDeployment(old_values,new_values){
     if(edits.redirect_uris&&edits.redirect_uris.N.length===0&&edits.redirect_uris.D.length===0){
       delete edits.redirect_uris;
     }
+    if(edits.post_logout_redirect_uris&&edits.post_logout_redirect_uris.N.length===0&&edits.post_logout_redirect_uris.D.length===0){
+      delete edits.post_logout_redirect_uris;
+    }
 
     if(edits.contacts&&edits.contacts.N.length===0&&edits.contacts.D.length===0){
       delete edits.contacts;
     }
     if(edits.redirect_uris&&edits.redirect_uris.N.length===0&&edits.redirect_uris.D.length===0){
       delete edits.redirect_uris;
+    }
+    if(edits.post_logout_redirect_uris&&edits.post_logout_redirect_uris.N.length===0&&edits.post_logout_redirect_uris.D.length===0){
+      delete edits.post_logout_redirect_uris;
     }
     return edits
   }

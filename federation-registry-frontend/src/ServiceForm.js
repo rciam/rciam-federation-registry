@@ -292,6 +292,50 @@ const ServiceForm = (props)=> {
         then: yup.array().min(1,t('yup_required')).nullable().required(t('yup_required'))
       })
     }),
+    post_logout_redirect_uris:yup.array().nullable().when('protocol',{
+      is:'oidc',
+      then: yup.array().nullable().when('integration_environment',(integration_environment)=>{
+        integrationEnvironment = integration_environment;
+      }).when('application_type',(application_type_value)=>{application_type = application_type_value;}).of(yup.string().required("Uri can't be an empty string").test('test_redirect_uri','Invalid Post Logout Redirect Uri',function(value){
+        if(value){
+          let url
+          try {
+            url = new URL(value);
+          } catch (err) {
+            return this.createError({ message: "Invalid uri" });  
+          }
+          if(value.includes('#')){
+            return this.createError({ message: "Uri can't contain fragments" });
+          }
+          if(application_type==='WEB'){
+            if((integrationEnvironment==='production'||integrationEnvironment==='demo')&& url){
+              if(url.protocol !== 'https:'&&!(url.protocol==='http:'&&url.hostname==='localhost')){
+                return this.createError({ message: "Uri must be a secure url starting with https://" });              
+              }
+              
+            }
+            else{
+              if(url&&!(url.protocol==='http:'||url.protocol==='https:')){
+                return this.createError({ message: "Uri must be a url starting with http(s):// " });                              
+              }
+            }
+          }
+          else{
+            // eslint-disable-next-line
+            if(url.protocol==="javascript:"){
+              return this.createError({ message: "Uri can't be of schema 'javascript:'" });
+            }
+            else if(url.protocol==='data:'){
+              return this.createError({ message: "Uri can't be of schema 'data:'" });              
+            }
+          }
+          return true
+        }
+      })).unique(t('yup_redirect_uri_unique')).when('grant_types',{
+        is:(grant_types)=> grant_types.includes("implicit")||grant_types.includes("authorization_code"),
+        then: yup.array().min(1,t('yup_required')).nullable().required(t('yup_required'))
+      })
+    }),
     logo_uri:yup.string().nullable().matches(reg.regUrl,'Logo must be be a secure url starting with https://').test('testImage',t('yup_image_url'),function(imageUrl){
       imageExists(imageUrl);
       if(imageUrl&&imageUrl.length > 6000){
@@ -1147,6 +1191,22 @@ const ServiceForm = (props)=> {
                                setFieldTouched={setFieldTouched}
                                disabled={disabled}
                                changed={props.changes?props.changes.redirect_uris:null}
+                             />
+                           </InputRow>
+                           <InputRow  moreInfo={tenant.form_config.more_info.post_logout_redirect_uris} title={t('form_redirect_uris')} required={values.grant_types.includes("implicit")||values.grant_types.includes("authorization_code")} error={typeof(errors.post_logout_redirect_uris)==='string'?errors.post_logout_redirect_uris:null}  touched={touched.post_logout_redirect_uris} description={t('form_redirect_uris_desc')}>
+                             <ListInput
+                               values={values.post_logout_redirect_uris}
+                               placeholder={t('form_type_prompt')}
+                               empty={(typeof(errors.post_logout_redirect_uris)==='string')?true:false}
+                               name='post_logout_redirect_uris'
+                               error={errors.post_logout_redirect_uris}
+                               touched={touched.post_logout_redirect_uris}
+                               onBlur={handleBlur}
+                               onChange={handleChange}
+                               integrationEnvironment = {values.integration_environment}
+                               setFieldTouched={setFieldTouched}
+                               disabled={disabled}
+                               changed={props.changes?props.changes.post_logout_redirect_uris:null}
                              />
                            </InputRow>
                           <InputRow  moreInfo={tenant.form_config.more_info.scope} title={t('form_scope')} required={true} description={t('form_scope_desc')} error={typeof(errors.scope)==='string'?errors.scope:null} touched={true}>

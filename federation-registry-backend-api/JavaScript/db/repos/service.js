@@ -70,6 +70,9 @@ class ServiceRepository {
                 if(service.redirect_uris&&service.redirect_uris.length>0){
                   queries.push(t.service_multi_valued.add('service','oidc_redirect_uris',service.redirect_uris,result.id));
                 }
+                if(service.post_logout_redirect_uris&&service.post_logout_redirect_uris.length>0){
+                  queries.push(t.service_multi_valued.add('service','oidc_post_logout_redirect_uris',service.post_logout_redirect_uris,result.id));
+                }
               }
               if(service.protocol==='saml'){
                 if(service.requested_attributes&&service.requested_attributes.length>0){
@@ -158,7 +161,7 @@ class ServiceRepository {
       'grant_types',(SELECT json_agg((v.value)) FROM service_oidc_grant_types v WHERE sd.id = v.owner_id),\
       'scope',(SELECT json_agg((v.value)) FROM service_oidc_scopes v WHERE sd.id = v.owner_id),\
       'requested_attributes',(SELECT coalesce(json_agg(json_build_object('friendly_name',v.friendly_name,'name',v.name,'required',v.required,'name_format',v.name_format)), '[]'::json) FROM service_saml_attributes v WHERE sd.id=v.owner_id),\
-      'redirect_uris',(SELECT json_agg((v.value)) FROM service_oidc_redirect_uris v WHERE sd.id = v.owner_id),",
+      'redirect_uris',(SELECT json_agg((v.value)) FROM service_oidc_redirect_uris v WHERE sd.id = v.owner_id),'post_logout_redirect_uris',(SELECT json_agg((v.value)) FROM service_oidc_post_logout_redirect_uris v WHERE sd.id = v.owner_id),",
       tags_filter:"",
       exclude_tags_filter:""
     }
