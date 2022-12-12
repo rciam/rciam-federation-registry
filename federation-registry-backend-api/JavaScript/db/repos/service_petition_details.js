@@ -154,8 +154,7 @@ class ServicePetitionDetailsRepository {
             tenant_selector_array.push("(tenant='"+tenant+"' AND integration_environment IN ('" + config[tenant].service_integration_notification.integration_environments.join("','") +"'))")
           }
          }
-
-         let tenant_selector = " AND ("+tenant_selector_array.join(" OR ") + ") ";
+         let tenant_selector = tenant_selector_array.length>0?" AND ("+tenant_selector_array.join(" OR ") + ") ":" AND false ";
          const query = this.pgp.as.format(sql.getTicketInfo,{ids:ids,tenant_selector:tenant_selector});
          return this.db.any(query);
       }

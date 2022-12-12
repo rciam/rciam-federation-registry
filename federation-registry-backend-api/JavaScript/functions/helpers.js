@@ -389,7 +389,7 @@ const sendMail= (data,template_uri,users)=>{
 }
 
 
-const createGgusTickets =  function(data){
+const sendDeploymentMail =  function(data){
   if(process.env.NODE_ENV!=='test'&&process.env.NODE_ENV!=='test-docker'&&!config.disable_emails){
     try{
         if(data&&data.length>0){
@@ -538,7 +538,7 @@ module.exports = {
   sendMultipleInvitations,
   readHTMLFile,
   extractServiceBoolean,
-  createGgusTickets,
+  sendDeploymentMail,
   delay,
   sendNotif,
   createTransport,
