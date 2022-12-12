@@ -3,7 +3,7 @@ const {petitionValidationRules,validate,validateInternal,tenantValidation,format
 const qs = require('qs');
 const {v1:uuidv1} = require('uuid');
 const axios = require('axios').default;
-const {sendMail,sendInvitationMail,sendMultipleInvitations,createGgusTickets,delay} = require('../functions/helpers.js');
+const {sendMail,sendInvitationMail,sendMultipleInvitations,sendDeploymentMail,delay} = require('../functions/helpers.js');
 const {db} = require('../db');
 var router = require('express').Router();
 var config = require('../config');
@@ -174,6 +174,11 @@ router.post('/tenants/:tenant/services',adminAuth,tenantValidation(),validate,fo
                   if(service.redirect_uris && service.redirect_uris.length>0){
                     service.redirect_uris.forEach(redirect_uri => {
                       redirect_uris.push({owner_id:service.id,value:redirect_uri});
+                    });
+                  }
+                  if(service.post_logout_redirect_uris && service.post_logout_redirect_uris.length>0){
+                    service.post_logout_redirect_uris.forEach(post_logout_redirect_uri => {
+                      post_logout_redirect_uris.push({owner_id:service.id,value:post_logout_redirect_uri});
                     });
                   }
                 }
@@ -471,7 +476,7 @@ router.post('/ams/ingest',checkCertificate,decodeAms,amsIngestValidation(),valid
               if(data){
                 await t.service_petition_details.getTicketInfo(ids).then(async ticket_data=>{
                   if(ticket_data){
-                    createGgusTickets(ticket_data);
+                    sendDeploymentMail(ticket_data);
                   }
                   if(errors.length>0){
                     await t.user.getUsersByAction('error_action').then(users=>{

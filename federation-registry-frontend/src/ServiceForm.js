@@ -461,7 +461,13 @@ const ServiceForm = (props)=> {
                 }}).then(async response=>{
                   if(response.status===200||response.status===304){
                     let metadata = await response.json();
-                    setMetadataLoaded(metadata);        
+                    if(tenant.form_config.more_info.requested_attributes&&!tenant.form_config.more_info.requested_attributes.disabled){
+                      setMetadataLoaded(metadata);        
+                    }
+                    else{
+                      metadata.supported_attributes = [];
+                      setMetadataLoaded(metadata);
+                    }
                   }
                   else {
                     setMetadataWarning(response.statusText);
@@ -1405,7 +1411,7 @@ const ServiceForm = (props)=> {
                             metadataLoaded.entity_id && metadataLoaded.entity_id!==values.entity_id?"The Metadata Url contains a different Entity Id from the provided, do you wish to replace it?":"" 
                           } 
                           message={
-                            metadataLoaded.supported_attributes.length>0&&metadataLoaded.unsupported_attributes.length>0?metadataLoaded.supported_attributes.length+ " out of " + (metadataLoaded.supported_attributes.length+metadataLoaded.unsupported_attributes.length)+ " attributes found are supported and can be added in the service configuration." :
+                            metadataLoaded.supported_attributes.length>0?metadataLoaded.supported_attributes.length+ (metadataLoaded.unsupported_attributes.length>0?" out of " + (metadataLoaded.supported_attributes.length+metadataLoaded.unsupported_attributes.length):"")+ " attributes found are supported and can be added in the service configuration." :
                             metadataLoaded.entity_id && (!values.entity_id||metadataLoaded.entity_id!==values.entity_id)?"Entity Id: "+metadataLoaded.entity_id:
                             null } 
                           accept={'Yes'} 

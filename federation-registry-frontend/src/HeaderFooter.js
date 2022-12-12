@@ -23,7 +23,7 @@ export const Header= (props)=> {
       <div className={"header" + (props.alertBar?' alert_bar_displacement':'')}>
         {/*<div className="corner-ribbon red">Devel</div>*/}
         <div className="text-center ssp-logo">
-          <a href="https://www.egi.eu/" >
+          <a href={tenant[0]?tenant[0].config.website_url:null}>
             <Image src={tenant[0]?tenant[0].config.logo_url:null} fluid />
           </a>
         </div>
