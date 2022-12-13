@@ -499,37 +499,7 @@ const serviceValidationRules = (options,req) => {
           throw new Error(err);
         }
       }),
-      body('*.post_logout_redirect_uris').custom((value,{req,location,path})=>{
-        let pos = path.match(/\[(.*?)\]/)[1];
-        let grant_types_bool;
-        if(Array.isArray(req.body[pos].grant_types)){
-          grant_types_bool = req.body[pos].grant_types.includes("implicit")||req.body[pos].grant_types.includes("authorization_code")
-        }
-        else{
-          grant_types_bool = false;
-        }
-        if(req.body[pos].protocol==='oidc'&&grant_types_bool){
-          // required
-          if(!value||value.length===0){
-            if(options.optional){
-
-              req.body[pos].outdated = true;
-              return true
-            }
-            else{
-              return false
-            }
-          }
-          else{
-            return true
-          }
-
-        }
-        else{
-          // not required
-          return true
-        }
-      }).withMessage('Service post_logout_redirect_uris missing').if((value,{req,location,path})=> {
+      body('*.post_logout_redirect_uris').if((value,{req,location,path})=> {
         let pos = path.match(/\[(.*?)\]/)[1];
         return isNotEmpty(value)&&req.body[pos].protocol==='oidc'
       }).custom((value,{req,location,path})=> {

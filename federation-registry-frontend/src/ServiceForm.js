@@ -331,10 +331,7 @@ const ServiceForm = (props)=> {
           }
           return true
         }
-      })).unique(t('yup_redirect_uri_unique')).when('grant_types',{
-        is:(grant_types)=> grant_types.includes("implicit")||grant_types.includes("authorization_code"),
-        then: yup.array().min(1,t('yup_required')).nullable().required(t('yup_required'))
-      })
+      })).unique(t('yup_redirect_uri_unique'))
     }),
     logo_uri:yup.string().nullable().matches(reg.regUrl,'Logo must be be a secure url starting with https://').test('testImage',t('yup_image_url'),function(imageUrl){
       imageExists(imageUrl);
@@ -1199,7 +1196,7 @@ const ServiceForm = (props)=> {
                                changed={props.changes?props.changes.redirect_uris:null}
                              />
                            </InputRow>
-                           <InputRow  moreInfo={tenant.form_config.more_info.post_logout_redirect_uris} title={t('form_redirect_uris')} required={values.grant_types.includes("implicit")||values.grant_types.includes("authorization_code")} error={typeof(errors.post_logout_redirect_uris)==='string'?errors.post_logout_redirect_uris:null}  touched={touched.post_logout_redirect_uris} description={t('form_redirect_uris_desc')}>
+                           <InputRow  moreInfo={tenant.form_config.more_info.post_logout_redirect_uris} title={t('form_redirect_uris')} error={typeof(errors.post_logout_redirect_uris)==='string'?errors.post_logout_redirect_uris:null}  touched={touched.post_logout_redirect_uris} description={t('form_redirect_uris_desc')}>
                              <ListInput
                                values={values.post_logout_redirect_uris}
                                placeholder={t('form_type_prompt')}
