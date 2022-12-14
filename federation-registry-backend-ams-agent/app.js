@@ -166,9 +166,8 @@ async function run() {
     axios.get(process.env.EXPRESS_URL+'/agent/get_new_configurations',options)
     .then(async function (response) {
       // handle success
-
       let service;
-      if(response.data.services){
+      if(response.data.services&&response.data.services.length>0){
         // fix format of the data
         for(let index=0;index<response.data.services.length;index++){
           service = response.data.services[index];
