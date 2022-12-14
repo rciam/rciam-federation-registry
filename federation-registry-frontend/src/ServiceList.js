@@ -1033,7 +1033,7 @@ function TableItem(props) {
               </React.Fragment>}
               id="dropdown-menu-align-right"
             >
-              {props.service.service_id && props.service.state==='deployed' && props.service.owned?
+              {props.service.service_id && props.service.state==='deployed' && props.service.owned&& tenant.form_config.integration_environment.length>1?
               <Dropdown.Item as='span'>
                 <div>
                   <Link to={"#"} onClick={()=>{

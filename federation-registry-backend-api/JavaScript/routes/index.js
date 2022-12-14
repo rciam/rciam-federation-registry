@@ -247,7 +247,7 @@ router.get('/tenants/:tenant',(req,res,next)=>{
         if(config[req.params.tenant].restricted_env){
           tenant.restricted_environments = config[req.params.tenant].restricted_env;
         }
-        tenant.form_config.requested_attributes = requested_attributes;
+        tenant.form_config.requested_attributes = requested_attributes.filter(x=> config[req.params.tenant].form.supported_attributes.includes(x.friendly_name));
         tenant.logout_uri = clients[req.params.tenant].logout_uri;
         res.status(200).json(tenant).end();
       }
