@@ -1277,7 +1277,7 @@ export function ListInput(props){
         <FieldArray name={props.name}>
           {({push,remove,insert})=>(
             <React.Fragment>
-              {!props.disabled?
+              {!props.disabled||!props.values?
               <InputGroup className={props.empty&&props.touched?'invalid-input mb-3':'mb-3'}>
                 <Form.Control
                   value={newVal}
@@ -1291,6 +1291,7 @@ export function ListInput(props){
                   disabled={props.disabled}
                 />
                 <InputGroup.Prepend>
+                {!props.disabled?
                   <Button
                     disabled={props.disabled}
                     variant="outline-primary"
@@ -1298,9 +1299,10 @@ export function ListInput(props){
                       push(newVal);
                       setNewVal('');
                     }}
-                  >
-                    {t('input_add_button')}
-                  </Button>
+                  >{t('input_add_button')}
+                  </Button>:null
+                }
+                    
                 </InputGroup.Prepend>
                 </InputGroup>:null}
 

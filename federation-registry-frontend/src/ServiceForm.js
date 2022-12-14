@@ -960,7 +960,7 @@ const ServiceForm = (props)=> {
                           onChange={handleChange}
                           disabled={disabled||tenant.form_config.integration_environment.length===1||props.copy||props.disableEnvironment}
                           changed={props.changes?props.changes.integration_environment:null}
-                          copybuttonActive={props.owned&&props.disabled&&service_id}
+                          copybuttonActive={props.owned&&props.disabled&&service_id&&tenant.form_config.integration_environment.length>1}
                           toggleCopyDialog={toggleCopyDialog}
                         />
                       </InputRow>
