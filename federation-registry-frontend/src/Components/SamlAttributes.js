@@ -76,13 +76,6 @@ export function SamlAttributesInput(props){
       // eslint-disable-next-line react-hooks/exhaustive-deps
     },[]);
 
-    useEffect(()=>{
-      if(!Array.isArray(props.values)){
-        console.log(props.values);
-        console.log(typeof(props.values));
-      }
-    },[props.values])
-
 
 
     useEffect(()=>{

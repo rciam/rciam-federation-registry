@@ -18,6 +18,9 @@ SELECT json_build_object('service_name', sd.service_name,'service_description',s
 						 'redirect_uris',
 						 	(SELECT CASE WHEN array_agg((v.value)) IS NULL THEN Array[]::varchar[] ELSE array_agg((v.value)) END
 							 FROM service_oidc_redirect_uris v WHERE sd.id = v.owner_id),
+						 'post_logout_redirect_uris',
+						 	(SELECT json_agg((v.value))
+							 FROM service_oidc_post_logout_redirect_uris v WHERE sd.id = v.owner_id),
 						 'contacts',
 						 	(SELECT CASE WHEN array_agg(json_build_object('email',v.value,'type',v.type)) IS NULL THEN Array[]::json[] ELSE array_agg(json_build_object('email',v.value,'type',v.type)) END
 							 FROM service_contacts v WHERE sd.id = v.owner_id),

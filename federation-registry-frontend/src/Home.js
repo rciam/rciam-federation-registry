@@ -91,7 +91,7 @@ const Home = ()=> {
       {loading?<LoadingPage  loading={loading}/>:null}
       <div className="home-container">
         <h1>{t('main_greeting')}</h1>
-        <p>{localStorage.getItem('invitation')?t('invitation_landing_page_message'):tenant.description}</p>
+        <p>{localStorage.getItem('invitation')?t('invitation_landing_page_message'):tenant.config.home_page_description}</p>
         
       </div>
       {services.length>0&&!user?<ServiceOverviewTable services={services}/>:null}

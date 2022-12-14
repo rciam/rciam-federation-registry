@@ -499,6 +499,55 @@ const serviceValidationRules = (options,req) => {
           throw new Error(err);
         }
       }),
+      body('*.post_logout_redirect_uris').if((value,{req,location,path})=> {
+        let pos = path.match(/\[(.*?)\]/)[1];
+        return isNotEmpty(value)&&req.body[pos].protocol==='oidc'
+      }).custom((value,{req,location,path})=> {
+        let pos = path.match(/\[(.*?)\]/)[1];
+        try{
+          if(Array.isArray(value)&&value.length>0){
+            value.map((item,index)=>{
+              let url
+              try {
+                url = new URL(item);
+              } catch (err) {
+                throw new Error("Invalid uri");  
+
+              }
+              if(item.includes('#')){
+                throw new Error("Uri can't contain fragments");
+              }
+              if(req.body[pos].application_type==='WEB'){
+                if((req.body[pos].integration_environment==='production'||req.body[pos].integration_environment==='demo')&& url){
+                  if(url.protocol !== 'https:'&&!(url.protocol==='http:'&&url.hostname==='localhost')){
+                    throw new Error("Uri must be a secure url starting with https://");              
+                  }
+                }
+                else{
+                  if(url&&!(url.protocol==='http:'||url.protocol==='https:')){
+                    throw new Error("Uri must be a url starting with http(s):// ");                              
+                  }
+                }
+              }
+              else{
+                if(url.protocol==='javascript:'){
+                  throw new Error("Uri can't be of schema 'javascript:'");
+                }
+                else if(url.protocol==='data:'){
+                  throw new Error("Uri can't be of schema 'data:'");              
+                }
+              }
+            });
+          }
+          else{
+            throw new Error("Service post_logout_redirect_uris must be an array");
+          }
+          return true;
+        }
+        catch(err){
+          throw new Error(err);
+        }
+      }),
       body('*.scope').custom((value,{req,location,path})=>{ return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1],'scope')}).withMessage('Service redirect_uri missing').if((value,{req,location,path})=> {return value&&value.length>0&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).isArray({min:1}).withMessage('Must be an array').custom((value,success=true)=> {
         try{
           value.map((item,index)=>{if(!item.match(reg.regScope)){

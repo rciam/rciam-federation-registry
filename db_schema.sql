@@ -12,10 +12,6 @@ create table tenants (
   client_id VARCHAR(256),
   client_secret VARCHAR(1054),
   issuer_url VARCHAR(256),
-  logo VARCHAR(256),
-  description VARCHAR(1054),
-  main_title VARCHAR(256),
-  color VARCHAR(128),
   base_url VARCHAR(256) DEFAULT NULL
 );
 

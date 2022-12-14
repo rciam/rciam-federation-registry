@@ -292,6 +292,47 @@ const ServiceForm = (props)=> {
         then: yup.array().min(1,t('yup_required')).nullable().required(t('yup_required'))
       })
     }),
+    post_logout_redirect_uris:yup.array().nullable().when('protocol',{
+      is:'oidc',
+      then: yup.array().nullable().when('integration_environment',(integration_environment)=>{
+        integrationEnvironment = integration_environment;
+      }).when('application_type',(application_type_value)=>{application_type = application_type_value;}).of(yup.string().required("Uri can't be an empty string").test('test_redirect_uri','Invalid Post Logout Redirect Uri',function(value){
+        if(value){
+          let url
+          try {
+            url = new URL(value);
+          } catch (err) {
+            return this.createError({ message: "Invalid uri" });  
+          }
+          if(value.includes('#')){
+            return this.createError({ message: "Uri can't contain fragments" });
+          }
+          if(application_type==='WEB'){
+            if((integrationEnvironment==='production'||integrationEnvironment==='demo')&& url){
+              if(url.protocol !== 'https:'&&!(url.protocol==='http:'&&url.hostname==='localhost')){
+                return this.createError({ message: "Uri must be a secure url starting with https://" });              
+              }
+              
+            }
+            else{
+              if(url&&!(url.protocol==='http:'||url.protocol==='https:')){
+                return this.createError({ message: "Uri must be a url starting with http(s):// " });                              
+              }
+            }
+          }
+          else{
+            // eslint-disable-next-line
+            if(url.protocol==="javascript:"){
+              return this.createError({ message: "Uri can't be of schema 'javascript:'" });
+            }
+            else if(url.protocol==='data:'){
+              return this.createError({ message: "Uri can't be of schema 'data:'" });              
+            }
+          }
+          return true
+        }
+      })).unique(t('yup_redirect_uri_unique'))
+    }),
     logo_uri:yup.string().nullable().matches(reg.regUrl,'Logo must be be a secure url starting with https://').test('testImage',t('yup_image_url'),function(imageUrl){
       imageExists(imageUrl);
       if(imageUrl&&imageUrl.length > 6000){
@@ -417,7 +458,13 @@ const ServiceForm = (props)=> {
                 }}).then(async response=>{
                   if(response.status===200||response.status===304){
                     let metadata = await response.json();
-                    setMetadataLoaded(metadata);        
+                    if(tenant.form_config.more_info.requested_attributes&&!tenant.form_config.more_info.requested_attributes.disabled){
+                      setMetadataLoaded(metadata);        
+                    }
+                    else{
+                      metadata.supported_attributes = [];
+                      setMetadataLoaded(metadata);
+                    }
                   }
                   else {
                     setMetadataWarning(response.statusText);
@@ -913,7 +960,7 @@ const ServiceForm = (props)=> {
                           onChange={handleChange}
                           disabled={disabled||tenant.form_config.integration_environment.length===1||props.copy||props.disableEnvironment}
                           changed={props.changes?props.changes.integration_environment:null}
-                          copybuttonActive={props.owned&&props.disabled&&service_id}
+                          copybuttonActive={props.owned&&props.disabled&&service_id&&tenant.form_config.integration_environment.length>1}
                           toggleCopyDialog={toggleCopyDialog}
                         />
                       </InputRow>
@@ -1149,6 +1196,22 @@ const ServiceForm = (props)=> {
                                changed={props.changes?props.changes.redirect_uris:null}
                              />
                            </InputRow>
+                           <InputRow  moreInfo={tenant.form_config.more_info.post_logout_redirect_uris} title={t('form_redirect_uris')} error={typeof(errors.post_logout_redirect_uris)==='string'?errors.post_logout_redirect_uris:null}  touched={touched.post_logout_redirect_uris} description={t('form_redirect_uris_desc')}>
+                             <ListInput
+                               values={values.post_logout_redirect_uris}
+                               placeholder={t('form_type_prompt')}
+                               empty={(typeof(errors.post_logout_redirect_uris)==='string')?true:false}
+                               name='post_logout_redirect_uris'
+                               error={errors.post_logout_redirect_uris}
+                               touched={touched.post_logout_redirect_uris}
+                               onBlur={handleBlur}
+                               onChange={handleChange}
+                               integrationEnvironment = {values.integration_environment}
+                               setFieldTouched={setFieldTouched}
+                               disabled={disabled}
+                               changed={props.changes?props.changes.post_logout_redirect_uris:null}
+                             />
+                           </InputRow>
                           <InputRow  moreInfo={tenant.form_config.more_info.scope} title={t('form_scope')} required={true} description={t('form_scope_desc')} error={typeof(errors.scope)==='string'?errors.scope:null} touched={true}>
                             <ListInputArray
                               name='scope'
@@ -1345,7 +1408,7 @@ const ServiceForm = (props)=> {
                             metadataLoaded.entity_id && metadataLoaded.entity_id!==values.entity_id?"The Metadata Url contains a different Entity Id from the provided, do you wish to replace it?":"" 
                           } 
                           message={
-                            metadataLoaded.supported_attributes.length>0&&metadataLoaded.unsupported_attributes.length>0?metadataLoaded.supported_attributes.length+ " out of " + (metadataLoaded.supported_attributes.length+metadataLoaded.unsupported_attributes.length)+ " attributes found are supported and can be added in the service configuration." :
+                            metadataLoaded.supported_attributes.length>0?metadataLoaded.supported_attributes.length+ (metadataLoaded.unsupported_attributes.length>0?" out of " + (metadataLoaded.supported_attributes.length+metadataLoaded.unsupported_attributes.length):"")+ " attributes found are supported and can be added in the service configuration." :
                             metadataLoaded.entity_id && (!values.entity_id||metadataLoaded.entity_id!==values.entity_id)?"Entity Id: "+metadataLoaded.entity_id:
                             null } 
                           accept={'Yes'} 
@@ -1382,21 +1445,24 @@ const ServiceForm = (props)=> {
                             />
                             <UrlWarning url={values.metadata_url} overwriteWarning={metadataWarning} touched={!!values.metadata_url}/>
                           </InputRow>
-                          <InputRow  moreInfo={tenant.form_config.more_info.scope} title={tenant.form_config.more_info.requested_attributes.label||"Attributes"} required={true} description={"The saml atributes blah blah blah"} error={typeof(errors.scope)==='string'?errors.scope:null} touched={true}>
-                            <SamlAttributesInput
-                              name='requested_attributes'
-                              values={values.requested_attributes?values.requested_attributes:[]}
-                              placeholder={t('form_type_prompt')}
-                              defaultValues= {tenant.form_config.requested_attributes}
-                              errors={errors.requested_attributes}
-                              touched={touched.requested_attributes}
-                              setMetadataLoaded={setMetadataLoaded}
-                              disabled={disabled}
-                              setFieldValue={setFieldValue}
-                              onBlur={handleBlur}
-                              changed={props.changes?props.changes.requested_attributes:null}
-                            />
-                          </InputRow>
+                          {!tenant.form_config.more_info.requested_attributes.disabled?
+                            <InputRow  moreInfo={tenant.form_config.more_info.requested_attributes} title={tenant.form_config.more_info.requested_attributes.label||"Attributes"} required={false} description={tenant.form_config.more_info.requested_attributes.description} error={typeof(errors.scope)==='string'?errors.scope:null} touched={true}>
+                              <SamlAttributesInput
+                                name='requested_attributes'
+                                values={values.requested_attributes?values.requested_attributes:[]}
+                                placeholder={t('form_type_prompt')}
+                                defaultValues= {tenant.form_config.requested_attributes}
+                                errors={errors.requested_attributes}
+                                touched={touched.requested_attributes}
+                                setMetadataLoaded={setMetadataLoaded}
+                                disabled={disabled}
+                                setFieldValue={setFieldValue}
+                                onBlur={handleBlur}
+                                changed={props.changes?props.changes.requested_attributes:null}
+                              />
+                            </InputRow>
+                            :null
+                          }
                        </React.Fragment>
                      :null}
                     </Tab>

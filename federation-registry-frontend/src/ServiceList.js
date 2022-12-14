@@ -556,7 +556,7 @@ const ServiceList= (props)=> {
           <Row>
             <Col>
               <Button variant="light" onClick={getServices} ><FontAwesomeIcon icon={faSync} />{t('petitions_refresh')}</Button>
-              <Link to={'/'+tenant_name+"/form/new"}><Button style={{background:tenant.color,borderColor:tenant.color}}><FontAwesomeIcon icon={faPlus}/>{t('petitions_new')}</Button></Link>
+              <Link to={'/'+tenant_name+"/form/new"}><Button style={{background:tenant.config.theme_color,borderColor:tenant.config.theme_color}}><FontAwesomeIcon icon={faPlus}/>{t('petitions_new')}</Button></Link>
               {user.actions.includes('export_services')?
                 <OverlayTrigger
                   placement='top'
@@ -588,7 +588,7 @@ const ServiceList= (props)=> {
                   </Button>
                 </OverlayTrigger> 
                 :null}
-              <Button variant="light" className='filter-button' style={{color:tenant.color}} onClick={()=>setExpandFilters(!expandFilters)}><FontAwesomeIcon icon={faFilter} />
+              <Button variant="light" className='filter-button' style={{color:tenant.config.theme_color}} onClick={()=>setExpandFilters(!expandFilters)}><FontAwesomeIcon icon={faFilter} />
                 {expandFilters?
                   <React.Fragment>
                     {t('filters_hide')}
@@ -893,7 +893,7 @@ function TableItem(props) {
         <div className="flex-column">
           <h3 className="petition-title">{props.service.service_name?props.service.service_name:props.service.client_id?props.service.client_id:props.service.metadata_url}</h3>
           <div className="badge-container">
-            {props.service.hasOwnProperty('state')&&props.service.state==='deployed'?<Badge className="status-badge" style={{background:tenant.color}} variant={'primary'}>{t('badge_deployed')}</Badge>:null}
+            {props.service.hasOwnProperty('state')&&props.service.state==='deployed'?<Badge className="status-badge" style={{background:tenant.config.theme_color}} variant={'primary'}>{t('badge_deployed')}</Badge>:null}
             {props.service.hasOwnProperty('state')&&props.service.state==='error'?<Badge className={"status-badge "+ (user.actions.includes('error_action')?"cursor-pointer":"")} onClick={()=>{
               if(user.actions.includes('error_action')){
                 props.setFilter('errorFilter',true); props.setExpandFilters(true);
@@ -983,7 +983,7 @@ function TableItem(props) {
                   to={{
                     pathname:'/'+tenant_name+(props.service.service_id?"/services/"+props.service.service_id:"")+ (props.service.petition_id?"/requests/"+props.service.petition_id:"") + "/edit"
                   }}>
-                  <Button variant="info" style={{background:tenant.color}} disabled={props.service.status!=='request_review'&&(props.service.state==='deployed'||!props.service.state)?false:true}><FontAwesomeIcon icon={faEdit}/>{t('button_reconfigure')}</Button></Link>
+                  <Button variant="info" style={{background:tenant.config.theme_color}} disabled={props.service.status!=='request_review'&&(props.service.state==='deployed'||!props.service.state)?false:true}><FontAwesomeIcon icon={faEdit}/>{t('button_reconfigure')}</Button></Link>
                   </OverlayTrigger>
                 </React.Fragment>
               :null
@@ -1033,7 +1033,7 @@ function TableItem(props) {
               </React.Fragment>}
               id="dropdown-menu-align-right"
             >
-              {props.service.service_id && props.service.state==='deployed' && props.service.owned?
+              {props.service.service_id && props.service.state==='deployed' && props.service.owned&& tenant.form_config.integration_environment.length>1?
               <Dropdown.Item as='span'>
                 <div>
                   <Link to={"#"} onClick={()=>{

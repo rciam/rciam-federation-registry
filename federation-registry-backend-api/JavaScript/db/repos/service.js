@@ -2,7 +2,7 @@ const sql = require('../sql').service;
 const {calcDiff,extractServiceBoolean} = require('../../functions/helpers.js');
 const {requiredDeployment} = require('../../functions/requiredDeployment.js');
 const cs = {}; // Reusable ColumnSet objects.
-
+var requested_attributes = require('../../tenant_config/requested_attributes.json')
 /*
  This repository mixes hard-coded and dynamic SQL, primarily to show a diverse example of using both.
  */
@@ -69,6 +69,9 @@ class ServiceRepository {
                 }
                 if(service.redirect_uris&&service.redirect_uris.length>0){
                   queries.push(t.service_multi_valued.add('service','oidc_redirect_uris',service.redirect_uris,result.id));
+                }
+                if(service.post_logout_redirect_uris&&service.post_logout_redirect_uris.length>0){
+                  queries.push(t.service_multi_valued.add('service','oidc_post_logout_redirect_uris',service.post_logout_redirect_uris,result.id));
                 }
               }
               if(service.protocol==='saml'){
@@ -158,7 +161,7 @@ class ServiceRepository {
       'grant_types',(SELECT json_agg((v.value)) FROM service_oidc_grant_types v WHERE sd.id = v.owner_id),\
       'scope',(SELECT json_agg((v.value)) FROM service_oidc_scopes v WHERE sd.id = v.owner_id),\
       'requested_attributes',(SELECT coalesce(json_agg(json_build_object('friendly_name',v.friendly_name,'name',v.name,'required',v.required,'name_format',v.name_format)), '[]'::json) FROM service_saml_attributes v WHERE sd.id=v.owner_id),\
-      'redirect_uris',(SELECT json_agg((v.value)) FROM service_oidc_redirect_uris v WHERE sd.id = v.owner_id),",
+      'redirect_uris',(SELECT json_agg((v.value)) FROM service_oidc_redirect_uris v WHERE sd.id = v.owner_id),'post_logout_redirect_uris',(SELECT json_agg((v.value)) FROM service_oidc_post_logout_redirect_uris v WHERE sd.id = v.owner_id),",
       tags_filter:"",
       exclude_tags_filter:""
     }
@@ -214,6 +217,19 @@ class ServiceRepository {
   async getPending(){
     const query = this.pgp.as.format(sql.getPending);
     return this.db.any(query).then(services=>{
+      services.forEach((service,index)=>{
+
+        if(service.json.protocol==='saml'&&service.json.requested_attributes&&service.json.requested_attributes.length>0){
+          service.json.requested_attributes.forEach((attribute,attr_index)=>{            
+            let match_index = requested_attributes.findIndex(x => x.friendly_name ===attribute.friendly_name)
+            if(requested_attributes[match_index].name===attribute.name){              
+              services[index].json.requested_attributes[attr_index].type = "standard";
+            }else{
+              services[index].json.requested_attributes[attr_index].type = "custom";
+            }
+          })
+        }
+      })
       if(services){
         return services;
       }

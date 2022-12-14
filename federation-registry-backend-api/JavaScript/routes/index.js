@@ -3,7 +3,7 @@ const {petitionValidationRules,validate,validateInternal,tenantValidation,format
 const qs = require('qs');
 const {v1:uuidv1} = require('uuid');
 const axios = require('axios').default;
-const {sendMail,sendInvitationMail,sendMultipleInvitations,createGgusTickets,delay} = require('../functions/helpers.js');
+const {sendMail,sendInvitationMail,sendMultipleInvitations,sendDeploymentMail,delay} = require('../functions/helpers.js');
 const {db} = require('../db');
 var router = require('express').Router();
 var config = require('../config');
@@ -144,6 +144,7 @@ router.post('/tenants/:tenant/services',adminAuth,tenantValidation(),validate,fo
               let contacts = [];
               let grant_types = [];
               let redirect_uris = [];
+              let post_logout_redirect_uris = [];
               let scopes = [];
               let queries = [];
               let service_state = [];
@@ -175,6 +176,11 @@ router.post('/tenants/:tenant/services',adminAuth,tenantValidation(),validate,fo
                       redirect_uris.push({owner_id:service.id,value:redirect_uri});
                     });
                   }
+                  if(service.post_logout_redirect_uris && service.post_logout_redirect_uris.length>0){
+                    service.post_logout_redirect_uris.forEach(post_logout_redirect_uri => {
+                      post_logout_redirect_uris.push({owner_id:service.id,value:post_logout_redirect_uri});
+                    });
+                  }
                 }
                 if(service.protocol==='saml'){
                   if(service.requested_attributes&&service.requested_attributes.length>0){
@@ -197,6 +203,9 @@ router.post('/tenants/:tenant/services',adminAuth,tenantValidation(),validate,fo
               }
               if(redirect_uris.length>0){
                 queries.push(t.service_multi_valued.addMultiple(redirect_uris,'service_oidc_redirect_uris'));
+              }
+              if(post_logout_redirect_uris.length>0){
+                queries.push(t.service_multi_valued.addMultiple(post_logout_redirect_uris,'service_oidc_post_logout_redirect_uris'));
               }
               if(requested_attributes&&requested_attributes.length>0){
                 queries.push(t.service_multi_valued.addSamlAttributesMultiple(requested_attributes,'service_saml_attributes'));
@@ -238,7 +247,7 @@ router.get('/tenants/:tenant',(req,res,next)=>{
         if(config[req.params.tenant].restricted_env){
           tenant.restricted_environments = config[req.params.tenant].restricted_env;
         }
-        tenant.form_config.requested_attributes = requested_attributes;
+        tenant.form_config.requested_attributes = requested_attributes.filter(x=> config[req.params.tenant].form.supported_attributes.includes(x.friendly_name));
         tenant.logout_uri = clients[req.params.tenant].logout_uri;
         res.status(200).json(tenant).end();
       }
@@ -467,7 +476,7 @@ router.post('/ams/ingest',checkCertificate,decodeAms,amsIngestValidation(),valid
               if(data){
                 await t.service_petition_details.getTicketInfo(ids).then(async ticket_data=>{
                   if(ticket_data){
-                    createGgusTickets(ticket_data);
+                    sendDeploymentMail(ticket_data);
                   }
                   if(errors.length>0){
                     await t.user.getUsersByAction('error_action').then(users=>{
