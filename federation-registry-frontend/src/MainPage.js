@@ -59,10 +59,10 @@ import {faTimes} from '@fortawesome/free-solid-svg-icons';
       useEffect(() => {
         if(tenant&&tenant[0]){
           const faviconUpdate = async () => {
-            console.log(tenant[0].config.icon);
+            console.log(tenant[0]);
             //grab favicon element by ID
             const favicon = document.getElementById("favicon");
-            favicon.href = "/"+tenant[0].config.icon+"?v=2";
+            favicon.href = tenant[0].base_url.slice(0,tenant[0].base_url.length - tenant[0].name.length)+'/'+tenant[0].config.icon+"?v=2";
           }
           //run our function here
           faviconUpdate();
