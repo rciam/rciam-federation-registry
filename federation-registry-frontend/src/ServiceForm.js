@@ -1196,22 +1196,24 @@ const ServiceForm = (props)=> {
                                changed={props.changes?props.changes.redirect_uris:null}
                              />
                            </InputRow>
-                           <InputRow  moreInfo={tenant.form_config.more_info.post_logout_redirect_uris} title={t('form_redirect_uris')} error={typeof(errors.post_logout_redirect_uris)==='string'?errors.post_logout_redirect_uris:null}  touched={touched.post_logout_redirect_uris} description={t('form_redirect_uris_desc')}>
-                             <ListInput
-                               values={values.post_logout_redirect_uris}
-                               placeholder={t('form_type_prompt')}
-                               empty={(typeof(errors.post_logout_redirect_uris)==='string')?true:false}
-                               name='post_logout_redirect_uris'
-                               error={errors.post_logout_redirect_uris}
-                               touched={touched.post_logout_redirect_uris}
-                               onBlur={handleBlur}
-                               onChange={handleChange}
-                               integrationEnvironment = {values.integration_environment}
-                               setFieldTouched={setFieldTouched}
-                               disabled={disabled}
-                               changed={props.changes?props.changes.post_logout_redirect_uris:null}
-                             />
-                           </InputRow>
+                           {!tenant.form_config.disabled_fields.includes("post_logout_redirect_uris")?
+                              <InputRow  moreInfo={tenant.form_config.more_info.post_logout_redirect_uris} title={t('form_redirect_uris')} error={typeof(errors.post_logout_redirect_uris)==='string'?errors.post_logout_redirect_uris:null}  touched={touched.post_logout_redirect_uris} description={t('form_redirect_uris_desc')}>
+                              <ListInput
+                                values={values.post_logout_redirect_uris}
+                                placeholder={t('form_type_prompt')}
+                                empty={(typeof(errors.post_logout_redirect_uris)==='string')?true:false}
+                                name='post_logout_redirect_uris'
+                                error={errors.post_logout_redirect_uris}
+                                touched={touched.post_logout_redirect_uris}
+                                onBlur={handleBlur}
+                                onChange={handleChange}
+                                integrationEnvironment = {values.integration_environment}
+                                setFieldTouched={setFieldTouched}
+                                disabled={disabled}
+                                changed={props.changes?props.changes.post_logout_redirect_uris:null}
+                              />
+                            </InputRow>:null 
+                          }
                           <InputRow  moreInfo={tenant.form_config.more_info.scope} title={t('form_scope')} required={true} description={t('form_scope_desc')} error={typeof(errors.scope)==='string'?errors.scope:null} touched={true}>
                             <ListInputArray
                               name='scope'

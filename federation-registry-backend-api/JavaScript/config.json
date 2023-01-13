@@ -36,7 +36,7 @@
       "grant_types":["authorization_code","client_credentials","urn:ietf:params:oauth:grant-type:token-exchange","urn:ietf:params:oauth:grant-type:device_code","implicit","refresh_token"],
       "grant_types_deprecated":["implicit"],
       "dynamic_fields": ["allow_introspection"],
-      "disabled_fields": ["clear_access_tokens_on_refresh"],
+      "disabled_fields": ["clear_access_tokens_on_refresh","post_logout_redirect_uris"],
       "contact_requirements":[
         {
           "type":"support",
