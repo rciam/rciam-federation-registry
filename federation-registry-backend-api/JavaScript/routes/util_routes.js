@@ -8,9 +8,9 @@ var default_supported_attributes = require('../tenant_config/requested_attribute
 
 
 parser.on('error', function(err) { console.log('Parser error', err); });
-router.get('/metadata/:metadata_url',async (req,res,next)=>{
+router.get('/metadata_info',async (req,res,next)=>{
     try{
-      let url = decodeURIComponent(req.params.metadata_url);
+      let url = decodeURIComponent(req.query.metadata_url);
       var data = '';
       const request = https.get(url, function(response) {
         if (response.statusCode >= 200 && response.statusCode < 400) {
@@ -37,12 +37,16 @@ router.get('/metadata/:metadata_url',async (req,res,next)=>{
                 let entity_id, requested_attributes; 
                 let supported_attributes=[];
                 let unsupported_attributes= [];
-                try{
-                  entity_id=result['md:EntityDescriptor']['_attributes'].entityID;  
+                let pretext = '';
+                if(result['md:EntityDescriptor']){
+                  pretext='md:'
+                }
+                try{                  
+                  entity_id=result[pretext+'EntityDescriptor']['_attributes'].entityID;  
                 }
                 catch(err){};
                 try{
-                  requested_attributes = result['md:EntityDescriptor']['md:SPSSODescriptor']['md:AttributeConsumingService']['md:RequestedAttribute'];                 
+                  requested_attributes = result[pretext+'EntityDescriptor'][pretext+'SPSSODescriptor'][pretext+'AttributeConsumingService'][pretext+'RequestedAttribute'];                 
                   if(requested_attributes){
                     requested_attributes.forEach((attribute,index)=>{
                       requested_attributes[index] = {

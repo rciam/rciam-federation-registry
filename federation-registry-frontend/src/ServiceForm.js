@@ -1,5 +1,6 @@
 import React,{useState,useEffect,useContext,useRef} from 'react';
 import mapValues from 'lodash/mapValues';
+import {default as defaultInitialValues} from './initialValues';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {faCheckCircle,faBan,faSortDown,faExclamationTriangle,faPen} from '@fortawesome/free-solid-svg-icons';
 import Tabs from 'react-bootstrap/Tabs';
@@ -29,7 +30,7 @@ import * as yup from 'yup';
 import { useTranslation } from 'react-i18next';
 import parse from 'html-react-parser';
 import countryData from 'country-region-data';
-import {SimpleInput,CountrySelect,AuthMethRadioList,SelectEnvironment,DeviceCode,Select,PublicKey,ListInput,LogoInput,TextAria,ListInputArray,CheckboxList,SimpleCheckbox,ClientSecret,TimeInput,RefreshToken,Contacts,OrganizationField,SimpleRadio} from './Components/Inputs.js'// eslint-disable-next-line
+import {SimpleInput,CountrySelect,AuthMethRadioList,SelectEnvironment,DeviceCode,Select,PublicKey,ListInput,LogoInput,TextAria,ListInputArray,CheckboxList,SimpleCheckbox,ClientSecret,TimeInput,RefreshToken,Contacts,OrganizationField,SimpleRadio,MetadataInput} from './Components/Inputs.js'// eslint-disable-next-line
 import { SamlAttributesInput } from './Components/SamlAttributes.js';
 import {ConfirmationModal} from './Components/Modals';
 
@@ -162,6 +163,60 @@ const ServiceForm = (props)=> {
       }
     });
     return error;
+  }
+
+  const getMetadata = async (value,resolve,setRequestedAttributes)=>{
+    setMetadataLoading(true);
+    setMetadataChecked(value);
+    metadataUrlLoadTimeout = setTimeout(()=> {
+      fetch(config.host[tenant_name]+'util/metadata_info?metadata_url='+encodeURIComponent(value), {
+        method:'GET',
+        credentials:'include',
+        headers:{
+          'Content-Type':'application/json'
+        }}).then(async response=>{
+          if(response.status===200||response.status===304){
+            let metadata = await response.json();
+            if(tenant.form_config.more_info.requested_attributes&&!tenant.form_config.more_info.requested_attributes.disabled){
+              setMetadataLoaded(metadata);
+              if(metadata.supported_attributes.length===0&&!metadata.entity_id){
+                if(!resolve){
+                  setRequestedAttributes(defaultInitialValues.requested_attributes);
+                }
+                setMetadataWarning('Could not find an Entity Id or any Requested Attributes from this Metadata Url.');
+              }
+              else if(metadata.supported_attributes.length===0){
+                if(!resolve){
+                  setRequestedAttributes(defaultInitialValues.requested_attributes);
+                }
+                setMetadataWarning('Could not find any Requested Attributes from this Metadata Url.');                
+              }
+              else if(!metadata.entity_id){
+                setMetadataWarning('Could not find an Entity Id from this Metadata Url.');                
+              }
+            }
+            else{
+              if(!resolve){
+                setRequestedAttributes(defaultInitialValues.requested_attributes);
+              }
+              metadata.supported_attributes = [];
+              setMetadataLoaded(metadata);
+            }
+          }
+          else {
+            if(!resolve){
+              setRequestedAttributes(defaultInitialValues.requested_attributes);              
+            }
+            setMetadataWarning(response.statusText);
+          }
+          setMetadataLoading(false);
+        }).catch(()=>{
+          setMetadataLoading(false);
+          if(resolve){
+            resolve(true)  
+          }
+          });
+    },2000);
   }
 
 
@@ -447,33 +502,7 @@ const ServiceForm = (props)=> {
         }        
         if(value&&value.match(reg.regSimpleUrl)&&metadataChecked!==value&&value!==metadataLoaded.metadata_url){
           new Promise((resolve,reject)=>{
-            setMetadataLoading(true);
-            setMetadataChecked(value);
-            metadataUrlLoadTimeout = setTimeout(()=> {
-              fetch(config.host[tenant_name]+'util/metadata/'+encodeURIComponent(value), {
-                method:'GET',
-                credentials:'include',
-                headers:{
-                  'Content-Type':'application/json'
-                }}).then(async response=>{
-                  if(response.status===200||response.status===304){
-                    let metadata = await response.json();
-                    if(tenant.form_config.more_info.requested_attributes&&!tenant.form_config.more_info.requested_attributes.disabled){
-                      setMetadataLoaded(metadata);        
-                    }
-                    else{
-                      metadata.supported_attributes = [];
-                      setMetadataLoaded(metadata);
-                    }
-                  }
-                  else {
-                    setMetadataWarning(response.statusText);
-                  }
-                  setMetadataLoading(false);
-                }).catch(()=>{
-                  setMetadataLoading(false);
-                  resolve(true)});
-            },2000);
+            getMetadata(value,resolve);
           })
         }
         return true
@@ -1433,7 +1462,7 @@ const ServiceForm = (props)=> {
                            />
                          </InputRow>
                          <InputRow  moreInfo={tenant.form_config.more_info.metadata_url} required={true} title={t('form_metadata_url')} description={t('form_metadata_url_desc')} error={errors.metadata_url} touched={touched.metadata_url}>
-                           <SimpleInput
+                           <MetadataInput
                              name='metadata_url'
                              placeholder='Type something'
                              onChange={handleChange}
@@ -1441,7 +1470,11 @@ const ServiceForm = (props)=> {
                              value={values.metadata_url}
                              isInvalid={hasSubmitted?!!errors.metadata_url:(!!errors.metadata_url&&touched.metadata_url)}
                              onBlur={handleBlur}
+                             error={errors.metadata_url}
                              disabled={disabled}
+                             getmetadata={(metadata_url)=>{
+                              getMetadata(metadata_url,null,(attributes)=>{ setFieldValue('requested_attributes',attributes,false)});
+                             }}
                              changed={props.changes?props.changes.metadata_url:null}
                              isloading={values.metadata_url&&metadataLoading?1:0}
                             />

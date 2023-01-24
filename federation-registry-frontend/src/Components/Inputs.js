@@ -59,6 +59,55 @@ export function SimpleInput(props){
         </React.Fragment>
   )
 }
+export function MetadataInput(props){
+  const [show, setShow] = useState(false);
+  const target = useRef(null);
+  const { getmetadata, ...newProps } = props; // eslint-disable-line
+// `newProps` variable does not contain `className` and `id` properties
+
+  return (
+        <React.Fragment>
+        <InputGroup >
+          <Form.Control
+            {...newProps}
+            value={props.value?props.value:''}
+            type="text"
+            ref={target}
+            onMouseOver={()=>setShow(true)}
+            onMouseOut={()=>setShow(false)}
+            className={props.changed?'col-form-label.sm input-edited':'col-form-label.sm'}
+          />
+           <InputGroup.Prepend>
+                {!props.disabled?
+                 <OverlayTrigger
+                 placement='right'
+                 overlay={
+                   <Tooltip id={`tooltip-right`}>
+                     Load Metadata from Url
+                   </Tooltip>
+                 }
+               >
+                 <Button
+                   disabled={props.disabled||!props.value||props.error||props.isloading}
+                   variant="outline-primary"
+                   onClick={()=>{
+                     props.getmetadata(props.value);
+                   }}
+                 >Load
+                 </Button>
+               
+   
+               </OverlayTrigger>
+                :null}     
+                </InputGroup.Prepend>
+          {props.copybutton?<CopyToClipboardComponent value={props.value}/>:null}
+        </InputGroup>
+
+          <MyOverLay show={props.changed&&show?'string':null} type='Edited' target={target}/>
+          {props.isloading?<div className="loader"></div>:null}
+        </React.Fragment>
+  )
+}
 
 
 export function OrganizationField(props){

@@ -43,11 +43,6 @@ body a:hover {
     color: #084884;
 }
 
-body .nav-header {
-    color: #4b4b4b;
-    font-size: 15px;
-    font-weight: 300;
-}
 
 body .sidebar-nav li a {
     font-size: 14px;
@@ -58,16 +53,16 @@ body .nav-list .divider {
     border-bottom-color: #f2f2f2;
 }
 
-.header .ssp-logo {
+.tenant_logo_container .ssp-logo {
     margin-top: 10px;
 }
 
-.header .ssp-logo a {
+.tenant_logo_container .ssp-logo a {
 	display: inline-block;
 	padding: 10px;
 }
 
-.header .ssp-logo img {
+.tenant_logo_container .ssp-logo img {
 	max-height: 60px;
 }
 
@@ -75,7 +70,7 @@ body .nav-list .divider {
 	text-align: center;
 }
 
-.header h1 {
+.tenant_logo_container h1 {
 	font-family: 'Open Sans', sans-serif;
 	font-weight: 300;
     font-size: 26px;
@@ -183,16 +178,7 @@ body .nav-list .divider {
     }
 }
 
-.navbar-fixed-top {
-    top: 0;
-}
-.navbar-fixed-top, .navbar-fixed-bottom {
-     position: inherit;
-     right: 0;
-     left: 0;
-     z-index: 1030;
-     margin-bottom: 0;
-}
+
 .row-fluid {
     border-radius: 5px;
     margin: 0 auto 0px;
@@ -208,11 +194,7 @@ body .nav-list .divider {
 
 
 
-.navbar-fixed-top .navbar-inner {
-	border: 0 none;
-	box-shadow: none;
-	background: transparent;
-}
+
 
 
 
