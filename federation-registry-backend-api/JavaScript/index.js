@@ -21,8 +21,6 @@ const utilRoutes = require('./routes/util_routes.js');
 
 
 
-
-
 let clients= {};
 let tenant_config = {};
 custom.setHttpOptionsDefaults({

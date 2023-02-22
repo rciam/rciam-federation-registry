@@ -63,7 +63,8 @@ export function MetadataInput(props){
   const [show, setShow] = useState(false);
   const target = useRef(null);
   const { getmetadata, ...newProps } = props; // eslint-disable-line
-// `newProps` variable does not contain `className` and `id` properties
+  // `newProps` variable does not contain `className` and `id` properties
+
 
   return (
         <React.Fragment>

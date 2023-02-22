@@ -220,8 +220,8 @@ class ServiceRepository {
       services.forEach((service,index)=>{
 
         if(service.json.protocol==='saml'&&service.json.requested_attributes&&service.json.requested_attributes.length>0){
-          service.json.requested_attributes.forEach((attribute,attr_index)=>{            
-            let match_index = requested_attributes.findIndex(x => x.friendly_name ===attribute.friendly_name)
+          service.json.requested_attributes.forEach((attribute,attr_index)=>{      
+            let match_index = requested_attributes.findIndex(x => x.friendly_name ===attribute.friendly_name)            
             if(requested_attributes[match_index].name===attribute.name){              
               services[index].json.requested_attributes[attr_index].type = "standard";
             }else{

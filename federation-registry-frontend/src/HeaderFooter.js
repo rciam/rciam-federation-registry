@@ -140,7 +140,7 @@ export const Footer =(props) =>{
           <Col sm="3" className="ssp-footer__item">
             <div className="footer_link_container">
               <div className="ssp-footer__item__powered">
-              <a href = {"mailto: "+ (tenant[0]&&tenant[0].config&&tenant[0].config.contact)}>Contact us</a>
+              <a href = {"mailto: "+ (tenant[0]&&tenant[0].config&&tenant[0].config.contact)}>Support</a>
               </div>
               <div className="ssp-footer__item__powered">
                 <a href={'https://federation.rciam.grnet.gr/docs'}>Documentation</a>

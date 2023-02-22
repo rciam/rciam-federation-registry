@@ -39,14 +39,16 @@ import {ConfirmationModal} from './Components/Modals';
 
 const {reg} = require('./regex.js');
 var availabilityCheckTimeout;
-var metadataUrlLoadTimeout;
 var urlCheckTimeout;
 var urlCheckTimeoutResponse;
 var countries;
 let integrationEnvironment;
 let application_type;
+let timeouts = {};
+
 
 const ServiceForm = (props)=> {
+
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   let {tenant_name} = useParams();
@@ -72,7 +74,8 @@ const ServiceForm = (props)=> {
     entity_id:null,
     metadata_url:null
   });
-  const [metadataChecked,setMetadataChecked] = useState(props.initialValues.metadata_url);
+  const [metadataAsyncError,setMetadataAyncError] = useState("");
+  const [metadataChecked,setMetadataChecked] = useState();
   const [metadataLoading,setMetadataLoading] = useState(false)
   const [checkingAvailability,setCheckingAvailability] = useState(false);
   const [checkedId,setCheckedId] = useState(); // Variable containing the last client Id checked for availability to limit check requests
@@ -85,6 +88,8 @@ const ServiceForm = (props)=> {
   const [logoWarning,setLogoWarning] = useState(false);
   const [serviceTags,setServiceTags] = useState([]);
   const [manageTags,setManageTags] = useState(false);
+  const [timeoutId] = useState(hex(4));
+  
 
   useEffect(()=>{
     //Get tags 
@@ -165,10 +170,14 @@ const ServiceForm = (props)=> {
     return error;
   }
 
+
   const getMetadata = async (value,resolve,setRequestedAttributes)=>{
     setMetadataLoading(true);
+    setMetadataAyncError();
     setMetadataChecked(value);
-    metadataUrlLoadTimeout = setTimeout(()=> {
+    let loadMetadata = !(metadataChecked!==value&&value!==metadataLoaded.metadata_url&&value!==props.initialValues.metadataUrl)||setRequestedAttributes
+    clearTimeout(timeouts[timeoutId])
+    timeouts[timeoutId] = setTimeout(()=> {
       fetch(config.host[tenant_name]+'util/metadata_info?metadata_url='+encodeURIComponent(value), {
         method:'GET',
         credentials:'include',
@@ -178,7 +187,7 @@ const ServiceForm = (props)=> {
           if(response.status===200||response.status===304){
             let metadata = await response.json();
             if(tenant.form_config.more_info.requested_attributes&&!tenant.form_config.more_info.requested_attributes.disabled){
-              setMetadataLoaded(metadata);
+              loadMetadata&&setMetadataLoaded(metadata);
               if(metadata.supported_attributes.length===0&&!metadata.entity_id){
                 if(!resolve){
                   setRequestedAttributes(defaultInitialValues.requested_attributes);
@@ -200,18 +209,20 @@ const ServiceForm = (props)=> {
                 setRequestedAttributes(defaultInitialValues.requested_attributes);
               }
               metadata.supported_attributes = [];
-              setMetadataLoaded(metadata);
+              
+              loadMetadata&&setMetadataLoaded(metadata);
             }
           }
           else {
             if(!resolve){
               setRequestedAttributes(defaultInitialValues.requested_attributes);              
             }
-            setMetadataWarning(response.statusText);
+            setMetadataAyncError(response.statusText);
           }
-          setMetadataLoading(false);
+          setMetadataLoading(false);          
         }).catch(()=>{
           setMetadataLoading(false);
+          setMetadataAyncError("Could not get response from Metadata Url");          
           if(resolve){
             resolve(true)  
           }
@@ -309,7 +320,7 @@ const ServiceForm = (props)=> {
         integrationEnvironment = integration_environment;
       }).when('application_type',(application_type_value)=>{application_type = application_type_value;}).of(yup.string().required("Uri can't be an empty string").test('test_redirect_uri','Invalid Redirect Uri',function(value){
         if(value){
-          let url
+          let url;
           try {
             url = new URL(value);
           } catch (err) {
@@ -339,6 +350,12 @@ const ServiceForm = (props)=> {
             else if(url.protocol==='data:'){
               return this.createError({ message: "Uri can't be of schema 'data:'" });              
             }
+          }
+          if(value.includes('*')){
+            return this.createError({ message: "Uri can't contain wildcard character '*'" });                          
+          }
+          if(value.includes(' ')){
+            return this.createError({ message: "Uri can't contain spaces" });                          
           }
           return true
         }
@@ -383,6 +400,13 @@ const ServiceForm = (props)=> {
             else if(url.protocol==='data:'){
               return this.createError({ message: "Uri can't be of schema 'data:'" });              
             }
+          }
+
+          if(value.includes('*')){
+            return this.createError({ message: "Uri can't contain wildcard character '*'" });                          
+          }
+          if(value.includes(' ')){
+            return this.createError({ message: "Uri can't contain spaces" });                          
           }
           return true
         }
@@ -495,15 +519,31 @@ const ServiceForm = (props)=> {
       is:'saml',
       then: yup.string().nullable().required(t('yup_required')).matches(reg.regSimpleUrl,'Enter a valid Url').test('testXml','Invalid Metadata',function(value){
         // Metadata Url is Already Loaded?
-        setMetadataLoading(false);
-        if(!value||metadataChecked!==value){
-          setMetadataWarning();
-          clearTimeout(metadataUrlLoadTimeout);
-        }        
+        
+        // if(!value||metadataChecked!==value){
+        //   setMetadataLoading(false);
+        //   //setMetadataWarning();
+        //   clearTimeout(metadataUrlLoadTimeout);
+        // }        
+        // if(value&&value.match(reg.regSimpleUrl)&&metadataChecked!==value&&value!==metadataLoaded.metadata_url){
+        //   new Promise((resolve,reject)=>{
+        //     getMetadata(value,resolve);
+        //   })
+        // }
+
+
+
         if(value&&value.match(reg.regSimpleUrl)&&metadataChecked!==value&&value!==metadataLoaded.metadata_url){
+          clearTimeout(timeouts[timeoutId]);
           new Promise((resolve,reject)=>{
             getMetadata(value,resolve);
           })
+        }
+        else{
+          setMetadataLoading(false);
+        }
+        if(metadataAsyncError){
+          return this.createError({ message:metadataAsyncError})
         }
         return true
         
@@ -871,28 +911,31 @@ const ServiceForm = (props)=> {
       innerRef={formRef}
       validate={dynamicValidation}
       onSubmit={(values,{setSubmitting}) => {
-        setSubmitDisabled(true);
-        setHasSubmitted(true);
-        if(!(values.token_endpoint_auth_method==="client_secret_jwt"||values.token_endpoint_auth_method==="private_key_jwt")){
-          values.token_endpoint_auth_signing_alg=null;
-        }
-        if(values.token_endpoint_auth_method!=="private_key_jwt"){
-          values.jwks=null;
-          values.jwks_uri=null;
-        }
-        if(values.token_endpoint_auth_method==="private_key_jwt"||values.token_endpoint_auth_method==="none"){
-          values.client_secret = '';
-        }
-        if(values.jwks_uri){
-          values.jwks=null;
-        }
-        if(values.jwks){
-          values.jwks = JSON.parse(values.jwks);
-          values.jwks_uri=null;
-          // let check = values.jwks.replace(/\n/g, "\\\\n").replace(/\r/g, "\\\\r").replace(/\t/g, "\\\\t");
-          // values.jwks = JSON.parse(check);
-        }
-        postApi(values);
+        
+          setSubmitting(true);
+          setHasSubmitted(true);
+          setSubmitDisabled(true);
+          if(!(values.token_endpoint_auth_method==="client_secret_jwt"||values.token_endpoint_auth_method==="private_key_jwt")){
+            values.token_endpoint_auth_signing_alg=null;
+          }
+          if(values.token_endpoint_auth_method!=="private_key_jwt"){
+            values.jwks=null;
+            values.jwks_uri=null;
+          }
+          if(values.token_endpoint_auth_method==="private_key_jwt"||values.token_endpoint_auth_method==="none"){
+            values.client_secret = '';
+          }
+          if(values.jwks_uri){
+            values.jwks=null;
+          }
+          if(values.jwks){
+            values.jwks = JSON.parse(values.jwks);
+            values.jwks_uri=null;
+            // let check = values.jwks.replace(/\n/g, "\\\\n").replace(/\r/g, "\\\\r").replace(/\t/g, "\\\\t");
+            // values.jwks = JSON.parse(check);
+          }
+          postApi(values);
+        
       }}
     >
     {({
@@ -950,11 +993,11 @@ const ServiceForm = (props)=> {
                 {props.disabled?null:
                   <div className="form-controls-container">
                     {props.review?
-                      <ReviewComponent errors={errors} values={values} changes={props.changes}  reviewPetition={reviewPetition} type={props.type} restrictReview={restrictReview}/>
+                      <ReviewComponent errors={errors} asyncErrors={metadataAsyncError} disabled={metadataLoading} values={values} changes={props.changes}  reviewPetition={reviewPetition} type={props.type} restrictReview={restrictReview}/>
                       :
                       <React.Fragment>
                         <div className="form-submit-cancel-container">
-                          <Button className='submit-button' type="submit" disabled={submitDisabled} variant="primary" ><FontAwesomeIcon icon={faCheckCircle}/>{t('button_submit')}</Button>
+                          <Button className='submit-button' type="submit" disabled={submitDisabled||metadataLoading||checkingAvailability} variant="primary" ><FontAwesomeIcon icon={faCheckCircle}/>{t('button_submit')}</Button>
                           {petition_id?<Button variant="danger" onClick={()=>deletePetition()}><FontAwesomeIcon icon={faBan}/>{t('button_cancel_request')}</Button>:null}
                         </div>
                       </React.Fragment>
@@ -1328,7 +1371,6 @@ const ServiceForm = (props)=> {
                          <InputRow  moreInfo={tenant.form_config.more_info.client_secret} required={true} title={t('form_client_secret')}>
                            <ClientSecret
                              onChange={handleChange}
-                             feedback='not good'
                              client_secret={values.client_secret}
                              error={errors.client_secret}
                              touched={touched.client_secret}
@@ -1461,16 +1503,18 @@ const ServiceForm = (props)=> {
                             isloading={values.entity_id&&values.entity_id!==checkedId&&checkingAvailability?1:0}
                            />
                          </InputRow>
-                         <InputRow  moreInfo={tenant.form_config.more_info.metadata_url} required={true} title={t('form_metadata_url')} description={t('form_metadata_url_desc')} error={errors.metadata_url} touched={touched.metadata_url}>
+                         <InputRow  moreInfo={tenant.form_config.more_info.metadata_url} required={true} title={t('form_metadata_url')} description={t('form_metadata_url_desc')} error={metadataAsyncError||errors.metadata_url} touched={touched.metadata_url}>
                            <MetadataInput
                              name='metadata_url'
                              placeholder='Type something'
-                             onChange={handleChange}
+                             onChange={(e)=>{
+                              setMetadataAyncError('');
+                              setMetadataWarning();
+                              handleChange(e);}}
                              copybutton={props.copybutton}
                              value={values.metadata_url}
-                             isInvalid={hasSubmitted?!!errors.metadata_url:(!!errors.metadata_url&&touched.metadata_url)}
+                             isInvalid={hasSubmitted?!!metadataAsyncError||!!errors.metadata_url:((!!metadataAsyncError||!!errors.metadata_url)&&touched.metadata_url)}
                              onBlur={handleBlur}
-                             error={errors.metadata_url}
                              disabled={disabled}
                              getmetadata={(metadata_url)=>{
                               getMetadata(metadata_url,null,(attributes)=>{ setFieldValue('requested_attributes',attributes,false)});
@@ -1478,7 +1522,7 @@ const ServiceForm = (props)=> {
                              changed={props.changes?props.changes.metadata_url:null}
                              isloading={values.metadata_url&&metadataLoading?1:0}
                             />
-                            <UrlWarning url={values.metadata_url} overwriteWarning={metadataWarning} touched={!!values.metadata_url}/>
+                            <UrlWarning url={values.metadata_url} overwriteWarning={metadataWarning} disableCheck={1} touched={!!values.metadata_url}/>
                           </InputRow>
                           {!tenant.form_config.more_info.requested_attributes.disabled?
                             <InputRow  moreInfo={tenant.form_config.more_info.requested_attributes} title={tenant.form_config.more_info.requested_attributes.label||"Attributes"} required={false} description={tenant.form_config.more_info.requested_attributes.description} error={typeof(errors.scope)==='string'?errors.scope:null} touched={true}>
@@ -1506,11 +1550,11 @@ const ServiceForm = (props)=> {
                   {props.disabled?null:
                     <div className="form-controls-container">
                       {props.review?
-                          <ReviewComponent errors={errors} values={values} changes={props.changes} type={props.type} reviewPetition={reviewPetition} restrictReview={restrictReview} />
+                          <ReviewComponent errors={errors} disabled={metadataLoading} asyncErrors={metadataAsyncError} values={values} changes={props.changes} type={props.type} reviewPetition={reviewPetition} restrictReview={restrictReview} />
                         :
                         <React.Fragment>
                         <div className="form-submit-cancel-container">
-                          <Button className='submit-button' type="submit" disabled={submitDisabled} variant="primary" ><FontAwesomeIcon icon={faCheckCircle}/>Submit</Button>
+                          <Button className='submit-button' type="submit" disabled={submitDisabled||metadataLoading||checkingAvailability} variant="primary" ><FontAwesomeIcon icon={faCheckCircle}/>Submit</Button>
                           {props.type==='delete'||props.type==='edit'?<Button variant="danger" onClick={()=>deletePetition()}><FontAwesomeIcon icon={faBan}/>Cancel Request</Button>:null}
                         </div>
                         </React.Fragment>
@@ -1558,7 +1602,7 @@ const ReviewComponent = (props)=>{
         invalid=true
       }
     }
-    setInvalidPetition(invalid);
+    setInvalidPetition(invalid||!!props.asyncErrors);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[props.errors]);
 
@@ -1586,7 +1630,7 @@ const ReviewComponent = (props)=>{
     <React.Fragment>
         <Row className="review-button-row">
           <ButtonGroup>
-            <Button className="review-button" variant="success" onClick={()=> handleReview()}>{expand?t('review_submit'):
+            <Button className="review-button" disabled={expand&&props.disabled} variant="success" onClick={()=> handleReview()}>{expand?t('review_submit'):
               <React.Fragment>
                 {t('review')}
                 <FontAwesomeIcon icon={faSortDown}/>
@@ -1780,7 +1824,7 @@ const UrlWarning = (props) => {
 
   return (
     <React.Fragment>
-      {active||props.overwriteWarning?
+      {(active&&!props.disableCheck)||props.overwriteWarning?
         <div className='pkce-tooltip'>
           <FontAwesomeIcon icon={faExclamationTriangle}/>
           {props.overwriteWarning||"Url could not be reached, make sure you have provided a valid url."}
