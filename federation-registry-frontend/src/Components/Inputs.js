@@ -1070,10 +1070,8 @@ export function ListInputArray(props){
                 if(!props.defaultValues.includes(item)){
                   return(
                     <React.Fragment key={index}>
-
-                    <ListInputArrayInput2 error={props.error} index={index} item={item} arrayHelpers={arrayHelpers} disabled={props.disabled} changed={props.changed}/>
-                    {Array.isArray(props.error) || typeof(props.error)==='string'?<tr><td className='error-td'><div className="error-message-list-item">{props.error[index]}</div></td><td></td></tr>:null}
-
+                    <ListInputArrayInput2 error={props.error} index={index} item={item} arrayHelpers={arrayHelpers} disabled={props.disabled} changed={props.changed}/> 
+                    {Array.isArray(props.error)?<tr><td className='error-td'><div className="error-message-list-item">{props.error[index]}</div></td><td></td></tr>:null}
                     </React.Fragment>
                   )
                 }
@@ -1374,7 +1372,7 @@ export function ListInput(props){
                   </Field>
                   <br/>
                 </InputGroup>
-                {props.error&&props.error[index]?
+                {props.error&&props.error[index]&&Array.isArray(props.error)?
                   <div className="error-message-list-item" >{props.error[index]}</div>
                 :null}
                 </React.Fragment>

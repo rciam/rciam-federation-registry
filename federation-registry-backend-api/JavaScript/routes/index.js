@@ -301,18 +301,13 @@ router.get('/callback/:tenant',(req,res,next)=>{
   clients[req.params.tenant].callback(process.env.REDIRECT_URI+req.params.tenant,{code:req.query.code}).then(async response => {
     let code = await db.tokens.addToken(response.access_token,response.id_token);
     clients[req.params.tenant].userinfo(response.access_token).then(usr_info=>{
+    console.log(usr_info);
     saveUser(usr_info,req.params.tenant);
   }); // => Promise
     res.redirect(tenant_config[req.params.tenant].base_url+'/code/' + code.code);
   });
 });
 
-// Route used for verifing push subscription
-router.get('/ams/ams_verification_hash',(req,res)=>{
-  console.log('ams verification');
-  res.setHeader('Content-type', 'plain/text');
-  res.status(200).send(process.env.AMS_VER_HASH);
-})
 
 
 
@@ -346,6 +341,15 @@ router.get('/tokens/:code',(req,res,next)=>{
     next(err)
   }
 });
+
+
+// Route used for verifing push subscription
+router.get('/ams/ams_verification_hash',(req,res)=>{
+  console.log('ams verification');
+  res.setHeader('Content-type', 'plain/text');
+  res.status(200).send(process.env.AMS_VER_HASH);
+})
+
 
 router.get('/tenants/:tenant/services/:id/error',authenticate,(req,res,next)=>{
   try{

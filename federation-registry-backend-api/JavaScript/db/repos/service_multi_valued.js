@@ -84,7 +84,7 @@ async updateSamlAttributes(type,data,service_id){
     for(const item of data) {
       item.owner_id = parseInt(service_id);
      }
-     const query = this.pgp.helpers.update(data,cs.updateSamlAttributes,type==='petition'?'service_petition_saml_attributes':'service_saml_attributes') + ' WHERE v.owner_id = t.owner_id';
+     const query = this.pgp.helpers.update(data,cs.updateSamlAttributes,type==='petition'?'service_petition_saml_attributes':'service_saml_attributes') + ' WHERE v.owner_id = t.owner_id AND v.friendly_name=t.friendly_name';
      return this.db.none(query).then(res=>{
       return true
      }).catch(error=>{

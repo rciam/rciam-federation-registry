@@ -79,12 +79,6 @@
         "required": true
     },
     {
-        "friendly_name":"distinguishedName",
-        "name":"urn:oid:2.5.4.49",
-        "name_format":"urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
-        "required": true
-    },
-    {
         "friendly_name":"isServiceUser",
         "name":"urn:mace:egi.eu:attribute-def:isServiceUser",
         "name_format":"urn:oasis:names:tc:SAML:2.0:attrname-format:uri",

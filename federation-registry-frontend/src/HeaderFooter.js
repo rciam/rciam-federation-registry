@@ -91,7 +91,7 @@ export const NavbarTop = (props)=>{
               </Dropdown.Item>
               <Dropdown.Item onClick={()=>{
                 window.location.assign(tenant[0].logout_uri + "&id_token_hint="+cookies.federation_logoutkey);
-                }}>
+              }}>
                 {t('logout')}<FontAwesomeIcon icon={faSignOutAlt}/>
               </Dropdown.Item>
             </DropdownButton>
@@ -105,7 +105,6 @@ export const NavbarTop = (props)=>{
       </Navbar>
     }
     </React.Fragment>
-
   )
 }
 

@@ -67,14 +67,12 @@ function authenticate(req,res,next){
       }
     }
     else{
-      const data = {'client_secret':clients[req.params.tenant].client_secret}
       if(req.headers.authorization||req.cookies.federation_authtoken){
         let federation_authtoken = req.cookies.federation_authtoken||req.headers.authorization.split(" ")[1];  
         
         if(req.cookies.federation_authtoken){
           let hash = req.app.get('hash');
           federation_authtoken = CryptoJS.AES.decrypt(federation_authtoken,hash).toString(CryptoJS.enc.Utf8);
-
           req.cookies.federation_authtoken = federation_authtoken;
         }
         else{
