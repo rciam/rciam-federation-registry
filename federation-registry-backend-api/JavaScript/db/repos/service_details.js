@@ -104,6 +104,7 @@ class ServiceDetailsRepository {
 
     async updateExternalId(updateData){
       const update = this.pgp.helpers.update(updateData, cs.external_id) + ' WHERE v.id = t.id RETURNING t.id';
+      
       return this.db.any(update).then((ids)=>{
         if(ids.length===updateData.length){
           return true

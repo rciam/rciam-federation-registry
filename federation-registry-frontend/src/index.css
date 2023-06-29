@@ -193,29 +193,11 @@ code {
 
 /* Header */
 
-.drop-menu a {
-  font:300 13px / 23px 'Manrope' !important;
-  padding:0.2rem 1rem!important;
-}
 
-.drop-menu a svg {
-  margin-left: 0.2rem;
-}
 
-.drop-container-header .dropdown-menu {
-  font-size: 4rem!important;
-}
 
-.drop-container-header .dropdown-menu a {
-  padding:0.3rem 1rem!important;
-  font-size:1rem!important;
-}
 
-.log-button {
-  color: rgb(89, 154, 219)!important;
-  border-color: rgb(89, 154, 219)!important;
-  padding: .2rem .75rem!important;
-}
+
 .outdated-notifications-container {
   padding-top:1rem;
 }
@@ -232,9 +214,7 @@ code {
   width:auto!important;
   margin-top:1.4rem;
 }
-.log-button:hover {
-  color:white!important;
-}
+
 
 .logo {
   margin-top:-2.5rem;
@@ -1538,14 +1518,11 @@ html:lang(gr) .home-container h1 {
     border-width: 0.65em;
     animation: spinner-border 1.5s linear infinite;
 }
-.navbar-fixed-top {
-  z-index: 30!important;
-}
+
 .ssp-footer {
   z-index: 50!important;
 }
-.user-role {
-}
+
 
 
 /* Groups PPage */
@@ -1975,40 +1952,7 @@ html:lang(gr) .home-container h1 {
   margin-left: 1.5rem!important;
 }
 
-/* Development Banner */
 
-.noty-top-global {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
-  position: absolute;
-  z-index: 2000;
-  padding: 0.5em;
-}
-.noty-top-global svg {
-  margin-right: 0.5rem;
-}
-
-
-.noty-top-info {
-    color: #00529B;
-    background-color: #BDE5F8;
-  }
-
-  .noty-top-info, .noty-top-success, .noty-top-warning, .noty-top-error {
-    border-bottom: 1px solid;
-  }
-
-  .noty-top-error {
-    color: #D8000C;
-    background-color: #FFBABA;
-  }
-
-  .noty-top-warning {
-    color: #9F6000;
-    background-color: #FEEFB3;
-  }
   .alert_bar_displacement {
     margin-top: 2.5rem;
   }

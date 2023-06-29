@@ -13,7 +13,7 @@
     "pg-promise service-registry"
   ],
   "scripts": {
-    "test": "NODE_ENV=test mocha './JavaScript/test/test.js' --timeout 10000 --bail --exit",
+    "test": "./test.sh",
     "test-docker": "NODE_ENV=test-docker mocha './JavaScript/test/test.js' --timeout 10000 --bail --exit"
   },
   "author": {
@@ -33,7 +33,7 @@
     "crypto-js": "^4.1.1",
     "deep-diff": "^1.0.2",
     "dotenv": "^8.2.0",
-    "express": "4.17.1",
+    "express": "^4.18.2",
     "express-validator": "^6.2.0",
     "express-winston": "^4.0.3",
     "handlebars": "^4.7.7",
@@ -43,11 +43,11 @@
     "nodemon": "^2.0.19",
     "openid-client": "^5.0.2",
     "pg-monitor": "1.3.1",
-    "pg-promise": "10.6.0",
+    "pg-promise": "11.5.0",
     "uuid": "^8.2.0",
     "winston": "^3.2.1",
     "xml-js": "^1.6.11",
-    "xml2js": "^0.4.23"
+    "xml2js": "^0.6.0"
   },
   "devDependencies": {
     "@types/express": "4.17.2",

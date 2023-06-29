@@ -192,8 +192,18 @@ async function run() {
 
           let done = await axios.post(pubUrls[service.json.tenant].service[service.json.protocol][service.json.integration_environment],{"messages":messages}, options_ams_user).then((res) => {
             if(res.status===200){
+              let log = {
+                topic: pubUrls[service.json.tenant].service[service.json.protocol][service.json.integration_environment],
+                tenant: service.json.tenant,
+                service_id: service.json.id,
+                external_id: service.json.external_id,
+                integration_environment: service.json.integration_environment,
+                deployment_type: service.json.deployment_type,
+                protocol: service.json.protocol
+              };
               console.log('Successfully Pushed Message to Ams')
-              console.log(service.json);
+              
+              console.log(JSON.stringify(log));
               setStateArray.push({id:service.json.id,state:'waiting-deployment',protocol:service.json.protocol,tenant:service.json.tenant,integration_environment:service.json.integration_environment});
             }
           }).catch(err => {console.log(err)});

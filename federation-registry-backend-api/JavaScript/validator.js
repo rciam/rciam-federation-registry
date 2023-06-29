@@ -463,7 +463,6 @@ const serviceValidationRules = (options,req) => {
                 url = new URL(item);
               } catch (err) {
                 throw new Error("Invalid uri");  
-
               }
               if(item.includes('#')){
                 throw new Error("Uri can't contain fragments");
@@ -487,6 +486,12 @@ const serviceValidationRules = (options,req) => {
                 else if(url.protocol==='data:'){
                   throw new Error("Uri can't be of schema 'data:'");              
                 }
+              }
+              if(item.includes('*')){
+                return new Error("Uri can't contain wildcard character '*'" );                          
+              }
+              if(item.includes(' ')){
+                return new Error("Uri can't contain spaces");                          
               }
             });
           }
@@ -536,6 +541,12 @@ const serviceValidationRules = (options,req) => {
                 else if(url.protocol==='data:'){
                   throw new Error("Uri can't be of schema 'data:'");              
                 }
+              }
+              if(item.includes('*')){
+                return new Error("Uri can't contain wildcard character '*'" );                          
+              }
+              if(item.includes(' ')){
+                return new Error("Uri can't contain spaces");                          
               }
             });
           }
