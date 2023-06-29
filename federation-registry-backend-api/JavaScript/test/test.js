@@ -11,6 +11,7 @@ var diff = require('deep-diff').diff;
 const {postPetitionError,checkAvailability,setUser,putPetition} = require('./helpers.js');
 let userToken = {}
 var config = require('../config');
+const base64url = require('base64url');
 
 //var petition=10;
 
@@ -219,6 +220,7 @@ describe('Service registry API Integration Tests', function() {
     describe('# Create Service',function(){
       describe('# Create Petition',function(){
         it('should create a new petition and return the id',function(done){
+        userToken = setUser(users.egi.manager_user);
         var req = request(server).post('/tenants/egi/petitions').set({Authorization: userToken}).send({
           type:'create',
           ...create.oidc
@@ -399,6 +401,7 @@ describe('Service registry API Integration Tests', function() {
       })
       describe('# Activate invitation',function(){
         it('should fail to activate invitation user that is already an owner',function(done){
+          userToken = setUser(users.egi.manager_user);
           var req = request(server).put('/tenants/egi/invitations/activate_by_code').set({Authorization: userToken}).send({code});
           req.set('Accept','application/json')
           .expect('Content-Type',/json/)
@@ -478,6 +481,7 @@ describe('Service registry API Integration Tests', function() {
       });
     describe('# Edit Service',function(){
       it('should create a new edit petition and return the id',function(done){
+        userToken = setUser(users.egi.end_user);
         var req = request(server).post('/tenants/egi/petitions').set({Authorization: userToken}).send({
           type:'edit',
           service_id:service,
@@ -579,7 +583,9 @@ describe('Service registry API Integration Tests', function() {
       });
     });
     describe('# Delete Service',function(){
+      
       it('should create a new delete petition',function(done){
+        userToken = setUser(users.egi.end_user);
         var req = request(server).post('/tenants/egi/petitions').set({Authorization: userToken}).send({
           type:'delete',
           service_id:service
@@ -596,6 +602,7 @@ describe('Service registry API Integration Tests', function() {
         })
       });
       it('should approve petition and delete service',function(done){
+        userToken = setUser(users.egi.operator_user);
         var req = request(server).put('/tenants/egi/petitions/'+petition+'/review').set({Authorization: userToken}).send({type:'approve'});
         req.set('Accept','application/json')
         .expect('Content-Type',/json/)

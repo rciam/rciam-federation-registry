@@ -13,7 +13,7 @@
     "pg-promise service-registry"
   ],
   "scripts": {
-    "test": "NODE_ENV=test mocha './JavaScript/test/test.js' --timeout 10000 --bail --exit",
+    "test": "./test.sh",
     "test-docker": "NODE_ENV=test-docker mocha './JavaScript/test/test.js' --timeout 10000 --bail --exit"
   },
   "author": {

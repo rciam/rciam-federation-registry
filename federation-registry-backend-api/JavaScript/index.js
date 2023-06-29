@@ -52,10 +52,10 @@ app.set('hash',hash);
 
 db.tenants.getInit().then(async tenants => {
   for (const tenant of tenants){
-
     tenant_config[tenant.name] = {
       base_url:tenant.base_url
     }
+
     await Issuer.discover(tenant.issuer_url).then((issuer)=>{
       clients[tenant.name] = new issuer.Client({
         client_id: tenant.client_id,
@@ -66,6 +66,11 @@ db.tenants.getInit().then(async tenants => {
       clients[tenant.name].client_id = tenant.client_id;
       clients[tenant.name].client_secret = tenant.client_secret;
       clients[tenant.name].issuer_url = tenant.issuer_url;
+    }).catch(error=>{
+      if(process.env.NODE_ENV!=='test-docker'&&process.env.NODE_ENV!=='test'){     
+        console.log("Unable to Discover Tenant ");
+        console.log(tenant);
+      }
     })
   }
   app.set('clients',clients);
