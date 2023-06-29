@@ -51,15 +51,15 @@ const GroupsPage = (props) => {
     getService();
   }
 
+
+
   const getService = () =>{
     if(!service_id){
-      fetch(config.host+'tenants/'+tenant_name+'/petitions/'+petition_id+'?type=open', {
+      fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/petitions/'+petition_id+'?type=open', {
         method: 'GET', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': localStorage.getItem('token')
-        }
+          'Content-Type': 'application/json'}
       }).then(response=>{
 
         if(response.status===200){
@@ -83,13 +83,11 @@ const GroupsPage = (props) => {
       });
     }
     else{      
-      fetch(config.host+'tenants/'+tenant_name+'/services/'+service_id, {
+      fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/services/'+service_id, {
         method: 'GET', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': localStorage.getItem('token')
-        }
+          'Content-Type': 'application/json'}
       }).then(response=>{
         if(response.status===200){
           return response.json();
@@ -116,13 +114,11 @@ const GroupsPage = (props) => {
 
   const getGroupMembers = () => {
     setLoading(true);
-    fetch(config.host+'tenants/'+tenant_name+'/groups/'+group_id+'/members', {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/groups/'+group_id+'/members', {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json',
-      'Authorization': localStorage.getItem('token')
-      }}).then(response=>{
+      'Content-Type': 'application/json'}}).then(response=>{
         if(response.status===200){
           return response.json();
         }
@@ -158,13 +154,11 @@ const GroupsPage = (props) => {
   }
   const getInvites = () => {
 
-    fetch(config.host+'tenants/'+tenant_name+'/groups/'+group_id+'/invitations', {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/groups/'+group_id+'/invitations', {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json',
-      'Authorization': localStorage.getItem('token')
-      }}).then(response=>{
+      'Content-Type': 'application/json'}}).then(response=>{
         if(response.status===200){
           return response.json();
         }
@@ -189,13 +183,11 @@ const GroupsPage = (props) => {
 
   const cancelInvitation = (id,group_id)=>{
     setSending(true);
-    fetch(config.host+'tenants/'+tenant_name+'/groups/'+group_id+'/invitations/'+id, {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/groups/'+group_id+'/invitations/'+id, {
       method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': localStorage.getItem('token')
-      }
+        'Content-Type': 'application/json'}
     }).then(response=> {
       setSending(false);
       getData()
@@ -204,13 +196,11 @@ const GroupsPage = (props) => {
 
   const resendInvitation = (id,group_id,email) => {
     setSending(true);
-    fetch(config.host+'tenants/'+tenant_name+'/groups/'+group_id+'/invitations/'+id, {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/groups/'+group_id+'/invitations/'+id, {
       method: 'PUT', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': localStorage.getItem('token')
-      }
+        'Content-Type': 'application/json'}
     }).then(response=>{
       if(response.status===200){
         return true;
@@ -235,13 +225,11 @@ const GroupsPage = (props) => {
 
   const sendInvitation = (invitation) => {
     setSending(true);
-    fetch(config.host+'tenants/'+tenant_name+'/groups/'+invitation.group_id+'/invitations', {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/groups/'+invitation.group_id+'/invitations', {
       method: 'POST', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': localStorage.getItem('token')
-      },
+        'Content-Type': 'application/json'},
       body:JSON.stringify(invitation)
     }).then(response=>{
       if(response.status===200){
@@ -267,13 +255,11 @@ const GroupsPage = (props) => {
 
   const removeMember = (sub,group_id) => {
     setSending(true);
-    fetch(config.host+'tenants/'+tenant_name+'/groups/'+group_id+'/members/'+sub, {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/groups/'+group_id+'/members/'+sub, {
       method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': localStorage.getItem('token')
-      },
+        'Content-Type': 'application/json'},
       body:JSON.stringify({sub:sub,group_id:group_id})
     }).then(response=> {
       setSending(false);
@@ -370,23 +356,23 @@ const GroupsPage = (props) => {
                                     args:[member.sub,member.group_id],
                                     message:(member.sub!==user[0].sub?
                                       <React.Fragment>
-                                        <table style={{border:'none'}} className="confirmation-table">
-                                        <tbody>
-                                        <tr>
-                                        <td>username:</td>
-                                        <td>{member.username}</td>
-                                        </tr>
-                                        <tr>
-                                        <td>email:</td>
-                                        <td>{member.email}</td>
-                                        </tr>
-                                        <tr>
-                                        <td>role:</td>
-                                        <td>{member.group_manager?'group_manager':'group_member'}</td>
-                                        </tr>
-                                        </tbody>
-                                        </table>
-                                      </React.Fragment>
+                                          <table style={{border:'none'}} className="confirmation-table">
+                                          <tbody>
+                                          <tr>
+                                          <td>username:</td>
+                                          <td>{member.username}</td>
+                                          </tr>
+                                          <tr>
+                                          <td>email:</td>
+                                          <td>{member.email}</td>
+                                          </tr>
+                                          <tr>
+                                          <td>role:</td>
+                                          <td>{member.group_manager?'Group Manager':'Group Member'}</td>
+                                          </tr>
+                                          </tbody>
+                                          </table>
+                                        </React.Fragment>
                                       :null
                                     ),
                                     title:(member.sub===user[0].sub?'Are you sure you want to leave the owners group?':'Are you sure you want to remove following user from owners group')
@@ -473,21 +459,22 @@ const GroupsPage = (props) => {
                                                     message:
                                                     <React.Fragment>
                                                       <table style={{border:'none'}} className="confirmation-table">
-                                                      {member.username?
-                                                        <tr>
-                                                        <td>username:</td>
-                                                        <td>{member.username}</td>
-                                                        </tr>
-                                                        :null}
-                                                        <tr>
-                                                          <td>email:</td>
-                                                          <td><a href={'mailto:'+(member.email?member.email:member.invitation_email)}>{member.email?member.email:member.invitation_email}</a></td>
-                                                        </tr>
-
-                                                        <tr>
-                                                          <td>role:</td>
-                                                          <td>{member.group_manager?'group_manager':'group_member'}</td>
-                                                        </tr>
+                                                        <tbody>
+                                                          {member.username?
+                                                            <tr>
+                                                            <td>username:</td>
+                                                            <td>{member.username}</td>
+                                                            </tr>
+                                                          :null}
+                                                          <tr>
+                                                            <td>email:</td>
+                                                            <td><a href={'mailto:'+(member.email?member.email:member.invitation_email)}>{member.email?member.email:member.invitation_email}</a></td>
+                                                          </tr>
+                                                          <tr>
+                                                            <td>role:</td>
+                                                            <td>{member.group_manager?'Group Manager':'Group Member'}</td>
+                                                          </tr>
+                                                        </tbody>
                                                       </table>
                                                     </React.Fragment>
                                                     ,

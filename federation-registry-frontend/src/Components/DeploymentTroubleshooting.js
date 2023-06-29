@@ -29,13 +29,11 @@ const DeploymentTroubleshooting = (props) => {
   const [error,setError] = useState();
   const resendDeployment = () => {
     setLoading(true);
-    fetch(config.host+'tenants/'+tenant_name+'/services/'+props.service_id +'/deployment?action=resend', {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/services/'+props.service_id +'/deployment?action=resend', {
       method: 'PUT', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json',
-      'Authorization': localStorage.getItem('token')
-      }
+      'Content-Type': 'application/json'  }
     }).then(res=> {
 
       if(res.status===200){
@@ -106,7 +104,7 @@ const DeploymentTroubleshooting = (props) => {
           
             <React.Fragment>
               <hr/>
-              <Alert show={true} variant="light" style={{color:tenant.color}} className={expand?(props.deploymentError?"error":"warning")+"-action-alert":(props.deploymentError?"error":"warning")+"-action-alert-hidden"}>
+              <Alert show={true} variant="light" style={{color:tenant.config.theme_color}} className={expand?(props.deploymentError?"error":"warning")+"-action-alert":(props.deploymentError?"error":"warning")+"-action-alert-hidden"}>
               <div className="d-flex justify-content-end">
               {error&&expand?
                 <div className="review-error" style={{marginRight:'0.5rem',color:'#721c24'}}>

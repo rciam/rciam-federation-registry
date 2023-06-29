@@ -3,13 +3,15 @@ const {petitionValidationRules,validate,validateInternal,tenantValidation,format
 const qs = require('qs');
 const {v1:uuidv1} = require('uuid');
 const axios = require('axios').default;
-const {sendMail,sendInvitationMail,sendMultipleInvitations,createGgusTickets,delay} = require('../functions/helpers.js');
+const {sendMail,sendInvitationMail,sendMultipleInvitations,sendDeploymentMail,delay} = require('../functions/helpers.js');
 const {db} = require('../db');
 var router = require('express').Router();
 var config = require('../config');
+var requested_attributes = require('../tenant_config/requested_attributes.json')
 const customLogger = require('../loggers.js');
 const {rejectPetition,approvePetition,changesPetition,getPetition,getOpenPetition,requestReviewPetition} = require('../controllers/main.js');
-const {adminAuth,authenticate} = require('./authentication.js'); 
+const {adminAuth,authenticate,clearCookies} = require('./authentication.js'); 
+var CryptoJS = require("crypto-js");
 
 
 
@@ -23,6 +25,7 @@ const {adminAuth,authenticate} = require('./authentication.js');
 function getData(req,res,next) {
   db.service.getAll(req.params.tenant,{},true).then(services=>{
     req.body = services;
+    req.outdated_errors = [];
     //console.log(services);
     next();
   });
@@ -90,7 +93,7 @@ router.get('/tenants/:tenant/services',getServicesValidation(),validate,authenti
     if(req.query.outdated==='true'){
       db.service_state.getOutdatedServices(req.params.tenant).then(async outdated_services=>{
         if(outdated_services){
-          res.status(200).send(outdated_services);
+          res.status(200).send(outdated_services?outdated_services:[]);
           }
         else{
           res.status(200).send([]);
@@ -99,7 +102,7 @@ router.get('/tenants/:tenant/services',getServicesValidation(),validate,authenti
     }
     else {
       db.service.getAll(req.params.tenant,req.query,authorised).then(result=>{
-        res.status(200).send(result);
+        res.status(200).send(result?result:[]);
       }).catch(err=> {
         next(err);
       });
@@ -137,15 +140,16 @@ router.post('/tenants/:tenant/services',adminAuth,tenantValidation(),validate,fo
             services[index].group_id = ids[index].id;
           });
           await t.service_details.addMultiple(services).then(async services =>{
-
             if(services){
               let contacts = [];
               let grant_types = [];
               let redirect_uris = [];
+              let post_logout_redirect_uris = [];
               let scopes = [];
               let queries = [];
               let service_state = [];
               let invitations = [];
+              let requested_attributes = [];
               services.forEach((service,index)=> {
                 service_state.push({id:service.id,state:'deployed',outdated:(service.outdated?true:false)});
                 if(service.contacts && service.contacts.length>0){
@@ -172,7 +176,19 @@ router.post('/tenants/:tenant/services',adminAuth,tenantValidation(),validate,fo
                       redirect_uris.push({owner_id:service.id,value:redirect_uri});
                     });
                   }
+                  if(service.post_logout_redirect_uris && service.post_logout_redirect_uris.length>0){
+                    service.post_logout_redirect_uris.forEach(post_logout_redirect_uri => {
+                      post_logout_redirect_uris.push({owner_id:service.id,value:post_logout_redirect_uri});
+                    });
+                  }
                 }
+                if(service.protocol==='saml'){
+                  if(service.requested_attributes&&service.requested_attributes.length>0){
+                    service.requested_attributes.forEach(attribute=>{
+                      requested_attributes.push({owner_id:service.id,...attribute})
+                    });
+                  }
+                } 
               });
               queries.push(t.service_state.addMultiple(service_state));
               queries.push(t.service_details_protocol.addMultiple(services));
@@ -187,6 +203,12 @@ router.post('/tenants/:tenant/services',adminAuth,tenantValidation(),validate,fo
               }
               if(redirect_uris.length>0){
                 queries.push(t.service_multi_valued.addMultiple(redirect_uris,'service_oidc_redirect_uris'));
+              }
+              if(post_logout_redirect_uris.length>0){
+                queries.push(t.service_multi_valued.addMultiple(post_logout_redirect_uris,'service_oidc_post_logout_redirect_uris'));
+              }
+              if(requested_attributes&&requested_attributes.length>0){
+                queries.push(t.service_multi_valued.addSamlAttributesMultiple(requested_attributes,'service_saml_attributes'));
               }
               await t.batch(queries).then(done=>{
                 if(done){
@@ -216,16 +238,17 @@ router.get('/tenants/:tenant',(req,res,next)=>{
     var clients = req.app.get('clients');
     db.tenants.getTheme(req.params.tenant).then(tenant=>{
       if(tenant){
-        if(config.form[req.params.tenant]){
-          tenant.form_config = config.form[req.params.tenant];
+        if(config[req.params.tenant].form){
+          tenant.form_config = config[req.params.tenant].form;
         }
         if(config[req.params.tenant]){
           tenant.config = config[req.params.tenant];
         }
-        if(config.restricted_env[req.params.tenant]){
-          tenant.restricted_environments = config.restricted_env[req.params.tenant].env;
+        if(config[req.params.tenant].restricted_env){
+          tenant.restricted_environments = config[req.params.tenant].restricted_env;
         }
-        tenant.logout_uri = clients[req.params.tenant].logout_uri
+        tenant.form_config.requested_attributes = requested_attributes.filter(x=> config[req.params.tenant].form.supported_attributes.includes(x.friendly_name));
+        tenant.logout_uri = clients[req.params.tenant].logout_uri;
         res.status(200).json(tenant).end();
       }
       else{
@@ -269,28 +292,22 @@ router.get('/tenants/:tenant/login',(req,res)=>{
   }else{
     res.redirect(tenant_config[Object.keys(tenant_config)[0]].base_url.split("/"+Object.keys(tenant_config)[0])[0]+'/404');
   }
-})
-
+});
 
 
 // Callback Route
 router.get('/callback/:tenant',(req,res,next)=>{
   var clients = req.app.get('clients');
   clients[req.params.tenant].callback(process.env.REDIRECT_URI+req.params.tenant,{code:req.query.code}).then(async response => {
-    let code = await db.tokens.addToken(response.access_token);
+    let code = await db.tokens.addToken(response.access_token,response.id_token);
     clients[req.params.tenant].userinfo(response.access_token).then(usr_info=>{
+    console.log(usr_info);
     saveUser(usr_info,req.params.tenant);
   }); // => Promise
     res.redirect(tenant_config[req.params.tenant].base_url+'/code/' + code.code);
   });
 });
 
-// Route used for verifing push subscription
-router.get('/ams/ams_verification_hash',(req,res)=>{
-  console.log('ams verification');
-  res.setHeader('Content-type', 'plain/text');
-  res.status(200).send(process.env.AMS_VER_HASH);
-})
 
 
 
@@ -302,9 +319,20 @@ router.get('/tokens/:code',(req,res,next)=>{
         if(res){
           await t.tokens.deleteToken(req.params.code).then(deleted=>{
             if(deleted){
-              res.status(200).json({token:response.token});
+              let hash = req.app.get('hash');
+              let federation_authtoken_encrypted  = CryptoJS.AES.encrypt(response.token, hash).toString();
+              try{
+                res.cookie('federation_authtoken',federation_authtoken_encrypted, {path:'/',domain:req.headers.host.replace( /:[0-9]{0,4}.*/, '' ),sameSite:'Strict',secure:true,httpOnly:true });
+                res.cookie('federation_logoutkey',response.id_token, {path:'/',domain:req.headers.host.replace( /:[0-9]{0,4}.*/, '' ),sameSite:'Strict',secure:true});
+              }
+              catch(err){
+                console.log(err);
+              }
+              res.status(200).json({token:response.token,federation_logoutkey:response.id_token});
             }
-          }).catch(err=>{next(err);})
+          }).catch(err=>{
+            console.log(err);
+            next(err);})
         }
       }).catch(err=>{next(err);})
     })
@@ -313,6 +341,15 @@ router.get('/tokens/:code',(req,res,next)=>{
     next(err)
   }
 });
+
+
+// Route used for verifing push subscription
+router.get('/ams/ams_verification_hash',(req,res)=>{
+  console.log('ams verification');
+  res.setHeader('Content-type', 'plain/text');
+  res.status(200).send(process.env.AMS_VER_HASH);
+})
+
 
 router.get('/tenants/:tenant/services/:id/error',authenticate,(req,res,next)=>{
   try{
@@ -366,8 +403,9 @@ router.put('/tenants/:tenant/services/:id/deployment',authenticate,(req,res,next
 router.get('/tenants/:tenant/user',authenticate,(req,res,next)=>{
   try{
     var clients = req.app.get('clients');
-    TokenArray = req.headers.authorization.split(" ");
-    clients[req.params.tenant].userinfo(TokenArray[1]) // => Promise
+
+    let federation_authtoken = req.cookies.federation_authtoken||req.headers.authorization.split(" ")[1]
+    clients[req.params.tenant].userinfo(federation_authtoken) // => Promise
     .then(function (userinfo) {
       let user = userinfo;
       user = generatePreferredUsername(user);
@@ -394,9 +432,11 @@ router.get('/tenants/:tenant/user',authenticate,(req,res,next)=>{
       user.role = req.user.role.name;
       res.end(JSON.stringify({user}));
     }).catch(err=>{
+      res = clearCookies(res,req.headers.host);
       next(err)});
   }
   catch(err){
+    res = clearCookies(res,req.headers.host);
     next(err)
   }
 });
@@ -438,9 +478,9 @@ router.post('/ams/ingest',checkCertificate,decodeAms,amsIngestValidation(),valid
           if(ids.length>0){
             await t.user.getServiceOwners(ids).then(async data=>{
               if(data){
-                await t.service_petition_details.getTicketInfo(ids,config.restricted_env.egi.env).then(async ticket_data=>{
+                await t.service_petition_details.getTicketInfo(ids).then(async ticket_data=>{
                   if(ticket_data){
-                    createGgusTickets(ticket_data);
+                    sendDeploymentMail(ticket_data);
                   }
                   if(errors.length>0){
                     await t.user.getUsersByAction('error_action').then(users=>{
@@ -486,7 +526,6 @@ router.post('/ams/ingest',checkCertificate,decodeAms,amsIngestValidation(),valid
 // updateData = [{id:1,state:'deployed',tenant:'egi',protocol:'oidc'},{id:2,state:'deployed',tenant:'egi',protocol:'saml'},{id:3,state:'failed',tenant:'eosc',protocol:'oidc'}];
 router.put('/agent/set_services_state',amsAgentAuth,(req,res,next)=>{
   try{
-
     return db.task('set_state_and_agents',async t=>{
       let service_pending_agents = [];
       await t.service_state.updateMultiple(req.body).then(async result=>{
@@ -496,7 +535,8 @@ router.put('/agent/set_services_state',amsAgentAuth,(req,res,next)=>{
               req.body.forEach(service=> {
                 agents.forEach(agent => {
                   if(agent.tenant===service.tenant && agent.entity_protocol===service.protocol  && agent.entity_type==='service' && agent.integration_environment===service.integration_environment ){
-                    service_pending_agents.push({agent_id:agent.id,service_id:service.id});
+                    service_pending_agents.push({agent_id:agent.id,service_id:service.id,deployer_name:agent.deployer_name});
+                    
                   }
                 })
               });
@@ -517,7 +557,7 @@ router.put('/agent/set_services_state',amsAgentAuth,(req,res,next)=>{
         else{
           next('Failed to update state')
         }
-      });
+      }).catch(err=>{console.log(err);});
     });
   }
   catch(err){next(err);}
@@ -665,7 +705,7 @@ router.get('/tenants/:tenant/petitions/:id',authenticate,(req,res,next)=>{
     if(req.query.type==='open'){
       getOpenPetition(req,res,next,db);
     }
-    if(req.query.previous_state){
+    else if(req.query.previous_state){
       db.tx('get-history-for-petition', async t =>{
         await t.petition.getLastStateId(req.params.id).then(last_id=>{
           req.params.id=last_id;
@@ -1333,30 +1373,35 @@ function amsAgentAuth(req,res,next){
 function canReview(req,res,next){
   db.service_petition_details.getEnvironment(req.params.id,req.params.tenant).then(async environment=> {
     // Ckecking if review action is restricted for
-    if(req.body.type==='approve'&&config.restricted_env[req.params.tenant].env.includes(environment)&&!req.user.role.actions.includes('review_restricted')){
-        res.status(401).json({error:'Requested action not authorised'});
-    }
-    else if(req.user.role.actions.includes('review_petition')||req.user.role.actions.includes('review_restricted')){
-        next();
-    }
-    else {
-      await db.petition.canReviewOwn(req.params.id,req.user.sub).then(service=>{
-
-        if(service&&service.integration_environment==='development'){
-          next();
-        }
-        else if(service){
-           if (req.user.role.actions.includes('review_own_petition')){
-             next();
-           }
-           else{
-              res.status(401).json({error:'Requested action not authorised'});
-           }
-        }
-        else{
+    if(environment){
+      if(req.body.type==='approve'&&config[req.params.tenant].restricted_env.includes(environment)&&!req.user.role.actions.includes('review_restricted')){
           res.status(401).json({error:'Requested action not authorised'});
-        }
-      })
+      }
+      else if(req.user.role.actions.includes('review_petition')||req.user.role.actions.includes('review_restricted')){
+          next();
+      }
+      else {
+        await db.petition.canReviewOwn(req.params.id,req.user.sub).then(service=>{
+  
+          if(service&&service.integration_environment==='development'){
+            next();
+          }
+          else if(service){
+             if (req.user.role.actions.includes('review_own_petition')){
+               next();
+             }
+             else{
+                res.status(401).json({error:'Requested action not authorised'});
+             }
+          }
+          else{
+            res.status(401).json({error:'Requested action not authorised'});
+          }
+        })
+      }
+    }
+    else{
+      res.status(401).json({error:'Requested action not authorised'});
     }
   }).catch(err=> {
     res.status(401).json({error:'Requested action not authorised'});

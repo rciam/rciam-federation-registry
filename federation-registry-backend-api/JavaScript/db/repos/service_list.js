@@ -88,8 +88,8 @@ class ServiceListRepository {
     }
 
     if(req.query.search_string){
-      params.search_filter_services = "AND (service_name ILIKE '%"+req.query.search_string +"%' OR client_id ILIKE '%"+req.query.search_string +"%')";
-      params.search_filter_petitions = "WHERE (service_name ILIKE '%"+req.query.search_string +"%' OR client_id ILIKE '%"+req.query.search_string +"%')";
+      params.search_filter_services = "AND (service_name ILIKE '%"+req.query.search_string +"%' OR client_id ILIKE '%"+req.query.search_string +"%' OR entity_id ILIKE '%"+req.query.search_string+"%')";
+      params.search_filter_petitions = "WHERE (service_name ILIKE '%"+req.query.search_string +"%' OR client_id ILIKE '%"+req.query.search_string +"%' OR entity_id ILIKE '%"+req.query.search_string+"%')";
     }
 
     if(req.query.env){
@@ -164,18 +164,17 @@ class ServiceListRepository {
     params.tenant_name = req.params.tenant;
     params.sub = req.user.sub;
     if(req.query.limit){
-      params.limit= parseInt(req.query.limit);
+      params.limit= "LIMIT "+ parseInt(req.query.limit);
     }
     else{
-      params.limit= 10;
+      params.limit= "";
     }
-    if(req.query.page&&req.query.page!=1){
-      params.offset = (req.query.page-1) * params.limit;
+    if(req.query.page&&req.query.page!=1&&req.query.limit&&parseInt(req.query.limit)){
+      params.offset = (req.query.page-1) * parseInt(req.query.limit);
     }
     else {
       params.offset = 0;
     }
-    
     const query = this.pgp.as.format(sql.getList,params);
     return await this.db.any(query);
 

@@ -2,7 +2,7 @@ const sql = require('../sql').service;
 const {calcDiff,extractServiceBoolean} = require('../../functions/helpers.js');
 const {requiredDeployment} = require('../../functions/requiredDeployment.js');
 const cs = {}; // Reusable ColumnSet objects.
-
+var requested_attributes = require('../../tenant_config/requested_attributes.json')
 /*
  This repository mixes hard-coded and dynamic SQL, primarily to show a diverse example of using both.
  */
@@ -70,6 +70,14 @@ class ServiceRepository {
                 if(service.redirect_uris&&service.redirect_uris.length>0){
                   queries.push(t.service_multi_valued.add('service','oidc_redirect_uris',service.redirect_uris,result.id));
                 }
+                if(service.post_logout_redirect_uris&&service.post_logout_redirect_uris.length>0){
+                  queries.push(t.service_multi_valued.add('service','oidc_post_logout_redirect_uris',service.post_logout_redirect_uris,result.id));
+                }
+              }
+              if(service.protocol==='saml'){
+                if(service.requested_attributes&&service.requested_attributes.length>0){
+                  queries.push(t.service_multi_valued.addSamlAttributes('service',service.requested_attributes,result.id));                  
+                }
               }
               return t.batch(queries);
             }
@@ -78,7 +86,6 @@ class ServiceRepository {
         }).then(data => {
           return service_id;
         }).catch(stuff=>{
-
           throw 'error'
         });
       }
@@ -102,6 +109,9 @@ class ServiceRepository {
             if(Object.keys(edits.update.service_boolean).length >0){
               queries.push(t.service_multi_valued.updateServiceBoolean('service',{...edits.update.service_boolean,tenant:tenant},targetId));
             }
+            if(Object.keys(edits.update.requested_attributes).length >0){
+              queries.push(t.service_multi_valued.updateSamlAttributes('service',edits.update.requested_attributes,targetId))              
+            }
             if(Object.keys(edits.add.service_boolean).length >0){
               queries.push(t.service_multi_valued.addServiceBoolean('service',{...edits.add.service_boolean,tenant:tenant},targetId));
             }
@@ -110,12 +120,14 @@ class ServiceRepository {
               if(key==='contacts') {
                 queries.push(t.service_contacts.add('service',edits.add[key],targetId));
               }
+              else if(key==='requested_attributes'){queries.push(t.service_multi_valued.addSamlAttributes('service',edits.add[key],targetId))}
               else {
                 queries.push(t.service_multi_valued.add('service',key,edits.add[key],targetId));
               }
             }
             for (var key in edits.dlt){
               if(key==='contacts'){queries.push(t.service_contacts.delete_one_or_many('service',edits.dlt[key],targetId));}
+              else if(key==='requested_attributes'){queries.push(t.service_multi_valued.deleteSamlAttributes('service',edits.dlt[key],targetId))}
               else {queries.push(t.service_multi_valued.delete_one_or_many('service',key,edits.dlt[key],targetId));}
             }
             var result = await t.batch(queries);
@@ -148,7 +160,8 @@ class ServiceRepository {
       'metadata_url',sd.metadata_url,'entity_id',sd.entity_id,\
       'grant_types',(SELECT json_agg((v.value)) FROM service_oidc_grant_types v WHERE sd.id = v.owner_id),\
       'scope',(SELECT json_agg((v.value)) FROM service_oidc_scopes v WHERE sd.id = v.owner_id),\
-      'redirect_uris',(SELECT json_agg((v.value)) FROM service_oidc_redirect_uris v WHERE sd.id = v.owner_id),",
+      'requested_attributes',(SELECT coalesce(json_agg(json_build_object('friendly_name',v.friendly_name,'name',v.name,'required',v.required,'name_format',v.name_format)), '[]'::json) FROM service_saml_attributes v WHERE sd.id=v.owner_id),\
+      'redirect_uris',(SELECT json_agg((v.value)) FROM service_oidc_redirect_uris v WHERE sd.id = v.owner_id),'post_logout_redirect_uris',(SELECT json_agg((v.value)) FROM service_oidc_post_logout_redirect_uris v WHERE sd.id = v.owner_id),",
       tags_filter:"",
       exclude_tags_filter:""
     }
@@ -204,6 +217,19 @@ class ServiceRepository {
   async getPending(){
     const query = this.pgp.as.format(sql.getPending);
     return this.db.any(query).then(services=>{
+      services.forEach((service,index)=>{
+
+        if(service.json.protocol==='saml'&&service.json.requested_attributes&&service.json.requested_attributes.length>0){
+          service.json.requested_attributes.forEach((attribute,attr_index)=>{      
+            let match_index = requested_attributes.findIndex(x => x.friendly_name ===attribute.friendly_name)            
+            if(requested_attributes[match_index].name===attribute.name){              
+              services[index].json.requested_attributes[attr_index].type = "standard";
+            }else{
+              services[index].json.requested_attributes[attr_index].type = "custom";
+            }
+          })
+        }
+      })
       if(services){
         return services;
       }

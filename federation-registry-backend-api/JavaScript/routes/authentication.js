@@ -5,6 +5,8 @@ const {db} = require('../db');
 const { ResultWithContext } = require('express-validator/src/chain');
 const e = require('express');
 const base64url = require('base64url');
+var CryptoJS = require("crypto-js");
+
 
 function adminAuth(req,res,next){
     if(req.header('X-Api-Key')===process.env.ADMIN_AUTH_KEY){
@@ -27,6 +29,12 @@ function actionAuthorization(action){
 
 }
 
+function clearCookies(res,domain){
+  domain = domain.replace( /:[0-9]{0,4}.*/, '' );
+  res.clearCookie('federation_logoutkey',{domain});
+  res.clearCookie('federation_authtoken',{domain});
+  return res;
+}
 
 function decode(jwt) {
   const [headerB64, payloadB64] = jwt.split('.');
@@ -59,11 +67,17 @@ function authenticate(req,res,next){
       }
     }
     else{
-
-      const data = {'client_secret':clients[req.params.tenant].client_secret}
-      if(req.headers.authorization){
-        TokenArray = req.headers.authorization.split(" ");
-        clients[req.params.tenant].userinfo(TokenArray[1]).then(userinfo => {
+      if(req.headers.authorization||req.cookies.federation_authtoken){
+        let federation_authtoken = req.cookies.federation_authtoken||req.headers.authorization.split(" ")[1];  
+        
+        if(req.cookies.federation_authtoken){
+          let hash = req.app.get('hash');
+          federation_authtoken = CryptoJS.AES.decrypt(federation_authtoken,hash).toString(CryptoJS.enc.Utf8);
+          req.cookies.federation_authtoken = federation_authtoken;
+        }
+        else{
+        }
+        clients[req.params.tenant].userinfo(federation_authtoken).then(userinfo => {
           req.user = userinfo;
           if(req.user.sub){
             db.user_role.getRoleActions(req.user.sub,req.params.tenant).then(role=>{
@@ -72,26 +86,31 @@ function authenticate(req,res,next){
                 next();
               }
               else{
+                res = clearCookies(res,req.headers.host);                
                 res.status(401).send('Unauthenticated Request');
               }
             }).catch((err)=> {
+              res = clearCookies(res,req.headers.host);
               customLogger(req,res,'warn','Unauthenticated request'+err);
               res.status(401).end();
             });
           }
-          else{res.status(401).end();}
+          else{
+            res = clearCookies(res,req.headers.host);
+            res.status(401).end();}
         }).catch(err=> {
-          console.log(err);
+          res = clearCookies(res,req.headers.host);
           res.status(401).end();
         })
       }
       else{
+        res = clearCookies(res,req.headers.host);
         res.status(401).end();
       }
     }
-
   }
   catch(err){
+    res = clearCookies(res,req.headers.host);
     customLogger(req,res,'warn','Unauthenticated request'+err);
     next(err);
   }
@@ -99,4 +118,4 @@ function authenticate(req,res,next){
 }
 
 
-  module.exports = {adminAuth,authenticate,actionAuthorization}
+  module.exports = {adminAuth,authenticate,actionAuthorization,clearCookies}

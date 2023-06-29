@@ -15,7 +15,7 @@ export default function InputRow(props){
         <Form.Group as={Row}>
           <Form.Label column="true" sm="2" className='col-form-label text-right list-input-label'>
             <Row className="input-title-row">
-              <Col>{props.title}</Col>
+              <Col>{props.moreInfo&&props.moreInfo.label?parse(props.moreInfo.label):parse(props.title)}</Col>
               {props.moreInfo&&props.moreInfo.tooltip?
               <OverlayTrigger
               placement='top'

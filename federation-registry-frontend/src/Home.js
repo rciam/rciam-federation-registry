@@ -45,7 +45,7 @@ const Home = ()=> {
     },[])
 
    const getServices = () => {
-    fetch(config.host+'tenants/'+tenant_name+'/services?integration_environment=production&exclude_tags=test', {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/services?integration_environment=production&exclude_tags=test', {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
@@ -63,13 +63,11 @@ const Home = ()=> {
    }
 
    const activateInvitation = () => {
-     fetch(config.host+'tenants/'+tenant_name+'/invitations/activate_by_code', {
+     fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/invitations/activate_by_code', {
        method: 'PUT', // *GET, POST, PUT, DELETE, etc.
        credentials: 'include', // include, *same-origin, omit
        headers: {
-       'Content-Type': 'application/json',
-       'Authorization': localStorage.getItem('token')
-       },
+       'Content-Type': 'application/json'},
        body: JSON.stringify({code:localStorage.getItem('invitation')})
      }).then( response=>{
            if(response.status===406){return response.json();}
@@ -93,7 +91,7 @@ const Home = ()=> {
       {loading?<LoadingPage  loading={loading}/>:null}
       <div className="home-container">
         <h1>{t('main_greeting')}</h1>
-        <p>{localStorage.getItem('invitation')?t('invitation_landing_page_message'):tenant.description}</p>
+        <p>{localStorage.getItem('invitation')?t('invitation_landing_page_message'):tenant.config.home_page_description}</p>
         
       </div>
       {services.length>0&&!user?<ServiceOverviewTable services={services}/>:null}

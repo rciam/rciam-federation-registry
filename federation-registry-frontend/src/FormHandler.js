@@ -76,14 +76,14 @@ const EditService = (props) => {
       // eslint-disable-next-line react-hooks/exhaustive-deps
     },[petitionData, service, props.review, editPetition]);
 
+
     const getData = async () => {
       if(service_id){
-        fetch(config.host+'tenants/'+tenant_name+'/services/'+service_id, {
+        fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/services/'+service_id, {
           method: 'GET', // *GET, POST, PUT, DELETE, etc.
           credentials: 'include', // include, *same-origin, omit
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': localStorage.getItem('token')
+            'Content-Type': 'application/json'
           }
         }).then(response=>{
           if(response.status===200){
@@ -108,12 +108,11 @@ const EditService = (props) => {
         });
       }
       if(service_id&&!petition_id&&!props.review){
-        fetch(config.host+'tenants/'+tenant_name+'/services/list?service_id='+service_id, {
+        fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/services/list?service_id='+service_id, {
           method: 'GET', // *GET, POST, PUT, DELETE, etc.
           credentials: 'include', // include, *same-origin, omit
           headers: {
-          'Content-Type': 'application/json',
-          'Authorization': localStorage.getItem('token')
+          'Content-Type': 'application/json'
         }}).then(response=>{
           if(response.status===200||response.status===304){
             return response.json();
@@ -154,12 +153,11 @@ const EditService = (props) => {
         });
       }
       if(petition_id){
-        fetch(config.host+'tenants/'+tenant_name+'/petitions/'+petition_id+'?type=open', {
+        fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/petitions/'+petition_id+'?type=open', {
           method: 'GET', // *GET, POST, PUT, DELETE, etc.
           credentials: 'include', // include, *same-origin, omit
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': localStorage.getItem('token')
+            'Content-Type': 'application/json'
           }
         }).then(response=>{
           if(response.status===200){
@@ -317,7 +315,6 @@ const ViewRequest = (props) => {
   useEffect(()=>{
       // eslint-disable-next-line react-hooks/exhaustive-deps
     if(petitionData&&service&&!editPetition){
-
       let helper = calcDiff(service,petitionData.petition,tenant[0].form_config,diff);
       let multivalue_attributes = [];
       for (const service_property in service) service[service_property]&&typeof(service[service_property])==='object'&&multivalue_attributes.push(service_property); 
@@ -337,13 +334,11 @@ const ViewRequest = (props) => {
 
   const getData = async () => {
     if(service_id){
-      fetch(config.host+'tenants/'+tenant_name+'/services/'+service_id, {
+      fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/services/'+service_id, {
         method: 'GET', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': localStorage.getItem('token')
-        }
+          'Content-Type': 'application/json'}
       }).then(response=>{
         if(response.status===200){
           return response.json();
@@ -366,13 +361,11 @@ const ViewRequest = (props) => {
       });
     }
     if(petition_id){
-      fetch(config.host+'tenants/'+tenant_name+'/petitions/'+petition_id+'?type=open', {
+      fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/petitions/'+petition_id+'?type=open', {
         method: 'GET', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': localStorage.getItem('token')
-        }
+          'Content-Type': 'application/json'}
       }).then(response=>{
         if(response.status===200){
           return response.json();
@@ -474,13 +467,11 @@ const ViewService = (props)=>{
 
   const getData = () => {
     if(service_id){
-      fetch(config.host+'tenants/'+tenant_name+'/services/'+service_id, {
+      fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/services/'+service_id, {
         method: 'GET', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': localStorage.getItem('token')
-        }
+          'Content-Type': 'application/json'}
       }).then(response=>{
         if(response.status===200){
           return response.json();
@@ -507,13 +498,11 @@ const ViewService = (props)=>{
       });
     }
     if(petition_id){
-      fetch(config.host+'tenants/'+tenant_name+'/petitions/'+petition_id+'?type=open', {
+      fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/petitions/'+petition_id+'?type=open', {
         method: 'GET', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': localStorage.getItem('token')
-        }
+          'Content-Type': 'application/json'}
       }).then(response=>{
 
         if(response.status===200){
@@ -658,13 +647,11 @@ const CopyService = (props)=> {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
   const getData = () => {
-      fetch(config.host+'tenants/'+tenant_name+'/services/'+props.service_id, {
+      fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/services/'+props.service_id, {
         method: 'GET', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': localStorage.getItem('token')
-        }
+          'Content-Type': 'application/json'}
       }).then(response=>{
         if(response.status===200){
           return response.json();

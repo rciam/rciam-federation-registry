@@ -243,13 +243,11 @@ const ServiceList= (props)=> {
   }
   const getInvites = () => {
 
-    fetch(config.host+'tenants/'+tenant_name+'/invitations', {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/invitations', {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json',
-      'Authorization': localStorage.getItem('token')
-    }}).then(response=>{
+      'Content-Type': 'application/json'}}).then(response=>{
       if(response.status===200){
         return response.json();
       }else if(response.status===401){
@@ -277,13 +275,11 @@ const ServiceList= (props)=> {
   // Get data, to create Service List
   const getServices = ()=> {
     setLoadingList(true);
-    fetch(config.host+'tenants/'+tenant_name+'/services/list?page='+activePage+'&limit='+pageSize+generateFilterString(), {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/services/list?page='+activePage+'&limit='+pageSize+generateFilterString(), {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json',
-      'Authorization': localStorage.getItem('token')
-    }}).then(response=>{
+      'Content-Type': 'application/json'}}).then(response=>{
       if(response.status===200||response.status===304){
         return response.json();
       }
@@ -325,13 +321,11 @@ const ServiceList= (props)=> {
 
 
   const exportServicesToCsv = ()=> {
-    fetch(config.host+'tenants/'+tenant_name+'/services/list?'+(generateFilterString().length>0?generateFilterString().slice(1):""), {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/services/list?'+(generateFilterString().length>0?generateFilterString().slice(1):""), {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json',
-      'Authorization': localStorage.getItem('token')
-    }}).then(response=>{
+      'Content-Type': 'application/json'}}).then(response=>{
       if(response.status===200||response.status===304){
         return response.json();
       }
@@ -361,22 +355,27 @@ const ServiceList= (props)=> {
   const createCsv = (exportedServices) => {
     var csv =
       "Country,Organization,Service Name, Service Url, Service Managers, Integration Date, Last Update Date\n";
-      exportedServices.forEach((service) => {
-      csv += service.country + ",";
-      csv += service.organization_name + ",";
-      csv += service.service_name + ",";
-      csv += service.website_url + ",";
-      csv += service.owners.join(" ") + ",";
-      //csv += Array.isArray(service.owners)?(service.owners.join(" ") + ","):[];
-      csv += service.created_at + ",";
-      csv += service.last_edited + ",";
-      csv += "\n";
+      exportedServices.forEach((service,index) => {
+      try{
+        csv += '"' + (service.country?service.country:' ') + '",';
+        csv += '"' + (service.organization_name?service.organization_name:' ') + '",';
+        csv += '"' + (service.service_name?service.service_name:' ') + '",';
+        csv += '"' + (service.website_url?service.website_url:' ') + '",';
+        csv += '"' + (Array.isArray(service.owners)?service.owners.join(" "):'Ownerless') + '",';
+        csv += '"' + (service.created_at?service.created_at:' ') + '",';
+        csv += '"' + (service.last_edited?service.last_edited:' ') + '",';
+        csv += "\n";
+      }
+      catch(err){
+        console.log(err);
+      }
+      
     });
 
     var hiddenElement = document.createElement("a");
-    hiddenElement.href = "data:text/csv;charset=utf-8," + encodeURI(csv);
+    hiddenElement.href = "data:text/csv;charset=utf-8," + encodeURI(csv).replaceAll('#', '%23');
     hiddenElement.target = "_blank";
-
+    console.log("data:text/csv;charset=utf-8," + encodeURI(csv));
     //provide the name for the CSV file to be downloaded
     hiddenElement.download = "ServiceExport.csv";
     hiddenElement.click();
@@ -429,12 +428,11 @@ const ServiceList= (props)=> {
   const deleteService = (service_id,petition_id)=>{
     setAsyncResponse(true);
     if(petition_id){
-      fetch(config.host+'tenants/'+tenant_name+'/petitions/'+petition_id, {
+      fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/petitions/'+petition_id, {
         method: 'PUT', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': localStorage.getItem('token')
+          'Content-Type': 'application/json'
         },
         body:JSON.stringify({service_id:service_id,type:'delete'})
       }).then(response=> {
@@ -457,12 +455,11 @@ const ServiceList= (props)=> {
       });
     }
     else {
-      fetch(config.host+'tenants/'+tenant_name+'/petitions', {
+      fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/petitions', {
         method: 'POST', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': localStorage.getItem('token')
+          'Content-Type': 'application/json'
         },
         body:JSON.stringify({service_id:service_id,type:'delete'})
       }).then(response=> {
@@ -488,13 +485,11 @@ const ServiceList= (props)=> {
 
   const deletePetition = (id)=>{
     setAsyncResponse(true);
-    fetch(config.host+'tenants/'+tenant_name+'/petitions/'+id, {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/petitions/'+id, {
       method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json',
-      'Authorization': localStorage.getItem('token')
-    }}).then(response=> {
+      'Content-Type': 'application/json'}}).then(response=> {
       setResponseTitle(t('request_cancel_title'));
       setAsyncResponse(false);
       getServices();
@@ -561,7 +556,7 @@ const ServiceList= (props)=> {
           <Row>
             <Col>
               <Button variant="light" onClick={getServices} ><FontAwesomeIcon icon={faSync} />{t('petitions_refresh')}</Button>
-              <Link to={'/'+tenant_name+"/form/new"}><Button style={{background:tenant.color,borderColor:tenant.color}}><FontAwesomeIcon icon={faPlus}/>{t('petitions_new')}</Button></Link>
+              <Link to={'/'+tenant_name+"/form/new"}><Button style={{background:tenant.config.theme_color,borderColor:tenant.config.theme_color}}><FontAwesomeIcon icon={faPlus}/>{t('petitions_new')}</Button></Link>
               {user.actions.includes('export_services')?
                 <OverlayTrigger
                   placement='top'
@@ -593,7 +588,7 @@ const ServiceList= (props)=> {
                   </Button>
                 </OverlayTrigger> 
                 :null}
-              <Button variant="light" className='filter-button' style={{color:tenant.color}} onClick={()=>setExpandFilters(!expandFilters)}><FontAwesomeIcon icon={faFilter} />
+              <Button variant="light" className='filter-button' style={{color:tenant.config.theme_color}} onClick={()=>setExpandFilters(!expandFilters)}><FontAwesomeIcon icon={faFilter} />
                 {expandFilters?
                   <React.Fragment>
                     {t('filters_hide')}
@@ -739,9 +734,21 @@ const ServiceList= (props)=> {
                       </Dropdown>
                     </div>  
                   :
-                  <div className='filter-container' onClick={()=> setFilters({...filters,showPending:!filters.showPending})}>
+                  <div className='filter-container' onClick={()=> {
+                      if(filters.showPending){
+                        setFilters({...filters,showPendingSubFilter:'',waitingDeploymentFilter:false, showPending:false}); }
+                      else{
+                        setFilters({...filters,waitingDeploymentFilter:true,showPendingSubFilter:'', showPending:true});
+                      }
+                    }}>
                     <span>Show Pending</span>
-                    <input type='checkbox' name='filter' checked={filters.showPending} onChange={()=> setFilters({...filters,showPending:!filters.showPending})}/>
+                    <input type='checkbox' name='filter' checked={filters.showPending} onChange={()=> {
+                      if(filters.showPending){
+                        setFilters({...filters,showPendingSubFilter:'',waitingDeploymentFilter:false, showPending:false}); }
+                      else{
+                        setFilters({...filters,waitingDeploymentFilter:true,showPendingSubFilter:'', showPending:true});
+                      }
+                    }}/>
                   </div>
                   }
                  <OverlayTrigger
@@ -886,8 +893,12 @@ function TableItem(props) {
         <div className="flex-column">
           <h3 className="petition-title">{props.service.service_name?props.service.service_name:props.service.client_id?props.service.client_id:props.service.metadata_url}</h3>
           <div className="badge-container">
-            {props.service.hasOwnProperty('state')&&props.service.state==='deployed'?<Badge className="status-badge" style={{background:tenant.color}} variant={'primary'}>{t('badge_deployed')}</Badge>:null}
-            {props.service.hasOwnProperty('state')&&props.service.state==='error'?<Badge className="status-badge cursor-pointer" onClick={()=>{props.setFilter('errorFilter',true); props.setExpandFilters(true);}} variant={'danger'}>{t('badge_error')}</Badge>:null}
+            {props.service.hasOwnProperty('state')&&props.service.state==='deployed'?<Badge className="status-badge" style={{background:tenant.config.theme_color}} variant={'primary'}>{t('badge_deployed')}</Badge>:null}
+            {props.service.hasOwnProperty('state')&&props.service.state==='error'?<Badge className={"status-badge "+ (user.actions.includes('error_action')?"cursor-pointer":"")} onClick={()=>{
+              if(user.actions.includes('error_action')){
+                props.setFilter('errorFilter',true); props.setExpandFilters(true);
+              }
+            }} variant={'danger'}>{t('badge_error')}</Badge>:null}
             {props.service.hasOwnProperty('state')&&(props.service.state==='pending'||props.service.state==='waiting-deployment')?
               <Badge 
                 className="status-badge cursor-pointer" 
@@ -901,7 +912,7 @@ function TableItem(props) {
               </Badge>:null}
             {props.service.outdated&&!props.service.petition_id&&props.service.state==='deployed'?<Badge className="status-badge cursor-pointer"  onClick={()=>{props.setFilter('showOutdated',true); props.setExpandFilters(true); }} variant="danger">Update Required</Badge>:null}
             {props.service.status==='changes'?<Badge className="status-badge cursor-pointer" variant="info" onClick={()=>{props.setFilters({...props.filters,showPending:true,showPendingSubFilter:'changes'}); props.setExpandFilters(true);}}>{t('badge_changes_requested')}</Badge>:null}
-            {props.service.status==='request_review'?<Badge className="status-badge cursor-pointer" onClick={()=>{props.setFilters({...props.filters,showRequestReview:true,showPendingSubFilter:'request_review',showPending:true}); props.setExpandFilters(true);}} variant="info">Review Requested</Badge>:null}
+            {props.service.status==='request_review'&&user.actions.includes('review_petition')?<Badge className="status-badge cursor-pointer" onClick={()=>{props.setFilters({...props.filters,showRequestReview:true,showPendingSubFilter:'request_review',showPending:true}); props.setExpandFilters(true);}} variant="info">Review Requested</Badge>:null}
           </div>
          
           {user.actions.includes('manage_tags')&&props.service.tags?
@@ -972,7 +983,7 @@ function TableItem(props) {
                   to={{
                     pathname:'/'+tenant_name+(props.service.service_id?"/services/"+props.service.service_id:"")+ (props.service.petition_id?"/requests/"+props.service.petition_id:"") + "/edit"
                   }}>
-                  <Button variant="info" style={{background:tenant.color}} disabled={props.service.status!=='request_review'&&(props.service.state==='deployed'||!props.service.state)?false:true}><FontAwesomeIcon icon={faEdit}/>{t('button_reconfigure')}</Button></Link>
+                  <Button variant="info" style={{background:tenant.config.theme_color}} disabled={props.service.status!=='request_review'&&(props.service.state==='deployed'||!props.service.state)?false:true}><FontAwesomeIcon icon={faEdit}/>{t('button_reconfigure')}</Button></Link>
                   </OverlayTrigger>
                 </React.Fragment>
               :null
@@ -1022,7 +1033,7 @@ function TableItem(props) {
               </React.Fragment>}
               id="dropdown-menu-align-right"
             >
-              {props.service.service_id && props.service.state==='deployed' && props.service.owned?
+              {props.service.service_id && props.service.state==='deployed' && props.service.owned&& tenant.form_config.integration_environment.length>1?
               <Dropdown.Item as='span'>
                 <div>
                   <Link to={"#"} onClick={()=>{

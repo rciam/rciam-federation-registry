@@ -3,6 +3,7 @@ const create = {
      service_name:"Test Oidc Service",
      service_description:"This is a test service",
      redirect_uris: ["https://redirecturi1.com"],
+     post_logout_redirect_uris: ["https://test.com"],
      logo_uri:"https://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
      policy_uri:"https://policyuri.com",
      website_url:"",
@@ -63,6 +64,7 @@ const create = {
      service_name:"Test Saml Service",
      service_description:"This is a test service",
      redirect_uris: null,
+     post_logout_redirect_uris:null,
      logo_uri:"https://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
      policy_uri:"https://policyuri.com",
      website_url:"",
@@ -111,6 +113,9 @@ const edit = {
    "redirect_uris":[
       "https://redirecturi1edit.com",
       "https://redirecturi1edit.com"
+   ],
+   "post_logout_redirect_uris": [
+      "https://post_logout_redirect_uri.com"
    ],
    "logo_uri":"https://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
    "policy_uri":"https://policyuriedit.com",
@@ -172,6 +177,7 @@ const edit = {
    service_name:"Test Saml Service edit",
    service_description:"This is a test service edit",
    redirect_uris:null,
+   post_logout_redirect_uris:null,
    logo_uri:"https://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
    policy_uri:"https://policyuriedit.com",
    website_url:"",
@@ -263,6 +269,7 @@ const postServices = [
     "entity_id": null,
     "metadata_url": null,
     "redirect_uris": null,
+    "post_logout_redirect_uris":null,
     "egi_policy":true,
     "dpcoco":false
   },
@@ -348,6 +355,7 @@ const validationRequests = {
    service_name: 1,
    service_description:2,
    redirect_uris: "string",
+   post_logout_redirect_uris: "string",
    logo_uri:"http://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
    policy_uri:"http://policyuri.com",
    website_url:"",
@@ -385,6 +393,7 @@ const validationRequests = {
    service_name: "stringasdasd",
    service_description:"str",
    redirect_uris: ["string","string"],
+   post_logout_redirect_uris: ["string","string"],
    logo_uri:"string",
    policy_uri:"string",
    website_url:"",
@@ -422,6 +431,7 @@ const validationRequests = {
    service_name:"Test Saml Service edit",
    service_description:"This is a test service edit",
    redirect_uris:null,
+   post_logout_redirect_uris:null,
    logo_uri:"https://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
    policy_uri:"https://policyuriedit.com",
    website_url:"",
@@ -457,6 +467,7 @@ const validationRequests = {
    service_name:"Test Saml Service edit",
    service_description:"This is a test service edit",
    redirect_uris:null,
+   post_logout_redirect_uris:null,
    logo_uri:"https://cdn.shopify.com/shopifycloud/hatchful-web/assets/6fcc76cfd1c59f44d43a485167fb3139.png",
    policy_uri:"https://policyuriedit.com",
    website_url:"",
@@ -562,6 +573,7 @@ const validationResponses = {
      { '[0].policy_uri': 'Service Policy Uri missing' },
      { '[0].contacts': 'Service Contacts missing' },
      { '[0].redirect_uris': 'Service redirect_uri missing' },
+     { '[0].post_logout_redirect_uris': 'Service post_logout_redirect_uris missing' },
      { '[0].scope': 'Service redirect_uri missing' },
      { '[0].grant_types': 'Service grant_types missing' },
      {
@@ -588,6 +600,7 @@ const validationResponses = {
     {'[0].contacts': 'Service Contacts must be an array' },
     {'[0].client_id': 'client_id must be a string' },
     {'[0].redirect_uris': 'Service redirect_uri must be an array' },
+    {'[0].post_logout_redirect_uris': 'Service post_logout_redirect_uris must be an array' },
     {'[0].scope': 'Must be an array' },
     {'[0].grant_types': 'grant_types must be an array' },
     {'[0].id_token_timeout_seconds': 'id_token_timeout_seconds must be an integer in specified range [1-3600]'},
@@ -612,6 +625,7 @@ const validationResponses = {
      { '[0].contacts': 'Invalid contact' },
      { '[0].client_id': 'client_id must be between 4 and 36 characters' },
      {'[0].redirect_uris': 'Error: Invalid redirect url (string), it must be a url starting with http(s):// at position [0]'},
+     {'[0].post_logout_redirect_uris': 'Error: Invalid post_logout_redirect_uris (string), it must be a url starting with http(s):// at position [0]'},
      { '[0].grant_types': 'Invalid grant_type value' },
      {'[0].id_token_timeout_seconds': 'id_token_timeout_seconds must be an integer in specified range [1-3600]'},
      { '[0].code_challenge_method': 'Device Code invalid value' },
@@ -646,17 +660,17 @@ const users = {
      edu_person_entitlement: []
    }
  },
- eosc: {
+ ni4os: {
    manager_user: {
-     sub: "test_eosc_manager_user",
-     edu_person_entitlement :['urn:mace:egi.eu:group:service-integration.aai.eosc.eu:role=approver#aai.eosc.eu']
+     sub: "test_ni4os_manager_user",
+     edu_person_entitlement :['urn:mace:egi.eu:group:service-integration.aai.ni4os.eu:role=approver#aai.ni4os.eu']
    },
    operator_user:{
-     sub: "test_eosc_operator_user",
-     edu_person_entitlement : ['urn:mace:egi.eu:group:service-integration.aai.eosc.eu:role=member#aai.eosc.eu']
+     sub: "test_ni4os_operator_user",
+     edu_person_entitlement : ['urn:mace:egi.eu:group:service-integration.aai.ni4os.eu:role=member#aai.ni4os.eu']
    },
    end_user: {
-     sub: "test_eosc_end_user",
+     sub: "test_ni4os_end_user",
      edu_person_entitlement : []
    }
  }

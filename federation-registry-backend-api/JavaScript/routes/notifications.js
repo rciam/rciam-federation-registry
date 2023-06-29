@@ -73,7 +73,7 @@ router.put('/owners',authenticate,ownersNotificationValidation(),validate,(req,r
     }
   })
   
-  router.put('/notifications/broadcast',authenticate,broadcastNotificationsValidation(),validate,(req,res,next)=>{
+  router.put('/broadcast',authenticate,broadcastNotificationsValidation(),validate,(req,res,next)=>{
     try{
       if(req.user.role.actions.includes('send_notifications')){
         db.service.getContacts(req.body,req.params.tenant).then(async users=>{

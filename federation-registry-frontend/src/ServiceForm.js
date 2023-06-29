@@ -1,5 +1,6 @@
 import React,{useState,useEffect,useContext,useRef} from 'react';
 import mapValues from 'lodash/mapValues';
+import {default as defaultInitialValues} from './initialValues';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {faCheckCircle,faBan,faSortDown,faExclamationTriangle,faPen} from '@fortawesome/free-solid-svg-icons';
 import Tabs from 'react-bootstrap/Tabs';
@@ -29,7 +30,11 @@ import * as yup from 'yup';
 import { useTranslation } from 'react-i18next';
 import parse from 'html-react-parser';
 import countryData from 'country-region-data';
-import {SimpleInput,CountrySelect,AuthMethRadioList,SelectEnvironment,DeviceCode,Select,PublicKey,ListInput,LogoInput,TextAria,ListInputArray,CheckboxList,SimpleCheckbox,ClientSecret,TimeInput,RefreshToken,Contacts,OrganizationField,SimpleRadio} from './Components/Inputs.js'// eslint-disable-next-line
+import {SimpleInput,CountrySelect,AuthMethRadioList,SelectEnvironment,DeviceCode,Select,PublicKey,ListInput,LogoInput,TextAria,ListInputArray,CheckboxList,SimpleCheckbox,ClientSecret,TimeInput,RefreshToken,Contacts,OrganizationField,SimpleRadio,MetadataInput} from './Components/Inputs.js'// eslint-disable-next-line
+import { SamlAttributesInput } from './Components/SamlAttributes.js';
+import {ConfirmationModal} from './Components/Modals';
+
+
 
 
 const {reg} = require('./regex.js');
@@ -39,8 +44,11 @@ var urlCheckTimeoutResponse;
 var countries;
 let integrationEnvironment;
 let application_type;
+let timeouts = {};
+
 
 const ServiceForm = (props)=> {
+
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   let {tenant_name} = useParams();
@@ -59,8 +67,19 @@ const ServiceForm = (props)=> {
   const [hasSubmitted,setHasSubmitted] = useState(false);
   const [message,setMessage] = useState();
   const [modalTitle,setModalTitle] = useState(null);
+  const [metadataWarning,setMetadataWarning] = useState();
+  const [metadataLoaded,setMetadataLoaded] = useState({
+    supported_attributes:[],
+    unsupported_attributes:[],
+    entity_id:null,
+    metadata_url:null
+  });
+  const [metadataAsyncError,setMetadataAyncError] = useState("");
+  const [metadataChecked,setMetadataChecked] = useState();
+  const [metadataLoading,setMetadataLoading] = useState(false)
   const [checkingAvailability,setCheckingAvailability] = useState(false);
   const [checkedId,setCheckedId] = useState(); // Variable containing the last client Id checked for availability to limit check requests
+ // const [loadedMetadata,setLoadedMetadata] = useState(); // Variable containing the last loaded metadata url
   const [checkedEnvironment,setCheckedEnvironment] = useState();
   const [asyncResponse,setAsyncResponse] = useState(false);
   const [formValues,setFormValues] = useState();
@@ -69,6 +88,8 @@ const ServiceForm = (props)=> {
   const [logoWarning,setLogoWarning] = useState(false);
   const [serviceTags,setServiceTags] = useState([]);
   const [manageTags,setManageTags] = useState(false);
+  const [timeoutId] = useState(hex(4));
+  
 
   useEffect(()=>{
     //Get tags 
@@ -107,9 +128,7 @@ const ServiceForm = (props)=> {
     if(props.initialValues.organization_name){
       setDisabledOrganizationFields(['organization_url']);
     }
-    //console.log(props.initialValues);
     setFormValues(props.initialValues);
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
 
@@ -152,6 +171,66 @@ const ServiceForm = (props)=> {
   }
 
 
+  const getMetadata = async (value,resolve,setRequestedAttributes)=>{
+    setMetadataLoading(true);
+    setMetadataAyncError();
+    setMetadataChecked(value);
+    let loadMetadata = !(metadataChecked!==value&&value!==metadataLoaded.metadata_url&&value!==props.initialValues.metadataUrl)||setRequestedAttributes
+    clearTimeout(timeouts[timeoutId])
+    timeouts[timeoutId] = setTimeout(()=> {
+      fetch(config.host[tenant_name]+'util/metadata_info?metadata_url='+encodeURIComponent(value), {
+        method:'GET',
+        credentials:'include',
+        headers:{
+          'Content-Type':'application/json'
+        }}).then(async response=>{
+          if(response.status===200||response.status===304){
+            let metadata = await response.json();
+            if(tenant.form_config.more_info.requested_attributes&&!tenant.form_config.more_info.requested_attributes.disabled){
+              loadMetadata&&setMetadataLoaded(metadata);
+              if(metadata.supported_attributes.length===0&&!metadata.entity_id){
+                if(!resolve){
+                  setRequestedAttributes(defaultInitialValues.requested_attributes);
+                }
+                setMetadataWarning('Could not find an Entity Id or any Requested Attributes from this Metadata Url.');
+              }
+              else if(metadata.supported_attributes.length===0){
+                if(!resolve){
+                  setRequestedAttributes(defaultInitialValues.requested_attributes);
+                }
+                setMetadataWarning('Could not find any Requested Attributes from this Metadata Url.');                
+              }
+              else if(!metadata.entity_id){
+                setMetadataWarning('Could not find an Entity Id from this Metadata Url.');                
+              }
+            }
+            else{
+              if(!resolve){
+                setRequestedAttributes(defaultInitialValues.requested_attributes);
+              }
+              metadata.supported_attributes = [];
+              
+              loadMetadata&&setMetadataLoaded(metadata);
+            }
+          }
+          else {
+            if(!resolve){
+              setRequestedAttributes(defaultInitialValues.requested_attributes);              
+            }
+            setMetadataAyncError(response.statusText);
+          }
+          setMetadataLoading(false);          
+        }).catch(()=>{
+          setMetadataLoading(false);
+          setMetadataAyncError("Could not get response from Metadata Url");          
+          if(resolve){
+            resolve(true)  
+          }
+          });
+    },2000);
+  }
+
+
   const lazy_schema  = yup.lazy(obj => yup.object(
     mapValues(obj, (v, k) => {
       if (Object.keys((tenant.form_config.extra_fields)).includes(k) && tenant.form_config.extra_fields[k].type==='boolean') {        
@@ -187,7 +266,7 @@ const ServiceForm = (props)=> {
     website_url:yup.string().nullable().matches(reg.regSimpleUrl,t('yup_url')),
     client_id:yup.string().nullable().when('protocol',{
       is:'oidc',
-      then: yup.string().nullable().min(2,t('yup_char_min') + ' ('+2+')').max(128,t('yup_char_max') + ' ('+128+')').test('testAvailable',t('yup_client_id_available'),function(value){
+      then: yup.string().nullable().min(2,t('yup_char_min') + ' ('+2+')').max(128,t('yup_char_max') + ' ('+128+')').matches(reg.regClientId,'Client Id can contain only numbers, letters and the special characters  "$-_.+!*\'(),"').test('testAvailable',t('yup_client_id_available'),function(value){
         if(props.initialValues.client_id===value && !props.copy){
           return true
         }
@@ -203,12 +282,11 @@ const ServiceForm = (props)=> {
                 else{
                   setCheckingAvailability(true);
                   availabilityCheckTimeout = setTimeout(()=> {
-                    fetch(config.host+'tenants/'+tenant_name+'/check-availability?value='+ value +'&protocol=oidc&environment='+ this.parent.integration_environment+(petition_id?('&petition_id='+petition_id):"")+(service_id?('&service_id='+service_id):""), {
+                    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/check-availability?value='+ value +'&protocol=oidc&environment='+ this.parent.integration_environment+(petition_id?('&petition_id='+petition_id):"")+(service_id?('&service_id='+service_id):""), {
                       method:'GET',
                       credentials:'include',
                       headers:{
-                        'Content-Type':'application/json',
-                        'Authorization': localStorage.getItem('token')
+                        'Content-Type':'application/json'
                       }}).then(response=>{
                         if(response.status===200||response.status===304){
                           return response.json();
@@ -242,6 +320,56 @@ const ServiceForm = (props)=> {
         integrationEnvironment = integration_environment;
       }).when('application_type',(application_type_value)=>{application_type = application_type_value;}).of(yup.string().required("Uri can't be an empty string").test('test_redirect_uri','Invalid Redirect Uri',function(value){
         if(value){
+          let url;
+          try {
+            url = new URL(value);
+          } catch (err) {
+            return this.createError({ message: "Invalid uri" });  
+          }
+          if(value.includes('#')){
+            return this.createError({ message: "Uri can't contain fragments" });
+          }
+          if(application_type==='WEB'){
+            if((integrationEnvironment==='production'||integrationEnvironment==='demo')&& url){
+              if(url.protocol !== 'https:'&&!(url.protocol==='http:'&&url.hostname==='localhost')){
+                return this.createError({ message: "Uri must be a secure url starting with https://" });              
+              }
+              
+            }
+            else{
+              if(url&&!(url.protocol==='http:'||url.protocol==='https:')){
+                return this.createError({ message: "Uri must be a url starting with http(s):// " });                              
+              }
+            }
+          }
+          else{
+            // eslint-disable-next-line
+            if(url.protocol==="javascript:"){
+              return this.createError({ message: "Uri can't be of schema 'javascript:'" });
+            }
+            else if(url.protocol==='data:'){
+              return this.createError({ message: "Uri can't be of schema 'data:'" });              
+            }
+          }
+          if(value.includes('*')){
+            return this.createError({ message: "Uri can't contain wildcard character '*'" });                          
+          }
+          if(value.includes(' ')){
+            return this.createError({ message: "Uri can't contain spaces" });                          
+          }
+          return true
+        }
+      })).unique(t('yup_redirect_uri_unique')).when('grant_types',{
+        is:(grant_types)=> grant_types.includes("implicit")||grant_types.includes("authorization_code"),
+        then: yup.array().min(1,t('yup_required')).nullable().required(t('yup_required'))
+      })
+    }),
+    post_logout_redirect_uris:yup.array().nullable().when('protocol',{
+      is:'oidc',
+      then: yup.array().nullable().when('integration_environment',(integration_environment)=>{
+        integrationEnvironment = integration_environment;
+      }).when('application_type',(application_type_value)=>{application_type = application_type_value;}).of(yup.string().required("Uri can't be an empty string").test('test_redirect_uri','Invalid Post Logout Redirect Uri',function(value){
+        if(value){
           let url
           try {
             url = new URL(value);
@@ -273,12 +401,16 @@ const ServiceForm = (props)=> {
               return this.createError({ message: "Uri can't be of schema 'data:'" });              
             }
           }
+
+          if(value.includes('*')){
+            return this.createError({ message: "Uri can't contain wildcard character '*'" });                          
+          }
+          if(value.includes(' ')){
+            return this.createError({ message: "Uri can't contain spaces" });                          
+          }
           return true
         }
-      })).unique(t('yup_redirect_uri_unique')).when('grant_types',{
-        is:(grant_types)=> grant_types.includes("implicit")||grant_types.includes("authorization_code"),
-        then: yup.array().min(1,t('yup_required')).nullable().required(t('yup_required'))
-      })
+      })).unique(t('yup_redirect_uri_unique'))
     }),
     logo_uri:yup.string().nullable().matches(reg.regUrl,'Logo must be be a secure url starting with https://').test('testImage',t('yup_image_url'),function(imageUrl){
       imageExists(imageUrl);
@@ -289,6 +421,12 @@ const ServiceForm = (props)=> {
     }),
     country:yup.string().nullable().test('testCountry','Select one of the available options',function(value){return countries.includes(value)}).required(t('yup_required')),
     service_description:yup.string().nullable().required(t('yup_required')).max(1000,'Exceeded maximum characters (1000)'),
+    requested_attributes: yup.array().nullable().of(yup.object().shape({
+      name:yup.string().nullable().required(t('yup_required')).min(1,t('yup_required')).required(t('yup_required')).max(512,'Exceeded maximum characters (512)'),
+      friendly_name:yup.string().test('testAttributeName','invalid_name',function(friendly_name){
+        return tenant.form_config.requested_attributes.some(e=>e.friendly_name===friendly_name);
+      })
+    })),
     contacts:yup.array().min(1,t('yup_required')).nullable().of(yup.object().shape({
         email:yup.string().email(t('yup_email')).required(t('yup_contact_empty')),
         type:yup.string().required(t('yup_required'))
@@ -320,7 +458,7 @@ const ServiceForm = (props)=> {
           }).required(t('yup_required')),
     scope:yup.array().nullable().when('protocol',{
       is:'oidc',
-      then: yup.array().min(1,t('yup_select_option')).nullable().of(yup.string().min(1,t('yup_scope')).max(256,t('yup_char_max') + ' ('+ 256 +')').matches(reg.regScope,t('yup_scope_reg'))).unique(t('yup_scope_unique')).required(t('yup_required'))
+      then: yup.array().min(1,t('yup_select_option')).nullable().of(yup.string().required("Scope value cannot be empty").min(1,t('yup_scope')).max(256,t('yup_char_max') + ' ('+ 256 +')').matches(reg.regScope,t('yup_scope_reg'))).unique(t('yup_scope_unique')).required(t('yup_required'))
     }),
     grant_types:yup.array().nullable().when('protocol',{
       is:'oidc',
@@ -379,7 +517,41 @@ const ServiceForm = (props)=> {
     }),
     metadata_url:yup.string().nullable().when('protocol',{
       is:'saml',
-      then: yup.string().required(t('yup_required')).matches(reg.regSimpleUrl,'Enter a valid Url')
+      then: yup.string().nullable().required(t('yup_required')).matches(reg.regSimpleUrl,'Enter a valid Url').test('testXml','Invalid Metadata',function(value){
+        // Metadata Url is Already Loaded?
+        
+        // if(!value||metadataChecked!==value){
+        //   setMetadataLoading(false);
+        //   //setMetadataWarning();
+        //   clearTimeout(metadataUrlLoadTimeout);
+        // }        
+        // if(value&&value.match(reg.regSimpleUrl)&&metadataChecked!==value&&value!==metadataLoaded.metadata_url){
+        //   new Promise((resolve,reject)=>{
+        //     getMetadata(value,resolve);
+        //   })
+        // }
+
+
+
+        if(value&&value.match(reg.regSimpleUrl)&&metadataChecked!==value&&value!==metadataLoaded.metadata_url){
+          clearTimeout(timeouts[timeoutId]);
+          new Promise((resolve,reject)=>{
+            getMetadata(value,resolve);
+          })
+        }
+        else{
+          setMetadataLoading(false);
+        }
+        if(metadataAsyncError){
+          return this.createError({ message:metadataAsyncError})
+        }
+        return true
+        
+          
+      
+        
+      })
+    
     }),
     token_endpoint_auth_signing_alg:yup.string().nullable().when(['protocol',"token_endpoint_auth_method"],{
       is:(protocol,token_endpoint_auth_method)=> protocol==='oidc'&&(token_endpoint_auth_method==="private_key_jwt"||token_endpoint_auth_method==="client_secret_jwt"),
@@ -440,12 +612,11 @@ const ServiceForm = (props)=> {
                 }
                 else{
                   availabilityCheckTimeout = setTimeout(()=> {
-                    fetch(config.host+'tenants/'+tenant_name+'/check-availability?value='+ value +'&protocol=saml&environment='+ this.parent.integration_environment+(petition_id?('&petition_id='+petition_id):"")+(service_id?('&service_id='+service_id):""), {
+                    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/check-availability?value='+ value +'&protocol=saml&environment='+ this.parent.integration_environment+(petition_id?('&petition_id='+petition_id):"")+(service_id?('&service_id='+service_id):""), {
                       method:'GET',
                       credentials:'include',
                       headers:{
-                        'Content-Type':'application/json',
-                        'Authorization': localStorage.getItem('token')
+                        'Content-Type':'application/json'
                       }}).then(response=>{
                         if(response.status===200){
 
@@ -498,13 +669,11 @@ const ServiceForm = (props)=> {
     }
     if (diff(petition,props.initialValues)||props.copy){
       setAsyncResponse(true);
-      fetch(config.host+'tenants/'+tenant_name+'/petitions', {
+      fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/petitions', {
         method: 'POST', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
-        'Content-Type': 'application/json',
-        'Authorization': localStorage.getItem('token')
-        },
+        'Content-Type': 'application/json'  },
         body: JSON.stringify(petition)
       }).then(response=> {
         setAsyncResponse(false);
@@ -536,13 +705,11 @@ const ServiceForm = (props)=> {
     }
     if(diff(petition,props.initialValues)){
       setAsyncResponse(true);
-      fetch(config.host+'tenants/'+tenant_name+'/petitions/'+petition_id, {
+      fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/petitions/'+petition_id, {
         method: 'PUT', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
-        'Content-Type': 'application/json',
-        'Authorization': localStorage.getItem('token')
-        },
+        'Content-Type': 'application/json'  },
         body: JSON.stringify(petition) // body data type must match "Content-Type" header
       }).then(response=> {
         setAsyncResponse(false);
@@ -569,13 +736,11 @@ const ServiceForm = (props)=> {
 
   const deletePetition = ()=>{
     setAsyncResponse(true);
-    fetch(config.host+'tenants/'+tenant_name+'/petitions/'+petition_id, {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/petitions/'+petition_id, {
       method: 'DELETE', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json',
-      'Authorization': localStorage.getItem('token')
-    }}).then(response=> {
+      'Content-Type': 'application/json'}}).then(response=> {
       setModalTitle(t('request_submit_title'));
       setAsyncResponse(false);
       if(response.status===200){
@@ -595,13 +760,11 @@ const ServiceForm = (props)=> {
 
   const addOrganization = async (data) => {
     if(!data.organization_id){
-      return await fetch(config.host+'tenants/'+tenant_name+'/organizations', {
+      return await fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/organizations', {
           method: 'POST', // *GET, POST, PUT, DELETE, etc.
           credentials: 'include', // include, *same-origin, omit
           headers: {
-          'Content-Type': 'application/json',
-          'Authorization': localStorage.getItem('token')
-          },
+          'Content-Type': 'application/json'},
           body:JSON.stringify({organization_name:data.organization_name,organization_url:data.organization_url,ror_id:data.ror_id})
       }).then(response=>{
         if(response.status===200||response.status===409){
@@ -630,13 +793,11 @@ const ServiceForm = (props)=> {
   }
 
   const getTags = () =>{
-    fetch(config.host+ 'tenants/' + tenant_name + '/tags/services/' + service_id ,{
+    fetch(config.host[tenant_name]+ 'tenants/' + tenant_name + '/tags/services/' + service_id ,{
       method: 'GET',
       credentials: 'include',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': localStorage.getItem('token')
-      }
+        'Content-Type': 'application/json'}
     }).then(response => {
       if(response.status===200){
         return response.json();
@@ -661,13 +822,11 @@ const ServiceForm = (props)=> {
   const reviewPetition = (comment,type)=>{
       setModalTitle(t('review_'+props.type+'_title'))
       setAsyncResponse(true);
-      fetch(config.host+'tenants/'+tenant_name+'/petitions/'+petition_id+'/review', {
+      fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/petitions/'+petition_id+'/review', {
         method: 'PUT', // *GET, POST, PUT, DELETE, etc.
         credentials: 'include', // include, *same-origin, omit
         headers: {
-        'Content-Type': 'application/json',
-        'Authorization': localStorage.getItem('token')
-        },
+        'Content-Type': 'application/json'  },
         body:JSON.stringify({comment:comment,type:type})
     }).then(response=> {
         setAsyncResponse(false);
@@ -752,28 +911,31 @@ const ServiceForm = (props)=> {
       innerRef={formRef}
       validate={dynamicValidation}
       onSubmit={(values,{setSubmitting}) => {
-        setSubmitDisabled(true);
-        setHasSubmitted(true);
-        if(!(values.token_endpoint_auth_method==="client_secret_jwt"||values.token_endpoint_auth_method==="private_key_jwt")){
-          values.token_endpoint_auth_signing_alg=null;
-        }
-        if(values.token_endpoint_auth_method!=="private_key_jwt"){
-          values.jwks=null;
-          values.jwks_uri=null;
-        }
-        if(values.token_endpoint_auth_method==="private_key_jwt"||values.token_endpoint_auth_method==="none"){
-          values.client_secret = '';
-        }
-        if(values.jwks_uri){
-          values.jwks=null;
-        }
-        if(values.jwks){
-          values.jwks = JSON.parse(values.jwks);
-          values.jwks_uri=null;
-          // let check = values.jwks.replace(/\n/g, "\\\\n").replace(/\r/g, "\\\\r").replace(/\t/g, "\\\\t");
-          // values.jwks = JSON.parse(check);
-        }
-        postApi(values);
+        
+          setSubmitting(true);
+          setHasSubmitted(true);
+          setSubmitDisabled(true);
+          if(!(values.token_endpoint_auth_method==="client_secret_jwt"||values.token_endpoint_auth_method==="private_key_jwt")){
+            values.token_endpoint_auth_signing_alg=null;
+          }
+          if(values.token_endpoint_auth_method!=="private_key_jwt"){
+            values.jwks=null;
+            values.jwks_uri=null;
+          }
+          if(values.token_endpoint_auth_method==="private_key_jwt"||values.token_endpoint_auth_method==="none"){
+            values.client_secret = '';
+          }
+          if(values.jwks_uri){
+            values.jwks=null;
+          }
+          if(values.jwks){
+            values.jwks = JSON.parse(values.jwks);
+            values.jwks_uri=null;
+            // let check = values.jwks.replace(/\n/g, "\\\\n").replace(/\r/g, "\\\\r").replace(/\t/g, "\\\\t");
+            // values.jwks = JSON.parse(check);
+          }
+          postApi(values);
+        
       }}
     >
     {({
@@ -795,6 +957,7 @@ const ServiceForm = (props)=> {
       isSubmitting})=>(
       <div className="tab-panel">
               {showCopyDialog?<CopyDialog service_id={service_id} show={showCopyDialog} toggleCopyDialog={toggleCopyDialog} current_environment={props.initialValues.integration_environment} />:null}
+              
               <ProcessingRequest active={asyncResponse}/>
               {props.user.actions.includes('manage_tags')&&service_id?
                 <div className='service-form-tags-container'>
@@ -830,11 +993,11 @@ const ServiceForm = (props)=> {
                 {props.disabled?null:
                   <div className="form-controls-container">
                     {props.review?
-                      <ReviewComponent errors={errors} values={values} changes={props.changes}  reviewPetition={reviewPetition} type={props.type} restrictReview={restrictReview}/>
+                      <ReviewComponent errors={errors} asyncErrors={metadataAsyncError} disabled={metadataLoading} values={values} changes={props.changes}  reviewPetition={reviewPetition} type={props.type} restrictReview={restrictReview}/>
                       :
                       <React.Fragment>
                         <div className="form-submit-cancel-container">
-                          <Button className='submit-button' type="submit" disabled={submitDisabled} variant="primary" ><FontAwesomeIcon icon={faCheckCircle}/>{t('button_submit')}</Button>
+                          <Button className='submit-button' type="submit" disabled={submitDisabled||metadataLoading||checkingAvailability} variant="primary" ><FontAwesomeIcon icon={faCheckCircle}/>{t('button_submit')}</Button>
                           {petition_id?<Button variant="danger" onClick={()=>deletePetition()}><FontAwesomeIcon icon={faBan}/>{t('button_cancel_request')}</Button>:null}
                         </div>
                       </React.Fragment>
@@ -869,7 +1032,7 @@ const ServiceForm = (props)=> {
                           onChange={handleChange}
                           disabled={disabled||tenant.form_config.integration_environment.length===1||props.copy||props.disableEnvironment}
                           changed={props.changes?props.changes.integration_environment:null}
-                          copybuttonActive={props.owned&&props.disabled&&service_id}
+                          copybuttonActive={props.owned&&props.disabled&&service_id&&tenant.form_config.integration_environment.length>1}
                           toggleCopyDialog={toggleCopyDialog}
                         />
                       </InputRow>
@@ -1105,6 +1268,24 @@ const ServiceForm = (props)=> {
                                changed={props.changes?props.changes.redirect_uris:null}
                              />
                            </InputRow>
+                           {!tenant.form_config.disabled_fields.includes("post_logout_redirect_uris")?
+                              <InputRow  moreInfo={tenant.form_config.more_info.post_logout_redirect_uris} title={t('form_redirect_uris')} error={typeof(errors.post_logout_redirect_uris)==='string'?errors.post_logout_redirect_uris:null}  touched={touched.post_logout_redirect_uris} description={t('form_redirect_uris_desc')}>
+                              <ListInput
+                                values={values.post_logout_redirect_uris}
+                                placeholder={t('form_type_prompt')}
+                                empty={(typeof(errors.post_logout_redirect_uris)==='string')?true:false}
+                                name='post_logout_redirect_uris'
+                                error={errors.post_logout_redirect_uris}
+                                touched={touched.post_logout_redirect_uris}
+                                onBlur={handleBlur}
+                                onChange={handleChange}
+                                integrationEnvironment = {values.integration_environment}
+                                setFieldTouched={setFieldTouched}
+                                disabled={disabled}
+                                changed={props.changes?props.changes.post_logout_redirect_uris:null}
+                              />
+                            </InputRow>:null 
+                          }
                           <InputRow  moreInfo={tenant.form_config.more_info.scope} title={t('form_scope')} required={true} description={t('form_scope_desc')} error={typeof(errors.scope)==='string'?errors.scope:null} touched={true}>
                             <ListInputArray
                               name='scope'
@@ -1190,7 +1371,6 @@ const ServiceForm = (props)=> {
                          <InputRow  moreInfo={tenant.form_config.more_info.client_secret} required={true} title={t('form_client_secret')}>
                            <ClientSecret
                              onChange={handleChange}
-                             feedback='not good'
                              client_secret={values.client_secret}
                              error={errors.client_secret}
                              touched={touched.client_secret}
@@ -1275,6 +1455,37 @@ const ServiceForm = (props)=> {
                     :null}
                     {values.protocol==='saml'?
                       <React.Fragment>
+                        <ConfirmationModal 
+                          active={metadataLoaded.supported_attributes.length>0||(metadataLoaded.entity_id&&(!values.entity_id||values.entity_id!==metadataLoaded.entity_id))?true:false} 
+                          close={()=>{
+                            if(metadataLoaded.supported_attributes.length>0){
+                              setMetadataLoaded({...metadataLoaded,supported_attributes:[]});
+                            }
+                            else if(metadataLoaded.entity_id){
+                              setMetadataLoaded({...metadataLoaded,entity_id:""});
+                            }
+                          }} 
+                          action={()=>{
+                            if(metadataLoaded.supported_attributes.length>0){
+                              setFieldValue('requested_attributes',metadataLoaded.supported_attributes)
+                              setMetadataLoaded({...metadataLoaded,supported_attributes:[]});
+                            }
+                            else{
+                              setFieldValue('entity_id',metadataLoaded.entity_id);
+                              setMetadataLoaded({...metadataLoaded,entity_id:""});
+                            }
+                          }} 
+                          title={
+                            metadataLoaded.supported_attributes.length>0?"Do you wish to load the requested attributes contained in the Metadata Url?":
+                            metadataLoaded.entity_id && !values.entity_id?"Do you wish to use the Entity Id contained in the Metadata Url?":
+                            metadataLoaded.entity_id && metadataLoaded.entity_id!==values.entity_id?"The Metadata Url contains a different Entity Id from the provided, do you wish to replace it?":"" 
+                          } 
+                          message={
+                            metadataLoaded.supported_attributes.length>0?metadataLoaded.supported_attributes.length+ (metadataLoaded.unsupported_attributes.length>0?" out of " + (metadataLoaded.supported_attributes.length+metadataLoaded.unsupported_attributes.length):"")+ " attributes found are supported and can be added in the service configuration." :
+                            metadataLoaded.entity_id && (!values.entity_id||metadataLoaded.entity_id!==values.entity_id)?"Entity Id: "+metadataLoaded.entity_id:
+                            null } 
+                          accept={'Yes'} 
+                          decline={'No'}/>
                         <InputRow  moreInfo={tenant.form_config.more_info.entity_id} required={true} title={t('form_entity_id')} description={t('form_entity_id_desc')} error={checkingAvailability?null:errors.entity_id} touched={touched.entity_id}>
                           <SimpleInput
                             name='entity_id'
@@ -1292,20 +1503,45 @@ const ServiceForm = (props)=> {
                             isloading={values.entity_id&&values.entity_id!==checkedId&&checkingAvailability?1:0}
                            />
                          </InputRow>
-                         <InputRow  moreInfo={tenant.form_config.more_info.metadata_url} required={true} title={t('form_metadata_url')} description={t('form_metadata_url_desc')} error={errors.metadata_url} touched={touched.metadata_url}>
-                           <SimpleInput
+                         <InputRow  moreInfo={tenant.form_config.more_info.metadata_url} required={true} title={t('form_metadata_url')} description={t('form_metadata_url_desc')} error={metadataAsyncError||errors.metadata_url} touched={touched.metadata_url}>
+                           <MetadataInput
                              name='metadata_url'
                              placeholder='Type something'
-                             onChange={handleChange}
+                             onChange={(e)=>{
+                              setMetadataAyncError('');
+                              setMetadataWarning();
+                              handleChange(e);}}
                              copybutton={props.copybutton}
                              value={values.metadata_url}
-                             isInvalid={hasSubmitted?!!errors.metadata_url:(!!errors.metadata_url&&touched.metadata_url)}
+                             isInvalid={hasSubmitted?!!metadataAsyncError||!!errors.metadata_url:((!!metadataAsyncError||!!errors.metadata_url)&&touched.metadata_url)}
                              onBlur={handleBlur}
                              disabled={disabled}
+                             getmetadata={(metadata_url)=>{
+                              getMetadata(metadata_url,null,(attributes)=>{ setFieldValue('requested_attributes',attributes,false)});
+                             }}
                              changed={props.changes?props.changes.metadata_url:null}
+                             isloading={values.metadata_url&&metadataLoading?1:0}
                             />
-                            <UrlWarning url={values.metadata_url} touched={hasSubmitted||touched.metadata_url}/>
+                            <UrlWarning url={values.metadata_url} overwriteWarning={metadataWarning} disableCheck={1} touched={!!values.metadata_url}/>
                           </InputRow>
+                          {!tenant.form_config.more_info.requested_attributes.disabled?
+                            <InputRow  moreInfo={tenant.form_config.more_info.requested_attributes} title={tenant.form_config.more_info.requested_attributes.label||"Attributes"} required={false} description={tenant.form_config.more_info.requested_attributes.description} error={typeof(errors.scope)==='string'?errors.scope:null} touched={true}>
+                              <SamlAttributesInput
+                                name='requested_attributes'
+                                values={values.requested_attributes?values.requested_attributes:[]}
+                                placeholder={t('form_type_prompt')}
+                                defaultValues= {tenant.form_config.requested_attributes}
+                                errors={errors.requested_attributes}
+                                touched={touched.requested_attributes}
+                                setMetadataLoaded={setMetadataLoaded}
+                                disabled={disabled}
+                                setFieldValue={setFieldValue}
+                                onBlur={handleBlur}
+                                changed={props.changes?props.changes.requested_attributes:null}
+                              />
+                            </InputRow>
+                            :null
+                          }
                        </React.Fragment>
                      :null}
                     </Tab>
@@ -1314,11 +1550,11 @@ const ServiceForm = (props)=> {
                   {props.disabled?null:
                     <div className="form-controls-container">
                       {props.review?
-                          <ReviewComponent errors={errors} values={values} changes={props.changes} type={props.type} reviewPetition={reviewPetition} restrictReview={restrictReview} />
+                          <ReviewComponent errors={errors} disabled={metadataLoading} asyncErrors={metadataAsyncError} values={values} changes={props.changes} type={props.type} reviewPetition={reviewPetition} restrictReview={restrictReview} />
                         :
                         <React.Fragment>
                         <div className="form-submit-cancel-container">
-                          <Button className='submit-button' type="submit" disabled={submitDisabled} variant="primary" ><FontAwesomeIcon icon={faCheckCircle}/>Submit</Button>
+                          <Button className='submit-button' type="submit" disabled={submitDisabled||metadataLoading||checkingAvailability} variant="primary" ><FontAwesomeIcon icon={faCheckCircle}/>Submit</Button>
                           {props.type==='delete'||props.type==='edit'?<Button variant="danger" onClick={()=>deletePetition()}><FontAwesomeIcon icon={faBan}/>Cancel Request</Button>:null}
                         </div>
                         </React.Fragment>
@@ -1366,7 +1602,7 @@ const ReviewComponent = (props)=>{
         invalid=true
       }
     }
-    setInvalidPetition(invalid);
+    setInvalidPetition(invalid||!!props.asyncErrors);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[props.errors]);
 
@@ -1394,7 +1630,7 @@ const ReviewComponent = (props)=>{
     <React.Fragment>
         <Row className="review-button-row">
           <ButtonGroup>
-            <Button className="review-button" variant="success" onClick={()=> handleReview()}>{expand?t('review_submit'):
+            <Button className="review-button" disabled={expand&&props.disabled} variant="success" onClick={()=> handleReview()}>{expand?t('review_submit'):
               <React.Fragment>
                 {t('review')}
                 <FontAwesomeIcon icon={faSortDown}/>
@@ -1555,41 +1791,43 @@ const ReviewComponent = (props)=>{
 
 
 const UrlWarning = (props) => {
-  const [active,setActive] = useState(false);
+  const [active,setActive] = useState(!!props.overwriteWarning);
   
 
   useEffect(()=>{
-    setActive(false);
-    clearTimeout(urlCheckTimeout);
-    if (props.touched&&props.url&&reg.regSimpleUrl.test(props.url)){      
-      const exists = async (url) => {
-        const result = await fetch(url, { 
-          method: 'HEAD',mode:'no-cors' });
-        return result.ok;      
-      } 
-      urlCheckTimeout = setTimeout(()=>{
-        urlCheckTimeoutResponse = setTimeout(()=>{
-          setActive(true);
-          clearTimeout(urlCheckTimeout);
-        },3000)
-        exists(props.url).then(result=>{
-          clearTimeout(urlCheckTimeoutResponse);
-          setActive(false);
-        }).catch(err=>{        
-          clearTimeout(urlCheckTimeoutResponse);
-          setActive(true)
-        });
-      },3000)
-    }  
+    if(!props.overwriteWarning){
+      setActive(false);
+      clearTimeout(urlCheckTimeout);
+      if (props.touched&&props.url&&reg.regSimpleUrl.test(props.url)){      
+        const exists = async (url) => {
+          const result = await fetch(url, { 
+            method: 'HEAD',mode:'no-cors' });
+          return result.ok;      
+        } 
+        urlCheckTimeout = setTimeout(()=>{
+          urlCheckTimeoutResponse = setTimeout(()=>{
+            setActive(true);
+            clearTimeout(urlCheckTimeout);
+          },3000)
+          exists(props.url).then(result=>{
+            clearTimeout(urlCheckTimeoutResponse);
+            setActive(false);
+          }).catch(err=>{        
+            clearTimeout(urlCheckTimeoutResponse);
+            setActive(true)
+          });
+        },1000)
+      }  
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[props.url,props.touched]);
 
   return (
     <React.Fragment>
-      {active?
+      {(active&&!props.disableCheck)||props.overwriteWarning?
         <div className='pkce-tooltip'>
           <FontAwesomeIcon icon={faExclamationTriangle}/>
-          Url could not be reached, make sure you have provided a valid url.
+          {props.overwriteWarning||"Url could not be reached, make sure you have provided a valid url."}
         </div>:null
       }
     </React.Fragment>

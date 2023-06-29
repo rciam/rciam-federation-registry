@@ -138,7 +138,6 @@ const approvePetition = (req,res,next,db) => {
           ]);
         }
         else if(petition.meta_data.type==='create'){
-
           await t.service.add(petition.service_data,petition.meta_data.requester,petition.meta_data.group_id).then(async id=>{
             if(id){
               service_id = id;
@@ -177,13 +176,13 @@ const approvePetition = (req,res,next,db) => {
 
 
 const getOpenPetition = (req,res,next,db) =>{
-  db.task('find-petition-data',async t=>{
+  db.tx('get-open-petition',async t =>{
   if(req.user.role.actions.includes('get_petition')){
-    db.tx('get-open-petition',async t =>{
+    
       await t.petition.get(req.params.id,req.params.tenant).then(async petition => {
          if(petition){
             await t.service_petition_details.belongsToRequester(req.params.id,req.user.sub).then(owned=>{
-              res.status(200).json({petition:petition.service_data,metadata:{...petition.meta_data,owned:owned}});  
+              return res.status(200).json({petition:petition.service_data,metadata:{...petition.meta_data,owned:owned}});  
             }) 
          }
          else {
@@ -192,7 +191,7 @@ const getOpenPetition = (req,res,next,db) =>{
            res.end();
          }
        }).catch(err=>{next(err);});
-    })
+    
    }
    else if(req.user.role.actions.includes('get_own_petition')){
      await t.petition.getOwn(req.params.id,req.user.sub,req.params.tenant).then(petition => {
@@ -209,7 +208,7 @@ const getOpenPetition = (req,res,next,db) =>{
    else {
      res.status(401).json({err:'Requested action not authorised'})
    }
- });
+  });
 }
 
 
@@ -220,12 +219,12 @@ const getPetition = (req,res,next,db) => {
         if(petition){
           await t.service_petition_details.belongsToRequester(req.params.id,req.user.sub).then(owned=>{
             res.status(200).json({petition:petition.service_data,metadata:{...petition.meta_data,owned:  owned}});
-          })
+          }).catch(err=>{console.log(err); next(err)})
         }
         else{
           return res.status(404).end();
         }
-      }).catch(err=>{next(err)});
+      }).catch(err=>{console.log(err); next(err)});
     })
     
   }

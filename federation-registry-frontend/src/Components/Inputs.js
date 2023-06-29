@@ -59,6 +59,56 @@ export function SimpleInput(props){
         </React.Fragment>
   )
 }
+export function MetadataInput(props){
+  const [show, setShow] = useState(false);
+  const target = useRef(null);
+  const { getmetadata, ...newProps } = props; // eslint-disable-line
+  // `newProps` variable does not contain `className` and `id` properties
+
+
+  return (
+        <React.Fragment>
+        <InputGroup >
+          <Form.Control
+            {...newProps}
+            value={props.value?props.value:''}
+            type="text"
+            ref={target}
+            onMouseOver={()=>setShow(true)}
+            onMouseOut={()=>setShow(false)}
+            className={props.changed?'col-form-label.sm input-edited':'col-form-label.sm'}
+          />
+           <InputGroup.Prepend>
+                {!props.disabled?
+                 <OverlayTrigger
+                 placement='right'
+                 overlay={
+                   <Tooltip id={`tooltip-right`}>
+                     Load Metadata from Url
+                   </Tooltip>
+                 }
+               >
+                 <Button
+                   disabled={props.disabled||!props.value||props.error||props.isloading}
+                   variant="outline-primary"
+                   onClick={()=>{
+                     props.getmetadata(props.value);
+                   }}
+                 >Load
+                 </Button>
+               
+   
+               </OverlayTrigger>
+                :null}     
+                </InputGroup.Prepend>
+          {props.copybutton?<CopyToClipboardComponent value={props.value}/>:null}
+        </InputGroup>
+
+          <MyOverLay show={props.changed&&show?'string':null} type='Edited' target={target}/>
+          {props.isloading?<div className="loader"></div>:null}
+        </React.Fragment>
+  )
+}
 
 
 export function OrganizationField(props){
@@ -95,12 +145,11 @@ export function OrganizationField(props){
             let options = {};
             let exists = false;
             
-            fetch(config.host+'tenants/'+tenant_name+'/organizations?ror=true'+(searchString?("&search_string="+searchString):''),{
+            fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/organizations?ror=true'+(searchString?("&search_string="+searchString):''),{
               method:'GET',
               credentials:'include',
               headers:{
-                'Content-Type':'application/json',
-                'Authorization': localStorage.getItem('token')
+                'Content-Type':'application/json'
               }
             }).then(response=>{
               if(response.status===200||response.status===304){
@@ -175,7 +224,7 @@ export function OrganizationField(props){
 
             
           }
-        ).catch((err)=>{console.log(err); alert('Error')});
+        ).catch((err)=>{console.log(err);});
     }
   }
 
@@ -200,10 +249,10 @@ export function OrganizationField(props){
     else{
       props.setDisabledOrganizationFields([]);
     }
-     props.setFieldValue('organization_url',(organizations[selected[0]]&&organizations[selected[0]].url?organizations[selected[0]].url:''),false).then(()=>{
+    props.setFieldValue('organization_url',(organizations[selected[0]]&&organizations[selected[0]].url?organizations[selected[0]].url:selected[0]&&selected[0].contains(' (Add New Organization)')?props.values.organization_url:''),false).then(()=>{
       props.validateField('organization_url');       
-     });
-     setSingleSelections(selected);
+    });
+    setSingleSelections(selected);
 
   } 
   
@@ -1021,10 +1070,8 @@ export function ListInputArray(props){
                 if(!props.defaultValues.includes(item)){
                   return(
                     <React.Fragment key={index}>
-
-                    <ListInputArrayInput2 error={props.error} index={index} item={item} arrayHelpers={arrayHelpers} disabled={props.disabled} changed={props.changed}/>
-                    {Array.isArray(props.error) || typeof(props.error)==='string'?<tr><td className='error-td'><div className="error-message-list-item">{props.error[index]}</div></td><td></td></tr>:null}
-
+                    <ListInputArrayInput2 error={props.error} index={index} item={item} arrayHelpers={arrayHelpers} disabled={props.disabled} changed={props.changed}/> 
+                    {Array.isArray(props.error)?<tr><td className='error-td'><div className="error-message-list-item">{props.error[index]}</div></td><td></td></tr>:null}
                     </React.Fragment>
                   )
                 }
@@ -1203,7 +1250,7 @@ export  function LogoInput(props){
   )
 }
 
-function MyOverLay(props) {
+export function MyOverLay(props) {
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   const [show,setShow] = useState(false);
@@ -1220,7 +1267,8 @@ function MyOverLay(props) {
     <Overlay target={props.target.current}  show={show} placement={props.placement?props.placement:'right'}>
       {propsOv => (
         <Tooltip id="overlay-example" placement={propsOv.placement} arrowProps={propsOv.arrowProps} ref={propsOv.ref} style={propsOv.style} outofboundaries={propsOv.outofboundaries} >
-          {props.type==="Added"?t('input_added'):props.type==="Deleted"?t('input_deleted'):props.type==="Edited"?t('input_edited'):null}
+          {props.type==="Added"?t('input_added'):props.type==="Deleted"?t('input_deleted'):props.type==="Edited"?t('input_edited'):props.type}
+
         </Tooltip>
 
       )}
@@ -1277,20 +1325,21 @@ export function ListInput(props){
         <FieldArray name={props.name}>
           {({push,remove,insert})=>(
             <React.Fragment>
-              {!props.disabled?
+              {!props.disabled||!props.values?
               <InputGroup className={props.empty&&props.touched?'invalid-input mb-3':'mb-3'}>
                 <Form.Control
                   value={newVal}
-                  onChange={(e)=>{setNewVal(e.target.value)}}
+                  onChange={(e)=>{setNewVal(e.target.value.trim())}}
                   column="true"
                   sm="4"
-                  onBlur={()=>{!props.touched?props.setFieldTouched(props.name,true):console.log('sdf')}}
+                  onBlur={()=>{!props.touched&&props.setFieldTouched(props.name,true)}}
                   type="text"
                   className='col-form-label.sm'
                   placeholder={props.placeholder}
                   disabled={props.disabled}
                 />
                 <InputGroup.Prepend>
+                {!props.disabled?
                   <Button
                     disabled={props.disabled}
                     variant="outline-primary"
@@ -1298,9 +1347,10 @@ export function ListInput(props){
                       push(newVal);
                       setNewVal('');
                     }}
-                  >
-                    {t('input_add_button')}
-                  </Button>
+                  >{t('input_add_button')}
+                  </Button>:null
+                }
+                    
                 </InputGroup.Prepend>
                 </InputGroup>:null}
 
@@ -1322,7 +1372,7 @@ export function ListInput(props){
                   </Field>
                   <br/>
                 </InputGroup>
-                {props.error&&props.error[index]?
+                {props.error&&props.error[index]&&Array.isArray(props.error)?
                   <div className="error-message-list-item" >{props.error[index]}</div>
                 :null}
                 </React.Fragment>
@@ -1353,7 +1403,7 @@ export function Contacts(props){
                       onChange={(e)=>{setNewVal(e.target.value)}}
                       column="true"
                       sm="4"
-                      onBlur={()=>{!props.touched?props.setFieldTouched(props.name,true):console.log('sdf')}}
+                      onBlur={()=>{!props.touched&&props.setFieldTouched(props.name,true)}}
                       type="text"
                       className='col-form-label.sm'
                       placeholder={props.placeholder}

@@ -1,30 +1,28 @@
 {
   "egi" :{
+    "icon": "egi.ico",
     "logo_url":"https://aai-dev.egi.eu/proxy/module.php/themeegi/resources/images/logo.svg",
     "sender":"EGI Check-in",
     "contact":"check-in@egi.eu",
+    "website_url": "https://www.egi.eu/",
     "tenant_signature": "EGI AAI team",
-    "production_url": "https://aai.egi.eu/federation/egi"
-  },
-  "eosc" : {
-    "logo_url":"https://www.eosc-portal.eu/sites/all/themes/theme1/logo.png",
-    "sender":"EOSC Infrastructure Proxy",
-    "contact":"support@example.org",
-    "tenant_signature": "EOSC team",
-    "production_url": null
-  },
-  "grnet": {
-    "logo_url":"https://upload.wikimedia.org/wikipedia/en/e/e8/Grnet-transp.jpg",
-    "sender":"support@example.org",
-    "contact": "check-in@egi.eu",
-    "tenant_signature": "GRNET team",
-    "production_url": null
-  },
-  "form" : {
-    "egi" : {
+    "production_url": "https://aai.egi.eu/federation/egi",
+    "home_page_description": "The EGI CheckIn Service provides a secure web interface through which service operators can register their OpenID Connect and SAML based services.",
+    "home_page_title":"EGI Federation Registry",
+    "footer_description": "Copyright ©2016-2022 | Check-in is an EGI service provided by GRNET, receiving funding from the <a href='https://www.egi.eu/egi-foundation/' target='_blank' rel='noopener noreferrer'>EGI Foundation (EGI.eu)</a> and the <a href='https://www.egi.eu/project/egi-ace/' target='_blank' rel='noopener noreferrer'>EGI-ACE project</a> (Horizon 2020) under Grant number 101017567",
+    "theme_color": "#0A559C",
+    "service_integration_notification": {
+      "enabled": false,
+      "email": "checkin-support@mailman.egi.eu",
+      "integration_environments": ["production","development"], 
+      "template": ""
+    },
+    "restricted_env": ["production"],
+    "form": {
+      "supported_attributes": ["voPersonID","displayName","givenName","sn","mail","voPersonVerifiedEmail","uid","eduPersonEntitlement","voPersonExternalAffiliation","sshPublicKey","eduPersonOrcid","voPersonCertificateDN","voPersonCertificateIssuerDN","distinguishedName","isServiceUser","eduPersonAssurance"],
       "multivalue_fields": {
         "general": ["contacts"],
-        "oidc": ["grant_types","scope","redirect_uris"],
+        "oidc": ["grant_types","scope","redirect_uris","post_logout_redirect_uris"],
         "saml": []
       },
       "application_type":["WEB", "NATIVE"],
@@ -34,11 +32,11 @@
       "id_token_timeout_seconds":86400,
       "code_challenge_method":[null,"plain","S256"],
       "protocol":["oidc","saml"],
-      "integration_environment": ["production","development","demo"],
+      "integration_environment": ["production","demo","development"],
       "grant_types":["authorization_code","client_credentials","urn:ietf:params:oauth:grant-type:token-exchange","urn:ietf:params:oauth:grant-type:device_code","implicit","refresh_token"],
       "grant_types_deprecated":["implicit"],
       "dynamic_fields": ["allow_introspection"],
-      "disabled_fields": ["clear_access_tokens_on_refresh"],
+      "disabled_fields": ["clear_access_tokens_on_refresh","post_logout_redirect_uris"],
       "contact_requirements":[
         {
           "type":"support",
@@ -58,7 +56,7 @@
         }
       ],
       "contact_types":["admin","technical","support","security"],
-      "scope":["openid","voperson_id","email","profile","offline_access","eduperson_entitlement","eduperson_scoped_affiliation","eduperson_unique_id","aarc","orcid"],
+      "scope":["openid","voperson_id","email","profile","offline_access","eduperson_entitlement","eduperson_scoped_affiliation","eduperson_unique_id","aarc","orcid","eduperson_entitlement_jwt"],
       "invitation_validity_seconds":2592000,
       "token_endpoint_auth_method":["client_secret_basic","client_secret_post","client_secret_jwt","private_key_jwt","none"],
       "token_endpoint_auth_method_title":["Client Secret over HTTP Basic","Client Secret over HTTP POST","Client Secret via symmetrically-signed JWT assertion","Asymmetrically-signed JWT assertion","No authentication"],
@@ -75,10 +73,14 @@
           "tooltip": "A unique string representing the registration information provided by the OAuth 2.0 client at the authorisation server."
         },
         "scope": {
-          "description": "OAuth scopes this client is allowed to request. See <a href='https://docs.egi.eu/providers/check-in/sp/#claims' target='_blank' rel='noopener noreferrer'>here</a> for more information."
+          "description": "OAuth scopes this client is allowed to request. See <a href='https://docs.egi.eu/providers/check-in/sp/#claims' target='_blank' rel='noopener noreferrer'>here</a> for more information. <br> <span style=\"color:#D89C46\"><svg aria-hidden=\"true\" focusable=\"false\" data-prefix=\"fas\" data-icon=\"triangle-exclamation\" class=\"svg-inline--fa fa-triangle-exclamation \" role=\"img\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 512 512\"><path fill=\"currentColor\" d=\"M256 32c14.2 0 27.3 7.5 34.5 19.8l216 368c7.3 12.4 7.3 27.7 .2 40.1S486.3 480 472 480H40c-14.3 0-27.6-7.7-34.7-20.1s-7-27.8 .2-40.1l216-368C228.7 39.5 241.8 32 256 32zm0 128c-13.3 0-24 10.7-24 24V296c0 13.3 10.7 24 24 24s24-10.7 24-24V184c0-13.3-10.7-24-24-24zm32 224c0-17.7-14.3-32-32-32s-32 14.3-32 32s14.3 32 32 32s32-14.3 32-32z\"></path></svg> <b>eduperson_entitlement_jwt</b> scope is only supported in the development integration environment. </span>"
         },
         "redirect_uris":{
           "description": "URIs that the client can be redirected to. Different URI validation rules apply depending on the application type."
+        },
+        "post_logout_redirect_uris": {
+          "label":"Post Logout Redirect URI(s)",
+          "description": "URLs to request that the End-User's browser be redirected after a logout has been performed using the post_logout_redirect_uri parameter."
         },
         "contacts": {
           "description": "List of contacts for administrators of this service. (Technical and Support Contacts will be shown in the Consent Page)"
@@ -94,6 +96,11 @@
         },
         "application_type": {
           "description": "Kind of the application. Web Clients MUST only register URLs using the https scheme as redirect_uris; they MAY use the http scheme when using localhost as the hostname. Native Clients MUST only register redirect_uris using custom URI schemes or URLs using the http scheme with localhost as the hostname."
+        },
+        "requested_attributes": {
+          "label": "Requested attributes <br/>(see <a href='https://docs.egi.eu/providers/check-in/sp/#user-attributes' target='_blank' rel='noopener noreferrer'>here</a>)",
+          "description": "List of SAML attributes this SAML service is allowed to receive. See <a href='https://docs.egi.eu/providers/check-in/sp/#user-attributes' target='_blank' rel='noopener noreferrer'>here</a> for more information",
+          "disabled": false
         },
         "allow_introspection": {
           "description": "Access to the Token Introspection endpoint is restricted to confidential clients.",
@@ -149,12 +156,34 @@
         }
 
       }
+    }
+
+  },
+  "ni4os": {
+    "icon": "ni4os.ico",
+    "logo_url":"https://aai.ni4os.eu/proxy/module.php/themevanilla/resources/images/logo.jpg",
+    "sender":"NI4OS-Europe Federation Registry Notifications",
+    "contact": "mailto:aai-support@ni4os.eu",
+    "website_url": "https://ni4os.eu/",
+    "tenant_signature": "NI4OS-Europe Login team",
+    "production_url": "https://aai.ni4os.eu/federation/ni4os",
+    "home_page_description": "The NI4OS-Europe Federation Registry provides a secure web interface through which service operators can register their OpenID Connect and SAML based services.",
+    "home_page_title":"NI4OS-Europe Federation Registry",
+    "footer_description": "The NI4OS-Europe project is funded by the European Commission under the Horizon 2020 European research infrastructures grant agreement no.857645",
+    "theme_color": "#0A559C",
+    "service_integration_notification": {
+      "enabled": false,
+      "email": " aai@ni4os.eu",
+      "integration_environments": ["production"], 
+      "template": ""
     },
-    "eosc" : {
+    "restricted_env": ["production"],
+    "form":{
+      "supported_attributes": ["voPersonID","displayName","givenName","sn","mail","voPersonVerifiedEmail","uid","eduPersonEntitlement","voPersonExternalAffiliation","sshPublicKey","eduPersonOrcid","eduPersonAssurance"],
       "multivalue_fields": {
         "general": ["contacts"],
-        "oidc": ["grant_types","scope","redirect_uris"],
-        "saml": []
+        "oidc": ["grant_types","scope","redirect_uris","post_logout_redirect_uris"],
+        "saml": ["required_attributes"]
       },
       "application_type":["WEB", "NATIVE"],
       "device_code_validity_seconds":30000,
@@ -163,9 +192,9 @@
       "id_token_timeout_seconds":86400,
       "code_challenge_method":[null,"plain","S256"],
       "protocol":["oidc","saml"],
-      "integration_environment": ["production","demo"],
-      "grant_types":["implicit","authorization_code","refresh_token","client_credentials","urn:ietf:params:oauth:grant_type:redelegate","urn:ietf:params:oauth:grant-type:token-exchange","urn:ietf:params:oauth:grant-type:device_code","urn:ietf:params:oauth:grant-type:jwt-bearer"],
-      "grant_types_deprecated":["implicit"],      
+      "integration_environment": ["production"],
+      "grant_types":["authorization_code","client_credentials","urn:ietf:params:oauth:grant-type:token-exchange","urn:ietf:params:oauth:grant-type:device_code"],
+      "grant_types_deprecated":[],      
       "dynamic_fields": [],
       "disabled_fields": [],
       "contact_requirements":[
@@ -180,7 +209,7 @@
       ],
       "contact_types":["admin","technical","support","security"],
       "invitation_validity_seconds":2592000,
-      "scope":["openid","email","profile","offline_access","eduperson_entitlement","eduperson_scoped_affiliation","eduperson_unique_id"],
+      "scope":["openid","email","profile","offline_access","eduperson_entitlement","eduperson_scoped_affiliation","eduperson_unique_id","voperson_id"],
       "token_endpoint_auth_method":["client_secret_basic","client_secret_post","client_secret_jwt","private_key_jwt","none"],
       "token_endpoint_auth_method_title":["Client Secret over HTTP Basic","Client Secret over HTTP POST","Client Secret via symmetrically-signed JWT assertion","Asymmetrically-signed JWT assertion","No authentication"],
       "token_endpoint_auth_signing_alg":["HS256","HS384","HS512","RS256","RS384","RS512","PS256"],
@@ -212,68 +241,41 @@
         },
         "application_type": {
           "description": "Kind of the application. Web Clients MUST only register URLs using the https scheme as redirect_uris; they MAY use the http scheme when using localhost as the hostname. Native Clients MUST only register redirect_uris using custom URI schemes or URLs using the http scheme with localhost as the hostname."
+        },
+        "requested_attributes": {
+          "label": "Requested attributes <br/>(see <a href='https://docs.egi.eu/providers/check-in/sp/#user-attributes' target='_blank' rel='noopener noreferrer'>here</a>)",
+          "description": "List of SAML attributes this SAML service is allowed to receive. See <a href='https://docs.egi.eu/providers/check-in/sp/#user-attributes' target='_blank' rel='noopener noreferrer'>here</a> for more information",
+          "required":false
         }
-    },
-    "extra_fields":{
-      "aup_uri":{
-        "title": "Link to Terms of Use",
-        "desc": "Link to the Acceptable Use Policy / Terms of Use based on the <a href='https://wise-community.org/wise-baseline-aup/'>WISE AUP Baseline template</a>",
-        "type":"string",
-        "tag":"url",
-        "default":"",
-        "tab":"general",
-        "placeholder":"https://",
-        "required":["production","demo","dev"]
       },
-      "organization":{
-        "title": "Organization",
-        "tag": "org",
-        "active": ["production","demo"],
-        "required": ["production","demo"]
-      },
-      "eosc_security_policies":{
-        "title": "EOSC Security Policies",
-        "desc":"The service adheres to the EOSC Security Baseline",
-        "required": ["production","demo"],
-        "type":"boolean",
-        "tag":"coc",
-        "tab":"general",
-        "default": false,
-        "error": "The service must comply with this policy"
-      },
-      "eosc_data_protection":{
-        "title": "Research & Scholarship",
-        "desc":"The service is compliant with the <a href='https://refeds.org/category/research-and-scholarship'>REFEDS Research & Scholarship Entity Category</a>",
-        "required": [],
-        "type":"boolean",
-        "tag":"coc",
-        "tab":"general",
-        "default": false,
-        "error": "The service must comply with this policy"
-      },
-      "dpcoco":{
-        "title": "Data Protection Code of Conduct",
-        "desc": "The service is compliant with the <a href='https://wiki.refeds.org/display/CODE/Data+Protection+Code+of+Conduct+Home'>GEANT Code of Conduct version 1</a> or any other code of conduct compatible with legislation and guidelines on data protection and privacy including GDPR",
-        "required": [],
-        "default": false,
-        "tab":"general",
-        "type":"boolean",
-        "tag":"coc",
-        "error": "The service must comply with this policy"
+      "extra_fields":{
+        "aup_uri":{
+          "title": "Link to Terms of Use",
+          "desc": "Link to the Acceptable Use Policy / Terms of Use based on the <a href='https://wise-community.org/wise-baseline-aup/'>WISE AUP Baseline template</a>",
+          "type":"string",
+          "tag":"url",
+          "default":"",
+          "tab":"general",
+          "placeholder":"https://",
+          "required":["production"]
+        },
+        "organization":{
+          "title": "Organization",
+          "tag": "org",
+          "active": ["production"],
+          "required": ["production"]
+        },
+        "dpcoco":{
+          "title": "Data Protection Code of Conduct",
+          "desc": "The service is compliant with the <a href='https://wiki.refeds.org/display/CODE/Data+Protection+Code+of+Conduct+Home'>GEANT Code of Conduct version 1</a> or any other code of conduct compatible with legislation and guidelines on data protection and privacy including GDPR",
+          "required": [],
+          "default": false,
+          "tab":"general",
+          "type":"boolean",
+          "tag":"coc",
+          "error": "The service must comply with this policy"
+        }
       }
-
-    }
-    }
-  },
-  "restricted_env" : {
-    "egi" : {
-      "env":["production"]
-    },
-    "eosc": {
-      "env":["production"]
-    },
-    "grnet":{
-      "env":[]
     }
   },
   "agent" : {
@@ -281,13 +283,9 @@
     "entity_type": ["service","idp"],
     "entity_protocol": ["saml","oidc"]
   },
-  "outdated_notifications_interval_seconds":604800,
-  "send_outdated_notifications":false,
   "invitation_validity_seconds": 5184000,
-  "service_fields":["external_id","tenant","service_name","service_description","logo_uri","policy_uri","integration_environment","protocol","client_id","allow_introspection","code_challenge_method","device_code_validity_seconds","access_token_validity_seconds","refresh_token_validity_seconds","client_secret","reuse_refresh_token","clear_access_tokens_on_refresh","id_token_timeout_seconds","entity_id","metadata_url","grant_types","scope","contacts","redirect_uris","token_endpoint_auth_method","token_endpoint_auth_signing_alg","jwks","jwks_uri","country","website_url","aup_uri","organization_id","application_type"],
-  "ggus_email":"checkin-support@mailman.egi.eu",
-  "disable_emails":false,
-  "deployment_fields":["service_name","service_description","client_id","allow_introspection","code_challenge_method","device_code_validity_seconds","access_token_validity_seconds","refresh_token_validity_seconds","client_secret","reuse_refresh_token","clear_access_tokens_on_refresh","id_token_timeout_seconds","entity_id","metadata_url","grant_types","scope","contacts","redirect_uris","token_endpoint_auth_method","token_endpoint_auth_signing_alg","jwks","jwks_uri","website_url","aup_uri","policy_uri","country","logo_uri","application_type"],
-  "multivalue_fields": ["grant_types","scope","contacts","redirect_uris"],
-  "send_notifications_on_startup":false
+  "service_fields":["external_id","tenant","service_name","service_description","logo_uri","policy_uri","integration_environment","protocol","client_id","allow_introspection","code_challenge_method","device_code_validity_seconds","access_token_validity_seconds","refresh_token_validity_seconds","client_secret","reuse_refresh_token","clear_access_tokens_on_refresh","id_token_timeout_seconds","entity_id","metadata_url","grant_types","scope","contacts","redirect_uris","token_endpoint_auth_method","token_endpoint_auth_signing_alg","jwks","jwks_uri","country","website_url","aup_uri","organization_id","application_type","post_logout_redirect_uris"],
+  "disable_emails":true,
+  "deployment_fields":["service_name","service_description","client_id","allow_introspection","code_challenge_method","device_code_validity_seconds","access_token_validity_seconds","refresh_token_validity_seconds","client_secret","reuse_refresh_token","clear_access_tokens_on_refresh","id_token_timeout_seconds","entity_id","metadata_url","grant_types","scope","contacts","redirect_uris","token_endpoint_auth_method","token_endpoint_auth_signing_alg","jwks","jwks_uri","website_url","aup_uri","policy_uri","country","logo_uri","application_type","requested_attributes","post_logout_redirect_uris"],
+  "multivalue_fields": ["grant_types","scope","contacts","redirect_uris","post_logout_redirect_uris"]
 }

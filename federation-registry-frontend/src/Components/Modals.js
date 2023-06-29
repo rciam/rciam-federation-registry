@@ -5,16 +5,15 @@ import Button from 'react-bootstrap/Button';
 import { useTranslation } from 'react-i18next';
 import { Translation } from 'react-i18next';
 import {tenantContext} from '../context.js';
-import parse from 'html-react-parser';
-
+import Spinner from 'react-bootstrap/Spinner';
+import { useCookies } from 'react-cookie';
 
 export const Logout = (props) => {
   // const history = useHistory();
+  const [cookies] = useCookies(['federation_logoutkey']);
   const tenant = useContext(tenantContext);
   const handleClose = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    window.location.assign(tenant.logout_uri);
+    window.location.assign(tenant[0].logout_uri + "&id_token_hint="+cookies.federation_logoutkey);
   }
   return (
     <Translation>
@@ -116,10 +115,22 @@ export class SimpleModal extends React.Component {
     )
   }
 }
-
+export const LoadingModal = (props)=>{
+  return (
+    <Modal show={props.active}>
+        <Modal.Header>
+          <Modal.Title>
+              {props.title}
+          </Modal.Title>
+        </Modal.Header>
+              <Modal.Body>
+                <Spinner animation="border" variant="primary" />
+              </Modal.Body>
+    </Modal>
+  )
+}
 
 export const ConfirmationModal = (props) =>{
-  
   return (
     <Modal show={props.active} onHide={()=>{props.close()}}>
         <Modal.Header closeButton>
@@ -130,9 +141,9 @@ export const ConfirmationModal = (props) =>{
 
           {props.message?
               <Modal.Body>
-                {parse(props.message)}
+                {props.message}
               </Modal.Body>
-              :null
+              :""
           }
 
         <Modal.Footer>

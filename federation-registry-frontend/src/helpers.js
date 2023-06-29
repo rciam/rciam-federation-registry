@@ -46,31 +46,38 @@ function calcDiff(old_state,new_state,config,diff){
             }
 
             if((new_state[attribute]&&typeof(new_state[attribute][0])==='object')||(old_state[attribute]&&typeof(old_state[attribute][0])==='object')){
-            changes[attribute].D = old_state[attribute].filter((x,index)=>{
-                let match = false;
-                new_state[attribute].forEach(y=>{
-                if(shallowEqual(x,y)){
-                    match = true
+                if(attribute==='requested_attributes'){
+                    changes.requested_attributes.N = new_state.requested_attributes.filter(x=> !old_state.requested_attributes.some(e=> e.friendly_name === x.friendly_name));
+                    changes.requested_attributes.D = old_state.requested_attributes.filter(x=> !new_state.requested_attributes.some(e=> e.friendly_name === x.friendly_name));
+                    changes.requested_attributes.U = new_state.requested_attributes.filter(x=> old_state.requested_attributes.some(e=> e.friendly_name === x.friendly_name&&(e.required!==x.required||e.name!==x.name)));
                 }
-                })
-                // If there was no match for the old state value we add it to the deleted values
-                return !match
-            });
-            changes[attribute].N = new_state[attribute].filter((x,index)=>{
-                let match = false;
-                old_state[attribute].forEach(y=>{
-                if(shallowEqual(x,y)){
-                    match = true
+                else{
+                    changes[attribute].D = old_state[attribute].filter((x,index)=>{    
+                        let match = false;
+                        new_state[attribute].forEach(y=>{
+                            if(shallowEqual(x,y)){
+                                match = true
+                            }
+                        })
+                        // If there was no match for the old state value we add it to the deleted values
+                        return !match
+                    });
+                    changes[attribute].N = new_state[attribute].filter((x,index)=>{
+                        let match = false;
+                        old_state[attribute].forEach(y=>{
+                        if(shallowEqual(x,y)){
+                            match = true
+                        }
+                        })
+                        // If there is no match for new state value we add it to the new values 
+                        return !match
+                    }); 
                 }
-                })
-                // If there is no match for new state value we add it to the new values 
-                return !match
-            }); 
             }
 
             if((typeof(new_state[attribute][0])==='string')||typeof(old_state[attribute][0])==='string'){
                 changes[attribute].D = old_state[attribute].filter(x=>!new_state[attribute].includes(x));
-                changes[attribute].N = new_state[attribute].filter(x=>!old_state[attribute].includes(x));            
+                changes[attribute].N = new_state[attribute].filter(x=>!old_state[attribute].includes(x));   
             }
     })
     for(var property in config.extra_fields){        

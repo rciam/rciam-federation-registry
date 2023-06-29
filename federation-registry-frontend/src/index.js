@@ -7,18 +7,20 @@ import * as serviceWorker from './serviceWorker';
 //import './oidc-base.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './index.css';
+import './theme/theme.css';
 import './vanilla.css'
 import {GlobalStateProvider} from './useGlobalState.js';
-
+import { CookiesProvider } from "react-cookie";
 
 
 const Root = () => (
-
+  <CookiesProvider>
   <GlobalStateProvider>
   <I18nextProvider i18n={i18n}>
       <App />
   </I18nextProvider>
   </GlobalStateProvider>
+  </CookiesProvider>
 
 )
 

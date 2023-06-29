@@ -38,12 +38,11 @@ const OutdatedNotifications = () =>{
   },[]);
 
   const getOutdatedServices = ()=> {
-    fetch(config.host+'tenants/'+tenant_name+'/services?outdated=true', {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/services?outdated=true', {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json',
-      'Authorization': localStorage.getItem('token'),
+      'Content-Type': 'application/json'
       }
     }).then(response=>{
         if(response.status===200){
@@ -61,6 +60,7 @@ const OutdatedNotifications = () =>{
         }
       }).then(response=> {
       if(response){
+
         let outdated_services  = {...outdatedServices};
         for(const integration_environment in outdated_services){
           outdated_services[integration_environment] = 0;
@@ -76,12 +76,11 @@ const OutdatedNotifications = () =>{
   }
 
   const sendNotification = (notification)=> {
-    fetch(config.host+'tenants/'+tenant_name+'/notifications/outdated', {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/notifications/outdated', {
       method: 'PUT', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {
-      'Content-Type': 'application/json',
-      'Authorization': localStorage.getItem('token'),
+      'Content-Type': 'application/json'
       },
       body: JSON.stringify({integration_environment:integrationEnvironment})
     }).then(response=>{
@@ -120,7 +119,7 @@ const OutdatedNotifications = () =>{
       <div className="outdated-notifications-container">
         <Logout logout={logout}/>
         
-        <ConfirmationModal active={confirmationData.active?true:false} close={()=>{setConfirmationData()}} action={()=>{sendNotification(integrationEnvironment); setConfirmationData();}} title={"Are you sure you want to send this notification"} message={"This notification is targeting the owners of outdated services registered in the " +capitalize(integrationEnvironment) + ' environment'} accept={'Yes'} decline={'No'}/>
+        <ConfirmationModal active={confirmationData.active?true:false} close={()=>{setConfirmationData({active:false})}} action={()=>{sendNotification(integrationEnvironment); setConfirmationData({active:false});}} title={"Are you sure you want to send this notification"} message={"This notification is targeting the owners of outdated services registered in the " +capitalize(integrationEnvironment) + ' environment'} accept={'Yes'} decline={'No'}/>
         <ResponseModal return_url={'/'+tenant_name+'/home'} message={responseMessage} modalTitle={responseTitle}/>
         <h1>Send Alert for Outdated Services</h1>
         <p>Send alert to owners of services with oudated configuration of the selected environment.</p>
