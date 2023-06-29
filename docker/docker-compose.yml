@@ -1,7 +1,7 @@
 version: '3'
 services:
   node:
-    image: node:13-buster
+    image: node:14-buster
     volumes:
       - ../:/home
     depends_on:
