@@ -18,6 +18,7 @@
       "template": ""
     },
     "restricted_env": ["production"],
+    "test_env":["development"],
     "form": {
       "supported_attributes": ["voPersonID","displayName","givenName","sn","mail","voPersonVerifiedEmail","uid","eduPersonEntitlement","voPersonExternalAffiliation","sshPublicKey","eduPersonOrcid","voPersonCertificateDN","voPersonCertificateIssuerDN","distinguishedName","isServiceUser","eduPersonAssurance"],
       "multivalue_fields": {
