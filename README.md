@@ -13,7 +13,15 @@ Federation registry is consisted of three node.js projects:
 - federation-registry-backend-api: An API created with Express.js
 - federation-registry-backend-ams-agent: An agent that uses the api and communicates with ams
 
+**Usefull Links**
+- [Documentation](https://federation.rciam.grnet.gr/)
+- [Swagger Documentation](https://federation.rciam.grnet.gr/swagger-ui/dist/)
+- [Ansible Role](https://github.com/rciam/rciam-deploy)
+- [Deployment Agents](https://github.com/rciam/rciam-federation-registry-agent)
+
 ## Running the project
+
+The deployment process has been automated with the use of [Ansible](https://www.ansible.com/). You can find the Ansible role in [this repository](https://github.com/rciam/rciam-deploy/tree/master).     
 
 ### Dependencies
 
@@ -21,7 +29,7 @@ Federation registry requires [Nodejs](https://nodejs.org/en/) and a [PostgreSQL]
 to run.
 Versions used in project development:
 
-- node v13.14.0
+- node v14.19.3
 - PostgreSQL 12.4
 
 ### Database
@@ -29,6 +37,7 @@ Versions used in project development:
 A PostgreSQL database should be created using the schema described in **_db_schema.sql_**
 
 ### Configuration
+
 
 If we need to set the project to communicate with deployment agents we will need the following from the ams setup:
 
@@ -38,20 +47,35 @@ If we need to set the project to communicate with deployment agents we will need
 - a verification hash for the push endpoint
 - an authorization key for the push endpoint
 
-\*Note: Default values are configured for a local installation
 
-#### 1) Backend API
+##### 1) Initialise/Configure Tenant
+&NewLine;
+a) Setup the tenants configuration file.
+```
+federation-registry-backend-api/JavaScript/config.json
+```
 
+b) Initialise tenant in the database.  An example of an initialisation script can be seen in the **setup_tenant.sql** file
+- **Authentication:** Configure the Issuer that will be used for authentication providing also the Client Id and Client Secret.
+- **User Roles:**  Configure the user roles and the entitlements that grant them and associate the with [role actions](#role-actions).  (The use of the example roles is recommended) 
+- **Deployment Agents:** Configure the deployment agents that will be connected to the Federation Registry instance.
+
+\*Note: If you are running federation registry in a development instance consider using a [mock deployer](https://github.com/rciam/rciam-federation-registry-agent/tree/mock-deployer). 
+
+
+##### 1) Backend API
+&NewLine;
 **Configure Environment File**
 `federation-registry-backend-api/JavaScript/.env`
 
 ```shell
-REACT_BASE=base_frontend_url
-EXPRESS_BASE=base_api_url
+EXPRESS_BASE = base_api_url
 AMS_AGENT_KEY=authentication_key_for_ams_agent
-REDIRECT_URI=redirection_uri_after_login
 AMS_AUTH_KEY=authorization_key_for_push_subscription
-AMS_VER_HASH=verification_hash_used_to_activate_push_subscription
+AMS_VER_HASH = verification_hash_used_to_activate_push_subscription
+ADMIN_AUTH_KEY = authorization_key_for_administrative_routes
+CORS = external_urls_allowed
+TOKEN_KEY = token_used_for_encription
 ```
 
 **Configure Database File**
@@ -67,25 +91,31 @@ AMS_VER_HASH=verification_hash_used_to_activate_push_subscription
 }
 ```
 
-#### 2) Front End
-
-For the frontend we just need to configure where the backend api is located:
+##### 2) Front End
+&NewLine;
+For the frontend we need to configure where the backend api is located:
 `federation-registry-frontend/src/config.json`
 
 ```json
 {
-  "host": "api_base_url"
+  "host": {
+    "tenant1":"http://localhost:5000/",
+    "tenant2":"http://localhost:5000/"
+  },
+  "basename": "/",
 }
+
 ```
 
-#### **3) AMS Agent**
-
+##### **3) AMS Agent**
+&NewLine;
 To configure the ams we must set the environmental variables:
 
 ```shell
 AMS_PROJECT=ams-project
 AMS_BASE_URL=ams-url
-AMS_USER_TOKEN=user-token
+AMS_USER_TOKEN= user-token
+AMS_ADMIN_TOKEN= admin-user-token
 EXPRESS_URL=base-url-api
 EXPRESS_KEY=authentication_key_for_ams_agent
 ENV=installation_environment
@@ -126,3 +156,35 @@ To run the federation-registry-backend-ams-agent:
 $ cd federation-registry-backend-ams-agent
 $ node app.js
 ```
+
+### Role Actions
+
+Each user role is associated with a set of actions. Here is a list of the supported actions. 
+
+##### Simple Actions 
+- **get_user**: User can has access to it's own personal information.
+- **get_own_services**: User can get a list of their services.
+- **get_own_service**: User can view their own services.
+- **get_own_petitions**: User can view requests for their services.
+- **get_own_petition**: User can view requests for services owned by them.
+- **add_own_petition**: User can create new requests.
+- **update_own_petition**: User can update requests for services they own.
+- **delete_own_petition**: User can cancel requests for their services.
+- **review_own_petition**: User can review requests for services they own in a testing environment. 
+##### Admin Actions
+- **get_service**: User can view any service.
+- **get_services**: User can get a list of all services and requests.
+- **get_petition**: User has access to all requests.
+- **get_petitions**: Allows User to see all available requests.
+- **review_petition**: Allows User to review a request.
+- **review_notification**: User gets a notification when new requests are submitted.
+- **review_restricted**: User can review a request in a restricted environment.
+- **send_notifications**: Allows Users to send notifications to service owners. 
+- **invite_to_group**: User can manage owners of any service.
+- **error_action**: User can troubleshoot deployment errors 
+- **manage_tags**: User can add tags to any service.
+- **view_groups**: User can view any group. 
+- **view_errors**: User has access to the deployment errors.
+- **export_services**: User can export services.
+
+
