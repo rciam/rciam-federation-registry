@@ -147,7 +147,6 @@ const approvePetition = (req,res,next,db) => {
               ]);
             }
           }).catch(err=>{
-            console.log(err);
             next(err);});
         }
         res.status(200).json({service_id});

@@ -1383,7 +1383,7 @@ function canReview(req,res,next){
       else {
         await db.petition.canReviewOwn(req.params.id,req.user.sub).then(service=>{
   
-          if(service&&service.integration_environment==='development'){
+          if(service&&config[req.params.tenant].test_env.includes(environment)){
             next();
           }
           else if(service){
