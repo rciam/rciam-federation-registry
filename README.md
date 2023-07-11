@@ -109,6 +109,9 @@ For the frontend we need to configure where the backend api is located:
 
 ##### **3) AMS Agent**
 &NewLine;
+Ams Agent is responsible for
+- Creating the necessary Topics and Subscriptions in the AMS.
+- Pushing Deployment messages from the Federation Registry to the AMS. 
 To configure the ams we must set the environmental variables:
 
 ```shell
