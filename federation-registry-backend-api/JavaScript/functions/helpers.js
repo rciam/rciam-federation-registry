@@ -5,6 +5,7 @@ var fs = require('fs');
 var hbs = require('handlebars');
 nodeMailer = require('nodemailer');
 var config = require('../config');
+var email_transport_conf = require('../email_transport_conf.json')
 const customLogger = require('../loggers.js');
 
 hbs.registerHelper('loud', function (aString) {
@@ -456,11 +457,7 @@ const sendDeploymentMail =  function(data){
 }
 
 const createTransport = () =>{
-  let transporter = nodeMailer.createTransport({
-    host: 'relay.grnet.gr',
-    port: 587,
-    secure: false
-  });
+  let transporter = nodeMailer.createTransport(email_transport_conf);
   // let transporter = nodeMailer.createTransport({
   //     service: 'gmail',
   //     auth: {
