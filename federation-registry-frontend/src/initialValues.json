@@ -28,7 +28,8 @@
     "profile",
     "email",
     "voperson_id",
-    "eduperson_entitlement"
+    "eduperson_entitlement",
+    "voperson_external_affiliation"
   ],
   "grant_types": [
     "authorization_code"
