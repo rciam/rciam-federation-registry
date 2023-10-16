@@ -990,7 +990,7 @@ function TableItem(props) {
               }
               {
                 (user.review||
-                  (props.service.owned&&tenant.config.test_env.included(props.service.integration_environment)))
+                  (props.service.owned&&tenant.config.test_env.includes(props.service.integration_environment)))
                 &&props.service.petition_id
                 &&!(props.service.status==='changes')
                 &&(props.service.status!=='request_review'||(props.service.status==='request_review'&&user.review_restricted))?

@@ -84,7 +84,7 @@ class ServiceStateRepository {
         }
         if((deployed || decoded_message.state==='error')&&done){
           updateState.push({id:decoded_message.id,state:decoded_message.state,outdated:false});
-          if(deployed){
+          if(deployed&&decoded_message.state!=='error'){
             ids.push(decoded_message.id); 
           }
           if(decoded_message.state==='error'){
