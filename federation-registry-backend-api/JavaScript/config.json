@@ -19,6 +19,7 @@
     },
     "restricted_env": ["production"],
     "test_env":["development"],
+    "scopes":["openid", "email", "profile", "eduperson_entitlement"],
     "form": {
       "supported_attributes": ["voPersonID","displayName","givenName","sn","mail","voPersonVerifiedEmail","uid","eduPersonEntitlement","voPersonExternalAffiliation","sshPublicKey","eduPersonOrcid","voPersonCertificateDN","voPersonCertificateIssuerDN","distinguishedName","isServiceUser","eduPersonAssurance"],
       "multivalue_fields": {

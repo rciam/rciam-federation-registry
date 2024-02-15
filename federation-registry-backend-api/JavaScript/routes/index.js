@@ -286,7 +286,7 @@ router.get('/tenants/:tenant/login',(req,res)=>{
   if(clients[req.params.tenant]){
     res.redirect(clients[req.params.tenant].authorizationUrl({
       client_id:clients[req.params.tenant].client_id,
-      scope: 'openid email profile eduperson_entitlement',
+      scope: clients[req.params.tenant].scope.join(" "),
       redirect_uri: process.env.REDIRECT_URI+req.params.tenant
     }));
   }else{

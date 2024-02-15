@@ -66,7 +66,8 @@ db.tenants.getInit().then(async tenants => {
       clients[tenant.name].client_id = tenant.client_id;
       clients[tenant.name].client_secret = tenant.client_secret;
       clients[tenant.name].issuer_url = tenant.issuer_url;
-    }).catch(error=>{
+      clients[tenant.name].scopes = config[tenant.name].client_scopes;
+     }).catch(error=>{
       if(process.env.NODE_ENV!=='test-docker'&&process.env.NODE_ENV!=='test'){     
         console.log("Unable to Discover Tenant ");
         console.log(tenant);
