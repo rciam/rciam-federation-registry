@@ -51,7 +51,7 @@ const putAgentValidation = () => {
   return [
     body('type').exists().withMessage('Required Field').bail().custom((value)=>{if(config.agent.type.includes(value)){return true}else{return false}}).bail(),
     body('entity_type').exists().withMessage('Required Field').bail().custom((value)=>{if(config.agent.entity_type.includes(value)){return true}else{return false}}).bail(),
-    body('integration_environment').exists().withMessage('Required Field').isString().custom((value,{req,location,path})=> {   if(config[req.params.tenant].form.integration_environment.includes(value)){return true}else{return false}}).withMessage('Integration environment value not supported'),
+    body('integration_environment').exists().withMessage('Required Field').isString().custom((value,{req,location,path})=> {   if(tenant_config[req.params.tenant].form.integration_environment.includes(value)){return true}else{return false}}).withMessage('Integration environment value not supported'),
     body('entity_protocol').exists().withMessage('Required Field').bail().custom((value)=>{if(config.agent.entity_protocol.includes(value)){return true}else{return false}}).bail(),
     body('hostname').exists().withMessage('Required Field').bail().isString().withMessage('Must be a string').bail().custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Must be a url').bail()
   ]
@@ -61,8 +61,8 @@ const getServiceListValidation = () => {
   return [
     query('page').optional({checkFalsy:true}).isInt({gt:0}).withMessage('Page must be a positive integer').toInt(),
     query('limit').optional({checkFalsy:true}).isInt({gt:0}).withMessage('Limit must be a positive integer').toInt(),
-    query('env').optional({checkFalsy:true}).isString().custom((value,{req,location,path})=> {   if(config[req.params.tenant].form.integration_environment.includes(value)){return true}else{return false}}).withMessage('Integration environment value not supported'),
-    query('protocol').optional({checkFalsy:true}).isString().custom((value,{req,location,path})=> {if(config[req.params.tenant].form.protocol.includes(value)){return true}else{return false}}).withMessage('Protocol not supported'),
+    query('env').optional({checkFalsy:true}).isString().custom((value,{req,location,path})=> {   if(tenant_config[req.params.tenant].form.integration_environment.includes(value)){return true}else{return false}}).withMessage('Integration environment value not supported'),
+    query('protocol').optional({checkFalsy:true}).isString().custom((value,{req,location,path})=> {if(tenant_config[req.params.tenant].form.protocol.includes(value)){return true}else{return false}}).withMessage('Protocol not supported'),
     query('owned').optional({checkFalsy:true}).isBoolean().toBoolean(),
     query('waiting_deployment').optional({checkFalsy:true}).isBoolean().toBoolean(),
     query('created_after').optional({checkFalsy:true}).isString().isDate(),
@@ -100,7 +100,7 @@ const getServiceListValidation = () => {
 const postAgentValidation = () => {
   return [
     body('agents').exists().withMessage('No agents found').bail().isArray({min:1}).withMessage('No agents found').bail().toArray(),
-    body('agents.*.integration_environment').exists().withMessage('Required Field').isString().custom((value,{req,location,path})=> {   if(config[req.params.tenant].form.integration_environment.includes(value)){return true}else{return false}}).withMessage('Integration environment value not supported'),
+    body('agents.*.integration_environment').exists().withMessage('Required Field').isString().custom((value,{req,location,path})=> {   if(tenant_config[req.params.tenant].form.integration_environment.includes(value)){return true}else{return false}}).withMessage('Integration environment value not supported'),
     body('agents.*.type').exists().withMessage('Required Field').custom((value)=>{ if(config.agent.type.includes(value)){return true}else{return false}}).bail(),
     body('agents.*.entity_type').exists().withMessage('Required Field').bail().custom((value)=>{if(config.agent.entity_type.includes(value)){return true}else{return false}}).bail(),
     body('agents.*.entity_protocol').exists().withMessage('Required Field').bail().custom((value)=>{if(config.agent.entity_protocol.includes(value)){return true}else{return false}}).bail(),
@@ -149,8 +149,8 @@ const putBannerAlertValidation = () =>{
 
 const getServicesValidation = () => {
   return [
-    query('integration_environment').optional({checkFalsy:true}).isString().custom((value,{req,location,path})=> { if(config[req.params.tenant].form.integration_environment.includes(value)){return true}else{return false}}).withMessage('integration_environment value not supported'),
-    query('protocol').optional({checkFalsy:true}).isString().custom((value,{req,location,path})=> { if(config[req.params.tenant].form.protocol.includes(value)){return true}else{return false}}).withMessage('protocol value not supported'),
+    query('integration_environment').optional({checkFalsy:true}).isString().custom((value,{req,location,path})=> { if(tenant_configconfig[req.params.tenant].form.integration_environment.includes(value)){return true}else{return false}}).withMessage('integration_environment value not supported'),
+    query('protocol').optional({checkFalsy:true}).isString().custom((value,{req,location,path})=> { if(tenant_config[req.params.tenant].form.protocol.includes(value)){return true}else{return false}}).withMessage('protocol value not supported'),
     query('protocol_id').optional({checkFalsy:true}).isString().withMessage('protocol_id must be a string').if((value)=>{return(value.constructor === stringConstructor)}).isLength({min:2, max:128}).withMessage('protocol_id must be between 2 and 128 characters'),
     param('tenant').custom((value,{req,location,path})=>{if(value in tenant_config){return true}else{return false}}).withMessage('Invalid Tenant in the url'),
     query('tags').optional({checkFalsy:true}).custom((value,{req,location,path})=>{
@@ -358,11 +358,11 @@ const serviceValidationRules = (options,req) => {
         let success = true;
         try{
           value.map((contact,index)=>{
-            if(contact.email&&!contact.email.toLowerCase().match(reg.regEmail)||!config[tenant].form.contact_types.includes(contact.type)){
+            if(contact.email&&!contact.email.toLowerCase().match(reg.regEmail)||!tenant_config[tenant].form.contact_types.includes(contact.type)){
               throw new Error("Invalid contact format");
             }
           }); 
-          config[tenant].form.contact_requirements.forEach((requirement,index)=>{
+          tenant_config[tenant].form.contact_requirements.forEach((requirement,index)=>{
             let type_array =requirement.type.split(" ");
             let requirement_met = false; 
             value.forEach(contact=>{              
@@ -392,7 +392,7 @@ const serviceValidationRules = (options,req) => {
           }),
       body('*.protocol').exists({checkFalsy:true}).withMessage('Protocol missing').if(value=>{return value}).custom((value,{req,location,path})=> {
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
-        if(config[tenant].form.protocol.includes(value)){return true}else{return false}}).withMessage('Invalid Protocol value'),
+        if(tenant_config[tenant].form.protocol.includes(value)){return true}else{return false}}).withMessage('Invalid Protocol value'),
       body('*.client_id').if((value,{req,location,path})=>{
         let skip;
         if(options.null_client_id&&!value){
@@ -579,7 +579,7 @@ const serviceValidationRules = (options,req) => {
         let success=true;
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         try{
-          value.map((item,index)=>{if(!config[tenant].form.grant_types.includes(item)){
+          value.map((item,index)=>{if(!tenant_config[tenant].form.grant_types.includes(item)){
             //reuse_refresh_token(item);
             success=false}});
         }
@@ -638,7 +638,7 @@ const serviceValidationRules = (options,req) => {
           }).withMessage('Invalid Schema for private key'),
       body('*.application_type').custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1],'application_type')}).withMessage('Service application_type is missing').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).custom((value,{req,location,path})=>{
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
-        if(!value||config[tenant].form.application_type.includes(value)){
+        if(!value||tenant_config[tenant].form.application_type.includes(value)){
           
           return true
         }
@@ -648,7 +648,7 @@ const serviceValidationRules = (options,req) => {
       }).withMessage('Invalid application_type value'),
       body('*.token_endpoint_auth_method').custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1],'token_endpoint_auth_method')}).withMessage('Service token_endpoint_auth_method missing').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).custom((value,{req,location,path})=>{
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
-        if(!value||config[tenant].form.token_endpoint_auth_method.includes(value)){
+        if(!value||tenant_config[tenant].form.token_endpoint_auth_method.includes(value)){
           return true;
         }else{
           return false;
@@ -660,13 +660,13 @@ const serviceValidationRules = (options,req) => {
         }).if((value,{req,location,path})=>{
           return (['private_key_jwt','client_secret_jwt'].includes(req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method))}).custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1],'token_endpoint_auth_signing_alg')}).withMessage('Service token_endpoint_auth_method missing').if((value,{req,location,path})=> {return isNotEmpty(value)&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).
           custom((value,{req,location,path})=>{
-            return config[req.params.tenant].form.token_endpoint_auth_signing_alg.includes(value)}).
+            return tenant_config[req.params.tenant].form.token_endpoint_auth_signing_alg.includes(value)}).
             withMessage('Invalid Token Endpoint Signing Algorithm'),
       body('*.id_token_timeout_seconds').customSanitizer(value => {
         return sanitizeInteger(value);
         }).custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1],'id_token_timeout_seconds')}).withMessage('id_token_timeout_seconds missing').if((value,{req,location,path})=> {return isNotEmpty(value)&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).custom((value,{req,location,path})=> {
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
-        let max = config[tenant].form.id_token_timeout_seconds;
+        let max = tenant_config[tenant].form.id_token_timeout_seconds;
         if(isEmpty(value)||(value<=max&&value>=1)){return true}else{
           throw new Error("id_token_timeout_seconds must be an integer in specified range [1-"+ max +"]")
         }}),
@@ -674,7 +674,7 @@ const serviceValidationRules = (options,req) => {
         return sanitizeInteger(value);
         }).custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1],'access_token_validity_seconds')}).withMessage('access_token_validity_seconds missing').if((value,{req,location,path})=> {return isNotEmpty(value)&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).custom((value,{req,location,path})=> {
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
-        let max = config[tenant].form.access_token_validity_seconds;
+        let max = tenant_config[tenant].form.access_token_validity_seconds;
         if(isNotEmpty(value)&&value<=max&&value>=1){return true}else{
           throw new Error("access_token_timeout_seconds must be an integer in specified range [1-"+ max +"]")
         }}),
@@ -703,7 +703,7 @@ const serviceValidationRules = (options,req) => {
             return true;
           }
           let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
-          let max = config[tenant].form.refresh_token_validity_seconds;
+          let max = tenant_config[tenant].form.refresh_token_validity_seconds;
           if(isNotEmpty(value)&&value<=max&&value>=1){return true}else{
             throw new Error("Refresh Token Validity Seconds must be an integer in specified range [1-"+ max +"]")
           }
@@ -723,7 +723,7 @@ const serviceValidationRules = (options,req) => {
           }
         }
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
-        let max = config[tenant].form.device_code_validity_seconds;
+        let max = tenant_config[tenant].form.device_code_validity_seconds;
         
         if(isEmpty(value)){
           return true;
@@ -771,7 +771,7 @@ const serviceValidationRules = (options,req) => {
       }).custom((value)=> typeof(value)==='boolean').withMessage('Reuse refresh tokens must be a boolean'),
       body('*.integration_environment').exists({checkFalsy:true}).withMessage('Integration Environment missing').if(value=>{return value}).custom((value,{req,location,path})=> {
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
-        if(config[tenant].form.integration_environment.includes(value)){return true}else{return false}}).withMessage('Invalid Integration Environment'),
+        if(tenant_config[tenant].form.integration_environment.includes(value)){return true}else{return false}}).withMessage('Invalid Integration Environment'),
       body('*.clear_access_tokens_on_refresh').customSanitizer(value => {
         if((typeof(value)!=="boolean")){
           return false;
@@ -821,7 +821,7 @@ const serviceValidationRules = (options,req) => {
         let pos = path.match(/\[(.*?)\]/)[1];
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         let integration_environment = req.body[path.match(/\[(.*?)\]/)[1]].integration_environment;
-        let aup_uri_config = config[tenant].form.extra_fields.aup_uri;
+        let aup_uri_config = tenant_configconfig[tenant].form.extra_fields.aup_uri;
         if(aup_uri_config){
           if(isNotEmpty(value)){
             if(reg.regSimpleUrl.test(value)){
@@ -853,7 +853,7 @@ const serviceValidationRules = (options,req) => {
         let pos = path.match(/\[(.*?)\]/)[1];
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         let integration_environment = req.body[path.match(/\[(.*?)\]/)[1]].integration_environment;
-        let extra_fields = config[tenant].form.extra_fields;
+        let extra_fields = tenant_config[tenant].form.extra_fields;
         // Iterate through extra fields for code of conduct fields
         let error = false; 
         for(const extra_field in extra_fields){
@@ -871,7 +871,7 @@ const serviceValidationRules = (options,req) => {
         let pos = path.match(/\[(.*?)\]/)[1];
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         let integration_environment = req.body[path.match(/\[(.*?)\]/)[1]].integration_environment;
-        let extra_fields = config[tenant].form.extra_fields;
+        let extra_fields = tenant_config[tenant].form.extra_fields;
 
         if(!extra_fields.organization.active.includes(integration_environment)){
           return null;
@@ -883,7 +883,7 @@ const serviceValidationRules = (options,req) => {
         let pos = path.match(/\[(.*?)\]/)[1];
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         let integration_environment = req.body[path.match(/\[(.*?)\]/)[1]].integration_environment;
-        let extra_fields = config[tenant].form.extra_fields;
+        let extra_fields = tenant_config[tenant].form.extra_fields;
         if(!extra_fields.organization.required.includes(integration_environment)){
           return true;
         }
@@ -1015,7 +1015,7 @@ const formatServiceBooleanForValidation = (req,res,next) => {
         if(typeof service === 'object' && service !== null){
           req.body[index].service_boolean = {};
           let tenant = req.params.tenant?req.params.tenant:service.tenant;
-          let extra_fields = config[tenant].form.extra_fields;
+          let extra_fields = tenant_config[tenant].form.extra_fields;
           for(const extra_field in extra_fields){
             if(extra_fields[extra_field].tag==='coc'||extra_fields[extra_field].tag==='once'){
               req.body[index].service_boolean[extra_field] = req.body[index][extra_field]=== 'true'||req.body[index][extra_field]=== true?true:false;

@@ -683,10 +683,12 @@ const CopyService = (props)=> {
 }
 
 const NewService = (props)=>{
+  const [tenant] = useContext(tenantContext);
+
   return (
     <React.Fragment>
 
-      <ServiceForm user={props.user} initialValues={initialValues} {...props}/>
+      <ServiceForm user={props.user} initialValues={tenant?.form_config?.defaultValues||initialValues} {...props}/>
     </React.Fragment>
   )
 }

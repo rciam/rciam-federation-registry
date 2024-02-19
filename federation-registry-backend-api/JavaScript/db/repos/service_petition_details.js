@@ -150,8 +150,8 @@ class ServicePetitionDetailsRepository {
       try{
         let tenant_selector_array = [];
         for(const tenant in tenant_config){
-          if(config[tenant].service_integration_notification.enabled){
-            tenant_selector_array.push("(tenant='"+tenant+"' AND integration_environment IN ('" + config[tenant].service_integration_notification.integration_environments.join("','") +"'))")
+          if(tenant_config[tenant].service_integration_notification.enabled){
+            tenant_selector_array.push("(tenant='"+tenant+"' AND integration_environment IN ('" + tenant_config[tenant].service_integration_notification.integration_environments.join("','") +"'))")
           }
          }
          let tenant_selector = tenant_selector_array.length>0?" AND ("+tenant_selector_array.join(" OR ") + ") ":" AND false ";

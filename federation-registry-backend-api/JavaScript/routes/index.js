@@ -238,16 +238,16 @@ router.get('/tenants/:tenant',(req,res,next)=>{
     var clients = req.app.get('clients');
     db.tenants.getTheme(req.params.tenant).then(tenant=>{
       if(tenant){
-        if(config[req.params.tenant].form){
-          tenant.form_config = config[req.params.tenant].form;
+        if(tenant_config[req.params.tenant].form){
+          tenant.form_config = tenant_config[req.params.tenant].form;
         }
-        if(config[req.params.tenant]){
-          tenant.config = config[req.params.tenant];
+        if(tenant_config[req.params.tenant]){
+          tenant.config = tenant_config[req.params.tenant];
         }
-        if(config[req.params.tenant].restricted_env){
-          tenant.restricted_environments = config[req.params.tenant].restricted_env;
+        if(tenant_config[req.params.tenant].restricted_env){
+          tenant.restricted_environments = tenant_config[req.params.tenant].restricted_env;
         }
-        tenant.form_config.requested_attributes = requested_attributes.filter(x=> config[req.params.tenant].form.supported_attributes.includes(x.friendly_name));
+        tenant.form_config.requested_attributes = requested_attributes.filter(x=> tenant_config[req.params.tenant].form.supported_attributes.includes(x.friendly_name));
         tenant.logout_uri = clients[req.params.tenant].logout_uri;
         res.status(200).json(tenant).end();
       }
@@ -286,7 +286,7 @@ router.get('/tenants/:tenant/login',(req,res)=>{
   if(clients[req.params.tenant]){
     res.redirect(clients[req.params.tenant].authorizationUrl({
       client_id:clients[req.params.tenant].client_id,
-      scope: clients[req.params.tenant].scope.join(" "),
+      scope: clients[req.params.tenant].client_scopes.join(" "),
       redirect_uri: process.env.REDIRECT_URI+req.params.tenant
     }));
   }else{
@@ -301,7 +301,6 @@ router.get('/callback/:tenant',(req,res,next)=>{
   clients[req.params.tenant].callback(process.env.REDIRECT_URI+req.params.tenant,{code:req.query.code}).then(async response => {
     let code = await db.tokens.addToken(response.access_token,response.id_token);
     clients[req.params.tenant].userinfo(response.access_token).then(usr_info=>{
-    console.log(usr_info);
     saveUser(usr_info,req.params.tenant);
   }); // => Promise
     res.redirect(tenant_config[req.params.tenant].base_url+'/code/' + code.code);
@@ -1374,7 +1373,7 @@ function canReview(req,res,next){
   db.service_petition_details.getEnvironment(req.params.id,req.params.tenant).then(async environment=> {
     // Ckecking if review action is restricted for
     if(environment){
-      if(req.body.type==='approve'&&config[req.params.tenant].restricted_env.includes(environment)&&!req.user.role.actions.includes('review_restricted')){
+      if(req.body.type==='approve'&&tenant_config[req.params.tenant].restricted_env.includes(environment)&&!req.user.role.actions.includes('review_restricted')){
           res.status(401).json({error:'Requested action not authorised'});
       }
       else if(req.user.role.actions.includes('review_petition')||req.user.role.actions.includes('review_restricted')){
@@ -1383,7 +1382,7 @@ function canReview(req,res,next){
       else {
         await db.petition.canReviewOwn(req.params.id,req.user.sub).then(service=>{
   
-          if(service&&config[req.params.tenant].test_env.includes(environment)){
+          if(service&&tenant_config[req.params.tenant].test_env.includes(environment)){
             next();
           }
           else if(service){

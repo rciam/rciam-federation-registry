@@ -3,7 +3,6 @@ var logPath = __dirname + "/logs/logs.log";
 require('dotenv').config({path:envPath});
 const express = require('express');
 const {db} = require('./db');
-var config = require('./config');
 const cors = require('cors');
 var CryptoJS = require("crypto-js");
 var winston = require('winston');
@@ -16,7 +15,7 @@ const bannerAlertRoutes = require('./routes/banner_alerts.js');
 const serviceTagRoutes = require('./routes/service_tags.js');
 const notificationRoutes = require('./routes/notifications.js');
 const utilRoutes = require('./routes/util_routes.js');
-
+const fs = require('fs');
 
 
 
@@ -49,12 +48,27 @@ const app = express();
 
 
 app.set('hash',hash);
-
 db.tenants.getInit().then(async tenants => {
+  
   for (const tenant of tenants){
     tenant_config[tenant.name] = {
       base_url:tenant.base_url
+  }
+ 
+  const filePath = './tenant_config/'+tenant.name+'.json';
+  fs.readFile(filePath, 'utf8', (err, data) => {
+    if (err) {
+      console.error('Error reading file:', err);
+      return;
     }
+  
+    try {
+      // Parse the JSON data
+      tenant_config[tenant.name] = {...tenant_config[tenant.name],...JSON.parse(data)};
+    } catch (error) {
+      console.error('Error parsing tenant configuration:', error);
+    }
+  });
 
     await Issuer.discover(tenant.issuer_url).then((issuer)=>{
       clients[tenant.name] = new issuer.Client({
@@ -66,11 +80,10 @@ db.tenants.getInit().then(async tenants => {
       clients[tenant.name].client_id = tenant.client_id;
       clients[tenant.name].client_secret = tenant.client_secret;
       clients[tenant.name].issuer_url = tenant.issuer_url;
-      clients[tenant.name].scopes = config[tenant.name].client_scopes;
+      clients[tenant.name].client_scopes = tenant_config[tenant.name].client_scopes;
      }).catch(error=>{
       if(process.env.NODE_ENV!=='test-docker'&&process.env.NODE_ENV!=='test'){     
-        console.log("Unable to Discover Tenant ");
-        console.log(tenant);
+        console.log("Unable to Discover Tenant "+ tenant);
       }
     })
   }

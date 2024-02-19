@@ -1,6 +1,5 @@
 import React,{useState,useEffect,useContext,useRef} from 'react';
 import mapValues from 'lodash/mapValues';
-import {default as defaultInitialValues} from './initialValues';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {faCheckCircle,faBan,faSortDown,faExclamationTriangle,faPen} from '@fortawesome/free-solid-svg-icons';
 import Tabs from 'react-bootstrap/Tabs';
@@ -190,13 +189,13 @@ const ServiceForm = (props)=> {
               loadMetadata&&setMetadataLoaded(metadata);
               if(metadata.supported_attributes.length===0&&!metadata.entity_id){
                 if(!resolve){
-                  setRequestedAttributes(defaultInitialValues.requested_attributes);
+                  setRequestedAttributes(tenant.form_config.requested_attributes);
                 }
                 setMetadataWarning('Could not find an Entity Id or any Requested Attributes from this Metadata Url.');
               }
               else if(metadata.supported_attributes.length===0){
                 if(!resolve){
-                  setRequestedAttributes(defaultInitialValues.requested_attributes);
+                  setRequestedAttributes(tenant.form_config.defaultValues.requested_attributes);
                 }
                 setMetadataWarning('Could not find any Requested Attributes from this Metadata Url.');                
               }
@@ -206,7 +205,7 @@ const ServiceForm = (props)=> {
             }
             else{
               if(!resolve){
-                setRequestedAttributes(defaultInitialValues.requested_attributes);
+                setRequestedAttributes(tenant.form_config.defaultValues.requested_attributes);
               }
               metadata.supported_attributes = [];
               
@@ -215,7 +214,7 @@ const ServiceForm = (props)=> {
           }
           else {
             if(!resolve){
-              setRequestedAttributes(defaultInitialValues.requested_attributes);              
+              setRequestedAttributes(tenant.form_config.defaultValues.requested_attributes);              
             }
             setMetadataAyncError(response.statusText);
           }
