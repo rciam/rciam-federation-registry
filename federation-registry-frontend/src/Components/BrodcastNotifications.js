@@ -64,7 +64,7 @@ const BroadcastNotifications = (props) =>{
   const [logout,setLogout] = useState(false);
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
-  const tenant = useContext(tenantContext);
+  const [tenant] = useContext(tenantContext);
   const [responseTitle,setResponseTitle] = useState();
   const [responseMessage,setResponseMessage] = useState();
   const [recipients,setRecipients] = useState([]);
@@ -86,7 +86,7 @@ const BroadcastNotifications = (props) =>{
     notify_admins: yup.boolean().nullable().required(t('yup_required')),
     email_address: yup.string().nullable().email((object)=>{return object.value + ' is not a valid email address'}).required(t('yup_required')),
     contact_types: yup.array().nullable().min(1,t('yup_select_option')).of(yup.string().test("Test contact types","Pleace select one of the available options",function(contact_type){
-      if(tenant&&tenant[0]&&tenant[0].form_config.contact_types.includes(contact_type)){
+      if(tenant&&tenant.form_config.contact_types.includes(contact_type)){
         return true
       }
       else{
@@ -94,7 +94,7 @@ const BroadcastNotifications = (props) =>{
       }
     })),
     environments: yup.array().nullable().min(1,t('yup_select_option')).of(yup.string().test("Test environments","Pleace select one of the available options",function(environment){
-      if(tenant&&tenant[0]&&tenant[0].form_config.integration_environment.includes(environment)){
+      if(tenant&&tenant.form_config.integration_environment.includes(environment)){
         return true
       }
       else{
@@ -291,13 +291,13 @@ const BroadcastNotifications = (props) =>{
                   <Form.Check
                     name="all_contacts"
                     label="All Contact Types"
-                    checked={values.contact_types.length===tenant[0].form_config.contact_types.length}
+                    checked={values.contact_types.length===tenant.form_config.contact_types.length}
                     disabled={false}
                     onChange={(e)=>{
                       setFieldTouched('contact_types');
                       if(e.target.checked){
-                        setFieldValue('contact_types',[...tenant[0].form_config.contact_types])
-                        getRecipients({contact_types:[...tenant[0].form_config.contact_types],environments:values.environments,protocols:values.protocols});
+                        setFieldValue('contact_types',[...tenant.form_config.contact_types])
+                        getRecipients({contact_types:[...tenant.form_config.contact_types],environments:values.environments,protocols:values.protocols});
   
                       }
                       else{
@@ -309,7 +309,7 @@ const BroadcastNotifications = (props) =>{
                   />
                   
                   
-                  {tenant[0].form_config.contact_types.map((contact_type,index)=>{
+                  {tenant.form_config.contact_types.map((contact_type,index)=>{
                     return(
                         <Form.Check
                         name={contact_type}
@@ -384,13 +384,13 @@ const BroadcastNotifications = (props) =>{
                   <Form.Check
                     name="all_environments"
                     label="All Environments"
-                    checked={values.environments.length===tenant[0].form_config.integration_environment.length}
+                    checked={values.environments.length===tenant.form_config.integration_environment.length}
                     disabled={false}
                     onChange={(e)=>{
                       setFieldTouched('environments');
                       if(e.target.checked){
-                        getRecipients({contact_types:values.contact_types,environments:[...tenant[0].form_config.integration_environment],protocols:values.protocols});
-                        setFieldValue('environments',[...tenant[0].form_config.integration_environment])
+                        getRecipients({contact_types:values.contact_types,environments:[...tenant.form_config.integration_environment],protocols:values.protocols});
+                        setFieldValue('environments',[...tenant.form_config.integration_environment])
                       }
                       else{
                         setFieldValue('environments',[]);
@@ -400,7 +400,7 @@ const BroadcastNotifications = (props) =>{
                     className={"col-form-label checkbox"}
                   />
                   
-                  {tenant[0].form_config.integration_environment.map((environment)=>{
+                  {tenant.form_config.integration_environment.map((environment)=>{
                     return(
                         <Form.Check
                         name={environment}

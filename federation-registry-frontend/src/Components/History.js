@@ -31,7 +31,7 @@ export const HistoryRequest = () =>{
   // eslint-disable-next-line
   const [user] = useContext(userContext);
   const [oldPetition,setOldPetition] = useState();
-  const tenant = useContext(tenantContext);
+  const [tenant] = useContext(tenantContext);
   const [changes,setChanges] = useState();
    
 
@@ -43,7 +43,7 @@ export const HistoryRequest = () =>{
   useEffect(()=>{
     if(petition&&oldPetition){
 
-      let helper = calcDiff(oldPetition.petition,petition.petition,tenant[0].form_config,diff);
+      let helper = calcDiff(oldPetition.petition,petition.petition,tenant.form_config,diff);
       let multivalue_attributes = [];
       for (const service_property in oldPetition.petition) oldPetition.petition[service_property]&&typeof(oldPetition.petition[service_property])==='object'&&multivalue_attributes.push(service_property); 
       for (const service_property in petition.petition) petition.petition[service_property]&&typeof(petition.petition[service_property])==='object'&&!multivalue_attributes.includes(service_property)&&multivalue_attributes.push(service_property);

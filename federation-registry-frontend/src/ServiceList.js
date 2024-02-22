@@ -519,7 +519,7 @@ const ServiceList= (props)=> {
       <ConfirmationModal active={confirmationData.action?true:false} close={()=>{setConfirmationData({})}} action={()=>{if(confirmationData.action==='delete_service'){deleteService(...confirmationData.args)}else{deletePetition(...confirmationData.args)} setConfirmationData({});}} title={confirmationData.title} accept={'Yes'} decline={'No'}/>
       <div>
         <LoadingBar loading={initialLoading}>
-        {requestReviewCount>0&&user.review_restricted?<Collapse in={showNotification}>
+        {requestReviewCount>0&&user.actions.includes('review_restricted')?<Collapse in={showNotification}>
           <div>
             <Alert variant='primary' className="invitation_alert">
               {requestReviewCount>1?'There are ':'There is '} <span>{requestReviewCount}</span>{' '}
@@ -764,7 +764,7 @@ const ServiceList= (props)=> {
                       <input type='checkbox' name='filter' checked={filters.showOutdated} onChange={()=> setFilters({...filters,showOutdated:!filters.showOutdated})}/>
                     </div>
                   </OverlayTrigger>
-                  {user.view_all?
+                  {user.actions.includes['get_service']?
                     <React.Fragment>
                       <OverlayTrigger
                                 placement='top'
@@ -938,7 +938,7 @@ function TableItem(props) {
           <Row>
             <Col className='controls-col  controls-col-buttons'>
             <CopyDialog service_id={props.service.service_id} show={showCopyDialog} toggleCopyDialog={toggleCopyDialog} current_environment={props.service.integration_environment} />
-                {props.service.state==='error'&&user.view_errors?
+                {props.service.state==='error'&&user.actions.includes('view_errors')?
                 <div className="notification">
                   <FontAwesomeIcon icon={faExclamation} className="fa-exclamation"/>
                   <FontAwesomeIcon icon={faCircle} className="fa-circle"/>
@@ -948,7 +948,7 @@ function TableItem(props) {
                   placement='top'
                   overlay={
                     <Tooltip id={`tooltip-top`}>
-                      {props.service.state==='error'&&user.view_errors?'Deployment error click to view':'View Service'}
+                      {props.service.state==='error'&&user.actions.includes('view_errors')?'Deployment error click to view':'View Service'}
                     </Tooltip>
                   }
                 >
@@ -989,13 +989,13 @@ function TableItem(props) {
               :null
               }
               {
-                (user.review||
+                ((user.actions.includes('review_own_petition')||user.actions.includes('review_petition'))||
                   (props.service.owned&&tenant.config.test_env.includes(props.service.integration_environment)))
                 &&props.service.petition_id
                 &&!(props.service.status==='changes')
-                &&(props.service.status!=='request_review'||(props.service.status==='request_review'&&user.review_restricted))?
+                &&(props.service.status!=='request_review'||(props.service.status==='request_review'&&user.actions.includes('review_restricted')))?
               <React.Fragment>
-              {props.service.status==='request_review'&&user.review_restricted?
+              {props.service.status==='request_review'&&user.actions.includes('review_restricted')?
                 <div className="notification">
                 <FontAwesomeIcon icon={faExclamation} className="fa-exclamation"/>
                 <FontAwesomeIcon icon={faCircle} className="fa-circle"/>
@@ -1006,7 +1006,7 @@ function TableItem(props) {
                 className='button-link'
                 to={{
                 pathname:'/'+tenant_name+(props.service.service_id?"/services/"+props.service.service_id:"")+ (props.service.petition_id?"/requests/"+props.service.petition_id:"") + "/review"
-              }}><Button variant="success" disabled={props.service.status==="request_review"&&!user.review_restricted}><FontAwesomeIcon icon={faEdit}/>{t('button_review')}</Button></Link>
+              }}><Button variant="success" disabled={props.service.status==="request_review"&&!user.actions.includes('review_restricted')}><FontAwesomeIcon icon={faEdit}/>{t('button_review')}</Button></Link>
               </React.Fragment>
               :null}
               {(user.actions.includes('review_petition')&&props.service.status==='changes'&&!props.service.owned)||(!user.actions.includes('review_restricted')&&props.service.status==='request_review'&&!props.service.owned)?

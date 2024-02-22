@@ -4,6 +4,7 @@ const qs = require('qs');
 const {v1:uuidv1} = require('uuid');
 const axios = require('axios').default;
 const {sendMail,sendInvitationMail,sendMultipleInvitations,sendDeploymentMail,delay} = require('../functions/helpers.js');
+const {getUserFromClaims} = require('../functions/util_functions.js')
 const {db} = require('../db');
 var router = require('express').Router();
 var config = require('../config');
@@ -402,31 +403,11 @@ router.put('/tenants/:tenant/services/:id/deployment',authenticate,(req,res,next
 router.get('/tenants/:tenant/user',authenticate,(req,res,next)=>{
   try{
     var clients = req.app.get('clients');
-
     let federation_authtoken = req.cookies.federation_authtoken||req.headers.authorization.split(" ")[1]
     clients[req.params.tenant].userinfo(federation_authtoken) // => Promise
     .then(function (userinfo) {
       let user = userinfo;
-      user = generatePreferredUsername(user);
-      if(req.user.role.actions.includes('review_own_petition')||req.user.role.actions.includes('review_petition')){
-        user.review = true;
-      }
-      if(req.user.role.actions.includes('get_service')){
-        user.view_all = true;
-      }
-      else{
-        user.view_all = false;
-      }
-      if(req.user.role.actions.includes('view_errors')){
-        user.view_errors = true;
-      }
-      // Check if user has restricted access
-      if(req.user.role.actions.includes('review_restricted')){
-        user.review_restricted = true;
-      }
-      else{
-        user.review_restricted = false;
-      }
+      user = generatePreferredUsername(user,req.params.tenant);
       user.actions = req.user.role.actions;
       user.role = req.user.role.name;
       res.end(JSON.stringify({user}));
@@ -1408,9 +1389,12 @@ function canReview(req,res,next){
 
 }
 
+
+
 // Save new User to db. Gets called on Authentication
 const saveUser=(userinfo,tenant)=>{
   return db.tx('user-check',async t=>{
+    userinfo = getUserFromClaims(userinfo,tenant);
     return t.user.getUser(userinfo.sub,tenant).then(async user=>{
       if(user){
         if(!user.eduperson_entitlement||typeof(user.eduperson_entitlement)!=='object'){
@@ -1432,7 +1416,7 @@ const saveUser=(userinfo,tenant)=>{
             userinfo.role_id = role.id.toString();
             
             // Generate preferred username from given name and family name
-            userinfo = generatePreferredUsername(userinfo);
+            userinfo = generatePreferredUsername(userinfo,tenant);
 
             for (const property in userinfo) {
               if(user.hasOwnProperty(property)&&userinfo[property]!==user[property]){
@@ -1469,11 +1453,7 @@ const saveUser=(userinfo,tenant)=>{
           }
         });
       }
-      
-
-
     })
-    
   });
 }
 
@@ -1501,9 +1481,10 @@ const isAvailable= async (t,id,protocol,petition_id,service_id,tenant,environmen
   }
 }
 
-const generatePreferredUsername = (userinfo) => {
+const generatePreferredUsername = (userinfo,tenant) => {
+  // userinfo[tenant_config[tenant].claims.username_claim]&&
   if(!userinfo.preferred_username&&userinfo.given_name&&userinfo.family_name){
-    userinfo.preferred_username= (userinfo.given_name.replace(/[^a-zA-Z0-9]/g,'_').charAt(0)+userinfo.family_name.replace(/[^a-zA-Z0-9]/g,'_')).toLowerCase();;
+    userinfo.preferred_username = (userinfo.given_name.replace(/[^a-zA-Z0-9]/g,'_').charAt(0)+userinfo.family_name.replace(/[^a-zA-Z0-9]/g,'_')).toLowerCase();;
   }
   return userinfo;
 }

@@ -120,7 +120,7 @@ const ServiceForm = (props)=> {
 
     // Check restrictions for review
     if(props.review){
-      if(tenant.restricted_environments.includes(props.initialValues.integration_environment)&&!props.user.review_restricted){
+      if(tenant.restricted_environments.includes(props.initialValues.integration_environment)&&!props.user.actions.includes('review_restricted')){
         setRestrictReview(true);
       }
     }
@@ -418,7 +418,11 @@ const ServiceForm = (props)=> {
       }
       return true;
     }),
-    country:yup.string().nullable().test('testCountry','Select one of the available options',function(value){return countries.includes(value)}).required(t('yup_required')),
+    country:yup.string().nullable().when('integration_environment', {
+      is: (integration_environment) => tenant?.form_config?.more_info?.country?.required.includes(integration_environment),
+      then: yup.string().test('testCountry','Select one of the available options',function(value){return countries.includes(value)}).required(t('yup_required')),
+      otherwise: yup.string().nullable(),
+    }),
     service_description:yup.string().nullable().required(t('yup_required')).max(1000,'Exceeded maximum characters (1000)'),
     requested_attributes: yup.array().nullable().of(yup.object().shape({
       name:yup.string().nullable().required(t('yup_required')).min(1,t('yup_required')).required(t('yup_required')).max(512,'Exceeded maximum characters (512)'),
@@ -851,10 +855,10 @@ const ServiceForm = (props)=> {
   const postApi= async (data)=>{
     data = generateValues(data);
     let organization_id;
-    if(tenant.form_config.extra_fields.organization.active.includes(data.integration_environment)){
+    if(!tenant.form_config.extra_fields.organization.hide.includes(data.integration_environment)){
       organization_id = await addOrganization(data);
     }
-    if(organization_id||!tenant.form_config.extra_fields.organization.active.includes(data.integration_environment)){
+    if(organization_id||tenant.form_config.extra_fields.organization.hide.includes(data.integration_environment)){
       data.organization_id = organization_id;
       if(!props.type){
         createNewPetition(data);
@@ -1078,7 +1082,7 @@ const ServiceForm = (props)=> {
                           changed={props.changes?props.changes.service_description:null}
                         />
                       </InputRow>
-                      <InputRow  moreInfo={tenant.form_config.more_info.country} title={'Select country'} required={true} extraClass='select-col' error={errors.country} touched={touched.country}>
+                      <InputRow  moreInfo={tenant.form_config.more_info.country} title={'Select country'} required={tenant?.form_config?.more_info?.country?.required.includes(values.integration_environment)} extraClass='select-col' error={errors.country} touched={touched.country}>
                         <CountrySelect
                           onBlur={handleBlur}
                           placeholder={'Select country'}
@@ -1090,7 +1094,7 @@ const ServiceForm = (props)=> {
                           changed={props.changes?props.changes.country:null}
                         />
                       </InputRow>
-                      {tenant.form_config.extra_fields.organization.active.includes(values.integration_environment)?
+                      {tenant.form_config.extra_fields.organization&&!tenant?.form_config?.extra_fields?.organization?.hide.includes(values.integration_environment)?
                       <React.Fragment>
                         <InputRow  moreInfo={tenant.form_config.more_info.organization_name} required={tenant.form_config.extra_fields.organization.required.includes(values.integration_environment)} title="Organisation" description="Search for your organisation" error={errors.organization_name} touched={touched.organization_name}>
                             <OrganizationField
@@ -1497,7 +1501,7 @@ const ServiceForm = (props)=> {
                             copybutton={props.copybutton}
                             isInvalid={hasSubmitted?!!(errors.entity_id&&!checkingAvailability):(!!errors.entity_id&&touched.entity_id&&!checkingAvailability)}
                             onBlur={handleBlur}
-                            disabled={disabled}
+                            disabled={disabled||service_id}
                             changed={props.changes?props.changes.entity_id:null}
                             isloading={values.entity_id&&values.entity_id!==checkedId&&checkingAvailability?1:0}
                            />

@@ -21,7 +21,7 @@ import { useCookies } from 'react-cookie';
 
 
 const Routes = (props) => {
-  const tenant = useContext(tenantContext);
+  const [tenant] = useContext(tenantContext);
 
   return(
   <div className="content-container">
@@ -44,7 +44,7 @@ const Routes = (props) => {
       </ProtectedRoute>
       <ProtectedRoute exact path="/:tenant_name/services">
         <div className="links">
-          <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/home"}>{props.t('link_home')}</Link>
+          <Link to={"/"+ tenant?.name +"/home"}>{props.t('link_home')}</Link>
           <span className="link-seperator">/</span>
           {props.t('link_petitions')}
         </div>
@@ -52,7 +52,7 @@ const Routes = (props) => {
       </ProtectedRoute>
       <ProtectedRoute user={props.user} path="/:tenant_name/userinfo">
         <div className="links">
-          <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/home"}>{props.t('link_home')}</Link>
+          <Link to={"/"+ tenant?.name +"/home"}>{props.t('link_home')}</Link>
           <span className="link-seperator">/</span>
            View User Profile
         </div>
@@ -60,9 +60,9 @@ const Routes = (props) => {
       </ProtectedRoute>
       <ProtectedRoute user={props.user} path="/:tenant_name/form/copy">
         <div className="links">
-          <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/home"}>{props.t('link_home')}</Link>
+          <Link to={"/"+ tenant?.name +"/home"}>{props.t('link_home')}</Link>
           <span className="link-seperator">/</span>
-          <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/services"}>{props.t('link_petitions')}</Link>
+          <Link to={"/"+ tenant?.name +"/services"}>{props.t('link_petitions')}</Link>
           <span className="link-seperator">/</span>
           New Service
         </div>
@@ -70,9 +70,9 @@ const Routes = (props) => {
       </ProtectedRoute>
       <ProtectedRoute user={props.user} path="/:tenant_name/form/new">
         <div className="links">
-          <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/home"}>{props.t('link_home')}</Link>
+          <Link to={"/"+ tenant?.name +"/home"}>{props.t('link_home')}</Link>
           <span className="link-seperator">/</span>
-          <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/services"}>{props.t('link_petitions')}</Link>
+          <Link to={"/"+ tenant?.name +"/services"}>{props.t('link_petitions')}</Link>
           <span className="link-seperator">/</span>
           New Service
         </div>
@@ -80,9 +80,9 @@ const Routes = (props) => {
       </ProtectedRoute>
       <ProtectedRoute user={props.user} path="/:tenant_name/invitations">
         <div className="links">
-          <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/home"}>{props.t('link_home')}</Link>
+          <Link to={"/"+ tenant?.name +"/home"}>{props.t('link_home')}</Link>
           <span className="link-seperator">/</span>
-          <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/services"}>{props.t('link_petitions')}</Link>
+          <Link to={"/"+ tenant?.name +"/services"}>{props.t('link_petitions')}</Link>
           <span className="link-seperator">/</span>
           Invitations
         </div>
@@ -90,9 +90,9 @@ const Routes = (props) => {
       </ProtectedRoute>
       <ProtectedRoute user={props.user} exact path="/:tenant_name/services/:service_id/edit">
         <div className="links">
-          <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/home"}>{props.t('link_home')}</Link>
+          <Link to={"/"+ tenant?.name +"/home"}>{props.t('link_home')}</Link>
           <span className="link-seperator">/</span>
-          <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/services"}>{props.t('link_petitions')}</Link>
+          <Link to={"/"+ tenant?.name +"/services"}>{props.t('link_petitions')}</Link>
           <span className="link-seperator">/</span>
           Edit Service
         </div>
@@ -100,7 +100,7 @@ const Routes = (props) => {
       </ProtectedRoute>
       <ProtectedRoute user={props.user} exact path="/:tenant_name/notifications/broadcast" actions={['send_notifications']} >
         <div className="links">
-          <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/home"}>{props.t('link_home')}</Link>
+          <Link to={"/"+ tenant?.name +"/home"}>{props.t('link_home')}</Link>
           <span className="link-seperator">/</span>
           Send Broadcast Notifications
         </div>
@@ -108,7 +108,7 @@ const Routes = (props) => {
       </ProtectedRoute>
       <ProtectedRoute user={props.user} exact path="/:tenant_name/notifications/outdated" actions={['send_notifications']} >
         <div className="links">
-          <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/home"}>{props.t('link_home')}</Link>
+          <Link to={"/"+ tenant?.name +"/home"}>{props.t('link_home')}</Link>
           <span className="link-seperator">/</span>
           Send Outdated Notifications
         </div>
@@ -116,9 +116,9 @@ const Routes = (props) => {
       </ProtectedRoute>
       <ProtectedRoute user={props.user} exact path="/:tenant_name/requests/:petition_id/edit">
         <div className="links">
-          <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/home"}>{props.t('link_home')}</Link>
+          <Link to={"/"+ tenant?.name +"/home"}>{props.t('link_home')}</Link>
           <span className="link-seperator">/</span>
-          <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/services"}>{props.t('link_petitions')}</Link>
+          <Link to={"/"+ tenant?.name +"/services"}>{props.t('link_petitions')}</Link>
           <span className="link-seperator">/</span>
           Edit Service
         </div>
@@ -126,9 +126,9 @@ const Routes = (props) => {
       </ProtectedRoute>
       <ProtectedRoute user={props.user} exact path="/:tenant_name/services/:service_id/requests/:petition_id/edit">
         <div className="links">
-          <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/home"}>{props.t('link_home')}</Link>
+          <Link to={"/"+ tenant?.name +"/home"}>{props.t('link_home')}</Link>
           <span className="link-seperator">/</span>
-          <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/services"}>{props.t('link_petitions')}</Link>
+          <Link to={"/"+ tenant?.name +"/services"}>{props.t('link_petitions')}</Link>
           <span className="link-seperator">/</span>
           Edit Service
         </div>
@@ -136,9 +136,9 @@ const Routes = (props) => {
       </ProtectedRoute>
       <ProtectedRoute user={props.user} exact path="/:tenant_name/requests/:petition_id/groups/:group_id">
         <div className="links">
-          <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/home"}>{props.t('link_home')}</Link>
+          <Link to={"/"+ tenant?.name +"/home"}>{props.t('link_home')}</Link>
           <span className="link-seperator">/</span>
-          <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/services"}>{props.t('link_petitions')}</Link>
+          <Link to={"/"+ tenant?.name +"/services"}>{props.t('link_petitions')}</Link>
           <span className="link-seperator">/</span>
           {props.t('group_page')}
         </div>
@@ -146,9 +146,9 @@ const Routes = (props) => {
       </ProtectedRoute>
       <ProtectedRoute user={props.user} exact path="/:tenant_name/services/:service_id/groups/:group_id">
         <div className="links">
-          <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/home"}>{props.t('link_home')}</Link>
+          <Link to={"/"+ tenant?.name +"/home"}>{props.t('link_home')}</Link>
           <span className="link-seperator">/</span>
-          <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/services"}>{props.t('link_petitions')}</Link>
+          <Link to={"/"+ tenant?.name +"/services"}>{props.t('link_petitions')}</Link>
           <span className="link-seperator">/</span>
           {props.t('group_page')}
         </div>
@@ -156,9 +156,9 @@ const Routes = (props) => {
       </ProtectedRoute>
       <ProtectedRoute user={props.user} path="/:tenant_name/requests/:petition_id/groups/:group_id/contact">
         <div className="links">
-          <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/home"}>{props.t('link_home')}</Link>
+          <Link to={"/"+ tenant?.name +"/home"}>{props.t('link_home')}</Link>
           <span className="link-seperator">/</span>
-          <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/services"}>{props.t('link_petitions')}</Link>
+          <Link to={"/"+ tenant?.name +"/services"}>{props.t('link_petitions')}</Link>
           <span className="link-seperator">/</span>
           {"Contact Owners"}
         </div>
@@ -166,9 +166,9 @@ const Routes = (props) => {
       </ProtectedRoute>
       <ProtectedRoute user={props.user} path="/:tenant_name/services/:service_id/groups/:group_id/contact">
         <div className="links">
-          <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/home"}>{props.t('link_home')}</Link>
+          <Link to={"/"+ tenant?.name +"/home"}>{props.t('link_home')}</Link>
           <span className="link-seperator">/</span>
-          <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/services"}>{props.t('link_petitions')}</Link>
+          <Link to={"/"+ tenant?.name +"/services"}>{props.t('link_petitions')}</Link>
           <span className="link-seperator">/</span>
           {"Contact Owners"}
         </div>
@@ -185,9 +185,9 @@ const Routes = (props) => {
       </ProtectedRoute>
       <ProtectedRoute user={props.user} exact path="/:tenant_name/services/:service_id/requests/:petition_id/review" admin={true}>
           <div className="links">
-            <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/home"}>{props.t('link_home')}</Link>
+            <Link to={"/"+ tenant?.name +"/home"}>{props.t('link_home')}</Link>
             <span className="link-seperator">/</span>
-            <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/services"}>{props.t('link_petitions')}</Link>
+            <Link to={"/"+ tenant?.name +"/services"}>{props.t('link_petitions')}</Link>
             <span className="link-seperator">/</span>
             Review
           </div>
@@ -195,9 +195,9 @@ const Routes = (props) => {
       </ProtectedRoute>
       <ProtectedRoute user={props.user} exact path="/:tenant_name/requests/:petition_id/review" admin={true}>
           <div className="links">
-            <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/home"}>{props.t('link_home')}</Link>
+            <Link to={"/"+ tenant?.name +"/home"}>{props.t('link_home')}</Link>
             <span className="link-seperator">/</span>
-            <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/services"}>{props.t('link_petitions')}</Link>
+            <Link to={"/"+ tenant?.name +"/services"}>{props.t('link_petitions')}</Link>
             <span className="link-seperator">/</span>
             Review
           </div>
@@ -205,9 +205,9 @@ const Routes = (props) => {
       </ProtectedRoute>
       <ProtectedRoute user={props.user} exact path="/:tenant_name/services/:service_id">
           <div className="links">
-            <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/home"}>{props.t('link_home')}</Link>
+            <Link to={"/"+ tenant?.name +"/home"}>{props.t('link_home')}</Link>
             <span className="link-seperator">/</span>
-            <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/services"}>{props.t('link_petitions')}</Link>
+            <Link to={"/"+ tenant?.name +"/services"}>{props.t('link_petitions')}</Link>
             <span className="link-seperator">/</span>
             View Service
           </div>
@@ -215,9 +215,9 @@ const Routes = (props) => {
       </ProtectedRoute>
       <ProtectedRoute user={props.user} exact path="/:tenant_name/services/:service_id/requests/:petition_id/view_request">
           <div className="links">
-            <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/home"}>{props.t('link_home')}</Link>
+            <Link to={"/"+ tenant?.name +"/home"}>{props.t('link_home')}</Link>
             <span className="link-seperator">/</span>
-            <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/services"}>{props.t('link_petitions')}</Link>
+            <Link to={"/"+ tenant?.name +"/services"}>{props.t('link_petitions')}</Link>
             <span className="link-seperator">/</span>
             View Request
           </div>
@@ -225,9 +225,9 @@ const Routes = (props) => {
       </ProtectedRoute>
       <ProtectedRoute user={props.user} exact path="/:tenant_name/requests/:petition_id/view_request">
           <div className="links">
-            <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/home"}>{props.t('link_home')}</Link>
+            <Link to={"/"+ tenant?.name +"/home"}>{props.t('link_home')}</Link>
             <span className="link-seperator">/</span>
-            <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/services"}>{props.t('link_petitions')}</Link>
+            <Link to={"/"+ tenant?.name +"/services"}>{props.t('link_petitions')}</Link>
             <span className="link-seperator">/</span>
             View Request
           </div>
@@ -235,9 +235,9 @@ const Routes = (props) => {
       </ProtectedRoute>
       <ProtectedRoute user={props.user} exact path="/:tenant_name/services/:service_id/requests/:petition_id">
           <div className="links">
-            <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/home"}>{props.t('link_home')}</Link>
+            <Link to={"/"+ tenant?.name +"/home"}>{props.t('link_home')}</Link>
             <span className="link-seperator">/</span>
-            <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/services"}>{props.t('link_petitions')}</Link>
+            <Link to={"/"+ tenant?.name +"/services"}>{props.t('link_petitions')}</Link>
             <span className="link-seperator">/</span>
             View Service
           </div>
@@ -245,9 +245,9 @@ const Routes = (props) => {
       </ProtectedRoute>
       <ProtectedRoute user={props.user} exact path="/:tenant_name/requests/:petition_id">
           <div className="links">
-            <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/home"}>{props.t('link_home')}</Link>
+            <Link to={"/"+ tenant?.name +"/home"}>{props.t('link_home')}</Link>
             <span className="link-seperator">/</span>
-            <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/services"}>{props.t('link_petitions')}</Link>
+            <Link to={"/"+ tenant?.name +"/services"}>{props.t('link_petitions')}</Link>
             <span className="link-seperator">/</span>
             View Service
           </div>
@@ -255,9 +255,9 @@ const Routes = (props) => {
       </ProtectedRoute>
       <ProtectedRoute user={props.user} path="/:tenant_name/form/view">
           <div className="links">
-            <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/home"}>{props.t('link_home')}</Link>
+            <Link to={"/"+ tenant?.name +"/home"}>{props.t('link_home')}</Link>
             <span className="link-seperator">/</span>
-            <Link to={"/"+ (tenant&&tenant[0]?tenant[0].name:null) +"/services"}>{props.t('link_petitions')}</Link>
+            <Link to={"/"+ tenant?.name +"/services"}>{props.t('link_petitions')}</Link>
             <span className="link-seperator">/</span>
             View Service
           </div>
@@ -273,8 +273,8 @@ const Routes = (props) => {
 
 
 const TenantRoute = (props) => {
-  const tenant = useContext(tenantContext);
-  const user = useContext(userContext);
+  const [tenant] = useContext(tenantContext);
+  const [user] = useContext(userContext);
   const [cookies] = useCookies(['federation_logoutkey']);
 
   const childrenWithProps = React.Children.map(props.children, child =>
@@ -285,10 +285,10 @@ const TenantRoute = (props) => {
     <Route
       path={props.path}
       render={({ location }) =>
-        !(tenant && tenant[0] && (props.computedMatch.params.tenant_name === tenant[0].name)) ?(
+        !(tenant && (props.computedMatch.params.tenant_name === tenant.name)) ?(
           <TenantHandler/>
         ) :
-        cookies.federation_logoutkey&&!(user&&user[0])? 
+        cookies.federation_logoutkey&&!user? 
         <UserHandler/>:
         (
           childrenWithProps
@@ -301,15 +301,16 @@ const TenantRoute = (props) => {
 
 
 const ProtectedRoute= (props)=> {
-  const user = useContext(userContext);
-  const tenant = useContext(tenantContext);
+  const [user] = useContext(userContext);
+  const [tenant] = useContext(tenantContext);
   //let {tenant_name} = useParams();
   const [cookies] = useCookies(['federation_logoutkey']);
 
   useEffect(()=>{
-    if(!(tenant&&tenant[0]&&tenant[0].name)||!(user&&user[0])){
+    if(!(tenant?.name)||!user){
       localStorage.setItem('url', props.location.pathname);
     }
+  
   },[props.location.pathname,tenant,user]);
 
   const authorisedActions = (actions) =>{
@@ -331,19 +332,17 @@ const ProtectedRoute= (props)=> {
     <Route
       path={props.path}
       render={({ location }) =>
-        !(tenant && tenant[0] && (props.computedMatch.params.tenant_name === tenant[0].name)) ?
+        !(tenant && (props.computedMatch.params.tenant_name === tenant.name)) ?
         <TenantHandler/>:
-        //localStorage.getItem('user')
-        // user && user[0] && (!(props.admin && !user[0].review)||props.location.state.integration_environment==='development')
-        cookies.federation_logoutkey&&!(user&&user[0])? 
+        cookies.federation_logoutkey&&!user? 
           <UserHandler/>:
-        cookies.federation_logoutkey&&(user&&user[0])&&(!props.actions||authorisedActions(user[0].actions))?
+        cookies.federation_logoutkey&&user&&(!props.actions||authorisedActions(user.actions))?
         (
           childrenWithProps
         ) : (
           <Redirect
             to={{
-              pathname: "/"+tenant[0].name+"/home",
+              pathname: "/"+tenant.name+"/home",
               state: { from: location }
             }}
           />

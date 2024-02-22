@@ -16,7 +16,7 @@ const serviceTagRoutes = require('./routes/service_tags.js');
 const notificationRoutes = require('./routes/notifications.js');
 const utilRoutes = require('./routes/util_routes.js');
 const fs = require('fs');
-
+const path = require('path'); 
 
 
 
@@ -54,8 +54,7 @@ db.tenants.getInit().then(async tenants => {
     tenant_config[tenant.name] = {
       base_url:tenant.base_url
   }
- 
-  const filePath = './tenant_config/'+tenant.name+'.json';
+  const filePath = path.join(__dirname, 'tenant_config', tenant.name + '.json');
   fs.readFile(filePath, 'utf8', (err, data) => {
     if (err) {
       console.error('Error reading file:', err);

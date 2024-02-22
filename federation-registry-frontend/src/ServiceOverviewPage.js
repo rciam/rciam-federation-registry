@@ -1,8 +1,9 @@
-import React,{useEffect,useState} from 'react';
+import React,{useEffect,useState,useContext} from 'react';
 import {useParams } from "react-router-dom";
 import {LoadingPage} from './Components/LoadingPage.js';
 import config from './config.json';
 import ServiceOverviewTable from './Components/ServiceOverviewTable.js'
+import {tenantContext} from './context.js';
 
 const ServiceOverviewPage = ()=> {
 
@@ -10,6 +11,7 @@ const ServiceOverviewPage = ()=> {
   let {tenant_name} = useParams();
   const [loading,setLoading] = useState(false);
   const [services,setServices] = useState([]);
+  const [tenant] = useContext(tenantContext);
 
 
    useEffect(()=>{
@@ -18,7 +20,7 @@ const ServiceOverviewPage = ()=> {
     },[])
 
    const getServices = () => {
-    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/services?integration_environment=production&exclude_tags=test', {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/services?integration_environment='+tenant.config.home_page_services_integration_env+'&exclude_tags=test', {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {

@@ -149,7 +149,7 @@ const putBannerAlertValidation = () =>{
 
 const getServicesValidation = () => {
   return [
-    query('integration_environment').optional({checkFalsy:true}).isString().custom((value,{req,location,path})=> { if(tenant_configconfig[req.params.tenant].form.integration_environment.includes(value)){return true}else{return false}}).withMessage('integration_environment value not supported'),
+    query('integration_environment').optional({checkFalsy:true}).isString().custom((value,{req,location,path})=> { if(tenant_config[req.params.tenant].form.integration_environment.includes(value)){return true}else{return false}}).withMessage('integration_environment value not supported'),
     query('protocol').optional({checkFalsy:true}).isString().custom((value,{req,location,path})=> { if(tenant_config[req.params.tenant].form.protocol.includes(value)){return true}else{return false}}).withMessage('protocol value not supported'),
     query('protocol_id').optional({checkFalsy:true}).isString().withMessage('protocol_id must be a string').if((value)=>{return(value.constructor === stringConstructor)}).isLength({min:2, max:128}).withMessage('protocol_id must be between 2 and 128 characters'),
     param('tenant').custom((value,{req,location,path})=>{if(value in tenant_config){return true}else{return false}}).withMessage('Invalid Tenant in the url'),
@@ -315,7 +315,11 @@ const serviceValidationRules = (options,req) => {
       body('*.tenant').custom((value,{req,location,path})=>{if(options.tenant_param||req.body[path.match(/\[(.*?)\]/)[1]].tenant in tenant_config){return true}else{return false}}).withMessage('Invalid Tenant'),
       body('*.service_name').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1],'service_name')}).withMessage('Service name missing').if((value,{req,location,path})=> { return value}).isString().withMessage('Service name must be a string').isLength({min:2, max:256}).withMessage('Service name must be from 2 up to 256 characters'),
       body('*.country').custom((value,{req,location,path})=>{
-        return required(value,req,path.match(/\[(.*?)\]/)[1],'country')
+        let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
+        let integration_environment = req.body[path.match(/\[(.*?)\]/)[1]].integration_environment;
+        let general_requirement =  !required(value,req,path.match(/\[(.*?)\]/)[1],'country');
+        let tenant_requirement = tenant_config[tenant].form.more_info.country.required.includes(integration_environment);
+        return !(general_requirement&&tenant_requirement)
       }).withMessage('Country code missing').
       customSanitizer(value => {
         if(value){
@@ -323,7 +327,7 @@ const serviceValidationRules = (options,req) => {
         }else{
           return value;
         }
-      }).
+      }).if((value)=> {return value}).
       custom((country) => {
         if(!country||countryCodes.includes(country)){
           return true
@@ -821,7 +825,7 @@ const serviceValidationRules = (options,req) => {
         let pos = path.match(/\[(.*?)\]/)[1];
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         let integration_environment = req.body[path.match(/\[(.*?)\]/)[1]].integration_environment;
-        let aup_uri_config = tenant_configconfig[tenant].form.extra_fields.aup_uri;
+        let aup_uri_config = tenant_config[tenant].form.extra_fields.aup_uri;
         if(aup_uri_config){
           if(isNotEmpty(value)){
             if(reg.regSimpleUrl.test(value)){
@@ -873,7 +877,7 @@ const serviceValidationRules = (options,req) => {
         let integration_environment = req.body[path.match(/\[(.*?)\]/)[1]].integration_environment;
         let extra_fields = tenant_config[tenant].form.extra_fields;
 
-        if(!extra_fields.organization.active.includes(integration_environment)){
+        if(extra_fields.organization.hide.includes(integration_environment)){
           return null;
         }
         else{

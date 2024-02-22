@@ -30,7 +30,7 @@ const EditService = (props) => {
     const {petition_id} = useParams();
     const [logout,setLogout] = useState(false);
     const [notFound,setNotFound] = useState(false);
-    const tenant = useContext(tenantContext);
+    const [tenant] = useContext(tenantContext);
     const [user] = useContext(userContext);
     const [owned,setOwned] = useState(true);
     const [modalMessage,setModalMessage] = useState();
@@ -60,7 +60,7 @@ const EditService = (props) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
       if(petitionData&&service&&props.review&&!editPetition){
 
-        let helper = calcDiff(service,petitionData.petition,tenant[0].form_config,diff);
+        let helper = calcDiff(service,petitionData.petition,tenant?.form_config,diff);
         let multivalue_attributes = [];
         for (const service_property in service) service[service_property]&&typeof(service[service_property])==='object'&&multivalue_attributes.push(service_property); 
         for (const service_property in petitionData.petition) petitionData.petition[service_property]&&typeof(petitionData.petition[service_property])==='object'&&!multivalue_attributes.includes(service_property)&&multivalue_attributes.push(service_property);
@@ -175,7 +175,7 @@ const EditService = (props) => {
           }
         }).then(response=> {
           if(response){
-            if(props.review&&!user.review&&response&&response.petition.integration_environment!=='development'){
+            if(props.review&&!user.actions.includes('review_petition')||user.actions.includes('review_restricted')&&response&&response.petition.integration_environment!=='development'){
               setNotFound(true);
             }
             else{
@@ -299,7 +299,7 @@ const ViewRequest = (props) => {
   const {petition_id} = useParams();
   const [logout,setLogout] = useState(false);
   const [notFound,setNotFound] = useState(false);
-  const tenant = useContext(tenantContext);
+  const [tenant] = useContext(tenantContext);
   const [service,setService] = useState();
   const [user] = useContext(userContext);
 
@@ -315,7 +315,7 @@ const ViewRequest = (props) => {
   useEffect(()=>{
       // eslint-disable-next-line react-hooks/exhaustive-deps
     if(petitionData&&service&&!editPetition){
-      let helper = calcDiff(service,petitionData.petition,tenant[0].form_config,diff);
+      let helper = calcDiff(service,petitionData.petition,tenant?.form_config,diff);
       let multivalue_attributes = [];
       for (const service_property in service) service[service_property]&&typeof(service[service_property])==='object'&&multivalue_attributes.push(service_property); 
       for (const service_property in petitionData.petition) petitionData.petition[service_property]&&typeof(petitionData.petition[service_property])==='object'&&!multivalue_attributes.includes(service_property)&&multivalue_attributes.push(service_property);
