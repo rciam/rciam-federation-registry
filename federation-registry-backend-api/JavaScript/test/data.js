@@ -57,7 +57,7 @@ const create = {
        "client_credentials"
      ],
      generate_client_secret:false,
-     egi_policy:true,
+     tenant_1_policy:true,
      dpcoco:false
    },
    saml:{
@@ -169,7 +169,7 @@ const edit = {
       "client_credentials"
    ],
    "generate_client_secret":false,
-   "egi_policy":true,
+   "tenant_1_policy":true,
    "dpcoco":false
 },
  saml:{
@@ -261,7 +261,7 @@ const postServices = [
     ],
     "grant_types": [ "client_credentials" ],
     "generate_client_secret": false,
-    "tenant": "egi",
+    "tenant": "tenant_1",
     "external_id": null,
     "service_name": null,
     "service_description": null,
@@ -270,7 +270,7 @@ const postServices = [
     "metadata_url": null,
     "redirect_uris": null,
     "post_logout_redirect_uris":null,
-    "egi_policy":true,
+    "tenant_1_policy":true,
     "dpcoco":false
   },
   {
@@ -304,8 +304,8 @@ const postServices = [
       "eduperson_unique_id",
     ],
     "generate_client_secret": false,
-    "tenant": "egi",
-    "egi_policy":true,
+    "tenant": "tenant_1",
+    "tenant_1_policy":true,
     "dpcoco":false
   },
   {
@@ -321,7 +321,7 @@ const postServices = [
     "integration_environment": "development",
     "protocol": "saml",
     "contacts": null,
-    "tenant": "egi",
+    "tenant": "tenant_1",
 
   },
   {
@@ -329,7 +329,7 @@ const postServices = [
     "country": "GR",
     "integration_environment": "development",
     "client_id": "test_12",
-    "tenant": "egi"
+    "tenant": "tenant_1"
   },
   {
     "protocol": "saml",
@@ -337,14 +337,14 @@ const postServices = [
     "country": "GR",
     "entity_id": "https://entity_id_test_asd.com",
     "metadata_url": "https://hello_this_should_be_unique.com",
-    "tenant": "egi"
+    "tenant": "tenant_1"
   },
   {
     "protocol": "saml",
     "country": "gr",
     "integration_environment": "development",
     "metadata_url": "https://hello_this_should_be_unique_2.com",
-    "tenant": "egi"
+    "tenant": "tenant_1"
   }
 ]
 
@@ -385,7 +385,7 @@ const validationRequests = {
    scope: "string",
    grant_types:"string",
    generate_client_secret:"string",
-   egi_policy:true,
+   tenant_1_policy:true,
    dpcoco:false
  },
  oidc_values: {
@@ -423,7 +423,7 @@ const validationRequests = {
    scope: ["string","string"],
    grant_types:["string","string"],
    generate_client_secret:false,
-   egi_policy:true,
+   tenant_1_policy:true,
    dpcoco:false
  },
  saml_types: {
@@ -646,31 +646,31 @@ const validationResponses = {
 }
 
 const users = {
- egi: {
+ tenant_1: {
    manager_user:{
-     sub: "test_egi_manager_user",
-     edu_person_entitlement:['urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=approver#aai.egi.eu']
+     sub: "test_tenant_1_manager_user",
+     edu_person_entitlement:['urn:mace:tenant_1.eu:group:service-integration.aai.tenant_1.eu:role=approver#aai.tenant_1.eu']
    },
    operator_user:{
-     sub: "test_egi_operator_user",
-     edu_person_entitlement:['urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu']
+     sub: "test_tenant_1_operator_user",
+     edu_person_entitlement:['urn:mace:tenant_1.eu:group:service-integration.aai.tenant_1.eu:role=member#aai.tenant_1.eu']
    },
    end_user: {
-     sub: "test_egi_end_user",
+     sub: "test_tenant_1_end_user",
      edu_person_entitlement: []
    }
  },
- ni4os: {
+ tenant_2: {
    manager_user: {
-     sub: "test_ni4os_manager_user",
-     edu_person_entitlement :['urn:mace:egi.eu:group:service-integration.aai.ni4os.eu:role=approver#aai.ni4os.eu']
+     sub: "test_tenant_2_manager_user",
+     edu_person_entitlement :['urn:mace:tenant_1.eu:group:service-integration.aai.tenant_2.eu:role=approver#aai.tenant_2.eu']
    },
    operator_user:{
-     sub: "test_ni4os_operator_user",
-     edu_person_entitlement : ['urn:mace:egi.eu:group:service-integration.aai.ni4os.eu:role=member#aai.ni4os.eu']
+     sub: "test_tenant_2_operator_user",
+     edu_person_entitlement : ['urn:mace:tenant_1.eu:group:service-integration.aai.tenant_2.eu:role=member#aai.tenant_2.eu']
    },
    end_user: {
-     sub: "test_ni4os_end_user",
+     sub: "test_tenant_2_end_user",
      edu_person_entitlement : []
    }
  }

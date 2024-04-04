@@ -17,16 +17,17 @@ const OutdatedNotifications = () =>{
   const [logout,setLogout] = useState(false);
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
-  const tenant = useContext(tenantContext);
+  const [tenant] = useContext(tenantContext);
   const [responseTitle,setResponseTitle] = useState();
   const [responseMessage,setResponseMessage] = useState();
-  const [integrationEnvironment,setIntegrationEnvironment] = useState('production');
+  const [integrationEnvironment,setIntegrationEnvironment] = useState('');
   const [confirmationData,setConfirmationData] = useState({active:false}) 
   const history = useHistory();
 
   const [outdatedServices,setOutdatedService] = useState(()=>{
       let outdated_services = {};
-      tenant[0].form_config.integration_environment.forEach(integration_environment=>{
+      setIntegrationEnvironment(tenant.form_config.integration_environment[0]);
+      tenant.form_config.integration_environment.forEach(integration_environment=>{
       outdated_services[integration_environment] = 0;
       });
       return outdated_services;
@@ -129,9 +130,8 @@ const OutdatedNotifications = () =>{
               as="select"
               onChange={(e)=>{
                 setIntegrationEnvironment(e.target.value)
-              }}>
-            >              
-              {tenant[0].form_config.integration_environment.map((environment,index)=>{return <option key={index} value={environment}>{capitalize(environment)}</option>})}
+              }}>                  
+              {tenant.form_config.integration_environment.map((environment,index)=>{return <option key={index} value={environment}>{capitalize(environment)}</option>})}
             </Form.Control>
             <InputGroup.Append>
               <Button variant="primary" onClick={()=>{setConfirmationData({active:true})}}><FontAwesomeIcon icon={faPaperPlane}/> Send</Button>

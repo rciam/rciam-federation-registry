@@ -399,31 +399,31 @@ VALUES ('Andreas Foundation','https://andreaskozadinos.com');
 
 
 INSERT INTO tenants (name,client_id,client_secret,issuer_url,base_url)
-VALUES ('egi','test','test','test','http://localhost:3000/egi');
+VALUES ('tenant_1','test','test','test','http://localhost:3000/tenant_1');
 INSERT INTO tenants (name,client_id,client_secret,issuer_url,base_url)
-VALUES ('ni4os','test','test','test','http://localhost:3000/ni4os');
+VALUES ('tenant_2','test','test','test','http://localhost:3000/tenant_2');
 
 
 INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol,group_id,tenant,external_id,country,website_url,organization_id)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 1','https://cdn.vox-cdn.com/thumbor/0n6dqQfk9MuOBSiM39Pog2Bw39Y=/1400x1400/filters:format(jpeg)/cdn.vox-cdn.com/uploads/chorus_asset/file/19341372/microsoftedgenewlogo.jpg','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','oidc',1,'egi',1,'gr','https://my_service_website.com',1);
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 1','https://cdn.vox-cdn.com/thumbor/0n6dqQfk9MuOBSiM39Pog2Bw39Y=/1400x1400/filters:format(jpeg)/cdn.vox-cdn.com/uploads/chorus_asset/file/19341372/microsoftedgenewlogo.jpg','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@tenant_1.eu','oidc',1,'tenant_1',1,'gr','https://my_service_website.com',1);
 INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol,group_id,tenant,external_id,country,website_url,organization_id)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 2','https://i.pinimg.com/originals/33/b8/69/33b869f90619e81763dbf1fccc896d8d.jpg','https://policy_uri.com','production','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','oidc',2,'egi',2,'gr','https://my_service_website.com',1);
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 2','https://i.pinimg.com/originals/33/b8/69/33b869f90619e81763dbf1fccc896d8d.jpg','https://policy_uri.com','production','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@tenant_1.eu','oidc',2,'tenant_1',2,'gr','https://my_service_website.com',1);
 INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol,group_id,tenant,external_id,country,website_url,organization_id)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 3','https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcROY_lTxPGm6_XjUncdBfqkSbRoFoEf4BLBlQ&usqp=CAU','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','oidc',3,'egi',3,'gr','https://my_service_website.com',1);
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 3','https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcROY_lTxPGm6_XjUncdBfqkSbRoFoEf4BLBlQ&usqp=CAU','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@tenant_1.eu','oidc',3,'tenant_1',3,'gr','https://my_service_website.com',1);
 INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol,group_id,tenant,external_id,country,website_url,organization_id)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 4','https://brandmark.io/logo-rank/random/pepsi.png','https://policy_uri.com','development','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','oidc',4,'egi',4,'gr','https://my_service_website.com',1);
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 4','https://brandmark.io/logo-rank/random/pepsi.png','https://policy_uri.com','development','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@tenant_1.eu','oidc',4,'tenant_1',4,'gr','https://my_service_website.com',1);
 INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol,group_id,tenant,external_id,country,website_url,organization_id)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 5','https://brandmark.io/logo-rank/random/pepsi.png','https://policy_uri.com','development','7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu','oidc',5,'egi',5,'gr','https://my_service_website.com',1);
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 5','https://brandmark.io/logo-rank/random/pepsi.png','https://policy_uri.com','development','7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@tenant_1.eu','oidc',5,'tenant_1',5,'gr','https://my_service_website.com',1);
 INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol,group_id,tenant,external_id,country,website_url,organization_id)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Saml 6','https://cdn.auth0.com/blog/duo-saml-exploit/saml.png','https://policy_uri.com','development','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','saml',6,'egi',6,'gr','https://my_service_website.com',1);
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Saml 6','https://cdn.auth0.com/blog/duo-saml-exploit/saml.png','https://policy_uri.com','development','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@tenant_1.eu','saml',6,'tenant_1',6,'gr','https://my_service_website.com',1);
 INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol,group_id,tenant,external_id,country,website_url,organization_id)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','ni4os OIDC Service 1','https://nat.sakimura.org/wp-content/uploads/2012/02/openid-icon-250x250.png','https://policy_uri.com','development','4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.ni4os-portal.eu','oidc',8,'ni4os',1,'gr','https://my_service_website.com',1);
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','tenant_2 OIDC Service 1','https://nat.sakimura.org/wp-content/uploads/2012/02/openid-icon-250x250.png','https://policy_uri.com','development','4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.tenant_2-portal.eu','oidc',8,'tenant_2',1,'gr','https://my_service_website.com',1);
 INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol,group_id,tenant,external_id,country,website_url,organization_id)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','ni4os OIDC Service 2','https://nat.sakimura.org/wp-content/uploads/2012/02/openid-icon-250x250.png','https://policy_uri.com','development','4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.ni4os-portal.eu','oidc',9,'ni4os',2,'gr','https://my_service_website.com',1);
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','tenant_2 OIDC Service 2','https://nat.sakimura.org/wp-content/uploads/2012/02/openid-icon-250x250.png','https://policy_uri.com','development','4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.tenant_2-portal.eu','oidc',9,'tenant_2',2,'gr','https://my_service_website.com',1);
 INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol,group_id,tenant,external_id,country,website_url,organization_id)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','ni4os SAML Service 1','https://cdn.auth0.com/blog/duo-saml-exploit/saml.png','https://policy_uri.com','demo','4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.ni4os-portal.eu','saml',10,'ni4os',3,'gr','https://my_service_website.com',1);
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','tenant_2 SAML Service 1','https://cdn.auth0.com/blog/duo-saml-exploit/saml.png','https://policy_uri.com','demo','4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.tenant_2-portal.eu','saml',10,'tenant_2',3,'gr','https://my_service_website.com',1);
 INSERT INTO service_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,protocol,group_id,tenant,external_id,country,website_url,organization_id)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Egi saml Service 2','https://cdn.auth0.com/blog/duo-saml-exploit/saml.png','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','saml',11,'egi',3,'gr','https://my_service_website.com',1);
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','tenant_1 saml Service 2','https://cdn.auth0.com/blog/duo-saml-exploit/saml.png','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@tenant_1.eu','saml',11,'tenant_1',3,'gr','https://my_service_website.com',1);
 
 
 
@@ -624,31 +624,31 @@ VALUES ('8','telescope');
 
 
 INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,status,service_id,reviewed_at,protocol,tenant,country,website_url,organization_id)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 1','https://cdn.vox-cdn.com/thumbor/0n6dqQfk9MuOBSiM39Pog2Bw39Y=/1400x1400/filters:format(jpeg)/cdn.vox-cdn.com/uploads/chorus_asset/file/19341372/microsoftedgenewlogo.jpg','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','approved',1,'2004-10-19 10:23:54','oidc','egi','gr','https://my_service_website',1);
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 1','https://cdn.vox-cdn.com/thumbor/0n6dqQfk9MuOBSiM39Pog2Bw39Y=/1400x1400/filters:format(jpeg)/cdn.vox-cdn.com/uploads/chorus_asset/file/19341372/microsoftedgenewlogo.jpg','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@tenant_1.eu','approved',1,'2004-10-19 10:23:54','oidc','tenant_1','gr','https://my_service_website',1);
 INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,status,service_id,reviewed_at,protocol,tenant,country,website_url,organization_id)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 2','https://i.pinimg.com/originals/33/b8/69/33b869f90619e81763dbf1fccc896d8d.jpg','https://policy_uri.com','production','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','approved',2,'2004-10-19 10:23:54','oidc','egi','gr','https://my_service_website',1);
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 2','https://i.pinimg.com/originals/33/b8/69/33b869f90619e81763dbf1fccc896d8d.jpg','https://policy_uri.com','production','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@tenant_1.eu','approved',2,'2004-10-19 10:23:54','oidc','tenant_1','gr','https://my_service_website',1);
 INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,status,service_id,reviewed_at,protocol,tenant,country,website_url,organization_id)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 3','https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcROY_lTxPGm6_XjUncdBfqkSbRoFoEf4BLBlQ&usqp=CAU','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','approved',3,'2004-10-19 10:23:54','oidc','egi','gr','https://my_service_website',1);
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 3','https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcROY_lTxPGm6_XjUncdBfqkSbRoFoEf4BLBlQ&usqp=CAU','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@tenant_1.eu','approved',3,'2004-10-19 10:23:54','oidc','tenant_1','gr','https://my_service_website',1);
 INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,status,service_id,reviewed_at,protocol,tenant,country,website_url,organization_id)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 4','https://brandmark.io/logo-rank/random/pepsi.png','https://policy_uri.com','development','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','approved',4,'2004-10-19 10:23:54','oidc','egi','gr','https://my_service_website',1);
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 4','https://brandmark.io/logo-rank/random/pepsi.png','https://policy_uri.com','development','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@tenant_1.eu','approved',4,'2004-10-19 10:23:54','oidc','tenant_1','gr','https://my_service_website',1);
 INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,status,service_id,reviewed_at,protocol,tenant,country,website_url,organization_id)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 5','https://brandmark.io/logo-rank/random/pepsi.png','https://policy_uri.com','development','7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu','approved',5,'2004-10-19 10:23:54','oidc','egi','gr','https://my_service_website',1);
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 5','https://brandmark.io/logo-rank/random/pepsi.png','https://policy_uri.com','development','7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@tenant_1.eu','approved',5,'2004-10-19 10:23:54','oidc','tenant_1','gr','https://my_service_website',1);
 INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,type,service_id,protocol,tenant,country,last_edited,website_url,organization_id)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 5 new','https://images.fastcompany.net/image/upload/w_596,c_limit,q_auto:best,f_auto/fc/3034007-inline-i-applelogo.jpg','https://policy_uri.com','development','7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu','edit',5,'oidc','egi','gr','2021-01-27 10:23:54','https://my_service_website',1);
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 5 new','https://images.fastcompany.net/image/upload/w_596,c_limit,q_auto:best,f_auto/fc/3034007-inline-i-applelogo.jpg','https://policy_uri.com','development','7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@tenant_1.eu','edit',5,'oidc','tenant_1','gr','2021-01-27 10:23:54','https://my_service_website',1);
 INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,type,protocol,group_id,tenant,country,last_edited,website_url,organization_id)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 7','https://www.bookmarks.design/media/image/hatchful.jpg','https://policy_uri.com','development','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','create','oidc',7,'egi','gr','2021-01-29 10:23:54','https://my_service_website',1);
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 7','https://www.bookmarks.design/media/image/hatchful.jpg','https://policy_uri.com','development','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@tenant_1.eu','create','oidc',7,'tenant_1','gr','2021-01-29 10:23:54','https://my_service_website',1);
 INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,type,service_id,protocol,tenant,country,last_edited,website_url,organization_id)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 1','https://cdn.vox-cdn.com/thumbor/0n6dqQfk9MuOBSiM39Pog2Bw39Y=/1400x1400/filters:format(jpeg)/cdn.vox-cdn.com/uploads/chorus_asset/file/19341372/microsoftedgenewlogo.jpg','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','delete',1,'oidc','egi','gr','2021-01-28 10:23:54','https://my_service_website',1);
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Client 1','https://cdn.vox-cdn.com/thumbor/0n6dqQfk9MuOBSiM39Pog2Bw39Y=/1400x1400/filters:format(jpeg)/cdn.vox-cdn.com/uploads/chorus_asset/file/19341372/microsoftedgenewlogo.jpg','https://policy_uri.com','demo','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@tenant_1.eu','delete',1,'oidc','tenant_1','gr','2021-01-28 10:23:54','https://my_service_website',1);
 INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,status,type,service_id,reviewed_at,protocol,tenant,country,website_url,organization_id)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Saml 6','https://cdn.auth0.com/blog/duo-saml-exploit/saml.png','https://policy_uri.com','development','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu','approved','create',6,'2020-10-4 13:18:11','saml','egi','gr','https://my_service_website',1);
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','Saml 6','https://cdn.auth0.com/blog/duo-saml-exploit/saml.png','https://policy_uri.com','development','4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@tenant_1.eu','approved','create',6,'2020-10-4 13:18:11','saml','tenant_1','gr','https://my_service_website',1);
 
 
 INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,status,service_id,reviewed_at,protocol,group_id,tenant,country,website_url,organization_id)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','ni4os OIDC Service 1','https://nat.sakimura.org/wp-content/uploads/2012/02/openid-icon-250x250.png','https://policy_uri.com','demo','4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.ni4os-portal.eu','approved',7,'2004-10-19 10:23:54','oidc',8,'ni4os','gr','https://my_service_website',1);
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','tenant_2 OIDC Service 1','https://nat.sakimura.org/wp-content/uploads/2012/02/openid-icon-250x250.png','https://policy_uri.com','demo','4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.tenant_2-portal.eu','approved',7,'2004-10-19 10:23:54','oidc',8,'tenant_2','gr','https://my_service_website',1);
 INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,status,service_id,reviewed_at,protocol,group_id,tenant,country,website_url,organization_id)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','ni4os OIDC Service 2','https://nat.sakimura.org/wp-content/uploads/2012/02/openid-icon-250x250.png','https://policy_uri.com','production','4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.ni4os-portal.eu','approved',8,'2004-10-19 10:23:54','oidc',9,'ni4os','gr','https://my_service_website',1);
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','tenant_2 OIDC Service 2','https://nat.sakimura.org/wp-content/uploads/2012/02/openid-icon-250x250.png','https://policy_uri.com','production','4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.tenant_2-portal.eu','approved',8,'2004-10-19 10:23:54','oidc',9,'tenant_2','gr','https://my_service_website',1);
 INSERT INTO service_petition_details (service_description,service_name,logo_uri,policy_uri,integration_environment,requester,status,service_id,reviewed_at,protocol,group_id,tenant,country,website_url,organization_id)
-VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','ni4os SAML Service 1','https://cdn.auth0.com/blog/duo-saml-exploit/saml.png','https://policy_uri.com','demo','4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.ni4os-portal.eu','approved',9,'2004-10-19 10:23:54','saml',10,'ni4os','gr','https://my_service_website',1);
+VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','tenant_2 SAML Service 1','https://cdn.auth0.com/blog/duo-saml-exploit/saml.png','https://policy_uri.com','demo','4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.tenant_2-portal.eu','approved',9,'2004-10-19 10:23:54','saml',10,'tenant_2','gr','https://my_service_website',1);
 
 
 INSERT INTO service_petition_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_token,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds,token_endpoint_auth_method,token_endpoint_auth_signing_alg,application_type)
@@ -872,65 +872,65 @@ VALUES ('11','electroscope');
 
 
 INSERT INTO user_info(sub,preferred_username,name,given_name,family_name,email,tenant,role_id)
-VALUES ('4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621934@egi.eu','asdasd','aas','asdas','asdasd','testmail@mail.com','egi',1);
+VALUES ('4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621934@tenant_1.eu','asdasd','aas','asdas','asdasd','testmail@mail.com','tenant_1',1);
 INSERT INTO user_edu_person_entitlement (user_id,edu_person_entitlement)
-VALUES (1,'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu');
+VALUES (1,'urn:mace:tenant_1.eu:group:service-integration.aai.tenant_1.eu:role=member#aai.tenant_1.eu');
 INSERT INTO user_info(sub,preferred_username,name,given_name,family_name,email,tenant,role_id)
-VALUES ('test_egi_end_user','test_egi_end_user','test_egi_end_user','test_egi_end_user','test_egi_end_user','testmail@mail.com','egi',1);
+VALUES ('test_tenant_1_end_user','test_tenant_1_end_user','test_tenant_1_end_user','test_tenant_1_end_user','test_tenant_1_end_user','testmail@mail.com','tenant_1',1);
 INSERT INTO user_edu_person_entitlement (user_id,edu_person_entitlement)
-VALUES (2,'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu');
+VALUES (2,'urn:mace:tenant_1.eu:group:service-integration.aai.tenant_1.eu:role=member#aai.tenant_1.eu');
 INSERT INTO user_info(sub,preferred_username,name,given_name,family_name,email,tenant,role_id)
-VALUES ('test_egi_operator_user','test_egi_operator_user','test_egi_operator_user','test_egi_operator_user','test_egi_operator_user','testmail@mail.com','egi',2);
+VALUES ('test_tenant_1_operator_user','test_tenant_1_operator_user','test_tenant_1_operator_user','test_tenant_1_operator_user','test_tenant_1_operator_user','testmail@mail.com','tenant_1',2);
 INSERT INTO user_edu_person_entitlement (user_id,edu_person_entitlement)
-VALUES (3,'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu');
+VALUES (3,'urn:mace:tenant_1.eu:group:service-integration.aai.tenant_1.eu:role=member#aai.tenant_1.eu');
 INSERT INTO user_info(sub,preferred_username,name,given_name,family_name,email,tenant,role_id)
-VALUES ('test_egi_manager_user','test_egi_manager_user','test_egi_manager_user','test_egi_manager_user','test_egi_manager_user','testmail@mail.com','egi',3);
+VALUES ('test_tenant_1_manager_user','test_tenant_1_manager_user','test_tenant_1_manager_user','test_tenant_1_manager_user','test_tenant_1_manager_user','testmail@mail.com','tenant_1',3);
 INSERT INTO user_edu_person_entitlement (user_id,edu_person_entitlement)
-VALUES (4,'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu');
+VALUES (4,'urn:mace:tenant_1.eu:group:service-integration.aai.tenant_1.eu:role=member#aai.tenant_1.eu');
 INSERT INTO user_info(sub,preferred_username,name,given_name,family_name,email,tenant,role_id)
-VALUES ('test_ni4os_end_user','test_ni4os_end_user','test_ni4os_end_user','test_ni4os_end_user','test_ni4os_end_user','testmail@mail.com','ni4os',4);
+VALUES ('test_tenant_2_end_user','test_tenant_2_end_user','test_tenant_2_end_user','test_tenant_2_end_user','test_tenant_2_end_user','testmail@mail.com','tenant_2',4);
 INSERT INTO user_edu_person_entitlement (user_id,edu_person_entitlement)
-VALUES (5,'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu');
+VALUES (5,'urn:mace:tenant_1.eu:group:service-integration.aai.tenant_1.eu:role=member#aai.tenant_1.eu');
 INSERT INTO user_info(sub,preferred_username,name,given_name,family_name,email,tenant,role_id)
-VALUES ('test_ni4os_operator_user','test_ni4os_operator_user','test_ni4os_operator_user','test_ni4os_operator_user','test_ni4os_operator_user','testmail@mail.com','ni4os',5);
+VALUES ('test_tenant_2_operator_user','test_tenant_2_operator_user','test_tenant_2_operator_user','test_tenant_2_operator_user','test_tenant_2_operator_user','testmail@mail.com','tenant_2',5);
 INSERT INTO user_edu_person_entitlement (user_id,edu_person_entitlement)
-VALUES (6,'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu');
+VALUES (6,'urn:mace:tenant_1.eu:group:service-integration.aai.tenant_1.eu:role=member#aai.tenant_1.eu');
 INSERT INTO user_info(sub,preferred_username,name,given_name,family_name,email,tenant,role_id)
-VALUES ('test_ni4os_manager_user','test_ni4os_manager_user','test_ni4os_manager_user','test_ni4os_manager_user','test_ni4os_manager_user','testmail@mail.com','ni4os',6);
+VALUES ('test_tenant_2_manager_user','test_tenant_2_manager_user','test_tenant_2_manager_user','test_tenant_2_manager_user','test_tenant_2_manager_user','testmail@mail.com','tenant_2',6);
 INSERT INTO user_edu_person_entitlement (user_id,edu_person_entitlement)
-VALUES (7,'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu');
+VALUES (7,'urn:mace:tenant_1.eu:group:service-integration.aai.tenant_1.eu:role=member#aai.tenant_1.eu');
 INSERT INTO user_info(sub,preferred_username,name,given_name,family_name,email,tenant,role_id)
-VALUES ('test_egi_operator_user_2','test_egi_operator_user','test_egi_operator_user2','test_egi_operator_user','test_egi_operator_user','testmai1l@mail.com','egi',2);
+VALUES ('test_tenant_1_operator_user_2','test_tenant_1_operator_user','test_tenant_1_operator_user2','test_tenant_1_operator_user','test_tenant_1_operator_user','testmai1l@mail.com','tenant_1',2);
 INSERT INTO user_edu_person_entitlement (user_id,edu_person_entitlement)
-VALUES (8,'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu');
+VALUES (8,'urn:mace:tenant_1.eu:group:service-integration.aai.tenant_1.eu:role=member#aai.tenant_1.eu');
 INSERT INTO user_info(sub,preferred_username,name,given_name,family_name,email,tenant,role_id)
-VALUES ('test_egi_operator_user_3','test_egi_operator_user','test_egi_operator_user3','test_egi_operator_user','test_egi_operator_user','testmail2@mail.com','egi',2);
+VALUES ('test_tenant_1_operator_user_3','test_tenant_1_operator_user','test_tenant_1_operator_user3','test_tenant_1_operator_user','test_tenant_1_operator_user','testmail2@mail.com','tenant_1',2);
 INSERT INTO user_edu_person_entitlement (user_id,edu_person_entitlement)
-VALUES (9,'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu');
+VALUES (9,'urn:mace:tenant_1.eu:group:service-integration.aai.tenant_1.eu:role=member#aai.tenant_1.eu');
 
 
 INSERT INTO user_roles (role_name,tenant)
-VALUES ('End User','egi');
+VALUES ('End User','tenant_1');
 INSERT INTO user_roles(role_name,tenant)
-VALUES ('Operator','egi');
+VALUES ('Operator','tenant_1');
 INSERT INTO user_roles(role_name,tenant)
-VALUES ('Manager','egi');
+VALUES ('Manager','tenant_1');
 INSERT INTO user_roles (role_name,tenant)
-VALUES ('End User','ni4os');
+VALUES ('End User','tenant_2');
 INSERT INTO user_roles(role_name,tenant)
-VALUES ('Operator','ni4os');
+VALUES ('Operator','tenant_2');
 INSERT INTO user_roles(role_name,tenant)
-VALUES ('Manager','ni4os');
+VALUES ('Manager','tenant_2');
 
 
 INSERT INTO role_entitlements (role_id,entitlement)
-VALUES (3,'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=approver#aai.egi.eu');
+VALUES (3,'urn:mace:tenant_1.eu:group:service-integration.aai.tenant_1.eu:role=approver#aai.tenant_1.eu');
 INSERT INTO role_entitlements (role_id,entitlement)
-VALUES (2,'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu');
+VALUES (2,'urn:mace:tenant_1.eu:group:service-integration.aai.tenant_1.eu:role=member#aai.tenant_1.eu');
 INSERT INTO role_entitlements (role_id,entitlement)
-VALUES (6,'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=approver#aai.egi.eu');
+VALUES (6,'urn:mace:tenant_1.eu:group:service-integration.aai.tenant_1.eu:role=approver#aai.tenant_1.eu');
 INSERT INTO role_entitlements (role_id,entitlement)
-VALUES (5,'urn:mace:egi.eu:group:service-integration.aai.egi.eu:role=member#aai.egi.eu');
+VALUES (5,'urn:mace:tenant_1.eu:group:service-integration.aai.tenant_1.eu:role=member#aai.tenant_1.eu');
 
 
 INSERT INTO role_actions(role_id,action)
@@ -1143,16 +1143,16 @@ VALUES(6,'manage_tags');
 
 INSERT INTO tenant_deployer_agents (tenant,integration_environment,type,entity_type,hostname,entity_protocol,deployer_name)
 VALUES 
-  ('egi', 'production', 'keycloak', 'service', 'mock','oidc',null ),
-  ('egi', 'demo', 'keycloak', 'service', 'mock','oidc',null ),
-  ('egi', 'development', 'keycloak', 'service', 'mock','oidc',null ),
-  ('egi', 'production', 'ssp', 'service', 'mock','saml','1' ),
-  ('egi', 'production', 'ssp', 'service', 'mock','saml','2' ),
-  ('egi', 'demo', 'ssp', 'service', 'mock','saml','1' ),
-  ('egi', 'demo', 'ssp', 'service', 'mock','saml','2'),
-  ('egi', 'development', 'ssp', 'service', 'mock','saml',null ),
-  ('ni4os', 'production', 'keycloak', 'service', 'mock','saml',null ),
-  ('ni4os', 'production', 'keycloak', 'service', 'mock','oidc',null );
+  ('tenant_1', 'production', 'keycloak', 'service', 'mock','oidc',null ),
+  ('tenant_1', 'demo', 'keycloak', 'service', 'mock','oidc',null ),
+  ('tenant_1', 'development', 'keycloak', 'service', 'mock','oidc',null ),
+  ('tenant_1', 'production', 'ssp', 'service', 'mock','saml','1' ),
+  ('tenant_1', 'production', 'ssp', 'service', 'mock','saml','2' ),
+  ('tenant_1', 'demo', 'ssp', 'service', 'mock','saml','1' ),
+  ('tenant_1', 'demo', 'ssp', 'service', 'mock','saml','2'),
+  ('tenant_1', 'development', 'ssp', 'service', 'mock','saml',null ),
+  ('tenant_2', 'production', 'keycloak', 'service', 'mock','saml',null ),
+  ('tenant_2', 'production', 'keycloak', 'service', 'mock','oidc',null );
 
 INSERT INTO groups (group_name)
 VALUES ('group_1');
@@ -1179,29 +1179,29 @@ VALUES ('group_8');
 
 
 INSERT INTO group_subs (group_id,sub,group_manager)
-VALUES (1,'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',true);
+VALUES (1,'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@tenant_1.eu',true);
 INSERT INTO group_subs (group_id,sub,group_manager)
-VALUES (2,'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',true);
+VALUES (2,'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@tenant_1.eu',true);
 INSERT INTO group_subs (group_id,sub,group_manager)
-VALUES (3,'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',true);
+VALUES (3,'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@tenant_1.eu',true);
 INSERT INTO group_subs (group_id,sub,group_manager)
-VALUES (4,'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',true);
+VALUES (4,'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@tenant_1.eu',true);
 INSERT INTO group_subs (group_id,sub,group_manager)
-VALUES (6,'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',true);
+VALUES (6,'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@tenant_1.eu',true);
 INSERT INTO group_subs (group_id,sub,group_manager)
-VALUES (5,'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',true);
+VALUES (5,'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@tenant_1.eu',true);
 INSERT INTO group_subs (group_id,sub,group_manager)
-VALUES (5,'7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@egi.eu',true);
+VALUES (5,'7a6ae5617ea76389401e3c3839127fd2a019572066d40c5d0176bd242651f934@tenant_1.eu',true);
 INSERT INTO group_subs (group_id,sub,group_manager)
-VALUES (7,'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',true);
+VALUES (7,'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@tenant_1.eu',true);
 INSERT INTO group_subs (group_id,sub,group_manager)
-VALUES (8,'4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.ni4os-portal.eu',true);
+VALUES (8,'4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.tenant_2-portal.eu',true);
 INSERT INTO group_subs (group_id,sub,group_manager)
-VALUES (9,'4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.ni4os-portal.eu',true);
+VALUES (9,'4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.tenant_2-portal.eu',true);
 INSERT INTO group_subs (group_id,sub,group_manager)
-VALUES (10,'4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.ni4os-portal.eu',true);
+VALUES (10,'4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.tenant_2-portal.eu',true);
 INSERT INTO group_subs (group_id,sub,group_manager)
-VALUES (11,'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@egi.eu',true);
+VALUES (11,'4359841657275796f20734f26d7b60c515f17cd36bad58d29ed87d000d621974@tenant_1.eu',true);
 
 
 INSERT INTO service_errors (service_id,date,error_code,error_description)
@@ -1224,12 +1224,12 @@ VALUES (1,'dbcoco',true);
 
 
 INSERT INTO service_boolean (service_id,name,value)
-VALUES (1,'egi_policy',true);
+VALUES (1,'tenant_1_policy',true);
 
 
 INSERT INTO service_tags (service_id,tenant,tag)
-VALUES (1,'egi','egi');
+VALUES (1,'tenant_1','tenant_1');
 INSERT INTO service_tags (service_id,tenant,tag)
-VALUES (1,'egi','test');
+VALUES (1,'tenant_1','test');
 
 

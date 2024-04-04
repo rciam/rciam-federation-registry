@@ -11,9 +11,9 @@ import { useCookies } from 'react-cookie';
 export const Logout = (props) => {
   // const history = useHistory();
   const [cookies] = useCookies(['federation_logoutkey']);
-  const tenant = useContext(tenantContext);
+  const [tenant] = useContext(tenantContext);
   const handleClose = () => {
-    window.location.assign(tenant[0].logout_uri + "&id_token_hint="+cookies.federation_logoutkey);
+    window.location.assign(tenant.logout_uri + "&id_token_hint="+cookies.federation_logoutkey);
   }
   return (
     <Translation>
@@ -39,14 +39,14 @@ export const NotFound = (props) => {
   const history = useHistory();
   const location = useLocation();
   const [close,setClose] = useState(false);
-  const tenant = useContext(tenantContext);
+  const [tenant] = useContext(tenantContext);
   const handleClose = () => {
     setClose(true);
-    if(location.pathname==='/'+(tenant&&tenant[0]?tenant[0].name:null)+'/services'){
+    if(location.pathname==='/'+(tenant?tenant.name:null)+'/services'){
       window.location.reload(false);
     }else
     {
-      history.push('/'+(tenant&&tenant[0]?tenant[0].name:null)+'/services');
+      history.push('/'+(tenant?tenant.name:null)+'/services');
     }
   }
   return (

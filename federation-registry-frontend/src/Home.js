@@ -11,8 +11,7 @@ const Home = ()=> {
   // eslint-disable-next-line
   let history = useHistory();
   let {tenant_name} = useParams();
-  // eslint-disable-next-line
-  const [tenant,setTenant] = useContext(tenantContext);
+  const [tenant] = useContext(tenantContext);
   // eslint-disable-next-line
   const [user, setUser] = useContext(userContext);
   // eslint-disable-next-line
@@ -45,7 +44,7 @@ const Home = ()=> {
     },[])
 
    const getServices = () => {
-    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/services?integration_environment=production&exclude_tags=test', {
+    fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/services?integration_environment='+tenant.config.home_page_services_integration_env+'&exclude_tags=test', {
       method: 'GET', // *GET, POST, PUT, DELETE, etc.
       credentials: 'include', // include, *same-origin, omit
       headers: {

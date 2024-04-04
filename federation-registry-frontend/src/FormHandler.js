@@ -30,7 +30,7 @@ const EditService = (props) => {
     const {petition_id} = useParams();
     const [logout,setLogout] = useState(false);
     const [notFound,setNotFound] = useState(false);
-    const tenant = useContext(tenantContext);
+    const [tenant] = useContext(tenantContext);
     const [user] = useContext(userContext);
     const [owned,setOwned] = useState(true);
     const [modalMessage,setModalMessage] = useState();
@@ -60,7 +60,7 @@ const EditService = (props) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
       if(petitionData&&service&&props.review&&!editPetition){
 
-        let helper = calcDiff(service,petitionData.petition,tenant[0].form_config,diff);
+        let helper = calcDiff(service,petitionData.petition,tenant?.form_config,diff);
         let multivalue_attributes = [];
         for (const service_property in service) service[service_property]&&typeof(service[service_property])==='object'&&multivalue_attributes.push(service_property); 
         for (const service_property in petitionData.petition) petitionData.petition[service_property]&&typeof(petitionData.petition[service_property])==='object'&&!multivalue_attributes.includes(service_property)&&multivalue_attributes.push(service_property);
@@ -86,7 +86,7 @@ const EditService = (props) => {
             'Content-Type': 'application/json'
           }
         }).then(response=>{
-          if(response.status===200){
+          if(response.status===200||response.status===304){
             return response.json();
           }else if(response.status===401){
             setLogout(true);
@@ -132,7 +132,6 @@ const EditService = (props) => {
 
           if(response){
             try{
-              // console.log(response.list_items);
               if(response.list_items[0].petition_id){
                 if(response.list_items[0].type==='edit'){
                   setPetitionIdRedirect(response.list_items[0].petition_id);
@@ -160,7 +159,7 @@ const EditService = (props) => {
             'Content-Type': 'application/json'
           }
         }).then(response=>{
-          if(response.status===200){
+          if(response.status===200||response.status===304){
             return response.json();
           }else if(response.status===401){
             setLogout(true);
@@ -174,14 +173,15 @@ const EditService = (props) => {
             return false
           }
         }).then(response=> {
+
           if(response){
-            if(props.review&&!user.review&&response&&response.petition.integration_environment!=='development'){
-              setNotFound(true);
+            if(user.actions.includes('review_petition')||user.actions.includes('review_restricted')||(user.actions.includes('review_own_petition')&& tenant.config.test_env.includes(response?.petition?.integration_environment))
+            ){
+              setOwned(response.metadata.owned);
+              setPetitionData(response);              
             }
             else{
-              setOwned(response.metadata.owned);
-              // console.log(...response.metadata)
-              setPetitionData(response);
+              setNotFound(true);
             }
           }
         });
@@ -299,7 +299,7 @@ const ViewRequest = (props) => {
   const {petition_id} = useParams();
   const [logout,setLogout] = useState(false);
   const [notFound,setNotFound] = useState(false);
-  const tenant = useContext(tenantContext);
+  const [tenant] = useContext(tenantContext);
   const [service,setService] = useState();
   const [user] = useContext(userContext);
 
@@ -315,7 +315,7 @@ const ViewRequest = (props) => {
   useEffect(()=>{
       // eslint-disable-next-line react-hooks/exhaustive-deps
     if(petitionData&&service&&!editPetition){
-      let helper = calcDiff(service,petitionData.petition,tenant[0].form_config,diff);
+      let helper = calcDiff(service,petitionData.petition,tenant?.form_config,diff);
       let multivalue_attributes = [];
       for (const service_property in service) service[service_property]&&typeof(service[service_property])==='object'&&multivalue_attributes.push(service_property); 
       for (const service_property in petitionData.petition) petitionData.petition[service_property]&&typeof(petitionData.petition[service_property])==='object'&&!multivalue_attributes.includes(service_property)&&multivalue_attributes.push(service_property);
@@ -340,7 +340,7 @@ const ViewRequest = (props) => {
         headers: {
           'Content-Type': 'application/json'}
       }).then(response=>{
-        if(response.status===200){
+        if(response.status===200||response.status===304){
           return response.json();
         }else if(response.status===401){
           setLogout(true);
@@ -367,7 +367,7 @@ const ViewRequest = (props) => {
         headers: {
           'Content-Type': 'application/json'}
       }).then(response=>{
-        if(response.status===200){
+        if(response.status===200||response.status===304){
           return response.json();
         }else if(response.status===401){
           setLogout(true);
@@ -386,7 +386,6 @@ const ViewRequest = (props) => {
             setNotFound(true);
           }
           else{
-            // console.log(...response.metadata)
             setPetitionData(response);
           }
         }
@@ -473,7 +472,7 @@ const ViewService = (props)=>{
         headers: {
           'Content-Type': 'application/json'}
       }).then(response=>{
-        if(response.status===200){
+        if(response.status===200||response.status===304){
           return response.json();
         }
         else if(response.status===401){
@@ -504,8 +503,7 @@ const ViewService = (props)=>{
         headers: {
           'Content-Type': 'application/json'}
       }).then(response=>{
-
-        if(response.status===200){
+        if(response.status===200||response.status===304){
           return response.json();
         }
         else if(response.status===401){
@@ -653,7 +651,7 @@ const CopyService = (props)=> {
         headers: {
           'Content-Type': 'application/json'}
       }).then(response=>{
-        if(response.status===200){
+        if(response.status===200||response.status===304){
           return response.json();
         }else if(response.status===401){
           setLogout(true);
@@ -683,10 +681,12 @@ const CopyService = (props)=> {
 }
 
 const NewService = (props)=>{
+  const [tenant] = useContext(tenantContext);
+
   return (
     <React.Fragment>
 
-      <ServiceForm user={props.user} initialValues={initialValues} {...props}/>
+      <ServiceForm user={props.user} initialValues={tenant?.form_config?.defaultValues||initialValues} {...props}/>
     </React.Fragment>
   )
 }

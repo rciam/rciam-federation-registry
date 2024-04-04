@@ -39,6 +39,7 @@ body .nav-header {
     align-items: center;
     width: 100%;
     z-index: 2000;
+    position: relative;
     padding: 0.5em;
 }
 

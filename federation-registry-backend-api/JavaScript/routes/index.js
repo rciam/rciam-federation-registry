@@ -1,9 +1,8 @@
 require('dotenv').config();
 const {petitionValidationRules,validate,validateInternal,tenantValidation,formatPetition,getServiceListValidation,postInvitationValidation,serviceValidationRules,putAgentValidation,postAgentValidation,decodeAms,amsIngestValidation,reFormatPetition,getServicesValidation,formatServiceBooleanForValidation} = require('../validator.js');
 const qs = require('qs');
-const {v1:uuidv1} = require('uuid');
-const axios = require('axios').default;
-const {sendMail,sendInvitationMail,sendMultipleInvitations,sendDeploymentMail,delay} = require('../functions/helpers.js');
+const {v1:uuidv1} = require('uuid');const {sendMail,sendInvitationMail,sendMultipleInvitations,sendDeploymentMail,delay} = require('../functions/helpers.js');
+const {getUserFromClaims} = require('../functions/util_functions.js')
 const {db} = require('../db');
 var router = require('express').Router();
 var config = require('../config');
@@ -12,7 +11,6 @@ const customLogger = require('../loggers.js');
 const {rejectPetition,approvePetition,changesPetition,getPetition,getOpenPetition,requestReviewPetition} = require('../controllers/main.js');
 const {adminAuth,authenticate,clearCookies} = require('./authentication.js'); 
 var CryptoJS = require("crypto-js");
-
 
 
 // ----------------------------------------------------------
@@ -238,16 +236,16 @@ router.get('/tenants/:tenant',(req,res,next)=>{
     var clients = req.app.get('clients');
     db.tenants.getTheme(req.params.tenant).then(tenant=>{
       if(tenant){
-        if(config[req.params.tenant].form){
-          tenant.form_config = config[req.params.tenant].form;
+        if(tenant_config[req.params.tenant].form){
+          tenant.form_config = tenant_config[req.params.tenant].form;
         }
-        if(config[req.params.tenant]){
-          tenant.config = config[req.params.tenant];
+        if(tenant_config[req.params.tenant]){
+          tenant.config = tenant_config[req.params.tenant];
         }
-        if(config[req.params.tenant].restricted_env){
-          tenant.restricted_environments = config[req.params.tenant].restricted_env;
+        if(tenant_config[req.params.tenant].restricted_env){
+          tenant.restricted_environments = tenant_config[req.params.tenant].restricted_env;
         }
-        tenant.form_config.requested_attributes = requested_attributes.filter(x=> config[req.params.tenant].form.supported_attributes.includes(x.friendly_name));
+        tenant.form_config.requested_attributes = requested_attributes.filter(x=> tenant_config[req.params.tenant].form.supported_attributes.includes(x.friendly_name));
         tenant.logout_uri = clients[req.params.tenant].logout_uri;
         res.status(200).json(tenant).end();
       }
@@ -286,7 +284,7 @@ router.get('/tenants/:tenant/login',(req,res)=>{
   if(clients[req.params.tenant]){
     res.redirect(clients[req.params.tenant].authorizationUrl({
       client_id:clients[req.params.tenant].client_id,
-      scope: 'openid email profile eduperson_entitlement',
+      scope: clients[req.params.tenant].client_scopes.join(" "),
       redirect_uri: process.env.REDIRECT_URI+req.params.tenant
     }));
   }else{
@@ -300,10 +298,14 @@ router.get('/callback/:tenant',(req,res,next)=>{
   var clients = req.app.get('clients');
   clients[req.params.tenant].callback(process.env.REDIRECT_URI+req.params.tenant,{code:req.query.code}).then(async response => {
     let code = await db.tokens.addToken(response.access_token,response.id_token);
-    clients[req.params.tenant].userinfo(response.access_token).then(usr_info=>{
-    console.log(usr_info);
-    saveUser(usr_info,req.params.tenant);
-  }); // => Promise
+    try{
+        clients[req.params.tenant].userinfo(response.access_token).then(usr_info=>{
+        saveUser(usr_info,req.params.tenant);
+      }); // => Promise
+    }
+    catch(err){
+      console.log(err);
+    }
     res.redirect(tenant_config[req.params.tenant].base_url+'/code/' + code.code);
   });
 });
@@ -334,10 +336,11 @@ router.get('/tokens/:code',(req,res,next)=>{
             console.log(err);
             next(err);})
         }
-      }).catch(err=>{next(err);})
+      }).catch(err=>{console.log(err); next(err);})
     })
   }
   catch(err){
+    console.log(err);
     next(err)
   }
 });
@@ -403,31 +406,11 @@ router.put('/tenants/:tenant/services/:id/deployment',authenticate,(req,res,next
 router.get('/tenants/:tenant/user',authenticate,(req,res,next)=>{
   try{
     var clients = req.app.get('clients');
-
     let federation_authtoken = req.cookies.federation_authtoken||req.headers.authorization.split(" ")[1]
     clients[req.params.tenant].userinfo(federation_authtoken) // => Promise
     .then(function (userinfo) {
       let user = userinfo;
-      user = generatePreferredUsername(user);
-      if(req.user.role.actions.includes('review_own_petition')||req.user.role.actions.includes('review_petition')){
-        user.review = true;
-      }
-      if(req.user.role.actions.includes('get_service')){
-        user.view_all = true;
-      }
-      else{
-        user.view_all = false;
-      }
-      if(req.user.role.actions.includes('view_errors')){
-        user.view_errors = true;
-      }
-      // Check if user has restricted access
-      if(req.user.role.actions.includes('review_restricted')){
-        user.review_restricted = true;
-      }
-      else{
-        user.review_restricted = false;
-      }
+      user = generatePreferredUsername(user,req.params.tenant);
       user.actions = req.user.role.actions;
       user.role = req.user.role.name;
       res.end(JSON.stringify({user}));
@@ -523,7 +506,7 @@ router.post('/ams/ingest',checkCertificate,decodeAms,amsIngestValidation(),valid
 
 
 // ams-agent requests to set state to waiting development
-// updateData = [{id:1,state:'deployed',tenant:'egi',protocol:'oidc'},{id:2,state:'deployed',tenant:'egi',protocol:'saml'},{id:3,state:'failed',tenant:'eosc',protocol:'oidc'}];
+// updateData = [{id:1,state:'deployed',tenant:'tenant_name',protocol:'oidc'},{id:2,state:'deployed',tenant:'tenant_name',protocol:'saml'},{id:3,state:'failed',tenant:'tenant_name',protocol:'oidc'}];
 router.put('/agent/set_services_state',amsAgentAuth,(req,res,next)=>{
   try{
     return db.task('set_state_and_agents',async t=>{
@@ -1374,7 +1357,7 @@ function canReview(req,res,next){
   db.service_petition_details.getEnvironment(req.params.id,req.params.tenant).then(async environment=> {
     // Ckecking if review action is restricted for
     if(environment){
-      if(req.body.type==='approve'&&config[req.params.tenant].restricted_env.includes(environment)&&!req.user.role.actions.includes('review_restricted')){
+      if(req.body.type==='approve'&&tenant_config[req.params.tenant].restricted_env.includes(environment)&&!req.user.role.actions.includes('review_restricted')){
           res.status(401).json({error:'Requested action not authorised'});
       }
       else if(req.user.role.actions.includes('review_petition')||req.user.role.actions.includes('review_restricted')){
@@ -1383,7 +1366,7 @@ function canReview(req,res,next){
       else {
         await db.petition.canReviewOwn(req.params.id,req.user.sub).then(service=>{
   
-          if(service&&config[req.params.tenant].test_env.includes(environment)){
+          if(service&&tenant_config[req.params.tenant].test_env.includes(environment)){
             next();
           }
           else if(service){
@@ -1409,9 +1392,12 @@ function canReview(req,res,next){
 
 }
 
+
+
 // Save new User to db. Gets called on Authentication
 const saveUser=(userinfo,tenant)=>{
   return db.tx('user-check',async t=>{
+    userinfo = getUserFromClaims(userinfo,tenant);
     return t.user.getUser(userinfo.sub,tenant).then(async user=>{
       if(user){
         if(!user.eduperson_entitlement||typeof(user.eduperson_entitlement)!=='object'){
@@ -1433,7 +1419,7 @@ const saveUser=(userinfo,tenant)=>{
             userinfo.role_id = role.id.toString();
             
             // Generate preferred username from given name and family name
-            userinfo = generatePreferredUsername(userinfo);
+            userinfo = generatePreferredUsername(userinfo,tenant);
 
             for (const property in userinfo) {
               if(user.hasOwnProperty(property)&&userinfo[property]!==user[property]){
@@ -1470,11 +1456,7 @@ const saveUser=(userinfo,tenant)=>{
           }
         });
       }
-      
-
-
     })
-    
   });
 }
 
@@ -1502,9 +1484,10 @@ const isAvailable= async (t,id,protocol,petition_id,service_id,tenant,environmen
   }
 }
 
-const generatePreferredUsername = (userinfo) => {
+const generatePreferredUsername = (userinfo,tenant) => {
+  // userinfo[tenant_config[tenant].claims.username_claim]&&
   if(!userinfo.preferred_username&&userinfo.given_name&&userinfo.family_name){
-    userinfo.preferred_username= (userinfo.given_name.replace(/[^a-zA-Z0-9]/g,'_').charAt(0)+userinfo.family_name.replace(/[^a-zA-Z0-9]/g,'_')).toLowerCase();;
+    userinfo.preferred_username = (userinfo.given_name.replace(/[^a-zA-Z0-9]/g,'_').charAt(0)+userinfo.family_name.replace(/[^a-zA-Z0-9]/g,'_')).toLowerCase();;
   }
   return userinfo;
 }
