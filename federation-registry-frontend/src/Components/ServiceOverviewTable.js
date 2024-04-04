@@ -68,16 +68,7 @@ const ServiceTable = ({services}) => {
             return (
               <React.Fragment>
                               <div>
-                                {/* <h5>
-                                  <Badge 
-                                    className="status-badge"
-                                    variant={props.row.original.integration_environment==='development'?'secondary':props.row.original.integration_environment==='demo'?'dark':props.row.original.integration_environment==='production'?'info':'warning'}
-                                  >
-                                    {capitalWords(props.row.original.integration_environment==='development'?'dev':props.row.original.integration_environment==='production'?'prod':props.row.original.integration_environment)}
-                                  </Badge>
-                                </h5> */}
                                 <LogoContainer url={props.value}/>
-  
                               </div>
               </React.Fragment>
             )

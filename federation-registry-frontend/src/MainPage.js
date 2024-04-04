@@ -9,8 +9,8 @@ import config from './config.json';
 
  const MainPage= (props)=> {
      
-      const tenant = useContext(tenantContext);
-      const user = useContext(userContext);
+      const [tenant] = useContext(tenantContext);
+      const [user] = useContext(userContext);
       // eslint-disable-next-line
       const { t, i18n } = useTranslation();
 
@@ -19,8 +19,8 @@ import config from './config.json';
 
       const [bannerAlertInfo,setBannerAlertInfo] = useState([]);
       const getBannerAlerts = () => {
-        if(tenant[0]){
-          fetch(config.host[tenant[0].name]+'tenants/'+tenant[0].name+'/banner_alert?active=true', {
+        if(tenant){
+          fetch(config.host[tenant.name]+'tenants/'+tenant.name+'/banner_alert?active=true', {
             method: 'GET', // *GET, POST, PUT, DELETE, etc.
             credentials: 'include', // include, *same-origin, omit
             headers: {
@@ -55,11 +55,11 @@ import config from './config.json';
       },[tenant])
       
       useEffect(() => {
-        if(tenant&&tenant[0]){
+        if(tenant){
           const faviconUpdate = async () => {
             //grab favicon element by ID
             const favicon = document.getElementById("favicon");
-            favicon.href = tenant[0].base_url.slice(0,tenant[0].base_url.length - tenant[0].name.length)+'/'+tenant[0].config.icon+"?v=2";
+            favicon.href = tenant?.base_url.slice(0,tenant.base_url.length - tenant.name.length)+'/'+tenant.config.icon+"?v=2";
           }
           //run our function here
           faviconUpdate();
@@ -76,8 +76,8 @@ import config from './config.json';
             <Header bannerAlertInfo={bannerAlertInfo} alertBar={bannerAlertInfo.length>0} />
             <div className="ssp-container main">
               <div className="flex-container">
-                {user&&user[0]&&<SideNav tenant_name={tenant&&tenant[0]?tenant[0].name:null}/>}
-                <Routes user={user[0]} tenant={tenant[0]} t={t} />
+                {user&&<SideNav tenant_name={tenant?tenant.name:null}/>}
+                <Routes user={user} tenant={tenant} t={t} />
               </div>
             </div>
             <Footer lang={props.lang} changeLanguage={props.changeLanguage}/>

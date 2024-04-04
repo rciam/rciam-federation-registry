@@ -1248,6 +1248,19 @@ tbody tr td:last-child {
   font: 300 15px / 23px 'Manrope';
   color:rgb(43, 63, 68)!important;
 }
+
+.dl-text-error {
+  font: 300 15px / 23px 'Manrope';
+  color:#dc3545!important;
+  font-weight: bold;
+}
+
+.dl-text-success {
+  font: 300 15px / 23px 'Manrope';
+  color:#28A745!important;
+  font-weight: bold;
+}
+
 .text-info {
   font: 300 15px / 23px 'Manrope';
 }

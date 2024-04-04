@@ -1,6 +1,5 @@
 import React,{useState,useEffect,useContext,useRef} from 'react';
 import mapValues from 'lodash/mapValues';
-import {default as defaultInitialValues} from './initialValues';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {faCheckCircle,faBan,faSortDown,faExclamationTriangle,faPen} from '@fortawesome/free-solid-svg-icons';
 import Tabs from 'react-bootstrap/Tabs';
@@ -121,7 +120,7 @@ const ServiceForm = (props)=> {
 
     // Check restrictions for review
     if(props.review){
-      if(tenant.restricted_environments.includes(props.initialValues.integration_environment)&&!props.user.review_restricted){
+      if(tenant.restricted_environments.includes(props.initialValues.integration_environment)&&!props.user.actions.includes('review_restricted')){
         setRestrictReview(true);
       }
     }
@@ -190,13 +189,13 @@ const ServiceForm = (props)=> {
               loadMetadata&&setMetadataLoaded(metadata);
               if(metadata.supported_attributes.length===0&&!metadata.entity_id){
                 if(!resolve){
-                  setRequestedAttributes(defaultInitialValues.requested_attributes);
+                  setRequestedAttributes(tenant.form_config.requested_attributes);
                 }
                 setMetadataWarning('Could not find an Entity Id or any Requested Attributes from this Metadata Url.');
               }
               else if(metadata.supported_attributes.length===0){
                 if(!resolve){
-                  setRequestedAttributes(defaultInitialValues.requested_attributes);
+                  setRequestedAttributes(tenant.form_config.defaultValues.requested_attributes);
                 }
                 setMetadataWarning('Could not find any Requested Attributes from this Metadata Url.');                
               }
@@ -206,7 +205,7 @@ const ServiceForm = (props)=> {
             }
             else{
               if(!resolve){
-                setRequestedAttributes(defaultInitialValues.requested_attributes);
+                setRequestedAttributes(tenant.form_config.defaultValues.requested_attributes);
               }
               metadata.supported_attributes = [];
               
@@ -215,7 +214,7 @@ const ServiceForm = (props)=> {
           }
           else {
             if(!resolve){
-              setRequestedAttributes(defaultInitialValues.requested_attributes);              
+              setRequestedAttributes(tenant.form_config.defaultValues.requested_attributes);              
             }
             setMetadataAyncError(response.statusText);
           }
@@ -259,7 +258,7 @@ const ServiceForm = (props)=> {
     service_name:yup.string().nullable().min(4,t('yup_char_min') + ' ('+2+')').max(256,t('yup_char_max') + ' ('+256+')').required(t('yup_required')),
     // Every time client_id changes we make a fetch request to see if it is available.
     policy_uri:yup.string().nullable().when('integration_environment',{
-      is:'production',
+      is:(integrationEnvironment)=> tenant.form_config.more_info.policy_uri?.required?.includes(integrationEnvironment),
       then: yup.string().nullable().required(t('yup_required')).matches(reg.regSimpleUrl,t('yup_url')),
       otherwise: yup.string().nullable().matches(reg.regSimpleUrl,t('yup_url'))
       }),
@@ -330,7 +329,7 @@ const ServiceForm = (props)=> {
             return this.createError({ message: "Uri can't contain fragments" });
           }
           if(application_type==='WEB'){
-            if((integrationEnvironment==='production'||integrationEnvironment==='demo')&& url){
+            if(!tenant?.config?.test_env.includes(integrationEnvironment)&& url){
               if(url.protocol !== 'https:'&&!(url.protocol==='http:'&&url.hostname==='localhost')){
                 return this.createError({ message: "Uri must be a secure url starting with https://" });              
               }
@@ -380,7 +379,7 @@ const ServiceForm = (props)=> {
             return this.createError({ message: "Uri can't contain fragments" });
           }
           if(application_type==='WEB'){
-            if((integrationEnvironment==='production'||integrationEnvironment==='demo')&& url){
+            if(!tenant?.form_config?.test_env.includes(integrationEnvironment)&& url){
               if(url.protocol !== 'https:'&&!(url.protocol==='http:'&&url.hostname==='localhost')){
                 return this.createError({ message: "Uri must be a secure url starting with https://" });              
               }
@@ -419,7 +418,11 @@ const ServiceForm = (props)=> {
       }
       return true;
     }),
-    country:yup.string().nullable().test('testCountry','Select one of the available options',function(value){return countries.includes(value)}).required(t('yup_required')),
+    country:yup.string().nullable().when('integration_environment', {
+      is: (integration_environment) => tenant?.form_config?.more_info?.country?.required.includes(integration_environment),
+      then: yup.string().test('testCountry','Select one of the available options',function(value){return countries.includes(value)}).required(t('yup_required')),
+      otherwise: yup.string().nullable(),
+    }),
     service_description:yup.string().nullable().required(t('yup_required')).max(1000,'Exceeded maximum characters (1000)'),
     requested_attributes: yup.array().nullable().of(yup.object().shape({
       name:yup.string().nullable().required(t('yup_required')).min(1,t('yup_required')).required(t('yup_required')).max(512,'Exceeded maximum characters (512)'),
@@ -852,10 +855,10 @@ const ServiceForm = (props)=> {
   const postApi= async (data)=>{
     data = generateValues(data);
     let organization_id;
-    if(tenant.form_config.extra_fields.organization.active.includes(data.integration_environment)){
+    if(!tenant.form_config.extra_fields.organization.hide.includes(data.integration_environment)){
       organization_id = await addOrganization(data);
     }
-    if(organization_id||!tenant.form_config.extra_fields.organization.active.includes(data.integration_environment)){
+    if(organization_id||tenant.form_config.extra_fields.organization.hide.includes(data.integration_environment)){
       data.organization_id = organization_id;
       if(!props.type){
         createNewPetition(data);
@@ -1079,7 +1082,7 @@ const ServiceForm = (props)=> {
                           changed={props.changes?props.changes.service_description:null}
                         />
                       </InputRow>
-                      <InputRow  moreInfo={tenant.form_config.more_info.country} title={'Select country'} required={true} extraClass='select-col' error={errors.country} touched={touched.country}>
+                      <InputRow  moreInfo={tenant.form_config.more_info.country} title={'Select country'} required={tenant?.form_config?.more_info?.country?.required.includes(values.integration_environment)} extraClass='select-col' error={errors.country} touched={touched.country}>
                         <CountrySelect
                           onBlur={handleBlur}
                           placeholder={'Select country'}
@@ -1091,7 +1094,7 @@ const ServiceForm = (props)=> {
                           changed={props.changes?props.changes.country:null}
                         />
                       </InputRow>
-                      {tenant.form_config.extra_fields.organization.active.includes(values.integration_environment)?
+                      {tenant.form_config.extra_fields.organization&&!tenant?.form_config?.extra_fields?.organization?.hide.includes(values.integration_environment)?
                       <React.Fragment>
                         <InputRow  moreInfo={tenant.form_config.more_info.organization_name} required={tenant.form_config.extra_fields.organization.required.includes(values.integration_environment)} title="Organisation" description="Search for your organisation" error={errors.organization_name} touched={touched.organization_name}>
                             <OrganizationField
@@ -1125,7 +1128,7 @@ const ServiceForm = (props)=> {
                         </React.Fragment>
                         :null
                       }
-                      <InputRow  moreInfo={tenant.form_config.more_info.policy_uri} title={t('form_policy_uri')} required={true&&values.integration_environment==='production'} description={t('form_policy_uri_desc')} error={errors.policy_uri} touched={touched.policy_uri}>
+                      <InputRow  moreInfo={tenant.form_config.more_info.policy_uri} title={t('form_policy_uri')} required={tenant.form_config.more_info.policy_uri?.required?.includes(values.integration_environment)} description={t('form_policy_uri_desc')} error={errors.policy_uri} touched={touched.policy_uri}>
                         <SimpleInput
                           name='policy_uri'
                           placeholder={t('form_url_placeholder')}
@@ -1498,7 +1501,7 @@ const ServiceForm = (props)=> {
                             copybutton={props.copybutton}
                             isInvalid={hasSubmitted?!!(errors.entity_id&&!checkingAvailability):(!!errors.entity_id&&touched.entity_id&&!checkingAvailability)}
                             onBlur={handleBlur}
-                            disabled={disabled}
+                            disabled={disabled||service_id}
                             changed={props.changes?props.changes.entity_id:null}
                             isloading={values.entity_id&&values.entity_id!==checkedId&&checkingAvailability?1:0}
                            />

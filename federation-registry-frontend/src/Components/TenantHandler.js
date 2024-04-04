@@ -11,11 +11,19 @@ export const TenantHandler = () => {
   const [tenant,setTenant] = useContext(tenantContext);
   let history = useHistory();
   useEffect(()=>{
-    getTenant(tenant_name);
+    if(config.host[tenant_name]){
+      getTenant(tenant_name);  
+    }
+    else{
+      setTenant(null);
+      history.push('/404');
+    }
+    
     // eslint-disable-next-line
   },[]);
 
   const getTenant = (tenant_name)=>{
+
     fetch(config.host[tenant_name]+'tenants/'+tenant_name,{
       method:'GET',
       credentials:'include',

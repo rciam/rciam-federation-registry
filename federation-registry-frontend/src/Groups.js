@@ -16,7 +16,7 @@ import {LoadingBar,ProcessingRequest} from './Components/LoadingBar';
 import * as yup from 'yup';
 import Alert from 'react-bootstrap/Alert';
 import {Logout,NotFound} from './Components/Modals';
-import {userContext} from './context.js';
+import {userContext,tenantContext} from './context.js';
 import {ConfirmationModal} from './Components/Modals';
 import Tabs from 'react-bootstrap/Tabs';
 import Tab from 'react-bootstrap/Tab';
@@ -32,8 +32,8 @@ const GroupsPage = (props) => {
     getData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
-
-  const user = useContext(userContext);
+  const [tenant] = useContext(tenantContext);
+  const [user] = useContext(userContext);
   const [group_managers,setGroupManagers] = useState();
   const [invitationResult,setInvitationResult] = useState();
   const [sending,setSending] = useState();
@@ -62,7 +62,7 @@ const GroupsPage = (props) => {
           'Content-Type': 'application/json'}
       }).then(response=>{
 
-        if(response.status===200){
+        if(response.status===200||response.status===304){
           return response.json();
         }
         else if(response.status===401){
@@ -89,7 +89,7 @@ const GroupsPage = (props) => {
         headers: {
           'Content-Type': 'application/json'}
       }).then(response=>{
-        if(response.status===200){
+        if(response.status===200||response.status===304){
           return response.json();
         }
         else if(response.status===401){
@@ -136,9 +136,9 @@ const GroupsPage = (props) => {
       }).then(response=> {
         if(response){
           let count = 0;
-          let group_manager = user[0].actions.includes('invite_to_group');
+          let group_manager = user.actions.includes('invite_to_group');
           response.group_members.forEach((member, i) => {
-            if(member.sub===user[0].sub){
+            if(member.sub===user[tenant.config.claims.sub_claim]){
               group_manager = true;
             }
             if(member.group_manager){
@@ -343,18 +343,18 @@ const GroupsPage = (props) => {
                                 placement='top'
                                 overlay={
                                     <Tooltip id={`tooltip-top`}>
-                                    {group_managers<2&&member.group_manager?"Can't remove user, at least one group manager must remain in the group":user[0].sub===member.sub?'Leave Group':member.pending?'Cancel Invitation':'Remove Member'}
+                                    {group_managers<2&&member.group_manager?"Can't remove user, at least one group manager must remain in the group":user[tenant.config.claims.sub_claim]===member.sub?'Leave Group':member.pending?'Cancel Invitation':'Remove Member'}
                                     </Tooltip>
                                   }
                                 >
                                 <Button
                                 variant="danger"
-                                className={user[0].sub===member.sub?'leave-group-button':''}
+                                className={user[tenant.config.claims.sub_claim]===member.sub?'leave-group-button':''}
                                 onClick={()=>{
                                   setConfirmationData({
                                     action:'remove',
                                     args:[member.sub,member.group_id],
-                                    message:(member.sub!==user[0].sub?
+                                    message:(member.sub!==user[tenant.config.claims.sub_claim]?
                                       <React.Fragment>
                                           <table style={{border:'none'}} className="confirmation-table">
                                           <tbody>
@@ -375,12 +375,12 @@ const GroupsPage = (props) => {
                                         </React.Fragment>
                                       :null
                                     ),
-                                    title:(member.sub===user[0].sub?'Are you sure you want to leave the owners group?':'Are you sure you want to remove following user from owners group')
+                                    title:(member.sub===user[tenant.config.claims.sub_claim]?'Are you sure you want to leave the owners group?':'Are you sure you want to remove following user from owners group')
                                   });
                                 }}
                                 disabled={group.length<1||(group_managers<2&&member.group_manager)}
                                 >
-                                <FontAwesomeIcon icon={user[0].sub===member.sub?faSignOutAlt:faTimes} />
+                                <FontAwesomeIcon icon={user[tenant.config.claims.sub_claim]===member.sub?faSignOutAlt:faTimes} />
                                 </Button>
                                 </OverlayTrigger>
                                 </td>:null}
@@ -510,7 +510,7 @@ const GroupsPage = (props) => {
                             {invitationResult.success?t('invitation_success'):t('invitation_error')}{invitationResult.email}
                           </Alert>:null
                         }
-                        {isGroupManager||user[0].actions.includes('invite_to_group')?
+                        {isGroupManager||user.actions.includes('invite_to_group')?
                           <React.Fragment>
                             <h4 className="group_title">Send Invites</h4>
                             <Row className="group_invite_row">
@@ -557,7 +557,7 @@ const GroupsPage = (props) => {
 
                   </Tab>
                   <Tab eventKey="service" title="View Service">
-                    {service?<ServiceForm user={user[0]} initialValues={service} disabled={true} {...props}/>:<LoadingBar/>}
+                    {service?<ServiceForm user={user} initialValues={service} disabled={true} {...props}/>:<LoadingBar/>}
                   </Tab>
       </Tabs>
       </React.Fragment>

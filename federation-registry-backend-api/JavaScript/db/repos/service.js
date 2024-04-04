@@ -218,7 +218,6 @@ class ServiceRepository {
     const query = this.pgp.as.format(sql.getPending);
     return this.db.any(query).then(services=>{
       services.forEach((service,index)=>{
-
         if(service.json.protocol==='saml'&&service.json.requested_attributes&&service.json.requested_attributes.length>0){
           service.json.requested_attributes.forEach((attribute,attr_index)=>{      
             let match_index = requested_attributes.findIndex(x => x.friendly_name ===attribute.friendly_name)            

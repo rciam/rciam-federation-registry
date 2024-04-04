@@ -1,11 +1,8 @@
-const qs = require('qs');
 const customLogger = require('../loggers.js');
-const axios = require('axios').default;
 const {db} = require('../db');
-const { ResultWithContext } = require('express-validator/src/chain');
-const e = require('express');
 const base64url = require('base64url');
 var CryptoJS = require("crypto-js");
+const {getUserFromClaims} = require('../functions/util_functions.js')
 
 
 function adminAuth(req,res,next){
@@ -78,7 +75,7 @@ function authenticate(req,res,next){
         else{
         }
         clients[req.params.tenant].userinfo(federation_authtoken).then(userinfo => {
-          req.user = userinfo;
+          req.user = getUserFromClaims(userinfo,req.params.tenant);
           if(req.user.sub){
             db.user_role.getRoleActions(req.user.sub,req.params.tenant).then(role=>{
               if(role){

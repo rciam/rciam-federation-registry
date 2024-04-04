@@ -18,7 +18,7 @@ import {faTimes} from '@fortawesome/free-solid-svg-icons';
 
 
 export const Header= (props)=> {
-  const tenant = useContext(tenantContext);
+  const [tenant] = useContext(tenantContext);
   const [bannerAlertInfo,setBannerAlertInfo] = useState([]);
 
   useEffect(()=>{
@@ -41,12 +41,12 @@ export const Header= (props)=> {
 
       <div className={"tenant_logo_container"}>
         <div className="text-center ssp-logo">
-          <a href={tenant[0]&&tenant[0].config.website_url}>
-            <Image src={tenant[0]&&tenant[0].config.logo_url} fluid />
+          <a href={tenant?.config.website_url}>
+            <Image src={tenant?.config.logo_url} fluid />
           </a>
         </div>
         <h1 className="text-center">
-          {tenant[0]&&tenant[0].config.home_page_title}
+          {tenant?.config.home_page_title}
         </h1>
       </div>
     </div>
@@ -59,50 +59,54 @@ export const NavbarTop = (props)=>{
   const [user,setUser] = useContext(userContext);
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
-  const tenant = useContext(tenantContext);
+  const [tenant] = useContext(tenantContext);
   const [cookies] = useCookies(['federation_logoutkey']);
 
   return (
     <React.Fragment>
-    {tenant[0]&&
-      <Navbar className={"navbar-fixed-top"}>
-        <Navbar.Collapse className="justify-content-end">
-          {user?
-            <DropdownButton
-              variant="link"
-              alignRight
-              className='drop-menu drop-container-header'
-              title={<React.Fragment>
-                <span style={tenant&&tenant[0]&&{color:tenant[0].config.theme_color}}>
-                {user?user.name:'login'}
-                <span>{user&&' ('+user.role+')'}</span>
-                <FontAwesomeIcon icon={user.actions.includes('review_petition')?faUserShield:faUser}/>
-                </span>
-              </React.Fragment>}
-              id="dropdown-menu-align-right"
-            >
-              {user&&
-                <Dropdown.Item>
-                  {user.sub} <strong>(sub)</strong>
+    
+    {tenant&&
+      <React.Fragment>
+        {tenant.config.ribon.active&&<div class="corner-ribbon red">{tenant.config.ribon.text}</div>}
+        <Navbar className={"navbar-fixed-top"}>
+          <Navbar.Collapse className="justify-content-end">
+            {user?
+              <DropdownButton
+                variant="link"
+                alignRight
+                className='drop-menu drop-container-header'
+                title={<React.Fragment>
+                  <span style={tenant&&{color:tenant?.config?.theme_color}}>
+                  {user?user[tenant.config.claims.display_name_claim]:'login'}
+                  <span>{user&&' ('+user.role+')'}</span>
+                  <FontAwesomeIcon icon={user.actions.includes('review_petition')?faUserShield:faUser}/>
+                  </span>
+                </React.Fragment>}
+                id="dropdown-menu-align-right"
+              >
+                {user&&
+                  <Dropdown.Item>
+                    {user[tenant.config.claims.sub_claim]} <strong>(sub)</strong>
+                  </Dropdown.Item>
+                }
+                <Dropdown.Item onClick={()=>{history.push('/'+tenant?.name+'/userinfo');}}>
+                {t('nav_link_userinfo')}
                 </Dropdown.Item>
-              }
-              <Dropdown.Item onClick={()=>{history.push('/'+(tenant&&tenant[0]&&(tenant[0].name+'/userinfo')));}}>
-              {t('nav_link_userinfo')}
-              </Dropdown.Item>
-              <Dropdown.Item onClick={()=>{
-                window.location.assign(tenant[0].logout_uri + "&id_token_hint="+cookies.federation_logoutkey);
-              }}>
-                {t('logout')}<FontAwesomeIcon icon={faSignOutAlt}/>
-              </Dropdown.Item>
-            </DropdownButton>
-          :(
-          <React.Fragment>
-            <a href={config.host[tenant[0].name]+"tenants/"+(tenant[0]&&tenant[0].name)+"/login"}><Button className="log-button" variant="outline-primary">{t('login')}</Button></a>
-          </React.Fragment>
-          )
-        }
-        </Navbar.Collapse>
-      </Navbar>
+                <Dropdown.Item onClick={()=>{
+                  window.location.assign(tenant?.logout_uri + "&id_token_hint="+cookies.federation_logoutkey);
+                }}>
+                  {t('logout')}<FontAwesomeIcon icon={faSignOutAlt}/>
+                </Dropdown.Item>
+              </DropdownButton>
+            :(
+            <React.Fragment>
+              <a href={config.host[tenant?.name]+"tenants/"+tenant?.name+"/login"}><Button className="log-button" variant="outline-primary">{t('login')}</Button></a>
+            </React.Fragment>
+            )
+          }
+          </Navbar.Collapse>
+        </Navbar>
+      </React.Fragment>
     }
     </React.Fragment>
   )
@@ -112,7 +116,7 @@ export const NavbarTop = (props)=>{
 
 
 export const Footer =(props) =>{
-  const tenant = useContext(tenantContext);
+  const [tenant] = useContext(tenantContext);
 
   return (
     <footer>
@@ -139,7 +143,7 @@ export const Footer =(props) =>{
           <Col sm="3" className="ssp-footer__item">
             <div className="footer_link_container">
               <div className="ssp-footer__item__powered">
-              <a href = {"mailto: "+ (tenant[0]&&tenant[0].config&&tenant[0].config.contact)}>Support</a>
+              <a href = {"mailto: "+ tenant?.config?.contact}>Support</a>
               </div>
               <div className="ssp-footer__item__powered">
                 <a href={'https://federation.rciam.grnet.gr/docs'}>Documentation</a>
@@ -149,7 +153,7 @@ export const Footer =(props) =>{
         </Row>
         <Row>
           <div className='copyright-funding-footer'>
-            {tenant&&tenant[0]&&parse(tenant[0].config.footer_description)} | Powered by <a href="https://rciam.github.io/rciam-docs/" target="_blank" rel="noreferrer"> RCIAM</a>
+            {tenant&&parse(tenant?.config?.footer_description)} | Powered by <a href="https://rciam.github.io/rciam-docs/" target="_blank" rel="noreferrer"> RCIAM</a>
           </div>
         </Row>
       </div>

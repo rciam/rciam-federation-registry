@@ -12,7 +12,6 @@ const {delay,readHTMLFile,createTransport} = require('./helpers');
 
 const outdatedNotificationsWorker =  async(interval_seconds) =>{
   const sendNotif = () =>{
-  //  console.log(db);
     
     db.service_state.getOutdatedOwners('egi',null).then(async users=>{
       if(users){
@@ -101,15 +100,15 @@ const sendOutdatedNotification = async (data) => {
         var replacements = {
           username:data.username,
           tenant:data.tenant,
-          logo_url:config[data.tenant].logo_url,
+          logo_url:tenant_config[data.tenant].logo_url,
           integration_environment:data.integration_environment,
           url:tenant_config[data.tenant].base_url+'/services/'+ data.service_id+'/edit',
           service_name:data.service_name,
-          tenant_signature:config[data.tenant].tenant_signature
+          tenant_signature:tenant_config[data.tenant].tenant_signature
         }
         var htmlToSend = template(replacements);
         var mailOptions = {
-          from: config[data.tenant].sender+" Notifications <noreply@faai.grnet.gr>",
+          from: tenant_config[data.tenant].sender+" Notifications <noreply@faai.grnet.gr>",
           to : data.email,
           subject : 'Service ('+data.service_name+') is outdated [Action Required]',
           html : htmlToSend

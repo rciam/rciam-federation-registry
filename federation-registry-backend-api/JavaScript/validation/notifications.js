@@ -10,8 +10,8 @@ const getRecipientsBroadcastNotifications = () => {
           let contact_types = value.split(',');
           if(contact_types.length>0){
             contact_types.forEach(contact_type=>{
-              if(!config[req.params.tenant].form.contact_types.includes(contact_type)){
-                throw new Error(contact_type + ' is not a supported contact type, supported contact types (' + config[req.params.tenant].form.contact_types + ')');            
+              if(!tenant_config[req.params.tenant].form.contact_types.includes(contact_type)){
+                throw new Error(contact_type + ' is not a supported contact type, supported contact types (' + tenant_config[req.params.tenant].form.contact_types + ')');            
               }
             })
           }
@@ -29,8 +29,8 @@ const getRecipientsBroadcastNotifications = () => {
           let environments = value.split(',');
           if(environments.length>0){
             environments.forEach(environment=>{
-              if(!config[req.params.tenant].form.integration_environment.includes(environment)){
-                throw new Error(environment + ' is not a supported environment, supported environments (' + config[req.params.tenant].form.integration_environment + ')');            
+              if(!tenant_config[req.params.tenant].form.integration_environment.includes(environment)){
+                throw new Error(environment + ' is not a supported environment, supported environments (' + tenant_config[req.params.tenant].form.integration_environment + ')');            
               }
             })
           }
@@ -48,8 +48,8 @@ const getRecipientsBroadcastNotifications = () => {
           let protocols = value.split(',');
           if(protocols.length>0){
             protocols.forEach(protocol=>{
-              if(!config[req.params.tenant].form.protocol.includes(protocol)){
-                throw new Error(protocol + ' is not a supported protocol, supported protocols (' + config[req.params.tenant].form.protocol + ')');            
+              if(!tenant_config[req.params.tenant].form.protocol.includes(protocol)){
+                throw new Error(protocol + ' is not a supported protocol, supported protocols (' + tenant_config[req.params.tenant].form.protocol + ')');            
               }
             })
           }
@@ -69,8 +69,8 @@ const getRecipientsBroadcastNotifications = () => {
     return [
       body('integration_environment').exists().withMessage('Required Field').bail().isString().withMessage('name must be a string').bail().custom((value,{req,location,path})=>{
         try{
-          if(!config[req.params.tenant].form.integration_environment.includes(value)){
-            throw new Error(value + ' is not a supported integration_environment, supported values (' + config[req.params.tenant].form.integration_environment+ ')')
+          if(!tenant_config[req.params.tenant].form.integration_environment.includes(value)){
+            throw new Error(value + ' is not a supported integration_environment, supported values (' + tenant_config[req.params.tenant].form.integration_environment+ ')')
           }
           
         }
@@ -154,7 +154,7 @@ const getRecipientsBroadcastNotifications = () => {
         
         if(value.length>0){
           value.forEach(type=>{
-            if(!config[req.params.tenant].form.contact_types.includes(type)){
+            if(!tenant_config[req.params.tenant].form.contact_types.includes(type)){
               throw new Error(type +" is not a valid contact type");
             }
           });
@@ -176,7 +176,7 @@ const getRecipientsBroadcastNotifications = () => {
       
         if(value.length>0){
           value.forEach(environment=>{
-            if(!config[req.params.tenant].form.integration_environment.includes(environment)){
+            if(!tenant_config[req.params.tenant].form.integration_environment.includes(environment)){
               throw new Error(environment +" is not a valid environment");
             }
           });

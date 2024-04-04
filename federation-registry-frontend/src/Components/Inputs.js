@@ -430,7 +430,7 @@ export function AuthMethRadioList(props){
   // const signingAlg = props.values.token_endpoint_auth_signing_alg;
   const setFieldValue = props.setFieldValue;
   const target = useRef(null);
-  const tenant = useContext(tenantContext);
+  const [tenant] = useContext(tenantContext);
 
   useEffect(()=>{
     if((props.values.token_endpoint_auth_method==="client_secret_jwt"||props.values.token_endpoint_auth_method==="private_key_jwt")&&!props.values.token_endpoint_auth_signing_alg){
@@ -440,7 +440,7 @@ export function AuthMethRadioList(props){
   },[props.values.token_endpoint_auth_method]);
 
   useEffect(()=>{
-    if(tenant[0].form_config.dynamic_fields.includes('allow_introspection')){
+    if(tenant.form_config.dynamic_fields.includes('allow_introspection')){
       setFieldValue('allow_introspection',props.values.token_endpoint_auth_method!=='none');
     } 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -471,7 +471,7 @@ export function AuthMethRadioList(props){
                     disabled={props.disabled}
                     {...field}
                     onChange={(e)=>{
-                      if(tenant[0].form_config.dynamic_fields.includes('allow_introspection')){
+                      if(tenant.form_config.dynamic_fields.includes('allow_introspection')){
                           setFieldValue('allow_introspection',e.target.value!=='none');
                       } 
                       props.onChange(e); }}
@@ -775,7 +775,7 @@ export function RefreshToken(props){
     const target = useRef(null);
     // eslint-disable-next-line
     const { t, i18n } = useTranslation();
-    const tenant = useContext(tenantContext);
+    const [tenant] = useContext(tenantContext);
     return(
       <React.Fragment>
         <div
@@ -815,7 +815,7 @@ export function RefreshToken(props){
               Enabling re-use of Refresh Tokens is not recommended. Public clients in particular should have this option disabled and use refresh token rotation as described in <a href='https://datatracker.ietf.org/doc/html/rfc6749#section-4.13' target='_blank' rel='noopener noreferrer'>Section 4.13 of  RFC6749</a>
             </div>
             <div className={"checkbox-item "+(props.changed&&props.changed.reuse_refresh_token?"spacing-bot":'')}>
-            {!tenant[0].form_config.disabled_fields.includes('clear_access_tokens_on_refresh')?
+            {!tenant.form_config.disabled_fields.includes('clear_access_tokens_on_refresh')?
               <SimpleCheckbox
                 name="clear_access_tokens_on_refresh"
                 label={t('form_clear_access_tokens_on_refresh')}
@@ -1388,7 +1388,7 @@ export function Contacts(props){
 
   const [newVal,setNewVal] = useState('');
   const [newVal2,setNewVal2] = useState('admin');
-  const tenant = useContext(tenantContext);
+  const [tenant] = useContext(tenantContext);
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
   return (
@@ -1414,7 +1414,7 @@ export function Contacts(props){
                             setNewVal2(e.target.value)
                           }}>
                             <React.Fragment>
-                              {tenant[0].form_config.contact_types.map((item,index) => {
+                              {tenant.form_config.contact_types.map((item,index) => {
                                   return <option key={index} value={item}>{capitalize(item)}</option>
                                 })
                               }
@@ -1463,7 +1463,7 @@ function ContactInput(props){
   const [type,setType] = useState();
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
-  const tenant = useContext(tenantContext);
+  const [tenant] = useContext(tenantContext);
 
   useEffect(()=>{
     if(props.changed){
@@ -1516,7 +1516,7 @@ function ContactInput(props){
             onBlur={props.handleBlur}
             onChange={props.onChange}
           >
-            {tenant[0].form_config.contact_types.map((item,index) => {
+            {tenant.form_config.contact_types.map((item,index) => {
                 return <option key={index} value={item}>{capitalize(item)}</option>
               })
             }
