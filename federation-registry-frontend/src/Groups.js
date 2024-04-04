@@ -62,7 +62,7 @@ const GroupsPage = (props) => {
           'Content-Type': 'application/json'}
       }).then(response=>{
 
-        if(response.status===200){
+        if(response.status===200||response.status===304){
           return response.json();
         }
         else if(response.status===401){
@@ -89,7 +89,7 @@ const GroupsPage = (props) => {
         headers: {
           'Content-Type': 'application/json'}
       }).then(response=>{
-        if(response.status===200){
+        if(response.status===200||response.status===304){
           return response.json();
         }
         else if(response.status===401){

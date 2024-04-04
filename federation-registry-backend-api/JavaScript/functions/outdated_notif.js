@@ -12,7 +12,6 @@ const {delay,readHTMLFile,createTransport} = require('./helpers');
 
 const outdatedNotificationsWorker =  async(interval_seconds) =>{
   const sendNotif = () =>{
-  //  console.log(db);
     
     db.service_state.getOutdatedOwners('egi',null).then(async users=>{
       if(users){

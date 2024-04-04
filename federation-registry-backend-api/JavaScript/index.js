@@ -53,21 +53,27 @@ db.tenants.getInit().then(async tenants => {
   for (const tenant of tenants){
     tenant_config[tenant.name] = {
       base_url:tenant.base_url
-  }
-  const filePath = path.join(__dirname, 'tenant_config', tenant.name + '.json');
-  fs.readFile(filePath, 'utf8', (err, data) => {
-    if (err) {
-      console.error('Error reading file:', err);
-      return;
     }
-  
-    try {
-      // Parse the JSON data
-      tenant_config[tenant.name] = {...tenant_config[tenant.name],...JSON.parse(data)};
-    } catch (error) {
-      console.error('Error parsing tenant configuration:', error);
+    let filePath;
+    if(process.env.NODE_ENV!=='test-docker'&&process.env.NODE_ENV!=='test'){
+      filePath = path.join(__dirname, 'tenant_config', tenant.name + '.json');
     }
-  });
+    else{
+      filePath = path.join(__dirname, 'test', tenant.name + '.json');
+    }
+
+    fs.readFile(filePath, 'utf8', (err, data) => {
+      if (err) {
+        console.error('Error reading file:', err);
+        return;
+      }
+      try {
+        // Parse the JSON data
+        tenant_config[tenant.name] = {...tenant_config[tenant.name],...JSON.parse(data)};
+      } catch (error) {
+        console.error('Error parsing tenant configuration:', error);
+      }
+    });
 
     await Issuer.discover(tenant.issuer_url).then((issuer)=>{
       clients[tenant.name] = new issuer.Client({
@@ -89,26 +95,6 @@ db.tenants.getInit().then(async tenants => {
   app.set('clients',clients);
   global.tenant_config = tenant_config;
 }).catch(err => {console.log('Tenant initialization failed due to following error'); console.log(err);});
-
-// if(config.send_notifications_on_startup){
-//   try{
-//     db.user.getTechnicalContacts('egi').then(async users=>{
-//       if(users){
-//         for(const user of users){
-//           await delay(400);
-//           sendNotif({subject:'New portal for managing services in Check-in',tenant:'egi'},'introduction-to-fed.hbs',{name:user.name,email:user.email});
-//         }
-//       }
-//     }).catch(err=>{
-//       console.log('Failed to get users to push the notifications');
-//     })
-
-//   }
-//   catch(err){
-//       console.log('Error when trying to send notifications: '+ err);
-//   }
-// }
-
 
 
 

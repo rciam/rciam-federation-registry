@@ -2,7 +2,7 @@ import React,{useContext} from 'react';
 import Nav from 'react-bootstrap/Nav';
 import {Link} from "react-router-dom";
 import { useTranslation } from 'react-i18next';
-import {userContext,tenantContext} from '../context.js';
+import {userContext} from '../context.js';
 
 export const SideNav = (props) => {
   // eslint-disable-next-line

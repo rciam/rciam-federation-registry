@@ -1,9 +1,7 @@
 require('dotenv').config();
 const {petitionValidationRules,validate,validateInternal,tenantValidation,formatPetition,getServiceListValidation,postInvitationValidation,serviceValidationRules,putAgentValidation,postAgentValidation,decodeAms,amsIngestValidation,reFormatPetition,getServicesValidation,formatServiceBooleanForValidation} = require('../validator.js');
 const qs = require('qs');
-const {v1:uuidv1} = require('uuid');
-const axios = require('axios').default;
-const {sendMail,sendInvitationMail,sendMultipleInvitations,sendDeploymentMail,delay} = require('../functions/helpers.js');
+const {v1:uuidv1} = require('uuid');const {sendMail,sendInvitationMail,sendMultipleInvitations,sendDeploymentMail,delay} = require('../functions/helpers.js');
 const {getUserFromClaims} = require('../functions/util_functions.js')
 const {db} = require('../db');
 var router = require('express').Router();
@@ -13,7 +11,6 @@ const customLogger = require('../loggers.js');
 const {rejectPetition,approvePetition,changesPetition,getPetition,getOpenPetition,requestReviewPetition} = require('../controllers/main.js');
 const {adminAuth,authenticate,clearCookies} = require('./authentication.js'); 
 var CryptoJS = require("crypto-js");
-
 
 
 // ----------------------------------------------------------
@@ -301,9 +298,14 @@ router.get('/callback/:tenant',(req,res,next)=>{
   var clients = req.app.get('clients');
   clients[req.params.tenant].callback(process.env.REDIRECT_URI+req.params.tenant,{code:req.query.code}).then(async response => {
     let code = await db.tokens.addToken(response.access_token,response.id_token);
-    clients[req.params.tenant].userinfo(response.access_token).then(usr_info=>{
-    saveUser(usr_info,req.params.tenant);
-  }); // => Promise
+    try{
+        clients[req.params.tenant].userinfo(response.access_token).then(usr_info=>{
+        saveUser(usr_info,req.params.tenant);
+      }); // => Promise
+    }
+    catch(err){
+      console.log(err);
+    }
     res.redirect(tenant_config[req.params.tenant].base_url+'/code/' + code.code);
   });
 });
@@ -334,10 +336,11 @@ router.get('/tokens/:code',(req,res,next)=>{
             console.log(err);
             next(err);})
         }
-      }).catch(err=>{next(err);})
+      }).catch(err=>{console.log(err); next(err);})
     })
   }
   catch(err){
+    console.log(err);
     next(err)
   }
 });
@@ -503,7 +506,7 @@ router.post('/ams/ingest',checkCertificate,decodeAms,amsIngestValidation(),valid
 
 
 // ams-agent requests to set state to waiting development
-// updateData = [{id:1,state:'deployed',tenant:'egi',protocol:'oidc'},{id:2,state:'deployed',tenant:'egi',protocol:'saml'},{id:3,state:'failed',tenant:'eosc',protocol:'oidc'}];
+// updateData = [{id:1,state:'deployed',tenant:'tenant_name',protocol:'oidc'},{id:2,state:'deployed',tenant:'tenant_name',protocol:'saml'},{id:3,state:'failed',tenant:'tenant_name',protocol:'oidc'}];
 router.put('/agent/set_services_state',amsAgentAuth,(req,res,next)=>{
   try{
     return db.task('set_state_and_agents',async t=>{

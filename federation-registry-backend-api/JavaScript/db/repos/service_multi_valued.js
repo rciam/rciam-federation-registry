@@ -117,7 +117,6 @@ async updateSamlAttributes(type,data,service_id){
 
 
   async addSamlAttributesMultiple(data,table){
-    //console.log(data);.
     if(data&&data.length>0){
       const query = this.pgp.helpers.insert(data,cs.serviceSamlAttributes,table);
       return this.db.none(query).then(data => {

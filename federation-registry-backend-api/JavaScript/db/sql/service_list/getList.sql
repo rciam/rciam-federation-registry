@@ -2,7 +2,7 @@ SELECT  json_agg(json_build_object('outdated',foo.outdated,'service_id',foo.serv
               ,'country',foo.country,'website_url',foo.website_url,'organization_name',foo.organization_name
               ,'owners',
 							 (SELECT coalesce(json_agg((v.email)), '[]'::json)
-						 		FROM (SELECT * from (select * from group_subs g WHERE foo.group_id = g.group_id) as subs LEFT JOIN user_info USING (sub) WHERE tenant='egi')as v),'created_at',foo.created_at,'orphan',foo.orphan ${get_tags_filter:raw})) as list_items, full_count,outdated_count,request_review_count FROM (
+						 		FROM (SELECT * from (select * from group_subs g WHERE foo.group_id = g.group_id) as subs LEFT JOIN user_info USING (sub) WHERE tenant=${tenant_name})as v),'created_at',foo.created_at,'orphan',foo.orphan ${get_tags_filter:raw})) as list_items, full_count,outdated_count,request_review_count FROM (
   SELECT *,COUNT(*) OVER() As full_count,COUNT(case when outdated=true AND petition_id IS NULL AND bar.owned then 1 else null end ) OVER() as outdated_count,COUNT(case when status='request_review' then 1 else null end ) OVER() as request_review_count FROM (
     SELECT DISTINCT service_id,petition_id,service_description,logo_uri,service_name,integration_environment,CASE WHEN owned IS NULL THEN false ELSE owned END,status,type,state,CASE WHEN group_ids.group_manager IS NULL then false ELSE group_ids.group_manager END,CASE WHEN notification IS NULL THEN false ELSE notification END AS notification,comment,service_details.group_id,deployment_type,CASE WHEN petitions.last_edited IS NOT NULL THEN petitions.last_edited ELSE service_state.last_edited END,outdated,client_id,entity_id,created_at,orphan,tags,website_url,country,organizations.name as organization_name
     FROM

@@ -20,12 +20,13 @@ const OutdatedNotifications = () =>{
   const [tenant] = useContext(tenantContext);
   const [responseTitle,setResponseTitle] = useState();
   const [responseMessage,setResponseMessage] = useState();
-  const [integrationEnvironment,setIntegrationEnvironment] = useState('production');
+  const [integrationEnvironment,setIntegrationEnvironment] = useState('');
   const [confirmationData,setConfirmationData] = useState({active:false}) 
   const history = useHistory();
 
   const [outdatedServices,setOutdatedService] = useState(()=>{
       let outdated_services = {};
+      setIntegrationEnvironment(tenant.form_config.integration_environment[0]);
       tenant.form_config.integration_environment.forEach(integration_environment=>{
       outdated_services[integration_environment] = 0;
       });

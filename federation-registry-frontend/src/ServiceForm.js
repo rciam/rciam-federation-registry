@@ -258,7 +258,7 @@ const ServiceForm = (props)=> {
     service_name:yup.string().nullable().min(4,t('yup_char_min') + ' ('+2+')').max(256,t('yup_char_max') + ' ('+256+')').required(t('yup_required')),
     // Every time client_id changes we make a fetch request to see if it is available.
     policy_uri:yup.string().nullable().when('integration_environment',{
-      is:'production',
+      is:(integrationEnvironment)=> tenant.form_config.more_info.policy_uri?.required?.includes(integrationEnvironment),
       then: yup.string().nullable().required(t('yup_required')).matches(reg.regSimpleUrl,t('yup_url')),
       otherwise: yup.string().nullable().matches(reg.regSimpleUrl,t('yup_url'))
       }),
@@ -329,7 +329,7 @@ const ServiceForm = (props)=> {
             return this.createError({ message: "Uri can't contain fragments" });
           }
           if(application_type==='WEB'){
-            if((integrationEnvironment==='production'||integrationEnvironment==='demo')&& url){
+            if(!tenant?.config?.test_env.includes(integrationEnvironment)&& url){
               if(url.protocol !== 'https:'&&!(url.protocol==='http:'&&url.hostname==='localhost')){
                 return this.createError({ message: "Uri must be a secure url starting with https://" });              
               }
@@ -379,7 +379,7 @@ const ServiceForm = (props)=> {
             return this.createError({ message: "Uri can't contain fragments" });
           }
           if(application_type==='WEB'){
-            if((integrationEnvironment==='production'||integrationEnvironment==='demo')&& url){
+            if(!tenant?.form_config?.test_env.includes(integrationEnvironment)&& url){
               if(url.protocol !== 'https:'&&!(url.protocol==='http:'&&url.hostname==='localhost')){
                 return this.createError({ message: "Uri must be a secure url starting with https://" });              
               }
@@ -1128,7 +1128,7 @@ const ServiceForm = (props)=> {
                         </React.Fragment>
                         :null
                       }
-                      <InputRow  moreInfo={tenant.form_config.more_info.policy_uri} title={t('form_policy_uri')} required={true&&values.integration_environment==='production'} description={t('form_policy_uri_desc')} error={errors.policy_uri} touched={touched.policy_uri}>
+                      <InputRow  moreInfo={tenant.form_config.more_info.policy_uri} title={t('form_policy_uri')} required={tenant.form_config.more_info.policy_uri?.required?.includes(values.integration_environment)} description={t('form_policy_uri_desc')} error={errors.policy_uri} touched={touched.policy_uri}>
                         <SimpleInput
                           name='policy_uri'
                           placeholder={t('form_url_placeholder')}

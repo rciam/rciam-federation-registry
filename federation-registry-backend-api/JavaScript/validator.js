@@ -276,14 +276,13 @@ const serviceValidationRules = (options,req) => {
       return isNotEmpty(value)&&(req.body[pos].protocol==='saml');
     }
   }
-  const requiredProduction = (value,env,req,pos,field) =>{
+  const requiredIntegrationEnvironment = (tenant,value,env,req,pos,field) =>{
     let error = false;
-
-    if(env==="production"&&isEmpty(value)){
+    if(tenant_config[tenant].form.more_info[field]?.required?.includes(env)&&isEmpty(value)){
       if(options.optional){
         req.body[pos].outdated = true;
-        append_error(value,req,pos,field,field + " is a required attribute for the production environment");
-        error = false;
+        append_error(value,req,pos,field,field + " is a required attribute for the "+env+" environment");
+        error = false ;
       }else{
         error = true;
       }
@@ -304,11 +303,6 @@ const serviceValidationRules = (options,req) => {
 
 
 
-  const checkRedirectUri = (value,env)=> {
-    if(env==="production"){
-      return value.match(reg.regUrl) || value.match(reg.regLocalhostUrl)
-    }
-  }
 
     return [
       body().isArray({min:1}).withMessage('Body must be an array containing at least one service'),
@@ -337,7 +331,10 @@ const serviceValidationRules = (options,req) => {
       }).withMessage('Invalid Country Code'),
       body('*.service_description').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1],'service_description')}).withMessage('Service Description missing').if((value)=> {return value}).isString().withMessage('Service Description must be a string').isLength({min:1}).withMessage("Service description can't be empty"),
       body('*.logo_uri').optional({checkFalsy:true}).isString().withMessage('Service Logo must be a string').custom((value)=> value.match(reg.regUrl)).withMessage('Service Logo must be a secure url https://').isLength({max:256}).withMessage("Service logo cant exceed character limit (6000)"),
-      body('*.policy_uri').custom((value,{req,location,path})=>{return requiredProduction(value,req.body[path.match(/\[(.*?)\]/)[1]].integration_environment,req,path.match(/\[(.*?)\]/)[1],'policy_uri')}).withMessage('Service Policy Uri missing').if((value)=> {return value}).isString().withMessage('Service Policy Uri must be a string').custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Service Policy Uri must be a url'),
+      body('*.policy_uri').custom((value,{req,location,path})=>{
+        let pos = path.match(/\[(.*?)\]/)[1];
+        let tenant = options.tenant_param?req.params.tenant:req.body[pos].tenant;
+        return requiredIntegrationEnvironment(tenant,value,req.body[pos].integration_environment,req,pos,'policy_uri')}).withMessage('Service Policy Uri missing').if((value)=> {return value}).isString().withMessage('Service Policy Uri must be a string').custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Service Policy Uri must be a url'),
       body('*.requested_attributes').if((value)=> {
         return value&&(Array.isArray(value)&&value.length!==0)
       }).isArray().withMessage('Required attributes must be an array').custom((attributes,{req,location,path})=> {
@@ -459,6 +456,7 @@ const serviceValidationRules = (options,req) => {
         return isNotEmpty(value)&&req.body[pos].protocol==='oidc'
       }).custom((value,{req,location,path})=> {
         let pos = path.match(/\[(.*?)\]/)[1];
+        let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         try{
           if(Array.isArray(value)&&value.length>0){
             value.map((item,index)=>{
@@ -472,7 +470,7 @@ const serviceValidationRules = (options,req) => {
                 throw new Error("Uri can't contain fragments");
               }
               if(req.body[pos].application_type==='WEB'){
-                if((req.body[pos].integration_environment==='production'||req.body[pos].integration_environment==='demo')&& url){
+                if(!tenant_config[tenant].test_env.includes(req.body[pos].integration_environment)&& url){
                   if(url.protocol !== 'https:'&&!(url.protocol==='http:'&&url.hostname==='localhost')){
                     throw new Error("Uri must be a secure url starting with https://");              
                   }
@@ -513,6 +511,7 @@ const serviceValidationRules = (options,req) => {
         return isNotEmpty(value)&&req.body[pos].protocol==='oidc'
       }).custom((value,{req,location,path})=> {
         let pos = path.match(/\[(.*?)\]/)[1];
+        let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         try{
           if(Array.isArray(value)&&value.length>0){
             value.map((item,index)=>{
@@ -527,7 +526,7 @@ const serviceValidationRules = (options,req) => {
                 throw new Error("Uri can't contain fragments");
               }
               if(req.body[pos].application_type==='WEB'){
-                if((req.body[pos].integration_environment==='production'||req.body[pos].integration_environment==='demo')&& url){
+                if(!tenant_config[tenant].test_env.includes(req.body[pos].integration_environment)&& url){
                   if(url.protocol !== 'https:'&&!(url.protocol==='http:'&&url.hostname==='localhost')){
                     throw new Error("Uri must be a secure url starting with https://");              
                   }
@@ -875,10 +874,7 @@ const serviceValidationRules = (options,req) => {
         let pos = path.match(/\[(.*?)\]/)[1];
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         let integration_environment = req.body[path.match(/\[(.*?)\]/)[1]].integration_environment;
-        let extra_fields = tenant_config[tenant].form.extra_fields;
-
-        if(extra_fields.organization.hide.includes(integration_environment)){
-          return null;
+        if ((tenant_config[tenant]?.form.extra_fields?.organization?.hide || []).includes(integration_environment)) {          return null;
         }
         else{
           return value;

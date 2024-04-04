@@ -23,12 +23,14 @@ import {ResponseModal,Logout,ConfirmationModal,SimpleModal} from './Modals.js';
      </React.Fragment>
    )
  }
-
 const BroadcastNotifications = (props) =>{
   let {tenant_name,group_id,service_id,petition_id} = useParams();
   const [formValues,setFormValues] = useState();
+  const [tenant] = useContext(tenantContext);
+
+
   let initialValues_broadcast = {
-    environments:["production"],
+    environments:[],
     contact_types:["technical"],
     cc_emails:[],
     name:"",
@@ -51,6 +53,7 @@ const BroadcastNotifications = (props) =>{
 
   useEffect(()=>{
     if(props.type==="broadcast"){
+      initialValues_broadcast.environments = tenant.form_config.integration_environment[0];
       getRecipients({contact_types:initialValues_broadcast.contact_types,environments:initialValues_broadcast.environments,protocols:initialValues_broadcast.protocols});
       setFormValues(initialValues_broadcast);
     }
@@ -64,7 +67,6 @@ const BroadcastNotifications = (props) =>{
   const [logout,setLogout] = useState(false);
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
-  const [tenant] = useContext(tenantContext);
   const [responseTitle,setResponseTitle] = useState();
   const [responseMessage,setResponseMessage] = useState();
   const [recipients,setRecipients] = useState([]);

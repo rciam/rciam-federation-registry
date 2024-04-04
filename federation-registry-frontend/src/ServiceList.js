@@ -851,8 +851,12 @@ function TableItem(props) {
   const [tenant,setTenant] = useContext(tenantContext);
   const [manageTags,setManageTags] = useState(false);
   const {tenant_name} = useParams();
+  const [variant,setVariant] = useState("");
 
-
+  useEffect(()=>{
+    let index = tenant.form_config.integration_environment.indexOf(props.service.integration_environment);
+    setVariant(index===1?"secondary":index===2?"dark":"info");
+  },[props.service,tenant.form_config.integration_environment])
 
   const [showCopyDialog,setShowCopyDialog] = useState(false);
   const toggleCopyDialog = () => {
@@ -879,7 +883,7 @@ function TableItem(props) {
               </Tooltip>
             }
           >
-            <Badge className="status-badge cursor-pointer" onClick={()=>{props.setFilter('integrationEnvironment',props.service.integration_environment); props.setExpandFilters(true);}} variant={props.service.integration_environment==='development'?'secondary':props.service.integration_environment==='demo'?'dark':props.service.integration_environment==='production'?'info':'warning'}>{capitalWords(props.service.integration_environment==='development'?'dev':props.service.integration_environment==='production'?'prod':props.service.integration_environment)}</Badge>
+            <Badge className="status-badge cursor-pointer" onClick={()=>{props.setFilter('integrationEnvironment',props.service.integration_environment); props.setExpandFilters(true);}} variant={variant}> {capitalWords(props.service.integration_environment==='development'?'dev':props.service.integration_environment==='production'?'prod':props.service.integration_environment)}</Badge>
           </OverlayTrigger>
           </h5>
         </div>
