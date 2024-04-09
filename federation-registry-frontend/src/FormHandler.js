@@ -173,15 +173,13 @@ const EditService = (props) => {
             return false
           }
         }).then(response=> {
-
-          if(response){
-            if(user.actions.includes('review_petition')||user.actions.includes('review_restricted')||(user.actions.includes('review_own_petition')&& tenant.config.test_env.includes(response?.petition?.integration_environment))
-            ){
-              setOwned(response.metadata.owned);
-              setPetitionData(response);              
+          if(response){            
+            if(props.review&&!(user.actions.includes('review_petition')||user.actions.includes('review_restricted')||(user.actions.includes('review_own_petition')&& tenant.config.test_env.includes(response?.petition?.integration_environment)))){
+              setNotFound(true);
             }
             else{
-              setNotFound(true);
+              setOwned(response.metadata.owned);
+              setPetitionData(response);
             }
           }
         });
