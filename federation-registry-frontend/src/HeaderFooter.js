@@ -122,7 +122,7 @@ export const Footer =(props) =>{
     <footer>
       <div className="container ssp-footer--container">
     		<Row className="row justify-content-center">
-    			<Col sm="2" className="ssp-footer__item">
+    			<Col sm="3" className="ssp-footer__item">
           <div className="dropup ssp-footer__item__lang">
 
           <DropdownButton onSelect={(e)=>{props.changeLanguage(e)}} className="ssp-btn btn ssp-btn__footer dropdown-toggle"  id='dropdown-button-drop-up' key="up" title={<React.Fragment ><span className="caret"></span> {props.lang==='en'?'English':'Greek'}</React.Fragment> } drop="up" variant="link">
@@ -137,7 +137,7 @@ export const Footer =(props) =>{
                 <Image className="ssp-footer__item__logo" src="https://vanilla-ui.aai-dev.grnet.gr/proxy/module.php/themevanilla/resources/images/grnet_logo_en.svg" alt="GRNET"/>
               </a>
               <div className="ssp-footer__item__copyright">
-                Copyright ©2016-2023      </div>
+              {tenant&&(tenant?.config?.copyright)}     </div>
             </div>
           </Col>
           <Col sm="3" className="ssp-footer__item">
