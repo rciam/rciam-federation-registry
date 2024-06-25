@@ -196,9 +196,6 @@ app.use(function (err, req, res, next) {
 
 const port = 5000;
 
-// if(config.send_outdated_notifications){
-//   outdatedNotificationsWorker(config.outdated_notifications_interval_seconds);
-// }
 
 var server = app.listen(port, () => {
     console.log('\nReady for GET requests on http://localhost:' + port);

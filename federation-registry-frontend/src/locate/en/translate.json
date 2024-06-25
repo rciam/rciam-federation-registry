@@ -1,12 +1,6 @@
 {
   "translations":{
-    "main_title":"EGI AAI OpenID Connect Provider",
-    "footer_logo_uri":"https://aai-dev.egi.eu/oidc/resources/images/grnet_logo_en.svg",
-    "footer_flag_uri":"https://aai-dev.egi.eu/oidc/resources/images/eu.svg",
-    "terms_uri":"https://aai.egi.eu/ToU.html",
-    "privacy_uri":"https://aai.egi.eu/privacy.html",
     "main_greeting":"Welcome",
-    "main_description":"The EGI Check-in Service provides a secure web interface through which service operators can register their OpenID Connect and SAML based services.",
     "login":"Login",
     "logout":"Logout",
     "reconfiguration_info":"This is a reconfiguration request, changes are highlighted bellow.",

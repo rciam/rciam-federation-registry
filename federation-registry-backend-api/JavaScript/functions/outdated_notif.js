@@ -10,10 +10,10 @@ nodeMailer = require('nodemailer');
 const customLogger = require('../loggers.js');
 const {delay,readHTMLFile,createTransport} = require('./helpers');
 
-const outdatedNotificationsWorker =  async(interval_seconds) =>{
+const outdatedNotificationsWorker =  async(interval_seconds,tenant) =>{
   const sendNotif = () =>{
     
-    db.service_state.getOutdatedOwners('egi',null).then(async users=>{
+    db.service_state.getOutdatedOwners(tenant,null).then(async users=>{
       if(users){
         console.log('Sending notication to the users');
         // Save last succesfull notification
