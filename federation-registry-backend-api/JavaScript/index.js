@@ -70,11 +70,11 @@ db.tenants.getInit().then(async tenants => {
       try {
         // Parse the JSON data
         tenant_config[tenant.name] = {...tenant_config[tenant.name],...JSON.parse(data)};
+        
       } catch (error) {
         console.error('Error parsing tenant configuration:', error);
       }
     });
-
     await Issuer.discover(tenant.issuer_url).then((issuer)=>{
       clients[tenant.name] = new issuer.Client({
         client_id: tenant.client_id,
@@ -196,9 +196,6 @@ app.use(function (err, req, res, next) {
 
 const port = 5000;
 
-// if(config.send_outdated_notifications){
-//   outdatedNotificationsWorker(config.outdated_notifications_interval_seconds);
-// }
 
 var server = app.listen(port, () => {
     console.log('\nReady for GET requests on http://localhost:' + port);

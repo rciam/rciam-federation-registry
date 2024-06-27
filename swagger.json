@@ -1271,7 +1271,7 @@ paths:
                   description: "True if user is a group manager."
                 sub:
                   type: "string"
-                  example: "7a6ae45156e678389401e3c3839127fd2a019572066d40c5d0176bd123651f934@egi.eu"
+                  example: "7a6ae45156e678389401e3c3839127fd2a019572066d40c5d0176bd123651f934"
                   description: "Unique identifier of user"
                 username:
                   type: "string"

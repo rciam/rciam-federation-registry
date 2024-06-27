@@ -87,7 +87,7 @@ router.get('/tenants/:tenant/services',getServicesValidation(),validate,authenti
     if(req.query.exclude_tags){
       req.query.exclude_tags = req.query.exclude_tags.split(',');      
     }
-    let authorised = !!(req.user && req.user.role && req.user.role.actions.includes('get_services'));
+    let authorised = (!!(req.user && req.user.role && req.user.role.actions.includes('get_services')))||req.header('X-Api-Key')===process.env.ADMIN_AUTH_KEY;
     if(req.query.outdated==='true'){
       db.service_state.getOutdatedServices(req.params.tenant).then(async outdated_services=>{
         if(outdated_services){

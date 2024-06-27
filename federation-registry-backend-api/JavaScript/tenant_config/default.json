@@ -9,6 +9,7 @@
     "home_page_description": "The Federation Registry provides a secure web interface through which service operators can register their OpenID Connect and SAML based services.",
     "home_page_title":"Federation Registry",
     "footer_description": "Footer Description",
+    "copyright": "Copyright 2016-2022",
     "theme_color": "#0A559C",
     "service_integration_notification": {
       "enabled": false,

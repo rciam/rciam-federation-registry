@@ -237,7 +237,6 @@ const ServiceList= (props)=> {
     if(filters.waitingDeploymentFilter){
       filterString = filterString + '&waiting_deployment=' +true; 
     }
-    //filterString=filterString + '&tags=test,egi';
 
     return filterString;
   }

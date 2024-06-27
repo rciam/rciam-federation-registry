@@ -146,8 +146,9 @@ body .nav-list .divider {
     font-size: 14px;
 }
 
-#footer .row {
+footer .row {
     padding: 8px;
+    justify-content:center!important;
 }
 
 
