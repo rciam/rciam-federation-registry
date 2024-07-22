@@ -4,7 +4,6 @@ import {capitalWords} from '../helpers.js'
 import {useParams,Link} from "react-router-dom";
 import Button from 'react-bootstrap/Button';
 import { Translation } from 'react-i18next';
-import {removeA} from '../helpers.js';
 import {tenantContext} from '../context.js';
 
 
@@ -20,10 +19,8 @@ const CopyDialog = (props) => {
   const [copyEnv,setCopyEnv] = useState();
 
   useEffect(()=>{
-    let availableEnvs = [...tenant.form_config.integration_environment];
-    let options = removeA(availableEnvs,props.current_environment)
-    setCopyOptions(options);
-    setCopyEnv(options[0]);
+    setCopyOptions([...tenant.form_config.integration_environment]);
+    setCopyEnv(tenant.form_config.integration_environment[0]);
   },[props.current_environment,tenant.form_config.integration_environment])
 
 
@@ -52,7 +49,8 @@ const CopyDialog = (props) => {
               pathname:'/'+tenant_name+"/form/copy",
               state:{
                 service_id:props.service_id,
-                integration_environment:copyEnv
+                integration_environment:copyEnv,
+                sameEnvironment: copyEnv===props.current_environment
               }
             }}>
               <React.Fragment>

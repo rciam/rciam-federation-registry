@@ -104,7 +104,7 @@ create table organizations (
 
 create table service_details (
   id SERIAL PRIMARY KEY,
-  external_id INTEGER DEFAULT NULL,
+  external_id VARCHAR(256) DEFAULT NULL,
   tenant VARCHAR(256),
   website_url VARCHAR(256) DEFAULT NULL,
   service_name  VARCHAR(256),
