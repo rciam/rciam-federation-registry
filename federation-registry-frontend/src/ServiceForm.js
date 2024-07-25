@@ -318,6 +318,12 @@ const ServiceForm = (props)=> {
       }).when('application_type',(application_type_value)=>{application_type = application_type_value;}).of(yup.string().required("Uri can't be an empty string").test('test_redirect_uri','Invalid Redirect Uri',function(value){
         if(value){
           let url;
+          if (tenant?.config?.test_env.includes(integrationEnvironment)) {
+            let isLocalIp = reg.regIpv4Local.test(value) || reg.regIpv6Local.test(value);
+            if (isLocalIp) {
+                return true;
+            }
+          }
           try {
             url = new URL(value);
           } catch (err) {
@@ -368,6 +374,12 @@ const ServiceForm = (props)=> {
       }).when('application_type',(application_type_value)=>{application_type = application_type_value;}).of(yup.string().required("Uri can't be an empty string").test('test_redirect_uri','Invalid Post Logout Redirect Uri',function(value){
         if(value){
           let url
+          if (tenant?.config?.test_env.includes(integrationEnvironment)) {
+            let isLocalIp = reg.regIpv4Local.test(value) || reg.regIpv6Local.test(value);
+            if (isLocalIp) {
+                return true;
+            }
+          }
           try {
             url = new URL(value);
           } catch (err) {
