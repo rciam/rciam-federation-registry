@@ -461,40 +461,47 @@ const serviceValidationRules = (options,req) => {
           if(Array.isArray(value)&&value.length>0){
             value.map((item,index)=>{
               let url
-              try {
-                url = new URL(item);
-              } catch (err) {
-                throw new Error("Invalid uri");  
+              let isLocalIp = false;
+              if(tenant_config[tenant].test_env.includes(req.body[pos].integration_environment)){
+                isLocalIp = item.match(reg.regIpv4Local) || item.match(reg.regIpv6Local)
               }
-              if(item.includes('#')){
-                throw new Error("Uri can't contain fragments");
-              }
-              if(req.body[pos].application_type==='WEB'){
-                if(!tenant_config[tenant].test_env.includes(req.body[pos].integration_environment)&& url){
-                  if(url.protocol !== 'https:'&&!(url.protocol==='http:'&&url.hostname==='localhost')){
-                    throw new Error("Uri must be a secure url starting with https://");              
+              if(!isLocalIp){
+                try {
+                  url = new URL(item);
+                } catch (err) {
+                  throw new Error("Invalid uri");  
+                }
+                if(item.includes('#')){
+                  throw new Error("Uri can't contain fragments");
+                }
+                if(req.body[pos].application_type==='WEB'){
+                  if(!tenant_config[tenant].test_env.includes(req.body[pos].integration_environment)&& url){
+                    if(url.protocol !== 'https:'&&!(url.protocol==='http:'&&url.hostname==='localhost')){
+                      throw new Error("Uri must be a secure url starting with https://");              
+                    }
+                  }
+                  else{
+                    if(url&&!(url.protocol==='http:'||url.protocol==='https:')){
+                      throw new Error("Uri must be a url starting with http(s):// ");                              
+                    }
                   }
                 }
                 else{
-                  if(url&&!(url.protocol==='http:'||url.protocol==='https:')){
-                    throw new Error("Uri must be a url starting with http(s):// ");                              
+                  if(url.protocol==='javascript:'){
+                    throw new Error("Uri can't be of schema 'javascript:'");
+                  }
+                  else if(url.protocol==='data:'){
+                    throw new Error("Uri can't be of schema 'data:'");              
                   }
                 }
-              }
-              else{
-                if(url.protocol==='javascript:'){
-                  throw new Error("Uri can't be of schema 'javascript:'");
+                if(item.includes('*')){
+                  return new Error("Uri can't contain wildcard character '*'" );                          
                 }
-                else if(url.protocol==='data:'){
-                  throw new Error("Uri can't be of schema 'data:'");              
+                if(item.includes(' ')){
+                  return new Error("Uri can't contain spaces");                          
                 }
               }
-              if(item.includes('*')){
-                return new Error("Uri can't contain wildcard character '*'" );                          
-              }
-              if(item.includes(' ')){
-                return new Error("Uri can't contain spaces");                          
-              }
+              
             });
           }
           else{
@@ -516,41 +523,48 @@ const serviceValidationRules = (options,req) => {
           if(Array.isArray(value)&&value.length>0){
             value.map((item,index)=>{
               let url
-              try {
-                url = new URL(item);
-              } catch (err) {
-                throw new Error("Invalid uri");  
-
+              let isLocalIp = false;
+              if(tenant_config[tenant].test_env.includes(req.body[pos].integration_environment)){
+                isLocalIp = item.match(reg.regIpv4Local) || item.match(reg.regIpv6Local)
               }
-              if(item.includes('#')){
-                throw new Error("Uri can't contain fragments");
-              }
-              if(req.body[pos].application_type==='WEB'){
-                if(!tenant_config[tenant].test_env.includes(req.body[pos].integration_environment)&& url){
-                  if(url.protocol !== 'https:'&&!(url.protocol==='http:'&&url.hostname==='localhost')){
-                    throw new Error("Uri must be a secure url starting with https://");              
+              if(!isLocalIp){
+                try {
+                  url = new URL(item);
+                } catch (err) {
+                  throw new Error("Invalid uri");  
+  
+                }
+                if(item.includes('#')){
+                  throw new Error("Uri can't contain fragments");
+                }
+                if(req.body[pos].application_type==='WEB'){
+                  if(!tenant_config[tenant].test_env.includes(req.body[pos].integration_environment)&& url){
+                    if(url.protocol !== 'https:'&&!(url.protocol==='http:'&&url.hostname==='localhost')){
+                      throw new Error("Uri must be a secure url starting with https://");              
+                    }
+                  }
+                  else{
+                    if(url&&!(url.protocol==='http:'||url.protocol==='https:')){
+                      throw new Error("Uri must be a url starting with http(s):// ");                              
+                    }
                   }
                 }
                 else{
-                  if(url&&!(url.protocol==='http:'||url.protocol==='https:')){
-                    throw new Error("Uri must be a url starting with http(s):// ");                              
+                  if(url.protocol==='javascript:'){
+                    throw new Error("Uri can't be of schema 'javascript:'");
+                  }
+                  else if(url.protocol==='data:'){
+                    throw new Error("Uri can't be of schema 'data:'");              
                   }
                 }
-              }
-              else{
-                if(url.protocol==='javascript:'){
-                  throw new Error("Uri can't be of schema 'javascript:'");
+                if(item.includes('*')){
+                  return new Error("Uri can't contain wildcard character '*'" );                          
                 }
-                else if(url.protocol==='data:'){
-                  throw new Error("Uri can't be of schema 'data:'");              
+                if(item.includes(' ')){
+                  return new Error("Uri can't contain spaces");                          
                 }
               }
-              if(item.includes('*')){
-                return new Error("Uri can't contain wildcard character '*'" );                          
-              }
-              if(item.includes(' ')){
-                return new Error("Uri can't contain spaces");                          
-              }
+              
             });
           }
           else{

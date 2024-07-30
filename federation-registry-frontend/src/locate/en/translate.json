@@ -83,6 +83,7 @@
     "yup_entity_id":"Entity ID is not available",
     "new_petition_title":"Your request",
     "petition_success_msg":"Was submitted successfully and is currently pending approval from an administrator.",
+    "petition_success_review_msg": "Was submitted successfully, you can review the request now or leave it for later.",
     "petition_error_msg":"Could not be submitted, please try again. Status:",
     "petition_no_change_title":"Request could not be submitted.",
     "petition_no_change_msg":"Because no changes were made.",

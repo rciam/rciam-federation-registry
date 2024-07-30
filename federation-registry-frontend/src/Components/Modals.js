@@ -161,6 +161,47 @@ export const ConfirmationModal = (props) =>{
 }
 
 
+export function PetitionSubmittedModal(props){
+  // eslint-disable-next-line
+  const { t, i18n } = useTranslation();
+  // eslint-disable-next-line
+  let history = useHistory();
+
+  //const handleClose = () => props.setMessage();
+  const handleClose = () => {
+    history.push('/'+props.modalData.tenant+'/services');
+  }
+  const handleReview = () => {
+    history.push('/'+props.modalData.tenant+ (props.modalData?.service_id?('/services/'+props.modalData.service_id):"")+ '/requests/'+ props.modalData.petition_id + '/review');
+  }
+
+
+  return (
+    <Modal show={props?.modalData?.title?true:false} onHide={handleClose}>
+        <Modal.Header closeButton>
+          <Modal.Title>
+              {props.modalData.title}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body >
+          {props.modalData.message}
+        </Modal.Body>
+        <Modal.Footer>
+          {props.modalData.reviewEnabled&&
+            <Button variant="success" onClick={handleReview}>
+              {t('review')}
+            </Button>
+          }
+          
+          <Button variant="secondary" onClick={handleClose}>
+            {t('modal_continue')}
+          </Button>
+
+        </Modal.Footer>
+    </Modal>
+  )
+
+}
 
 export function ResponseModal(props){
   // eslint-disable-next-line

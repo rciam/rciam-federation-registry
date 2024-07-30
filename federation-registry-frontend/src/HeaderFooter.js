@@ -146,7 +146,7 @@ export const Footer =(props) =>{
               <a href = {"mailto: "+ tenant?.config?.contact}>Support</a>
               </div>
               <div className="ssp-footer__item__powered">
-                <a href={'https://federation.rciam.grnet.gr/docs'}>Documentation</a>
+                <a href={tenant&&(tenant?.config?.documentation)}>Documentation</a>
               </div>
             </div>
           </Col>
