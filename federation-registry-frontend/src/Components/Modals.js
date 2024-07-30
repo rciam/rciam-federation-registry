@@ -172,7 +172,7 @@ export function PetitionSubmittedModal(props){
     history.push('/'+props.modalData.tenant+'/services');
   }
   const handleReview = () => {
-    history.push('/'+props.modalData.tenant+ (props.modalData?.service_id?('/services'+props.modalData.service_id):"")+ '/requests/'+ props.modalData.petition_id + '/review');
+    history.push('/'+props.modalData.tenant+ (props.modalData?.service_id?('/services/'+props.modalData.service_id):"")+ '/requests/'+ props.modalData.petition_id + '/review');
   }
 
 

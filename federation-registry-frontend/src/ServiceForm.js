@@ -389,7 +389,7 @@ const ServiceForm = (props)=> {
             return this.createError({ message: "Uri can't contain fragments" });
           }
           if(application_type==='WEB'){
-            if(!tenant?.form_config?.test_env.includes(integrationEnvironment)&& url){
+            if(!tenant?.config?.test_env.includes(integrationEnvironment)&& url){
               if(url.protocol !== 'https:'&&!(url.protocol==='http:'&&url.hostname==='localhost')){
                 return this.createError({ message: "Uri must be a secure url starting with https://" });              
               }
