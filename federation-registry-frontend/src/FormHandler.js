@@ -42,7 +42,7 @@ const EditService = (props) => {
       localStorage.removeItem('url');
       getData();
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    },[]);
+    },[props.review]);
 
     useEffect(()=>{
       if(petitionData&&props.review){
