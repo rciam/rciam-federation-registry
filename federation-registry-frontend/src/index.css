@@ -2047,3 +2047,8 @@ html:lang(gr) .home-container h1 {
 .attribute-table {
   table-layout: fixed;
 }
+
+footer .row {
+  padding: 8px;
+  justify-content:center!important;
+}

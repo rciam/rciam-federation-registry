@@ -17,7 +17,7 @@ import { diff } from 'deep-diff';
 import {tenantContext} from './context.js';
 import Alert from 'react-bootstrap/Alert';
 // import {Debug} from './Components/Debug.js';
-import {SimpleModal,ResponseModal,Logout,NotFound} from './Components/Modals.js';
+import {SimpleModal,Logout,NotFound,PetitionSubmittedModal} from './Components/Modals.js';
 import Form from 'react-bootstrap/Form';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import {Formik} from 'formik';
@@ -64,8 +64,6 @@ const ServiceForm = (props)=> {
   const [disabled,setDisabled] = useState(false);
   const [disabledOrganizationFields,setDisabledOrganizationFields] = useState([]);
   const [hasSubmitted,setHasSubmitted] = useState(false);
-  const [message,setMessage] = useState();
-  const [modalTitle,setModalTitle] = useState(null);
   const [metadataWarning,setMetadataWarning] = useState();
   const [metadataLoaded,setMetadataLoaded] = useState({
     supported_attributes:[],
@@ -88,7 +86,7 @@ const ServiceForm = (props)=> {
   const [serviceTags,setServiceTags] = useState([]);
   const [manageTags,setManageTags] = useState(false);
   const [timeoutId] = useState(hex(4));
-  
+  const [modalData,setModalData] = useState({});
 
   useEffect(()=>{
     //Get tags 
@@ -320,6 +318,12 @@ const ServiceForm = (props)=> {
       }).when('application_type',(application_type_value)=>{application_type = application_type_value;}).of(yup.string().required("Uri can't be an empty string").test('test_redirect_uri','Invalid Redirect Uri',function(value){
         if(value){
           let url;
+          if (tenant?.config?.test_env.includes(integrationEnvironment)) {
+            let isLocalIp = reg.regIpv4Local.test(value) || reg.regIpv6Local.test(value);
+            if (isLocalIp) {
+                return true;
+            }
+          }
           try {
             url = new URL(value);
           } catch (err) {
@@ -370,6 +374,12 @@ const ServiceForm = (props)=> {
       }).when('application_type',(application_type_value)=>{application_type = application_type_value;}).of(yup.string().required("Uri can't be an empty string").test('test_redirect_uri','Invalid Post Logout Redirect Uri',function(value){
         if(value){
           let url
+          if (tenant?.config?.test_env.includes(integrationEnvironment)) {
+            let isLocalIp = reg.regIpv4Local.test(value) || reg.regIpv6Local.test(value);
+            if (isLocalIp) {
+                return true;
+            }
+          }
           try {
             url = new URL(value);
           } catch (err) {
@@ -379,7 +389,7 @@ const ServiceForm = (props)=> {
             return this.createError({ message: "Uri can't contain fragments" });
           }
           if(application_type==='WEB'){
-            if(!tenant?.form_config?.test_env.includes(integrationEnvironment)&& url){
+            if(!tenant?.config?.test_env.includes(integrationEnvironment)&& url){
               if(url.protocol !== 'https:'&&!(url.protocol==='http:'&&url.hostname==='localhost')){
                 return this.createError({ message: "Uri must be a secure url starting with https://" });              
               }
@@ -658,6 +668,18 @@ const ServiceForm = (props)=> {
     setShowCopyDialog(!showCopyDialog);
   }
 
+  const canReview = (integration_environment) => {
+    return (
+      // Allow when user can review service requests targeting a restricted ennvironment    
+        (props.user.actions.includes('review_restricted')&& tenant?.config?.restricted_env.includes(integration_environment))
+      ||
+      // Allow when user can review their own petition and service request targets a testing environment
+        (tenant?.config?.test_env.includes(integration_environment) && props.user.actions.includes('review_own_petition'))
+      ||
+      // Allow when user can review all petitions and service request does not target a restricted environment 
+        (props.user.actions.includes('review_petition')&& !tenant?.config?.restricted_env.includes(integration_environment))
+      );
+  }
 
   const createNewPetition = (petition) => {
     // eslint-disable-next-line
@@ -678,24 +700,41 @@ const ServiceForm = (props)=> {
         headers: {
         'Content-Type': 'application/json'  },
         body: JSON.stringify(petition)
-      }).then(response=> {
+      }).then(async response=> {
         setAsyncResponse(false);
-        setModalTitle(t('new_petition_title'));
+        let responseData = await response.json();
         if(response.status===200){
-          setMessage(t('petition_success_msg'));
+          let reviewEnabled = canReview(petition.integration_environment); 
+          setModalData({
+            title:t('new_petition_title'),
+            message: reviewEnabled? t('petition_success_review_msg'):t('petition_success_msg'),
+            service_id: service_id,
+            tenant: tenant_name,
+            petition_id: responseData.id,
+            reviewEnabled
+          });
         }
         else if(response.status===401){
           setLogout(true);
         }
         else{
-          setMessage(t('petition_error_smg') + response.status);
+          setModalData({
+            title:t('new_petition_title'),
+            message:t('petition_error_msg') + response.status,
+            tenant:tenant_name,
+            reviewEnabled:false
+          })
         }
       });
     }
     else{
       setAsyncResponse(false);
-      setModalTitle(t('petition_no_change_title'));
-      setMessage(t('petition_no_change_msg'));
+      setModalData({
+        title:t('petition_no_change_title'),
+        message:t('petition_no_change_msg'),
+        tenant:tenant_name,
+        reviewEnabled:false
+      })
     }
   }
 
@@ -714,11 +753,19 @@ const ServiceForm = (props)=> {
         headers: {
         'Content-Type': 'application/json'  },
         body: JSON.stringify(petition) // body data type must match "Content-Type" header
-      }).then(response=> {
+      }).then(async response=> {
+        
         setAsyncResponse(false);
-        setModalTitle(t('edit_petition_title'));
+        let reviewEnabled = canReview(petition.integration_environment); 
         if(response.status===200){
-          setMessage(t('petition_success_msg'));
+          setModalData({
+            title:t('edit_petition_title'),
+            message: reviewEnabled? t('petition_success_review_msg'):t('petition_success_msg'),
+            service_id: service_id,
+            tenant: tenant_name,
+            petition_id: petition_id,
+            reviewEnabled
+          });
         }
         else if(response.status===401){
           setLogout(true);
@@ -727,13 +774,22 @@ const ServiceForm = (props)=> {
           setNotFound(true);
         }
         else{
-          setMessage(t('petition_error_msg') + response.status);
+          setModalData({
+            title:t('new_petition_title'),
+            message:t('petition_error_msg') + response.status,
+            tenant:tenant_name,
+            reviewEnabled:false
+          })
         }
       });
     }
     else{
-      setModalTitle(t('petition_no_change_title'));
-      setMessage(t('petition_no_change_msg'));
+      setModalData({
+        title:t('petition_no_change_title'),
+        message:t('petition_no_change_msg'),
+        tenant:tenant_name,
+        reviewEnabled:false
+      });
     }
   }
 
@@ -744,10 +800,14 @@ const ServiceForm = (props)=> {
       credentials: 'include', // include, *same-origin, omit
       headers: {
       'Content-Type': 'application/json'}}).then(response=> {
-      setModalTitle(t('request_submit_title'));
       setAsyncResponse(false);
       if(response.status===200){
-        setMessage(t('request_cancel_success_msg'));
+        setModalData({
+          title:t('request_submit_title'),
+          message:t('request_cancel_success_msg'),
+          tenant:tenant_name,
+          reviewEnabled:false
+        });
       }
       else if(response.status===401){
         setLogout(true);
@@ -756,7 +816,12 @@ const ServiceForm = (props)=> {
         setNotFound(true);
       }
       else{
-      setMessage(t('request_cancel_fail_msg+response.status'));
+        setModalData({
+          title:t('request_submit_title'),
+          message:t('request_cancel_fail_msg')+response.status,
+          tenant:tenant_name,
+          reviewEnabled:false
+        });
       }
     });
   }
@@ -823,7 +888,6 @@ const ServiceForm = (props)=> {
 
 
   const reviewPetition = (comment,type)=>{
-      setModalTitle(t('review_'+props.type+'_title'))
       setAsyncResponse(true);
       fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/petitions/'+petition_id+'/review', {
         method: 'PUT', // *GET, POST, PUT, DELETE, etc.
@@ -834,7 +898,12 @@ const ServiceForm = (props)=> {
     }).then(response=> {
         setAsyncResponse(false);
         if(response.status===200){
-          setMessage(t('review_success'));
+          setModalData({
+            title:t('review_'+props.type+'_title'),
+            tenant:tenant_name,
+            message:t('review_success'),
+            reviewEnabled:false
+          });
         }
         else if(response.status===401){
           setLogout(true);
@@ -845,7 +914,12 @@ const ServiceForm = (props)=> {
           return false;
         }
         else{
-          setMessage(t('review_error') +response.status);
+          setModalData({
+            title:t('review_'+props.type+'_title'),
+            message:t('review_error') +response.status,
+            tenant:tenant_name,
+            reviewEnabled:false
+          });
         }
       });
   }
@@ -1565,7 +1639,7 @@ const ServiceForm = (props)=> {
                     </div>
 
                   }
-                  <ResponseModal return_url={'/'+tenant_name+'/services'} message={message} modalTitle={modalTitle}/>
+                  <PetitionSubmittedModal modalData={modalData} setModalData={setModalData}/>
                   <SimpleModal isSubmitting={isSubmitting} isValid={!Object.keys(errors).length}/>
                    {/* <Debug/> */}
 
