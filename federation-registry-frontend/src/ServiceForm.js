@@ -127,8 +127,7 @@ const ServiceForm = (props)=> {
     }
     setFormValues(props.initialValues);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[]);
-
+  },[props.initialValues]);
 
 
   // Returns true
@@ -984,6 +983,7 @@ const ServiceForm = (props)=> {
       initialValues={formValues}
       validateOnMount={service_id||petition_id||props.copy}
       initialTouched={getInitialTouched(formValues)}
+      enableReinitialize={true}
       validationSchema={schema}
       innerRef={formRef}
       validate={dynamicValidation}
@@ -1109,7 +1109,7 @@ const ServiceForm = (props)=> {
                           onChange={handleChange}
                           disabled={disabled||tenant.form_config.integration_environment.length===1||props.copy||props.disableEnvironment}
                           changed={props.changes?props.changes.integration_environment:null}
-                          copybuttonActive={props.owned&&props.disabled&&service_id&&tenant.form_config.integration_environment.length>1}
+                          copybuttonActive={props.owned&&props.disabled&&service_id}
                           toggleCopyDialog={toggleCopyDialog}
                         />
                       </InputRow>

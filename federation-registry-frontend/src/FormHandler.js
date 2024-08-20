@@ -58,7 +58,7 @@ const EditService = (props) => {
 
     useEffect(()=>{
         // eslint-disable-next-line react-hooks/exhaustive-deps
-      if(petitionData&&service&&props.review&&!editPetition){
+      if(petitionData&&service&&props.review){
 
         let helper = calcDiff(service,petitionData.petition,tenant?.form_config,diff);
         let multivalue_attributes = [];
@@ -209,7 +209,6 @@ const EditService = (props) => {
                     <ServiceForm disableEnvironment={true} initialValues={editPetition} user={user} changes={changes} {...petitionData.metadata} {...props}/>
                   </React.Fragment>
                     :<LoadingBar loading={true}/>
-  
                 }
               </React.Fragment>
             :petitionData.metadata.type==='create'?
@@ -306,7 +305,6 @@ const ViewRequest = (props) => {
     
     localStorage.removeItem('url');
     getData();
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
 
