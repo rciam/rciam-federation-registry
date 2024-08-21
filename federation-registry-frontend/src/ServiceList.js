@@ -17,7 +17,7 @@ import {Link,useParams,useLocation,useHistory} from "react-router-dom";
 import Badge from 'react-bootstrap/Badge';
 import Pagination from 'react-bootstrap/Pagination';
 import {LoadingBar,ProcessingRequest} from './Components/LoadingBar';
-import {ListResponseModal,Logout,NotFound} from './Components/Modals.js';
+import {ListResponseModal,Logout,NotFound,PetitionSubmittedModal} from './Components/Modals.js';
 import CopyDialog from './Components/CopyDialog.js';
 import ManageTags from './Components/ManageTags.js';
 import { useTranslation } from 'react-i18next';
@@ -87,7 +87,7 @@ const ServiceList= (props)=> {
   const [searchInputString,setSearchInputString] = useState((query.tags?(":tag="+ query.tags):'')+(query.created_after?(":reg_after="+query.created_after):"")+(query.created_before?(":owner="+query.created_before):"")+(query.owner?(":owner="+query.owner):"")+(query.search_string||""))
   const pageSize = 10;
   const [showResetButton,setShowResetButton] = useState(false);
-  
+  const [petitionSubmittedModalData,setPetitionSubmittedModalData] = useState({});
 
 
 
@@ -421,10 +421,21 @@ const ServiceList= (props)=> {
     setPaginationItems(items);
   };
 
+  const canReview = (integration_environment) => {
+    return (
+      // Allow when user can review service requests targeting a restricted ennvironment    
+        (user.actions.includes('review_restricted')&& tenant?.config?.restricted_env.includes(integration_environment))
+      ||
+      // Allow when user can review their own petition and service request targets a testing environment
+        (tenant?.config?.test_env.includes(integration_environment) && user.actions.includes('review_own_petition'))
+      ||
+      // Allow when user can review all petitions and service request does not target a restricted environment 
+        (user.actions.includes('review_petition')&& !tenant?.config?.restricted_env.includes(integration_environment))
+      );
+  }
 
 
-
-  const deleteService = (service_id,petition_id)=>{
+  const deleteService = (service_id,petition_id,integration_environment)=>{
     setAsyncResponse(true);
     if(petition_id){
       fetch(config.host[tenant_name]+'tenants/'+tenant_name+'/petitions/'+petition_id, {
@@ -436,10 +447,17 @@ const ServiceList= (props)=> {
         body:JSON.stringify({service_id:service_id,type:'delete'})
       }).then(response=> {
         getServices();
-        setResponseTitle(t('request_submit_title'));
         setAsyncResponse(false);
         if(response.status===200){
-          setMessage(t('request_submit_success_msg'));
+          let reviewEnabled = canReview(integration_environment); 
+          setPetitionSubmittedModalData({
+            title:t('new_petition_title'),
+            message: reviewEnabled? t('request_submit_success_review_msg'):t('request_submit_success_msg'),
+            service_id: service_id,
+            tenant: tenant_name,
+            petition_id: petition_id,
+            reviewEnabled
+          });
         }else if(response.status===401){
           setLogout(true);
           return false;
@@ -449,7 +467,12 @@ const ServiceList= (props)=> {
           return false;
         }
         else{
-          setMessage(t('request_submit_failed_msg') + response.status);
+          setPetitionSubmittedModalData({
+            title:t('request_submit_title'),
+            message:t('request_submit_failed_msg') + response.status,
+            tenant: tenant_name,
+            reviewEnabled:false
+          });
         }
       });
     }
@@ -461,12 +484,20 @@ const ServiceList= (props)=> {
           'Content-Type': 'application/json'
         },
         body:JSON.stringify({service_id:service_id,type:'delete'})
-      }).then(response=> {
+      }).then(async response=> {
         getServices();
-        setResponseTitle(t('request_submit_title'));
+        let responseData = await response.json();
         setAsyncResponse(false);
         if(response.status===200){
-          setMessage(t('request_submit_success_msg'));
+          let reviewEnabled = canReview(integration_environment); 
+          setPetitionSubmittedModalData({
+            title:t('new_petition_title'),
+            message: reviewEnabled? t('request_submit_success_review_msg'):t('request_submit_success_msg'),
+            service_id: service_id,
+            tenant: tenant_name,
+            petition_id: responseData.id,
+            reviewEnabled
+          });
         }else if(response.status===401){
           setLogout(true);
           return false;
@@ -476,7 +507,12 @@ const ServiceList= (props)=> {
           return false;
         }
         else{
-          setMessage(t('request_submit_failed_msg') + response.status);
+          setPetitionSubmittedModalData({
+            title:t('request_submit_title'),
+            message:t('request_submit_failed_msg') + response.status,
+            tenant: tenant_name,
+            reviewEnabled:false
+          });
         }
       });
     }
@@ -513,6 +549,7 @@ const ServiceList= (props)=> {
   return(
     <React.Fragment>
       <Logout logout={logout}/>
+      <PetitionSubmittedModal modalData={petitionSubmittedModalData} setModalData={setPetitionSubmittedModalData}/>
       <NotFound notFound={notFound?true:false} setNotFound={setNotFound}/>
       <ListResponseModal message={message} modalTitle={responseTitle} setMessage={setMessage}/>
       <ConfirmationModal active={confirmationData.action?true:false} close={()=>{setConfirmationData({})}} action={()=>{if(confirmationData.action==='delete_service'){deleteService(...confirmationData.args)}else{deletePetition(...confirmationData.args)} setConfirmationData({});}} title={confirmationData.title} accept={'Yes'} decline={'No'}/>
@@ -1051,7 +1088,7 @@ function TableItem(props) {
                   onClick={()=>{
                     props.setConfirmationData({
                       action:'delete_service',
-                      args:[props.service.service_id,props.service.petition_id],
+                      args:[props.service.service_id,props.service.petition_id,props.service.integration_environment],
                       title:t('confirmation_title')+' '+t('confirmation_delete')
                     })
                   }}>
