@@ -169,9 +169,12 @@ export function PetitionSubmittedModal(props){
 
   //const handleClose = () => props.setMessage();
   const handleClose = () => {
+    props.setModalData({});
     history.push('/'+props.modalData.tenant+'/services');
+    
   }
   const handleReview = () => {
+    props.setModalData({});
     history.push('/'+props.modalData.tenant+ (props.modalData?.service_id?('/services/'+props.modalData.service_id):"")+ '/requests/'+ props.modalData.petition_id + '/review');
   }
 
