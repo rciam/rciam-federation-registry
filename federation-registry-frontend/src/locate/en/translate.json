@@ -48,6 +48,7 @@
     "production_filter":"Production",
     "development_filter":"Development",
     "request_submit_success_msg":"Was submitted successfully and is currently pending approval from an administrator.",
+    "request_submit_success_review_msg":"Was submitted successfully, you can review the request now or leave it for later.",    
     "request_submit_fail_msg":"Was not submitted Status:",
     "request_submit_title":"Your deregistration request",
     "request_cancel_success_msg":"Was canceled successfully.",
