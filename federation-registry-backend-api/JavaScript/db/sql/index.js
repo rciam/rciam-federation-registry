@@ -24,9 +24,11 @@ module.exports = {
     service_details_protocol:{
       addOidc:sql('service_details_protocol/addOidc.sql'),
       checkClientId:sql('service_details_protocol/checkClientId.sql'),
+      checkClientIdAllEnvironments:sql('service_details_protocol/checkClientIdAllEnvironments.sql'),
       updateOidc:sql('service_details_protocol/updateOidc.sql'),
       updateSaml:sql('service_details_protocol/updateSaml.sql'),
       checkEntityId:sql('service_details_protocol/checkEntityId.sql'),
+      checkEntityIdAllEnvironments:sql('service_details_protocol/checkEntityIdAllEnvironments.sql'),
       addSaml:sql('service_details_protocol/addSaml.sql')
     },
     service:{

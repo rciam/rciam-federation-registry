@@ -932,6 +932,22 @@ const serviceValidationRules = (options, req) => {
         let tenant = options.tenant_param
           ? req.params.tenant
           : req.body[path.match(/\[(.*?)\]/)[1]].tenant;
+        if ('merge_environments_on_deploy' in config && config.merge_environments_on_deploy) {
+          return db.service_details_protocol
+            .checkClientIdAllEnvironments(
+              value,
+              0,
+              0,
+              tenant,
+            )
+            .then((available) => {
+              if (!available) {
+                  return Promise.reject("Not available (" + value + ")");
+              } else {
+                  return Promise.resolve();
+              }
+            });
+        }
         return db.service_details_protocol
           .checkClientId(
             value,
@@ -1817,8 +1833,24 @@ const serviceValidationRules = (options, req) => {
         return options.check_available;
       })
       .custom((value, { req, location, path }) => {
+        if ('merge_environments_on_deploy' in config && config.merge_environments_on_deploy) {
+          return db.service_details_protocol
+            .checkEntityIdAllEnvironments(
+              value,
+              0,
+              0,
+              req.params.tenant,
+            )
+            .then((available) => {
+              if (!available) {
+                return Promise.reject("Metadata url is not available");
+              } else {
+                return Promise.resolve();
+              }
+            });
+        }
         return db.service_details_protocol
-          .checkClientId(
+          .checkEntityId(
             value,
             0,
             0,

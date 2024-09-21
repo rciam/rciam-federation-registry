@@ -1,0 +1,8 @@
+{
+  "authorized_users": [
+    "username1",
+    "username2"
+  ],
+  "merge_environments_on_deploy": false,
+  "merged_integration_environment_name": "merged"
+}

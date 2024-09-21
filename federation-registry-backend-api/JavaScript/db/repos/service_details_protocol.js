@@ -53,6 +53,20 @@ class ServiceDetailsProtocolRepository {
           if(result.length>0){return false}else{return true}
       })
     }
+
+    async checkClientIdAllEnvironments(client_id,service_id,petition_id,tenant){
+        const query =  this.pgp.as.format(sql.checkClientIdAllEnvironments,{
+            client_id:client_id,
+            service_id:service_id,
+            petition_id:petition_id,
+            tenant:tenant,
+        });
+        return this.db.any(query
+        ).then(result =>{
+            if(result.length>0){return false}else{return true}
+        })
+    }
+
     async checkEntityId(entity_id,service_id,petition_id,tenant,environment){
       return this.db.any(sql.checkEntityId,{
         entity_id:entity_id,
@@ -63,6 +77,17 @@ class ServiceDetailsProtocolRepository {
       }).then(result =>{
           if(result.length>0){return false}else{return true}
       })
+    }
+
+    async checkEntityIdAllEnvironments(entity_id,service_id,petition_id,tenant){
+        return this.db.any(sql.checkEntityIdAllEnvironments,{
+            entity_id:entity_id,
+            service_id:service_id,
+            petition_id:petition_id,
+            tenant:tenant,
+        }).then(result =>{
+            if(result.length>0){return false}else{return true}
+        })
     }
 
     // Data format

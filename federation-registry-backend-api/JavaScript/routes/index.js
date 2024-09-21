@@ -791,13 +791,17 @@ router.put("/agent/set_services_state", amsAgentAuth, (req, res, next) => {
               if (agents) {
                 req.body.forEach((service) => {
                   agents.forEach((agent) => {
-                    if (
+                    
+                  let service_agent_condition =
                       agent.tenant === service.tenant &&
                       agent.entity_protocol === service.protocol &&
-                      agent.entity_type === "service" &&
-                      agent.integration_environment ===
-                        service.integration_environment
-                    ) {
+                      agent.entity_type === 'service';
+
+                  if (!('merge_environments_on_deploy' in config) || !config.merge_environments_on_deploy) {
+                    service_agent_condition = service_agent_condition && agent.integration_environment === service.integration_environment;
+                  }
+
+                  if(service_agent_condition){
                       service_pending_agents.push({
                         agent_id: agent.id,
                         service_id: service.id,
@@ -2043,21 +2047,17 @@ const isAvailable = async (
 ) => {
   if (id) {
     if (protocol === "oidc") {
-      return t.service_details_protocol.checkClientId(
-        id,
-        service_id,
-        petition_id,
-        tenant,
-        environment,
-      );
+      if ('merge_environments_on_deploy' in config && config.merge_environments_on_deploy) {
+        return t.service_details_protocol.checkClientIdAllEnvironments(id,service_id,petition_id,tenant);
+      }
+      return t.service_details_protocol.checkClientId(id,service_id,petition_id,tenant,environment);
+
     } else if (protocol === "saml") {
-      return t.service_details_protocol.checkEntityId(
-        id,
-        service_id,
-        petition_id,
-        tenant,
-        environment,
-      );
+      if ('merge_environments_on_deploy' in config && config.merge_environments_on_deploy) {
+        return t.service_details_protocol.checkEntityIdAllEnvironments(id, service_id, petition_id, tenant);
+      }
+      return t.service_details_protocol.checkEntityId(id,service_id,petition_id,tenant,environment);
+
     }
   } else {
     return true;
