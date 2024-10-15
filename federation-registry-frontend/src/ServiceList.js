@@ -800,7 +800,7 @@ const ServiceList= (props)=> {
                       <input type='checkbox' name='filter' checked={filters.showOutdated} onChange={()=> setFilters({...filters,showOutdated:!filters.showOutdated})}/>
                     </div>
                   </OverlayTrigger>
-                  {user.actions.includes['get_service']?
+                  {user.actions.includes('get_service')?
                     <React.Fragment>
                       <OverlayTrigger
                                 placement='top'
@@ -862,7 +862,7 @@ const ServiceList= (props)=> {
               <React.Fragment>
                 {services.length>=1?services.map((item,index)=>{
                     return(
-                      <TableItem service={item} key={index}  setConfirmationData={setConfirmationData} getServices={getServices} filters={filters} setFilters={setFilters} setFilter={(filter,value)=>{let temp_filters={...filters}; temp_filters[filter]=value;  setFilters({...temp_filters})}} setSearchInputString={setSearchInputString} setExpandFilters={setExpandFilters} setTagString={(value)=>{setFilters({...filters,tagString:value })}}/>
+                      <TableItem canReview={canReview} service={item} key={index}  setConfirmationData={setConfirmationData} getServices={getServices} filters={filters} setFilters={setFilters} setFilter={(filter,value)=>{let temp_filters={...filters}; temp_filters[filter]=value;  setFilters({...temp_filters})}} setSearchInputString={setSearchInputString} setExpandFilters={setExpandFilters} setTagString={(value)=>{setFilters({...filters,tagString:value })}}/>
                     )
                 }):<tr><td></td><td>{t('no_services')}</td><td></td></tr>}
                 {loadingList?
@@ -1029,8 +1029,7 @@ function TableItem(props) {
               :null
               }
               {
-                ((user.actions.includes('review_own_petition')||user.actions.includes('review_petition'))||
-                  (props.service.owned&&tenant.config.test_env.includes(props.service.integration_environment)))
+                props.canReview(props.service.integration_environment)
                 &&props.service.petition_id
                 &&!(props.service.status==='changes')
                 &&(props.service.status!=='request_review'||(props.service.status==='request_review'&&user.actions.includes('review_restricted')))?
