@@ -662,9 +662,9 @@ const CopyService = (props)=> {
         }).then(response=> {
         if(response){
           response.service.integration_environment=props.integration_environment;
-          if(props.sameEnvironment){
+          if(props.sameEnvironment || props.clear_identifier){
             delete response.service.entity_id;
-            delete response.client_id;
+            delete response.service.client_id;
           }
           setService(response.service);
         }

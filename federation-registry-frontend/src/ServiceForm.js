@@ -33,6 +33,7 @@ import countryData from 'country-region-data';
 import { SimpleInput, AccessTokenValidationModel, CountrySelect, AuthMethRadioList, SelectEnvironment, DeviceCode, Select, PublicKey, ListInput, LogoInput, TextAria, ListInputArray, CheckboxList, SimpleCheckbox, ClientSecret, TimeInput, RefreshToken, Contacts, OrganizationField, SimpleRadio, MetadataInput } from './Components/Inputs.js'// eslint-disable-next-line
 import { SamlAttributesInput } from './Components/SamlAttributes.js';
 import { ConfirmationModal } from './Components/Modals';
+import MoveDialog from "./Components/MoveDialog";
 
 
 
@@ -48,6 +49,10 @@ let timeouts = {};
 
 
 const ServiceForm = (props) => {
+  let serviceMoveEnabled = false;
+  if ('merge_environments_on_deploy' in config && config.merge_environments_on_deploy) {
+    serviceMoveEnabled = true;
+  }
 
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
@@ -82,6 +87,7 @@ const ServiceForm = (props) => {
   const [asyncResponse, setAsyncResponse] = useState(false);
   const [formValues, setFormValues] = useState();
   const [showCopyDialog, setShowCopyDialog] = useState(false);
+  const [showMoveDialog,setShowMoveDialog] = useState(false);
   const [showInitErrors, setShowInitErrors] = useState(false);
   const [logoWarning, setLogoWarning] = useState(false);
   const [serviceTags, setServiceTags] = useState([]);
@@ -103,6 +109,11 @@ const ServiceForm = (props) => {
     if (!tenant.form_config.integration_environment.includes(props.initialValues.integration_environment)) {
       props.initialValues.integration_environment = tenant.form_config.integration_environment[0];
     }
+
+    if (props.move_service && props.integration_environment) {
+      props.initialValues.integration_environment = props.integration_environment;
+    }
+
     countryData.forEach((item, index) => {
       countries.push(item.countryShortCode.toLowerCase());
 
@@ -732,6 +743,10 @@ const ServiceForm = (props) => {
     setShowCopyDialog(!showCopyDialog);
   }
 
+  const toggleMoveDialog = () => {
+    setShowMoveDialog(!showMoveDialog);
+  }
+
   const canReview = (integration_environment) => {
     return (
       // Allow when user can review service requests targeting a restricted ennvironment    
@@ -1108,7 +1123,7 @@ const ServiceForm = (props) => {
             isSubmitting }) => (
             <div className="tab-panel">
               {showCopyDialog ? <CopyDialog service_id={service_id} show={showCopyDialog} toggleCopyDialog={toggleCopyDialog} current_environment={props.initialValues.integration_environment} /> : null}
-
+              {serviceMoveEnabled && showMoveDialog ? <MoveDialog service_id={service_id} show={showMoveDialog} toggleMoveDialog={toggleMoveDialog} current_environment={props.initialValues.integration_environment} /> : null}
               <ProcessingRequest active={asyncResponse} />
               {props.user.actions.includes('manage_tags') && service_id ?
                 <div className='service-form-tags-container'>
@@ -1184,7 +1199,8 @@ const ServiceForm = (props) => {
                           disabled={disabled || tenant.form_config.integration_environment.length === 1 || props.copy || props.disableEnvironment}
                           changed={props.changes ? props.changes.integration_environment : null}
                           copybuttonActive={props.owned && props.disabled && service_id}
-                          toggleCopyDialog={toggleCopyDialog}
+                          toggleCopyMoveDialog={serviceMoveEnabled ? toggleMoveDialog : toggleCopyDialog}
+                          moveInsteadCopy={serviceMoveEnabled}
                         />
                       </InputRow>
                       <InputRow moreInfo={{}} title={t('form_logo')}>

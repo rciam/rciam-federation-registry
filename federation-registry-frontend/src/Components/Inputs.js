@@ -882,7 +882,11 @@ export function SelectEnvironment(props) {
         {props.copybuttonActive ? (
           <OverlayTrigger
             placement="right"
-            overlay={<Tooltip id={`tooltip-right`}>Copy Service</Tooltip>}
+            overlay={
+              <Tooltip id={`tooltip-right`}>
+                {props.moveInsteadCopy ? "Move Service" : "Copy Service"}
+              </Tooltip>
+            }
           >
             <Button
               className="copy_button"

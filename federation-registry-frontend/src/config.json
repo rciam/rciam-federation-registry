@@ -4,5 +4,6 @@
     "tenant_2":"http://localhost:5000/"
   },
   "basename": "/",
-  "testing_instance": true
+  "testing_instance": true,
+  "merge_environments_on_deploy": true
 }

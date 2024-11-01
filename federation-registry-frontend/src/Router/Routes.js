@@ -16,6 +16,7 @@ import BroadcastNotifications from '../Components/BrodcastNotifications.js';
 import OutdatedNotifications from '../Components/OutdatedNotifications.js'; 
 import ServiceOverviewPage from '../ServiceOverviewPage.js';
 import { useCookies } from 'react-cookie';
+import config from '../config.json';
 //import { useParams } from "react-router-dom";
 
 
@@ -58,6 +59,19 @@ const Routes = (props) => {
         </div>
         <UserInfo user={props.user} />
       </ProtectedRoute>
+      {config.merge_environments_on_deploy && (
+        <ProtectedRoute user={props.user} path="/:tenant_name/services/:service_id/move">
+          <div className="links">
+            <Link to={"/" + tenant?.name + "/home"}>{props.t('link_home')}</Link>
+            <span className="link-seperator">/</span>
+            <Link to={"/" + tenant?.name + "/services"}>{props.t('link_petitions')}</Link>
+            <span className="link-seperator">/</span>
+            Move Service
+          </div>
+          <EditService user={props.user}/>
+        </ProtectedRoute>
+          )
+      }
       <ProtectedRoute user={props.user} path="/:tenant_name/form/copy">
         <div className="links">
           <Link to={"/"+ tenant?.name +"/home"}>{props.t('link_home')}</Link>
@@ -66,13 +80,14 @@ const Routes = (props) => {
           <span className="link-seperator">/</span>
           New Service
         </div>
-        <CopyService user={props.user}/>
-      </ProtectedRoute>
+          <CopyService user={props.user} clear_identifier={config.merge_environments_on_deploy}/>
+        </ProtectedRoute>
+      )
       <ProtectedRoute user={props.user} path="/:tenant_name/form/new">
         <div className="links">
-          <Link to={"/"+ tenant?.name +"/home"}>{props.t('link_home')}</Link>
+          <Link to={"/" + tenant?.name + "/home"}>{props.t('link_home')}</Link>
           <span className="link-seperator">/</span>
-          <Link to={"/"+ tenant?.name +"/services"}>{props.t('link_petitions')}</Link>
+          <Link to={"/" + tenant?.name + "/services"}>{props.t('link_petitions')}</Link>
           <span className="link-seperator">/</span>
           New Service
         </div>
