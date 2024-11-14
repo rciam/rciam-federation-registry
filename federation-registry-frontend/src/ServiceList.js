@@ -421,7 +421,7 @@ const ServiceList= (props)=> {
     setPaginationItems(items);
   };
 
-  const canReview = (integration_environment) => {
+  const canReview = (integration_environment,status) => {
     return (
       // Allow when user can review service requests targeting a restricted ennvironment    
         (user.actions.includes('review_restricted')&& tenant?.config?.restricted_env.includes(integration_environment))
@@ -430,7 +430,7 @@ const ServiceList= (props)=> {
         (tenant?.config?.test_env.includes(integration_environment) && user.actions.includes('review_own_petition'))
       ||
       // Allow when user can review all petitions and service request does not target a restricted environment 
-        (user.actions.includes('review_petition')&& !tenant?.config?.restricted_env.includes(integration_environment))
+        (user.actions.includes('review_petition')&& (!tenant?.config?.restricted_env.includes(integration_environment) || status!=="review_requested"))
       );
   }
 
@@ -449,7 +449,7 @@ const ServiceList= (props)=> {
         getServices();
         setAsyncResponse(false);
         if(response.status===200){
-          let reviewEnabled = canReview(integration_environment); 
+          let reviewEnabled = canReview(integration_environment,'pending'); 
           setPetitionSubmittedModalData({
             title:t('new_petition_title'),
             message: reviewEnabled? t('request_submit_success_review_msg'):t('request_submit_success_msg'),
@@ -489,7 +489,7 @@ const ServiceList= (props)=> {
         let responseData = await response.json();
         setAsyncResponse(false);
         if(response.status===200){
-          let reviewEnabled = canReview(integration_environment); 
+          let reviewEnabled = canReview(integration_environment,"pending"); 
           setPetitionSubmittedModalData({
             title:t('new_petition_title'),
             message: reviewEnabled? t('request_submit_success_review_msg'):t('request_submit_success_msg'),
@@ -1029,7 +1029,7 @@ function TableItem(props) {
               :null
               }
               {
-                props.canReview(props.service.integration_environment)
+                props.canReview(props.service.integration_environment,props.service.status)
                 &&props.service.petition_id
                 &&!(props.service.status==='changes')
                 &&(props.service.status!=='request_review'||(props.service.status==='request_review'&&user.actions.includes('review_restricted')))?
