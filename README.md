@@ -48,14 +48,14 @@ If we need to set the project to communicate with deployment agents we will need
 - an authorization key for the push endpoint
 
 
-##### 1) Initialise/Configure Tenant
-&NewLine;
-a) Setup the tenants configuration file.
+#### **Initialise/Configure Tenant**
+
+1) Setup the tenants configuration file.
 ```
 federation-registry-backend-api/JavaScript/config.json
 ```
 
-b) Initialise tenant in the database.  An example of an initialisation script can be seen in the **setup_tenant.sql** file
+2) Initialise tenant in the database.  An example of an initialisation script can be seen in the **setup_tenant.sql** file
 - **Authentication:** Configure the Issuer that will be used for authentication providing also the Client Id and Client Secret.
 - **User Roles:**  Configure the user roles and the entitlements that grant them and associate the with [role actions](#role-actions).  (The use of the example roles is recommended) 
 - **Deployment Agents:** Configure the deployment agents that will be connected to the Federation Registry instance.
@@ -63,8 +63,8 @@ b) Initialise tenant in the database.  An example of an initialisation script ca
 \*Note: If you are running federation registry in a development instance consider using a [mock deployer](https://github.com/rciam/rciam-federation-registry-agent/tree/mock-deployer). 
 
 
-##### 1) Backend API
-&NewLine;
+#### **Backend API**
+
 **Configure Environment File**
 `federation-registry-backend-api/JavaScript/.env`
 
@@ -91,8 +91,8 @@ TOKEN_KEY = token_used_for_encription
 }
 ```
 
-##### 2) Front End
-&NewLine;
+#### **Front End**
+
 For the frontend we need to configure where the backend api is located:
 `federation-registry-frontend/src/config.json`
 
@@ -104,11 +104,10 @@ For the frontend we need to configure where the backend api is located:
   },
   "basename": "/",
 }
-
 ```
 
-##### **3) AMS Agent**
-&NewLine;
+#### **AMS Agent**
+
 Ams Agent is responsible for
 - Creating the necessary Topics and Subscriptions in the AMS.
 - Pushing Deployment messages from the Federation Registry to the AMS. 
@@ -165,7 +164,8 @@ $ node app.js
 Each user role is associated with a set of actions. Here is a list of the supported actions. 
 
 ##### Simple Actions 
-- **get_user**: User can has access to it's own personal information.
+
+- **get_user**: User has access to it's own personal information.
 - **get_own_services**: User can get a list of their services.
 - **get_own_service**: User can view their own services.
 - **get_own_petitions**: User can view requests for their services.
