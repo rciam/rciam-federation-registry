@@ -1,2643 +1,3875 @@
-swagger: "2.0"
-info:
-  description: "This is an Express server used to manage identity provider services. Users manage services by creating requests handled by administrators. You can find out more about the project on the [github page](https://github.com/rciam/rciam-federation-registry) or you can try it out live  [here](http://service-registry.aai-dev.grnet.gr/egi). "
-  version: "1.2.1"
-  title: "Federation Registry"
-  termsOfService: "http://swagger.io/terms/"
-  contact:
-    email: "apiteam@swagger.io"
-  license:
-    name: "RCIAM"
-    url: "https://github.com/rciam"
-host: "swagger.io"
-basePath: "/v2"
-tags:
-- name: "Authentication"
-  description: "Authentication routes"
-- name: "Services"
-  description: "Manage Services"
-- name: "Petitions"
-  description: "Manage Petition Requests"
-- name: "User"
-  description: "Operations about user"
-- name: "Groups and Invitations"
-  description: "Manage owners group"
-- name: "AMS"
-  description: "Communication with the ARGO Messaging Service"
-- name: "Agent"
-  description: "Dedicated endpoints for the ams-agent"
-- name: "Deployer Agents"
-  description: "Manage Tenant Deployer Agents"
-- name: "Banner Alerts"
-  description: "Banner notification alerts"
-- name: "Service Tags"
-  description: "Managing Service Rags"
-schemes:
-- "https"
-paths:
-  /tenants/{name}/tags:
-    get:
-      tags:
-      - Service Tags
-      summary: "Get all tags"
-      description: "Get all available tags for a given tenant"
-      parameters:
-        - in: query
-          name: tag
-          type: string
-          description: "Search string to filter tags result"
-          required: false
-        - in: path
-          name: name
-          type: string
-          description: "Tenant that the request is targeting"
-          required: true
-      responses: 
-        "200":
-          description: "OK"
-          schema: 
-            type: "array"
-            items:
-              type: "string"
-        "401": 
-          description: "Unauthenticated request" 
-        "500":
-          description: "Error"
-  /tenants/{name}/tags/services/{id}:
-    get:
-      tags:
-      - Service Tags
-      summary: "Get all tags of a service"
-      description: "Get all available tags attached to a service"
-      parameters:
-        - in: path
-          name: id
-          type: integer
-          description: "Id of the requested service"
-          required: true
-        - in: path
-          name: name
-          type: string
-          description: "Tenant that the request is targeting"
-          required: true
-      responses: 
-        "200":
-          description: "OK"
-          schema: 
-            type: "array"
-            items:
-              type: "string"
-        "401": 
-          description: "Unauthenticated request" 
-        "500":
-          description: "Error"
-    post:
-      tags:
-      - Service Tags
-      summary: "Create new tags for a service"
-      description: "Create new tags for a service"
-      parameters:
-        - in: path
-          name: id
-          type: integer
-          description: "Id of the requested service"
-          required: true
-        - in: path
-          name: name
-          type: string
-          description: "Tenant that the request is targeting"
-          required: true
-        - in: body
-          name: body
-          schema:
-            type: "array"
-            description: "Array of string tags"
-            items: 
-              type: "string"
-      responses: 
-        "200":
-          description: "OK"
-        "401": 
-          description: "Unauthenticated request" 
-        "500":
-          description: "Error"
-    delete:
-      tags:
-      - Service Tags
-      summary: "Delete service tags"
-      description: "Delete tags for a service"
-      parameters:
-        - in: path
-          name: id
-          type: integer
-          description: "Id of the requested service"
-          required: true
-        - in: path
-          name: name
-          type: string
-          description: "Tenant that the request is targeting"
-          required: true
-        - in: body
-          name: body
-          schema:
-            type: "array"
-            description: "Array of string tags"
-            items: 
-              type: "string"
-      responses: 
-        "200":
-          description: "OK"
-        "401": 
-          description: "Unauthenticated request" 
-        "500":
-          description: "Error"
-    
-  /tenants/{name}/login:
-    get:
-      tags:
-      - "Authentication"
-      summary: "Redirects Users to Proxy"
-      description: "This route redirects user to the tenants proxy authentication server where user is prompted to choose an identity provider and login."
-      operationId: "login"
-      parameters:
-        - in: path
-          name: name
-          type: string
-          description: "Tenant that the request is targeting"
-          required: true
-      responses:
-        "301":
-          description: "Redirects back to React App"
-        "401":
-          description: "Tenant is not available" 
-        "500":
-          description: "Error"
-  /tokens/{code}:
-    get:
-      tags:
-      - "Authentication"
-      summary: "Exchange one time code with access token"
-      description: "Used to get access token issued from the authentication proxy on login."
-      operationId: "getToken"
-      parameters:
-        - in: "path"
-          name: "code"
-          type: "string"
-          description: "One time code returned after login"
-          required: true
-      responses:
-        "200":
-          description: "OK"
-          schema:
-            type: "object"
-            properties:
-              token:
-                type: "string"
-                description: "Access token"
-        "401":
-          description: "Unauthenticated request"
-        "500":
-          description: "Error"
-  /tenants/{name}/user:
-    get:
-      tags:
-      - "User"
-      summary: "Returns user and role info "
-      description: ""
-      operationId: "getUser"
-      parameters:
-        - in: path
-          name: name
-          type: string
-          description: "Tenant that the request is targeting"
-          required: true
-      responses:
-        "200":
-          description: "OK"
-          schema:
-            $ref: "#/definitions/User"
-        "401":
-          description: "Unauthenticated request"
-        "500":
-          description: "Error"
-      security:
-      - access_tokenAuth: []
-  /callback/{tenant_name}:
-    get:
-      tags:
-      - "Authentication"
-      summary: "Redirects user back to react app after login"
-      description: "This route handles redirects from the authentication proxy following Authorization Code Flow, saves user to db links access_token to a one time code and then redirects to react app sending also the code."
-      operationId: "callback"
-      parameters:
-        - in: path
-          type: string
-          name: tenant_name
-          description: "Tenant that the request is targeting"
-          required: true
-      responses:
-        "301":
-          description: "Redirects back to React App"
-        "500":
-          description: "Error"
-  /tenants/{name}/organizations:
-    post:
-      tags:
-      - "Organizations"
-      summary: "Add Organization"
-      description: ""
-      operationId: "postOrganization"
-      consumes:
-        - "application/json"
-      produces:
-        - "application/json"
-      parameters:
-      - in: path
-        type: string
-        name: name
-        description: "Tenant that the request is targeting"
-        required: true
-      - in: "body"
-        name: "body"
-        description: "Organization object"
-        required: true
-        schema:
-          $ref: "#/definitions/PostOrganization"
-      responses:
-        "200":
-          description: "OK"
-        "401":
-          description: "Unauthenticated request"
-        "422":
-          description: "Invalid Data"
-        "500":
-          description: "Internal Error"
-      security:
-      - access_tokenAuth: []
-    get:
-      tags:
-      - "Organizations"
-      summary: "Get organizations"
-      description: ""
-      operationId: "getOrganizations"
-      consumes:
-      - "application/json"
-      produces:
-      - "application/json"
-      parameters:
-      - in: path
-        type: string
-        name: name
-        description: "Tenant that the request is targeting"
-        required: true
-      - in: query 
-        type: string
-        name: search_string
-        description: "Search string to filter organizations"
-        required: false
-      - in: query
-        type: boolean
-        name: ror
-        description: "If true returns only organization registered at ror.org"
-      responses: 
-        "200":
-          description: "OK"
-          schema:
-            type: "array"
-            items:
-              type: "object"
-              $ref: "#/definitions/PostOrganization"
-        "401":
-          description: "Unauthenticated request"
-        "422":
-          description: "Invalid Data"
-        "500":
-          description: "Internal Error"
-      security:
-        - access_tokenAuth: []
-  /tenants/{name}/petitions:
-    post:
-      tags:
-      - "Petitions"
-      summary: "Create new petition"
-      description: ""
-      operationId: "addPetition"
-      consumes:
-      - "application/json"
-      produces:
-      - "application/json"
-      parameters:
-      - in: path
-        type: string
-        name: name
-        description: "Tenant that the request is targeting"
-        required: true
-      - in: "body"
-        name: "body"
-        description: "Petition object describing the service configuration "
-        required: true
-        schema:
-          $ref: "#/definitions/Petition"
-      responses:
-        "200":
-          description: "OK"
-        "401":
-          description: "Unauthenticated request"
-        "422":
-          description: "Invalid Data"
-        "500":
-          description: "Internal Error"
-      security:
-      - access_tokenAuth: []
-  /tenants/{name}/petitions/{id}:
-    get:
-      tags:
-      - "Petitions"
-      summary: "Get petition"
-      description: ""
-      operationId: "getPetition"
-      consumes:
-       - "application/json"
-      produces:
-        - "application/json"
-      parameters:
-        - in: path
-          type: string
-          name: name
-          description: "Tenant that the request is targeting"
-          required: true
-        - in: "query"
-          name: "type"
-          required: false
-          type: "string"
-          description: "Type should be 'open' when asking for a pending petition"
-        - name: "id"
-          in: "path"
-          description: "ID of petition to return"
-          required: true
-          type: "integer"
-          format: "int64"
-      responses:
-        "200":
-          description: "Successful"
-          schema:
-            $ref: "#/definitions/Petition"
-        "401":
-          description: "Unauthenticated request"
-        "404":
-          description: "Petition not found"
-        "500":
-          description: "Internal Error"
-      security:
-      - access_tokenAuth: []
-    put:
-      tags:
-      - "Petitions"
-      summary: "Edit petition"
-      description: ""
-      operationId: "updatePetition"
-      consumes:
-      - "application/json"
-      produces:
-      - "application/json"
-      parameters:
-      - in: path
-        type: string
-        name: name
-        description: "Tenant that the request is targeting"
-        required: true
-      - name: "id"
-        in: "path"
-        description: "ID of petition to edit"
-        required: true
-        type: "integer"
-        format: "int64"
-      - in: "body"
-        name: "body"
-        description: "Petition object that needs to be added to the registry may be empty if type is delete"
-        required: false
-        schema:
-          $ref: "#/definitions/Petition"
-      responses:
-        "200":
-          description: OK
-        "401":
-          description: "Unauthenticated request"
-        "422":
-          description: "Invalid Data"
-        "500":
-          description: "Internal Error"
-      security:
-      - access_tokenAuth: []
-    delete:
-      tags:
-      - "Petitions"
-      summary: "Delete petition"
-      description: ""
-      operationId: "deletePetition"
-      consumes:
-      - "application/json"
-      produces:
-      - "application/json"
-      parameters:
-        - in: path
-          type: string
-          name: name
-          description: "Tenant that the request is targeting"
-          required: true
-        - name: "id"
-          in: "path"
-          description: "ID of petition to delete"
-          required: true
-          type: "integer"
-          format: "int64"
-      responses:
-        "200":
-          description: OK
-        "401":
-          description: "Unauthenticated request"
-        "500":
-          description: "Internal Error"
-      security:
-      - access_tokenAuth: []
-  /tenants/{name}/notifications/broadcast/recipients:
-    get:
-      tags:
-      - "Notifications"
-      summary: "Get recipients"
-      description: "Fetches all contacts that match the criteria provided"
-      operationId: "getRecipients"
-      produces:
-      - "application/json"
-      parameters:
-      - in: path
-        type: string
-        required: true
-        name: name
-        description: "Tenant that the request is targeting"
-      - in: query 
-        name: contact_types
-        type: array
-        items:
-          type: string
-        description: "Types of contacts to get"
-      - in: query
-        name: environments
-        type: array
-        items:
-          type: string
-        description: "Target environments to get contacts from"
-      responses:
-        "200":
-          description: "successful"
-          schema:
-            type: "array"
-            items:
-              type: "string"
-            description: "Contact email addresses that match the criteria"
-        "401":
-          description: "Unauthenticated request"
-        "500":
-          description: "Internal Error"
-      security:
-      - access_tokenAuth: []
-  /tenants/{name}/notifications/owners:
-    put:
-      tags:
-      - "Notifications"
-      summary: "Send notifications to service owners"
-      description: "Sends notifications to the owners of a service"
-      operationId: "SendOwnerNotif"
-      produces:
-      - "application/json"
-      parameters:
-      - in: path
-        type: string
-        required: true
-        name: name
-        description: "Tenant that the request is targeting"
-      - in: "body"
-        name: "body"
-        description: "Notification data"
-        required: true
-        schema:
-          type: "object"
-          properties:
-            name:
-              type: "string"
-              description: "Name of the notification sender"
-            email_address:
-              type: "string"
-              format: "email"
-              description: "Email address of the notifications sender"
-            email_subject:
-              type: "string"
-              description: "Subject of the notification"
-            email_body:
-              type: "string"
-              description: "Notification Text, replaces (--* Reconfiguration Link *--) string with a button with a link to the reconfiguration page of the service/request"
-            cc_emails:
-              type: "array"
-              items: 
-                type: "string"
-                format: "email"
-              description: "Email addresses that will be added as CC to the notification email"
-            recipients:
-              type: "array"
-              items: 
-                type: "string"
-                format: "email"
-              description: "Email addresses that the notification will be sent"
-      responses:
-        "200":
-          description: "successful"
-          schema:
-            type: "object"
-            properties: 
-              notified_users:
-                type: "number"
-                description: "Number of users the notification was sent to"
-        "401":
-          description: "Unauthenticated request"
-        "500":
-          description: "Internal Error"
-      security:
-      - access_tokenAuth: []
-  /tenants/{name}/notifications/broadcast:
-    put:
-      tags:
-      - "Notifications"
-      summary: "Send Notifications to service contacts"
-      description: "Sends Notifications to the contacts of registered services"
-      operationId: "sendNotif"
-      produces:
-      - "application/json"
-      parameters:
-      - in: path
-        type: string
-        required: true
-        name: name
-        description: "Tenant that the request is targeting"
-      - in: "body"
-        name: "body"
-        description: "Notification data"
-        required: true
-        schema:
-          type: "object"
-          properties:
-            name:
-              type: "string"
-              description: "Name of the notification sender"
-            email_address:
-              type: "string"
-              format: "email"
-              description: "Email address of the notifications sender"
-            email_subject:
-              type: "string"
-              description: "Subject of the notification"
-            email_body:
-              type: "string"
-              description: "Notification Text"
-            contact_types:
-              type: "array"
-              items: 
-                type: "string"
-              description: "Types of Contacts that will recieve the notification"
-            cc_emails:
-              type: "array"
-              items: 
-                type: "string"
-                format: "email"
-              description: "Email addresses that will be added as CC to the notification email"
-            environments:
-              type: "array"
-              items:
-                type: "string"
-              description: "Environments that will be targeted by the notification"
-            notify_admins:
-              type: "boolean"
-              description: "Also add administrators as CC to the notification email"
-            protocols:
-              type: "array"
-              items:
-                type: "string"
-              description: "Protocols of services that will be targeted by the notification"
-      responses:
-        "200":
-          description: "successful"
-          schema:
-            type: "object"
-            properties: 
-              notified_users:
-                type: "number"
-                description: "Number of users the notification was sent to"
-        "401":
-          description: "Unauthenticated request"
-        "500":
-          description: "Internal Error"
-      security:
-      - access_tokenAuth: []
-  /tenants/{name}/notifications/outdated:
-    put:
-      tags:
-      - "Notifications"
-      summary: "Send Outdated Alert Notifications"
-      description: "Sends Notifications to the owners of outdated services"
-      operationId: "sendOutdatedNotif"
-      produces:
-      - "application/json"
-      parameters:
-      - in: path
-        type: string
-        required: true
-        name: name
-        description: "Tenant that the request is targeting"
-      - in: "body"
-        name: "body"
-        description: "Notification data"
-        required: true
-        schema:
-          type: "object"
-          properties:
-            integration_environment:
-              type: "string"
-              description: "Integration environment to send outdated alert notifications"
-      responses:
-        "200":
-          description: "successful"
-          schema:
-            type: "object"
-            properties: 
-              user_count:
-                type: "number"
-                description: "Number of users the notification was sent to"
-              service_count:
-                type: "number"
-                description: "Number of outdated service in integration environment provided as parameter"
-        "401":
-          description: "Unauthenticated request"
-        "500":
-          description: "Internal Error"
-      security:
-      - access_tokenAuth: []
-  /tenants/{name}/banner_alert:
-    get:
-      tags:
-      - "Banner Alerts"
-      summary: "Get all banner alerts for the given tenant"
-      description: "Get all banner alerts for the given tenant"
-      operationId: "getBannerAlerts"
-      produces:
-      - "application/json"
-      parameters:
-      - in: path
-        type: string
-        name: name
-        description: "Tenant that the request is targeting"
-        required: true
-      - name: "active"
-        in: "query"
-        description: "If true returns only active alerts"
-        required: false
-        type: "boolean"
-      responses:
-        "200":
-          description: "successful"
-          schema:
-            type: "array"
-            items:
-              type: "object"
-              $ref: "#/definitions/BannerAlert"
-        "401":
-          description: "Unauthenticated request"
-        "500":
-          description: "Internal Error"
-      security:
-      - admin_key: []
-    post: 
-      tags:
-      - "Banner Alerts"
-      summary: "Create a new banner alert"
-      description: "Create a new banner alert"
-      operationId: "createBannerAlerts"
-      produces:
-      - "application/json"
-      parameters:
-      - in: path
-        type: string
-        name: name
-        description: "Tenant that the request is targeting"
-        required: true
-      - in: "body"
-        name: "body"
-        schema:     
-          $ref: "#/definitions/BannerAlert"
-      responses:
-        "200":
-          description: "successful"
-        "401":
-          description: "Unauthenticated request"
-        "500":
-          description: "Internal Error"
-      security:
-      - admin_key: []
-  /tenants/{name}/banner_alert/{id}:
-    put:
-      tags:
-      - "Banner Alerts"
-      summary: "Update a banner alert"
-      description: "Update a banner alert"
-      operationId: "UpdateBannerAlerts"
-      produces:
-      - "application/json"
-      parameters:
-      - in: path
-        type: string
-        name: name
-        description: "Tenant that the request is targeting"
-        required: true
-      - in: path
-        name: id
-        type: "integer"
-        format: "int64"
-        required: true
-        description: "Id of Banner Alert to update"
-      - in: "body"
-        name: "body"
-        schema:     
-          $ref: "#/definitions/BannerAlert"
-      responses:
-        "200":
-          description: "successful"
-        "401":
-          description: "Unauthenticated request"
-        "500":
-          description: "Internal Error"
-      security:
-      - admin_key: []
-    delete:
-      tags:
-      - "Banner Alerts"
-      summary: "Delete a banner alert"
-      description: "Delete a banner alert"
-      operationId: "DeleteBannerAlerts"
-      produces:
-      - "application/json"
-      parameters:
-      - in: path
-        type: string
-        name: name
-        description: "Tenant that the request is targeting"
-        required: true
-      - in: path
-        name: id
-        type: "integer"
-        format: "int64"
-        required: true
-        description: "Id of Banner Alert to delete"
-      responses:
-        "200":
-          description: "successful"
-        "401":
-          description: "Unauthenticated request"
-        "500":
-          description: "Internal Error"
-      security:
-      - admin_key: []
-  /tenants/{name}/services/{id}:
-    get:
-      tags:
-      - "Services"
-      summary: "Get service by id"
-      description: "Gets service by id"
-      operationId: "getService"
-      produces:
-      - "application/json"
-      parameters:
-      - in: path
-        type: string
-        name: name
-        description: "Tenant that the request is targeting"
-        required: true
-      - name: "id"
-        in: "path"
-        description: "ID of service to return"
-        required: true
-        type: "integer"
-        format: "int64"
-      responses:
-        "200":
-          description: "successful"
-          schema:
-            type: "object"
-            properties:
-              service: 
-                $ref: "#/definitions/Service"
-              owned:
-                type: "boolean"
-              state:
-                type: "string"
-                description: "The deployment state of the service"
-                enum:
-                - error
-                - pending
-                - deployed
-                - waiting-deployment
-              deployment_type:
-                type: "string"
-                description: "Type of the pending deployment"
-                enum:
-                - edit
-                - create
-                - delete
-              last_edited:
-                type: string
-                description: "Timestamp of the last successful deployment of the service"
-              create_at:
-                type: string
-                description: "Timestamp of the registration of the service"
-              error:
-                type: object
-                properties:
-                  error_date: 
-                    type: string
-                    description: "Timestamp of the deployment error"
-                  error_code:
-                    type: string
-                    description: "Error status code returned by the deployment process"
-                  error_description:
-                    type: string
-                    description: "Description of the deployment error"
-        "401":
-          description: "Unauthenticated request"
-        "500":
-          description: "Internal Error"
-      security:
-      - access_tokenAuth: []
-  /tenants/{name}/services/{id}/deployment:
-    put:
-      tags:
-      - "Services"
-      summary: "Troubleshoot Deployment"
-      description: "Troubleshoot Deployment of a Service Request"
-      operationId: "putServiceDeployment"
-      produces:
-      - "application/json"
-      parameters:
-      - in: path
-        type: string
-        name: name
-        description: "Tenant that the request is targeting"
-        required: true
-      - name: "id"
-        in: "path"
-        description: "ID of the service"
-        required: true
-        type: "integer"
-        format: "int64"
-      - name: "action"
-        in: "query"
-        type: "string"
-        enum:
-        - "resend"
-        description: "Troubleshoot action selected by user"
-      responses:
-        "200":
-          description: "successful"
-        "401":
-          description: "Unauthenticated request"
-        "403":
-          description: "Unauthorised user"
-        "500":
-          description: "Internal Error"
-      security:
-      - access_tokenAuth: []
-  /tenants/{name}/petitions/{id}/review:
-    put:
-      tags:
-      - "Petitions"
-      summary: "Review Petition"
-      description: ""
-      operationId: "review"
-      produces:
-      - "application/json"
-      parameters:
-      - in: path
-        type: string
-        name: name
-        description: "Tenant that the request is targeting"
-        required: true
-      - name: "id"
-        in: "path"
-        description: "ID of petition to review"
-        required: true
-        type: "integer"
-        format: "int64"
-      - name: "type"
-        in: "query"
-        type: "string"
-        enum:
-        - "approve"
-        - "reject"
-        - "changes"
-        - "request_review"
-      responses:
-        "200":
-          description: OK
-        "204":
-          description: "Petition not found"
-        "401":
-          description: "Unauthenticated request"
-        "500":
-          description: "Internal Error"
-      security:
-      - access_tokenAuth: []
-  /tenants/{name}/services/list:
-    get:
-      tags:
-      - "Services"
-      summary: "Get all available services"
-      description: "Returns paginated service information for creating a service list"
-      operationId: "getServiceList"
-      produces:
-      - "application/json"
-      parameters:
-        - in: path
-          type: string
-          name: name
-          description: "Tenant that the request is targeting"
-          required: true
-        - in: query
-          type: integer
-          name: page
-          description: "The page number of the response"
-        - in: query
-          type: integer
-          name: limit
-          description: "The page size determining the number of services contained in each page of the response"
-        - in: query
-          type: boolean
-          name: owned
-          description: "If true returns only services and petitions owned by requesting user"
-        - in: query
-          type: boolean
-          name: pending
-          description: "If true returns only services that have open petitions"
-        - in: query
-          type: string
-          name: search_string
-          description: "Returns only services and petitions that contain the provided string"
-        - in: query
-          type: string
-          name: protocol
-          enum:
-          - saml
-          - oidc
-          description: "Returns only services of the selected protocol"
-        - in: query
-          type: string
-          name: env
-          description: "Returns only services deployed in selected integration environment"
-        - in: query
-          type: string
-          name: request_review
-          description: "Returns only services that are in review requested state"
-        - in: query
-          type: string
-          name: outdated
-          description: "Returns only services that have invalid configuration"
-        - in: query
-          type: string
-          enum:
-          - 'pending'
-          - 'changes'
-          - 'request_review'
-          name: pending_sub
-          description: "Sub filter for services with pending requests based on the review state of the request"
-        - in: query
-          type: boolean
-          name: error
-          description: "Returns only services that have a deployment error"
-        - in: query
-          type: string
-          name: 'tag'
-          description: "Filters results based on tags, supports multiple comma separated values"
-        - in: query
-          type: string
-          name: created_after
-          description: "Filter results based on creation/registration date, returns services created after given date. Format:(yyyy/mm/dd)"
-        - in: query
-          type: string
-          name: created_before
-          description: "Filter results based on creation/registration date, returns services created before given date. Format:(yyyy/mm/dd)"
-      responses:
-        "200":
-          description: "OK"
-          schema:
-            type: "array"
-            items:
-              type: "object"
-              $ref: "#/definitions/Services"
-        "401":
-          description: "Unauthenticated request"
-        "500":
-          description: "Internal Error"
-      security:
-      - access_tokenAuth: []
-  /tenants/{name}/services:
-    get:
-      tags:
-      - "Services"
-      summary: "Get all available services"
-      description: "Returns all available services, some properties are returned only for authorized requests"
-      operationId: "getServices"
-      produces:
-      - "application/json"
-      parameters:
-        - in: path
-          type: string
-          name: name
-          description: "Tenant that the request is targeting"
-          required: true
-      responses:
-        "200":
-          description: "OK"
-          schema:
-            type: "array"
-            items:
-              type: "object"
-              $ref: "#/definitions/Service"
-        "401":
-          description: "Unauthenticated request"
-        "500":
-          description: "Internal Error"
-      security:
-      - access_tokenAuth: []
-    post:
-      tags:
-      - "Services"
-      summary: "Add services"
-      description: "Endpoint used to directly add services to federation registry. Should be used only when necessary and not as an alternative way to add services."
-      operationId: "addServices"
-      parameters:
-        - in: path
-          type: string
-          name: name
-          description: "Tenant that the request is targeting"
-          required: true
-        - in: "body"
-          name: "body"
-          description: "Service details to add to the registry"
-          required: true
-          schema:
-            $ref: "#/definitions/PostServices"
-      responses:
-        "200":
-          description: "OK"
-        "422":
-          description: "Unprocessable Entry"
-        "401":
-          description: "Unauthenticated request"
-        "500":
-          description: "Internal Error"
-  /agent/get_new_configurations:
-    get:
-      tags:
-      - "Agent"
-      summary: "Get new Configurations"
-      description: "Route used from ams-agent to get all service configuration awaiting deployment and push them to the ams topic"
-      operationId: "getPendingServices"
-      produces:
-      - "application/json"
-      responses:
-        "200":
-          description: "OK"
-          schema:
-            $ref: "#/definitions/Pending"
-        "401":
-          description: "Unauthenticated request"
-        "500":
-          description: "Internal Error"
-      security:
-      - api_key: []
-  /ams/ingest:
-    post:
-      tags:
-      - "AMS"
-      summary: "Route that Ams posts deployment results"
-      description: ""
-      operationId: "setState"
-      produces:
-      - "application/json"
-      parameters:
-      - in: "body"
-        name: "body"
-        description: "Ams formatted messages containing results for deployment requests"
-        required: true
-        schema:
-          $ref: "#/definitions/AmsPending"
-      responses:
-        "200":
-          description: "OK"
-        "401":
-          description: "Unauthenticated request"
-        "500":
-          description: "Internal Error"
-  /agent/set_services_state:
-    put:
-      tags:
-      - "Agent"
-      summary: "Edit service state"
-      description: "Route used by ams agent to update state once service changes have been push to the ams"
-      operationId: "putState"
-      produces:
-      - "application/json"
-      parameters:
-      - in: "body"
-        name: "body"
-        required: true
-        schema:
-          $ref: "#/definitions/PutState"
-      responses:
-        "200":
-          description: "OK"
-        "401":
-          description: "Unauthenticated request"
-        "500":
-          description: "internal error"
-      security:
-      - api_key: []
-  /tenants/{name}/services/{id}/petitions:
-    get:
-      tags:
-      - "Petitions"
-      summary: "Retrieve service history"
-      description: "Get all petitions linked to service"
-      operationId: "findServiceHistory"
-      produces:
-      - "application/json"
-      parameters:
-      - in: path
-        type: string
-        name: name
-        description: "Tenant that the request is targeting"
-        required: true
-      - name: "id"
-        in: "path"
-        description: "ID of service to retrieve history"
-        required: true
-        type: "integer"
-        format: "int64"
-      responses:
-        "200":
-          description: "OK"
-          schema:
-              $ref: "#/definitions/History"
-        "204":
-          description: "Service could not be found"
-        "401":
-          description: "Unauthenticated request"
-        "500":
-          description: "internal error"
-      security:
-      - access_tokenAuth: []
-  /tenants/{name}/check_availability:
-    get:
-      tags:
-      - "Petitions"
-      summary: "Check availability of protocol id"
-      description: ""
-      operationId: "Idavailability"
-      produces:
-      - "application/json"
-      parameters:
-      - in: "path"
-        type: "string"
-        name: "name"
-        description: "Tenant that the request is targeting"
-        required: true
-      responses:
-        "200":
-          description: "OK"
-          schema:
-            type: "object"
-            properties:
-              available:
-                type: "boolean"
-                description: ""
-        "400":
-          description: "Invalid tag value"
-        "401":
-          description: "Unauthenticated request"
-      security:
-      - access_tokenAuth: []
-  /tenants/{name}/groups/{group_id}/members:
-    get:
-      tags:
-      - "Groups and Invitations"
-      summary: "Get group member of target group"
-      description: ""
-      operationId: "Get group"
-      produces:
-      - "application/json"
-      parameters:
-        - in: "path"
-          type: "string"
-          name: "name"
-          description: "Tenant that the request is targeting"
-          required: true
-        - in: "path"
-          type: "integer"
-          name: "group_id"
-          description: "Id of target owners group"
-          required: true
-      responses:
-        "200":
-          description: "OK"
-          schema:
-            type: "array"
-            items:
-              type: "object"
-              properties:
-                email:
-                  type: "string"
-                  format: "email"
-                  description: "Email of group member"
-                group_id:
-                  type: "integer"
-                  example: 1
-                group_manager:
-                  type: "boolean"
-                  description: "True if user is a group manager."
-                sub:
-                  type: "string"
-                  example: "7a6ae45156e678389401e3c3839127fd2a019572066d40c5d0176bd123651f934"
-                  description: "Unique identifier of user"
-                username:
-                  type: "string"
-                  example: "test123"
-                  description: "Username of group member"
-        "204":
-          description: "No group found"
-        "401":
-          description: "Unauthenticated request"
-        "500":
-          description: "Internal Error"
-      security:
-        - access_tokenAuth: []
-  /tenants/{name}/groups/{group_id}/members/{sub}:
-    delete:
-      tags:
-      - "Groups and Invitations"
-      summary: "Remove a member from a group"
-      description: "A group manager can request to remove a member from his group."
-      operationId: "deleteMember"
-      parameters:
-        - in: "path"
-          type: "string"
-          name: "name"
-          description: "Tenant that the request is targeting"
-          required: true
-        - in: "path"
-          type: "integer"
-          name: "group_id"
-          description: "Id of target owners group"
-          required: true
-        - in: "path"
-          type: "string"
-          name: "sub"
-          required: true
-          description: "User unique identification"
-      responses:
-        "200":
-          description: "OK"
-        "204":
-          description: "Could not find user"
-        "401":
-          description: "Unauthenticated request"
-        "500":
-          description: "Internal Error"
-      security:
-        - access_tokenAuth: []
-  /tenants/{name}/groups/{group_id}/invitations:
-    get:
-      tags:
-      - "Groups and Invitations"
-      summary: "Get invitations for a group"
-      description: "Get all invitations to target group"
-      operationId: "getGroupInvites"
-      produces:
-      - "application/json"
-      parameters:
-        - in: "path"
-          type: "string"
-          name: "name"
-          description: "Tenant that the request is targeting"
-          required: true
-        - in: "path"
-          type: "integer"
-          name: "group_id"
-          description: "Id of target owners group"
-          required: true
-      responses:
-        "200":
-          description: "OK"
-          schema:
-            type: "array"
-            items:
-              type: "object"
-              properties:
-                invited_by:
-                  type: "string"
-                  format: "email"
-                  description: "Email of user that sent the invitation"
-                id:
-                  type: "integer"
-                  example: 1
-                  description: "Id of group the invitation is for"
-                group_manager:
-                  type: "boolean"
-                  description: "Role for invited user in the group."
-                service_name:
-                  type: "string"
-                  example: "Service Name"
-                  description: "Name of the service that the owners group linked to"
-        "204":
-          description: "No invitations found"
-        "401":
-          description: "Unauthenticated request"
-        "500":
-          description: "Internal Error"
-      security:
-        - access_tokenAuth: []
-    post:
-      tags:
-      - "Groups and Invitations"
-      summary: "Create a group invitation"
-      description: "A group manager can send an invitation via email"
-      operationId: "sendGroupInvite"
-      produces:
-      - "application/json"
-      parameters:
-        - in: "path"
-          type: "string"
-          name: "name"
-          description: "Tenant that the request is targeting"
-          required: true
-        - in: "path"
-          type: "integer"
-          name: "group_id"
-          description: "Id of target owners group"
-          required: true
-        - in: "body"
-          name: "body"
-          schema:
-            type: "object"
-            properties:
-              group_manager:
-                type: "boolean"
-                description: "If true the user is invited to be a group manager"
-              group_id:
-                type: "integer"
-                example: 1
-                description: "Id of group that the user is invited to"
-              email:
-                type: "string"
-                format: "email"
-                description: "email the invitation is sent to"
-              invited_by:
-                type: "string"
-                format: "email"
-                description: "email of the user that sends the invitation"
-      responses:
-        "200":
-          description: "OK"
-        "204":
-          description: "Could not create Invitation"
-        "401":
-          description: "Unauthenticated request"
-        "500":
-          description: "Internal Error"
-      security:
-        - access_tokenAuth: []
-  /tenants/{name}/groups/{group_id}/invitations/{id}:
-    put:
-      tags:
-      - "Groups and Invitations"
-      summary: "Refresh a group invitation"
-      description: "A group manager can refresh an invitation"
-      operationId: "refreshGroupInvite"
-      produces:
-      - "application/json"
-      parameters:
-        - in: "path"
-          type: "string"
-          name: "name"
-          description: "Tenant that the request is targeting"
-          required: true
-        - in: "path"
-          type: "integer"
-          name: "group_id"
-          description: "Id of target owners group"
-          required: true
-        - in: "path"
-          type: "integer"
-          name: "id"
-          description: "Id of target invitation"
-          required: true
-      responses:
-        "200":
-          description: "OK"
-        "204":
-          description: "Could not find Invitation"
-        "401":
-          description: "Unauthenticated request"
-        "500":
-          description: "Internal Error"
-      security:
-        - access_tokenAuth: []
-    delete:
-      tags:
-      - "Groups and Invitations"
-      summary: "Delete a group invitation"
-      description: "A group manager can delete an invitation"
-      operationId: "deleteGroupInvite"
-      produces:
-      - "application/json"
-      parameters:
-        - in: "path"
-          type: "string"
-          name: "name"
-          description: "Tenant that the request is targeting"
-          required: true
-        - in: "path"
-          type: "integer"
-          name: "group_id"
-          description: "Id of target owners group"
-          required: true
-        - in: "path"
-          type: "integer"
-          name: "id"
-          description: "Id of target invitation"
-          required: true
-      responses:
-        "200":
-          description: "OK"
-        "204":
-          description: "Could not find Invitation"
-        "401":
-          description: "Unauthenticated request"
-        "500":
-          description: "Internal Error"
-      security:
-        - access_tokenAuth: []
-  /tenants/{name}/invitations/{id}/{action}:
-    put:
-        tags:
-        - "Groups and Invitations"
-        summary: "Respond to a group invitation"
-        description: "A user can accept or reject an invitation sent to them"
-        operationId: "respondGroupInvite"
-        produces:
-        - "application/json"
-        parameters:
-          - in: "path"
-            type: "string"
-            name: "name"
-            description: "Tenant that the request is targeting"
-            required: true
-          - in: "path"
-            type: "string"
-            name: "action"
-            description: "accept/reject invitation"
-            required: true
-          - in: "path"
-            type: "integer"
-            name: "id"
-            description: "Id of target invitation"
-            required: true
-        responses:
-          "200":
-            description: "OK"
-          "204":
-            description: "Could not find Invitation"
-          "401":
-            description: "Unauthenticated request"
-          "500":
-            description: "Internal Error"
-        security:
-          - access_tokenAuth: []
-  /tenants/{name}/invitations:
-    get:
-        tags:
-        - "Groups and Invitations"
-        summary: "Get invitations"
-        description: "Get all invitations for the requesting user"
-        operationId: "getInvitesUser"
-        produces:
-        - "application/json"
-        parameters:
-          - in: "path"
-            type: "string"
-            name: "name"
-            description: "Tenant that the request is targeting"
-            required: true
-        responses:
-          "200":
-            description: "OK"
-            schema:
-              type: "array"
-              items:
-                type: "object"
-                properties:
-                  date:
-                    type: "string"
-                    format: "date"
-                  group_manager:
-                    type: "boolean"
-                  id:
-                    type: "integer"
-                    example: 1
-                    description: "id of owners group invited to"
-                  invited_by:
-                    type: "string"
-                    format: "email"
-                  service_name:
-                    type: "string"
-                    example: "service1"
-          "204":
-            description: "No invitations found"
-          "401":
-            description: "Unauthenticated request"
-          "500":
-            description: "Internal Error"
-        security:
-          - access_tokenAuth: []
-  /tenants/{name}/invitations/activate_by_code:
-    put:
-        tags:
-        - "Groups and Invitations"
-        summary: "Activate an invitation"
-        description: "Activate an invitation with the one time code sent via email"
-        operationId: "activateInvitation"
-        produces:
-        - "application/json"
-        parameters:
-          - in: "path"
-            type: "string"
-            name: "name"
-            description: "Tenant that the request is targeting"
-            required: true
-          - in: "body"
-            name: "body"
-            schema:
-              type: "object"
-              properties:
-                code:
-                  type: "string"
-                  example: "7a6ae45156e678389401e3c3839127fd2a019572066d40c5d0176bd123651f93asdasdasdwqq4123414qwd124d32f235f234"
-        responses:
-          "200":
-            description: "OK"
-          "204":
-            description: "No invitations found"
-          "401":
-            description: "Unauthenticated request"
-          "500":
-            description: "Internal Error"
-        security:
-          - access_tokenAuth: []
-  /tenants/{name}/agents:
-    get:
-      tags:
-      - "Deployer Agents"
-      summary: "Get agents"
-      description: "Get all deployer agents"
-      operationId: "getAgents"
-      produces:
-      - "application/json"
-      parameters:
-        - in: "path"
-          type: "string"
-          name: "name"
-          description: "Tenant that the request is targeting"
-          required: true
-      responses:
-        "200":
-          description: "OK"
-          schema:
-              $ref: "#/definitions/getAgents"
-        "404":
-          description: "No agent found"
-        "401":
-          description: "Unauthenticated request"
-        "500":
-          description: "Internal Error"
-    post:
-      tags:
-       - "Deployer Agents"
-      summary: "Add Agents"
-      description: "Add new Deployer Agents"
-      operationId: "addAgents"
-      produces:
-      - "application/json"
-      parameters:
-         - in: "path"
-           type: "string"
-           name: "name"
-           description: "Tenant that the request is targeting"
-           required: true
-         - in: "body"
-           name: "body"
-           required: true
-           schema:
-             $ref: "#/definitions/postAgents"
-      responses:
-         "200":
-           description: "OK"
-         "404":
-           description: "Could not add agents"
-         "401":
-           description: "Unauthenticated request"
-         "500":
-           description: "Internal Error"
-    delete:
-      tags:
-      - "Deployer Agents"
-      summary: "Delete Agents"
-      description: "Delete all Deployer Agents"
-      operationId: "deleteAgents"
-      produces:
-      - "application/json"
-      parameters:
-         - in: "path"
-           type: "string"
-           name: "name"
-           description: "Tenant that the request is targeting"
-           required: true
-      responses:
-         "200":
-           description: "OK"
-         "404":
-           description: "No agents where found to delete"
-         "401":
-           description: "Unauthenticated request"
-         "500":
-           description: "Internal Error"
-  /tenants/{name}:
-    get:
-      tags:
-      - "Tenants"
-      summary: "Get tenant information and configuration"
-      description: "Get tenant information and configuration about theme and form configuration"
-      operationId: "GetTenant"
-      produces:
-      - "application/json"
-      parameters:
-       - in: "path"
-         type: "string"
-         name: "name"
-         description: "Tenant that the request is targeting"
-         required: true
-      responses:
-       "200":
-         description: "OK"
-         schema:
-             $ref: "#/definitions/Tenant"
-       "404":
-         description: "Tenant not found"
-       "500":
-         description: "Internal Error"
-  /tenants:
-    get:
-      tags:
-      - "Tenants"
-      summary: "Get Tenants"
-      description: "Get all available tenants"
-      operationId: "GetTenants"
-      produces:
-      - "application/json"
-      responses:
-       "200":
-         description: "OK"
-         schema:
-             $ref: "#/definitions/Tenants"
-       "404":
-         description: "Tenant not found"
-       "500":
-         description: "Internal Error"
-  /tenants/{name}/agents/id:
-    get:
-      tags:
-      - "Deployer Agents"
-      summary: "Get agent"
-      description: "Get deployer agents by id"
-      operationId: "getAgent"
-      produces:
-      - "application/json"
-      parameters:
-       - in: "path"
-         type: "string"
-         name: "name"
-         description: "Tenant that the request is targeting"
-         required: true
-      responses:
-       "200":
-         description: "OK"
-         schema:
-             $ref: "#/definitions/Agent"
-       "404":
-         description: "No agent found"
-       "401":
-         description: "Unauthenticated request"
-       "500":
-         description: "Internal Error"
-    put:
-     tags:
-     - "Deployer Agents"
-     summary: "Update agent"
-     description: "Update deployer agent"
-     operationId: "updateAgent"
-     produces:
-     - "application/json"
-     parameters:
-       - in: "path"
-         type: "string"
-         name: "name"
-         description: "Tenant that the request is targeting"
-         required: true
-       - in: "body"
-         name: "body"
-         required: true
-         schema:
-           $ref: "#/definitions/Agent"
-     responses:
-       "200":
-         description: "OK"
-       "404":
-         description: "No agent found"
-       "401":
-         description: "Unauthenticated request"
-       "500":
-         description: "Internal Error"
-    delete:
-     tags:
-     - "Deployer Agents"
-     summary: "Delete agent"
-     description: "Delete deployer agent"
-     operationId: "deleteAgent"
-     produces:
-     - "application/json"
-     parameters:
-       - in: "path"
-         type: "string"
-         name: "name"
-         description: "Tenant that the request is targeting"
-         required: true
-     responses:
-       "200":
-         description: "OK"
-       "404":
-         description: "No agent was found"
-       "401":
-         description: "Unauthenticated request"
-       "500":
-         description: "Internal Error"
-securityDefinitions:
-  access_tokenAuth:
-    type: "basic"
-  api_key:
-    type: "apiKey"
-    name: "api_key"
-    in: "header"
-  admin_key:
-    type: "apiKey"
-    name: "X-API-KEY"
-    in: "header"
-definitions:
-  PostOrganization:
-    type: "object"
-    required: 
-      - organization_name
-      - organization_url
-    properties:
-      organization_name:
-        type: "string"
-        description: "Human-readable organization name"
-      organization_url:
-        type: "string"
-        description: "Link to the organizations website"
-      ror_id:
-        type: "string"
-        description: "The id of the organization on the ror.org dataset"
-  PostServices:
-    type: "array"
-    items:
-      type: "object"
-      required:
-        - integration_environment
-        - protocol
-        - client_id
-        - metadata_url
-      $ref: "#/definitions/Service"
-  Agent:
-    type: "object"
-    properties:
-      type:
-        type: "string"
-        enum:
-          - "mitreId"
-          - "ssp"
-          - "keycloak"
-          - "satosa"
-      entity_type:
-        type: "string"
-        enum:
-          - "service"
-          - "idp"
-      hostname:
-        type: "string"
-        example: "https://snf-ssp-1.grnet.gr"
-      entity_protocol:
-        type: "string"
-        enum:
-        - "oidc"
-        - "saml"
-  postAgents:
-    type: "object"
-    properties:
-      agents:
-        type: "array"
-        items:
-          type: "object"
-          properties:
-            type:
-              type: "string"
-              enum:
-              - "mitreId"
-              - "ssp"
-              - "keycloak"
-              - "satosa"
-            entity_type:
-              type: "string"
-              enum:
-              - "service"
-              - "idp"
-            hostname:
-              type: "string"
-              example: "https://snf-ssp-1.grnet.gr"
-            entity_protocol:
-              type: "string"
-              enum:
-              - "oidc"
-              - "saml"
-  getAgents:
-    type: "array"
-    items:
-      type: "object"
-      properties:
-        id:
-          type: "integer"
-          format: "int64"
-        tenant:
-          type: "string"
-        type:
-          type: "string"
-          enum:
-          - "mitreId"
-          - "ssp"
-          - "keycloak"
-          - "satosa"
-        entity_type:
-          type: "string"
-          enum:
-          - "service"
-          - "idp"
-        hostname:
-          type: "string"
-          example: "https://snf-ssp-1.grnet.gr"
-        entity_protocol:
-          type: "string"
-          enum:
-          - "oidc"
-          - "saml"
-  User:
-    type: "object"
-    properties:
-      name:
-        type: "string"
-      given_name:
-        type: "string"
-      family_name:
-        type: "string"
-      preffered_username:
-        type: "string"
-      sub:
-        type: "string"
-        description: "Unique identifier"
-      email:
-        type: "string"
-        format: "email"
-      eduperson_entitlement:
-        type: "array"
-        items:
-          type: "string"
-          description: "User entitlements"
-      eduperson_assurance:
-        type: "array"
-        items:
-          type: "string"
-          description: "User assurance"
-      acr:
-        type: "string"
-        format: "uri"
-      edu_person_entitlements:
-        type: "array"
-        items:
-          type: "string"
-          description: "User entitlements"
-      tenant_id:
-        type: "string"
-        description: "Unique tenant identification"
-      actions:
-        type: "array"
-        items:
-          type: "string"
-          description: "List of Available Actions"
-      role:
-        type: "string"
-        description: "Role Name"
-
-  Petition:
-    type: "object"
-    properties:
-      type:
-        type: "string"
-        enum:
-        - "edit"
-        - "create"
-        - "delete"
-      service_id:
-        type: "string"
-        description: "Required on edit and delete petition requests"
-      service_name:
-        type: "string"
-        description: "Human-readable application name"
-      service_description:
-        type: "string"
-        description: "Human-readable text description"
-      logo_uri:
-        type: "string"
-        format: "uri"
-        description: "URL that points to an image"
-      policy_uri:
-        type: "string"
-        format: "uri"
-        description: "URL for the Policy Statement of this service"
-      integration_environment:
-        type: "string"
-        enum:
-        - "demo"
-        - "development"
-        - "production"
-      contacts:
-        type: "array"
-        items:
-          type: "object"
-          properties:
-            email:
-              type: "string"
-              format: "email"
-            type:
-              type: "string"
-              enum:
-              - "admin"
-              - "support"
-              - "technical"
-              - "security"
-      protocol:
-        type: "string"
-        enum:
-        - "oidc"
-        - "saml"
-      entity_id:
-        type: "string"
-        description: "Unique identifier for saml services"
-      metadata_uri:
-        type: "string"
-        format: "uri"
-        description: "Metadata uri for saml services"
-      client_id:
-        type: "string"
-        description: "Unique identifier for oidc services"
-      grant_types:
-        type: "array"
-        items:
-          type: "string"
-          enum:
-          - "authorization_code"
-          - "client_credentials"
-          - "urn:ietf:params:oauth:grant-type:token-exchange"
-          - "urn:ietf:params:oauth:grant-type:device_code"
-          - "implicit"
-        description: "Grant Types Values"
-      scope:
-        type: "array"
-        items:
-          type: "string"
-          enum:
-          - "openid"
-          - "email"
-          - "profile"
-          - "offline_access"
-          - "eduperson_entitlement"
-          - "eduperson_scoped_affiliation"
-          - "eduperson_unique_id"
-          - "refeds_edu"
-        description: "oidc specific"
-      allow_introspection:
-        type: "boolean"
-        description: "Allow calls to the Introspection Endpoint. For oidc services."
-      code_challenge_method:
-        type: "string"
-        enum:
-        - "plain"
-        - "S256"
-        - ""
-        description: "Proof Key for Code Exchange (PKCE) Code Challenge Method. For oidc services."
-      client_secret:
-        type: "string"
-        format: "password"
-        description: "Client secret, oidc specific"
-      token_endpoint_auth_method:
-        type: "string"
-        enum:
-        - "client_secret_basic"
-        - "client_secret_post"
-        - "client_secret_jwt"
-        - "private_key_jwt"
-        - "none"
-        description: "Authentication method for token endpoint, oidc specific"
-      application_type:
-        type: "string"
-        enum:
-        - "WEB"
-        - "NATIVE"
-        description: "Application type of the service, oidc specific"
-      token_endpoint_auth_signing_alg:
-        type: "string"
-        enum:
-          - "HS256"
-          - "HS384"
-          - "HS512"
-          - "RS256"
-          - "RS384"
-          - "RS512"
-          - "PS256"
-        description: "Signing algorithm for the token endpoint, oidc specific"
-      jwks:
-        type: "object"
-        properties:
-          keys:
-            type: "array"
-            items:
-              type: "string"
-        description: "Public key value for the token endpoint, oidc specific"
-      jwks_uri:
-        type: "string"
-        description: "Uri containing public key for the token endpoint, oidc specific"
-      country:
-        type: "string"
-        description: "Country of the service"
-      website_url:
-        type: "string"
-        description: "Website Url containing information about the service"
-      redirect_uris:
-        type: "array"
-        items:
-          type: "string"
-          description: "Allowed Redirect uris for the service"
-      generate_client_secret:
-        type: boolean
-        description: "Prompts backend to generate value for client secret. Oidc specific"
-      reuse_refresh_tokens:
-        type: "boolean"
-        description: "Adds the offline_access scope to the client's scope, oidc specific"
-      clear_access_tokens_on_refresh:
-        type: "boolean"
-        description: "oidc specific"
-      device_code_validity_seconds:
-        type: integer
-        minimum: 0
-        maximum: 1800
-        description: "oidc specific"
-      access_token_validity_seconds:
-        type: integer
-        minimum: 0
-        maximum: 11160
-        description: "oidc specific"
-      refresh_token_validity_seconds:
-        type: integer
-        minimum: 0
-        maximum: 1422000
-        description: "oidc specific"
-      id_token_timeout_seconds:
-        type: integer
-        minimum: 0
-        maximum: 3600
-        description: "oidc specific"
-      code_of_conduct_field:
-        type: "boolean"
-        description: "There could be multiple code of contact fields with different depending on the tenant some of them might be required to be true."
-  Tenants:
-    type: "array"
-    items:
-      type: "object"
-      properties:
-        name:
-          type: "string"
-          description: "Name of the tenant"
-        client_id:
-          type: "string"
-        client_secret:
-          type: "string"
-        issuer_url:
-          type: "string"
-  Tenant:
-    type: "object"
-    properties:
-      name:
-        type: "string"
-      logo:
-        type: "string"
-      main_title:
-        type: "string"
-      color:
-        type: "string"
-      description:
-        type: "string"
-      form_config:
-        type: "object"
-        properties:
-          code_of_conduct:
-            type: "object"
-            properties:
-              title:
-                type: "string"
-              desc:
-                type: "string"
-              link:
-                type: "string"
-              required:
-                type: "array"
-                items:
-                  type: "string"
-                  description: "Integration Environments that are restricted"
-              erros:
-                type: "string"
-          device_code_validity_seconds:
-            type: "integer"
-          refresh_token_validity_seconds:
-            type: "integer"
-          access_token_validity_seconds:
-            type: "integer"
-          id_token_timeout_seconds:
-            type: "integer"
-          code_challenge_method:
-            type: "array"
-            items:
-              type: "string"
-          protocol:
-            type: "array"
-            items:
-              type: "string"
-          integration_environment:
-            type: "array"
-            items:
-              type: "string"
-          grant_types:
-            type: "array"
-            items:
-              type: "string"
-          contact_types:
-            type: "array"
-            items:
-              type: "string"
-          scope:
-            type: "array"
-            items:
-              type: "string"
-          invitation_validity_seconds:
-            type: "array"
-            items:
-              type: "string"
-          token_endpoint_auth_method:
-            type: "array"
-            items:
-              type: "string"
-          application_type:
-            type: "array"
-            items:
-              type: "string"
-          token_endpoint_auth_signing_alg:
-            type: "array"
-            items:
-              type: "string"
-          token_endpoint_auth_signing_alg_title:
-            type: "array"
-            items:
-              type: "string"
-          restricted_environments:
-            type: "array"
-            items:
-              type: "string"
-  Service:
-    type: "object"
-    properties:
-      service_name:
-        type: "string"
-        description: "Human-readable application name"
-      service_description:
-        type: "string"
-        description: "Human-readable text description"
-      logo_uri:
-        type: "string"
-        format: "uri"
-        description: "URL that points to an image"
-      policy_uri:
-        type: "string"
-        format: "uri"
-        description: "URL for the Policy Statement of this service"
-      aup_uri:
-        type: "string"
-        format: "uri"
-        description: "URL that contains the Acceptable Use Policy for the users of the service"
-      organization_id:
-        type: "integer"
-        description: "The unique identifier of the Organization of the Service"
-      integration_environment:
-        type: "string"
-        enum:
-        - "demo"
-        - "development"
-        - "production"
-      contacts:
-        type: "array"
-        items:
-          type: "object"
-          properties:
-            email:
-              type: "string"
-              format: "email"
-            type:
-              type: "string"
-              enum:
-              - "admin"
-              - "support"
-              - "technical"
-              - "security"
-      protocol:
-        type: "string"
-        enum:
-        - "oidc"
-        - "saml"
-      entity_id:
-        type: "string"
-        description: "Unique identifier for saml services"
-      metadata_uri:
-        type: "string"
-        format: "uri"
-        description: "Metadata uri for saml services"
-      client_id:
-        type: "string"
-        description: "Unique identifier for oidc services"
-      grant_types:
-        type: "array"
-        items:
-          type: "string"
-          enum:
-          - "authorization_code"
-          - "client_credentials"
-          - "urn:ietf:params:oauth:grant-type:token-exchange"
-          - "urn:ietf:params:oauth:grant-type:device_code"
-          - "implicit"
-        description: "Grant Types Values"
-      scope:
-        type: "array"
-        items:
-          type: "string"
-          enum:
-          - "openid"
-          - "email"
-          - "profile"
-          - "offline_access"
-          - "eduperson_entitlement"
-          - "eduperson_scoped_affiliation"
-          - "eduperson_unique_id"
-          - "refeds_edu"
-        description: "oidc specific"
-      allow_introspection:
-        type: "boolean"
-        description: "Allow calls to the Introspection Endpoint. For oidc services."
-      code_challenge_method:
-        type: "string"
-        enum:
-        - "plain"
-        - "S256"
-        - "null"
-        description: "Proof Key for Code Exchange (PKCE) Code Challenge Method. For oidc services."
-      client_secret:
-        type: "string"
-        format: "password"
-        description: "Client secret, oidc specific"
-      token_endpoint_auth_method:
-        type: "string"
-        enum:
-        - "client_secret_basic"
-        - "client_secret_post"
-        - "client_secret_jwt"
-        - "private_key_jwt"
-        - "none"
-        description: "Authentication method for token endpoint, oidc specific"
-      application_type:
-        type: "string"
-        enum:
-        - "WEB"
-        - "NATIVE"
-        description: "Application type of the service, oidc specific"
-      token_endpoint_auth_signing_alg:
-        type: "string"
-        enum:
-          - "HS256"
-          - "HS384"
-          - "HS512"
-          - "RS256"
-          - "RS384"
-          - "RS512"
-          - "PS256"
-        description: "Signing algorithm for the token endpoint, oidc specific"
-      jwks:
-        type: "object"
-        properties:
-          keys:
-            type: "array"
-            items:
-              type: "string"
-        description: "Public key value for the token endpoint, oidc specific"
-      jwks_uri:
-        type: "string"
-        description: "Uri containing public key for the token endpoint, oidc specific"
-      country:
-        type: "string"
-        description: "Country of the organisation of the service"
-      website_url:
-        type: "string"
-        description: "Website Url containing information about the service"
-      redirect_uris:
-        type: "array"
-        items:
-          type: "string"
-          description: "Allowed Redirect uris for the service"
-      generate_client_secret:
-        type: boolean
-        description: "Prompts backend to generate value for client secret. Oidc specific"
-      reuse_refresh_tokens:
-        type: "boolean"
-        description: "Adds the offline_access scope to the client's scope, oidc specific"
-      clear_access_tokens_on_refresh:
-        type: "boolean"
-        description: "oidc specific"
-      device_code_validity_seconds:
-        type: integer
-        minimum: 0
-        maximum: 1800
-        description: "oidc specific"
-      access_token_validity_seconds:
-        type: integer
-        minimum: 0
-        maximum: 11160
-        description: "oidc specific"
-      refresh_token_validity_seconds:
-        type: integer
-        minimum: 0
-        maximum: 1422000
-        description: "oidc specific"
-      id_token_timeout_seconds:
-        type: integer
-        minimum: 0
-        maximum: 3600
-        description: "oidc specific"
-      code_of_conduct_field:
-        type: "boolean"
-        description: "There could be multiple code of contact fields with different depending on the tenant some of them might be required to be true."
-  Services:
-    type: "object"
-    properties:
-      outdated_count:
-        type: "integer"
-        format: "int64"
-        description: "Total Services available to the user that have invalid configuration"
-      request_review_count:
-        type: "integer"
-        format: "int64"
-        description: "Total Services available to the user that are on the request_review state"
-      full_count:
-        type: "integer"
-        format: "int64"
-        description: "Total Services matching the request query filters and are available to the user"
-      list_items:
-        type: "array"
-        items:
-          type: "object"
-          properties:
-            service_id:
-              type: "integer"
-              format: "int64"
-            petition_id:
-              type: "integer"
-              format: "int64"
-            comment:
-              type: "string"
-              description: "Comment from admin on pending request"
-            last_edited:
-              type: "string"
-              description: "Timestamp of the last request that was made for this service"
-            state:
-              type: "string"
-              enum:
-              - "deployed"
-              - "error"
-              - "waiting-deployment"
-              - "pending"
-              description: "State of the service"
-            owned:
-              type: "boolean"
-              description: "True if user is a member of the service owners group"
-            owners:
-              type: "array"
-              items: 
-                type: "string"
-              description: "An array containing the email of the owners of the service"
-            organization_name:
-              type: "string"
-              description: "The name of the organization the service blongs to."
-            country:
-              type: string
-              description: "The country of the service"
-            website_url:
-              type: "string"
-              description: "Website Url containing information about the service"
-            notification:
-              type: "boolean"
-              description: "True if there is a nitification for the service"
-            deployment_type:
-              type: "string"
-              description: "Type of pending deployment"
-            outdated:
-              type: "boolean"
-              description: "True if Service has invalid configuration"
-            group_manager:
-              type: "boolean"
-              description: "True if the User is a manager of the service owners group"
-            group_id:
-              type: "integer"
-              description: "Id of the service owners group"
-            type:
-              type: "string"
-              enum:
-              - "edit"
-              - "create"
-              - "delete"
-              description: "Type of pending petition if exists"
-            status:
-              type: "string"
-              enum:
-              - "pending"
-              - "approved"
-              - "rejected"
-              - "request_review"
-              - "aproved_changes"
-            service_name:
-              type: "string"
-              description: "Human-readable application name"
-            service_description:
-              type: "string"
-              description: "Human-readable text description"
-            logo_uri:
-              type: "string"
-              format: "uri"
-              description: "URL that points to a logo image"
-            integration_environment:
-              type: "string"
-              enum:
-              - "demo"
-              - "development"
-              - "production"
-            created_at: 
-              type: "string"
-              format: "date"
-              description: "Date that the service was created"
-  Pending:
-    type: "object"
-    properties:
-      services:
-        type: "array"
-        items:
-          type: "object"
-          $ref: "#/definitions/Petition"
-  BannerAlert:
-    type: "object"
-    properties:
-      alert_message: 
-        type: "string"
-        description: "The Alert message"
-      type:
-        type: "string"
-        description: "Color and style of the alert banner"
-        enum:
-          - "warning"
-          - "error"
-          - "info"
-      priority:
-        type: "integer"
-        format: "int64"
-        description: "Banner Alerts are being shown one at a time based on priority"
-      active:
-        type: "boolean"
-        description: "Only Banner Alerts that are active are shown for each tenant"
-  AmsPending:
-    type: "object"
-    properties:
-      messages:
-        type: "array"
-        items:
-          type: "object"
-          properties:
-            message:
-              type: "object"
-              properties:
-                atributes:
-                  type: "object"
-                  properties:
-                    key:
-                      type: "string"
-                      default: "value"
-                data:
-                  type: "string"
-                  example: "SGVsbG8gQ2xvdWQgUHViL1N1YiEgSGVyZSBpcyBteSBtZXNzYWdlIQ=="
-                messageId:
-                  type: "string"
-                  example: "136969346945"
-            subscription:
-              type: "string"
-              default: "/projects/rciam-federation-registry/subscriptions/express-push"
-  PutState:
-    type: "array"
-    items:
-      type: "object"
-      properties:
-        id:
-          description: "Id of service"
-          type: "integer"
-          format: "int64"
-        state:
-          description: "State of service"
-          type: "string"
-          enum:
-          - "deployed"
-          - "error"
-          - "waiting-deployment"
-          - "pending"
-  History:
-    type: "array"
-    items:
-      type: "object"
-      properties:
-        id:
-          description: "Id of petition"
-          type: "integer"
-          format: "int64"
-        comment:
-          description: "Comment from admin"
-          type: "string"
-        status:
-          type: "string"
-          description: "Review status"
-          enum:
-          - "approved"
-          - "rejected"
-          - "approved_with_changes"
-          - "pending"
-        type:
-          type: "string"
-          description: "Type of petition request"
-          enum:
-          - "create"
-          - "edit"
-          - "delete"
-        reviewed_at:
-          type: "string"
-          format: "data-time"
-externalDocs:
-  description: "Find out more about Swagger"
-  url: "http://swagger.io"
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "This is an Express server used to manage identity provider services. Users manage services by creating requests handled by administrators. You can find out more about the project on the [github page](https://github.com/rciam/rciam-federation-registry) or you can try it out live  [here](http://service-registry.aai-dev.grnet.gr/egi). ",
+    "version": "1.2.1",
+    "title": "Federation Registry",
+    "termsOfService": "http://swagger.io/terms/",
+    "contact": {
+      "email": "apiteam@swagger.io"
+    },
+    "license": {
+      "name": "RCIAM",
+      "url": "https://github.com/rciam"
+    }
+  },
+  "host": "swagger.io",
+  "basePath": "/v2",
+  "tags": [
+    {
+      "name": "Authentication",
+      "description": "Authentication routes"
+    },
+    {
+      "name": "Services",
+      "description": "Manage Services"
+    },
+    {
+      "name": "Petitions",
+      "description": "Manage Petition Requests"
+    },
+    {
+      "name": "User",
+      "description": "Operations about user"
+    },
+    {
+      "name": "Groups and Invitations",
+      "description": "Manage owners group"
+    },
+    {
+      "name": "AMS",
+      "description": "Communication with the ARGO Messaging Service"
+    },
+    {
+      "name": "Agent",
+      "description": "Dedicated endpoints for the ams-agent"
+    },
+    {
+      "name": "Deployer Agents",
+      "description": "Manage Tenant Deployer Agents"
+    },
+    {
+      "name": "Banner Alerts",
+      "description": "Banner notification alerts"
+    },
+    {
+      "name": "Service Tags",
+      "description": "Managing Service Rags"
+    }
+  ],
+  "schemes": [
+    "https"
+  ],
+  "paths": {
+    "/tenants/{name}/tags": {
+      "get": {
+        "tags": [
+          "Service Tags"
+        ],
+        "summary": "Get all tags",
+        "description": "Get all available tags for a given tenant",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "tag",
+            "type": "string",
+            "description": "Search string to filter tags result",
+            "required": false
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "type": "string",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "500": {
+            "description": "Error"
+          }
+        }
+      }
+    },
+    "/tenants/{name}/tags/services/{id}": {
+      "get": {
+        "tags": [
+          "Service Tags"
+        ],
+        "summary": "Get all tags of a service",
+        "description": "Get all available tags attached to a service",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "type": "integer",
+            "description": "Id of the requested service",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "type": "string",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "500": {
+            "description": "Error"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Service Tags"
+        ],
+        "summary": "Create new tags for a service",
+        "description": "Create new tags for a service",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "type": "integer",
+            "description": "Id of the requested service",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "type": "string",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "type": "array",
+              "description": "Array of string tags",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "500": {
+            "description": "Error"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Service Tags"
+        ],
+        "summary": "Delete service tags",
+        "description": "Delete tags for a service",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "type": "integer",
+            "description": "Id of the requested service",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "type": "string",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "type": "array",
+              "description": "Array of string tags",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "500": {
+            "description": "Error"
+          }
+        }
+      }
+    },
+    "/tenants/{name}/login": {
+      "get": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Redirects Users to Proxy",
+        "description": "This route redirects user to the tenants proxy authentication server where user is prompted to choose an identity provider and login.",
+        "operationId": "login",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "type": "string",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          }
+        ],
+        "responses": {
+          "301": {
+            "description": "Redirects back to React App"
+          },
+          "401": {
+            "description": "Tenant is not available"
+          },
+          "500": {
+            "description": "Error"
+          }
+        }
+      }
+    },
+    "/tokens/{code}": {
+      "get": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Exchange one time code with access token",
+        "description": "Used to get access token issued from the authentication proxy on login.",
+        "operationId": "getToken",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "code",
+            "type": "string",
+            "description": "One time code returned after login",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "token": {
+                  "type": "string",
+                  "description": "Access token"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "500": {
+            "description": "Error"
+          }
+        }
+      }
+    },
+    "/tenants/{name}/user": {
+      "get": {
+        "tags": [
+          "User"
+        ],
+        "summary": "Returns user and role info ",
+        "description": "",
+        "operationId": "getUser",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "type": "string",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/User"
+            }
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "500": {
+            "description": "Error"
+          }
+        },
+        "security": [
+          {
+            "access_tokenAuth": []
+          }
+        ]
+      }
+    },
+    "/callback/{tenant_name}": {
+      "get": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Redirects user back to react app after login",
+        "description": "This route handles redirects from the authentication proxy following Authorization Code Flow, saves user to db links access_token to a one time code and then redirects to react app sending also the code.",
+        "operationId": "callback",
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "name": "tenant_name",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          }
+        ],
+        "responses": {
+          "301": {
+            "description": "Redirects back to React App"
+          },
+          "500": {
+            "description": "Error"
+          }
+        }
+      }
+    },
+    "/tenants/{name}/organizations": {
+      "post": {
+        "tags": [
+          "Organizations"
+        ],
+        "summary": "Add Organization",
+        "description": "",
+        "operationId": "postOrganization",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "name": "name",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Organization object",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PostOrganization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "422": {
+            "description": "Invalid Data"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        },
+        "security": [
+          {
+            "access_tokenAuth": []
+          }
+        ]
+      },
+      "get": {
+        "tags": [
+          "Organizations"
+        ],
+        "summary": "Get organizations",
+        "description": "",
+        "operationId": "getOrganizations",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "name": "name",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          },
+          {
+            "in": "query",
+            "type": "string",
+            "name": "search_string",
+            "description": "Search string to filter organizations",
+            "required": false
+          },
+          {
+            "in": "query",
+            "type": "boolean",
+            "name": "ror",
+            "description": "If true returns only organization registered at ror.org"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "$ref": "#/definitions/PostOrganization"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "422": {
+            "description": "Invalid Data"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        },
+        "security": [
+          {
+            "access_tokenAuth": []
+          }
+        ]
+      }
+    },
+    "/tenants/{name}/petitions": {
+      "post": {
+        "tags": [
+          "Petitions"
+        ],
+        "summary": "Create new petition",
+        "description": "",
+        "operationId": "addPetition",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "name": "name",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Petition object describing the service configuration ",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Petition"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "422": {
+            "description": "Invalid Data"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        },
+        "security": [
+          {
+            "access_tokenAuth": []
+          }
+        ]
+      }
+    },
+    "/tenants/{name}/petitions/{id}": {
+      "get": {
+        "tags": [
+          "Petitions"
+        ],
+        "summary": "Get petition",
+        "description": "",
+        "operationId": "getPetition",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "name": "name",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "type",
+            "required": false,
+            "type": "string",
+            "description": "Type should be 'open' when asking for a pending petition"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of petition to return",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful",
+            "schema": {
+              "$ref": "#/definitions/Petition"
+            }
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "404": {
+            "description": "Petition not found"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        },
+        "security": [
+          {
+            "access_tokenAuth": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Petitions"
+        ],
+        "summary": "Edit petition",
+        "description": "",
+        "operationId": "updatePetition",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "name": "name",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of petition to edit",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Petition object that needs to be added to the registry may be empty if type is delete",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/Petition"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "422": {
+            "description": "Invalid Data"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        },
+        "security": [
+          {
+            "access_tokenAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Petitions"
+        ],
+        "summary": "Delete petition",
+        "description": "",
+        "operationId": "deletePetition",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "name": "name",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of petition to delete",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        },
+        "security": [
+          {
+            "access_tokenAuth": []
+          }
+        ]
+      }
+    },
+    "/tenants/{name}/notifications/broadcast/recipients": {
+      "get": {
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Get recipients",
+        "description": "Fetches all contacts that match the criteria provided",
+        "operationId": "getRecipients",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "name": "name",
+            "description": "Tenant that the request is targeting"
+          },
+          {
+            "in": "query",
+            "name": "contact_types",
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Types of contacts to get"
+          },
+          {
+            "in": "query",
+            "name": "environments",
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Target environments to get contacts from"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Contact email addresses that match the criteria"
+            }
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        },
+        "security": [
+          {
+            "access_tokenAuth": []
+          }
+        ]
+      }
+    },
+    "/tenants/{name}/notifications/owners": {
+      "put": {
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Send notifications to service owners",
+        "description": "Sends notifications to the owners of a service",
+        "operationId": "SendOwnerNotif",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "name": "name",
+            "description": "Tenant that the request is targeting"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Notification data",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Name of the notification sender"
+                },
+                "email_address": {
+                  "type": "string",
+                  "format": "email",
+                  "description": "Email address of the notifications sender"
+                },
+                "email_subject": {
+                  "type": "string",
+                  "description": "Subject of the notification"
+                },
+                "email_body": {
+                  "type": "string",
+                  "description": "Notification Text, replaces (--* Reconfiguration Link *--) string with a button with a link to the reconfiguration page of the service/request"
+                },
+                "cc_emails": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "description": "Email addresses that will be added as CC to the notification email"
+                },
+                "recipients": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "description": "Email addresses that the notification will be sent"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "notified_users": {
+                  "type": "number",
+                  "description": "Number of users the notification was sent to"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        },
+        "security": [
+          {
+            "access_tokenAuth": []
+          }
+        ]
+      }
+    },
+    "/tenants/{name}/notifications/broadcast": {
+      "put": {
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Send Notifications to service contacts",
+        "description": "Sends Notifications to the contacts of registered services",
+        "operationId": "sendNotif",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "name": "name",
+            "description": "Tenant that the request is targeting"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Notification data",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Name of the notification sender"
+                },
+                "email_address": {
+                  "type": "string",
+                  "format": "email",
+                  "description": "Email address of the notifications sender"
+                },
+                "email_subject": {
+                  "type": "string",
+                  "description": "Subject of the notification"
+                },
+                "email_body": {
+                  "type": "string",
+                  "description": "Notification Text"
+                },
+                "contact_types": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Types of Contacts that will recieve the notification"
+                },
+                "cc_emails": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "description": "Email addresses that will be added as CC to the notification email"
+                },
+                "environments": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Environments that will be targeted by the notification"
+                },
+                "notify_admins": {
+                  "type": "boolean",
+                  "description": "Also add administrators as CC to the notification email"
+                },
+                "protocols": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Protocols of services that will be targeted by the notification"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "notified_users": {
+                  "type": "number",
+                  "description": "Number of users the notification was sent to"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        },
+        "security": [
+          {
+            "access_tokenAuth": []
+          }
+        ]
+      }
+    },
+    "/tenants/{name}/notifications/outdated": {
+      "put": {
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Send Outdated Alert Notifications",
+        "description": "Sends Notifications to the owners of outdated services",
+        "operationId": "sendOutdatedNotif",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "name": "name",
+            "description": "Tenant that the request is targeting"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Notification data",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "integration_environment": {
+                  "type": "string",
+                  "description": "Integration environment to send outdated alert notifications"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "user_count": {
+                  "type": "number",
+                  "description": "Number of users the notification was sent to"
+                },
+                "service_count": {
+                  "type": "number",
+                  "description": "Number of outdated service in integration environment provided as parameter"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        },
+        "security": [
+          {
+            "access_tokenAuth": []
+          }
+        ]
+      }
+    },
+    "/tenants/{name}/banner_alert": {
+      "get": {
+        "tags": [
+          "Banner Alerts"
+        ],
+        "summary": "Get all banner alerts for the given tenant",
+        "description": "Get all banner alerts for the given tenant",
+        "operationId": "getBannerAlerts",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "name": "name",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          },
+          {
+            "name": "active",
+            "in": "query",
+            "description": "If true returns only active alerts",
+            "required": false,
+            "type": "boolean"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "$ref": "#/definitions/BannerAlert"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        },
+        "security": [
+          {
+            "admin_key": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Banner Alerts"
+        ],
+        "summary": "Create a new banner alert",
+        "description": "Create a new banner alert",
+        "operationId": "createBannerAlerts",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "name": "name",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/BannerAlert"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful"
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        },
+        "security": [
+          {
+            "admin_key": []
+          }
+        ]
+      }
+    },
+    "/tenants/{name}/banner_alert/{id}": {
+      "put": {
+        "tags": [
+          "Banner Alerts"
+        ],
+        "summary": "Update a banner alert",
+        "description": "Update a banner alert",
+        "operationId": "UpdateBannerAlerts",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "name": "name",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "type": "integer",
+            "format": "int64",
+            "required": true,
+            "description": "Id of Banner Alert to update"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/BannerAlert"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful"
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        },
+        "security": [
+          {
+            "admin_key": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Banner Alerts"
+        ],
+        "summary": "Delete a banner alert",
+        "description": "Delete a banner alert",
+        "operationId": "DeleteBannerAlerts",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "name": "name",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "type": "integer",
+            "format": "int64",
+            "required": true,
+            "description": "Id of Banner Alert to delete"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful"
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        },
+        "security": [
+          {
+            "admin_key": []
+          }
+        ]
+      }
+    },
+    "/tenants/{name}/services/{id}": {
+      "get": {
+        "tags": [
+          "Services"
+        ],
+        "summary": "Get service by id",
+        "description": "Gets service by id",
+        "operationId": "getService",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "name": "name",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of service to return",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "service": {
+                  "$ref": "#/definitions/Service"
+                },
+                "owned": {
+                  "type": "boolean"
+                },
+                "state": {
+                  "type": "string",
+                  "description": "The deployment state of the service",
+                  "enum": [
+                    "error",
+                    "pending",
+                    "deployed",
+                    "waiting-deployment"
+                  ]
+                },
+                "deployment_type": {
+                  "type": "string",
+                  "description": "Type of the pending deployment",
+                  "enum": [
+                    "edit",
+                    "create",
+                    "delete"
+                  ]
+                },
+                "last_edited": {
+                  "type": "string",
+                  "description": "Timestamp of the last successful deployment of the service"
+                },
+                "create_at": {
+                  "type": "string",
+                  "description": "Timestamp of the registration of the service"
+                },
+                "error": {
+                  "type": "object",
+                  "properties": {
+                    "error_date": {
+                      "type": "string",
+                      "description": "Timestamp of the deployment error"
+                    },
+                    "error_code": {
+                      "type": "string",
+                      "description": "Error status code returned by the deployment process"
+                    },
+                    "error_description": {
+                      "type": "string",
+                      "description": "Description of the deployment error"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        },
+        "security": [
+          {
+            "access_tokenAuth": []
+          }
+        ]
+      }
+    },
+    "/tenants/{name}/services/{id}/deployment": {
+      "put": {
+        "tags": [
+          "Services"
+        ],
+        "summary": "Troubleshoot Deployment",
+        "description": "Troubleshoot Deployment of a Service Request",
+        "operationId": "putServiceDeployment",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "name": "name",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of the service",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "type": "string",
+            "enum": [
+              "resend"
+            ],
+            "description": "Troubleshoot action selected by user"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful"
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "403": {
+            "description": "Unauthorised user"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        },
+        "security": [
+          {
+            "access_tokenAuth": []
+          }
+        ]
+      }
+    },
+    "/tenants/{name}/petitions/{id}/review": {
+      "put": {
+        "tags": [
+          "Petitions"
+        ],
+        "summary": "Review Petition",
+        "description": "",
+        "operationId": "review",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "name": "name",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of petition to review",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "type",
+            "in": "query",
+            "type": "string",
+            "enum": [
+              "approve",
+              "reject",
+              "changes",
+              "request_review"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "204": {
+            "description": "Petition not found"
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        },
+        "security": [
+          {
+            "access_tokenAuth": []
+          }
+        ]
+      }
+    },
+    "/tenants/{name}/services/list": {
+      "get": {
+        "tags": [
+          "Services"
+        ],
+        "summary": "Get all available services",
+        "description": "Returns paginated service information for creating a service list",
+        "operationId": "getServiceList",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "name": "name",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          },
+          {
+            "in": "query",
+            "type": "integer",
+            "name": "page",
+            "description": "The page number of the response"
+          },
+          {
+            "in": "query",
+            "type": "integer",
+            "name": "limit",
+            "description": "The page size determining the number of services contained in each page of the response"
+          },
+          {
+            "in": "query",
+            "type": "boolean",
+            "name": "owned",
+            "description": "If true returns only services and petitions owned by requesting user"
+          },
+          {
+            "in": "query",
+            "type": "boolean",
+            "name": "pending",
+            "description": "If true returns only services that have open petitions"
+          },
+          {
+            "in": "query",
+            "type": "string",
+            "name": "search_string",
+            "description": "Returns only services and petitions that contain the provided string"
+          },
+          {
+            "in": "query",
+            "type": "string",
+            "name": "protocol",
+            "enum": [
+              "saml",
+              "oidc"
+            ],
+            "description": "Returns only services of the selected protocol"
+          },
+          {
+            "in": "query",
+            "type": "string",
+            "name": "env",
+            "description": "Returns only services deployed in selected integration environment"
+          },
+          {
+            "in": "query",
+            "type": "string",
+            "name": "request_review",
+            "description": "Returns only services that are in review requested state"
+          },
+          {
+            "in": "query",
+            "type": "string",
+            "name": "outdated",
+            "description": "Returns only services that have invalid configuration"
+          },
+          {
+            "in": "query",
+            "type": "string",
+            "enum": [
+              "pending",
+              "changes",
+              "request_review"
+            ],
+            "name": "pending_sub",
+            "description": "Sub filter for services with pending requests based on the review state of the request"
+          },
+          {
+            "in": "query",
+            "type": "boolean",
+            "name": "error",
+            "description": "Returns only services that have a deployment error"
+          },
+          {
+            "in": "query",
+            "type": "string",
+            "name": "tag",
+            "description": "Filters results based on tags, supports multiple comma separated values"
+          },
+          {
+            "in": "query",
+            "type": "string",
+            "name": "created_after",
+            "description": "Filter results based on creation/registration date, returns services created after given date. Format:(yyyy/mm/dd)"
+          },
+          {
+            "in": "query",
+            "type": "string",
+            "name": "created_before",
+            "description": "Filter results based on creation/registration date, returns services created before given date. Format:(yyyy/mm/dd)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "$ref": "#/definitions/Services"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        },
+        "security": [
+          {
+            "access_tokenAuth": []
+          }
+        ]
+      }
+    },
+    "/tenants/{name}/services": {
+      "get": {
+        "tags": [
+          "Services"
+        ],
+        "summary": "Get all available services",
+        "description": "Returns all available services, some properties are returned only for authorized requests",
+        "operationId": "getServices",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "name": "name",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "$ref": "#/definitions/Service"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        },
+        "security": [
+          {
+            "access_tokenAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Services"
+        ],
+        "summary": "Add services",
+        "description": "Endpoint used to directly add services to federation registry. Should be used only when necessary and not as an alternative way to add services.",
+        "operationId": "addServices",
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "name": "name",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Service details to add to the registry",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PostServices"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "422": {
+            "description": "Unprocessable Entry"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        }
+      }
+    },
+    "/agent/get_new_configurations": {
+      "get": {
+        "tags": [
+          "Agent"
+        ],
+        "summary": "Get new Configurations",
+        "description": "Route used from ams-agent to get all service configuration awaiting deployment and push them to the ams topic",
+        "operationId": "getPendingServices",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/Pending"
+            }
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ]
+      }
+    },
+    "/ams/ingest": {
+      "post": {
+        "tags": [
+          "AMS"
+        ],
+        "summary": "Route that Ams posts deployment results",
+        "description": "",
+        "operationId": "setState",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Ams formatted messages containing results for deployment requests",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/AmsPending"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        }
+      }
+    },
+    "/agent/set_services_state": {
+      "put": {
+        "tags": [
+          "Agent"
+        ],
+        "summary": "Edit service state",
+        "description": "Route used by ams agent to update state once service changes have been push to the ams",
+        "operationId": "putState",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PutState"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "500": {
+            "description": "internal error"
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ]
+      }
+    },
+    "/tenants/{name}/services/{id}/petitions": {
+      "get": {
+        "tags": [
+          "Petitions"
+        ],
+        "summary": "Retrieve service history",
+        "description": "Get all petitions linked to service",
+        "operationId": "findServiceHistory",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "name": "name",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of service to retrieve history",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/History"
+            }
+          },
+          "204": {
+            "description": "Service could not be found"
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "500": {
+            "description": "internal error"
+          }
+        },
+        "security": [
+          {
+            "access_tokenAuth": []
+          }
+        ]
+      }
+    },
+    "/tenants/{name}/check_availability": {
+      "get": {
+        "tags": [
+          "Petitions"
+        ],
+        "summary": "Check availability of protocol id",
+        "description": "",
+        "operationId": "Idavailability",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "name": "name",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "available": {
+                  "type": "boolean",
+                  "description": ""
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid tag value"
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          }
+        },
+        "security": [
+          {
+            "access_tokenAuth": []
+          }
+        ]
+      }
+    },
+    "/tenants/{name}/groups/{group_id}/members": {
+      "get": {
+        "tags": [
+          "Groups and Invitations"
+        ],
+        "summary": "Get group member of target group",
+        "description": "",
+        "operationId": "Get group",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "name": "name",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          },
+          {
+            "in": "path",
+            "type": "integer",
+            "name": "group_id",
+            "description": "Id of target owners group",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Email of group member"
+                  },
+                  "group_id": {
+                    "type": "integer",
+                    "example": 1
+                  },
+                  "group_manager": {
+                    "type": "boolean",
+                    "description": "True if user is a group manager."
+                  },
+                  "sub": {
+                    "type": "string",
+                    "example": "7a6ae45156e678389401e3c3839127fd2a019572066d40c5d0176bd123651f934",
+                    "description": "Unique identifier of user"
+                  },
+                  "username": {
+                    "type": "string",
+                    "example": "test123",
+                    "description": "Username of group member"
+                  }
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No group found"
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        },
+        "security": [
+          {
+            "access_tokenAuth": []
+          }
+        ]
+      }
+    },
+    "/tenants/{name}/groups/{group_id}/members/{sub}": {
+      "delete": {
+        "tags": [
+          "Groups and Invitations"
+        ],
+        "summary": "Remove a member from a group",
+        "description": "A group manager can request to remove a member from his group.",
+        "operationId": "deleteMember",
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "name": "name",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          },
+          {
+            "in": "path",
+            "type": "integer",
+            "name": "group_id",
+            "description": "Id of target owners group",
+            "required": true
+          },
+          {
+            "in": "path",
+            "type": "string",
+            "name": "sub",
+            "required": true,
+            "description": "User unique identification"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "204": {
+            "description": "Could not find user"
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        },
+        "security": [
+          {
+            "access_tokenAuth": []
+          }
+        ]
+      }
+    },
+    "/tenants/{name}/groups/{group_id}/invitations": {
+      "get": {
+        "tags": [
+          "Groups and Invitations"
+        ],
+        "summary": "Get invitations for a group",
+        "description": "Get all invitations to target group",
+        "operationId": "getGroupInvites",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "name": "name",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          },
+          {
+            "in": "path",
+            "type": "integer",
+            "name": "group_id",
+            "description": "Id of target owners group",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "invited_by": {
+                    "type": "string",
+                    "format": "email",
+                    "description": "Email of user that sent the invitation"
+                  },
+                  "id": {
+                    "type": "integer",
+                    "example": 1,
+                    "description": "Id of group the invitation is for"
+                  },
+                  "group_manager": {
+                    "type": "boolean",
+                    "description": "Role for invited user in the group."
+                  },
+                  "service_name": {
+                    "type": "string",
+                    "example": "Service Name",
+                    "description": "Name of the service that the owners group linked to"
+                  }
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No invitations found"
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        },
+        "security": [
+          {
+            "access_tokenAuth": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Groups and Invitations"
+        ],
+        "summary": "Create a group invitation",
+        "description": "A group manager can send an invitation via email",
+        "operationId": "sendGroupInvite",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "name": "name",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          },
+          {
+            "in": "path",
+            "type": "integer",
+            "name": "group_id",
+            "description": "Id of target owners group",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "group_manager": {
+                  "type": "boolean",
+                  "description": "If true the user is invited to be a group manager"
+                },
+                "group_id": {
+                  "type": "integer",
+                  "example": 1,
+                  "description": "Id of group that the user is invited to"
+                },
+                "email": {
+                  "type": "string",
+                  "format": "email",
+                  "description": "email the invitation is sent to"
+                },
+                "invited_by": {
+                  "type": "string",
+                  "format": "email",
+                  "description": "email of the user that sends the invitation"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "204": {
+            "description": "Could not create Invitation"
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        },
+        "security": [
+          {
+            "access_tokenAuth": []
+          }
+        ]
+      }
+    },
+    "/tenants/{name}/groups/{group_id}/invitations/{id}": {
+      "put": {
+        "tags": [
+          "Groups and Invitations"
+        ],
+        "summary": "Refresh a group invitation",
+        "description": "A group manager can refresh an invitation",
+        "operationId": "refreshGroupInvite",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "name": "name",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          },
+          {
+            "in": "path",
+            "type": "integer",
+            "name": "group_id",
+            "description": "Id of target owners group",
+            "required": true
+          },
+          {
+            "in": "path",
+            "type": "integer",
+            "name": "id",
+            "description": "Id of target invitation",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "204": {
+            "description": "Could not find Invitation"
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        },
+        "security": [
+          {
+            "access_tokenAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Groups and Invitations"
+        ],
+        "summary": "Delete a group invitation",
+        "description": "A group manager can delete an invitation",
+        "operationId": "deleteGroupInvite",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "name": "name",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          },
+          {
+            "in": "path",
+            "type": "integer",
+            "name": "group_id",
+            "description": "Id of target owners group",
+            "required": true
+          },
+          {
+            "in": "path",
+            "type": "integer",
+            "name": "id",
+            "description": "Id of target invitation",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "204": {
+            "description": "Could not find Invitation"
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        },
+        "security": [
+          {
+            "access_tokenAuth": []
+          }
+        ]
+      }
+    },
+    "/tenants/{name}/invitations/{id}/{action}": {
+      "put": {
+        "tags": [
+          "Groups and Invitations"
+        ],
+        "summary": "Respond to a group invitation",
+        "description": "A user can accept or reject an invitation sent to them",
+        "operationId": "respondGroupInvite",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "name": "name",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          },
+          {
+            "in": "path",
+            "type": "string",
+            "name": "action",
+            "description": "accept/reject invitation",
+            "required": true
+          },
+          {
+            "in": "path",
+            "type": "integer",
+            "name": "id",
+            "description": "Id of target invitation",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "204": {
+            "description": "Could not find Invitation"
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        },
+        "security": [
+          {
+            "access_tokenAuth": []
+          }
+        ]
+      }
+    },
+    "/tenants/{name}/invitations": {
+      "get": {
+        "tags": [
+          "Groups and Invitations"
+        ],
+        "summary": "Get invitations",
+        "description": "Get all invitations for the requesting user",
+        "operationId": "getInvitesUser",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "name": "name",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "group_manager": {
+                    "type": "boolean"
+                  },
+                  "id": {
+                    "type": "integer",
+                    "example": 1,
+                    "description": "id of owners group invited to"
+                  },
+                  "invited_by": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "service_name": {
+                    "type": "string",
+                    "example": "service1"
+                  }
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No invitations found"
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        },
+        "security": [
+          {
+            "access_tokenAuth": []
+          }
+        ]
+      }
+    },
+    "/tenants/{name}/invitations/activate_by_code": {
+      "put": {
+        "tags": [
+          "Groups and Invitations"
+        ],
+        "summary": "Activate an invitation",
+        "description": "Activate an invitation with the one time code sent via email",
+        "operationId": "activateInvitation",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "name": "name",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "code": {
+                  "type": "string",
+                  "example": "7a6ae45156e678389401e3c3839127fd2a019572066d40c5d0176bd123651f93asdasdasdwqq4123414qwd124d32f235f234"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "204": {
+            "description": "No invitations found"
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        },
+        "security": [
+          {
+            "access_tokenAuth": []
+          }
+        ]
+      }
+    },
+    "/tenants/{name}/agents": {
+      "get": {
+        "tags": [
+          "Deployer Agents"
+        ],
+        "summary": "Get agents",
+        "description": "Get all deployer agents",
+        "operationId": "getAgents",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "name": "name",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/getAgents"
+            }
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "404": {
+            "description": "No agent found"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Deployer Agents"
+        ],
+        "summary": "Add Agents",
+        "description": "Add new Deployer Agents",
+        "operationId": "addAgents",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "name": "name",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/postAgents"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "404": {
+            "description": "Could not add agents"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Deployer Agents"
+        ],
+        "summary": "Delete Agents",
+        "description": "Delete all Deployer Agents",
+        "operationId": "deleteAgents",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "name": "name",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "404": {
+            "description": "No agents where found to delete"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        }
+      }
+    },
+    "/tenants/{name}": {
+      "get": {
+        "tags": [
+          "Tenants"
+        ],
+        "summary": "Get tenant information and configuration",
+        "description": "Get tenant information and configuration about theme and form configuration",
+        "operationId": "GetTenant",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "name": "name",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/Tenant"
+            }
+          },
+          "404": {
+            "description": "Tenant not found"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        }
+      }
+    },
+    "/tenants": {
+      "get": {
+        "tags": [
+          "Tenants"
+        ],
+        "summary": "Get Tenants",
+        "description": "Get all available tenants",
+        "operationId": "GetTenants",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/Tenants"
+            }
+          },
+          "404": {
+            "description": "Tenant not found"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        }
+      }
+    },
+    "/tenants/{name}/agents/id": {
+      "get": {
+        "tags": [
+          "Deployer Agents"
+        ],
+        "summary": "Get agent",
+        "description": "Get deployer agents by id",
+        "operationId": "getAgent",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "name": "name",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/Agent"
+            }
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "404": {
+            "description": "No agent found"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Deployer Agents"
+        ],
+        "summary": "Update agent",
+        "description": "Update deployer agent",
+        "operationId": "updateAgent",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "name": "name",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Agent"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "404": {
+            "description": "No agent found"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Deployer Agents"
+        ],
+        "summary": "Delete agent",
+        "description": "Delete deployer agent",
+        "operationId": "deleteAgent",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "name": "name",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "404": {
+            "description": "No agent was found"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        }
+      }
+    }
+  },
+  "securityDefinitions": {
+    "access_tokenAuth": {
+      "type": "basic"
+    },
+    "api_key": {
+      "type": "apiKey",
+      "name": "api_key",
+      "in": "header"
+    },
+    "admin_key": {
+      "type": "apiKey",
+      "name": "X-API-KEY",
+      "in": "header"
+    }
+  },
+  "definitions": {
+    "PostOrganization": {
+      "type": "object",
+      "required": [
+        "organization_name",
+        "organization_url"
+      ],
+      "properties": {
+        "organization_name": {
+          "type": "string",
+          "description": "Human-readable organization name"
+        },
+        "organization_url": {
+          "type": "string",
+          "description": "Link to the organizations website"
+        },
+        "ror_id": {
+          "type": "string",
+          "description": "The id of the organization on the ror.org dataset"
+        }
+      }
+    },
+    "PostServices": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "integration_environment",
+          "protocol",
+          "client_id",
+          "metadata_url"
+        ],
+        "$ref": "#/definitions/Service"
+      }
+    },
+    "Agent": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "mitreId",
+            "ssp",
+            "keycloak",
+            "satosa"
+          ]
+        },
+        "entity_type": {
+          "type": "string",
+          "enum": [
+            "service",
+            "idp"
+          ]
+        },
+        "hostname": {
+          "type": "string",
+          "example": "https://snf-ssp-1.grnet.gr"
+        },
+        "entity_protocol": {
+          "type": "string",
+          "enum": [
+            "oidc",
+            "saml"
+          ]
+        }
+      }
+    },
+    "postAgents": {
+      "type": "object",
+      "properties": {
+        "agents": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": [
+                  "mitreId",
+                  "ssp",
+                  "keycloak",
+                  "satosa"
+                ]
+              },
+              "entity_type": {
+                "type": "string",
+                "enum": [
+                  "service",
+                  "idp"
+                ]
+              },
+              "hostname": {
+                "type": "string",
+                "example": "https://snf-ssp-1.grnet.gr"
+              },
+              "entity_protocol": {
+                "type": "string",
+                "enum": [
+                  "oidc",
+                  "saml"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "getAgents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "tenant": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "mitreId",
+              "ssp",
+              "keycloak",
+              "satosa"
+            ]
+          },
+          "entity_type": {
+            "type": "string",
+            "enum": [
+              "service",
+              "idp"
+            ]
+          },
+          "hostname": {
+            "type": "string",
+            "example": "https://snf-ssp-1.grnet.gr"
+          },
+          "entity_protocol": {
+            "type": "string",
+            "enum": [
+              "oidc",
+              "saml"
+            ]
+          }
+        }
+      }
+    },
+    "User": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "given_name": {
+          "type": "string"
+        },
+        "family_name": {
+          "type": "string"
+        },
+        "preffered_username": {
+          "type": "string"
+        },
+        "sub": {
+          "type": "string",
+          "description": "Unique identifier"
+        },
+        "email": {
+          "type": "string",
+          "format": "email"
+        },
+        "eduperson_entitlement": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "User entitlements"
+          }
+        },
+        "eduperson_assurance": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "User assurance"
+          }
+        },
+        "acr": {
+          "type": "string",
+          "format": "uri"
+        },
+        "edu_person_entitlements": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "User entitlements"
+          }
+        },
+        "tenant_id": {
+          "type": "string",
+          "description": "Unique tenant identification"
+        },
+        "actions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "List of Available Actions"
+          }
+        },
+        "role": {
+          "type": "string",
+          "description": "Role Name"
+        }
+      }
+    },
+    "Petition": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "edit",
+            "create",
+            "delete"
+          ]
+        },
+        "service_id": {
+          "type": "string",
+          "description": "Required on edit and delete petition requests"
+        },
+        "service_name": {
+          "type": "string",
+          "description": "Human-readable application name"
+        },
+        "service_description": {
+          "type": "string",
+          "description": "Human-readable text description"
+        },
+        "logo_uri": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL that points to an image"
+        },
+        "policy_uri": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL for the Policy Statement of this service"
+        },
+        "integration_environment": {
+          "type": "string",
+          "enum": [
+            "demo",
+            "development",
+            "production"
+          ]
+        },
+        "contacts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "admin",
+                  "support",
+                  "technical",
+                  "security"
+                ]
+              }
+            }
+          }
+        },
+        "protocol": {
+          "type": "string",
+          "enum": [
+            "oidc",
+            "saml"
+          ]
+        },
+        "entity_id": {
+          "type": "string",
+          "description": "Unique identifier for saml services"
+        },
+        "metadata_uri": {
+          "type": "string",
+          "format": "uri",
+          "description": "Metadata uri for saml services"
+        },
+        "client_id": {
+          "type": "string",
+          "description": "Unique identifier for oidc services"
+        },
+        "grant_types": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "authorization_code",
+              "client_credentials",
+              "urn:ietf:params:oauth:grant-type:token-exchange",
+              "urn:ietf:params:oauth:grant-type:device_code",
+              "implicit"
+            ]
+          },
+          "description": "Grant Types Values"
+        },
+        "scope": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "openid",
+              "email",
+              "profile",
+              "offline_access",
+              "eduperson_entitlement",
+              "eduperson_scoped_affiliation",
+              "eduperson_unique_id",
+              "refeds_edu"
+            ]
+          },
+          "description": "oidc specific"
+        },
+        "allow_introspection": {
+          "type": "boolean",
+          "description": "Allow calls to the Introspection Endpoint. For oidc services."
+        },
+        "code_challenge_method": {
+          "type": "string",
+          "enum": [
+            "plain",
+            "S256",
+            ""
+          ],
+          "description": "Proof Key for Code Exchange (PKCE) Code Challenge Method. For oidc services."
+        },
+        "client_secret": {
+          "type": "string",
+          "format": "password",
+          "description": "Client secret, oidc specific"
+        },
+        "token_endpoint_auth_method": {
+          "type": "string",
+          "enum": [
+            "client_secret_basic",
+            "client_secret_post",
+            "client_secret_jwt",
+            "private_key_jwt",
+            "none"
+          ],
+          "description": "Authentication method for token endpoint, oidc specific"
+        },
+        "application_type": {
+          "type": "string",
+          "enum": [
+            "WEB",
+            "NATIVE"
+          ],
+          "description": "Application type of the service, oidc specific"
+        },
+        "token_endpoint_auth_signing_alg": {
+          "type": "string",
+          "enum": [
+            "HS256",
+            "HS384",
+            "HS512",
+            "RS256",
+            "RS384",
+            "RS512",
+            "PS256"
+          ],
+          "description": "Signing algorithm for the token endpoint, oidc specific"
+        },
+        "jwks": {
+          "type": "object",
+          "properties": {
+            "keys": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "description": "Public key value for the token endpoint, oidc specific"
+        },
+        "jwks_uri": {
+          "type": "string",
+          "description": "Uri containing public key for the token endpoint, oidc specific"
+        },
+        "country": {
+          "type": "string",
+          "description": "Country of the service"
+        },
+        "website_url": {
+          "type": "string",
+          "description": "Website Url containing information about the service"
+        },
+        "redirect_uris": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Allowed Redirect uris for the service"
+          }
+        },
+        "generate_client_secret": {
+          "type": "boolean",
+          "description": "Prompts backend to generate value for client secret. Oidc specific"
+        },
+        "reuse_refresh_tokens": {
+          "type": "boolean",
+          "description": "Adds the offline_access scope to the client's scope, oidc specific"
+        },
+        "clear_access_tokens_on_refresh": {
+          "type": "boolean",
+          "description": "oidc specific"
+        },
+        "device_code_validity_seconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1800,
+          "description": "oidc specific"
+        },
+        "access_token_validity_seconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 11160,
+          "description": "oidc specific"
+        },
+        "refresh_token_validity_seconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1422000,
+          "description": "oidc specific"
+        },
+        "id_token_timeout_seconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3600,
+          "description": "oidc specific"
+        },
+        "code_of_conduct_field": {
+          "type": "boolean",
+          "description": "There could be multiple code of contact fields with different depending on the tenant some of them might be required to be true."
+        }
+      }
+    },
+    "Tenants": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name of the tenant"
+          },
+          "client_id": {
+            "type": "string"
+          },
+          "client_secret": {
+            "type": "string"
+          },
+          "issuer_url": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Tenant": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "logo": {
+          "type": "string"
+        },
+        "main_title": {
+          "type": "string"
+        },
+        "color": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "form_config": {
+          "type": "object",
+          "properties": {
+            "code_of_conduct": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string"
+                },
+                "desc": {
+                  "type": "string"
+                },
+                "link": {
+                  "type": "string"
+                },
+                "required": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "description": "Integration Environments that are restricted"
+                  }
+                },
+                "erros": {
+                  "type": "string"
+                }
+              }
+            },
+            "device_code_validity_seconds": {
+              "type": "integer"
+            },
+            "refresh_token_validity_seconds": {
+              "type": "integer"
+            },
+            "access_token_validity_seconds": {
+              "type": "integer"
+            },
+            "id_token_timeout_seconds": {
+              "type": "integer"
+            },
+            "code_challenge_method": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "protocol": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "integration_environment": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "grant_types": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "contact_types": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "scope": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "invitation_validity_seconds": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "token_endpoint_auth_method": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "application_type": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "token_endpoint_auth_signing_alg": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "token_endpoint_auth_signing_alg_title": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "restricted_environments": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "Service": {
+      "type": "object",
+      "properties": {
+        "service_name": {
+          "type": "string",
+          "description": "Human-readable application name"
+        },
+        "service_description": {
+          "type": "string",
+          "description": "Human-readable text description"
+        },
+        "logo_uri": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL that points to an image"
+        },
+        "policy_uri": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL for the Policy Statement of this service"
+        },
+        "aup_uri": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL that contains the Acceptable Use Policy for the users of the service"
+        },
+        "organization_id": {
+          "type": "integer",
+          "description": "The unique identifier of the Organization of the Service"
+        },
+        "integration_environment": {
+          "type": "string",
+          "enum": [
+            "demo",
+            "development",
+            "production"
+          ]
+        },
+        "contacts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "admin",
+                  "support",
+                  "technical",
+                  "security"
+                ]
+              }
+            }
+          }
+        },
+        "protocol": {
+          "type": "string",
+          "enum": [
+            "oidc",
+            "saml"
+          ]
+        },
+        "entity_id": {
+          "type": "string",
+          "description": "Unique identifier for saml services"
+        },
+        "metadata_uri": {
+          "type": "string",
+          "format": "uri",
+          "description": "Metadata uri for saml services"
+        },
+        "client_id": {
+          "type": "string",
+          "description": "Unique identifier for oidc services"
+        },
+        "grant_types": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "authorization_code",
+              "client_credentials",
+              "urn:ietf:params:oauth:grant-type:token-exchange",
+              "urn:ietf:params:oauth:grant-type:device_code",
+              "implicit"
+            ]
+          },
+          "description": "Grant Types Values"
+        },
+        "scope": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "openid",
+              "email",
+              "profile",
+              "offline_access",
+              "eduperson_entitlement",
+              "eduperson_scoped_affiliation",
+              "eduperson_unique_id",
+              "refeds_edu"
+            ]
+          },
+          "description": "oidc specific"
+        },
+        "allow_introspection": {
+          "type": "boolean",
+          "description": "Allow calls to the Introspection Endpoint. For oidc services."
+        },
+        "code_challenge_method": {
+          "type": "string",
+          "enum": [
+            "plain",
+            "S256",
+            "null"
+          ],
+          "description": "Proof Key for Code Exchange (PKCE) Code Challenge Method. For oidc services."
+        },
+        "client_secret": {
+          "type": "string",
+          "format": "password",
+          "description": "Client secret, oidc specific"
+        },
+        "token_endpoint_auth_method": {
+          "type": "string",
+          "enum": [
+            "client_secret_basic",
+            "client_secret_post",
+            "client_secret_jwt",
+            "private_key_jwt",
+            "none"
+          ],
+          "description": "Authentication method for token endpoint, oidc specific"
+        },
+        "application_type": {
+          "type": "string",
+          "enum": [
+            "WEB",
+            "NATIVE"
+          ],
+          "description": "Application type of the service, oidc specific"
+        },
+        "token_endpoint_auth_signing_alg": {
+          "type": "string",
+          "enum": [
+            "HS256",
+            "HS384",
+            "HS512",
+            "RS256",
+            "RS384",
+            "RS512",
+            "PS256"
+          ],
+          "description": "Signing algorithm for the token endpoint, oidc specific"
+        },
+        "jwks": {
+          "type": "object",
+          "properties": {
+            "keys": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "description": "Public key value for the token endpoint, oidc specific"
+        },
+        "jwks_uri": {
+          "type": "string",
+          "description": "Uri containing public key for the token endpoint, oidc specific"
+        },
+        "country": {
+          "type": "string",
+          "description": "Country of the organisation of the service"
+        },
+        "website_url": {
+          "type": "string",
+          "description": "Website Url containing information about the service"
+        },
+        "redirect_uris": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "description": "Allowed Redirect uris for the service"
+          }
+        },
+        "generate_client_secret": {
+          "type": "boolean",
+          "description": "Prompts backend to generate value for client secret. Oidc specific"
+        },
+        "reuse_refresh_tokens": {
+          "type": "boolean",
+          "description": "Adds the offline_access scope to the client's scope, oidc specific"
+        },
+        "clear_access_tokens_on_refresh": {
+          "type": "boolean",
+          "description": "oidc specific"
+        },
+        "device_code_validity_seconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1800,
+          "description": "oidc specific"
+        },
+        "access_token_validity_seconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 11160,
+          "description": "oidc specific"
+        },
+        "refresh_token_validity_seconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1422000,
+          "description": "oidc specific"
+        },
+        "id_token_timeout_seconds": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3600,
+          "description": "oidc specific"
+        },
+        "code_of_conduct_field": {
+          "type": "boolean",
+          "description": "There could be multiple code of contact fields with different depending on the tenant some of them might be required to be true."
+        }
+      }
+    },
+    "Services": {
+      "type": "object",
+      "properties": {
+        "outdated_count": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Total Services available to the user that have invalid configuration"
+        },
+        "request_review_count": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Total Services available to the user that are on the request_review state"
+        },
+        "full_count": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Total Services matching the request query filters and are available to the user"
+        },
+        "list_items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "service_id": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "petition_id": {
+                "type": "integer",
+                "format": "int64"
+              },
+              "comment": {
+                "type": "string",
+                "description": "Comment from admin on pending request"
+              },
+              "last_edited": {
+                "type": "string",
+                "description": "Timestamp of the last request that was made for this service"
+              },
+              "state": {
+                "type": "string",
+                "enum": [
+                  "deployed",
+                  "error",
+                  "waiting-deployment",
+                  "pending"
+                ],
+                "description": "State of the service"
+              },
+              "owned": {
+                "type": "boolean",
+                "description": "True if user is a member of the service owners group"
+              },
+              "owners": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "An array containing the email of the owners of the service"
+              },
+              "organization_name": {
+                "type": "string",
+                "description": "The name of the organization the service blongs to."
+              },
+              "country": {
+                "type": "string",
+                "description": "The country of the service"
+              },
+              "website_url": {
+                "type": "string",
+                "description": "Website Url containing information about the service"
+              },
+              "notification": {
+                "type": "boolean",
+                "description": "True if there is a nitification for the service"
+              },
+              "deployment_type": {
+                "type": "string",
+                "description": "Type of pending deployment"
+              },
+              "outdated": {
+                "type": "boolean",
+                "description": "True if Service has invalid configuration"
+              },
+              "group_manager": {
+                "type": "boolean",
+                "description": "True if the User is a manager of the service owners group"
+              },
+              "group_id": {
+                "type": "integer",
+                "description": "Id of the service owners group"
+              },
+              "type": {
+                "type": "string",
+                "enum": [
+                  "edit",
+                  "create",
+                  "delete"
+                ],
+                "description": "Type of pending petition if exists"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pending",
+                  "approved",
+                  "rejected",
+                  "request_review",
+                  "aproved_changes"
+                ]
+              },
+              "service_name": {
+                "type": "string",
+                "description": "Human-readable application name"
+              },
+              "service_description": {
+                "type": "string",
+                "description": "Human-readable text description"
+              },
+              "logo_uri": {
+                "type": "string",
+                "format": "uri",
+                "description": "URL that points to a logo image"
+              },
+              "integration_environment": {
+                "type": "string",
+                "enum": [
+                  "demo",
+                  "development",
+                  "production"
+                ]
+              },
+              "created_at": {
+                "type": "string",
+                "format": "date",
+                "description": "Date that the service was created"
+              }
+            }
+          }
+        }
+      }
+    },
+    "Pending": {
+      "type": "object",
+      "properties": {
+        "services": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "$ref": "#/definitions/Petition"
+          }
+        }
+      }
+    },
+    "BannerAlert": {
+      "type": "object",
+      "properties": {
+        "alert_message": {
+          "type": "string",
+          "description": "The Alert message"
+        },
+        "type": {
+          "type": "string",
+          "description": "Color and style of the alert banner",
+          "enum": [
+            "warning",
+            "error",
+            "info"
+          ]
+        },
+        "priority": {
+          "type": "integer",
+          "format": "int64",
+          "description": "Banner Alerts are being shown one at a time based on priority"
+        },
+        "active": {
+          "type": "boolean",
+          "description": "Only Banner Alerts that are active are shown for each tenant"
+        }
+      }
+    },
+    "AmsPending": {
+      "type": "object",
+      "properties": {
+        "messages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "message": {
+                "type": "object",
+                "properties": {
+                  "atributes": {
+                    "type": "object",
+                    "properties": {
+                      "key": {
+                        "type": "string",
+                        "default": "value"
+                      }
+                    }
+                  },
+                  "data": {
+                    "type": "string",
+                    "example": "SGVsbG8gQ2xvdWQgUHViL1N1YiEgSGVyZSBpcyBteSBtZXNzYWdlIQ=="
+                  },
+                  "messageId": {
+                    "type": "string",
+                    "example": "136969346945"
+                  }
+                }
+              },
+              "subscription": {
+                "type": "string",
+                "default": "/projects/rciam-federation-registry/subscriptions/express-push"
+              }
+            }
+          }
+        }
+      }
+    },
+    "PutState": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "description": "Id of service",
+            "type": "integer",
+            "format": "int64"
+          },
+          "state": {
+            "description": "State of service",
+            "type": "string",
+            "enum": [
+              "deployed",
+              "error",
+              "waiting-deployment",
+              "pending"
+            ]
+          }
+        }
+      }
+    },
+    "History": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "description": "Id of petition",
+            "type": "integer",
+            "format": "int64"
+          },
+          "comment": {
+            "description": "Comment from admin",
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "description": "Review status",
+            "enum": [
+              "approved",
+              "rejected",
+              "approved_with_changes",
+              "pending"
+            ]
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of petition request",
+            "enum": [
+              "create",
+              "edit",
+              "delete"
+            ]
+          },
+          "reviewed_at": {
+            "type": "string",
+            "format": "data-time"
+          }
+        }
+      }
+    }
+  },
+  "externalDocs": {
+    "description": "Find out more about Swagger",
+    "url": "http://swagger.io"
+  }
+}
