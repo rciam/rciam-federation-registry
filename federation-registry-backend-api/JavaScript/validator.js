@@ -602,7 +602,7 @@ const serviceValidationRules = (options,req) => {
           }
         }
         return success }).withMessage('Invalid Scope value'),
-      body('*.grant_types').custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1],'grant_types')}).withMessage('Service grant_types missing').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).isArray({min:1}).withMessage('grant_types must be an array').custom((value,{req,location,path})=> {
+      body('*.grant_types').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).isArray().withMessage('grant_types must be an array').custom((value,{req,location,path})=> {
         let success=true;
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         try{
