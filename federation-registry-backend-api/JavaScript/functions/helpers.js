@@ -253,20 +253,20 @@ const newMemberNotificationMail = (data,managers) => {
     var currentDate = new Date();
     readHTMLFile(path.join(__dirname, '../html/new-member-notification.html'), function(err, html) {
       let transporter = createTransport();
-      var replacements = {  
-        invitation_mail:data.invitation_mail,
-        username:data.preferred_username,
-        email:data.email,
-        url:tenant_config[data.tenant].base_url+'/'+data.url,
-        tenant:data.tenant.toUpperCase(),
-        logo_url:tenant_config[data.tenant].logo_url,
-        tenant_title:tenant_config[data.tenant].sender,
-        tenant_signature:tenant_config[data.tenant].tenant_signature
-      };
       var template = hbs.compile(html);
       managers.forEach(async (manager)=>{
-        replacements.target_email = manager.email;
-        replacements.recipient_name = manager.name;
+        const replacements = {  
+          invitation_mail: data.invitation_mail,
+          username: data.preferred_username,
+          email: data.email,
+          url: tenant_config[data.tenant].base_url + '/' + data.url,
+          tenant: data.tenant.toUpperCase(),
+          logo_url: tenant_config[data.tenant].logo_url,
+          tenant_title: tenant_config[data.tenant].sender,
+          tenant_signature: tenant_config[data.tenant].tenant_signature,
+          target_email: manager.email,
+          recipient_name: manager.name
+        };
         await delay(400);
         var htmlToSend = template(replacements);
         var mailOptions = {
@@ -351,19 +351,20 @@ const sendMail= (data,template_uri,users)=>{
           state=data.state
         }
       }
-      var replacements = {
-        service_name:data.service_name,
-        date:currentDate,
-        state:state,
-        comment:data.comment,
-        logo_url:tenant_config[data.tenant].logo_url,
-        ...data,
-        url:tenant_config[data.tenant].base_url+ (data.url?data.url:""),
-        tenant_title:tenant_config[data.tenant].sender,
-        tenant_signature:tenant_config[data.tenant].tenant_signature
-      };
+   
       users.forEach(async (user) => {
-          replacements.name = user.name;
+        const replacements = {
+          service_name:data.service_name,
+          date:currentDate,
+          state:state,
+          comment:data.comment,
+          logo_url:tenant_config[data.tenant].logo_url,
+          ...data,
+          url:tenant_config[data.tenant].base_url+ (data.url?data.url:""),
+          tenant_title:tenant_config[data.tenant].sender,
+          tenant_signature:tenant_config[data.tenant].tenant_signature,
+          name: user.name
+        };
           var htmlToSend = template(replacements);
           var mailOptions = {
             from:  tenant_config[data.tenant].sender+" Notifications <noreply@faai.grnet.gr>",
