@@ -307,7 +307,7 @@ const serviceValidationRules = (options,req) => {
     return [
       body().isArray({min:1}).withMessage('Body must be an array containing at least one service'),
       body('*.tenant').custom((value,{req,location,path})=>{if(options.tenant_param||req.body[path.match(/\[(.*?)\]/)[1]].tenant in tenant_config){return true}else{return false}}).withMessage('Invalid Tenant'),
-      body('*.service_name').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1],'service_name')}).withMessage('Service name missing').if((value,{req,location,path})=> { return value}).isString().withMessage('Service name must be a string').isLength({min:2, max:256}).withMessage('Service name must be from 2 up to 256 characters'),
+      body('*.service_name').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1],'service_name')}).withMessage('Service name missing').if((value,{req,location,path})=> { return value}).trim().isString().withMessage('Service name must be a string').isLength({min:2, max:256}).withMessage('Service name must be from 2 up to 256 characters'),
       body('*.country').custom((value,{req,location,path})=>{
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         let integration_environment = req.body[path.match(/\[(.*?)\]/)[1]].integration_environment;
@@ -329,12 +329,12 @@ const serviceValidationRules = (options,req) => {
           return false
         }
       }).withMessage('Invalid Country Code'),
-      body('*.service_description').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1],'service_description')}).withMessage('Service Description missing').if((value)=> {return value}).isString().withMessage('Service Description must be a string').isLength({min:1}).withMessage("Service description can't be empty"),
-      body('*.logo_uri').optional({checkFalsy:true}).isString().withMessage('Service Logo must be a string').custom((value)=> value.match(reg.regUrl)).withMessage('Service Logo must be a secure url https://').isLength({max:256}).withMessage("Service logo cant exceed character limit (6000)"),
+      body('*.service_description').custom((value,{req,location,path})=>{return required(value,req,path.match(/\[(.*?)\]/)[1],'service_description')}).withMessage('Service Description missing').if((value)=> {return value}).trim().isString().withMessage('Service Description must be a string').isLength({min:1}).withMessage("Service description can't be empty"),
+      body('*.logo_uri').optional({checkFalsy:true}).trim().isString().withMessage('Service Logo must be a string').custom((value)=> value.match(reg.regUrl)).withMessage('Service Logo must be a secure url https://').isLength({max:256}).withMessage("Service logo cant exceed character limit (6000)"),
       body('*.policy_uri').custom((value,{req,location,path})=>{
         let pos = path.match(/\[(.*?)\]/)[1];
         let tenant = options.tenant_param?req.params.tenant:req.body[pos].tenant;
-        return requiredIntegrationEnvironment(tenant,value,req.body[pos].integration_environment,req,pos,'policy_uri')}).withMessage('Service Policy Uri missing').if((value)=> {return value}).isString().withMessage('Service Policy Uri must be a string').custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Service Policy Uri must be a url'),
+        return requiredIntegrationEnvironment(tenant,value,req.body[pos].integration_environment,req,pos,'policy_uri')}).withMessage('Service Policy Uri missing').if((value)=> {return value}).trim().isString().withMessage('Service Policy Uri must be a string').custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Service Policy Uri must be a url'),
       body('*.requested_attributes').if((value)=> {
         return value&&(Array.isArray(value)&&value.length!==0)
       }).isArray().withMessage('Required attributes must be an array').custom((attributes,{req,location,path})=> {
@@ -403,7 +403,7 @@ const serviceValidationRules = (options,req) => {
             skip = !(req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc')
         }
         return !skip
-        }).exists({checkFalsy:true}).withMessage('client_id is missing').if(value=>{return value}).isString().withMessage('client_id must be a string').if((value)=>{return(value.constructor === stringConstructor)}).isLength({min:2, max:128}).withMessage('client_id must be between 2 and 128 characters').custom((value,{req,location,path})=> {
+        }).exists({checkFalsy:true}).withMessage('client_id is missing').if(value=>{return value}).trim().isString().withMessage('client_id must be a string').if((value)=>{return(value.constructor === stringConstructor)}).isLength({min:2, max:128}).withMessage('client_id must be between 2 and 128 characters').custom((value,{req,location,path})=> {
           try{          
             return (!value||value.match(reg.regClientId))
           }
@@ -512,6 +512,11 @@ const serviceValidationRules = (options,req) => {
         catch(err){
           throw new Error(err);
         }
+      }).customSanitizer(value => {
+        value.forEach((string_value,index)=>{
+          value[index] = string_value.trim();
+        })
+        return value;
       }),
       body('*.post_logout_redirect_uris').if((value,{req,location,path})=> {
         let pos = path.match(/\[(.*?)\]/)[1];
@@ -575,6 +580,11 @@ const serviceValidationRules = (options,req) => {
         catch(err){
           throw new Error(err);
         }
+      }).customSanitizer(value => {
+        value.forEach((string_value,index)=>{
+          value[index] = string_value.trim();
+        })
+        return value;
       }),
       body('*.scope').custom((value,{req,location,path})=>{ return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1],'scope')}).withMessage('Service redirect_uri missing').if((value,{req,location,path})=> {return value&&value.length>0&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).isArray({min:1}).withMessage('Must be an array').custom((value,success=true)=> {
         try{
@@ -592,7 +602,7 @@ const serviceValidationRules = (options,req) => {
           }
         }
         return success }).withMessage('Invalid Scope value'),
-      body('*.grant_types').custom((value,{req,location,path})=>{return requiredOidc(value,req,path.match(/\[(.*?)\]/)[1],'grant_types')}).withMessage('Service grant_types missing').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).isArray({min:1}).withMessage('grant_types must be an array').custom((value,{req,location,path})=> {
+      body('*.grant_types').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'}).isArray().withMessage('grant_types must be an array').custom((value,{req,location,path})=> {
         let success=true;
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         try{
@@ -802,8 +812,8 @@ const serviceValidationRules = (options,req) => {
         }else{
           return value;
         }
-      }).if((value,{req,location,path})=>{return ((value||!req.body[path.match(/\[(.*?)\]/)[1]].generate_client_secret)&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'&&["client_secret_basic","client_secret_post","client_secret_jwt"].includes(req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method))}).exists({checkFalsy:true}).withMessage('Client secret is missing').if((value)=>{return value}).isString().withMessage('Client Secret must be a string').isLength({min:4,max:256}).withMessage('Out of range'),
-      body('*.entity_id').custom((value,{req,location,path})=>{return requiredSaml(value,req,path.match(/\[(.*?)\]/)[1],'entity_id')}).withMessage('Entity ID is missing').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='saml'}).isString().withMessage('Entity id must be a string').custom((value)=> {
+      }).if((value,{req,location,path})=>{return ((value||!req.body[path.match(/\[(.*?)\]/)[1]].generate_client_secret)&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='oidc'&&["client_secret_basic","client_secret_post","client_secret_jwt"].includes(req.body[path.match(/\[(.*?)\]/)[1]].token_endpoint_auth_method))}).exists({checkFalsy:true}).withMessage('Client secret is missing').if((value)=>{return value}).trim().isString().withMessage('Client Secret must be a string').isLength({min:4,max:256}).withMessage('Out of range'),
+      body('*.entity_id').custom((value,{req,location,path})=>{return requiredSaml(value,req,path.match(/\[(.*?)\]/)[1],'entity_id')}).withMessage('Entity ID is missing').if((value,{req,location,path})=> {return value&&req.body[path.match(/\[(.*?)\]/)[1]].protocol==='saml'}).trim().isString().withMessage('Entity id must be a string').custom((value)=> {
         try{
           if(value.constructor === stringConstructor){
             if(value.length<4||value.length>256){
@@ -816,7 +826,7 @@ const serviceValidationRules = (options,req) => {
           return true
         }
       }).withMessage('Entity id must be a url'),
-      body('*.metadata_url').if((value,{req,location,path})=>{return req.body[path.match(/\[(.*?)\]/)[1]].protocol==='saml'}).exists({checkFalsy:true}).withMessage('Metadata url missing').if((value)=>{ return value}).isString().withMessage('Metadata url must be a string').if((value)=>{return(value.constructor === stringConstructor)}).custom((value)=> {return value.match(reg.regSimpleUrl)}).withMessage('Metadata url must be a url').if(()=>{return options.check_available}).custom((value,{req,location,path})=> {
+      body('*.metadata_url').if((value,{req,location,path})=>{return req.body[path.match(/\[(.*?)\]/)[1]].protocol==='saml'}).exists({checkFalsy:true}).withMessage('Metadata url missing').if((value)=>{ return value}).trim().isString().withMessage('Metadata url must be a string').if((value)=>{return(value.constructor === stringConstructor)}).custom((value)=> {return value.match(reg.regSimpleUrl)}).withMessage('Metadata url must be a url').if(()=>{return options.check_available}).custom((value,{req,location,path})=> {
         return db.service_details_protocol.checkClientId(value,0,0,req.params.tenant,req.body[path.match(/\[(.*?)\]/)[1]].integration_environment).then(available=> {
           if(!available){
             return Promise.reject('Metadata url is not available');
@@ -832,8 +842,8 @@ const serviceValidationRules = (options,req) => {
         }else{
           return value;
         }
-      }).optional({checkFalsy:true}).isString().withMessage('Must be a string').isLength({min:1, max:36}),
-      body('*.website_url').optional({checkFalsy:true}).isString().withMessage('Website Url must be a string').custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Website Url must be a valid url'),
+      }).optional({checkFalsy:true}).trim().isString().withMessage('Must be a string').isLength({min:1, max:36}),
+      body('*.website_url').optional({checkFalsy:true}).trim().isString().withMessage('Website Url must be a string').custom((value)=> value.match(reg.regSimpleUrl)).withMessage('Website Url must be a valid url'),
       body('*.aup_uri').custom((value,{req,location,path})=>{
         let pos = path.match(/\[(.*?)\]/)[1];
         let tenant = options.tenant_param?req.params.tenant:req.body[path.match(/\[(.*?)\]/)[1]].tenant;
@@ -865,6 +875,8 @@ const serviceValidationRules = (options,req) => {
             throw new Error("aup_uri value is not supported for this tenant");
           }
         }
+      }).customSanitizer(value => {
+        return value.trim();
       }),
       body('*.service_boolean').custom((value,{req,location,path})=>{
         let pos = path.match(/\[(.*?)\]/)[1];
