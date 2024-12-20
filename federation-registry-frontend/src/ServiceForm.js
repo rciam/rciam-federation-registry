@@ -364,7 +364,7 @@ const ServiceForm = (props) => {
           return true
         }
       })).unique(t('yup_redirect_uri_unique')).when('grant_types', {
-        is: (grant_types) => grant_types.includes("implicit") || grant_types.includes("authorization_code"),
+        is: (grant_types) => grant_types?.includes("implicit") || grant_types?.includes("authorization_code"),
         then: yup.array().min(1, t('yup_required')).nullable().required(t('yup_required'))
       })
     }),
@@ -476,7 +476,7 @@ const ServiceForm = (props) => {
     }),
     grant_types: yup.array().nullable().when('protocol', {
       is: 'oidc',
-      then: yup.array().nullable().of(yup.string().test('testGrantTypes', 'error-grant-types', function (value) { return tenant.form_config.grant_types.includes(value) })).required(t('yup_select_option'))
+      then: yup.array().nullable().of(yup.string().test('testGrantTypes', 'error-grant-types', function (value) { return tenant.form_config.grant_types.includes(value) }))
     }),
     id_token_timeout_seconds: yup.number().nullable().when('protocol', {
       is: 'oidc',
@@ -491,7 +491,7 @@ const ServiceForm = (props) => {
       then: yup.number().min(1, "Must be a positive value greater that 0").max(tenant.form_config.refresh_token_validity_seconds, t('yup_exceeds_max')).required('This field is required when the offline_access is selected')
     }),
     device_code_validity_seconds: yup.number().nullable().when(['protocol', 'grant_types'], {
-      is: (protocol, grant_types) => protocol === 'oidc' && grant_types.includes('urn:ietf:params:oauth:grant-type:device_code'),
+      is: (protocol, grant_types) => protocol === 'oidc' && grant_types?.includes('urn:ietf:params:oauth:grant-type:device_code'),
       then: yup.number().nullable().min(0).max(tenant.form_config.device_code_validity_seconds, t('yup_exceeds_max')).required('This is a required field when the device code grant type is selected')
     }),
     code_challenge_method: yup.string().nullable().when('protocol', {
@@ -1437,7 +1437,7 @@ const ServiceForm = (props) => {
                               changed={props.changes ? props.changes.scope : null}
                             />
                           </InputRow>
-                          <InputRow moreInfo={tenant.form_config.more_info.redirect_uris} title={t('form_redirect_uris')} required={values.grant_types.includes("implicit") || values.grant_types.includes("authorization_code")} error={typeof (errors.redirect_uris) === 'string' ? errors.redirect_uris : null} touched={touched.redirect_uris} description={t('form_redirect_uris_desc')}>
+                          <InputRow moreInfo={tenant.form_config.more_info.redirect_uris} title={t('form_redirect_uris')} required={values.grand_types&&(values.grant_types.includes("implicit") || values.grant_types.includes("authorization_code"))} error={typeof (errors.redirect_uris) === 'string' ? errors.redirect_uris : null} touched={touched.redirect_uris} description={t('form_redirect_uris_desc')}>
                             <ListInput
                               values={values.redirect_uris}
                               placeholder={t('form_type_prompt')}
@@ -1474,7 +1474,7 @@ const ServiceForm = (props) => {
                           <InputRow moreInfo={tenant.form_config.more_info.code_challenge_method} required={true} title={t('form_code_challenge_method')} extraClass='select-col' error={errors.code_challenge_method} touched={touched.code_challenge_method}>
                             <Select
                               onBlur={handleBlur}
-                              optionsTitle={['PKCE will not be used for this service ' + (values.grant_types.includes('authorization_code') ? '(disabled)' : ''), 'Plain code challenge (deprecated)', 'SHA-256 hash algorithm (recommended)']}
+                              optionsTitle={['PKCE will not be used for this service ' + (values.grant_types && values.grant_types.includes('authorization_code') ? '(disabled)' : ''), 'Plain code challenge (deprecated)', 'SHA-256 hash algorithm (recommended)']}
                               options={['', 'plain', 'S256']}
                               name="code_challenge_method"
                               values={values}
@@ -1504,7 +1504,7 @@ const ServiceForm = (props) => {
                               changed={props.changes}
                             />
                           </InputRow>
-                          <InputRow moreInfo={tenant.form_config.more_info.device_code_validity_seconds} required={values.grant_types.includes('urn:ietf:params:oauth:grant-type:device_code')} title={t('form_device_code_validity_seconds')} extraClass='time-input' error={errors.device_code_validity_seconds} touched={touched.device_code_validity_seconds}>
+                          <InputRow moreInfo={tenant.form_config.more_info.device_code_validity_seconds} required={values?.grant_types?.includes('urn:ietf:params:oauth:grant-type:device_code')} title={t('form_device_code_validity_seconds')} extraClass='time-input' error={errors.device_code_validity_seconds} touched={touched.device_code_validity_seconds}>
                             <DeviceCode
                               onBlur={handleBlur}
                               values={values}
