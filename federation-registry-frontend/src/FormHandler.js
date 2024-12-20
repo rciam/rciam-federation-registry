@@ -59,16 +59,15 @@ const EditService = (props) => {
     useEffect(()=>{
         // eslint-disable-next-line react-hooks/exhaustive-deps
       if(petitionData&&service&&props.review){
-
         let helper = calcDiff(service,petitionData.petition,tenant?.form_config,diff);
         let multivalue_attributes = [];
         for (const service_property in service) service[service_property]&&typeof(service[service_property])==='object'&&multivalue_attributes.push(service_property); 
         for (const service_property in petitionData.petition) petitionData.petition[service_property]&&typeof(petitionData.petition[service_property])==='object'&&!multivalue_attributes.includes(service_property)&&multivalue_attributes.push(service_property);
-        multivalue_attributes.forEach(item=>{
-          if(helper[item].D){
-            petitionData.petition[item].push(...helper[item].D);
-          }
-        });
+        // multivalue_attributes.forEach(item=>{
+        //   if(helper[item].D){
+        //     petitionData.petition[item].push(...helper[item].D);
+        //   }
+        // });
         // eslint-disable-next-line react-hooks/exhaustive-deps
         setEditPetition(petitionData.petition);
         setChanges(helper);

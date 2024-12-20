@@ -374,11 +374,9 @@ const ServiceList= (props)=> {
     var hiddenElement = document.createElement("a");
     hiddenElement.href = "data:text/csv;charset=utf-8," + encodeURI(csv).replaceAll('#', '%23');
     hiddenElement.target = "_blank";
-    console.log("data:text/csv;charset=utf-8," + encodeURI(csv));
     //provide the name for the CSV file to be downloaded
     hiddenElement.download = "ServiceExport.csv";
     hiddenElement.click();
-    console.log(csv);
   };
 
 
