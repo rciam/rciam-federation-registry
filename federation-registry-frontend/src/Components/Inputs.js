@@ -213,8 +213,6 @@ export function OrganizationField(props){
                   newOption[searchString+ " (Add New Organization)"].name = searchString; 
                   newOption[searchString+ " (Add New Organization)"].url = null;
                 }
-                // console.log(options);
-                // console.log(ror_response.items);
                 setOrganizations({...newOption,...options});
             }
             else{
@@ -704,7 +702,7 @@ export function CheckboxList(props){
     let dlt = [];
     let exst = [];
     if(props.changed){
-      props.values.forEach(item=>{
+      [...props.values,...props.changed.D].forEach(item=>{
         if(props.changed.D.includes(item)){
           dlt.push(item);
         }
@@ -718,7 +716,6 @@ export function CheckboxList(props){
       setExisting(exst);
       setAdded(add);
       setDeleted(dlt);
-
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -749,6 +746,7 @@ export function CheckboxList(props){
           :
           <React.Fragment>
             {props.listItems.map((item,index)=>
+              
                 {
                   if(item!=='refresh_token'){
                     return(
@@ -863,25 +861,25 @@ export function DeviceCode(props){
   return(
     <React.Fragment>
       <div
-        className={"checkbox-item " + (props.changed&&(props.changed.grant_types.D.includes('urn:ietf:params:oauth:grant-type:device_code')||props.changed.grant_types.N.includes('urn:ietf:params:oauth:grant-type:device_code'))?'input-edited checkbox-item-edited':'')}
+        className={"checkbox-item " + (props.changed&&(props.changed?.grant_types?.D.includes('urn:ietf:params:oauth:grant-type:device_code')||props.changed?.grant_types?.N.includes('urn:ietf:params:oauth:grant-type:device_code'))?'input-edited checkbox-item-edited':'')}
         ref={target}
         onMouseOver={()=>setShow(true)}
         onMouseOut={()=>setShow(false)}
       >
         <Checkbox name="grant_types" disabled={props.disabled} value='urn:ietf:params:oauth:grant-type:device_code' onClick={()=>{
-           if(!props.values.grant_types.includes('urn:ietf:params:oauth:grant-type:device_code')&&props.values.device_code_validity_seconds===null){
+           if(!props.values?.grant_types?.includes('urn:ietf:params:oauth:grant-type:device_code')&&props.values.device_code_validity_seconds===null){
             props.setFieldValue('device_code_validity_seconds',initialValues.device_code_validity_seconds,true).then(()=>{
               props.validateField('device_code_validity_seconds');
             });
            }    
         }}/>
           {t('form_device_code_desc')}
-        <MyOverLay show={(props.changed&&(props.changed.grant_types.D.includes('urn:ietf:params:oauth:grant-type:device_code')||props.changed.grant_types.N.includes('urn:ietf:params:oauth:grant-type:device_code'))?'input-edited checkbox-item-edited':'')&&show} type='Edited' target={target}/>
+        <MyOverLay show={(props.changed&&(props.changed.grant_types?.D.includes('urn:ietf:params:oauth:grant-type:device_code')||props.changed.grant_types?.N.includes('urn:ietf:params:oauth:grant-type:device_code'))?'input-edited checkbox-item-edited':'')&&show} type='Edited' target={target}/>
       </div>
       <Form.Text className="text-muted text-left label-checkbox" id="uri-small-desc">
       {t('form_device_code_info')}
       </Form.Text>
-      {props.values.grant_types.includes('urn:ietf:params:oauth:grant-type:device_code')?(
+      {props.values?.grant_types?.includes('urn:ietf:params:oauth:grant-type:device_code')?(
         <React.Fragment>
           <TimeInput
             name='device_code_validity_seconds'
@@ -1057,7 +1055,7 @@ export function ListInputArray(props){
 
         </thead>
         <tbody>
-          {props.defaultValues.map((item,index)=>(
+          {[...props.defaultValues].map((item,index)=>(
 
               <ListInputArrayInput1 key={index} index={index} item={item} name={props.name} values={props.values} disabled={props.disabled} changed={props.changed}/>
 
@@ -1066,7 +1064,7 @@ export function ListInputArray(props){
           <FieldArray
             name={props.name}
             render={arrayHelpers =>(
-              props.values.map((item,index)=>{
+              [...props.values,...(props?.changed?.D?props?.changed?.D:[])].map((item,index)=>{
                 if(!props.defaultValues.includes(item)){
                   return(
                     <React.Fragment key={index}>
@@ -1088,16 +1086,15 @@ export function ListInputArray(props){
 
 function ListInputArrayInput1(props){
   const [show, setShow] = useState(false);
-  const [type, setType] = useState();
+  const [type, setType] = useState('');
   const target = useRef(null);
-
+  
   const mystyle = {
     width: "100%",
     wordWrap: "break-word",
     wordBreak:"break-all"
   };
   useEffect(()=>{
-
     if(props.changed){
       if(props.changed.N.includes(props.item)){
         setType('Added');
@@ -1105,12 +1102,14 @@ function ListInputArrayInput1(props){
       }
       else if(props.changed.D.includes(props.item)){
         setType('Deleted');
-
+      }
+      else{
+        setType('');
       }
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[]);
+  },[props.changed]);
   return (
     <React.Fragment>
     <tr
@@ -1298,6 +1297,7 @@ function ListSingleInput(props){
     <Form.Control
       {...props.field}
       onBlur={props.handleBlur}
+      value={props.item}
       onChange={props.onChange}
       onMouseOver={()=>setShow(true)}
       onMouseOut={()=>setShow(false)}
@@ -1354,7 +1354,7 @@ export function ListInput(props){
                 </InputGroup.Prepend>
                 </InputGroup>:null}
 
-              {props.values && props.values.length > 0 && props.values.map((item,index)=>(
+              {((props.values && props.values.length > 0)||props?.changed?.D) && [...props.values,...(props?.changed?.D?props.changed?.D:[])].map((item,index)=>(
                 <React.Fragment key={index}>
                 <InputGroup className="mb-3 spacing-bot-contact" >
                   <Field name={`${props.name}.${index}`}>
@@ -1436,7 +1436,7 @@ export function Contacts(props){
                 </React.Fragment>
                 :null}
 
-              {props.values && props.values.length > 0 && props.values.map((item,index)=>(
+              {props.values && props.values.length > 0 && [...props.values,...(props?.changed?.D?props.changed.D:[])].map((item,index)=>(
                 <React.Fragment key={index} >
                 <InputGroup className="spacing-bot-contact" >
                   <ContactInput name={props.name} item={item} index={index} onBlur={props.handleBlur} onChange={props.onChange} error={props.error} remove={remove} changed={props.changed} disabled={props.disabled}/>
@@ -1489,6 +1489,7 @@ function ContactInput(props){
         <React.Fragment>
           <Form.Control
             {...field}
+            value={props.item.email}
             onMouseOver={()=>setShow(true)}
             onMouseOut={()=>setShow(false)}
             onBlur={props.handleBlur}
@@ -1502,7 +1503,7 @@ function ContactInput(props){
             disabled={props.disabled}
           />
           <InputGroup.Prepend>
-          <Field name={`${props.name}.${props.index}.type`}>
+          <Field name={`${props.name}.${props.index}.type`} value={props.item.type}>
             {({field,form})=>(
               <React.Fragment>
           <Form.Control
@@ -1547,15 +1548,15 @@ export function Checkbox(props) {
           <input
             type="checkbox"
             {...props}
-            checked={field.value.includes(props.value)}
+            checked={field.value?.includes(props.value)}
             onChange={() => {
-              if (field.value.includes(props.value)) {
+              if (field.value?.includes(props.value)) {
                 const nextValue = field.value.filter(
                   value => value !== props.value
                 );
                 form.setFieldValue(props.name, nextValue);
               } else {
-                const nextValue = field.value.concat(props.value);
+                const nextValue = field?.value?.concat(props.value) || [props.value];
                 form.setFieldValue(props.name, nextValue);
               }
             }}
