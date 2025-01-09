@@ -470,8 +470,8 @@ const ServiceForm = (props) => {
       const unique = array.filter((v, i, a) => a.indexOf(v) === i);
       if (unique.length === array.length) { return true } else { return false }
     }).required(t('yup_required')),
-    scope: yup.array().nullable().when('protocol', {
-      is: 'oidc',
+    scope: yup.array().nullable().when(['protocol','grant_types'], {
+      is: (protocol,grant_types) => protocol === 'oidc' && grant_types?.length>0,
       then: yup.array().min(1, t('yup_select_option')).nullable().of(yup.string().required("Scope value cannot be empty").min(1, t('yup_scope')).max(256, t('yup_char_max') + ' (' + 256 + ')').matches(reg.regScope, t('yup_scope_reg'))).unique(t('yup_scope_unique')).required(t('yup_required'))
     }),
     grant_types: yup.array().nullable().when('protocol', {
@@ -487,7 +487,7 @@ const ServiceForm = (props) => {
       then: yup.number().nullable().min(1, "Must be a positive value greater that 0").max(tenant.form_config.access_token_validity_seconds, t('yup_exceeds_max')).required('This is a required field')
     }),
     refresh_token_validity_seconds: yup.number().nullable().when(['scope', 'protocol'], {
-      is: (scope, protocol) => protocol === 'oidc' && scope.includes('offline_access'),
+      is: (scope, protocol) => protocol === 'oidc' && scope?.includes('offline_access'),
       then: yup.number().min(1, "Must be a positive value greater that 0").max(tenant.form_config.refresh_token_validity_seconds, t('yup_exceeds_max')).required('This field is required when the offline_access is selected')
     }),
     device_code_validity_seconds: yup.number().nullable().when(['protocol', 'grant_types'], {
@@ -1424,7 +1424,7 @@ const ServiceForm = (props) => {
                               />
                             </div>
                           </InputRow>
-                          <InputRow moreInfo={tenant.form_config.more_info.scope} title={t('form_scope')} required={true} description={t('form_scope_desc')} error={typeof (errors.scope) === 'string' ? errors.scope : null} touched={true}>
+                          <InputRow moreInfo={tenant.form_config.more_info.scope} title={t('form_scope')} required={values?.grant_types?.length>0} description={t('form_scope_desc')} error={typeof (errors.scope) === 'string' ? errors.scope : null} touched={true}>
                             <ListInputArray
                               name='scope'
                               values={values.scope}
@@ -1491,7 +1491,7 @@ const ServiceForm = (props) => {
                               Enabling PKCE is highly recommended to avoid code injection and code replay attacks. If enabled, you need to make sure that your client uses PKCE to prevent errors
                             </div>
                           </InputRow>
-                          <InputRow moreInfo={tenant.form_config.more_info.refresh_token_validity_seconds} required={values.scope.includes('offline_access')} title={t('form_refresh_token_validity_seconds')} extraClass='time-input' error={errors.refresh_token_validity_seconds} touched={touched.refresh_token_validity_seconds}>
+                          <InputRow moreInfo={tenant.form_config.more_info.refresh_token_validity_seconds} required={values.scope?.includes('offline_access')} title={t('form_refresh_token_validity_seconds')} extraClass='time-input' error={errors.refresh_token_validity_seconds} touched={touched.refresh_token_validity_seconds}>
                             <RefreshToken
                               values={values}
                               onBlur={handleBlur}

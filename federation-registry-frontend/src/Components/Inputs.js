@@ -702,14 +702,14 @@ export function CheckboxList(props){
     let dlt = [];
     let exst = [];
     if(props.changed){
-      [...props.values,...props.changed.D].forEach(item=>{
-        if(props.changed.D.includes(item)){
+      [...(props.values||[]),...(props.changed?.D||[])].forEach(item=>{
+        if(props.changed.D?.includes(item)){
           dlt.push(item);
         }
-        else if (props.changed.N.includes(item)){
+        else if (props.changed.N?.includes(item)){
           add.push(item);
         }
-        else if(props.values.includes(item)){
+        else if(props.values?.includes(item)){
           exst.push(item)
         }
       });
@@ -722,7 +722,8 @@ export function CheckboxList(props){
   },[]);
   return (
     <React.Fragment>
-        {props.changed?
+        
+        {props.changed &&(existing.length>0||added.length>0||deleted.length>0)?
 
           <Table className="client-list-table">
             <thead>
@@ -743,6 +744,8 @@ export function CheckboxList(props){
               })}
             </thead>
           </Table>
+          :props.changed?
+            <p>No Grant Types</p>
           :
           <React.Fragment>
             {props.listItems.map((item,index)=>
@@ -777,25 +780,25 @@ export function RefreshToken(props){
     return(
       <React.Fragment>
         <div
-          className={"checkbox-item "+(props.changed&&(props.changed.scope.D.includes('offline_access')||props.changed.scope.N.includes('offline_access'))?'input-edited checkbox-item-edited':'')}
+          className={"checkbox-item "+(props.changed&&(props.changed.scope.D?.includes('offline_access')||props.changed.scope.N?.includes('offline_access'))?'input-edited checkbox-item-edited':'')}
           ref={target}
           onMouseOver={()=>setShow(true)}
           onMouseOut={()=>setShow(false)}
           >
-          <Checkbox name="scope" disabled={props.disabled} checked={props.values.scope.includes('offline_access')} value='offline_access' onClick={()=>{
-                  if(!props.values.scope.includes('offline_access')&&(props.values.refresh_token_validity_seconds===null||props.values.refresh_token_validity_seconds===0)){
+          <Checkbox name="scope" disabled={props.disabled} checked={props.values.scope?.includes('offline_access')} value='offline_access' onClick={()=>{
+                  if(!props.values.scope?.includes('offline_access')&&(props.values.refresh_token_validity_seconds===null||props.values.refresh_token_validity_seconds===0)){
                     props.setFieldValue('refresh_token_validity_seconds',initialValues.refresh_token_validity_seconds,true).then(()=>{
                       props.validateField('refresh_token_validity_seconds');
                     });      
                   }
           }}/>
             {t('form_reuse_refresh_token_scope')}
-          <MyOverLay show={props.changed&&(props.changed.scope.D.includes('offline_access')||props.changed.scope.N.includes('offline_access'))&&show} type='Edited' target={target}/>
+          <MyOverLay show={props.changed&&(props.changed.scope.D?.includes('offline_access')||props.changed.scope.N?.includes('offline_access'))&&show} type='Edited' target={target}/>
         </div>
         <Form.Text className="text-muted text-left label-checkbox" id="uri-small-desc">
           {t('form_offline_access_desc')}
         </Form.Text>
-        {props.values.scope.includes('offline_access')?(
+        {props.values.scope?.includes('offline_access')?(
           <React.Fragment>
             <div className={"checkbox-item "+(props.changed&&props.changed.reuse_refresh_token?"spacing-bot":'')}>
               <SimpleCheckbox
@@ -861,7 +864,7 @@ export function DeviceCode(props){
   return(
     <React.Fragment>
       <div
-        className={"checkbox-item " + (props.changed&&(props.changed?.grant_types?.D.includes('urn:ietf:params:oauth:grant-type:device_code')||props.changed?.grant_types?.N.includes('urn:ietf:params:oauth:grant-type:device_code'))?'input-edited checkbox-item-edited':'')}
+        className={"checkbox-item " + (props.changed&&(props.changed?.grant_types?.D?.includes('urn:ietf:params:oauth:grant-type:device_code')||props.changed?.grant_types?.N?.includes('urn:ietf:params:oauth:grant-type:device_code'))?'input-edited checkbox-item-edited':'')}
         ref={target}
         onMouseOver={()=>setShow(true)}
         onMouseOut={()=>setShow(false)}
@@ -874,7 +877,7 @@ export function DeviceCode(props){
            }    
         }}/>
           {t('form_device_code_desc')}
-        <MyOverLay show={(props.changed&&(props.changed.grant_types?.D.includes('urn:ietf:params:oauth:grant-type:device_code')||props.changed.grant_types?.N.includes('urn:ietf:params:oauth:grant-type:device_code'))?'input-edited checkbox-item-edited':'')&&show} type='Edited' target={target}/>
+        <MyOverLay show={(props.changed&&(props.changed.grant_types?.D?.includes('urn:ietf:params:oauth:grant-type:device_code')||props.changed.grant_types?.N?.includes('urn:ietf:params:oauth:grant-type:device_code'))?'input-edited checkbox-item-edited':'')&&show} type='Edited' target={target}/>
       </div>
       <Form.Text className="text-muted text-left label-checkbox" id="uri-small-desc">
       {t('form_device_code_info')}
@@ -1064,7 +1067,7 @@ export function ListInputArray(props){
           <FieldArray
             name={props.name}
             render={arrayHelpers =>(
-              [...props.values,...(props?.changed?.D?props?.changed?.D:[])].map((item,index)=>{
+              [...(props.values||[]),...(props?.changed?.D?props?.changed?.D:[])].map((item,index)=>{
                 if(!props.defaultValues.includes(item)){
                   return(
                     <React.Fragment key={index}>
@@ -1096,11 +1099,11 @@ function ListInputArrayInput1(props){
   };
   useEffect(()=>{
     if(props.changed){
-      if(props.changed.N.includes(props.item)){
+      if(props.changed.N?.includes(props.item)){
         setType('Added');
 
       }
-      else if(props.changed.D.includes(props.item)){
+      else if(props.changed.D?.includes(props.item)){
         setType('Deleted');
       }
       else{

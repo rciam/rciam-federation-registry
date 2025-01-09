@@ -24,7 +24,6 @@ function capitalWords(item) {
 }
 
 function calcDiff(old_state,new_state,config,diff){
-
     const deep_diff = diff(new_state,old_state);
     let changes = {}
     let multivalue_attributes = [];

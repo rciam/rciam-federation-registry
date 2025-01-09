@@ -592,7 +592,11 @@ const serviceValidationRules = (options, req) => {
       }
       return value;
     }),
-    body('*.scope').custom((value, { req, location, path }) => { return requiredOidc(value, req, path.match(/\[(.*?)\]/)[1], 'scope') }).withMessage('Service redirect_uri missing').if((value, { req, location, path }) => { return value && value.length > 0 && req.body[path.match(/\[(.*?)\]/)[1]].protocol === 'oidc' }).isArray({ min: 1 }).withMessage('Must be an array').custom((value, success = true) => {
+    body('*.scope').custom((value, { req, location, path }) => {
+      grant_types =req.body[path.match(/\[(.*?)\]/)[1]].grant_types;
+      return requiredOidc(value, req, path.match(/\[(.*?)\]/)[1], 'scope') || !grant_types?.length>0;
+    
+      }).withMessage('Service scope missing').if((value, { req, location, path }) => { return value && value.length > 0 && req.body[path.match(/\[(.*?)\]/)[1]].protocol === 'oidc' }).isArray({ min: 1 }).withMessage('Must be an array').custom((value, success = true) => {
       try {
         value.map((item, index) => {
           if (!item.match(reg.regScope)) {
