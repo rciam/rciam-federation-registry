@@ -118,9 +118,6 @@ function requiredDeployment(old_values,new_values){
       edits.post_logout_redirect_uris.N = new_values.post_logout_redirect_uris?.filter(x=>!old_values.post_logout_redirect_uris.includes(x));
       edits.post_logout_redirect_uris.D = old_values.post_logout_redirect_uris?.filter(x=>!new_values.post_logout_redirect_uris.includes(x));
 
-      
-
-
     }
     if(edits.scope&&edits.scope.N.length===0&&edits.scope.D.length===0){
       delete edits.scope;
