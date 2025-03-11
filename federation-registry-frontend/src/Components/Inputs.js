@@ -1232,7 +1232,7 @@ export  function LogoInput(props){
           </Form.Text>
           :''}
       <MyOverLay show={props.changed&&show?'string':null} type='Edited' target={target}/>
-      {props.warning&&!props.error?<div className="warning-message"> <FontAwesomeIcon icon={faExclamationTriangle}/>Warning: Image could not be loaded, make sure the url points to an image resourse</div>:null}
+      {props.warning&&!props.error?<div className="warning-message"> <FontAwesomeIcon icon={faExclamationTriangle}/>{t("logo_warning")}</div>:null}
       {props.error && props.touched ? (typeof(props.error)==='string')?(<div className="error-message">{props.error}</div>):(<div className="error-message">{t('input_image_error')}</div>):null}
       <FormikConsumer>
         {({ validationSchema, validate, onSubmit, ...rest }) => (
