@@ -45,7 +45,7 @@ const rejectPetition = (req,res,next,db) => {
 
 const changesPetition = (req,res,next,db) => {
   db.tx('approve-with-changes-petition',async t =>{
-        await t.petition.get(req.params.id,req.params.tenant).then(async petition =>{
+        await t.petition.get(req.params.id,req.params.tenant,req.user).then(async petition =>{
           if(petition){
             petition.service_data.type = petition.meta_data.type;
             petition.service_data.service_id = petition.meta_data.service_id;
@@ -99,7 +99,7 @@ const requestReviewPetition = (req,res,next,db) => {
               sendMail({subject:'Review Requested',service_name:res.service_data.service_name,tenant:req.params.tenant,url:"/services/"+service_id+"/requests/"+req.params.id+"/review"},'request-reviewer-notification.html',users);
             });
           }else{
-            await t.petition.get(req.params.id,req.params.tenant).then(res=>{
+            await t.petition.get(req.params.id,req.params.tenant,req.user).then(res=>{
                 sendMail({subject:'Review Requested',service_name:res.service_data.service_name,tenant:req.params.tenant,url:"/requests/"+req.params.id+"/review"},'request-reviewer-notification.html',users);
             });
           }
@@ -117,7 +117,7 @@ const requestReviewPetition = (req,res,next,db) => {
 const approvePetition = (req,res,next,db) => {
   db.tx('approve-petition',async t =>{
     let service_id;
-    await t.petition.get(req.params.id,req.params.tenant).then(async petition =>{
+    await t.petition.get(req.params.id,req.params.tenant,req.user).then(async petition =>{
       if(petition){
         petition.service_data.tenant = req.params.tenant;
         if(petition.meta_data.type==='delete'){
@@ -178,7 +178,7 @@ const getOpenPetition = (req,res,next,db) =>{
   db.tx('get-open-petition',async t =>{
   if(req.user.role.actions.includes('get_petition')){
     
-      await t.petition.get(req.params.id,req.params.tenant).then(async petition => {
+      await t.petition.get(req.params.id,req.params.tenant,req.user).then(async petition => {
          if(petition){
             await t.service_petition_details.belongsToRequester(req.params.id,req.user.sub).then(owned=>{
               return res.status(200).json({petition:petition.service_data,metadata:{...petition.meta_data,owned:owned}});  
@@ -193,7 +193,7 @@ const getOpenPetition = (req,res,next,db) =>{
     
    }
    else if(req.user.role.actions.includes('get_own_petition')){
-     await t.petition.getOwn(req.params.id,req.user.sub,req.params.tenant).then(petition => {
+     await t.petition.getOwn(req.params.id,req.params.tenant,req.user).then(petition => {
        if(petition){
           res.status(200).json({petition:petition.service_data,metadata:{...petition.meta_data,owned:true}});
        }
@@ -214,7 +214,7 @@ const getOpenPetition = (req,res,next,db) =>{
 const getPetition = (req,res,next,db) => {
   if(req.user.role.actions.includes('get_petition')){
     db.tx('get-open-petition',async t =>{
-      await t.petition.getOld(req.params.id,req.user.sub,req.params.tenant).then(async petition =>{
+      await t.petition.getOld(req.params.id,req.params.tenant,req.user).then(async petition =>{
         if(petition){
           await t.service_petition_details.belongsToRequester(req.params.id,req.user.sub).then(owned=>{
             res.status(200).json({petition:petition.service_data,metadata:{...petition.meta_data,owned:  owned}});
@@ -228,7 +228,7 @@ const getPetition = (req,res,next,db) => {
     
   }
   else if (req.user.role.actions.includes('get_own_petition')){
-    db.petition.getOwnOld(req.params.id,req.user.sub,req.params.tenant).then(petition =>{
+    db.petition.getOwnOld(req.params.id,req.params.tenant,req.user).then(petition =>{
       if(petition){
         res.status(200).json({petition:petition.service_data,metadata:{...petition.meta_data,owned:true}});
       }
