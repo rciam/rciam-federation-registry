@@ -39,6 +39,8 @@ export const NotFound = (props) => {
   const history = useHistory();
   const location = useLocation();
   const [close,setClose] = useState(false);
+  // eslint-disable-next-line
+  const { t, i18n } = useTranslation();
   const [tenant] = useContext(tenantContext);
   const handleClose = () => {
     setClose(true);
@@ -55,7 +57,7 @@ export const NotFound = (props) => {
         return(
           <Modal show={props.notFound||props.notAuthorised||close} onHide={handleClose}>
             <Modal.Header >
-              <Modal.Title>{props.notFound?"Resourse requested was not found":props.notAuthorised?"Resourse not authorised":null}</Modal.Title>
+              <Modal.Title>{props.notFound?t('resource_not_found'):props.notAuthorised?t("resource_not_authorized"):null}</Modal.Title>
             </Modal.Header>
             <Modal.Footer>
               <Button variant="secondary" onClick={handleClose}>

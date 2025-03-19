@@ -14,10 +14,11 @@ class PetitionRepository {
   }
 
 
-  async get(id,tenant){
+  async get(id,tenant,user){
     return this.db.oneOrNone(sql.getPetition,{
       id:+id,
-      tenant:tenant
+      tenant:tenant,
+      hide_comments:!user.role.actions.includes('review_petition')
     }).then(result => {
       if(result){
         return fixPetition(result);
@@ -33,26 +34,27 @@ class PetitionRepository {
       id:+petition_id
     })
   }
-  async getOwnOld(id,sub,tenant){
+  async getOwnOld(id,tenant,user){
     return this.db.oneOrNone(sql.getOldOwnPetition,{
-      sub:sub,
+      sub:user.sub,
       id:+id,
-      tenant:tenant
+      tenant:tenant,
+      hide_comments:!user.role.actions.includes('review_petition')
     }).then(result => {
       if(result){
         return fixPetition(result);
-
       }
       else {
         return null
       }
     })
   }
-  async getOld(id,sub,tenant){
+  async getOld(id,tenant,user){
     return this.db.oneOrNone(sql.getOldPetition,{
-      sub:sub,
+      sub:user.sub,
       id:+id,
-      tenant:tenant
+      tenant:tenant,
+      hide_comments:!user.role.actions.includes('review_petition')
     }).then(result => {
       if(result){
         return fixPetition(result);
@@ -74,11 +76,12 @@ class PetitionRepository {
     })
   }
 
-  async getOwn(id,sub,tenant){
+  async getOwn(id,tenant,user){
     return this.db.oneOrNone(sql.getOwnPetition,{
-      sub:sub,
+      sub:user.sub,
       id:+id,
-      tenant:tenant
+      tenant:tenant,
+      hide_comments:!user.role.actions.includes('review_petition')
     }).then(result => {
       if(result){
         return fixPetition(result);
@@ -122,11 +125,11 @@ class PetitionRepository {
         });
     }
 
-  async update(newState,targetId,tenant){
+  async update(newState,targetId,tenant,req){
     try{
       return this.db.tx('update-service',async t =>{
         let queries = [];
-        return t.petition.get(targetId,tenant).then(async oldState=>{
+        return t.petition.get(targetId,tenant,req.user).then(async oldState=>{
           if(oldState){
             let edits = calcDiff(oldState.service_data,newState,tenant);
             if(Object.keys(edits.details).length !== 0){

@@ -1,4 +1,8 @@
-SELECT  json_agg(json_build_object('outdated',foo.outdated,'service_id',foo.service_id,'petition_id',foo.petition_id,'service_name',foo.service_name,'service_description',foo.service_description,'logo_uri',foo.logo_uri,'integration_environment',foo.integration_environment,'owned',foo.owned,'status',foo.status,'type',foo.type,'state',foo.state,'group_manager',foo.group_manager,'notification',foo.notification,'comment',foo.comment,'group_id',foo.group_id,'deployment_type',foo.deployment_type,'last_edited',foo.last_edited
+SELECT  json_agg(json_build_object('outdated',foo.outdated,'service_id',foo.service_id,'petition_id',foo.petition_id,'service_name',foo.service_name,'service_description',foo.service_description,'logo_uri',foo.logo_uri,'integration_environment',foo.integration_environment,'owned',foo.owned,'status',foo.status,'type',foo.type,'state',foo.state,'group_manager',foo.group_manager,'notification',foo.notification,'comment',
+        CASE 
+          WHEN ${hide_comments:raw} = TRUE AND foo.status = 'request_review' THEN NULL 
+          ELSE foo.comment 
+        END,'group_id',foo.group_id,'deployment_type',foo.deployment_type,'last_edited',foo.last_edited
               ,'country',foo.country,'website_url',foo.website_url,'organization_name',foo.organization_name
               ,'owners',
 							 (SELECT coalesce(json_agg((v.email)), '[]'::json)

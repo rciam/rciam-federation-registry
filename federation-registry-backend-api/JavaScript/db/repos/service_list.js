@@ -46,8 +46,11 @@ class ServiceListRepository {
       get_tags_filter:'',
       service_id_filter:'',
       created_before_filter:'',
-      created_after_filter:''
+      created_after_filter:'',
+      hide_comments:''
     };
+
+    params.hide_comments = !req.user.role.actions.includes('review_petition'); 
 
     if(req.user.role.actions.includes('manage_tags')){
       params.get_tags_filter = ",'tags',foo.tags"

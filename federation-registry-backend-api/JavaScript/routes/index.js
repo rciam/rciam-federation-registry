@@ -805,7 +805,7 @@ router.put('/tenants/:tenant/petitions/:id',authenticate,formatPetition,formatSe
               service = service.service_data;
               service.service_id = req.body.service_id;
               service.type = 'delete';
-              await t.petition.update(service,req.params.id,req.params.tenant).then(resp=>{
+              await t.petition.update(service,req.params.id,req.params.tenant,req).then(resp=>{
                 if(resp.success){
                   res.status(200).json();
                 }
@@ -817,7 +817,7 @@ router.put('/tenants/:tenant/petitions/:id',authenticate,formatPetition,formatSe
           }).catch(err=>{next(err)});
         }
         else{
-          await t.petition.update(req.body,req.params.id,req.params.tenant).then(response=>{
+          await t.petition.update(req.body,req.params.id,req.params.tenant,req).then(response=>{
             if(response.success){
               res.status(200).end();
             }
