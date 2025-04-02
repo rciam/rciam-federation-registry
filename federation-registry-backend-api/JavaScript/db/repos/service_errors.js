@@ -12,7 +12,7 @@ class ServiceErrorsRepository {
         this.pgp = pgp;
         const table = new pgp.helpers.TableName({table: 'service_errors', schema: 'public'});
         // set-up all ColumnSet objects, if needed:
-        cs.insert = new pgp.helpers.ColumnSet(['error_description','error_code','service_id','date'],{table});
+        cs.insert = new pgp.helpers.ColumnSet(['error_description','error_code','service_id','date','proxy_deploy_success'],{table});
     }
 
     async add(errors){
@@ -28,7 +28,9 @@ class ServiceErrorsRepository {
     async archive(id){
       return this.db.oneOrNone('UPDATE service_errors SET archived=true WHERE service_id=$1 and archived=false RETURNING service_id',+id);
     }
-
+    async solveAllErrors(service_id) {
+        this.db.any('UPDATE service_errors SET solved=true WHERE service_id = $1', +service_id);
+    }
 
 }
 

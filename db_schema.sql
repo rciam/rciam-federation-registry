@@ -163,6 +163,8 @@ create table service_errors (
   error_code bigint,
   error_description VARCHAR(2048),
   archived BOOLEAN DEFAULT FALSE,
+  proxy_deploy_success BOOLEAN DEFAULT FALSE,
+  solved BOOLEAN DEFAULT FALSE,
   PRIMARY KEY (service_id,date),
   FOREIGN KEY (service_id) REFERENCES service_details(id) ON DELETE CASCADE
 );
