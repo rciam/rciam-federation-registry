@@ -96,12 +96,11 @@
 }
 
 .ssp-footer__item__powered {
-    margin-top: 0.5rem;
+    padding:0.2rem;
     position: relative;
 }
 
 .footer_link_container {
-    height: 100%;
     float:right;
 }
 

@@ -34,7 +34,13 @@ code {
 #footer .ssp-footer__item  {
   min-height: 40px;
   font-size: 12px;
-  vertical-align: bottom;
+  vertical-align: bottom;      
+}
+
+.ssp-footer__item {
+  display: flex!important;
+  justify-content: center!important;  
+  align-items: center!important;
 }
 
 .flex-container {
