@@ -661,6 +661,10 @@ const CopyService = (props)=> {
         }
         }).then(response=> {
         if(response){
+
+          // Updated by Jan Pavlíček (xpavli95@stud.fit.vutbr.cz) - updated the condition for clearing the service identifiers
+          // with props.clear_identifier signal
+          // Also added missing clearing of client id
           response.service.integration_environment=props.integration_environment;
           if(props.sameEnvironment || props.clear_identifier){
             delete response.service.entity_id;

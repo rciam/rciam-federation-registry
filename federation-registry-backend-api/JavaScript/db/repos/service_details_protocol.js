@@ -54,6 +54,7 @@ class ServiceDetailsProtocolRepository {
       })
     }
 
+    // Added by Jan Pavlíček (xpavli95@stud.fit.vutbr.cz) to check OIDC client id uniqueness
     async checkClientIdAllEnvironments(client_id,service_id,petition_id,tenant){
         const query =  this.pgp.as.format(sql.checkClientIdAllEnvironments,{
             client_id:client_id,
@@ -79,6 +80,7 @@ class ServiceDetailsProtocolRepository {
       })
     }
 
+    // Added by Jan Pavlíček (xpavli95@stud.fit.vutbr.cz) to check SAML entity id uniqueness
     async checkEntityIdAllEnvironments(entity_id,service_id,petition_id,tenant){
         return this.db.any(sql.checkEntityIdAllEnvironments,{
             entity_id:entity_id,

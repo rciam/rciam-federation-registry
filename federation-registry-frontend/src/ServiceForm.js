@@ -47,7 +47,8 @@ let integrationEnvironment;
 let application_type;
 let timeouts = {};
 
-
+// Updated by Jan Pavlíček (xpavli95@stud.fit.vutbr.cz) - to show move dialog instead of copy dialog when clicking
+// the button next to the integration environments box.
 const ServiceForm = (props) => {
   let serviceMoveEnabled = false;
   if ('merge_environments_on_deploy' in config && config.merge_environments_on_deploy) {

@@ -86,14 +86,15 @@ class ServiceStateRepository {
           updateState.push({id:decoded_message.id,state:decoded_message.state,outdated:false});
           if(deployed&&decoded_message.state!=='error'){
             ids.push(decoded_message.id);
+            // Added by Jan Pavlíček (xpavli95@stud.fit.vutbr.cz) for solving all previous deployment errors
             batch_queries.push(t.service_errors.solveAllErrors(decoded_message.id))
           }
           if(decoded_message.state==='error'){
 
+            // Added by Jan Pavlíček (xpavli95@stud.fit.vutbr.cz)
             // if there are more deployments than to proxy (e.g. to perun) and proxy deployment pass this indicates,
             // that deployment agent should skip the proxy deployment when retry
             let proxy_deploy_success = !!decoded_message.proxy_deploy_success;
-
             errors.push({
               date:date,
               service_id:decoded_message.id,

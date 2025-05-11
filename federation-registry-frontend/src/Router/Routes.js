@@ -59,7 +59,9 @@ const Routes = (props) => {
         </div>
         <UserInfo user={props.user} />
       </ProtectedRoute>
-      {config.merge_environments_on_deploy && (
+      {// Added by Jan Pavlíček (xpavli95@stud.fit.vutbr.cz) - new route for moving services between integration
+        // environments
+        config.merge_environments_on_deploy && (
         <ProtectedRoute user={props.user} path="/:tenant_name/services/:service_id/move">
           <div className="links">
             <Link to={"/" + tenant?.name + "/home"}>{props.t('link_home')}</Link>
@@ -80,6 +82,8 @@ const Routes = (props) => {
           <span className="link-seperator">/</span>
           New Service
         </div>
+          {/* Updated by Jan Pavlíček (xpavli95@stud.fit.vutbr.cz) - passing the clear_identifier signal to clear
+          identifiers when copying services */}
           <CopyService user={props.user} clear_identifier={config.merge_environments_on_deploy}/>
         </ProtectedRoute>
       )

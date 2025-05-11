@@ -6,6 +6,7 @@ import Button from 'react-bootstrap/Button';
 import { Translation } from 'react-i18next';
 import {tenantContext} from '../context.js';
 
+// AUTHOR Jan Pavlíček (xpavli95@stud.fit.vutbr.cz) - the dialog for moving services between ingeration envrionments
 
 //import Select from 'react-select';
 const MoveDialog = (props) => {

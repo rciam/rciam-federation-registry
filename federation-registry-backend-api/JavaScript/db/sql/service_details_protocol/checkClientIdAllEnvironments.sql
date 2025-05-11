@@ -1,3 +1,5 @@
+-- AUTHOR Jan Pavlíček (xpavli95@stud.fit.vutbr.cz)
+
 SELECT t1.id as service_id
 FROM
 	(SELECT id FROM service_details_oidc WHERE client_id=${client_id} and id!=${service_id})  as t1

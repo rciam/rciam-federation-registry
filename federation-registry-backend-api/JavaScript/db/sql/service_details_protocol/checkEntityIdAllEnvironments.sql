@@ -1,3 +1,5 @@
+-- AUTHOR Jan Pavlíček (xpavli95@stud.fit.vutbr.cz)
+
 SELECT t1.id as service_id
 FROM
 	(SELECT id FROM service_details_saml WHERE entity_id=${entity_id} and id!=${service_id})  as t1

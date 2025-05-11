@@ -880,6 +880,8 @@ export function SelectEnvironment(props) {
         </Field>
 
         {props.copybuttonActive ? (
+            // Updated by Jan Pavlíček (xpavli95@stud.fit.vutbr.cz) to show move instead of copy text when merging of integration
+            // environments is enabled
           <OverlayTrigger
             placement="right"
             overlay={

@@ -932,6 +932,8 @@ const serviceValidationRules = (options, req) => {
         let tenant = options.tenant_param
           ? req.params.tenant
           : req.body[path.match(/\[(.*?)\]/)[1]].tenant;
+        // Upadted by Jan Pavlíček (xpavli95@stud.fit.vutbr.cz) to check availability of entity id when merging of integration
+        // environments is enabled.
         if ('merge_environments_on_deploy' in config && config.merge_environments_on_deploy) {
           return db.service_details_protocol
             .checkClientIdAllEnvironments(

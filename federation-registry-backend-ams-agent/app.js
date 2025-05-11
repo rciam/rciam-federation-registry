@@ -190,6 +190,8 @@ async function run() {
           }
           let messages = [{"attributes":{},"data": Buffer.from(JSON.stringify(service.json)).toString("base64")}];
 
+          // Updated by Jan Pavlíček (xpavli95@stud.fit.vutbr.cz) to use merged propagation environment from the configuration when
+          // merging of integration environments is enabled
           let propagation_integration_environment = service.json.integration_environment;
           if ('merge_environments_on_deploy' in config && config.merge_environments_on_deploy) {
             propagation_integration_environment = config.merged_integration_environment_name;

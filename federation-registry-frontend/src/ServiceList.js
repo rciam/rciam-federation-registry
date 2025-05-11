@@ -881,6 +881,8 @@ const ServiceList= (props)=> {
     )
   }
 
+// Upadted by Jan Pavlíček (xpavli95@stud.fit.vutbr.cz) - to include action for moving the service between
+// integration environments in the action menu when merging of integration environments is enabled.
 function TableItem(props) {
 
   let serviceMoveEnabled = false;
