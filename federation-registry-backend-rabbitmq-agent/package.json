@@ -1,0 +1,24 @@
+{
+  "name": "federation-registry-rabbitmq-agent",
+  "version": "1.0.0",
+  "description": "Agent that handles communication between Express backend and RabbitJMQ for the RCIAM Federation Registry project",
+  "main": "app.js",
+  "homepage": "https://github.com/rciam/rciam-federation-registry",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:rciam/rciam-federation-registry.git"
+  },
+  "keywords": [
+    "rabbitmq",
+    "service-registry"
+  ],
+  "engines": {
+    "node": ">=7.6"
+  },
+  "dependencies": {
+    "amqplib": "^0.10.8",
+    "axios": "^0.21.4",
+    "base-64": "^0.1.0",
+    "dotenv": "^8.6.0"
+  }
+}
