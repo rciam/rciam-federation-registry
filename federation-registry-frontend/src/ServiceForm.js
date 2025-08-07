@@ -1436,8 +1436,8 @@ const ServiceForm = (props) => {
                               onBlur={handleBlur}
                               changed={props.changes ? props.changes.scope : null}
                             />
-                          </InputRow>
-                          <InputRow moreInfo={tenant.form_config.more_info.redirect_uris} title={t('form_redirect_uris')} required={values.grand_types&&(values.grant_types.includes("implicit") || values.grant_types.includes("authorization_code"))} error={typeof (errors.redirect_uris) === 'string' ? errors.redirect_uris : null} touched={touched.redirect_uris} description={t('form_redirect_uris_desc')}>
+                          </InputRow> 
+                          <InputRow moreInfo={tenant.form_config.more_info.redirect_uris} title={t('form_redirect_uris')} required={values?.grant_types?.includes("implicit") || values?.grant_types?.includes("authorization_code")} error={typeof (errors.redirect_uris) === 'string' ? errors.redirect_uris : null} touched={touched.redirect_uris} description={t('form_redirect_uris_desc')}>
                             <ListInput
                               values={values.redirect_uris}
                               placeholder={t('form_type_prompt')}
