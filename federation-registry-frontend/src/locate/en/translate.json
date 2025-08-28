@@ -227,6 +227,8 @@
     "invitation_landing_page_message":"You were invited to manage a service, please login to Federation Registry to view your invitation.",
     "logo_warning":"Warning: Image could not be loaded, make sure the url points to an image resourse",
     "resource_not_found":"Resource requested was not found",
-    "resource_not_authorized":"Resource not authorised"
+    "resource_not_authorized":"Resource not authorised",
+    "name": "Name",
+    "sub": "User Sub"
   }
 }
