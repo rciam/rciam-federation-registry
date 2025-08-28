@@ -44,9 +44,10 @@ code {
 }
 
 .flex-container {
+  width:100%;
   display:flex;
   flex:1 1;
-  margin: 0 2em;
+  padding: 0 2em;
 }
 
 .copyright-funding-footer {
@@ -1591,6 +1592,14 @@ html:lang(gr) .home-container h1 {
 
 .groups-table button:nth-child(2) {
   padding:0.1rem 0.4rem 0.1rem 0.4rem;
+}
+
+.table-responsive-container {
+  width: 100%;
+  overflow-x: auto;
+}
+.table-responsive-container table {
+  min-width: 600px; /* or whatever minimum width you want */
 }
 .group_invite_row {
   margin:0;
