@@ -71,58 +71,84 @@ async function setupRabbitMQChannels() {
 }
 
 (async () => {
-  try {
-    await setupRabbitMQChannels();
+  let currentDelay = 2000;  // 2 seconds
+  const maxDelay = 30000;   // 30 seconds
 
-    const response = await axios.get(
-      config.express_url + "/agent/get_agents",
-      options
-    );
-    const agents = response.data.agents;
+  while (true) {
+    try {
+      await setupRabbitMQChannels();
 
-    let tenants = [];
-    for (let i = 0; i < agents.length; i++) {
-      let agent = agents[i];
-      let currentQ =
-        config.env +
-        "_" +
-        agent.tenant +
-        "_" +
-        agent.entity_type +
-        "_" +
-        agent.type +
-        "_" +
-        agent.integration_environment;
+      const response = await axios.get(
+        config.express_url + "/agent/get_agents",
+        options
+      );
+      const agents = response.data.agents;
 
-      await ensureQueueExists(currentQ, publishChannel);
+      let tenants = [];
+      for (let i = 0; i < agents.length; i++) {
+        let agent = agents[i];
+        let currentQ =
+          config.env +
+          "_" +
+          agent.tenant +
+          "_" +
+          agent.entity_type +
+          "_" +
+          agent.type +
+          "_" +
+          agent.integration_environment;
 
-      if (!tenants.includes(agent.tenant)) {
-        tenants.push(agent.tenant);
-        queueNames[agent.tenant] = {};
-      }
-      if (!queueNames[agent.tenant][agent.entity_type]) {
-        queueNames[agent.tenant][agent.entity_type] = {};
-      }
-      if (!queueNames[agent.tenant][agent.entity_type][agent.entity_protocol]) {
-        queueNames[agent.tenant][agent.entity_type][agent.entity_protocol] = {};
-      }
-      if (
-        !queueNames[agent.tenant][agent.entity_type][agent.entity_protocol][
-          agent.integration_environment
-        ]
-      ) {
+        await ensureQueueExists(currentQ, publishChannel);
+
+        if (!tenants.includes(agent.tenant)) {
+          tenants.push(agent.tenant);
+          queueNames[agent.tenant] = {};
+        }
+        if (!queueNames[agent.tenant][agent.entity_type]) {
+          queueNames[agent.tenant][agent.entity_type] = {};
+        }
+        if (
+          !queueNames[agent.tenant][agent.entity_type][agent.entity_protocol]
+        ) {
+          queueNames[agent.tenant][agent.entity_type][
+            agent.entity_protocol
+          ] = {};
+        }
+        if (
+          !queueNames[agent.tenant][agent.entity_type][agent.entity_protocol][
+            agent.integration_environment
+          ]
+        ) {
+          queueNames[agent.tenant][agent.entity_type][agent.entity_protocol][
+            agent.integration_environment
+          ] = [];
+        }
         queueNames[agent.tenant][agent.entity_type][agent.entity_protocol][
           agent.integration_environment
-        ] = [];
+        ] = currentQ;
       }
-      queueNames[agent.tenant][agent.entity_type][agent.entity_protocol][
-        agent.integration_environment
-      ] = currentQ;
-    }
 
-    var intervalID = setInterval(run, 10000);
-  } catch (err) {
-    console.error("Error initializing app:", err);
+      console.log("App initialization successful.");
+      setInterval(run, 10000);
+      break;
+
+    } catch (err) {
+      console.error(`Error initializing app: ${err.message}`);
+      
+      if (connection) {
+        try {
+          await connection.close(); 
+        } catch (closeErr) {
+           // Ignore close errors
+        }
+      }
+
+      console.log(`Retrying in ${currentDelay / 1000} seconds...`);
+      
+      await sleep(currentDelay);
+
+      currentDelay = Math.min(currentDelay * 2, maxDelay);
+    }
   }
 })();
 
