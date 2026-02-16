@@ -22,6 +22,8 @@ let setStateTask;
 let ResultMessageBatch = new ResultMessageBatchClass();
 let sendResultTask;
 let sendResultTaskRunning = false;
+let isReconnecting = false;
+let runIntervalTask = null;
 
 const options = {
   headers: {
@@ -41,16 +43,39 @@ async function ensureQueueExists(queueName, channel) {
   await channel.assertQueue(queueName, { durable: true });
 }
 
-async function setupRabbitMQChannels() {
+async function createConnection() {
+  console.log("Attempting to connect to RabbitMQ...");
   connection = await amqp.connect(rabbitConnUrl);
 
-  publishChannel = await connection.createChannel();
-  consumeChannel = await connection.createChannel();
+  connection.on("error", (err) => {
+    console.error("[AMQP] Connection error:", err.message);
+    scheduleRestart();
+  });
+  connection.on("close", () => {
+    console.error("[AMQP] Connection closed.");
+    scheduleRestart();
+  });
+}
 
-  await ensureQueueExists(
-    config.rabbitmq_update_status_q,
-    consumeChannel
-  );
+async function createChannel() {
+  const channel = await connection.createChannel();
+  channel.on("error", (err) => {
+    console.error("[AMQP] Publish channel error:", err.message);
+  });
+  channel.on("close", () => {
+    console.error("[AMQP] Publish channel closed! Restarting...");
+    scheduleRestart();
+  });
+  return channel;
+}
+
+async function setupRabbitMQChannels() {
+  await createConnection();
+
+  publishChannel = await createChannel();
+  consumeChannel = await createChannel();
+
+  await ensureQueueExists(config.rabbitmq_update_status_q, consumeChannel);
   const callback = async function callback(msg) {
     if (msg === null) return;
     try {
@@ -68,96 +93,103 @@ async function setupRabbitMQChannels() {
     }
   };
   consumeChannel.consume(config.rabbitmq_update_status_q, callback);
+  console.log("RabbitMQ Connected & Channels Ready.");
 }
 
-(async () => {
-  let currentDelay = 2000;  // 2 seconds
-  const maxDelay = 30000;   // 30 seconds
+async function setupQueues() {
+  const response = await axios.get(
+    config.express_url + "/agent/get_agents",
+    options,
+  );
+  const agents = response.data.agents;
 
-  while (true) {
-    try {
-      await setupRabbitMQChannels();
+  let tenants = [];
+  for (let i = 0; i < agents.length; i++) {
+    let agent = agents[i];
+    let currentQ =
+      config.env +
+      "_" +
+      agent.tenant +
+      "_" +
+      agent.entity_type +
+      "_" +
+      agent.type +
+      "_" +
+      agent.integration_environment;
 
-      const response = await axios.get(
-        config.express_url + "/agent/get_agents",
-        options
-      );
-      const agents = response.data.agents;
+    await ensureQueueExists(currentQ, publishChannel);
 
-      let tenants = [];
-      for (let i = 0; i < agents.length; i++) {
-        let agent = agents[i];
-        let currentQ =
-          config.env +
-          "_" +
-          agent.tenant +
-          "_" +
-          agent.entity_type +
-          "_" +
-          agent.type +
-          "_" +
-          agent.integration_environment;
-
-        await ensureQueueExists(currentQ, publishChannel);
-
-        if (!tenants.includes(agent.tenant)) {
-          tenants.push(agent.tenant);
-          queueNames[agent.tenant] = {};
-        }
-        if (!queueNames[agent.tenant][agent.entity_type]) {
-          queueNames[agent.tenant][agent.entity_type] = {};
-        }
-        if (
-          !queueNames[agent.tenant][agent.entity_type][agent.entity_protocol]
-        ) {
-          queueNames[agent.tenant][agent.entity_type][
-            agent.entity_protocol
-          ] = {};
-        }
-        if (
-          !queueNames[agent.tenant][agent.entity_type][agent.entity_protocol][
-            agent.integration_environment
-          ]
-        ) {
-          queueNames[agent.tenant][agent.entity_type][agent.entity_protocol][
-            agent.integration_environment
-          ] = [];
-        }
-        queueNames[agent.tenant][agent.entity_type][agent.entity_protocol][
-          agent.integration_environment
-        ] = currentQ;
-      }
-
-      console.log("App initialization successful.");
-      setInterval(run, 10000);
-      break;
-
-    } catch (err) {
-      console.error(`Error initializing app: ${err.message}`);
-      
-      if (connection) {
-        try {
-          await connection.close(); 
-        } catch (closeErr) {
-           // Ignore close errors
-        }
-      }
-
-      console.log(`Retrying in ${currentDelay / 1000} seconds...`);
-      
-      await sleep(currentDelay);
-
-      currentDelay = Math.min(currentDelay * 2, maxDelay);
+    if (!tenants.includes(agent.tenant)) {
+      tenants.push(agent.tenant);
+      queueNames[agent.tenant] = {};
     }
+    if (!queueNames[agent.tenant][agent.entity_type]) {
+      queueNames[agent.tenant][agent.entity_type] = {};
+    }
+    if (!queueNames[agent.tenant][agent.entity_type][agent.entity_protocol]) {
+      queueNames[agent.tenant][agent.entity_type][agent.entity_protocol] = {};
+    }
+    if (
+      !queueNames[agent.tenant][agent.entity_type][agent.entity_protocol][
+        agent.integration_environment
+      ]
+    ) {
+      queueNames[agent.tenant][agent.entity_type][agent.entity_protocol][
+        agent.integration_environment
+      ] = [];
+    }
+    queueNames[agent.tenant][agent.entity_type][agent.entity_protocol][
+      agent.integration_environment
+    ] = currentQ;
   }
-})();
+}
+
+function scheduleRestart() {
+  if (runIntervalTask) {
+    clearInterval(runIntervalTask);
+    runIntervalTask = null;
+  }
+  
+  if (connection) {
+    try { connection.close(); } catch (e) {}
+  }
+
+  console.log("[AMQP] Retrying in 5 seconds...");
+  setTimeout(() => {
+    isReconnecting = false;
+    startApp();
+  }, 5000);
+}
+
+async function startApp(){
+  if (isReconnecting) return;
+  isReconnecting = true;
+
+  try {
+    await setupRabbitMQChannels();
+    await setupQueues();
+  
+    if (runIntervalTask) clearInterval(runIntervalTask);
+    runIntervalTask = setInterval(run, 10000);
+  
+    isReconnecting = false;
+  
+    console.log("App initialization successful.");
+  } catch (err) {
+    console.error("[AMQP] Startup failed:", err.message);
+    scheduleRestart();
+  }
+
+}
+
+startApp();
 
 async function sendResult() {
   axios
     .post(
       config.express_url + "/ams/ingest",
       ResultMessageBatch.toJSON(),
-      publishResultsOptions
+      publishResultsOptions,
     )
     .then((res) => {
       if (res.status != 200) {
@@ -178,7 +210,7 @@ async function setServiceState() {
     .put(
       config.express_url + "/agent/set_services_state",
       setStateArray,
-      options
+      options,
     )
     .then((res) => {
       if (res.status != 200) {
@@ -266,10 +298,11 @@ async function handleSuccess(response) {
       queueNames[service.json.tenant].service[service.json.protocol][
         propagation_integration_environment
       ],
-      Buffer.from(JSON.stringify(msg))
+      Buffer.from(JSON.stringify(msg)),
+      { persistent: true },
     );
 
-    let log = {
+    const msgDetails = {
       topic:
         queueNames[service.json.tenant].service[service.json.protocol][
           propagation_integration_environment
@@ -281,6 +314,7 @@ async function handleSuccess(response) {
       deployment_type: service.json.deployment_type,
       protocol: service.json.protocol,
     };
+    console.debug(msgDetails);
     console.log("Successfully Pushed Message to RabbitMQ");
   }
   if (setStateArray.length > 0) {
