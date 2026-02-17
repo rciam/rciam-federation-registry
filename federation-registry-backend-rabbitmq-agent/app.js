@@ -23,6 +23,7 @@ let ResultMessageBatch = new ResultMessageBatchClass();
 let sendResultTask;
 let sendResultTaskRunning = false;
 let isReconnecting = false;
+let isShuttingDown = false;
 let runIntervalTask = null;
 
 const options = {
@@ -53,7 +54,9 @@ async function createConnection() {
   });
   connection.on("close", () => {
     console.error("[AMQP] Connection closed.");
-    scheduleRestart();
+    if(!isShuttingDown){
+      scheduleRestart();
+    }
   });
 }
 
@@ -160,6 +163,33 @@ function scheduleRestart() {
     startApp();
   }, 5000);
 }
+
+async function gracefulShutdown(signal) {
+  if (isShuttingDown) return;
+  isShuttingDown = true;
+  
+  console.log(`\nReceived ${signal}. Starting graceful shutdown...`);
+
+  if (runIntervalTask) clearInterval(runIntervalTask);
+  if (sendResultTask) clearInterval(sendResultTask);
+  if (setStateTask) clearInterval(setStateTask);
+
+  if (connection) {
+    try {
+      console.log("[AMQP] Closing connection...");
+      await connection.close();
+      console.log("[AMQP] Connection closed successfully.");
+    } catch (err) {
+      console.error("[AMQP] Error closing connection:", err.message);
+    }
+  }
+
+  console.log("All's done!");
+  process.exit(0);
+}
+
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 
 async function startApp(){
   if (isReconnecting) return;
