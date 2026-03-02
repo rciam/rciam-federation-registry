@@ -3,8 +3,8 @@ service_petition_details_oidc,service_petition_details_saml, service_petition_de
 service_details_saml,service_details,service_state,user_roles,role_actions,role_entitlements,groups,invitations,group_subs,tenant_deployer_agents,banner_alerts,deployment_tasks,service_errors,organizations,service_tags,tenants;
 
 create table tokens (
-  token VARCHAR(2048),
-  id_token VARCHAR(2048),
+  token VARCHAR(4096),
+  id_token VARCHAR(4096),
   code VARCHAR(1054) PRIMARY KEY
 );
 
