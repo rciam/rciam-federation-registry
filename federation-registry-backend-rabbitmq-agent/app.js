@@ -232,6 +232,7 @@ async function sendResult() {
     })
     .catch((err) => {
       console.log("Could not upload result, trying again...");
+      console.error("Error:", err);
     });
 }
 
@@ -252,6 +253,7 @@ async function setServiceState() {
     })
     .catch((err) => {
       console.log("Could not set state trying again...");
+      console.error("Error:", err);
     });
 }
 
