@@ -942,11 +942,13 @@ const ServiceForm = (props) => {
   const postApi = async (data) => {
     data = generateValues(data);
     let organization_id;
-    if (!tenant.form_config.extra_fields.organization.hide.includes(data.integration_environment)) {
+    let createOrganization;
+    if (!tenant.form_config.extra_fields.organization.hide.includes(data.integration_environment)&& data.organization_name && data.organization_url             ) {
+      createOrganization = true;
       organization_id = await addOrganization(data);
+      data.organization_id = organization_id;      
     }
-    if (organization_id || tenant.form_config.extra_fields.organization.hide.includes(data.integration_environment)) {
-      data.organization_id = organization_id;
+    if (organization_id || !createOrganization) {
       if (!props.type) {
         createNewPetition(data);
       }
