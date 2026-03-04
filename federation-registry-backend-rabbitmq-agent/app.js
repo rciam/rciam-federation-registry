@@ -223,7 +223,7 @@ async function sendResult() {
     )
     .then((res) => {
       if (res.status != 200) {
-        console.log("Could not send result, trying again...");
+        console.log("Could not send result to fedreg, trying again...");
       } else {
         ResultMessageBatch.clear();
         clearInterval(sendResultTask);
@@ -231,7 +231,7 @@ async function sendResult() {
       }
     })
     .catch((err) => {
-      console.log("Could not upload result, trying again...");
+      console.log("Could not upload result to fedreg, trying again...");
       console.error("Error:", err);
     });
 }
@@ -245,14 +245,14 @@ async function setServiceState() {
     )
     .then((res) => {
       if (res.status != 200) {
-        console.log("Could not set state trying again...");
+        console.log("Could not set service state trying again...");
       } else {
         setStateArray = [];
         clearInterval(setStateTask);
       }
     })
     .catch((err) => {
-      console.log("Could not set state trying again...");
+      console.log("Could not set service state trying again...");
       console.error("Error:", err);
     });
 }
