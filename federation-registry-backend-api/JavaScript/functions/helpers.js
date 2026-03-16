@@ -191,7 +191,7 @@ const sendNotif= (data,template_uri,user)=>{
     var template = hbs.compile(html);
     var htmlToSend = template(replacements);
     var mailOptions = {
-      from: tenant_config[data.tenant].sender+" Notifications <noreply@faai.grnet.gr>",
+      from: tenant_config[data.tenant].sender,
       to : user.email,
       subject : data.subject,
       html : htmlToSend
@@ -231,7 +231,7 @@ const sendInvitationMail = async (data) => {
         }
         var htmlToSend = template(replacements);
         var mailOptions = {
-          from: tenant_config[data.tenant].sender+" Notifications <noreply@faai.grnet.gr>",
+          from: tenant_config[data.tenant].sender,
           to : data.email,
           subject : 'Invitation to manage service',
           html : htmlToSend
@@ -277,7 +277,7 @@ const newMemberNotificationMail = (data,managers) => {
         await delay(400);
         var htmlToSend = template(replacements);
         var mailOptions = {
-          from: tenant_config[data.tenant].sender+" Notifications <noreply@faai.grnet.gr>",
+          from: tenant_config[data.tenant].sender,
           to : manager.email,
           subject : 'New member in your owners group',
           html : htmlToSend
@@ -374,7 +374,7 @@ const sendMail= (data,template_uri,users)=>{
         };
           var htmlToSend = template(replacements);
           var mailOptions = {
-            from:  tenant_config[data.tenant].sender+" Notifications <noreply@faai.grnet.gr>",
+            from:  tenant_config[data.tenant].sender,
             to : user.email,
             subject : data.subject,
             html : htmlToSend
