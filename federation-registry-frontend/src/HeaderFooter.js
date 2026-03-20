@@ -153,7 +153,7 @@ export const Footer =(props) =>{
         </Row>
         <Row>
           <div className='copyright-funding-footer'>
-            {tenant&&parse(tenant?.config?.footer_description)} | Powered by <a href="https://rciam.github.io/rciam-docs/" target="_blank" rel="noreferrer"> RCIAM</a>
+            {tenant&&parse(tenant?.config?.footer_description)}
           </div>
         </Row>
       </div>
