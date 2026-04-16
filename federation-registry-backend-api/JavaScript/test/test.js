@@ -861,7 +861,7 @@ describe('Service registry API Integration Tests', function() {
   });
   describe('# Deployer Agent',function(){
     it('should get configured deployer agents',function(done){
-      var req = request(server).get('/tenants/tenant_1/agents').set({Authorization: userToken});
+      var req = request(server).get('/tenants/tenant_1/agents').set('X-Api-Key',process.env.ADMIN_AUTH_KEY);
       req.set('Accept','application/json')
       .expect('Content-Type',/json/)
 
@@ -874,7 +874,7 @@ describe('Service registry API Integration Tests', function() {
       })
     });
     it('should delete an agent',function(done){
-      var req = request(server).delete('/tenants/tenant_1/agents/1').set({Authorization: userToken});
+      var req = request(server).delete('/tenants/tenant_1/agents/1').set('X-Api-Key',process.env.ADMIN_AUTH_KEY);
       req.set('Accept','application/json')
       .expect('Content-Type',/json/)
       .expect(200)
@@ -884,7 +884,7 @@ describe('Service registry API Integration Tests', function() {
       })
     });
     it('should update an agent',function(done){
-      var req = request(server).put('/tenants/tenant_1/agents/2').send(agents.put);
+      var req = request(server).put('/tenants/tenant_1/agents/2').set('X-Api-Key',process.env.ADMIN_AUTH_KEY).send(agents.put);
       req.set('Accept','application/json')
       .expect('Content-Type',/json/)
       .expect(200)
@@ -894,7 +894,7 @@ describe('Service registry API Integration Tests', function() {
       })
     });
     it('should get updated agent',function(done){
-      var req = request(server).get('/tenants/tenant_1/agents/2').send(agents.put);
+      var req = request(server).get('/tenants/tenant_1/agents/2').set('X-Api-Key',process.env.ADMIN_AUTH_KEY).send(agents.put);
       req.set('Accept','application/json')
       .expect('Content-Type',/json/)
       .expect(200)
@@ -906,7 +906,7 @@ describe('Service registry API Integration Tests', function() {
       })
     });
     it('should delete existing configuration',function(done){
-      var req = request(server).delete('/tenants/tenant_1/agents').set({Authorization: userToken});
+      var req = request(server).delete('/tenants/tenant_1/agents').set('X-Api-Key',process.env.ADMIN_AUTH_KEY);
       req.set('Accept','application/json')
       .expect('Content-Type',/json/)
       .expect(200)
@@ -916,7 +916,7 @@ describe('Service registry API Integration Tests', function() {
       })
     });
     it('should create new agents for tenant',function(done){
-      var req = request(server).post('/tenants/tenant_1/agents').send(agents.post);
+      var req = request(server).post('/tenants/tenant_1/agents').set('X-Api-Key',process.env.ADMIN_AUTH_KEY).send(agents.post);
       req.set('Accept','application/json')
       .expect('Content-Type',/json/)
       .expect(200)
@@ -926,7 +926,7 @@ describe('Service registry API Integration Tests', function() {
       })
     });
     it('should get configured deployer agents',function(done){
-      var req = request(server).get('/tenants/tenant_1/agents').set({Authorization: userToken});
+      var req = request(server).get('/tenants/tenant_1/agents').set('X-Api-Key',process.env.ADMIN_AUTH_KEY);
       req.set('Accept','application/json')
       .expect('Content-Type',/json/)
       .expect(200)
