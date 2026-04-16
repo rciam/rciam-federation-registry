@@ -432,19 +432,25 @@ router.get("/tenants/:tenant", (req, res, next) => {
 });
 
 // Get available tenants in the federation registry
-router.get("/tenants", (req, res, next) => {
-  try {
-    db.tenants.getInit().then((tenants) => {
-      if (tenants) {
-        res.status(200).json(tenants).end();
-      } else {
-        res.status(404).end();
-      }
-    });
-  } catch (err) {
-    next(err);
-  }
-});
+router.get(
+  "/tenants",
+  adminAuth,
+  tenantValidation(),
+  validate,
+  (req, res, next) => {
+    try {
+      db.tenants.getInit().then((tenants) => {
+        if (tenants) {
+          res.status(200).json(tenants).end();
+        } else {
+          res.status(404).end();
+        }
+      });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 //   Used to redirect users to authentication proxy
 router.get("/tenants/:tenant/login", (req, res) => {
@@ -534,12 +540,10 @@ router.get("/tokens/:code", (req, res, next) => {
                   } catch (err) {
                     console.log(err);
                   }
-                  res
-                    .status(200)
-                    .json({
-                      token: response.token,
-                      federation_logoutkey: response.id_token,
-                    });
+                  res.status(200).json({
+                    token: response.token,
+                    federation_logoutkey: response.id_token,
+                  });
                 }
               })
               .catch((err) => {
@@ -925,14 +929,12 @@ router.get("/tenants/:tenant/services/:id", authenticate, (req, res, next) => {
                           .getErrorByServiceId(req.params.id)
                           .then((service_error) => {
                             delete service_state.id;
-                            res
-                              .status(200)
-                              .json({
-                                service: service.service_data,
-                                owned: exists ? true : false,
-                                ...service_state,
-                                error: service_error,
-                              });
+                            res.status(200).json({
+                              service: service.service_data,
+                              owned: exists ? true : false,
+                              ...service_state,
+                              error: service_error,
+                            });
                           });
                       });
                   } else {
@@ -1604,38 +1606,53 @@ router.get("/agent/get_agents", amsAgentAuth, (req, res, next) => {
   }
 });
 
-router.get("/tenants/:tenant/agents", (req, res, next) => {
-  try {
-    db.deployer_agents.getTenantsAgents(req.params.tenant).then((result) => {
-      if (result) {
-        res.status(200).json({ agents: result });
-      } else {
-        res.status(404).send("No agents found.");
-      }
-    });
-  } catch (err) {
-    next(err);
-  }
-});
-
-router.get("/tenants/:tenant/agents/:id", (req, res, next) => {
-  try {
-    db.deployer_agents
-      .getById(req.params.tenant, req.params.id)
-      .then(async (result) => {
+router.get(
+  "/tenants/:tenant/agents",
+  adminAuth,
+  tenantValidation(),
+  validate,
+  (req, res, next) => {
+    try {
+      db.deployer_agents.getTenantsAgents(req.params.tenant).then((result) => {
         if (result) {
-          res.status(200).send(result);
+          res.status(200).json({ agents: result });
         } else {
-          res.status(404).send("No agent found");
+          res.status(404).send("No agents found.");
         }
       });
-  } catch (err) {
-    next(err);
-  }
-});
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+router.get(
+  "/tenants/:tenant/agents/:id",
+  adminAuth,
+  tenantValidation(),
+  validate,
+  (req, res, next) => {
+    try {
+      db.deployer_agents
+        .getById(req.params.tenant, req.params.id)
+        .then(async (result) => {
+          if (result) {
+            res.status(200).send(result);
+          } else {
+            res.status(404).send("No agent found");
+          }
+        });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 router.put(
   "/tenants/:tenant/agents/:id",
+  adminAuth,
+  tenantValidation(),
+  validate,
   putAgentValidation(),
   validate,
   (req, res, next) => {
@@ -1657,6 +1674,9 @@ router.put(
 
 router.post(
   "/tenants/:tenant/agents",
+  adminAuth,
+  tenantValidation(),
+  validate,
   postAgentValidation(),
   validate,
   (req, res, next) => {
@@ -1679,35 +1699,47 @@ router.post(
   },
 );
 
-router.delete("/tenants/:tenant/agents", (req, res, next) => {
-  try {
-    db.deployer_agents.deleteAll(req.params.tenant).then((result) => {
-      if (result) {
-        res.status(200).end();
-      } else {
-        res.status(404).send("No agents where found to delete");
-      }
-    });
-  } catch (err) {
-    next(err);
-  }
-});
-
-router.delete("/tenants/:tenant/agents/:id", (req, res, next) => {
-  try {
-    db.deployer_agents
-      .delete(req.params.tenant, req.params.id)
-      .then((result) => {
+router.delete(
+  "/tenants/:tenant/agents",
+  adminAuth,
+  tenantValidation(),
+  validate,
+  (req, res, next) => {
+    try {
+      db.deployer_agents.deleteAll(req.params.tenant).then((result) => {
         if (result) {
           res.status(200).end();
         } else {
-          res.status(404).send("No agent was found");
+          res.status(404).send("No agents where found to delete");
         }
       });
-  } catch (err) {
-    next(err);
-  }
-});
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+router.delete(
+  "/tenants/:tenant/agents/:id",
+  adminAuth,
+  tenantValidation(),
+  validate,
+  (req, res, next) => {
+    try {
+      db.deployer_agents
+        .delete(req.params.tenant, req.params.id)
+        .then((result) => {
+          if (result) {
+            res.status(200).end();
+          } else {
+            res.status(404).send("No agent was found");
+          }
+        });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
 
 // ----------------------------------------------------------
 // ******************** HELPER FUNCTIONS ********************
@@ -2132,11 +2164,9 @@ function asyncPetitionValidation(req, res, next) {
                             if (available) {
                               next();
                             } else {
-                              res
-                                .status(422)
-                                .send({
-                                  error: "Protocol id is not available",
-                                });
+                              res.status(422).send({
+                                error: "Protocol id is not available",
+                              });
                               customLogger(
                                 req,
                                 res,
@@ -2159,13 +2189,11 @@ function asyncPetitionValidation(req, res, next) {
                         return res.end();
                       }
                     } else {
-                      res
-                        .status(403)
-                        .send({
-                          error:
-                            "Could not find petition with id: " +
-                            req.body.service_id,
-                        });
+                      res.status(403).send({
+                        error:
+                          "Could not find petition with id: " +
+                          req.body.service_id,
+                      });
                       customLogger(
                         req,
                         res,
@@ -2176,12 +2204,10 @@ function asyncPetitionValidation(req, res, next) {
                     }
                   });
               } else {
-                res
-                  .status(403)
-                  .send({
-                    error:
-                      "Cannot create new petition because there is an open petition existing for target service",
-                  });
+                res.status(403).send({
+                  error:
+                    "Cannot create new petition because there is an open petition existing for target service",
+                });
                 customLogger(
                   req,
                   res,
@@ -2264,11 +2290,9 @@ function asyncPetitionValidation(req, res, next) {
                   });
               }
             } else {
-              res
-                .status(403)
-                .send({
-                  error: "Could not edit petition with id: " + req.params.id,
-                });
+              res.status(403).send({
+                error: "Could not edit petition with id: " + req.params.id,
+              });
               customLogger(
                 req,
                 res,
