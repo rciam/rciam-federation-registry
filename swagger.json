@@ -55,17 +55,29 @@
     {
       "name": "Service Tags",
       "description": "Managing Service Rags"
+    },
+    {
+      "name": "Tenants",
+      "description": "Tenant configuration and registry tenants"
+    },
+    {
+      "name": "Organizations",
+      "description": "Manage organizations"
+    },
+    {
+      "name": "Notifications",
+      "description": "Notification endpoints"
+    },
+    {
+      "name": "Utilities",
+      "description": "Utility endpoints"
     }
   ],
-  "schemes": [
-    "https"
-  ],
+  "schemes": ["https"],
   "paths": {
     "/tenants/{name}/tags": {
       "get": {
-        "tags": [
-          "Service Tags"
-        ],
+        "tags": ["Service Tags"],
         "summary": "Get all tags",
         "description": "Get all available tags for a given tenant",
         "parameters": [
@@ -105,9 +117,7 @@
     },
     "/tenants/{name}/tags/services/{id}": {
       "get": {
-        "tags": [
-          "Service Tags"
-        ],
+        "tags": ["Service Tags"],
         "summary": "Get all tags of a service",
         "description": "Get all available tags attached to a service",
         "parameters": [
@@ -145,9 +155,7 @@
         }
       },
       "post": {
-        "tags": [
-          "Service Tags"
-        ],
+        "tags": ["Service Tags"],
         "summary": "Create new tags for a service",
         "description": "Create new tags for a service",
         "parameters": [
@@ -190,9 +198,7 @@
         }
       },
       "delete": {
-        "tags": [
-          "Service Tags"
-        ],
+        "tags": ["Service Tags"],
         "summary": "Delete service tags",
         "description": "Delete tags for a service",
         "parameters": [
@@ -237,9 +243,7 @@
     },
     "/tenants/{name}/login": {
       "get": {
-        "tags": [
-          "Authentication"
-        ],
+        "tags": ["Authentication"],
         "summary": "Redirects Users to Proxy",
         "description": "This route redirects user to the tenants proxy authentication server where user is prompted to choose an identity provider and login.",
         "operationId": "login",
@@ -267,9 +271,7 @@
     },
     "/tokens/{code}": {
       "get": {
-        "tags": [
-          "Authentication"
-        ],
+        "tags": ["Authentication"],
         "summary": "Exchange one time code with access token",
         "description": "Used to get access token issued from the authentication proxy on login.",
         "operationId": "getToken",
@@ -306,9 +308,7 @@
     },
     "/tenants/{name}/user": {
       "get": {
-        "tags": [
-          "User"
-        ],
+        "tags": ["User"],
         "summary": "Returns user and role info ",
         "description": "",
         "operationId": "getUser",
@@ -344,9 +344,7 @@
     },
     "/callback/{tenant_name}": {
       "get": {
-        "tags": [
-          "Authentication"
-        ],
+        "tags": ["Authentication"],
         "summary": "Redirects user back to react app after login",
         "description": "This route handles redirects from the authentication proxy following Authorization Code Flow, saves user to db links access_token to a one time code and then redirects to react app sending also the code.",
         "operationId": "callback",
@@ -371,18 +369,12 @@
     },
     "/tenants/{name}/organizations": {
       "post": {
-        "tags": [
-          "Organizations"
-        ],
+        "tags": ["Organizations"],
         "summary": "Add Organization",
         "description": "",
         "operationId": "postOrganization",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
         "parameters": [
           {
             "in": "path",
@@ -422,18 +414,12 @@
         ]
       },
       "get": {
-        "tags": [
-          "Organizations"
-        ],
+        "tags": ["Organizations"],
         "summary": "Get organizations",
         "description": "",
         "operationId": "getOrganizations",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
         "parameters": [
           {
             "in": "path",
@@ -486,18 +472,12 @@
     },
     "/tenants/{name}/petitions": {
       "post": {
-        "tags": [
-          "Petitions"
-        ],
+        "tags": ["Petitions"],
         "summary": "Create new petition",
         "description": "",
         "operationId": "addPetition",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
         "parameters": [
           {
             "in": "path",
@@ -539,18 +519,12 @@
     },
     "/tenants/{name}/petitions/{id}": {
       "get": {
-        "tags": [
-          "Petitions"
-        ],
+        "tags": ["Petitions"],
         "summary": "Get petition",
         "description": "",
         "operationId": "getPetition",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
         "parameters": [
           {
             "in": "path",
@@ -599,18 +573,12 @@
         ]
       },
       "put": {
-        "tags": [
-          "Petitions"
-        ],
+        "tags": ["Petitions"],
         "summary": "Edit petition",
         "description": "",
         "operationId": "updatePetition",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
         "parameters": [
           {
             "in": "path",
@@ -658,18 +626,12 @@
         ]
       },
       "delete": {
-        "tags": [
-          "Petitions"
-        ],
+        "tags": ["Petitions"],
         "summary": "Delete petition",
         "description": "",
         "operationId": "deletePetition",
-        "consumes": [
-          "application/json"
-        ],
-        "produces": [
-          "application/json"
-        ],
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
         "parameters": [
           {
             "in": "path",
@@ -710,9 +672,9 @@
         "tags": [
           "Notifications"
         ],
-        "summary": "Get recipients",
-        "description": "Fetches all contacts that match the criteria provided",
-        "operationId": "getRecipients",
+        "summary": "Get broadcast notification recipients",
+        "description": "Returns service contact recipients matching the requested contact types, environments, and protocols for the target tenant.",
+        "operationId": "getBroadcastRecipients",
         "produces": [
           "application/json"
         ],
@@ -727,35 +689,41 @@
           {
             "in": "query",
             "name": "contact_types",
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "Types of contacts to get"
+            "type": "string",
+            "required": true,
+            "description": "Comma-separated contact types to include"
           },
           {
             "in": "query",
             "name": "environments",
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "Target environments to get contacts from"
+            "type": "string",
+            "required": true,
+            "description": "Comma-separated integration environments to include"
+          },
+          {
+            "in": "query",
+            "name": "protocols",
+            "type": "string",
+            "required": true,
+            "description": "Comma-separated protocols to include"
           }
         ],
         "responses": {
           "200": {
-            "description": "successful",
+            "description": "OK",
             "schema": {
               "type": "array",
               "items": {
-                "type": "string"
-              },
-              "description": "Contact email addresses that match the criteria"
+                "type": "object",
+                "additionalProperties": true
+              }
             }
           },
           "401": {
             "description": "Unauthenticated request"
+          },
+          "422": {
+            "description": "Invalid Data"
           },
           "500": {
             "description": "Internal Error"
@@ -773,9 +741,9 @@
         "tags": [
           "Notifications"
         ],
-        "summary": "Send notifications to service owners",
-        "description": "Sends notifications to the owners of a service",
-        "operationId": "SendOwnerNotif",
+        "summary": "Send notifications to owners",
+        "description": "Sends notification emails to the provided owner recipients. Supports the placeholder '--* Reconfiguration Link *--' inside email_body.",
+        "operationId": "sendOwnerNotifications",
         "produces": [
           "application/json"
         ],
@@ -790,10 +758,17 @@
           {
             "in": "body",
             "name": "body",
-            "description": "Notification data",
+            "description": "Owner notification data",
             "required": true,
             "schema": {
               "type": "object",
+              "required": [
+                "name",
+                "email_address",
+                "email_subject",
+                "email_body",
+                "recipients"
+              ],
               "properties": {
                 "name": {
                   "type": "string",
@@ -802,15 +777,15 @@
                 "email_address": {
                   "type": "string",
                   "format": "email",
-                  "description": "Email address of the notifications sender"
+                  "description": "Email address of the notification sender"
                 },
                 "email_subject": {
                   "type": "string",
-                  "description": "Subject of the notification"
+                  "description": "Subject of the notification email"
                 },
                 "email_body": {
                   "type": "string",
-                  "description": "Notification Text, replaces (--* Reconfiguration Link *--) string with a button with a link to the reconfiguration page of the service/request"
+                  "description": "Notification body. May include '--* Reconfiguration Link *--' placeholder."
                 },
                 "cc_emails": {
                   "type": "array",
@@ -818,7 +793,7 @@
                     "type": "string",
                     "format": "email"
                   },
-                  "description": "Email addresses that will be added as CC to the notification email"
+                  "description": "Email addresses added as CC"
                 },
                 "recipients": {
                   "type": "array",
@@ -826,7 +801,17 @@
                     "type": "string",
                     "format": "email"
                   },
-                  "description": "Email addresses that the notification will be sent"
+                  "description": "Recipient email addresses"
+                },
+                "service_id": {
+                  "type": "integer",
+                  "format": "int64",
+                  "description": "Optional service id used to build the reconfiguration link"
+                },
+                "petition_id": {
+                  "type": "integer",
+                  "format": "int64",
+                  "description": "Optional petition id used to build the reconfiguration link"
                 }
               }
             }
@@ -834,127 +819,16 @@
         ],
         "responses": {
           "200": {
-            "description": "successful",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "notified_users": {
-                  "type": "number",
-                  "description": "Number of users the notification was sent to"
-                }
-              }
-            }
+            "description": "OK"
           },
           "401": {
             "description": "Unauthenticated request"
           },
-          "500": {
-            "description": "Internal Error"
-          }
-        },
-        "security": [
-          {
-            "access_tokenAuth": []
-          }
-        ]
-      }
-    },
-    "/tenants/{name}/notifications/broadcast": {
-      "put": {
-        "tags": [
-          "Notifications"
-        ],
-        "summary": "Send Notifications to service contacts",
-        "description": "Sends Notifications to the contacts of registered services",
-        "operationId": "sendNotif",
-        "produces": [
-          "application/json"
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "type": "string",
-            "required": true,
-            "name": "name",
-            "description": "Tenant that the request is targeting"
+          "403": {
+            "description": "Unauthorized"
           },
-          {
-            "in": "body",
-            "name": "body",
-            "description": "Notification data",
-            "required": true,
-            "schema": {
-              "type": "object",
-              "properties": {
-                "name": {
-                  "type": "string",
-                  "description": "Name of the notification sender"
-                },
-                "email_address": {
-                  "type": "string",
-                  "format": "email",
-                  "description": "Email address of the notifications sender"
-                },
-                "email_subject": {
-                  "type": "string",
-                  "description": "Subject of the notification"
-                },
-                "email_body": {
-                  "type": "string",
-                  "description": "Notification Text"
-                },
-                "contact_types": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  },
-                  "description": "Types of Contacts that will recieve the notification"
-                },
-                "cc_emails": {
-                  "type": "array",
-                  "items": {
-                    "type": "string",
-                    "format": "email"
-                  },
-                  "description": "Email addresses that will be added as CC to the notification email"
-                },
-                "environments": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  },
-                  "description": "Environments that will be targeted by the notification"
-                },
-                "notify_admins": {
-                  "type": "boolean",
-                  "description": "Also add administrators as CC to the notification email"
-                },
-                "protocols": {
-                  "type": "array",
-                  "items": {
-                    "type": "string"
-                  },
-                  "description": "Protocols of services that will be targeted by the notification"
-                }
-              }
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "successful",
-            "schema": {
-              "type": "object",
-              "properties": {
-                "notified_users": {
-                  "type": "number",
-                  "description": "Number of users the notification was sent to"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthenticated request"
+          "422": {
+            "description": "Invalid Data"
           },
           "500": {
             "description": "Internal Error"
@@ -972,9 +846,9 @@
         "tags": [
           "Notifications"
         ],
-        "summary": "Send Outdated Alert Notifications",
-        "description": "Sends Notifications to the owners of outdated services",
-        "operationId": "sendOutdatedNotif",
+        "summary": "Send outdated service notifications",
+        "description": "Sends notifications to owners of outdated services for the specified integration environment.",
+        "operationId": "sendOutdatedNotifications",
         "produces": [
           "application/json"
         ],
@@ -989,14 +863,17 @@
           {
             "in": "body",
             "name": "body",
-            "description": "Notification data",
+            "description": "Outdated notification filter",
             "required": true,
             "schema": {
               "type": "object",
+              "required": [
+                "integration_environment"
+              ],
               "properties": {
                 "integration_environment": {
                   "type": "string",
-                  "description": "Integration environment to send outdated alert notifications"
+                  "description": "Integration environment to target"
                 }
               }
             }
@@ -1004,23 +881,153 @@
         ],
         "responses": {
           "200": {
-            "description": "successful",
+            "description": "OK",
             "schema": {
               "type": "object",
               "properties": {
                 "user_count": {
-                  "type": "number",
-                  "description": "Number of users the notification was sent to"
+                  "type": "integer",
+                  "description": "Number of users notified"
                 },
                 "service_count": {
-                  "type": "number",
-                  "description": "Number of outdated service in integration environment provided as parameter"
+                  "type": "integer",
+                  "description": "Number of outdated services matched"
                 }
               }
             }
           },
           "401": {
             "description": "Unauthenticated request"
+          },
+          "403": {
+            "description": "Unauthorized"
+          },
+          "422": {
+            "description": "Invalid Data"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        },
+        "security": [
+          {
+            "access_tokenAuth": []
+          }
+        ]
+      }
+    },
+    "/tenants/{name}/notifications/broadcast": {
+      "put": {
+        "tags": [
+          "Notifications"
+        ],
+        "summary": "Send broadcast notifications",
+        "description": "Sends notification emails to service contacts that match the provided filters. Optionally includes tenant notification admins in CC.",
+        "operationId": "sendBroadcastNotifications",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "required": true,
+            "name": "name",
+            "description": "Tenant that the request is targeting"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Broadcast notification data",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "name",
+                "email_address",
+                "email_subject",
+                "email_body",
+                "contact_types",
+                "environments",
+                "protocols",
+                "cc_emails"
+              ],
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "description": "Name of the notification sender"
+                },
+                "email_address": {
+                  "type": "string",
+                  "format": "email",
+                  "description": "Email address of the notification sender"
+                },
+                "email_subject": {
+                  "type": "string",
+                  "description": "Subject of the notification email"
+                },
+                "email_body": {
+                  "type": "string",
+                  "description": "Notification body"
+                },
+                "contact_types": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Contact types to target"
+                },
+                "environments": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Integration environments to target"
+                },
+                "protocols": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Protocols to target"
+                },
+                "cc_emails": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "description": "Email addresses added as CC"
+                },
+                "notify_admins": {
+                  "type": "boolean",
+                  "description": "If true, also adds users with send_notifications permission as CC"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "notified_users": {
+                  "type": "integer",
+                  "description": "Number of users that the notification was sent to"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "403": {
+            "description": "Unauthorized"
+          },
+          "422": {
+            "description": "Invalid Data"
           },
           "500": {
             "description": "Internal Error"
@@ -1035,15 +1042,11 @@
     },
     "/tenants/{name}/banner_alert": {
       "get": {
-        "tags": [
-          "Banner Alerts"
-        ],
+        "tags": ["Banner Alerts"],
         "summary": "Get all banner alerts for the given tenant",
         "description": "Get all banner alerts for the given tenant",
         "operationId": "getBannerAlerts",
-        "produces": [
-          "application/json"
-        ],
+        "produces": ["application/json"],
         "parameters": [
           {
             "in": "path",
@@ -1085,15 +1088,11 @@
         ]
       },
       "post": {
-        "tags": [
-          "Banner Alerts"
-        ],
+        "tags": ["Banner Alerts"],
         "summary": "Create a new banner alert",
         "description": "Create a new banner alert",
         "operationId": "createBannerAlerts",
-        "produces": [
-          "application/json"
-        ],
+        "produces": ["application/json"],
         "parameters": [
           {
             "in": "path",
@@ -1130,15 +1129,11 @@
     },
     "/tenants/{name}/banner_alert/{id}": {
       "put": {
-        "tags": [
-          "Banner Alerts"
-        ],
+        "tags": ["Banner Alerts"],
         "summary": "Update a banner alert",
         "description": "Update a banner alert",
         "operationId": "UpdateBannerAlerts",
-        "produces": [
-          "application/json"
-        ],
+        "produces": ["application/json"],
         "parameters": [
           {
             "in": "path",
@@ -1181,15 +1176,11 @@
         ]
       },
       "delete": {
-        "tags": [
-          "Banner Alerts"
-        ],
+        "tags": ["Banner Alerts"],
         "summary": "Delete a banner alert",
         "description": "Delete a banner alert",
         "operationId": "DeleteBannerAlerts",
-        "produces": [
-          "application/json"
-        ],
+        "produces": ["application/json"],
         "parameters": [
           {
             "in": "path",
@@ -1227,15 +1218,11 @@
     },
     "/tenants/{name}/services/{id}": {
       "get": {
-        "tags": [
-          "Services"
-        ],
+        "tags": ["Services"],
         "summary": "Get service by id",
         "description": "Gets service by id",
         "operationId": "getService",
-        "produces": [
-          "application/json"
-        ],
+        "produces": ["application/json"],
         "parameters": [
           {
             "in": "path",
@@ -1268,21 +1255,12 @@
                 "state": {
                   "type": "string",
                   "description": "The deployment state of the service",
-                  "enum": [
-                    "error",
-                    "pending",
-                    "deployed",
-                    "waiting-deployment"
-                  ]
+                  "enum": ["error", "pending", "deployed", "waiting-deployment"]
                 },
                 "deployment_type": {
                   "type": "string",
                   "description": "Type of the pending deployment",
-                  "enum": [
-                    "edit",
-                    "create",
-                    "delete"
-                  ]
+                  "enum": ["edit", "create", "delete"]
                 },
                 "last_edited": {
                   "type": "string",
@@ -1328,15 +1306,11 @@
     },
     "/tenants/{name}/services/{id}/deployment": {
       "put": {
-        "tags": [
-          "Services"
-        ],
+        "tags": ["Services"],
         "summary": "Troubleshoot Deployment",
         "description": "Troubleshoot Deployment of a Service Request",
         "operationId": "putServiceDeployment",
-        "produces": [
-          "application/json"
-        ],
+        "produces": ["application/json"],
         "parameters": [
           {
             "in": "path",
@@ -1357,9 +1331,7 @@
             "name": "action",
             "in": "query",
             "type": "string",
-            "enum": [
-              "resend"
-            ],
+            "enum": ["resend"],
             "description": "Troubleshoot action selected by user"
           }
         ],
@@ -1386,15 +1358,11 @@
     },
     "/tenants/{name}/petitions/{id}/review": {
       "put": {
-        "tags": [
-          "Petitions"
-        ],
-        "summary": "Review Petition",
-        "description": "",
-        "operationId": "review",
-        "produces": [
-          "application/json"
-        ],
+        "tags": ["Petitions"],
+        "summary": "Review petition",
+        "description": "Approve, reject, request changes, or request review for a petition.",
+        "operationId": "reviewPetition",
+        "produces": ["application/json"],
         "parameters": [
           {
             "in": "path",
@@ -1412,23 +1380,24 @@
             "format": "int64"
           },
           {
-            "name": "type",
-            "in": "query",
-            "type": "string",
-            "enum": [
-              "approve",
-              "reject",
-              "changes",
-              "request_review"
-            ]
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": ["type"],
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": ["approve", "reject", "changes", "request_review"]
+                }
+              }
+            }
           }
         ],
         "responses": {
           "200": {
             "description": "OK"
-          },
-          "204": {
-            "description": "Petition not found"
           },
           "401": {
             "description": "Unauthenticated request"
@@ -1446,15 +1415,11 @@
     },
     "/tenants/{name}/services/list": {
       "get": {
-        "tags": [
-          "Services"
-        ],
+        "tags": ["Services"],
         "summary": "Get all available services",
         "description": "Returns paginated service information for creating a service list",
         "operationId": "getServiceList",
-        "produces": [
-          "application/json"
-        ],
+        "produces": ["application/json"],
         "parameters": [
           {
             "in": "path",
@@ -1497,10 +1462,7 @@
             "in": "query",
             "type": "string",
             "name": "protocol",
-            "enum": [
-              "saml",
-              "oidc"
-            ],
+            "enum": ["saml", "oidc"],
             "description": "Returns only services of the selected protocol"
           },
           {
@@ -1524,11 +1486,7 @@
           {
             "in": "query",
             "type": "string",
-            "enum": [
-              "pending",
-              "changes",
-              "request_review"
-            ],
+            "enum": ["pending", "changes", "request_review"],
             "name": "pending_sub",
             "description": "Sub filter for services with pending requests based on the review state of the request"
           },
@@ -1584,15 +1542,11 @@
     },
     "/tenants/{name}/services": {
       "get": {
-        "tags": [
-          "Services"
-        ],
-        "summary": "Get all available services",
-        "description": "Returns all available services, some properties are returned only for authorized requests",
+        "tags": ["Services"],
+        "summary": "Get services",
+        "description": "Returns services for a tenant. This endpoint allows unauthenticated requests, but additional fields may be returned for authorized users.",
         "operationId": "getServices",
-        "produces": [
-          "application/json"
-        ],
+        "produces": ["application/json"],
         "parameters": [
           {
             "in": "path",
@@ -1600,6 +1554,28 @@
             "name": "name",
             "description": "Tenant that the request is targeting",
             "required": true
+          },
+          {
+            "in": "query",
+            "name": "tags",
+            "type": "string",
+            "required": false,
+            "description": "Comma-separated list of tags to include"
+          },
+          {
+            "in": "query",
+            "name": "exclude_tags",
+            "type": "string",
+            "required": false,
+            "description": "Comma-separated list of tags to exclude"
+          },
+          {
+            "in": "query",
+            "name": "outdated",
+            "type": "string",
+            "enum": ["true", "false"],
+            "required": false,
+            "description": "If true, returns the list of outdated services"
           }
         ],
         "responses": {
@@ -1608,31 +1584,21 @@
             "schema": {
               "type": "array",
               "items": {
-                "type": "object",
                 "$ref": "#/definitions/Service"
               }
             }
           },
-          "401": {
-            "description": "Unauthenticated request"
-          },
           "500": {
             "description": "Internal Error"
           }
-        },
-        "security": [
-          {
-            "access_tokenAuth": []
-          }
-        ]
+        }
       },
       "post": {
-        "tags": [
-          "Services"
-        ],
+        "tags": ["Services"],
         "summary": "Add services",
-        "description": "Endpoint used to directly add services to federation registry. Should be used only when necessary and not as an alternative way to add services.",
+        "description": "Admin endpoint used to bootstrap a tenant or import multiple services directly into the registry.",
         "operationId": "addServices",
+        "produces": ["application/json"],
         "parameters": [
           {
             "in": "path",
@@ -1644,7 +1610,7 @@
           {
             "in": "body",
             "name": "body",
-            "description": "Service details to add to the registry",
+            "description": "Array of services to add to the registry",
             "required": true,
             "schema": {
               "$ref": "#/definitions/PostServices"
@@ -1664,20 +1630,21 @@
           "500": {
             "description": "Internal Error"
           }
-        }
+        },
+        "security": [
+          {
+            "admin_key": []
+          }
+        ]
       }
     },
     "/agent/get_new_configurations": {
       "get": {
-        "tags": [
-          "Agent"
-        ],
+        "tags": ["Agent"],
         "summary": "Get new Configurations",
         "description": "Route used from ams-agent to get all service configuration awaiting deployment and push them to the ams topic",
         "operationId": "getPendingServices",
-        "produces": [
-          "application/json"
-        ],
+        "produces": ["application/json"],
         "responses": {
           "200": {
             "description": "OK",
@@ -1701,20 +1668,16 @@
     },
     "/ams/ingest": {
       "post": {
-        "tags": [
-          "AMS"
-        ],
-        "summary": "Route that Ams posts deployment results",
-        "description": "",
+        "tags": ["AMS"],
+        "summary": "Receive deployment results from AMS",
+        "description": "Endpoint used by ARGO Messaging Service to push deployment result messages.",
         "operationId": "setState",
-        "produces": [
-          "application/json"
-        ],
+        "produces": ["application/json"],
         "parameters": [
           {
             "in": "body",
             "name": "body",
-            "description": "Ams formatted messages containing results for deployment requests",
+            "description": "AMS formatted messages containing results for deployment requests",
             "required": true,
             "schema": {
               "$ref": "#/definitions/AmsPending"
@@ -1731,20 +1694,38 @@
           "500": {
             "description": "Internal Error"
           }
+        },
+        "security": [
+          {
+            "ams_auth": []
+          }
+        ]
+      }
+    },
+    "/ams/ams_verification_hash": {
+      "get": {
+        "tags": ["AMS"],
+        "summary": "Get AMS verification hash",
+        "description": "Route used to verify push subscription ownership for AMS integration.",
+        "operationId": "getAmsVerificationHash",
+        "produces": ["text/plain"],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "string"
+            }
+          }
         }
       }
     },
     "/agent/set_services_state": {
       "put": {
-        "tags": [
-          "Agent"
-        ],
+        "tags": ["Agent"],
         "summary": "Edit service state",
         "description": "Route used by ams agent to update state once service changes have been push to the ams",
         "operationId": "putState",
-        "produces": [
-          "application/json"
-        ],
+        "produces": ["application/json"],
         "parameters": [
           {
             "in": "body",
@@ -1775,15 +1756,11 @@
     },
     "/tenants/{name}/services/{id}/petitions": {
       "get": {
-        "tags": [
-          "Petitions"
-        ],
+        "tags": ["Petitions"],
         "summary": "Retrieve service history",
         "description": "Get all petitions linked to service",
         "operationId": "findServiceHistory",
-        "produces": [
-          "application/json"
-        ],
+        "produces": ["application/json"],
         "parameters": [
           {
             "in": "path",
@@ -1825,17 +1802,13 @@
         ]
       }
     },
-    "/tenants/{name}/check_availability": {
+    "/tenants/{name}/check-availability": {
       "get": {
-        "tags": [
-          "Petitions"
-        ],
-        "summary": "Check availability of protocol id",
-        "description": "",
-        "operationId": "Idavailability",
-        "produces": [
-          "application/json"
-        ],
+        "tags": ["Petitions"],
+        "summary": "Check availability of protocol identifier",
+        "description": "Checks if an OIDC client_id or SAML entity_id is available for the given tenant and environment.",
+        "operationId": "checkAvailability",
+        "produces": ["application/json"],
         "parameters": [
           {
             "in": "path",
@@ -1843,6 +1816,42 @@
             "name": "name",
             "description": "Tenant that the request is targeting",
             "required": true
+          },
+          {
+            "in": "query",
+            "name": "value",
+            "type": "string",
+            "required": true,
+            "description": "The protocol identifier to check"
+          },
+          {
+            "in": "query",
+            "name": "protocol",
+            "type": "string",
+            "enum": ["oidc", "saml"],
+            "required": true,
+            "description": "Protocol of the identifier"
+          },
+          {
+            "in": "query",
+            "name": "petition_id",
+            "type": "integer",
+            "required": false,
+            "description": "Petition id to exclude from the uniqueness check"
+          },
+          {
+            "in": "query",
+            "name": "service_id",
+            "type": "integer",
+            "required": false,
+            "description": "Service id to exclude from the uniqueness check"
+          },
+          {
+            "in": "query",
+            "name": "environment",
+            "type": "string",
+            "required": false,
+            "description": "Integration environment"
           }
         ],
         "responses": {
@@ -1852,37 +1861,24 @@
               "type": "object",
               "properties": {
                 "available": {
-                  "type": "boolean",
-                  "description": ""
+                  "type": "boolean"
                 }
               }
             }
           },
-          "400": {
-            "description": "Invalid tag value"
-          },
-          "401": {
-            "description": "Unauthenticated request"
+          "500": {
+            "description": "Internal Error"
           }
-        },
-        "security": [
-          {
-            "access_tokenAuth": []
-          }
-        ]
+        }
       }
     },
     "/tenants/{name}/groups/{group_id}/members": {
       "get": {
-        "tags": [
-          "Groups and Invitations"
-        ],
+        "tags": ["Groups and Invitations"],
         "summary": "Get group member of target group",
         "description": "",
         "operationId": "Get group",
-        "produces": [
-          "application/json"
-        ],
+        "produces": ["application/json"],
         "parameters": [
           {
             "in": "path",
@@ -1953,9 +1949,7 @@
     },
     "/tenants/{name}/groups/{group_id}/members/{sub}": {
       "delete": {
-        "tags": [
-          "Groups and Invitations"
-        ],
+        "tags": ["Groups and Invitations"],
         "summary": "Remove a member from a group",
         "description": "A group manager can request to remove a member from his group.",
         "operationId": "deleteMember",
@@ -2005,15 +1999,11 @@
     },
     "/tenants/{name}/groups/{group_id}/invitations": {
       "get": {
-        "tags": [
-          "Groups and Invitations"
-        ],
+        "tags": ["Groups and Invitations"],
         "summary": "Get invitations for a group",
         "description": "Get all invitations to target group",
         "operationId": "getGroupInvites",
-        "produces": [
-          "application/json"
-        ],
+        "produces": ["application/json"],
         "parameters": [
           {
             "in": "path",
@@ -2078,15 +2068,11 @@
         ]
       },
       "post": {
-        "tags": [
-          "Groups and Invitations"
-        ],
+        "tags": ["Groups and Invitations"],
         "summary": "Create a group invitation",
         "description": "A group manager can send an invitation via email",
         "operationId": "sendGroupInvite",
-        "produces": [
-          "application/json"
-        ],
+        "produces": ["application/json"],
         "parameters": [
           {
             "in": "path",
@@ -2154,15 +2140,11 @@
     },
     "/tenants/{name}/groups/{group_id}/invitations/{id}": {
       "put": {
-        "tags": [
-          "Groups and Invitations"
-        ],
+        "tags": ["Groups and Invitations"],
         "summary": "Refresh a group invitation",
         "description": "A group manager can refresh an invitation",
         "operationId": "refreshGroupInvite",
-        "produces": [
-          "application/json"
-        ],
+        "produces": ["application/json"],
         "parameters": [
           {
             "in": "path",
@@ -2207,15 +2189,11 @@
         ]
       },
       "delete": {
-        "tags": [
-          "Groups and Invitations"
-        ],
+        "tags": ["Groups and Invitations"],
         "summary": "Delete a group invitation",
         "description": "A group manager can delete an invitation",
         "operationId": "deleteGroupInvite",
-        "produces": [
-          "application/json"
-        ],
+        "produces": ["application/json"],
         "parameters": [
           {
             "in": "path",
@@ -2260,17 +2238,13 @@
         ]
       }
     },
-    "/tenants/{name}/invitations/{id}/{action}": {
+    "/tenants/{name}/invitations/{invite_id}/{action}": {
       "put": {
-        "tags": [
-          "Groups and Invitations"
-        ],
+        "tags": ["Groups and Invitations"],
         "summary": "Respond to a group invitation",
-        "description": "A user can accept or reject an invitation sent to them",
+        "description": "A user can accept or decline an invitation sent to them.",
         "operationId": "respondGroupInvite",
-        "produces": [
-          "application/json"
-        ],
+        "produces": ["application/json"],
         "parameters": [
           {
             "in": "path",
@@ -2281,16 +2255,17 @@
           },
           {
             "in": "path",
-            "type": "string",
-            "name": "action",
-            "description": "accept/reject invitation",
+            "type": "integer",
+            "name": "invite_id",
+            "description": "Id of target invitation",
             "required": true
           },
           {
             "in": "path",
-            "type": "integer",
-            "name": "id",
-            "description": "Id of target invitation",
+            "type": "string",
+            "name": "action",
+            "enum": ["accept", "decline"],
+            "description": "Invitation response action",
             "required": true
           }
         ],
@@ -2299,7 +2274,7 @@
             "description": "OK"
           },
           "204": {
-            "description": "Could not find Invitation"
+            "description": "No invitation was found"
           },
           "401": {
             "description": "Unauthenticated request"
@@ -2317,15 +2292,11 @@
     },
     "/tenants/{name}/invitations": {
       "get": {
-        "tags": [
-          "Groups and Invitations"
-        ],
+        "tags": ["Groups and Invitations"],
         "summary": "Get invitations",
         "description": "Get all invitations for the requesting user",
         "operationId": "getInvitesUser",
-        "produces": [
-          "application/json"
-        ],
+        "produces": ["application/json"],
         "parameters": [
           {
             "in": "path",
@@ -2386,15 +2357,11 @@
     },
     "/tenants/{name}/invitations/activate_by_code": {
       "put": {
-        "tags": [
-          "Groups and Invitations"
-        ],
+        "tags": ["Groups and Invitations"],
         "summary": "Activate an invitation",
         "description": "Activate an invitation with the one time code sent via email",
         "operationId": "activateInvitation",
-        "produces": [
-          "application/json"
-        ],
+        "produces": ["application/json"],
         "parameters": [
           {
             "in": "path",
@@ -2440,15 +2407,11 @@
     },
     "/tenants/{name}/agents": {
       "get": {
-        "tags": [
-          "Deployer Agents"
-        ],
+        "tags": ["Deployer Agents"],
         "summary": "Get agents",
-        "description": "Get all deployer agents",
+        "description": "Get all deployer agents for a tenant. Admin access only.",
         "operationId": "getAgents",
-        "produces": [
-          "application/json"
-        ],
+        "produces": ["application/json"],
         "parameters": [
           {
             "in": "path",
@@ -2474,18 +2437,19 @@
           "500": {
             "description": "Internal Error"
           }
-        }
+        },
+        "security": [
+          {
+            "admin_key": []
+          }
+        ]
       },
       "post": {
-        "tags": [
-          "Deployer Agents"
-        ],
-        "summary": "Add Agents",
-        "description": "Add new Deployer Agents",
+        "tags": ["Deployer Agents"],
+        "summary": "Add agents",
+        "description": "Add new deployer agents for a tenant. Admin access only.",
         "operationId": "addAgents",
-        "produces": [
-          "application/json"
-        ],
+        "produces": ["application/json"],
         "parameters": [
           {
             "in": "path",
@@ -2516,18 +2480,19 @@
           "500": {
             "description": "Internal Error"
           }
-        }
+        },
+        "security": [
+          {
+            "admin_key": []
+          }
+        ]
       },
       "delete": {
-        "tags": [
-          "Deployer Agents"
-        ],
-        "summary": "Delete Agents",
-        "description": "Delete all Deployer Agents",
+        "tags": ["Deployer Agents"],
+        "summary": "Delete agents",
+        "description": "Delete all deployer agents for a tenant. Admin access only.",
         "operationId": "deleteAgents",
-        "produces": [
-          "application/json"
-        ],
+        "produces": ["application/json"],
         "parameters": [
           {
             "in": "path",
@@ -2545,25 +2510,26 @@
             "description": "Unauthenticated request"
           },
           "404": {
-            "description": "No agents where found to delete"
+            "description": "No agents were found to delete"
           },
           "500": {
             "description": "Internal Error"
           }
-        }
+        },
+        "security": [
+          {
+            "admin_key": []
+          }
+        ]
       }
     },
     "/tenants/{name}": {
       "get": {
-        "tags": [
-          "Tenants"
-        ],
+        "tags": ["Tenants"],
         "summary": "Get tenant information and configuration",
         "description": "Get tenant information and configuration about theme and form configuration",
         "operationId": "GetTenant",
-        "produces": [
-          "application/json"
-        ],
+        "produces": ["application/json"],
         "parameters": [
           {
             "in": "path",
@@ -2591,15 +2557,11 @@
     },
     "/tenants": {
       "get": {
-        "tags": [
-          "Tenants"
-        ],
-        "summary": "Get Tenants",
-        "description": "Get all available tenants",
+        "tags": ["Tenants"],
+        "summary": "Get tenants",
+        "description": "Get all available tenants. Admin access only.",
         "operationId": "GetTenants",
-        "produces": [
-          "application/json"
-        ],
+        "produces": ["application/json"],
         "responses": {
           "200": {
             "description": "OK",
@@ -2607,32 +2569,44 @@
               "$ref": "#/definitions/Tenants"
             }
           },
+          "401": {
+            "description": "Unauthenticated request"
+          },
           "404": {
             "description": "Tenant not found"
           },
           "500": {
             "description": "Internal Error"
           }
-        }
+        },
+        "security": [
+          {
+            "admin_key": []
+          }
+        ]
       }
     },
-    "/tenants/{name}/agents/id": {
+    "/tenants/{name}/agents/{id}": {
       "get": {
-        "tags": [
-          "Deployer Agents"
-        ],
+        "tags": ["Deployer Agents"],
         "summary": "Get agent",
-        "description": "Get deployer agents by id",
+        "description": "Get deployer agent by id. Admin access only.",
         "operationId": "getAgent",
-        "produces": [
-          "application/json"
-        ],
+        "produces": ["application/json"],
         "parameters": [
           {
             "in": "path",
             "type": "string",
             "name": "name",
             "description": "Tenant that the request is targeting",
+            "required": true
+          },
+          {
+            "in": "path",
+            "type": "integer",
+            "name": "id",
+            "format": "int64",
+            "description": "Id of target deployer agent",
             "required": true
           }
         ],
@@ -2652,24 +2626,33 @@
           "500": {
             "description": "Internal Error"
           }
-        }
+        },
+        "security": [
+          {
+            "admin_key": []
+          }
+        ]
       },
       "put": {
-        "tags": [
-          "Deployer Agents"
-        ],
+        "tags": ["Deployer Agents"],
         "summary": "Update agent",
-        "description": "Update deployer agent",
+        "description": "Update deployer agent. Admin access only.",
         "operationId": "updateAgent",
-        "produces": [
-          "application/json"
-        ],
+        "produces": ["application/json"],
         "parameters": [
           {
             "in": "path",
             "type": "string",
             "name": "name",
             "description": "Tenant that the request is targeting",
+            "required": true
+          },
+          {
+            "in": "path",
+            "type": "integer",
+            "name": "id",
+            "format": "int64",
+            "description": "Id of target deployer agent",
             "required": true
           },
           {
@@ -2689,29 +2672,38 @@
             "description": "Unauthenticated request"
           },
           "404": {
-            "description": "No agent found"
+            "description": "Could not find agent"
           },
           "500": {
             "description": "Internal Error"
           }
-        }
+        },
+        "security": [
+          {
+            "admin_key": []
+          }
+        ]
       },
       "delete": {
-        "tags": [
-          "Deployer Agents"
-        ],
+        "tags": ["Deployer Agents"],
         "summary": "Delete agent",
-        "description": "Delete deployer agent",
+        "description": "Delete deployer agent. Admin access only.",
         "operationId": "deleteAgent",
-        "produces": [
-          "application/json"
-        ],
+        "produces": ["application/json"],
         "parameters": [
           {
             "in": "path",
             "type": "string",
             "name": "name",
             "description": "Tenant that the request is targeting",
+            "required": true
+          },
+          {
+            "in": "path",
+            "type": "integer",
+            "name": "id",
+            "format": "int64",
+            "description": "Id of target deployer agent",
             "required": true
           }
         ],
@@ -2728,32 +2720,263 @@
           "500": {
             "description": "Internal Error"
           }
+        },
+        "security": [
+          {
+            "admin_key": []
+          }
+        ]
+      }
+    },
+    "/tenants/{name}/services/validate": {
+      "put": {
+        "tags": ["Services"],
+        "summary": "Validate and update outdated service flags",
+        "description": "Admin endpoint that validates tenant services and updates their outdated flags.",
+        "operationId": "validateServices",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "name": "name",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Validation completed"
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        },
+        "security": [
+          {
+            "admin_key": []
+          }
+        ]
+      }
+    },
+    "/tenants/{name}/services/{id}/error": {
+      "get": {
+        "tags": ["Services"],
+        "summary": "Get deployment error for service",
+        "description": "Returns the archived or latest deployment error details for a service when the caller has permission to view errors.",
+        "operationId": "getServiceError",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "name": "name",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "ID of service",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "error": {
+                  "type": "object",
+                  "properties": {
+                    "error_date": {
+                      "type": "string"
+                    },
+                    "error_code": {
+                      "type": "string"
+                    },
+                    "error_description": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "404": {
+            "description": "No error found"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        },
+        "security": [
+          {
+            "access_tokenAuth": []
+          }
+        ]
+      }
+    },
+    "/agent/get_agents": {
+      "get": {
+        "tags": ["Agent"],
+        "summary": "Get all deployer agents",
+        "description": "Route used by ams-agent to fetch the full deployer agent configuration list.",
+        "operationId": "getAllAgents",
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "agents": {
+                  "$ref": "#/definitions/getAgents"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "404": {
+            "description": "No agents found"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        },
+        "security": [
+          {
+            "api_key": []
+          }
+        ]
+      }
+    },
+    "/util/metadata_info": {
+      "get": {
+        "tags": ["Utilities"],
+        "summary": "Read SAML metadata information",
+        "description": "Fetches a SAML metadata XML document from the provided metadata_url, parses it, and returns the entity_id together with supported and unsupported requested attributes.",
+        "operationId": "getMetadataInfo",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "metadata_url",
+            "type": "string",
+            "required": true,
+            "description": "URL-encoded metadata XML URL to fetch and inspect"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "entity_id": {
+                  "type": "string",
+                  "description": "SAML entityID extracted from the metadata"
+                },
+                "supported_attributes": {
+                  "type": "array",
+                  "description": "Requested attributes that are supported by the default registry attribute set",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "friendly_name": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "required": {
+                        "type": "boolean"
+                      },
+                      "name_format": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "unsupported_attributes": {
+                  "type": "array",
+                  "description": "Requested attributes found in the metadata but not supported by the default registry attribute set",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "friendly_name": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "required": {
+                        "type": "boolean"
+                      },
+                      "name_format": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                },
+                "metadata_url": {
+                  "type": "string",
+                  "description": "Resolved metadata URL used for the request"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Could not fetch or parse the metadata document"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
         }
       }
     }
   },
   "securityDefinitions": {
     "access_tokenAuth": {
-      "type": "basic"
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header",
+      "description": "Bearer access token in the form: Bearer <token>"
     },
     "api_key": {
       "type": "apiKey",
-      "name": "api_key",
-      "in": "header"
+      "name": "X-Api-Key",
+      "in": "header",
+      "description": "AMS agent API key"
     },
     "admin_key": {
       "type": "apiKey",
-      "name": "X-API-KEY",
-      "in": "header"
+      "name": "X-Api-Key",
+      "in": "header",
+      "description": "Admin API key"
+    },
+    "ams_auth": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header",
+      "description": "AMS authorization key"
     }
   },
   "definitions": {
     "PostOrganization": {
       "type": "object",
-      "required": [
-        "organization_name",
-        "organization_url"
-      ],
+      "required": ["organization_name", "organization_url"],
       "properties": {
         "organization_name": {
           "type": "string",
@@ -2787,19 +3010,11 @@
       "properties": {
         "type": {
           "type": "string",
-          "enum": [
-            "mitreId",
-            "ssp",
-            "keycloak",
-            "satosa"
-          ]
+          "enum": ["mitreId", "ssp", "keycloak", "satosa"]
         },
         "entity_type": {
           "type": "string",
-          "enum": [
-            "service",
-            "idp"
-          ]
+          "enum": ["service", "idp"]
         },
         "hostname": {
           "type": "string",
@@ -2807,10 +3022,7 @@
         },
         "entity_protocol": {
           "type": "string",
-          "enum": [
-            "oidc",
-            "saml"
-          ]
+          "enum": ["oidc", "saml"]
         }
       }
     },
@@ -2824,19 +3036,11 @@
             "properties": {
               "type": {
                 "type": "string",
-                "enum": [
-                  "mitreId",
-                  "ssp",
-                  "keycloak",
-                  "satosa"
-                ]
+                "enum": ["mitreId", "ssp", "keycloak", "satosa"]
               },
               "entity_type": {
                 "type": "string",
-                "enum": [
-                  "service",
-                  "idp"
-                ]
+                "enum": ["service", "idp"]
               },
               "hostname": {
                 "type": "string",
@@ -2844,10 +3048,7 @@
               },
               "entity_protocol": {
                 "type": "string",
-                "enum": [
-                  "oidc",
-                  "saml"
-                ]
+                "enum": ["oidc", "saml"]
               }
             }
           }
@@ -2868,19 +3069,11 @@
           },
           "type": {
             "type": "string",
-            "enum": [
-              "mitreId",
-              "ssp",
-              "keycloak",
-              "satosa"
-            ]
+            "enum": ["mitreId", "ssp", "keycloak", "satosa"]
           },
           "entity_type": {
             "type": "string",
-            "enum": [
-              "service",
-              "idp"
-            ]
+            "enum": ["service", "idp"]
           },
           "hostname": {
             "type": "string",
@@ -2888,10 +3081,7 @@
           },
           "entity_protocol": {
             "type": "string",
-            "enum": [
-              "oidc",
-              "saml"
-            ]
+            "enum": ["oidc", "saml"]
           }
         }
       }
@@ -2966,11 +3156,7 @@
       "properties": {
         "type": {
           "type": "string",
-          "enum": [
-            "edit",
-            "create",
-            "delete"
-          ]
+          "enum": ["edit", "create", "delete"]
         },
         "service_id": {
           "type": "string",
@@ -2996,11 +3182,7 @@
         },
         "integration_environment": {
           "type": "string",
-          "enum": [
-            "demo",
-            "development",
-            "production"
-          ]
+          "enum": ["demo", "development", "production"]
         },
         "contacts": {
           "type": "array",
@@ -3013,22 +3195,14 @@
               },
               "type": {
                 "type": "string",
-                "enum": [
-                  "admin",
-                  "support",
-                  "technical",
-                  "security"
-                ]
+                "enum": ["admin", "support", "technical", "security"]
               }
             }
           }
         },
         "protocol": {
           "type": "string",
-          "enum": [
-            "oidc",
-            "saml"
-          ]
+          "enum": ["oidc", "saml"]
         },
         "entity_id": {
           "type": "string",
@@ -3080,11 +3254,7 @@
         },
         "code_challenge_method": {
           "type": "string",
-          "enum": [
-            "plain",
-            "S256",
-            ""
-          ],
+          "enum": ["plain", "S256", ""],
           "description": "Proof Key for Code Exchange (PKCE) Code Challenge Method. For oidc services."
         },
         "client_secret": {
@@ -3105,10 +3275,7 @@
         },
         "application_type": {
           "type": "string",
-          "enum": [
-            "WEB",
-            "NATIVE"
-          ],
+          "enum": ["WEB", "NATIVE"],
           "description": "Application type of the service, oidc specific"
         },
         "token_endpoint_auth_signing_alg": {
@@ -3383,11 +3550,7 @@
         },
         "integration_environment": {
           "type": "string",
-          "enum": [
-            "demo",
-            "development",
-            "production"
-          ]
+          "enum": ["demo", "development", "production"]
         },
         "contacts": {
           "type": "array",
@@ -3400,22 +3563,14 @@
               },
               "type": {
                 "type": "string",
-                "enum": [
-                  "admin",
-                  "support",
-                  "technical",
-                  "security"
-                ]
+                "enum": ["admin", "support", "technical", "security"]
               }
             }
           }
         },
         "protocol": {
           "type": "string",
-          "enum": [
-            "oidc",
-            "saml"
-          ]
+          "enum": ["oidc", "saml"]
         },
         "entity_id": {
           "type": "string",
@@ -3467,11 +3622,7 @@
         },
         "code_challenge_method": {
           "type": "string",
-          "enum": [
-            "plain",
-            "S256",
-            "null"
-          ],
+          "enum": ["plain", "S256", "null"],
           "description": "Proof Key for Code Exchange (PKCE) Code Challenge Method. For oidc services."
         },
         "client_secret": {
@@ -3492,10 +3643,7 @@
         },
         "application_type": {
           "type": "string",
-          "enum": [
-            "WEB",
-            "NATIVE"
-          ],
+          "enum": ["WEB", "NATIVE"],
           "description": "Application type of the service, oidc specific"
         },
         "token_endpoint_auth_signing_alg": {
@@ -3625,12 +3773,7 @@
               },
               "state": {
                 "type": "string",
-                "enum": [
-                  "deployed",
-                  "error",
-                  "waiting-deployment",
-                  "pending"
-                ],
+                "enum": ["deployed", "error", "waiting-deployment", "pending"],
                 "description": "State of the service"
               },
               "owned": {
@@ -3678,11 +3821,7 @@
               },
               "type": {
                 "type": "string",
-                "enum": [
-                  "edit",
-                  "create",
-                  "delete"
-                ],
+                "enum": ["edit", "create", "delete"],
                 "description": "Type of pending petition if exists"
               },
               "status": {
@@ -3710,11 +3849,7 @@
               },
               "integration_environment": {
                 "type": "string",
-                "enum": [
-                  "demo",
-                  "development",
-                  "production"
-                ]
+                "enum": ["demo", "development", "production"]
               },
               "created_at": {
                 "type": "string",
@@ -3748,11 +3883,7 @@
         "type": {
           "type": "string",
           "description": "Color and style of the alert banner",
-          "enum": [
-            "warning",
-            "error",
-            "info"
-          ]
+          "enum": ["warning", "error", "info"]
         },
         "priority": {
           "type": "integer",
@@ -3817,12 +3948,7 @@
           "state": {
             "description": "State of service",
             "type": "string",
-            "enum": [
-              "deployed",
-              "error",
-              "waiting-deployment",
-              "pending"
-            ]
+            "enum": ["deployed", "error", "waiting-deployment", "pending"]
           }
         }
       }
@@ -3844,21 +3970,12 @@
           "status": {
             "type": "string",
             "description": "Review status",
-            "enum": [
-              "approved",
-              "rejected",
-              "approved_with_changes",
-              "pending"
-            ]
+            "enum": ["approved", "rejected", "approved_with_changes", "pending"]
           },
           "type": {
             "type": "string",
             "description": "Type of petition request",
-            "enum": [
-              "create",
-              "edit",
-              "delete"
-            ]
+            "enum": ["create", "edit", "delete"]
           },
           "reviewed_at": {
             "type": "string",
