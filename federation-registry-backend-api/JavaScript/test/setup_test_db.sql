@@ -131,6 +131,7 @@ create table service_details_oidc (
   code_challenge_method VARCHAR(256),
   device_code_validity_seconds bigint,
   access_token_validity_seconds bigint,
+  access_token_validation_model VARCHAR(256),
   refresh_token_validity_seconds bigint,
   client_secret VARCHAR(2048),
   reuse_refresh_token BOOLEAN,
@@ -282,6 +283,7 @@ create table service_petition_details_oidc (
   jwks_uri VARCHAR(256),
   device_code_validity_seconds bigint,
   access_token_validity_seconds bigint,
+  access_token_validation_model VARCHAR(256),
   refresh_token_validity_seconds bigint,
   reuse_refresh_token BOOLEAN,
   clear_access_tokens_on_refresh BOOLEAN,
@@ -449,20 +451,20 @@ INSERT INTO service_state (id,state,deployment_type,last_edited)
 VALUES (10,'error','create','2021-02-04 10:23:54');
 
 
-INSERT INTO service_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_token,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds,token_endpoint_auth_method,token_endpoint_auth_signing_alg,application_type)
-VALUES (1,'client1',true,'secret',true,true,600,3600,28800,'plain',10000,'client_secret_basic','','WEB');
-INSERT INTO service_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_token,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds,token_endpoint_auth_method,token_endpoint_auth_signing_alg,application_type)
-VALUES (2,'client2',true,'secret',true,true,600,3600,28800,'plain',10000,'client_secret_basic','','WEB');
-INSERT INTO service_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_token,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds,token_endpoint_auth_method,token_endpoint_auth_signing_alg,application_type)
-VALUES (3,'client3',true,'secret',true,true,600,3600,28800,'plain',10000,'client_secret_basic','','WEB');
-INSERT INTO service_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_token,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds,token_endpoint_auth_method,token_endpoint_auth_signing_alg,application_type)
-VALUES (4,'client4',true,'secret',true,true,600,3600,28800,'plain',10000,'client_secret_basic','','WEB');
-INSERT INTO service_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_token,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds,token_endpoint_auth_method,token_endpoint_auth_signing_alg,application_type)
-VALUES (5,'client5',true,'secret',true,true,600,3600,28800,'plain',10000,'client_secret_basic','','WEB');
-INSERT INTO service_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_token,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds,token_endpoint_auth_method,token_endpoint_auth_signing_alg,application_type)
-VALUES (7,'client1',true,'secret',true,true,600,3600,28800,'plain',10000,'client_secret_basic','','WEB');
-INSERT INTO service_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_token,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds,token_endpoint_auth_method,token_endpoint_auth_signing_alg,application_type)
-VALUES (8,'client2',true,'secret',true,true,600,3600,28800,'plain',10000,'client_secret_basic','','WEB');
+INSERT INTO service_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_token,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds,token_endpoint_auth_method,token_endpoint_auth_signing_alg,application_type,access_token_validation_model)
+VALUES (1,'client1',true,'secret',true,true,600,3600,28800,'plain',10000,'client_secret_basic','','WEB','OFFLINE_VERIFIABLE');
+INSERT INTO service_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_token,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds,token_endpoint_auth_method,token_endpoint_auth_signing_alg,application_type,access_token_validation_model)
+VALUES (2,'client2',true,'secret',true,true,600,3600,28800,'plain',10000,'client_secret_basic','','WEB','OFFLINE_VERIFIABLE');
+INSERT INTO service_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_token,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds,token_endpoint_auth_method,token_endpoint_auth_signing_alg,application_type,access_token_validation_model)
+VALUES (3,'client3',true,'secret',true,true,600,3600,28800,'plain',10000,'client_secret_basic','','WEB','OFFLINE_VERIFIABLE');
+INSERT INTO service_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_token,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds,token_endpoint_auth_method,token_endpoint_auth_signing_alg,application_type,access_token_validation_model)
+VALUES (4,'client4',true,'secret',true,true,600,3600,28800,'plain',10000,'client_secret_basic','','WEB','OFFLINE_VERIFIABLE');
+INSERT INTO service_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_token,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds,token_endpoint_auth_method,token_endpoint_auth_signing_alg,application_type,access_token_validation_model)
+VALUES (5,'client5',true,'secret',true,true,600,3600,28800,'plain',10000,'client_secret_basic','','WEB','OFFLINE_VERIFIABLE');
+INSERT INTO service_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_token,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds,token_endpoint_auth_method,token_endpoint_auth_signing_alg,application_type,access_token_validation_model)
+VALUES (7,'client1',true,'secret',true,true,600,3600,28800,'plain',10000,'client_secret_basic','','WEB','OFFLINE_VERIFIABLE');
+INSERT INTO service_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_token,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds,token_endpoint_auth_method,token_endpoint_auth_signing_alg,application_type,access_token_validation_model)
+VALUES (8,'client2',true,'secret',true,true,600,3600,28800,'plain',10000,'client_secret_basic','','WEB','OFFLINE_VERIFIABLE');
 
 
 INSERT INTO service_details_saml (id,entity_id,metadata_url)
@@ -651,26 +653,26 @@ INSERT INTO service_petition_details (service_description,service_name,logo_uri,
 VALUES ('Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aenean in ex in tellus congue commodo. Suspendisse condimentum purus ante, in ornare leo egestas ut.','tenant_2 SAML Service 1','https://cdn.auth0.com/blog/duo-saml-exploit/saml.png','https://policy_uri.com','demo','4e38406c89591bb08e070accbce62140cfc8beb40314c03aa82cf3683ac270b5@aai.tenant_2-portal.eu','approved',9,'2004-10-19 10:23:54','saml',10,'tenant_2','gr','https://my_service_website',1);
 
 
-INSERT INTO service_petition_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_token,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds,token_endpoint_auth_method,token_endpoint_auth_signing_alg,application_type)
-VALUES (1,'client1',true,'secret',true,true,600,3600,28800,'plain',10000,'client_secret_basic','','WEB');
-INSERT INTO service_petition_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_token,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds,token_endpoint_auth_method,token_endpoint_auth_signing_alg,application_type)
-VALUES (2,'client2',true,'secret',true,true,600,3600,28800,'plain',10000,'client_secret_basic','','WEB');
-INSERT INTO service_petition_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_token,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds,token_endpoint_auth_method,token_endpoint_auth_signing_alg,application_type)
-VALUES (3,'client3',true,'secret',true,true,600,3600,28800,'plain',10000,'client_secret_basic','','WEB');
-INSERT INTO service_petition_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_token,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds,token_endpoint_auth_method,token_endpoint_auth_signing_alg,application_type)
-VALUES (4,'client4',true,'secret',true,true,600,36,28800,'plain',10000,'client_secret_basic','','WEB');
-INSERT INTO service_petition_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_token,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds,token_endpoint_auth_method,token_endpoint_auth_signing_alg,application_type)
-VALUES (5,'client5',true,'secret',true,true,600,3600,28800,'plain',10000,'client_secret_basic','','WEB');
-INSERT INTO service_petition_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_token,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds,token_endpoint_auth_method,token_endpoint_auth_signing_alg,application_type)
-VALUES (6,'client5',true,'secret',true,true,600,3600,28800,'plain',10000,'client_secret_basic','','WEB');
-INSERT INTO service_petition_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_token,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds,token_endpoint_auth_method,token_endpoint_auth_signing_alg,application_type)
-VALUES (7,'client7',true,'secret',true,true,600,3600,28800,'plain',10000,'client_secret_basic','','WEB');
-INSERT INTO service_petition_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_token,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds,token_endpoint_auth_method,token_endpoint_auth_signing_alg,application_type)
-VALUES (8,'client1',true,'secret',true,true,600,3600,28800,'plain',10000,'client_secret_basic','','WEB');
-INSERT INTO service_petition_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_token,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds,token_endpoint_auth_method,token_endpoint_auth_signing_alg,application_type)
-VALUES (10,'client1',true,'secret',true,true,600,3600,28800,'plain',10000,'client_secret_basic','','WEB');
-INSERT INTO service_petition_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_token,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds,token_endpoint_auth_method,token_endpoint_auth_signing_alg,application_type)
-VALUES (11,'client2',true,'secret',true,true,600,3600,28800,'plain',10000,'client_secret_basic','','WEB');
+INSERT INTO service_petition_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_token,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds,token_endpoint_auth_method,token_endpoint_auth_signing_alg,application_type,access_token_validation_model)
+VALUES (1,'client1',true,'secret',true,true,600,3600,28800,'plain',10000,'client_secret_basic','','WEB','OFFLINE_VERIFIABLE');
+INSERT INTO service_petition_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_token,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds,token_endpoint_auth_method,token_endpoint_auth_signing_alg,application_type,access_token_validation_model)
+VALUES (2,'client2',true,'secret',true,true,600,3600,28800,'plain',10000,'client_secret_basic','','WEB','OFFLINE_VERIFIABLE');
+INSERT INTO service_petition_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_token,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds,token_endpoint_auth_method,token_endpoint_auth_signing_alg,application_type,access_token_validation_model)
+VALUES (3,'client3',true,'secret',true,true,600,3600,28800,'plain',10000,'client_secret_basic','','WEB','OFFLINE_VERIFIABLE');
+INSERT INTO service_petition_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_token,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds,token_endpoint_auth_method,token_endpoint_auth_signing_alg,application_type,access_token_validation_model)
+VALUES (4,'client4',true,'secret',true,true,600,36,28800,'plain',10000,'client_secret_basic','','WEB','OFFLINE_VERIFIABLE');
+INSERT INTO service_petition_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_token,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds,token_endpoint_auth_method,token_endpoint_auth_signing_alg,application_type,access_token_validation_model)
+VALUES (5,'client5',true,'secret',true,true,600,3600,28800,'plain',10000,'client_secret_basic','','WEB','OFFLINE_VERIFIABLE');
+INSERT INTO service_petition_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_token,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds,token_endpoint_auth_method,token_endpoint_auth_signing_alg,application_type,access_token_validation_model)
+VALUES (6,'client5',true,'secret',true,true,600,3600,28800,'plain',10000,'client_secret_basic','','WEB','OFFLINE_VERIFIABLE');
+INSERT INTO service_petition_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_token,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds,token_endpoint_auth_method,token_endpoint_auth_signing_alg,application_type,access_token_validation_model)
+VALUES (7,'client7',true,'secret',true,true,600,3600,28800,'plain',10000,'client_secret_basic','','WEB','OFFLINE_VERIFIABLE');
+INSERT INTO service_petition_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_token,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds,token_endpoint_auth_method,token_endpoint_auth_signing_alg,application_type,access_token_validation_model)
+VALUES (8,'client1',true,'secret',true,true,600,3600,28800,'plain',10000,'client_secret_basic','','WEB','OFFLINE_VERIFIABLE');
+INSERT INTO service_petition_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_token,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds,token_endpoint_auth_method,token_endpoint_auth_signing_alg,application_type,access_token_validation_model)
+VALUES (10,'client1',true,'secret',true,true,600,3600,28800,'plain',10000,'client_secret_basic','','WEB','OFFLINE_VERIFIABLE');
+INSERT INTO service_petition_details_oidc (id,client_id,allow_introspection,client_secret,reuse_refresh_token,clear_access_tokens_on_refresh,id_token_timeout_seconds,access_token_validity_seconds,refresh_token_validity_seconds,code_challenge_method,device_code_validity_seconds,token_endpoint_auth_method,token_endpoint_auth_signing_alg,application_type,access_token_validation_model)
+VALUES (11,'client2',true,'secret',true,true,600,3600,28800,'plain',10000,'client_secret_basic','','WEB','OFFLINE_VERIFIABLE');
 
 
 INSERT INTO service_petition_details_saml (id,entity_id,metadata_url)
