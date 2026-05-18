@@ -141,6 +141,7 @@ create table service_details_oidc (
   jwks VARCHAR(2048),
   jwks_uri VARCHAR(256),
   application_type VARCHAR(256),
+  access_token_validation_model VARCHAR(256),
   FOREIGN KEY (id) REFERENCES service_details(id) ON DELETE CASCADE
 );
 
@@ -286,6 +287,7 @@ create table service_petition_details_oidc (
   reuse_refresh_token BOOLEAN,
   clear_access_tokens_on_refresh BOOLEAN,
   id_token_timeout_seconds bigint,
+  access_token_validation_model VARCHAR(256),
   client_secret VARCHAR(2048),
   application_type VARCHAR(256),
   FOREIGN KEY (id) REFERENCES service_petition_details(id) ON DELETE CASCADE

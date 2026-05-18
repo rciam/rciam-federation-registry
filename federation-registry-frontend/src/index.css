@@ -2067,3 +2067,63 @@ footer .row {
   padding: 8px;
   justify-content:center!important;
 }
+
+.access-token-validation-model {
+  display: flex;
+  gap: 18px;
+  align-items: stretch;
+}
+
+.access-token-validation-card {
+  flex: 1;
+  display: flex;
+  gap: 14px;
+  padding: 18px;
+  border: 1px solid #d8e0ef;
+  border-radius: 6px;
+  cursor: pointer;
+  background: #fff;
+}
+
+.access-token-validation-card.selected {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 1px #0d6efd;
+}
+
+.access-token-validation-card input {
+  margin-top: 4px;
+}
+
+.access-token-validation-card-content p {
+  margin: 8px 0;
+  color: #4d5870;
+}
+
+.access-token-validation-card-content span {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 4px 8px;
+  background: #eaf3ff;
+  color: #0d6efd;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.access-token-validation-warning {
+  width: 210px;
+  padding: 14px;
+  border: 1px solid #f0c36d;
+  background: #fff8e5;
+  color: #5f4500;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.access-token-validation-warning svg {
+  color: #f0ad4e;
+  margin-bottom: 8px;
+}
+
+.access-token-validation-warning p {
+  margin: 6px 0 0;
+}

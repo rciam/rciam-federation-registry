@@ -721,44 +721,135 @@ const serviceValidationRules = (options, req) => {
         throw new Error("id_token_timeout_seconds must be an integer in specified range [1-" + max + "]")
       }
     }),
-    body('*.access_token_validity_seconds').customSanitizer(value => {
-      return sanitizeInteger(value);
-    }).custom((value, { req, location, path }) => { return requiredOidc(value, req, path.match(/\[(.*?)\]/)[1], 'access_token_validity_seconds') }).withMessage('access_token_validity_seconds missing').if((value, { req, location, path }) => { return isNotEmpty(value) && req.body[path.match(/\[(.*?)\]/)[1]].protocol === 'oidc' }).custom((value, { req, location, path }) => {
-      let tenant = options.tenant_param ? req.params.tenant : req.body[path.match(/\[(.*?)\]/)[1]].tenant;
-      let max = tenant_config[tenant].form.access_token_validity_seconds;
-      if (isNotEmpty(value) && value <= max && value >= 1) { return true } else {
-        throw new Error("access_token_timeout_seconds must be an integer in specified range [1-" + max + "]")
-      }
-    }),
-    body('*.refresh_token_validity_seconds').customSanitizer((value, { req, location, path }) => {
-      let pos = path.match(/\[(.*?)\]/)[1];
-      return sanitizeInteger(value);
-    }).custom((value, { req, location, path }) => {
-      let pos = path.match(/\[(.*?)\]/)[1];
+    body('*.access_token_validation_model')
+    .custom((value, { req, location, path }) => {
+      const pos = path.match(/\[(.*?)\]/)[1];
 
-      if (isEmpty(value) && req.body[pos].scope && req.body[pos].scope.includes('offline_access')) {
-        if (options.optional) {
-          req.body[pos].outdated = true;
-          return true
-        }
-        else {
-          return false
-        }
+      if (req.body[pos].protocol !== 'oidc') {
+        return true;
       }
-      else {
-        return true
+
+      if (isEmpty(value)) {
+        req.body[pos].access_token_validation_model = 'OFFLINE_VERIFIABLE';
+        return true;
       }
-    }).withMessage("Refresh Token Validity Seconds is required when 'offline_access' is included in the scopes").
-      if((value, { req, location, path }) => { return isNotEmpty(value); }).
-      custom((value, { req, location, path }) => {
+
+      if (
+        value === 'OFFLINE_VERIFIABLE' ||
+        value === 'ONLINE_VALIDATION_REQUIRED'
+      ) {
+        return true;
+      }
+
+      throw new Error(
+        'access_token_validation_model must be OFFLINE_VERIFIABLE or ONLINE_VALIDATION_REQUIRED'
+      );
+    }),
+    body('*.access_token_validity_seconds')
+      .customSanitizer(value => {
+        return sanitizeInteger(value);
+      })
+      .custom((value, { req, location, path }) => {
+        return requiredOidc(
+          value,
+          req,
+          path.match(/\[(.*?)\]/)[1],
+          'access_token_validity_seconds'
+        );
+      })
+      .withMessage('access_token_validity_seconds missing')
+      .if((value, { req, location, path }) => {
+        return (
+          isNotEmpty(value) &&
+          req.body[path.match(/\[(.*?)\]/)[1]].protocol === 'oidc'
+        );
+      })
+      .custom((value, { req, location, path }) => {
+        const pos = path.match(/\[(.*?)\]/)[1];
+
+        const tenant = options.tenant_param
+          ? req.params.tenant
+          : req.body[pos].tenant;
+
+        const validationModel =
+          req.body[pos].access_token_validation_model ||
+          'OFFLINE_VERIFIABLE';
+
+        const config =
+          tenant_config[tenant].form.more_info?.access_token_validity_seconds;
+
+        const min = config?.min ?? 1;
+
+        const max =
+          config?.max?.[validationModel] ??
+          config?.max?.OFFLINE_VERIFIABLE ??
+          tenant_config[tenant].form.access_token_validity_seconds ??
+          21600;
+
+        if (isNotEmpty(value) && value <= max && value >= min) {
+          return true;
+        }
+
+        throw new Error(
+          `access_token_validity_seconds must be an integer in specified range [${min}-${max}]`
+        );
+      }),
+    body('*.refresh_token_validity_seconds')
+      .customSanitizer((value, { req, location, path }) => {
+        return sanitizeInteger(value);
+      })
+      .custom((value, { req, location, path }) => {
+        const pos = path.match(/\[(.*?)\]/)[1];
+
+        if (
+          isEmpty(value) &&
+          req.body[pos].scope &&
+          req.body[pos].scope.includes('offline_access')
+        ) {
+          if (options.optional) {
+            req.body[pos].outdated = true;
+            return true;
+          }
+
+          return false;
+        }
+
+        return true;
+      })
+      .withMessage(
+        "Refresh Token Validity Seconds is required when 'offline_access' is included in the scopes"
+      )
+      .if((value, { req, location, path }) => {
+        return isNotEmpty(value);
+      })
+      .custom((value, { req, location, path }) => {
         if (isEmpty(value)) {
           return true;
         }
-        let tenant = options.tenant_param ? req.params.tenant : req.body[path.match(/\[(.*?)\]/)[1]].tenant;
-        let max = tenant_config[tenant].form.refresh_token_validity_seconds;
-        if (isNotEmpty(value) && value <= max && value >= 1) { return true } else {
-          throw new Error("Refresh Token Validity Seconds must be an integer in specified range [1-" + max + "]")
+
+        const pos = path.match(/\[(.*?)\]/)[1];
+
+        const tenant = options.tenant_param
+          ? req.params.tenant
+          : req.body[pos].tenant;
+
+        const config =
+          tenant_config[tenant].form.more_info?.refresh_token_validity_seconds;
+
+        const min = config?.min ?? 1;
+
+        const max =
+          config?.max ??
+          tenant_config[tenant].form.refresh_token_validity_seconds ??
+          34560000;
+
+        if (isNotEmpty(value) && value <= max && value >= min) {
+          return true;
         }
+
+        throw new Error(
+          `Refresh Token Validity Seconds must be an integer in specified range [${min}-${max}]`
+        );
       }),
     body('*.device_code_validity_seconds').customSanitizer((value, { req, location, path }) => {
       let pos = path.match(/\[(.*?)\]/)[1];

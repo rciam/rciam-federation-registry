@@ -20,6 +20,7 @@ import Alert from 'react-bootstrap/Alert';
 import { SimpleModal, Logout, NotFound, PetitionSubmittedModal } from './Components/Modals.js';
 import Form from 'react-bootstrap/Form';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import {formatDuration} from './helpers.js';
 import { Formik } from 'formik';
 import config from './config.json';
 import InputRow from './Components/InputRow.js';
@@ -29,7 +30,7 @@ import * as yup from 'yup';
 import { useTranslation } from 'react-i18next';
 import parse from 'html-react-parser';
 import countryData from 'country-region-data';
-import { SimpleInput, CountrySelect, AuthMethRadioList, SelectEnvironment, DeviceCode, Select, PublicKey, ListInput, LogoInput, TextAria, ListInputArray, CheckboxList, SimpleCheckbox, ClientSecret, TimeInput, RefreshToken, Contacts, OrganizationField, SimpleRadio, MetadataInput } from './Components/Inputs.js'// eslint-disable-next-line
+import { SimpleInput, AccessTokenValidationModel, CountrySelect, AuthMethRadioList, SelectEnvironment, DeviceCode, Select, PublicKey, ListInput, LogoInput, TextAria, ListInputArray, CheckboxList, SimpleCheckbox, ClientSecret, TimeInput, RefreshToken, Contacts, OrganizationField, SimpleRadio, MetadataInput } from './Components/Inputs.js'// eslint-disable-next-line
 import { SamlAttributesInput } from './Components/SamlAttributes.js';
 import { ConfirmationModal } from './Components/Modals';
 
@@ -482,14 +483,71 @@ const ServiceForm = (props) => {
       is: 'oidc',
       then: yup.number().nullable().min(1, "Must be a positive value greater that 0").max(tenant.form_config.id_token_timeout_seconds, t('yup_exceeds_max')).required('This is a required field')
     }),
-    access_token_validity_seconds: yup.number().nullable().when('protocol', {
+    access_token_validation_model: yup.string().nullable().when('protocol', {
       is: 'oidc',
-      then: yup.number().nullable().min(1, "Must be a positive value greater that 0").max(tenant.form_config.access_token_validity_seconds, t('yup_exceeds_max')).required('This is a required field')
+      then: yup.string()
+        .nullable()
+        .oneOf(['OFFLINE_VERIFIABLE', 'ONLINE_VALIDATION_REQUIRED'])
+        .required('This is a required field')
     }),
-    refresh_token_validity_seconds: yup.number().nullable().when(['scope', 'protocol'], {
-      is: (scope, protocol) => protocol === 'oidc' && scope?.includes('offline_access'),
-      then: yup.number().min(1, "Must be a positive value greater that 0").max(tenant.form_config.refresh_token_validity_seconds, t('yup_exceeds_max')).required('This field is required when the offline_access is selected')
+   access_token_validity_seconds: yup.number().nullable().when('protocol', {
+      is: 'oidc',
+
+      then: yup.number()
+        .nullable()
+        .min(
+          tenant.form_config.more_info?.access_token_validity_seconds?.min ?? 1,
+          t('yup_below_min')
+        )
+        .test(
+          'access-token-max-by-validation-model',
+          t('yup_exceeds_max'),
+          function (value) {
+            if (value === null || value === undefined || value === '') {
+              return true;
+            }
+
+            const validationModel =
+              this.parent.access_token_validation_model ||
+              'OFFLINE_VERIFIABLE';
+
+            const max =
+              tenant.form_config.more_info?.access_token_validity_seconds?.max?.[
+                validationModel
+              ] ??
+              tenant.form_config.more_info?.access_token_validity_seconds?.max
+                ?.OFFLINE_VERIFIABLE ??
+              tenant.form_config.access_token_validity_seconds ??
+              21600;
+
+            return Number(value) <= Number(max);
+          }
+        )
+        .required('This is a required field')
     }),
+    refresh_token_validity_seconds: yup.number().nullable().when(
+      ['scope', 'protocol'],
+      {
+        is: (scope, protocol) =>
+          protocol === 'oidc' && scope?.includes('offline_access'),
+
+        then: yup.number()
+          .nullable()
+          .min(
+            tenant.form_config.more_info?.refresh_token_validity_seconds?.min ?? 1,
+            t('yup_below_min')
+          )
+          .max(
+            tenant.form_config.more_info?.refresh_token_validity_seconds?.max ??
+            tenant.form_config.refresh_token_validity_seconds ??
+            34560000,
+            t('yup_exceeds_max')
+          )
+          .required(
+            'This field is required when the offline_access is selected'
+          )
+      }
+    ),
     device_code_validity_seconds: yup.number().nullable().when(['protocol', 'grant_types'], {
       is: (protocol, grant_types) => protocol === 'oidc' && grant_types?.includes('urn:ietf:params:oauth:grant-type:device_code'),
       then: yup.number().nullable().min(0).max(tenant.form_config.device_code_validity_seconds, t('yup_exceeds_max')).required('This is a required field when the device code grant type is selected')
@@ -1501,6 +1559,13 @@ const ServiceForm = (props) => {
                               onChange={handleChange}
                               disabled={disabled}
                               errors={errors}
+                              description={`${t('form_refresh_token_validity_seconds_desc')} ${t('min_value_is')} ${formatDuration(
+                                  tenant.form_config.more_info?.refresh_token_validity_seconds?.min ?? 1
+                                )}. ${t('max_value_is')} ${formatDuration(
+                                  tenant.form_config.more_info?.refresh_token_validity_seconds?.max ??
+                                  tenant.form_config.refresh_token_validity_seconds ??
+                                  34560000
+                                )}.`}
                               setFieldValue={setFieldValue}
                               validateField={validateField}
                               changed={props.changes}
@@ -1519,7 +1584,29 @@ const ServiceForm = (props) => {
                               changed={props.changes}
                             />
                           </InputRow>
-                          <InputRow moreInfo={tenant.form_config.more_info.access_token_validity_seconds} required={true} title={t('form_access_token_validity_seconds')} extraClass='time-input' error={errors.access_token_validity_seconds} touched={touched.access_token_validity_seconds} description={t('form_access_token_validity_seconds_desc')}>
+                          <InputRow moreInfo={tenant.form_config.more_info.access_token_validation_model} required={true} title={t('form_access_token_validation_model')} error={errors.access_token_validation_model} touched={touched.access_token_validation_model}>
+                              <AccessTokenValidationModel
+                                name="access_token_validation_model"
+                                values={values}
+                                setFieldValue={setFieldValue}
+                                disabled={disabled}
+                                changed={props.changes ? props.changes.access_token_validation_model : null}
+                                limits={tenant.form_config.more_info.access_token_validity_seconds.max}
+                              />
+                          </InputRow>
+                          <InputRow moreInfo={tenant.form_config.more_info.access_token_validity_seconds} required={true} title={t('form_access_token_validity_seconds')} extraClass='time-input' error={errors.access_token_validity_seconds} touched={touched.access_token_validity_seconds} 
+                            description={`${t('form_access_token_validity_seconds_desc')} ${t('min_value_is')} ${formatDuration(
+                              tenant.form_config.more_info?.access_token_validity_seconds?.min ?? 1
+                            )}. ${t('max_value_is')} ${formatDuration(
+                              tenant.form_config.more_info?.access_token_validity_seconds?.max?.[
+                                values.access_token_validation_model || 'OFFLINE_VERIFIABLE'
+                              ] ??
+                              tenant.form_config.more_info?.access_token_validity_seconds?.max
+                                ?.OFFLINE_VERIFIABLE ??
+                              tenant.form_config.access_token_validity_seconds ??
+                              21600
+                            )}.`}
+                          >
                             <TimeInput
                               name='access_token_validity_seconds'
                               value={values.access_token_validity_seconds}
