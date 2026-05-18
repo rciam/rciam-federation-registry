@@ -13,6 +13,30 @@ function shallowEqual(object1, object2) {
     return true;
   }
 
+function formatDuration(maxSeconds) {
+  const units = [
+    { label: "year", seconds: 365 * 24 * 60 * 60 },
+    { label: "month", seconds: 30 * 24 * 60 * 60 },
+    { label: "day", seconds: 24 * 60 * 60 },
+    { label: "hour", seconds: 60 * 60 },
+    { label: "minute", seconds: 60 },
+    { label: "second", seconds: 1 },
+  ];
+
+  for (const unit of units) {
+    const value = maxSeconds / unit.seconds;
+
+    if (value >= 1) {
+      const rounded = Math.round(value * 10) / 10;
+
+      return `${rounded} ${unit.label}${rounded !== 1 ? "s" : ""} (${maxSeconds}s)`;
+    }
+  }
+
+  return `${maxSeconds} s`;
+}
+
+
 function capitalWords(item) {
    var splitStr = item.toLowerCase().split(' ');
       for (var i = 0; i < splitStr.length; i++) {
@@ -104,5 +128,5 @@ function removeA(arr) {
 
 
 module.exports = {
-    capitalWords,removeA,calcDiff
+    capitalWords,removeA,calcDiff,formatDuration
 }

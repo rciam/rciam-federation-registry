@@ -25,8 +25,7 @@ import "react-bootstrap-typeahead/css/Typeahead.css";
 import config from "../config.json";
 import { useParams } from "react-router-dom";
 import parse from "html-react-parser";
-
-// import {removeA} from '../helpers.js';
+import { formatDuration } from "../helpers.js";
 
 /*
 const [show, setShow] = useState(false);
@@ -522,6 +521,86 @@ export function SimpleRadio(props) {
   );
 }
 
+export function AccessTokenValidationModel(props) {
+  const {
+    name,
+    values,
+    setFieldValue,
+    disabled,
+    changed,
+    limits
+  } = props;
+  const { t, i18n } = useTranslation();
+  const selected = values[name] || 'OFFLINE_VERIFIABLE';
+
+  const options = [
+    {
+      value: 'OFFLINE_VERIFIABLE',
+      title: t('offline_verifiable'),
+      description:
+        t('access_token_validation_offline_description'),
+      maxLabel: `${t('max_access_token_lifetime')} ${formatDuration(limits['OFFLINE_VERIFIABLE'])}`
+    },
+    {
+      value: 'ONLINE_VALIDATION_REQUIRED',
+      title: t('online_validation_required'),
+      description:
+        t('access_token_validation_online_description'),
+      maxLabel: `${t('max_access_token_lifetime')} ${formatDuration(limits['ONLINE_VALIDATION_REQUIRED'])}`
+    }
+  ];
+
+  return (
+    <div className="access-token-validation-model">
+      {options.map(option => (
+        <div
+          key={option.value}
+          className={
+            'access-token-validation-card ' +
+            (selected === option.value ? 'selected' : '') +
+            (changed && selected === option.value ? ' input_radio_edited' : '')
+          }
+          onClick={() => {
+            if (!disabled) {
+              setFieldValue(name, option.value);
+            }
+          }}
+        >
+          <Field name={name}>
+            {({ field }) => (
+              <input
+                type="radio"
+                name={field.name}
+                value={option.value}
+                checked={selected === option.value}
+                disabled={disabled}
+                onChange={() => setFieldValue(name, option.value)}
+              />
+            )}
+          </Field>
+          <div className="access-token-validation-card-content">
+            <strong>{option.title}</strong>
+            <p>{option.description}</p>
+            <span>{option.maxLabel}</span>
+          </div>
+        </div>
+      ))}
+
+      {selected === 'ONLINE_VALIDATION_REQUIRED' && (
+        <div className="access-token-validation-warning">
+          <FontAwesomeIcon icon={faExclamationTriangle} />
+          <div>
+            <strong>{t('important')}</strong>
+            <p>
+              {t('access_token_validation_online_warning')}
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function AuthMethRadioList(props) {
   const [show, setShow] = useState(false);
   // const authMethod = props.values.token_endpoint_auth_method;
@@ -659,7 +738,17 @@ export function TimeInput(props) {
   const [timeMetric, setTimeMetric] = useState("0");
   const [show, setShow] = useState(false);
   const target = useRef(null);
-  var reg = /^-?\d*\.?\d*$/;
+  const reg = /^-?\d*\.?\d*$/;
+
+  const multiplier =
+    timeMetric === "0"
+      ? 1
+      : timeMetric === "1"
+      ? 60
+      : timeMetric === "2"
+      ? 3600
+      : 86400;
+
   return (
     <React.Fragment>
       <Col sm="4">
@@ -675,51 +764,48 @@ export function TimeInput(props) {
           onMouseOut={() => setShow(false)}
           value={
             props.value
-              ? Math.round(
-                  (props.value /
-                    (timeMetric === "0" ? 1 : timeMetric === "1" ? 60 : 3600)) *
-                    100
-                ) / 100
+              ? Math.round((props.value / multiplier) * 100) / 100
               : props.value === 0
               ? "0"
               : ""
           }
           onChange={(e) => {
             if (reg.test(e.target.value)) {
-              e.target.value =
-                e.target.value *
-                (timeMetric === "0"
-                  ? 1
-                  : timeMetric === "0"
-                  ? 1
-                  : timeMetric === "1"
-                  ? 60
-                  : 3600);
+              e.target.value = e.target.value * multiplier;
               props.onChange(e);
             }
           }}
         />
+
         <MyOverLay
           show={props.changed && show ? "string" : null}
           type="Edited"
           target={target}
         />
       </Col>
+
       <Col sm="4">
         <Form.Control
           as="select"
+          value={timeMetric}
           onChange={(e) => {
             setTimeMetric(e.target.value);
           }}
+          disabled={props.disabled}
         >
           <option value="0">seconds</option>
           <option value="1">minutes</option>
           <option value="2">hours</option>
+
+          {props.includeDays ? (
+            <option value="3">days</option>
+          ) : null}
         </Form.Control>
       </Col>
     </React.Fragment>
   );
 }
+
 
 export function CountrySelect(props) {
   const [show, setShow] = useState(false);
@@ -1105,12 +1191,12 @@ export function RefreshToken(props) {
                 ? props.changed.refresh_token_validity_seconds
                 : null
             }
+            includeDays={true}
           />
           <Form.Text
-            className="text-muted text-left label-checkbox"
-            id="uri-small-desc"
+            className="text-muted text-left"
           >
-            {t("form_refresh_token_validity_seconds_desc")}
+            {props.description}
           </Form.Text>
         </React.Fragment>
       ) : null}

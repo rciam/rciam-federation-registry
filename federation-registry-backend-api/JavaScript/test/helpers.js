@@ -33,19 +33,23 @@ const postPetitionError = async (data,tenant,result,done) => {
       done();
     })
 }
-const putPetition = async (data,result,done,user_token) => {
-  var req = request(server).put('/tenants/'+data.tenant+'/petitions/'+data.petition).set({Authorization: user_token}).send(data.body);
-  req.set('Accept','application/json')
-    .expect('Content-Type',/json/)
+const putPetition = async (data, result, done, user_token) => {
+  request(server)
+    .put('/tenants/' + data.tenant + '/petitions/' + data.petition)
+    .set({ Authorization: user_token })
+    .set('Accept', 'application/json')
+    .send(data.body)
+    .expect('Content-Type', /json/)
     .expect(result.status)
-    .end(function(err,res){
-      let body = JSON.parse(res.text);
+    .end(function (err, res) {
+      if (err) return done(err);
+
       expect(res.statusCode).to.equal(result.status);
-      expect(body).to.eql(result.body)
-      done();});
-}
+      expect(res.body).to.eql(result.body);
 
-
+      return done();
+    });
+};
 
 
 
