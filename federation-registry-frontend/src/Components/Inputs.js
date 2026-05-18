@@ -530,7 +530,7 @@ export function AccessTokenValidationModel(props) {
     changed,
     limits
   } = props;
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const selected = values[name] || 'OFFLINE_VERIFIABLE';
 
   const options = [
