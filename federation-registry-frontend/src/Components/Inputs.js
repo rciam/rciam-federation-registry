@@ -1087,21 +1087,25 @@ export function RefreshToken(props) {
           checked={props.values.scope?.includes("offline_access")}
           value="offline_access"
           onClick={() => {
-            if (
-              !props.values.scope?.includes("offline_access") &&
-              (props.values.refresh_token_validity_seconds === null ||
-                props.values.refresh_token_validity_seconds === 0)
-            ) {
-              props
-                .setFieldValue(
-                  "refresh_token_validity_seconds",
-                  initialValues.refresh_token_validity_seconds,
-                  true
-                )
-                .then(() => {
-                  props.validateField("refresh_token_validity_seconds");
-                });
+            const isEnablingOfflineAccess =
+              !props.values.scope?.includes("offline_access");
+
+            if (!isEnablingOfflineAccess || props?.values?.refresh_token_validity_seconds) {
+              return;
             }
+            const defaultRefreshTokenValidity =
+              tenant.form_config?.more_info?.refresh_token_validity_seconds?.default ??
+              initialValues.refresh_token_validity_seconds;
+
+            props
+              .setFieldValue(
+                "refresh_token_validity_seconds",
+                defaultRefreshTokenValidity,
+                true
+              )
+              .then(() => {
+                props.validateField("refresh_token_validity_seconds");
+              });
           }}
         />
         {t("form_reuse_refresh_token_scope")}
