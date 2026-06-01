@@ -193,11 +193,9 @@ async function run() {
           // Updated by Jan Pavlíček (xpavli95@stud.fit.vutbr.cz) to use merged propagation environment from the configuration when
           // merging of integration environments is enabled
           let propagation_integration_environment = service.json.integration_environment;
-          if ('merge_environments_on_deploy' in config && config.merge_environments_on_deploy) {
-            propagation_integration_environment = config.merged_integration_environment_name;
+          if (service.merge_environments_on_deploy) {
+            propagation_integration_environment = service.merged_integration_environment_name;
           }
-
-          console.log(pubUrls.toString());
 
           let done = await axios.post(pubUrls[service.json.tenant].service[service.json.protocol][propagation_integration_environment],{"messages":messages}, options_ams_user).then((res) => {
             if(res.status===200){

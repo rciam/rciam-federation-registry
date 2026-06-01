@@ -50,10 +50,6 @@ let timeouts = {};
 // Updated by Jan Pavlíček (xpavli95@stud.fit.vutbr.cz) - to show move dialog instead of copy dialog when clicking
 // the button next to the integration environments box.
 const ServiceForm = (props) => {
-  let serviceMoveEnabled = false;
-  if ('merge_environments_on_deploy' in config && config.merge_environments_on_deploy) {
-    serviceMoveEnabled = true;
-  }
 
   // eslint-disable-next-line
   const { t, i18n } = useTranslation();
@@ -95,6 +91,8 @@ const ServiceForm = (props) => {
   const [manageTags, setManageTags] = useState(false);
   const [timeoutId] = useState(hex(4));
   const [modalData, setModalData] = useState({});
+
+  const serviceMoveEnabled = tenant?.config?.merge_environments_on_deploy ?? false;
 
   useEffect(() => {
     //Get tags 

@@ -152,7 +152,7 @@ function scheduleRestart() {
     clearInterval(runIntervalTask);
     runIntervalTask = null;
   }
-  
+
   if (connection) {
     try { connection.close(); } catch (e) {}
   }
@@ -167,7 +167,7 @@ function scheduleRestart() {
 async function gracefulShutdown(signal) {
   if (isShuttingDown) return;
   isShuttingDown = true;
-  
+
   console.log(`\nReceived ${signal}. Starting graceful shutdown...`);
 
   if (runIntervalTask) clearInterval(runIntervalTask);
@@ -198,12 +198,12 @@ async function startApp(){
   try {
     await setupRabbitMQChannels();
     await setupQueues();
-  
+
     if (runIntervalTask) clearInterval(runIntervalTask);
     runIntervalTask = setInterval(run, 10000);
-  
+
     isReconnecting = false;
-  
+
     console.log("App initialization successful.");
   } catch (err) {
     console.error("[AMQP] Startup failed:", err.message);
@@ -310,12 +310,8 @@ async function handleSuccess(response) {
     // merging of integration environments is enabled
     let propagation_integration_environment =
       service.json.integration_environment;
-    if (
-      "merge_environments_on_deploy" in config &&
-      config.merge_environments_on_deploy
-    ) {
-      propagation_integration_environment =
-        config.merged_integration_environment_name;
+    if (service.merge_environments_on_deploy) {
+      propagation_integration_environment = service.merged_integration_environment_name;
     }
 
     setStateArray.push({

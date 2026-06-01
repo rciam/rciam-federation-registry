@@ -885,15 +885,13 @@ const ServiceList= (props)=> {
 // integration environments in the action menu when merging of integration environments is enabled.
 function TableItem(props) {
 
-  let serviceMoveEnabled = false;
-  if ('merge_environments_on_deploy' in config && config.merge_environments_on_deploy) {
-    serviceMoveEnabled = true;
-  }
   // eslint-disable-next-line
   const [tenant,setTenant] = useContext(tenantContext);
   const [manageTags,setManageTags] = useState(false);
   const {tenant_name} = useParams();
   const [variant,setVariant] = useState("");
+
+  const serviceMoveEnabled = tenant?.config?.merge_environments_on_deploy ?? false;
 
   useEffect(()=>{
     let index = tenant.form_config.integration_environment.indexOf(props.service.integration_environment);
