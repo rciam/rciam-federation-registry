@@ -5,6 +5,43 @@ All notable changes in Federation Registry will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0]
+
+### Added
+
+- Support for RabbitMQ as a deployment message queue.
+- Support for configurable email transport settings.
+- Support for configurable footer logo and logo link.
+- Support for deployment queue sharing across integration environments.
+- Support for service collision checks across integration environments.
+- Support for moving services between integration environments when deployment merging is enabled.
+- Extended deployment error schema with `proxy_deploy_success` and `solved` fields.
+
+### Fixed
+
+- Fixed race condition when loading footer logo configuration.
+- Fixed SAML service collision validation using `client_id` instead of `entityId`.
+- Removed hardcoded notification sender email address.
+- Removed hardcoded footer content and use configuration-defined content only.
+
+### Security
+
+- Updated backend, frontend and AMS agent dependencies.
+- Added support for Node.js 22.
+
+### Database Changes
+
+- Added `proxy_deploy_success` column to `service_errors`.
+- Added `solved` column to `service_errors`.
+
+```sql
+ALTER TABLE service_errors
+ADD COLUMN proxy_deploy_success BOOLEAN;
+
+ALTER TABLE service_errors
+ADD COLUMN solved BOOLEAN;
+```
+
 ## [1.7.0]
 
 ### Added
