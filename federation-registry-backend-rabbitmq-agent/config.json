@@ -1,0 +1,11 @@
+{
+  "rabbitmq_user": "guest",
+  "rabbitmq_pass": "guest",
+  "rabbitmq_host": "localhost",
+  "rabbitmq_vhost": "/",
+  "rabbitmq_update_status_q": "federation-registry-update-status",
+  "ams_auth_key": "banini",
+  "express_url": "http://localhost:5000",
+  "express_key": "banana",
+  "env": "dev"
+}

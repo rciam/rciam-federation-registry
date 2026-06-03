@@ -190,10 +190,17 @@ async function run() {
           }
           let messages = [{"attributes":{},"data": Buffer.from(JSON.stringify(service.json)).toString("base64")}];
 
-          let done = await axios.post(pubUrls[service.json.tenant].service[service.json.protocol][service.json.integration_environment],{"messages":messages}, options_ams_user).then((res) => {
+          // Updated by Jan Pavlíček (xpavli95@stud.fit.vutbr.cz) to use merged propagation environment from the configuration when
+          // merging of integration environments is enabled
+          let propagation_integration_environment = service.json.integration_environment;
+          if (service.merge_environments_on_deploy) {
+            propagation_integration_environment = service.merged_integration_environment_name;
+          }
+
+          let done = await axios.post(pubUrls[service.json.tenant].service[service.json.protocol][propagation_integration_environment],{"messages":messages}, options_ams_user).then((res) => {
             if(res.status===200){
               let log = {
-                topic: pubUrls[service.json.tenant].service[service.json.protocol][service.json.integration_environment],
+                topic: pubUrls[service.json.tenant].service[service.json.protocol][propagation_integration_environment],
                 tenant: service.json.tenant,
                 service_id: service.json.id,
                 external_id: service.json.external_id,

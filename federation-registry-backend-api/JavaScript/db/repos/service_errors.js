@@ -12,7 +12,8 @@ class ServiceErrorsRepository {
         this.pgp = pgp;
         const table = new pgp.helpers.TableName({table: 'service_errors', schema: 'public'});
         // set-up all ColumnSet objects, if needed:
-        cs.insert = new pgp.helpers.ColumnSet(['error_description','error_code','service_id','date'],{table});
+        // Updated by Jan Pavlíček (xpavli95@stud.fit.vutbr.cz) to include proxy_deploy_success
+        cs.insert = new pgp.helpers.ColumnSet(['error_description','error_code','service_id','date','proxy_deploy_success'],{table});
     }
 
     async add(errors){
@@ -29,6 +30,10 @@ class ServiceErrorsRepository {
       return this.db.oneOrNone('UPDATE service_errors SET archived=true WHERE service_id=$1 and archived=false RETURNING service_id',+id);
     }
 
+    // Added by Jan Pavlíček (xpavli95@stud.fit.vutbr.cz) to allow mark all previous service deployment errors as solved
+    async solveAllErrors(service_id) {
+        this.db.any('UPDATE service_errors SET solved=true WHERE service_id = $1', +service_id);
+    }
 
 }
 

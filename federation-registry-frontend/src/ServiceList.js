@@ -26,6 +26,7 @@ import {ConfirmationModal} from './Components/Modals';
 import {userContext,tenantContext} from './context.js';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import LogoContainer from './Components/LogoContainer.js';
+import MoveDialog from "./Components/MoveDialog";
 const {capitalWords} = require('./helpers.js');
 var filterTimeout;
 
@@ -880,12 +881,17 @@ const ServiceList= (props)=> {
     )
   }
 
+// Upadted by Jan Pavlíček (xpavli95@stud.fit.vutbr.cz) - to include action for moving the service between
+// integration environments in the action menu when merging of integration environments is enabled.
 function TableItem(props) {
+
   // eslint-disable-next-line
   const [tenant,setTenant] = useContext(tenantContext);
   const [manageTags,setManageTags] = useState(false);
   const {tenant_name} = useParams();
   const [variant,setVariant] = useState("");
+
+  const serviceMoveEnabled = tenant?.config?.merge_environments_on_deploy ?? false;
 
   useEffect(()=>{
     let index = tenant.form_config.integration_environment.indexOf(props.service.integration_environment);
@@ -893,8 +899,12 @@ function TableItem(props) {
   },[props.service,tenant.form_config.integration_environment])
 
   const [showCopyDialog,setShowCopyDialog] = useState(false);
+  const [showMoveDialog,setShowMoveDialog] = useState(false);
   const toggleCopyDialog = () => {
     setShowCopyDialog(!showCopyDialog);
+  }
+  const toggleMoveDialog = () => {
+    setShowMoveDialog(!showMoveDialog);
   }
 
 
@@ -975,7 +985,15 @@ function TableItem(props) {
         <div className="petition-actions">
           <Row>
             <Col className='controls-col  controls-col-buttons'>
-            <CopyDialog service_id={props.service.service_id} show={showCopyDialog} toggleCopyDialog={toggleCopyDialog} current_environment={props.service.integration_environment} />
+              {serviceMoveEnabled && (
+                  <MoveDialog
+                      service_id={props.service.service_id}
+                      show={showMoveDialog}
+                      toggleMoveDialog={toggleMoveDialog}
+                      current_environment={props.service.integration_environment}
+                  />
+              )}
+              <CopyDialog service_id={props.service.service_id} show={showCopyDialog} toggleCopyDialog={toggleCopyDialog} current_environment={props.service.integration_environment} />
                 {props.service.state==='error'&&user.actions.includes('view_errors')?
                 <div className="notification">
                   <FontAwesomeIcon icon={faExclamation} className="fa-exclamation"/>
@@ -1070,6 +1088,15 @@ function TableItem(props) {
               </React.Fragment>}
               id="dropdown-menu-align-right"
             >
+              {serviceMoveEnabled && props.service.service_id && props.service.state==='deployed' && props.service.owned &&
+                  <Dropdown.Item as='span'>
+                    <div>
+                      <Link to={"#"} onClick={()=>{
+                        toggleMoveDialog();
+                      }}>Move Service</Link>
+                    </div>
+                  </Dropdown.Item>
+              }
               {props.service.service_id && props.service.state==='deployed' && props.service.owned?
               <Dropdown.Item as='span'>
                 <div>

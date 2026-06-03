@@ -133,11 +133,19 @@ export const Footer =(props) =>{
           </Col>
     			<Col sm="3" className="ssp-footer__item">
             <div className="footer-logo-container">
-              <a href="https://grnet.gr/">
-                <Image className="ssp-footer__item__logo" src={process.env.PUBLIC_URL + '/grnet.png'} alt="GRNET"/>
-              </a>
-              <div className="ssp-footer__item__copyright">
-              {tenant&&(tenant?.config?.copyright)}     </div>
+                {tenant?.config && (
+                    <a href={tenant?.config?.footer_logo_link ?? "https://grnet.gr/"}>
+                        <Image
+                            className="ssp-footer__item__logo"
+                            src={tenant.config?.footer_logo_url || process.env.PUBLIC_URL + '/grnet.png'}
+                            alt="logo"
+                        />
+                    </a>
+                )}
+
+                <div className="ssp-footer__item__copyright">
+                    {tenant && tenant?.config?.copyright}
+                </div>
             </div>
           </Col>
           <Col sm="3" className="ssp-footer__item">
@@ -153,7 +161,7 @@ export const Footer =(props) =>{
         </Row>
         <Row>
           <div className='copyright-funding-footer'>
-            {tenant&&parse(tenant?.config?.footer_description)} | Powered by <a href="https://rciam.github.io/rciam-docs/" target="_blank" rel="noreferrer"> RCIAM</a>
+            {tenant&&parse(tenant?.config?.footer_description)}
           </div>
         </Row>
       </div>

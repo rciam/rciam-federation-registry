@@ -21,12 +21,16 @@ module.exports = {
       add:sql('service_details/add.sql'),
       update:sql('service_details/update.sql')
     },
+    // Updated by Jan Pavlíček (xpavli95@stud.fit.vutbr.cz) to include checks for client id and entity id
+    // uniqueness between all integration environments
     service_details_protocol:{
       addOidc:sql('service_details_protocol/addOidc.sql'),
       checkClientId:sql('service_details_protocol/checkClientId.sql'),
+      checkClientIdAllEnvironments:sql('service_details_protocol/checkClientIdAllEnvironments.sql'),
       updateOidc:sql('service_details_protocol/updateOidc.sql'),
       updateSaml:sql('service_details_protocol/updateSaml.sql'),
       checkEntityId:sql('service_details_protocol/checkEntityId.sql'),
+      checkEntityIdAllEnvironments:sql('service_details_protocol/checkEntityIdAllEnvironments.sql'),
       addSaml:sql('service_details_protocol/addSaml.sql')
     },
     service:{

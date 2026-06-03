@@ -1,0 +1,5 @@
+{
+  "host": "relay.grnet.gr",
+  "port": 587,
+  "secure": false
+}
