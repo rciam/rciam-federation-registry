@@ -932,6 +932,25 @@ const serviceValidationRules = (options, req) => {
         let tenant = options.tenant_param
           ? req.params.tenant
           : req.body[path.match(/\[(.*?)\]/)[1]].tenant;
+        // Upadted by Jan Pavlíček (xpavli95@stud.fit.vutbr.cz) to check availability of entity id when merging of integration
+        // environments is enabled.
+        const merge_environments_on_deploy = tenant_config[tenant].merge_environments_on_deploy ?? false;
+        if (merge_environments_on_deploy) {
+          return db.service_details_protocol
+            .checkClientIdAllEnvironments(
+              value,
+              0,
+              0,
+              tenant,
+            )
+            .then((available) => {
+              if (!available) {
+                  return Promise.reject("Not available (" + value + ")");
+              } else {
+                  return Promise.resolve();
+              }
+            });
+        }
         return db.service_details_protocol
           .checkClientId(
             value,
@@ -1817,8 +1836,25 @@ const serviceValidationRules = (options, req) => {
         return options.check_available;
       })
       .custom((value, { req, location, path }) => {
+        const merge_environments_on_deploy = tenant_config[req.params.tenant].merge_environments_on_deploy ?? false;
+        if (merge_environments_on_deploy) {
+          return db.service_details_protocol
+            .checkEntityIdAllEnvironments(
+              value,
+              0,
+              0,
+              req.params.tenant,
+            )
+            .then((available) => {
+              if (!available) {
+                return Promise.reject("Metadata url is not available");
+              } else {
+                return Promise.resolve();
+              }
+            });
+        }
         return db.service_details_protocol
-          .checkClientId(
+          .checkEntityId(
             value,
             0,
             0,

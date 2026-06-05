@@ -108,7 +108,7 @@ const sendOutdatedNotification = async (data) => {
         }
         var htmlToSend = template(replacements);
         var mailOptions = {
-          from: tenant_config[data.tenant].sender+" Notifications <noreply@faai.grnet.gr>",
+          from: tenant_config[data.tenant].sender,
           to : data.email,
           subject : 'Service ('+data.service_name+') is outdated [Action Required]',
           html : htmlToSend

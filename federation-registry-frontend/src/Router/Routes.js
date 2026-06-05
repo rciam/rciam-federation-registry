@@ -58,6 +58,21 @@ const Routes = (props) => {
         </div>
         <UserInfo user={props.user} />
       </ProtectedRoute>
+      {// Added by Jan Pavlíček (xpavli95@stud.fit.vutbr.cz) - new route for moving services between integration
+        // environments
+        tenant?.config?.merge_environments_on_deploy && (
+        <ProtectedRoute user={props.user} path="/:tenant_name/services/:service_id/move">
+          <div className="links">
+            <Link to={"/" + tenant?.name + "/home"}>{props.t('link_home')}</Link>
+            <span className="link-seperator">/</span>
+            <Link to={"/" + tenant?.name + "/services"}>{props.t('link_petitions')}</Link>
+            <span className="link-seperator">/</span>
+            Move Service
+          </div>
+          <EditService user={props.user}/>
+        </ProtectedRoute>
+          )
+      }
       <ProtectedRoute user={props.user} path="/:tenant_name/form/copy">
         <div className="links">
           <Link to={"/"+ tenant?.name +"/home"}>{props.t('link_home')}</Link>
@@ -66,13 +81,16 @@ const Routes = (props) => {
           <span className="link-seperator">/</span>
           New Service
         </div>
-        <CopyService user={props.user}/>
-      </ProtectedRoute>
+          {/* Updated by Jan Pavlíček (xpavli95@stud.fit.vutbr.cz) - passing the clear_identifier signal to clear
+          identifiers when copying services */}
+          <CopyService user={props.user} clear_identifier={tenant?.config?.merge_environments_on_deploy ?? false}/>
+        </ProtectedRoute>
+      )
       <ProtectedRoute user={props.user} path="/:tenant_name/form/new">
         <div className="links">
-          <Link to={"/"+ tenant?.name +"/home"}>{props.t('link_home')}</Link>
+          <Link to={"/" + tenant?.name + "/home"}>{props.t('link_home')}</Link>
           <span className="link-seperator">/</span>
-          <Link to={"/"+ tenant?.name +"/services"}>{props.t('link_petitions')}</Link>
+          <Link to={"/" + tenant?.name + "/services"}>{props.t('link_petitions')}</Link>
           <span className="link-seperator">/</span>
           New Service
         </div>

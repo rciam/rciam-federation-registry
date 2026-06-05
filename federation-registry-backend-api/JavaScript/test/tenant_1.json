@@ -18,6 +18,8 @@
         },
     "restricted_env": ["production"],
     "test_env":["development"],
+    "merge_environments_on_deploy": false,
+    "merged_integration_environment_name": "merged",
     "client_scopes":["openid", "email", "profile", "eduperson_entitlement"],
     "claims": {
         "sub_claim": "sub",
