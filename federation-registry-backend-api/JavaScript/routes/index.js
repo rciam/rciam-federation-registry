@@ -24,6 +24,7 @@ const {
   sendMultipleInvitations,
   sendDeploymentMail,
   delay,
+  filterDeploymentContacts
 } = require("../functions/helpers.js");
 const { getUserFromClaims } = require("../functions/util_functions.js");
 const { db } = require("../db");
@@ -909,8 +910,8 @@ router.get("/agent/get_new_configurations", amsAgentAuth, (req, res, next) => {
             const currentTenantConfig = tenant_config[service.json.tenant];
             service.merge_environments_on_deploy = currentTenantConfig.merge_environments_on_deploy ?? false;
             service.merged_integration_environment_name = currentTenantConfig.merged_integration_environment_name ?? null;
+            filterDeploymentContacts(service, currentTenantConfig);
           });
-
           res.status(200).json({ services });
         }
       })

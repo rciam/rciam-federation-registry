@@ -19,6 +19,11 @@
   },
   "restricted_env": ["production"],
   "test_env": ["development"],
+  "deployment": {
+    "contacts": {
+      "types": ["technical", "support"]
+    }
+  },
   "merge_environments_on_deploy": false,
   "merged_integration_environment_name": "merged",
   "client_scopes": ["openid", "email", "profile", "eduperson_entitlement"],
