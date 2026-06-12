@@ -530,6 +530,24 @@ function shallowEqual(object1, object2) {
   return true;
 }
 
+const DEFAULT_DEPLOYMENT_CONTACT_TYPES = ["technical", "support"];
+
+function getDeploymentContactTypes(tenantConfig) {
+  return tenantConfig?.deployment?.contacts?.types ?? DEFAULT_DEPLOYMENT_CONTACT_TYPES;
+}
+
+function filterDeploymentContacts(service, tenantConfig) {
+  const allowedTypes = getDeploymentContactTypes(tenantConfig);
+
+  if (!Array.isArray(service.json.contacts)) {
+    return;
+  }
+
+  service.json.contacts = service.json.contacts.filter((contact) =>
+    allowedTypes.includes(contact.type)
+  );
+}
+
 
 module.exports = {
   calcDiff,
@@ -542,6 +560,7 @@ module.exports = {
   extractServiceBoolean,
   sendDeploymentMail,
   delay,
+  filterDeploymentContacts,
   sendNotif,
   createTransport,
   sendNotifications,
