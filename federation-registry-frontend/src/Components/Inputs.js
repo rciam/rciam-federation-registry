@@ -603,8 +603,6 @@ export function AccessTokenValidationModel(props) {
 
 export function AuthMethRadioList(props) {
   const [show, setShow] = useState(false);
-  // const authMethod = props.values.token_endpoint_auth_method;
-  // const signingAlg = props.values.token_endpoint_auth_signing_alg;
   const setFieldValue = props.setFieldValue;
   const target = useRef(null);
   const [tenant] = useContext(tenantContext);
@@ -615,14 +613,14 @@ export function AuthMethRadioList(props) {
         props.values.token_endpoint_auth_method === "private_key_jwt") &&
       !props.values.token_endpoint_auth_signing_alg
     ) {
-      setFieldValue("token_endpoint_auth_signing_alg", "RS256");
+      setFieldValue?.("token_endpoint_auth_signing_alg", "RS256");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.values.token_endpoint_auth_method]);
 
   useEffect(() => {
-    if (tenant.form_config.dynamic_fields.includes("allow_introspection")) {
-      setFieldValue(
+    if (tenant.form_config.dynamic_fields?.includes("allow_introspection")) {
+      setFieldValue?.(
         "allow_introspection",
         props.values.token_endpoint_auth_method !== "none"
       );
@@ -1492,7 +1490,7 @@ export function ListInputArray(props) {
         ) : null}
       </thead>
       <tbody>
-        {[...props.defaultValues].map((item, index) => (
+        {[...(props.defaultValues || [])].map((item, index) => (
           <ListInputArrayInput1
             key={index}
             index={index}
@@ -1510,7 +1508,7 @@ export function ListInputArray(props) {
               ...(props.values || []),
               ...(props?.changed?.D ? props?.changed?.D : []),
             ].map((item, index) => {
-              if (!props.defaultValues.includes(item)) {
+              if (!(props.defaultValues || []).includes(item)) {
                 return (
                   <React.Fragment key={index}>
                     <ListInputArrayInput2
