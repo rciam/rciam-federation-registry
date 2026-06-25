@@ -155,6 +155,12 @@ function scheduleRestart() {
     runIntervalTask = null;
   }
 
+  if (sendResultTask) {
+    clearInterval(sendResultTask);
+    sendResultTaskRunning = false;
+  }
+  ResultMessageBatch.clear();
+
   if (connection) {
     connection.close().catch(() => {});
     connection = null;
