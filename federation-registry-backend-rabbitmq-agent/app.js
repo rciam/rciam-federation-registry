@@ -82,8 +82,7 @@ async function setupRabbitMQChannels() {
   const callback = async function callback(msg) {
     if (msg === null) return;
     try {
-      ResultMessageBatch.addMessage(msg.content.toString());
-      consumeChannel.ack(msg);
+      ResultMessageBatch.addMessage(msg.content.toString(), msg);
       if (!sendResultTaskRunning) {
         sendResultTask = setInterval(() => {
           sendResult();
@@ -226,7 +225,10 @@ async function sendResult() {
       if (res.status != 200) {
         console.log("Could not send result to fedreg, trying again...");
       } else {
+        const messagesToAck = ResultMessageBatch.getAmqpMessages();
+        messagesToAck.forEach((msg) => consumeChannel.ack(msg));
         ResultMessageBatch.clear();
+
         clearInterval(sendResultTask);
         sendResultTaskRunning = false;
       }
