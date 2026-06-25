@@ -24,6 +24,7 @@ let sendResultTask;
 let sendResultTaskRunning = false;
 let isReconnecting = false;
 let isShuttingDown = false;
+let restartTimeout = null;
 let runIntervalTask = null;
 
 const options = {
@@ -147,18 +148,22 @@ async function setupQueues() {
 }
 
 function scheduleRestart() {
+  if (restartTimeout) return;
+
   if (runIntervalTask) {
     clearInterval(runIntervalTask);
     runIntervalTask = null;
   }
 
   if (connection) {
-    try { connection.close(); } catch (e) {}
+    connection.close().catch(() => {});
+    connection = null;
   }
 
   console.log("[AMQP] Retrying in 5 seconds...");
-  setTimeout(() => {
+  restartTimeout = setTimeout(() => {
     isReconnecting = false;
+    restartTimeout = null;
     startApp();
   }, 5000);
 }
