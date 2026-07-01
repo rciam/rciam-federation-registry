@@ -24,6 +24,7 @@ let sendResultTask;
 let sendResultTaskRunning = false;
 let isReconnecting = false;
 let isShuttingDown = false;
+let restartTimeout = null;
 let runIntervalTask = null;
 
 const options = {
@@ -82,8 +83,7 @@ async function setupRabbitMQChannels() {
   const callback = async function callback(msg) {
     if (msg === null) return;
     try {
-      ResultMessageBatch.addMessage(msg.content.toString());
-      consumeChannel.ack(msg);
+      ResultMessageBatch.addMessage(msg.content.toString(), msg);
       if (!sendResultTaskRunning) {
         sendResultTask = setInterval(() => {
           sendResult();
@@ -148,18 +148,28 @@ async function setupQueues() {
 }
 
 function scheduleRestart() {
+  if (restartTimeout) return;
+
   if (runIntervalTask) {
     clearInterval(runIntervalTask);
     runIntervalTask = null;
   }
 
+  if (sendResultTask) {
+    clearInterval(sendResultTask);
+    sendResultTaskRunning = false;
+  }
+  ResultMessageBatch.clear();
+
   if (connection) {
-    try { connection.close(); } catch (e) {}
+    connection.close().catch(() => {});
+    connection = null;
   }
 
   console.log("[AMQP] Retrying in 5 seconds...");
-  setTimeout(() => {
+  restartTimeout = setTimeout(() => {
     isReconnecting = false;
+    restartTimeout = null;
     startApp();
   }, 5000);
 }
@@ -215,9 +225,10 @@ async function startApp(){
 startApp();
 
 async function sendResult() {
+  var ingest_url = config.express_url + "/ams/ingest";
   axios
     .post(
-      config.express_url + "/ams/ingest",
+      ingest_url,
       ResultMessageBatch.toJSON(),
       publishResultsOptions,
     )
@@ -225,21 +236,25 @@ async function sendResult() {
       if (res.status != 200) {
         console.log("Could not send result to fedreg, trying again...");
       } else {
+        const messagesToAck = ResultMessageBatch.getAmqpMessages();
+        messagesToAck.forEach((msg) => consumeChannel.ack(msg));
         ResultMessageBatch.clear();
+
         clearInterval(sendResultTask);
         sendResultTaskRunning = false;
       }
     })
     .catch((err) => {
-      console.log("Could not upload result to fedreg, trying again...");
-      console.error("Error:", err);
+      console.log(`Could not upload result to fedreg via ${ingest_url}, trying again...`);
+      console.error(`[Axios Error] ${err.code}: ${err.message}`);
     });
 }
 
 async function setServiceState() {
+  var update_service_state_url = config.express_url + "/agent/set_services_state";
   axios
     .put(
-      config.express_url + "/agent/set_services_state",
+      update_service_state_url,
       setStateArray,
       options,
     )
@@ -252,8 +267,8 @@ async function setServiceState() {
       }
     })
     .catch((err) => {
-      console.log("Could not set service state trying again...");
-      console.error("Error:", err);
+      console.log(`Could not set service state via ${update_service_state_url} trying again...`);
+      console.error(`[Axios Error] ${err.code}: ${err.message}`);
     });
 }
 
@@ -262,8 +277,9 @@ async function run() {
     return;
   }
   // check if config hasn't changed
+  var new_config_url = config.express_url + "/agent/get_new_configurations";
   axios
-    .get(config.express_url + "/agent/get_new_configurations", options)
+    .get(new_config_url, options)
     .then(async function (response) {
       if (response.data.services && response.data.services.length > 0) {
         handleSuccess(response);
@@ -271,7 +287,8 @@ async function run() {
     })
     .catch(function (error) {
       // handle error
-      console.log(error);
+      console.log(`Coudn't fetch new configurations from fedreg via ${new_config_url}`);
+      console.error(`[Axios Error] ${error.code}: ${error.message}`);
     });
 }
 
