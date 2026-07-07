@@ -203,6 +203,7 @@ var server = app.listen(port, () => {
   function stop() {
     server.close();
 }
+server.keepAliveTimeout = 3700000;
 
 
 
