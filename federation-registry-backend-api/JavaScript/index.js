@@ -46,7 +46,7 @@ var corsOptions = {
 
 const app = express();
 
-
+app.disable('x-powered-by');
 app.set('hash',hash);
 db.tenants.getInit().then(async tenants => {
   
