@@ -5,6 +5,25 @@ All notable changes in Federation Registry will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [2.2.0] 10/07/2026
+
+## Added
+
+- Display requester and reviewer information in service petition history when available.
+- Support for displaying reviewer metadata based on user permissions.
+
+## Changed
+
+- Increased `server.keepAliveTimeout` to 3700 seconds.
+- Disabled the `X-Powered-By` response header.
+- Enabled Express router case-sensitive and strict routing.
+- Refactored `ams_auth_key` configuration name for improved clarity.
+
+## Fixed
+
+- RabbitMQ agent small fixes.
+- Minor fixes to service petition history and review workflow.
+
 ## [2.1.1] 18/06/2026
 
 ## Fixed

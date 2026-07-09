@@ -18,7 +18,8 @@ class PetitionRepository {
     return this.db.oneOrNone(sql.getPetition,{
       id:+id,
       tenant:tenant,
-      hide_comments:!user.role.actions.includes('review_petition')
+      hide_comments:!user.role.actions.includes('review_petition'),
+      view_reviewer: user.role.actions.includes('view_reviewer')
     }).then(result => {
       if(result){
         return fixPetition(result);
@@ -39,7 +40,8 @@ class PetitionRepository {
       sub:user.sub,
       id:+id,
       tenant:tenant,
-      hide_comments:!user.role.actions.includes('review_petition')
+      hide_comments:!user.role.actions.includes('review_petition'),
+      view_reviewer: user.role.actions.includes('view_reviewer')
     }).then(result => {
       if(result){
         return fixPetition(result);
@@ -54,7 +56,8 @@ class PetitionRepository {
       sub:user.sub,
       id:+id,
       tenant:tenant,
-      hide_comments:!user.role.actions.includes('review_petition')
+      hide_comments:!user.role.actions.includes('review_petition'),
+      view_reviewer: user.role.actions.includes('view_reviewer')
     }).then(result => {
       if(result){
         return fixPetition(result);
@@ -81,9 +84,11 @@ class PetitionRepository {
       sub:user.sub,
       id:+id,
       tenant:tenant,
-      hide_comments:!user.role.actions.includes('review_petition')
+      hide_comments:!user.role.actions.includes('review_petition'),
+      view_reviewer: user.role.actions.includes('view_reviewer')
     }).then(result => {
       if(result){
+        console.log(result);
         return fixPetition(result);
 
       }
@@ -193,6 +198,8 @@ const fixPetition = (result) => {
   data.meta_data.service_id = result.json.service_id;
   data.meta_data.status = result.json.status;
   data.meta_data.reviewed_at = result.json.reviewed_at;
+  data.meta_data.reviewer = result?.json?.reviewer;
+  data.meta_data.requester_info = result?.json?.requester_info;
 
   delete result.group_id;
   delete result.json.status;
@@ -200,6 +207,8 @@ const fixPetition = (result) => {
   delete result.json.type;
   delete result.json.service_id;
   delete result.json.requester;
+  delete result.json.reviewer;
+  delete result.json.requester_info;
   delete result.json.comment;
   delete result.json.submitted_at;
   data.service_data = extractServiceBoolean(result.json);

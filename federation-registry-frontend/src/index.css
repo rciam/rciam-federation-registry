@@ -269,26 +269,24 @@ code {
   font-size:0.9rem;
 }
 
-
-/* Form Handler */
-.text-comment{
-   white-space: pre-line;
-}
-.jumbotron-comment {
-  padding:1rem!important;
-  text-align: left;
-  max-height:7123rem;
-  margin-top: 1rem;
-  margin-bottom:0rem!important;
-}
-.jumbotron-comment h5 {
-  font-size:1.3rem;
-}
-.jumbotron-comment p {
-  margin-bottom: 0;
-  font-size:1rem;
+.petition-review-alert {
+  padding: 1rem 1.25rem;
 }
 
+.petition-review-card {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: none;
+}
+
+.petition-status-badge {
+  font-weight: 500;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.petition-review-comment {
+  white-space: pre-line;
+  color: #333;
+}
 
 
 /* Service List */

@@ -8,16 +8,13 @@ import Button from 'react-bootstrap/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {faEye} from '@fortawesome/free-solid-svg-icons';
 import {Link,useParams,useHistory} from "react-router-dom";
-import Alert from 'react-bootstrap/Alert';
-import Jumbotron from 'react-bootstrap/Jumbotron';
-import Container from 'react-bootstrap/Container';
 import { useTranslation } from 'react-i18next';
 import {Logout,NotFound} from './Modals'
 import {userContext} from '../context.js';
 import {calcDiff} from '../helpers.js'
 import {tenantContext} from '../context.js';
 import { diff } from 'deep-diff';
-
+import PetitionHistoryInfo from './PetitionHistoryInfo.js';
 
 
 export const HistoryRequest = () =>{
@@ -132,22 +129,7 @@ export const HistoryRequest = () =>{
     <NotFound notFound={notFound}/>
     {petition&&(petition.metadata.type!=='edit'||changes)?
       <React.Fragment>
-        <Alert variant='warning' className='form-alert'>
-         {petition.metadata.status==='approved_with_changes'?"The Reviewer has requested changes to the following":t('history_info_1')}
-         {petition.metadata.type==='create'?t('registration'):petition.metadata.type==='edit'?t('reconfiguration'):t('deregistration')} 
-         {t('history_info_2')}
-         {petition.metadata.status==='approved'?t('history_info_approved'):petition.metadata.status==='reject'?t('history_info_rejected'):petition.metadata.status==='pending'?t('history_info_pending'):""}.
-        </Alert>
-        {petition.metadata.comment?
-          <Jumbotron fluid className="jumbotron-comment">
-            <Container>
-              <h5>{t('history_commend')}</h5>
-              <p className="text-comment">
-                {petition.metadata.comment}
-              </p>
-            </Container>
-          </Jumbotron>
-        :null}
+        <PetitionHistoryInfo petition={petition} t={t} />
         <ServiceForm initialValues={petition.petition} changes={changes} user={user} disabled={true}/>
       </React.Fragment>
     :<LoadingBar loading={true}/> 
@@ -226,11 +208,44 @@ export const HistoryList = (props) => {
         </thead>
         <tbody>
           {historyList.map((item,index)=>{
+            const requestLabel = item.type === "create"
+              ? t('registration')
+              : item.type === "edit"
+                ? t('reconfiguration')
+                : t('deregistration');
+            const requestStatusLabel =
+              item.status === "pending" || item.status === "changes"
+                ? `${requestLabel}${t('history_info_2_pending')}`
+                : item.status === "request_review"
+                  ? `${requestLabel}${t('history_info_2_under')}`
+                  : item.status === "approved_with_changes"
+                    ? `${requestLabel}${t('history_info_2_had')}`
+                    : `${requestLabel}${t('history_info_2')}`;
+            const statusBadgeText =
+              item.status === "reject"
+                ? t('history_info_rejected')
+                : item.status === "approved"
+                  ? t('history_info_approved')
+                  : item.status === "approved_with_changes"
+                    ? t('history_info_approved_with_changes')
+                    : item.status === "pending"
+                      ? t('history_info_pending_review')
+                      : item.status === "request_review"
+                        ? t('history_info_request_review')
+                        : item.status === "changes"
+                          ? t('badge_changes_pending')
+                          : item.status;
+            const statusBadgeVariant =
+              item.status === "pending" || item.status === "approved_with_changes" || item.status === 'request_review' || item.status === "changes"
+                ? 'warning'
+                : item.status === "reject"
+                  ? 'danger'
+                  : 'success';
             return(
             <tr key={index}>
               <td>{item.reviewed_at?item.reviewed_at.slice(0,10).split('-').join('/'):t('history_not_reviewed')}</td>
-              <td><Badge className="status-badge" variant='info'>{item.type==="create"?t('registration'):item.type==="edit"?t('reconfiguration'):t('deregistration')} {t('history_info_2')}</Badge></td>
-              <td><Badge className="status-badge" variant={item.status==="pending"||item.status==="approved_with_changes"||item.status==='request_review'?'warning':item.status==="reject"?'danger':'success'}>{item.status==='reject'?'rejected':item.status!=='request_review'?item.status:user.actions.includes('review_petition')?item.status:'pending'}</Badge></td>
+              <td><Badge className="status-badge" variant='info'>{requestStatusLabel}</Badge></td>
+              <td><Badge className="status-badge" variant={statusBadgeVariant}>{statusBadgeText}</Badge></td>
               <td>    <Button variant="secondary" onClick={()=>{history.push("/"+tenant_name+"/services/"+service_id+"/requests/"+item.id+"/history")}}>
                     <FontAwesomeIcon icon={faEye}/>View
                   </Button>
