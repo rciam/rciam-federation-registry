@@ -28,7 +28,7 @@ const {
 } = require("../functions/helpers.js");
 const { getUserFromClaims } = require("../functions/util_functions.js");
 const { db } = require("../db");
-var router = require("express").Router();
+var router = require("express").Router({ caseSensitive: true, strict: true });
 var config = require("../config");
 var requested_attributes = require("../tenant_config/requested_attributes.json");
 const customLogger = require("../loggers.js");
