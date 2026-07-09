@@ -46,7 +46,7 @@ var corsOptions = {
 
 const app = express();
 
-
+app.disable('x-powered-by');
 app.set('hash',hash);
 db.tenants.getInit().then(async tenants => {
   
@@ -203,6 +203,7 @@ var server = app.listen(port, () => {
   function stop() {
     server.close();
 }
+server.keepAliveTimeout = 3700000;
 
 
 
