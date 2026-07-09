@@ -8,7 +8,27 @@ SELECT json_build_object('service_name', sd.service_name,'service_description',s
 						 'country',sd.country,'website_url',sd.website_url,'token_endpoint_auth_method',sd.token_endpoint_auth_method,'token_endpoint_auth_signing_alg',sd.token_endpoint_auth_signing_alg,
 						 'clear_access_tokens_on_refresh',sd.clear_access_tokens_on_refresh,'id_token_timeout_seconds',sd.id_token_timeout_seconds,'metadata_url',sd.metadata_url
 						 ,'entity_id',sd.entity_id,'organization_name',sd.name,'organization_url',sd.url,'organization_id',sd.organization_id,'submitted_at',sd.last_edited,
-						 'requester',sd.requester,'service_id',sd.service_id,'type',sd.type,'status',sd.status,'reviewed_at',sd.reviewed_at,'aup_uri',sd.aup_uri,'comment',CASE 
+						 'requester',sd.requester,
+						'requester_info',CASE
+							WHEN sd.requester IS NOT NULL THEN
+								json_build_object(
+									'sub', requester_ui.sub,
+									'name', requester_ui.name,
+									'email', requester_ui.email
+								)
+							ELSE NULL
+							END,
+						 'service_id',sd.service_id,'type',sd.type,'status',sd.status,'reviewed_at',sd.reviewed_at,'aup_uri',sd.aup_uri,
+						 'reviewer',CASE
+							WHEN ${view_reviewer:raw} = TRUE AND sd.reviewer IS NOT NULL THEN
+								json_build_object(
+									'sub', ui.sub,
+									'name', ui.name,
+									'email', ui.email
+								)
+							ELSE NULL
+							END,
+						 'comment',CASE 
 							WHEN ${hide_comments:raw} = TRUE AND sd.status = 'request_review' THEN NULL 
 							ELSE sd.comment 
 							END,'application_type',sd.application_type,
@@ -44,3 +64,8 @@ SELECT json_build_object('service_name', sd.service_name,'service_description',s
 	LEFT JOIN service_petition_details_oidc USING (id)
 	LEFT JOIN service_petition_details_saml USING (id)
 	LEFT JOIN organizations USING (organization_id)) as sd
+	LEFT JOIN user_info ui
+	  ON ${view_reviewer:raw} = TRUE
+	 AND ui.sub = sd.reviewer
+	LEFT JOIN user_info requester_ui
+	ON requester_ui.sub = sd.requester

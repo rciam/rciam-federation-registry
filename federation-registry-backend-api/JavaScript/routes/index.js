@@ -24,7 +24,7 @@ const {
   sendMultipleInvitations,
   sendDeploymentMail,
   delay,
-  filterDeploymentContacts
+  filterDeploymentContacts,
 } = require("../functions/helpers.js");
 const { getUserFromClaims } = require("../functions/util_functions.js");
 const { db } = require("../db");
@@ -684,28 +684,64 @@ router.post(
   amsIngestValidation(),
   validate,
   (req, res, next) => {
-    // Decode messages
     try {
       return db.task("deploymentTasks", async (t) => {
-        // update state
+        customLogger(null, null, "info", [
+          { type: "ams_ingest_log" },
+          { message: "AMS ingest received" },
+          { decoded_messages: req.body.decoded_messages },
+        ]);
+
         await t.service_state
           .deploymentUpdate(req.body.decoded_messages)
           .then(async (response) => {
             let ids = response.deployed_ids;
-            let errors = response.errors;
+            let errors = response.errors || [];
+
+            customLogger(null, null, "info", [
+              { type: "ams_ingest_log" },
+              { message: "deploymentUpdate completed" },
+              { response },
+              { ids },
+              { errors },
+            ]);
+
             if (ids) {
               res.status(200).end();
+
               if (ids.length > 0) {
                 await t.user
                   .getServiceOwners(ids)
                   .then(async (data) => {
+                    customLogger(null, null, "info", [
+                      { type: "ams_ingest_log" },
+                      { message: "Loaded service owners" },
+                      { ids },
+                      { owners: data },
+                    ]);
+
                     if (data) {
                       await t.service_petition_details
                         .getTicketInfo(ids)
                         .then(async (ticket_data) => {
+                          customLogger(null, null, "info", [
+                            { type: "ams_ingest_log" },
+                            { message: "Loaded ticket data" },
+                            { ids },
+                            { ticket_data },
+                          ]);
+
                           if (ticket_data) {
+                            customLogger(null, null, "info", [
+                              { type: "ams_ingest_log" },
+                              { message: "Sending ticket deployment mail" },
+                              { ids },
+                              { ticket_data },
+                            ]);
+
                             sendDeploymentMail(ticket_data);
                           }
+
                           if (errors.length > 0) {
                             await t.user
                               .getUsersByAction("error_action")
@@ -715,8 +751,19 @@ router.post(
                                   errors,
                                   users,
                                 );
+
                                 error_services.forEach(async (error_data) => {
                                   await delay(400);
+
+                                  customLogger(null, null, "info", [
+                                    { type: "ams_ingest_log" },
+                                    {
+                                      message:
+                                        "Sending deployment error notification",
+                                    },
+                                    { error_data },
+                                  ]);
+
                                   sendMail(
                                     {
                                       subject: "Deployment Error",
@@ -731,13 +778,35 @@ router.post(
                                 });
                               })
                               .catch((error) => {
+                                customLogger(null, null, "error", [
+                                  { type: "ams_ingest_log" },
+                                  {
+                                    message:
+                                      "Could not send email to reviewers",
+                                  },
+                                  { error },
+                                ]);
+
                                 next(
                                   "Could not sent email to reviewers:" + error,
                                 );
                               });
                           }
+
                           if (ids.length > 0) {
                             data.forEach((email_data) => {
+                              customLogger(null, null, "info", [
+                                { type: "ams_ingest_log" },
+                                {
+                                  message:
+                                    "Sending deployment notification email",
+                                },
+                                {
+                                  template: "deployment-notification.hbs",
+                                },
+                                { email_data },
+                              ]);
+
                               sendMail(
                                 {
                                   subject: "Service Deployment Result",
@@ -760,15 +829,36 @@ router.post(
                     }
                   })
                   .catch((err) => {
+                    customLogger(null, null, "error", [
+                      { type: "ams_ingest_log" },
+                      { message: "Could not send deployment email" },
+                      { ids },
+                      { error: err },
+                    ]);
+
                     next("Could not sent deployment email." + err);
                   });
               }
             } else {
+              customLogger(null, null, "error", [
+                { type: "ams_ingest_log" },
+                { message: "Deployment Failed: no ids returned" },
+                { response },
+              ]);
+
               next("Deployment Failed");
             }
           })
           .catch((err) => {
             console.log(err);
+
+            customLogger(null, null, "error", [
+              { type: "ams_ingest_log" },
+              { message: "deploymentUpdate failed / invalid AMS message" },
+              { error: err },
+              { decoded_messages: req.body.decoded_messages },
+            ]);
+
             res.status(200).send("Invalid Message");
           });
       });
@@ -791,27 +881,31 @@ router.put("/agent/set_services_state", amsAgentAuth, (req, res, next) => {
             await t.deployer_agents.getAll().then(async (agents) => {
               if (agents) {
                 req.body.forEach((service) => {
-
                   // Added by Jan Pavlíček (xpavli95@stud.fit.vutbr.cz) for not taking integration_environment into consideration when
                   // assigning deployment tasks when merging integration environments is enabled.
-                  const merge_environments_on_deploy = tenant_config[service.tenant].merge_environments_on_deploy ?? false;
+                  const merge_environments_on_deploy =
+                    tenant_config[service.tenant]
+                      .merge_environments_on_deploy ?? false;
 
                   agents.forEach((agent) => {
                     let service_agent_condition =
-                        agent.tenant === service.tenant &&
-                        agent.entity_protocol === service.protocol &&
-                        agent.entity_type === 'service';
+                      agent.tenant === service.tenant &&
+                      agent.entity_protocol === service.protocol &&
+                      agent.entity_type === "service";
 
                     if (!merge_environments_on_deploy) {
-                      service_agent_condition = service_agent_condition && agent.integration_environment === service.integration_environment;
+                      service_agent_condition =
+                        service_agent_condition &&
+                        agent.integration_environment ===
+                          service.integration_environment;
                     }
 
-                    if(service_agent_condition){
-                        service_pending_agents.push({
-                          agent_id: agent.id,
-                          service_id: service.id,
-                          deployer_name: agent.deployer_name,
-                        });
+                    if (service_agent_condition) {
+                      service_pending_agents.push({
+                        agent_id: agent.id,
+                        service_id: service.id,
+                        deployer_name: agent.deployer_name,
+                      });
                     }
                   });
                 });
@@ -908,8 +1002,10 @@ router.get("/agent/get_new_configurations", amsAgentAuth, (req, res, next) => {
         if (services) {
           services.forEach((service) => {
             const currentTenantConfig = tenant_config[service.json.tenant];
-            service.merge_environments_on_deploy = currentTenantConfig.merge_environments_on_deploy ?? false;
-            service.merged_integration_environment_name = currentTenantConfig.merged_integration_environment_name ?? null;
+            service.merge_environments_on_deploy =
+              currentTenantConfig.merge_environments_on_deploy ?? false;
+            service.merged_integration_environment_name =
+              currentTenantConfig.merged_integration_environment_name ?? null;
             filterDeploymentContacts(service, currentTenantConfig);
           });
           res.status(200).json({ services });
@@ -2057,22 +2153,42 @@ const isAvailable = async (
   environment,
 ) => {
   if (id) {
-
     // Updated by Jan Pavlíček (xpavli95@stud.fit.vutbr.cz) to check availability of client id and entity id across all integration
     // environments when merging of integration environments is enabled.
-    const merge_environments_on_deploy = tenant_config[tenant].merge_environments_on_deploy ?? false;
+    const merge_environments_on_deploy =
+      tenant_config[tenant].merge_environments_on_deploy ?? false;
     if (protocol === "oidc") {
       if (merge_environments_on_deploy) {
-        return t.service_details_protocol.checkClientIdAllEnvironments(id,service_id,petition_id,tenant);
+        return t.service_details_protocol.checkClientIdAllEnvironments(
+          id,
+          service_id,
+          petition_id,
+          tenant,
+        );
       }
-      return t.service_details_protocol.checkClientId(id,service_id,petition_id,tenant,environment);
-
+      return t.service_details_protocol.checkClientId(
+        id,
+        service_id,
+        petition_id,
+        tenant,
+        environment,
+      );
     } else if (protocol === "saml") {
       if (merge_environments_on_deploy) {
-        return t.service_details_protocol.checkEntityIdAllEnvironments(id, service_id, petition_id, tenant);
+        return t.service_details_protocol.checkEntityIdAllEnvironments(
+          id,
+          service_id,
+          petition_id,
+          tenant,
+        );
       }
-      return t.service_details_protocol.checkEntityId(id,service_id,petition_id,tenant,environment);
-
+      return t.service_details_protocol.checkEntityId(
+        id,
+        service_id,
+        petition_id,
+        tenant,
+        environment,
+      );
     }
   } else {
     return true;

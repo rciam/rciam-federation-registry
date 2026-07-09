@@ -382,10 +382,10 @@ const sendMail= (data,template_uri,users)=>{
           await delay(400);
           transporter.sendMail(mailOptions, function (error, response) {
             if (error) {
-              customLogger(null,null,'error',[{type:'email_log'},{message:'Email not sent'},{template:template_uri},{error:error},{user:user},{data:data}]);
+              customLogger(null,null,'error',[{type:'email_log'},{message:'Email not sent'},{template:template_uri},{error:error},{user:user},{data:data},{ from: mailOptions.from }]);
             }
             else {
-              customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{template:template_uri},{user:user},{data:data}]);
+              customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{template:template_uri},{user:user},{data:data},{ from: mailOptions.from }]);
             }
           });
       });
@@ -417,7 +417,7 @@ const sendDeploymentMail =  function(data){
                     let env = ticket_data.integration_environment;
   
                     var mailOptions = {
-                      from: ticket_data.reviewer_email,
+                      from: tenant_config[ticket_data.tenant].sender,
                       to : tenant_config[ticket_data.tenant].service_integration_notification.email,
                       subject : "Federation Registry: Service integration to "+ ticket_data.integration_environment + " (" + code + ")",
                       text:`A request was made to `+ type +` a service on the `+ env +` environment
