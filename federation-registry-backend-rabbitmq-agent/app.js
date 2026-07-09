@@ -37,7 +37,7 @@ const options = {
 const publishResultsOptions = {
   headers: {
     "Content-Type": "application/json",
-    authorization: config.ams_auth_key,
+    authorization: config.deployment_result_endpoint_key,
   },
 };
 
@@ -55,7 +55,7 @@ async function createConnection() {
   });
   connection.on("close", () => {
     console.error("[AMQP] Connection closed.");
-    if(!isShuttingDown){
+    if (!isShuttingDown) {
       scheduleRestart();
     }
   });
@@ -161,10 +161,15 @@ function scheduleRestart() {
   }
   ResultMessageBatch.clear();
 
-  if (connection) {
-    connection.close().catch(() => {});
+if (connection) {
+  try {
+    await connection.close();
+  } catch (e) {
+    // Ignore errors during shutdown/restart.
+  } finally {
     connection = null;
   }
+}
 
   console.log("[AMQP] Retrying in 5 seconds...");
   restartTimeout = setTimeout(() => {
@@ -198,10 +203,10 @@ async function gracefulShutdown(signal) {
   process.exit(0);
 }
 
-process.on('SIGINT', () => gracefulShutdown('SIGINT'));
-process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
 
-async function startApp(){
+async function startApp() {
   if (isReconnecting) return;
   isReconnecting = true;
 
@@ -219,7 +224,6 @@ async function startApp(){
     console.error("[AMQP] Startup failed:", err.message);
     scheduleRestart();
   }
-
 }
 
 startApp();
@@ -328,7 +332,8 @@ async function handleSuccess(response) {
     let propagation_integration_environment =
       service.json.integration_environment;
     if (service.merge_environments_on_deploy) {
-      propagation_integration_environment = service.merged_integration_environment_name;
+      propagation_integration_environment =
+        service.merged_integration_environment_name;
     }
 
     setStateArray.push({
