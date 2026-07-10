@@ -192,7 +192,7 @@ export const HistoryList = (props) => {
       <div className="links">
         <Link to={"/"+tenant_name+"/home"}>{t('link_home')}</Link>
         <span className="link-seperator">/</span>
-        <Link to={"/"+tenant_name+"/services"}>{t('history_title')}</Link>
+        <Link to={"/"+tenant_name+"/services"}>{t('link_petitions')}</Link>
         <span className="link-seperator">/</span>
         {t('history_title')}
       </div>

@@ -25,9 +25,9 @@ SELECT json_build_object('service_name', sd.service_name,'service_description',s
 							'reviewer',CASE
 								WHEN ${view_reviewer:raw} = TRUE AND sd.reviewer IS NOT NULL THEN
 									json_build_object(
-										'sub', ui.sub,
-										'name', ui.name,
-										'email', ui.email
+										'sub', requester_ui.sub,
+										'name', requester_ui.name,
+										'email', requester_ui.email
 									)
 								ELSE NULL
 								END,
@@ -58,8 +58,10 @@ SELECT json_build_object('service_name', sd.service_name,'service_description',s
 	LEFT JOIN service_petition_details_saml USING (id)
 	LEFT JOIN organizations USING (organization_id)
 ) as sd
-	LEFT JOIN user_info ui
-	  ON ${view_reviewer:raw} = TRUE
-	 AND ui.sub = sd.reviewer
+	LEFT JOIN user_info reviewer_ui
+		ON ${view_reviewer:raw} = TRUE
+		AND reviewer_ui.sub = sd.reviewer
+		AND reviewer_ui.tenant = sd.tenant
 	LEFT JOIN user_info requester_ui
-	ON requester_ui.sub = sd.requester
+		ON requester_ui.sub = sd.requester
+		AND requester_ui.tenant = sd.tenant
