@@ -205,13 +205,20 @@ var server = app.listen(port, () => {
 }
 server.keepAliveTimeout = 3700000;
 
+function gracefulShutdown(signal) {
+  console.log(`Received ${signal}. Shutting down gracefully...`);
+  server.close(() => {
+    console.log('Server closed.');
+    process.exit(0);
+  });
+}
 
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 function stop() {
   server.close();
 }
 
 module.exports = server;
-
-
 module.exports.stop = stop;
