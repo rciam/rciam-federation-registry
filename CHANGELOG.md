@@ -5,6 +5,12 @@ All notable changes in Federation Registry will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+# UNRELEASHED
+
+## Added
+- Policy Tab to service form 
+
 # [2.2.0] 10/07/2026
 
 ## Added
