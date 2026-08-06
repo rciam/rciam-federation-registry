@@ -1401,7 +1401,69 @@ const serviceValidationRules = (options, req) => {
           return false;
         }
       })
-      .withMessage("Invalid token_endpoint_auth_method Method"),
+      .withMessage("Invalid token_endpoint_auth_method Method")
+      .custom((value, { req, path }) => {
+        const pos = path.match(/\[(.*?)\]/)[1];
+        const service = req.body[pos];
+        if (service.protocol !== "oidc") {
+          return true;
+        }
+        const grantTypes = Array.isArray(service.grant_types)
+          ? service.grant_types.filter(Boolean)
+          : [];
+
+        const hasClientCredentials = grantTypes.includes("client_credentials");
+        const hasImplicit = grantTypes.includes("implicit");
+        const hasTokenExchange = grantTypes.includes(
+          "urn:ietf:params:oauth:grant-type:token-exchange",
+        );
+        if (
+          (hasClientCredentials ||
+            hasTokenExchange ||
+            grantTypes.length === 0) &&
+          value === "none"
+        ) {
+          let message;
+          if (hasClientCredentials) {
+            message =
+              "Client Credentials requires client authentication. Select a token endpoint authentication method other than No authentication.";
+          } else if (hasTokenExchange) {
+            message =
+              "Token Exchange requires client authentication. Select a token endpoint authentication method other than No authentication.";
+          } else {
+            message =
+              "Resource Server configurations require client authentication. Select a token endpoint authentication method other than No authentication.";
+          }
+          if (options.optional) {
+            optionalError(
+              value,
+              req,
+              pos,
+              "token_endpoint_auth_method",
+              message,
+            );
+            return true;
+          }
+          throw new Error(message);
+        }
+        if (hasImplicit && value !== "none") {
+          const message =
+            "Implicit requires a public client. Select No authentication as the token endpoint authentication method.";
+
+          if (options.optional) {
+            optionalError(
+              value,
+              req,
+              pos,
+              "token_endpoint_auth_method",
+              message,
+            );
+            return true;
+          }
+          throw new Error(message);
+        }
+        return true;
+      }),
     body("*.token_endpoint_auth_signing_alg")
       .customSanitizer((value, { req, location, path }) => {
         if (

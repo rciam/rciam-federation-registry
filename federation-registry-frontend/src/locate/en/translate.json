@@ -256,6 +256,12 @@
     "history_reviewer": "Reviewer",
     "history_comment": "Reviewer comment",
     "history_changes_requested_prefix": "The Reviewer requested changes to the following",
-    "history_info_approved_with_changes": "Requested Changes"
+    "history_info_approved_with_changes": "Requested Changes",
+    "client_credentials_grant_type_error": "Client Credentials cannot be combined with other grant types. Remove the other grant types or remove Client Credentials.",
+    "implicit_token_exchange_error": "Implicit cannot be combined with Token Exchange. Remove either Implicit or Token Exchange.",
+    "client_credentials_authentication_required": "Client Credentials requires client authentication. Select an authentication method other than No authentication.",
+    "token_exchange_authentication_required": "Token Exchange requires client authentication. Select an authentication method other than No authentication.",
+    "implicit_no_authentication_required": "Implicit requires No authentication because it is a public client flow.",
+    "resource_server_authentication_required": "Resource Server configurations require client authentication."
   }
 }

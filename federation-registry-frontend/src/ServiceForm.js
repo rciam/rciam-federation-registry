@@ -857,8 +857,7 @@ const ServiceForm = (props) => {
                 grantTypes.length > 1
               ) {
                 return this.createError({
-                  message:
-                    "Client Credentials cannot be combined with other grant types. Remove the other grant types or remove Client Credentials.",
+                  message: t("client_credentials_grant_type_error"),
                 });
               }
               if (
@@ -868,8 +867,7 @@ const ServiceForm = (props) => {
                 )
               ) {
                 return this.createError({
-                  message:
-                    "Implicit cannot be combined with Token Exchange. Remove either Implicit or Token Exchange.",
+                  message: t("implicit_token_exchange_error"),
                 });
               }
               return true;
@@ -1167,7 +1165,40 @@ const ServiceForm = (props) => {
               );
             },
           ),
-      }),
+      })
+      .test(
+        "testTokenEndpointAuthCompatibility",
+        "Invalid token endpoint authentication method",
+        function (value) {
+          const grantTypes = this.parent.grant_types ?? [];
+          if (grantTypes.includes("client_credentials") && value === "none") {
+            return this.createError({
+              message: t("client_credentials_authentication_required"),
+            });
+          }
+          if (
+            grantTypes.includes(
+              "urn:ietf:params:oauth:grant-type:token-exchange",
+            ) &&
+            value === "none"
+          ) {
+            return this.createError({
+              message: t("token_exchange_authentication_required"),
+            });
+          }
+          if (grantTypes.includes("implicit") && value !== "none") {
+            return this.createError({
+              message: t("implicit_no_authentication_required"),
+            });
+          }
+          if (grantTypes.length === 0 && value === "none") {
+            return this.createError({
+              message: t("resource_server_authentication_required"),
+            });
+          }
+          return true;
+        },
+      ),
     jwks_uri: yup
       .string()
       .nullable()
