@@ -1786,6 +1786,26 @@ const serviceValidationRules = (options, req) => {
       .if((value, { req, location, path }) => {
         return req.body[path.match(/\[(.*?)\]/)[1]].protocol === "oidc";
       })
+      .custom((value, { req, path }) => {
+        const pos = path.match(/\[(.*?)\]/)[1];
+        const service = req.body[pos];
+        if (service.protocol !== "oidc" || isEmpty(value)) {
+          return true;
+        }
+        const grantTypes = Array.isArray(service.grant_types)
+          ? service.grant_types
+          : [];
+        if (grantTypes.includes("authorization_code")) {
+          return true;
+        }
+        const error =
+          "PKCE is only supported when Authorization Code is selected. Remove the configured PKCE method or select Authorization Code.";
+        if (options.optional) {
+          optionalError(value, req, pos, "code_challenge_method", error);
+          return true;
+        }
+        throw new Error(error);
+      })
       .custom((value, { req, location, path }) => {
         try {
           return !value || value.match(reg.regCodeChalMeth);

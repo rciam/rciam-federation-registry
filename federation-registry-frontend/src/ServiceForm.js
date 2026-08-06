@@ -604,8 +604,7 @@ const ServiceForm = (props) => {
                     return true;
                   }
                   return this.createError({
-                    message:
-                      t("redirect_uri_grant_type_error"),
+                    message: t("redirect_uri_grant_type_error"),
                   });
                 },
               ),
@@ -744,8 +743,7 @@ const ServiceForm = (props) => {
                     return true;
                   }
                   return this.createError({
-                    message:
-                      t("post_logout_redirect_uri_grant_type_error"),
+                    message: t("post_logout_redirect_uri_grant_type_error"),
                   });
                 },
               ),
@@ -1048,32 +1046,49 @@ const ServiceForm = (props) => {
         then: yup
           .string()
           .nullable()
-          .test(
-            "test_code_challenge_method",
-            "Invalid Value",
-            function (value) {
-              if (!value) {
-                return true;
-              } else {
-                return tenant.form_config.code_challenge_method.includes(value);
-              }
-            },
-          ),
-      })
-      .when(["token_endpoint_auth_method", "grant_types"], {
-        is: (token_endpoint_auth_method, grant_types) =>
-          token_endpoint_auth_method === "none" &&
-          grant_types.includes("authorization_code"),
-        then: yup
-          .string()
-          .nullable()
-          .test(
-            "extra_validation",
-            "PKCE must be enabled when no authentication is selected for the authorization code grant type.",
-            function (value) {
-              return value;
-            },
-          ),
+          .when("grant_types", {
+            is: (grant_types) => grant_types?.includes("authorization_code"),
+            // PKCE is applicable.
+            then: yup
+              .string()
+              .nullable()
+              .test(
+                "test_code_challenge_method",
+                "Invalid PKCE method",
+                function (value) {
+                  if (!value) {
+                    return true;
+                  }
+                  return reg.regCodeChalMeth.test(value);
+                },
+              )
+              .when("token_endpoint_auth_method", {
+                is: "none",
+                then: yup
+                  .string()
+                  .nullable()
+                  .required(
+                    "PKCE must be enabled when No authentication is selected for the Authorization Code grant type",
+                  ),
+              }),
+            // PKCE is not applicable.
+            otherwise: yup
+              .string()
+              .nullable()
+              .test(
+                "test_code_challenge_method_applicability",
+                "PKCE is not applicable for the selected grant types",
+                function (value) {
+                  if (!value) {
+                    return true;
+                  }
+                  return this.createError({
+                    message:
+                      t("pkce_grant_type_error"),
+                  });
+                },
+              ),
+          }),
       }),
     allow_introspection: yup.boolean().nullable().when("protocol", {
       is: "oidc",
@@ -2399,8 +2414,7 @@ const ServiceForm = (props) => {
                             title="Token Endpoint Authorization Method"
                             required={true}
                             error={
-                              errors.token_endpoint_auth_method ||
-                              errors.code_challenge_method
+                              errors.token_endpoint_auth_method
                             }
                             touched={touched.token_endpoint_auth_method}
                           >

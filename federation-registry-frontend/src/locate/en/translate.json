@@ -264,6 +264,7 @@
     "implicit_no_authentication_required": "Implicit requires No authentication because it is a public client flow.",
     "resource_server_authentication_required": "Resource Server configurations require client authentication.",
     "redirect_uri_grant_type_error": "Redirect URIs are only supported when Authorization Code or Implicit is selected. Remove the configured Redirect URIs or select a compatible grant type.",
-    "post_logout_redirect_uri_grant_type_error": "Post Logout Redirect URIs are only supported when Authorization Code or Implicit is selected. Remove the configured Post Logout Redirect URIs or select a compatible grant type."
+    "post_logout_redirect_uri_grant_type_error": "Post Logout Redirect URIs are only supported when Authorization Code or Implicit is selected. Remove the configured Post Logout Redirect URIs or select a compatible grant type.",
+    "pkce_grant_type_error": "PKCE is only supported when Authorization Code is selected. Remove the configured PKCE method or select Authorization Code."
   }
 }
