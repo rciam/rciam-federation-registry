@@ -843,6 +843,37 @@ const ServiceForm = (props) => {
               .test("testGrantTypes", "error-grant-types", function (value) {
                 return tenant.form_config.grant_types.includes(value);
               }),
+          )
+          .test(
+            "testGrantTypeCompatibility",
+            "Invalid grant type combination",
+            function (value) {
+              if (!value || value.length === 0) {
+                return true;
+              }
+              const grantTypes = value.filter(Boolean);
+              if (
+                grantTypes.includes("client_credentials") &&
+                grantTypes.length > 1
+              ) {
+                return this.createError({
+                  message:
+                    "Client Credentials cannot be combined with other grant types. Remove the other grant types or remove Client Credentials.",
+                });
+              }
+              if (
+                grantTypes.includes("implicit") &&
+                grantTypes.includes(
+                  "urn:ietf:params:oauth:grant-type:token-exchange",
+                )
+              ) {
+                return this.createError({
+                  message:
+                    "Implicit cannot be combined with Token Exchange. Remove either Implicit or Token Exchange.",
+                });
+              }
+              return true;
+            },
           ),
       }),
     id_token_timeout_seconds: yup

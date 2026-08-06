@@ -934,20 +934,16 @@ const serviceValidationRules = (options, req) => {
           : req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         // Upadted by Jan Pavlíček (xpavli95@stud.fit.vutbr.cz) to check availability of entity id when merging of integration
         // environments is enabled.
-        const merge_environments_on_deploy = tenant_config[tenant].merge_environments_on_deploy ?? false;
+        const merge_environments_on_deploy =
+          tenant_config[tenant].merge_environments_on_deploy ?? false;
         if (merge_environments_on_deploy) {
           return db.service_details_protocol
-            .checkClientIdAllEnvironments(
-              value,
-              0,
-              0,
-              tenant,
-            )
+            .checkClientIdAllEnvironments(value, 0, 0, tenant)
             .then((available) => {
               if (!available) {
-                  return Promise.reject("Not available (" + value + ")");
+                return Promise.reject("Not available (" + value + ")");
               } else {
-                  return Promise.resolve();
+                return Promise.resolve();
               }
             });
         }
@@ -1243,7 +1239,41 @@ const serviceValidationRules = (options, req) => {
         }
         return success;
       })
-      .withMessage("Invalid grant_type value"),
+      .withMessage("Invalid grant_type value")
+      .custom((grantTypes, { req, path }) => {
+        const pos = path.match(/\[(.*?)\]/)[1];
+        if (!Array.isArray(grantTypes) || grantTypes.length === 0) {
+          return true;
+        }
+        const hasClientCredentials = grantTypes.includes("client_credentials");
+        const hasImplicit = grantTypes.includes("implicit");
+        const hasTokenExchange = grantTypes.includes(
+          "urn:ietf:params:oauth:grant-type:token-exchange",
+        );
+        if (hasClientCredentials && grantTypes.length > 1) {
+          const error =
+            "Client Credentials cannot be combined with other grant types. Remove the other grant types or remove Client Credentials.";
+          if (options.optional) {
+            optionalError(grantTypes, req, pos, "grant_types", error);
+            return true;
+          }
+          throw new Error(error);
+        }
+
+        if (hasImplicit && hasTokenExchange) {
+          const error =
+            "Implicit cannot be combined with Token Exchange. Remove either Implicit or Token Exchange.";
+
+          if (options.optional) {
+            optionalError(grantTypes, req, pos, "grant_types", error);
+            return true;
+          }
+
+          throw new Error(error);
+        }
+
+        return true;
+      }),
     body("*.jwks_uri")
       .customSanitizer((value, { req, location, path }) => {
         if (
@@ -1836,15 +1866,12 @@ const serviceValidationRules = (options, req) => {
         return options.check_available;
       })
       .custom((value, { req, location, path }) => {
-        const merge_environments_on_deploy = tenant_config[req.params.tenant].merge_environments_on_deploy ?? false;
+        const merge_environments_on_deploy =
+          tenant_config[req.params.tenant].merge_environments_on_deploy ??
+          false;
         if (merge_environments_on_deploy) {
           return db.service_details_protocol
-            .checkEntityIdAllEnvironments(
-              value,
-              0,
-              0,
-              req.params.tenant,
-            )
+            .checkEntityIdAllEnvironments(value, 0, 0, req.params.tenant)
             .then((available) => {
               if (!available) {
                 return Promise.reject("Metadata url is not available");
