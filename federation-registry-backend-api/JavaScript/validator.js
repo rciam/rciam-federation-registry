@@ -992,6 +992,31 @@ const serviceValidationRules = (options, req) => {
         }
       })
       .withMessage("Service redirect_uri missing")
+      .custom((value, { req, path }) => {
+        const pos = path.match(/\[(.*?)\]/)[1];
+        const service = req.body[pos];
+        if (service.protocol !== "oidc" || isEmpty(value)) {
+          return true;
+        }
+        const grantTypes = Array.isArray(service.grant_types)
+          ? service.grant_types
+          : [];
+        const supportsRedirectUris =
+          grantTypes.includes("authorization_code") ||
+          grantTypes.includes("implicit");
+
+        if (supportsRedirectUris) {
+          return true;
+        }
+        const error =
+          "Redirect URIs are only supported when Authorization Code or Implicit is selected. Remove the configured Redirect URIs or select a compatible grant type.";
+
+        if (options.optional) {
+          optionalError(value, req, pos, "redirect_uris", error);
+          return true;
+        }
+        throw new Error(error);
+      })
       .if((value, { req, location, path }) => {
         let pos = path.match(/\[(.*?)\]/)[1];
         return isNotEmpty(value) && req.body[pos].protocol === "oidc";
@@ -1082,6 +1107,29 @@ const serviceValidationRules = (options, req) => {
         return value;
       }),
     body("*.post_logout_redirect_uris")
+      .custom((value, { req, path }) => {
+        const pos = path.match(/\[(.*?)\]/)[1];
+        const service = req.body[pos];
+        if (service.protocol !== "oidc" || isEmpty(value)) {
+          return true;
+        }
+        const grantTypes = Array.isArray(service.grant_types)
+          ? service.grant_types
+          : [];
+        const supportsPostLogoutRedirectUris =
+          grantTypes.includes("authorization_code") ||
+          grantTypes.includes("implicit");
+        if (supportsPostLogoutRedirectUris) {
+          return true;
+        }
+        const error =
+          "Post Logout Redirect URIs are only supported when Authorization Code or Implicit is selected. Remove the configured Post Logout Redirect URIs or select a compatible grant type.";
+        if (options.optional) {
+          optionalError(value, req, pos, "post_logout_redirect_uris", error);
+          return true;
+        }
+        throw new Error(error);
+      })
       .if((value, { req, location, path }) => {
         let pos = path.match(/\[(.*?)\]/)[1];
         return isNotEmpty(value) && req.body[pos].protocol === "oidc";

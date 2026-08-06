@@ -479,63 +479,78 @@ const ServiceForm = (props) => {
         then: yup
           .array()
           .nullable()
-          .when("integration_environment", (integration_environment) => {
-            integrationEnvironment = integration_environment;
-          })
-          .when("application_type", (application_type_value) => {
-            application_type = application_type_value;
-          })
-          .of(
-            yup
-              .string()
-              .required("Uri can't be an empty string")
-              .test(
-                "test_redirect_uri",
-                "Invalid Redirect Uri",
-                function (value) {
-                  if (value) {
-                    let url;
-                    if (
-                      tenant?.config?.test_env.includes(integrationEnvironment)
-                    ) {
-                      let isLocalIp =
-                        reg.regIpv4Local.test(value) ||
-                        reg.regIpv6Local.test(value);
-                      if (isLocalIp) {
+          .when("grant_types", {
+            is: (grant_types) =>
+              grant_types?.includes("authorization_code") ||
+              grant_types?.includes("implicit"),
+            // Redirect URIs are applicable:
+            // require at least one URI and validate every URI.
+            then: yup
+              .array()
+              .nullable()
+              .when("integration_environment", (integration_environment) => {
+                integrationEnvironment = integration_environment;
+              })
+              .when("application_type", (application_type_value) => {
+                application_type = application_type_value;
+              })
+              .of(
+                yup
+                  .string()
+                  .required("Uri can't be an empty string")
+                  .test(
+                    "test_redirect_uri",
+                    "Invalid Redirect Uri",
+                    function (value) {
+                      if (!value) {
                         return true;
                       }
-                    }
-                    try {
-                      url = new URL(value);
-                    } catch (err) {
-                      return this.createError({ message: "Invalid uri" });
-                    }
-                    if (value.includes("#")) {
-                      return this.createError({
-                        message: "Uri can't contain fragments",
-                      });
-                    }
-                    if (application_type === "WEB") {
+                      let url;
                       if (
-                        !tenant?.config?.test_env.includes(
+                        tenant?.config?.test_env.includes(
                           integrationEnvironment,
-                        ) &&
-                        url
+                        )
                       ) {
-                        if (
-                          url.protocol !== "https:" &&
-                          !(
-                            url.protocol === "http:" &&
-                            url.hostname === "localhost"
-                          )
-                        ) {
-                          return this.createError({
-                            message:
-                              "Uri must be a secure url starting with https://",
-                          });
+                        const isLocalIp =
+                          reg.regIpv4Local.test(value) ||
+                          reg.regIpv6Local.test(value);
+
+                        if (isLocalIp) {
+                          return true;
                         }
-                      } else {
+                      }
+                      try {
+                        url = new URL(value);
+                      } catch (err) {
+                        return this.createError({
+                          message: "Invalid uri",
+                        });
+                      }
+                      if (value.includes("#")) {
+                        return this.createError({
+                          message: "Uri can't contain fragments",
+                        });
+                      }
+                      if (application_type === "WEB") {
                         if (
+                          !tenant?.config?.test_env.includes(
+                            integrationEnvironment,
+                          ) &&
+                          url
+                        ) {
+                          if (
+                            url.protocol !== "https:" &&
+                            !(
+                              url.protocol === "http:" &&
+                              url.hostname === "localhost"
+                            )
+                          ) {
+                            return this.createError({
+                              message:
+                                "Uri must be a secure url starting with https://",
+                            });
+                          }
+                        } else if (
                           url &&
                           !(
                             url.protocol === "http:" ||
@@ -547,44 +562,53 @@ const ServiceForm = (props) => {
                               "Uri must be a url starting with http(s):// ",
                           });
                         }
+                      } else {
+                        if (url.protocol === "javascript:") {
+                          return this.createError({
+                            message: "Uri can't be of schema 'javascript:'",
+                          });
+                        }
+                        if (url.protocol === "data:") {
+                          return this.createError({
+                            message: "Uri can't be of schema 'data:'",
+                          });
+                        }
                       }
-                    } else {
-                      // eslint-disable-next-line
-                      if (url.protocol === "javascript:") {
+                      if (value.includes("*")) {
                         return this.createError({
-                          message: "Uri can't be of schema 'javascript:'",
-                        });
-                      } else if (url.protocol === "data:") {
-                        return this.createError({
-                          message: "Uri can't be of schema 'data:'",
+                          message: "Uri can't contain wildcard character '*'",
                         });
                       }
-                    }
-                    if (value.includes("*")) {
-                      return this.createError({
-                        message: "Uri can't contain wildcard character '*'",
-                      });
-                    }
-                    if (value.includes(" ")) {
-                      return this.createError({
-                        message: "Uri can't contain spaces",
-                      });
-                    }
+                      if (value.includes(" ")) {
+                        return this.createError({
+                          message: "Uri can't contain spaces",
+                        });
+                      }
+                      return true;
+                    },
+                  ),
+              )
+              .unique(t("yup_redirect_uri_unique"))
+              .min(1, t("yup_required"))
+              .required(t("yup_required")),
+            // Redirect URIs are not applicable:
+            // do not run URI-format validation. Only reject existing values.
+            otherwise: yup
+              .array()
+              .nullable()
+              .test(
+                "test_redirect_uri_applicability",
+                "Redirect URIs are not applicable for the selected grant types",
+                function (value) {
+                  if (!value || value.length === 0) {
                     return true;
                   }
+                  return this.createError({
+                    message:
+                      t("redirect_uri_grant_type_error"),
+                  });
                 },
               ),
-          )
-          .unique(t("yup_redirect_uri_unique"))
-          .when("grant_types", {
-            is: (grant_types) =>
-              grant_types?.includes("implicit") ||
-              grant_types?.includes("authorization_code"),
-            then: yup
-              .array()
-              .min(1, t("yup_required"))
-              .nullable()
-              .required(t("yup_required")),
           }),
       }),
     post_logout_redirect_uris: yup
@@ -595,63 +619,79 @@ const ServiceForm = (props) => {
         then: yup
           .array()
           .nullable()
-          .when("integration_environment", (integration_environment) => {
-            integrationEnvironment = integration_environment;
-          })
-          .when("application_type", (application_type_value) => {
-            application_type = application_type_value;
-          })
-          .of(
-            yup
-              .string()
-              .required("Uri can't be an empty string")
-              .test(
-                "test_redirect_uri",
-                "Invalid Post Logout Redirect Uri",
-                function (value) {
-                  if (value) {
-                    let url;
-                    if (
-                      tenant?.config?.test_env.includes(integrationEnvironment)
-                    ) {
-                      let isLocalIp =
-                        reg.regIpv4Local.test(value) ||
-                        reg.regIpv6Local.test(value);
-                      if (isLocalIp) {
+          .when("grant_types", {
+            is: (grant_types) =>
+              grant_types?.includes("authorization_code") ||
+              grant_types?.includes("implicit"),
+
+            // Post Logout Redirect URIs are applicable:
+            // validate configured values, but do not require the field.
+            then: yup
+              .array()
+              .nullable()
+              .when("integration_environment", (integration_environment) => {
+                integrationEnvironment = integration_environment;
+              })
+              .when("application_type", (application_type_value) => {
+                application_type = application_type_value;
+              })
+              .of(
+                yup
+                  .string()
+                  .required("Uri can't be an empty string")
+                  .test(
+                    "test_post_logout_redirect_uri",
+                    "Invalid Post Logout Redirect Uri",
+                    function (value) {
+                      if (!value) {
                         return true;
                       }
-                    }
-                    try {
-                      url = new URL(value);
-                    } catch (err) {
-                      return this.createError({ message: "Invalid uri" });
-                    }
-                    if (value.includes("#")) {
-                      return this.createError({
-                        message: "Uri can't contain fragments",
-                      });
-                    }
-                    if (application_type === "WEB") {
+                      let url;
                       if (
-                        !tenant?.config?.test_env.includes(
+                        tenant?.config?.test_env.includes(
                           integrationEnvironment,
-                        ) &&
-                        url
+                        )
                       ) {
-                        if (
-                          url.protocol !== "https:" &&
-                          !(
-                            url.protocol === "http:" &&
-                            url.hostname === "localhost"
-                          )
-                        ) {
-                          return this.createError({
-                            message:
-                              "Uri must be a secure url starting with https://",
-                          });
+                        const isLocalIp =
+                          reg.regIpv4Local.test(value) ||
+                          reg.regIpv6Local.test(value);
+
+                        if (isLocalIp) {
+                          return true;
                         }
-                      } else {
+                      }
+                      try {
+                        url = new URL(value);
+                      } catch (err) {
+                        return this.createError({
+                          message: "Invalid uri",
+                        });
+                      }
+                      if (value.includes("#")) {
+                        return this.createError({
+                          message: "Uri can't contain fragments",
+                        });
+                      }
+                      if (application_type === "WEB") {
                         if (
+                          !tenant?.config?.test_env.includes(
+                            integrationEnvironment,
+                          ) &&
+                          url
+                        ) {
+                          if (
+                            url.protocol !== "https:" &&
+                            !(
+                              url.protocol === "http:" &&
+                              url.hostname === "localhost"
+                            )
+                          ) {
+                            return this.createError({
+                              message:
+                                "Uri must be a secure url starting with https://",
+                            });
+                          }
+                        } else if (
                           url &&
                           !(
                             url.protocol === "http:" ||
@@ -663,36 +703,53 @@ const ServiceForm = (props) => {
                               "Uri must be a url starting with http(s):// ",
                           });
                         }
+                      } else {
+                        if (url.protocol === "javascript:") {
+                          return this.createError({
+                            message: "Uri can't be of schema 'javascript:'",
+                          });
+                        }
+                        if (url.protocol === "data:") {
+                          return this.createError({
+                            message: "Uri can't be of schema 'data:'",
+                          });
+                        }
                       }
-                    } else {
-                      // eslint-disable-next-line
-                      if (url.protocol === "javascript:") {
+                      if (value.includes("*")) {
                         return this.createError({
-                          message: "Uri can't be of schema 'javascript:'",
-                        });
-                      } else if (url.protocol === "data:") {
-                        return this.createError({
-                          message: "Uri can't be of schema 'data:'",
+                          message: "Uri can't contain wildcard character '*'",
                         });
                       }
-                    }
+                      if (value.includes(" ")) {
+                        return this.createError({
+                          message: "Uri can't contain spaces",
+                        });
+                      }
 
-                    if (value.includes("*")) {
-                      return this.createError({
-                        message: "Uri can't contain wildcard character '*'",
-                      });
-                    }
-                    if (value.includes(" ")) {
-                      return this.createError({
-                        message: "Uri can't contain spaces",
-                      });
-                    }
+                      return true;
+                    },
+                  ),
+              )
+              .unique(t("yup_redirect_uri_unique")),
+            // Post Logout Redirect URIs are not applicable:
+            // skip URI-format validation and reject only existing values.
+            otherwise: yup
+              .array()
+              .nullable()
+              .test(
+                "test_post_logout_redirect_uri_applicability",
+                "Post Logout Redirect URIs are not applicable for the selected grant types",
+                function (value) {
+                  if (!value || value.length === 0) {
                     return true;
                   }
+                  return this.createError({
+                    message:
+                      t("post_logout_redirect_uri_grant_type_error"),
+                  });
                 },
               ),
-          )
-          .unique(t("yup_redirect_uri_unique")),
+          }),
       }),
     logo_uri: yup
       .string()
