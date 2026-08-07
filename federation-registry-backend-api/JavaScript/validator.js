@@ -591,6 +591,14 @@ const serviceValidationRules = (options, req) => {
     }
   };
 
+  const compatibilityError = (value, req, pos, field, message) => {
+    if (options.optional) {
+      optionalError(value, req, pos, field, message);
+      return true;
+    }
+    throw new Error(message);
+  };
+
   const requiredSaml = (value, req, pos, field) => {
     if (options.optional || req.body[pos].protocol !== "saml") {
       if (isEmpty(value) && req.body[pos].protocol === "saml") {
@@ -1011,11 +1019,7 @@ const serviceValidationRules = (options, req) => {
         const error =
           "Redirect URIs are only supported when Authorization Code or Implicit is selected. Remove the configured Redirect URIs or select a compatible grant type.";
 
-        if (options.optional) {
-          optionalError(value, req, pos, "redirect_uris", error);
-          return true;
-        }
-        throw new Error(error);
+        return compatibilityError(value, req, pos, "redirect_uris", error);
       })
       .if((value, { req, location, path }) => {
         let pos = path.match(/\[(.*?)\]/)[1];
@@ -1124,11 +1128,7 @@ const serviceValidationRules = (options, req) => {
         }
         const error =
           "Post Logout Redirect URIs are only supported when Authorization Code or Implicit is selected. Remove the configured Post Logout Redirect URIs or select a compatible grant type.";
-        if (options.optional) {
-          optionalError(value, req, pos, "post_logout_redirect_uris", error);
-          return true;
-        }
-        throw new Error(error);
+        return compatibilityError(value, req, pos, "post_logout_redirect_uris", error);
       })
       .if((value, { req, location, path }) => {
         let pos = path.match(/\[(.*?)\]/)[1];
@@ -1301,23 +1301,14 @@ const serviceValidationRules = (options, req) => {
         if (hasClientCredentials && grantTypes.length > 1) {
           const error =
             "Client Credentials cannot be combined with other grant types. Remove the other grant types or remove Client Credentials.";
-          if (options.optional) {
-            optionalError(grantTypes, req, pos, "grant_types", error);
-            return true;
-          }
-          throw new Error(error);
+          return compatibilityError(grantTypes, req, pos, "grant_types", error);
         }
 
         if (hasImplicit && hasTokenExchange) {
           const error =
             "Implicit cannot be combined with Token Exchange. Remove either Implicit or Token Exchange.";
 
-          if (options.optional) {
-            optionalError(grantTypes, req, pos, "grant_types", error);
-            return true;
-          }
-
-          throw new Error(error);
+          return compatibilityError(grantTypes, req, pos, "grant_types", error);
         }
 
         return true;
@@ -1482,33 +1473,25 @@ const serviceValidationRules = (options, req) => {
             message =
               "Resource Server configurations require client authentication. Select a token endpoint authentication method other than No authentication.";
           }
-          if (options.optional) {
-            optionalError(
-              value,
-              req,
-              pos,
-              "token_endpoint_auth_method",
-              message,
-            );
-            return true;
-          }
-          throw new Error(message);
+          return compatibilityError(
+            value,
+            req,
+            pos,
+            "token_endpoint_auth_method",
+            message,
+          );
         }
         if (hasImplicit && value !== "none") {
           const message =
             "Implicit requires a public client. Select No authentication as the token endpoint authentication method.";
 
-          if (options.optional) {
-            optionalError(
-              value,
-              req,
-              pos,
-              "token_endpoint_auth_method",
-              message,
-            );
-            return true;
-          }
-          throw new Error(message);
+          return compatibilityError(
+            value,
+            req,
+            pos,
+            "token_endpoint_auth_method",
+            message,
+          );
         }
         return true;
       }),
@@ -1800,11 +1783,7 @@ const serviceValidationRules = (options, req) => {
         }
         const error =
           "PKCE is only supported when Authorization Code is selected. Remove the configured PKCE method or select Authorization Code.";
-        if (options.optional) {
-          optionalError(value, req, pos, "code_challenge_method", error);
-          return true;
-        }
-        throw new Error(error);
+        return compatibilityError(value, req, pos, "code_challenge_method", error);
       })
       .custom((value, { req, location, path }) => {
         try {

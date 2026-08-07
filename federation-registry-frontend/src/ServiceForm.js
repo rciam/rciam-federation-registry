@@ -563,12 +563,14 @@ const ServiceForm = (props) => {
                           });
                         }
                       } else {
-                        if (url.protocol === "javascript:") {
+                        const protocol = url.protocol.replace(/:$/, "");
+
+                        if (protocol === "javascript") {
                           return this.createError({
                             message: "Uri can't be of schema 'javascript:'",
                           });
                         }
-                        if (url.protocol === "data:") {
+                        if (protocol === "data") {
                           return this.createError({
                             message: "Uri can't be of schema 'data:'",
                           });
@@ -703,12 +705,13 @@ const ServiceForm = (props) => {
                           });
                         }
                       } else {
-                        if (url.protocol === "javascript:") {
+                        const protocol = url.protocol.replace(/:$/, "");
+                        if (protocol === "javascript") {
                           return this.createError({
                             message: "Uri can't be of schema 'javascript:'",
                           });
                         }
-                        if (url.protocol === "data:") {
+                        if (protocol === "data") {
                           return this.createError({
                             message: "Uri can't be of schema 'data:'",
                           });
@@ -1083,8 +1086,7 @@ const ServiceForm = (props) => {
                     return true;
                   }
                   return this.createError({
-                    message:
-                      t("pkce_grant_type_error"),
+                    message: t("pkce_grant_type_error"),
                   });
                 },
               ),
@@ -2413,9 +2415,7 @@ const ServiceForm = (props) => {
                             }
                             title="Token Endpoint Authorization Method"
                             required={true}
-                            error={
-                              errors.token_endpoint_auth_method
-                            }
+                            error={errors.token_endpoint_auth_method}
                             touched={touched.token_endpoint_auth_method}
                           >
                             <AuthMethRadioList
