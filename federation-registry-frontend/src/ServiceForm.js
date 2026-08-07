@@ -886,7 +886,28 @@ const ServiceForm = (props) => {
           )
           .unique(t("yup_scope_unique"))
           .required(t("yup_required")),
-      }),
+      })
+      .test(
+        "testOfflineAccessApplicability",
+        "Invalid offline_access configuration",
+        function (value) {
+          if (!value?.includes("offline_access")) {
+            return true;
+          }
+          const grantTypes = this.parent.grant_types ?? [];
+          const supportsOfflineAccess =
+            grantTypes.includes("authorization_code") ||
+            grantTypes.includes("urn:ietf:params:oauth:grant-type:device_code");
+          if (!supportsOfflineAccess) {
+            return this.createError({
+              message:
+                t("offline_access_grant_type_error"),
+            });
+          }
+
+          return true;
+        },
+      ),
     grant_types: yup
       .array()
       .nullable()

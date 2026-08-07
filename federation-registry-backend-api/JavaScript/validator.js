@@ -1128,7 +1128,13 @@ const serviceValidationRules = (options, req) => {
         }
         const error =
           "Post Logout Redirect URIs are only supported when Authorization Code or Implicit is selected. Remove the configured Post Logout Redirect URIs or select a compatible grant type.";
-        return compatibilityError(value, req, pos, "post_logout_redirect_uris", error);
+        return compatibilityError(
+          value,
+          req,
+          pos,
+          "post_logout_redirect_uris",
+          error,
+        );
       })
       .if((value, { req, location, path }) => {
         let pos = path.match(/\[(.*?)\]/)[1];
@@ -1257,7 +1263,34 @@ const serviceValidationRules = (options, req) => {
         }
         return success;
       })
-      .withMessage("Invalid Scope value"),
+      .withMessage("Invalid Scope value")
+      .custom((value, { req, path }) => {
+        const pos = path.match(/\[(.*?)\]/)[1];
+        const service = req.body[pos];
+        if (
+          service.protocol !== "oidc" ||
+          !Array.isArray(value) ||
+          !value.includes("offline_access")
+        ) {
+          return true;
+        }
+        const grantTypes = Array.isArray(service.grant_types)
+          ? service.grant_types
+          : [];
+        const supportsOfflineAccess =
+          grantTypes.includes("authorization_code") ||
+          grantTypes.includes("urn:ietf:params:oauth:grant-type:device_code");
+        if (supportsOfflineAccess) {
+          return true;
+        }
+        const error =
+          "Offline Access is only supported when Authorization Code or Device Authorization is selected. Remove Offline Access or select a compatible grant type.";
+        if (options.optional) {
+          optionalError(value, req, pos, "scope", error);
+          return true;
+        }
+        throw new Error(error);
+      }),
     body("*.grant_types")
       .if((value, { req, location, path }) => {
         return (
@@ -1783,7 +1816,13 @@ const serviceValidationRules = (options, req) => {
         }
         const error =
           "PKCE is only supported when Authorization Code is selected. Remove the configured PKCE method or select Authorization Code.";
-        return compatibilityError(value, req, pos, "code_challenge_method", error);
+        return compatibilityError(
+          value,
+          req,
+          pos,
+          "code_challenge_method",
+          error,
+        );
       })
       .custom((value, { req, location, path }) => {
         try {
