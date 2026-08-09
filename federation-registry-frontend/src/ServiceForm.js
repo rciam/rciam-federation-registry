@@ -1909,24 +1909,158 @@ const ServiceForm = (props) => {
               grantTypes?.includes("authorization_code") ||
               grantTypes?.includes("implicit");
 
+            const supportsPkce = (grantTypes) =>
+              grantTypes?.includes("authorization_code");
+
+            const supportsOfflineAccess = (grantTypes) =>
+              grantTypes?.includes("authorization_code") ||
+              grantTypes?.includes(
+                "urn:ietf:params:oauth:grant-type:device_code",
+              );
+
             const redirectUrisApplicable = supportsRedirectUris(
               values.grant_types,
             );
+
             const hasLegacyRedirectUris =
               !redirectUrisApplicable &&
               props.initialValues?.redirect_uris?.length > 0 &&
               values.redirect_uris?.length > 0;
+
             const hasLegacyPostLogoutRedirectUris =
               !redirectUrisApplicable &&
               props.initialValues?.post_logout_redirect_uris?.length > 0 &&
               values.post_logout_redirect_uris?.length > 0;
 
-            const onGrantTypesChange = (newGrantTypes) => {
-              const supportsRedirects = supportsRedirectUris(newGrantTypes);
-              if (!supportsRedirects) {
-                setFieldValue("redirect_uris", []);
-                setFieldValue("post_logout_redirect_uris", []);
+            const pkceApplicable = supportsPkce(values.grant_types);
+
+            const hasLegacyPkce =
+              !pkceApplicable &&
+              props.initialValues?.code_challenge_method &&
+              values.code_challenge_method;
+
+            const scopeApplicable = supportsOfflineAccess(values.grant_types);
+
+            const isUserFacing = isUserFacingService(
+              values.protocol,
+              values.grant_types,
+            );
+
+            const isMeaningfulUserFacingPolicyValue = (field_data, value) => {
+              if (field_data?.type === "boolean") {
+                return value === true;
               }
+
+              return value !== null && value !== undefined && value !== "";
+            };
+
+            const getDefaultUserFacingPolicyFieldValue = (field_data) => {
+              if (field_data?.type === "boolean") {
+                return field_data.default !== undefined
+                  ? field_data.default
+                  : false;
+              }
+
+              return field_data?.default != null ? field_data.default : "";
+            };
+
+            const shouldShowUserFacingPolicyField = (field_data, fieldName) => {
+              if (!field_data?.user_facing) {
+                return true;
+              }
+
+              const currentValue = values[fieldName];
+
+              return (
+                isUserFacing ||
+                isMeaningfulUserFacingPolicyValue(field_data, currentValue)
+              );
+            };
+
+            const clearUserFacingPolicyFields = () => {
+              setFieldValue("policy_uri", "");
+
+              Object.entries(tenant.form_config.extra_fields).forEach(
+                ([name, field_data]) => {
+                  if (field_data.user_facing) {
+                    setFieldValue(
+                      name,
+                      getDefaultUserFacingPolicyFieldValue(field_data),
+                    );
+                  }
+                },
+              );
+            };
+
+            const onProtocolChange = (event) => {
+              const nextProtocol = event.target.value;
+
+              const nextUserFacing = isUserFacingService(
+                nextProtocol,
+                values.grant_types,
+              );
+
+              handleChange(event);
+
+              if (isUserFacing && !nextUserFacing) {
+                clearUserFacingPolicyFields();
+              }
+            };
+
+            const onGrantTypesChange = (newGrantTypes) => {
+              setValues((currentValues) => {
+                const nextValues = {
+                  ...currentValues,
+                  grant_types: newGrantTypes,
+                };
+
+                // Redirect URIs and Post Logout Redirect URIs are only applicable
+                // when Authorization Code or Implicit is selected.
+                if (!supportsRedirectUris(newGrantTypes)) {
+                  nextValues.redirect_uris = [];
+                  nextValues.post_logout_redirect_uris = [];
+                }
+
+                // PKCE is only applicable when Authorization Code is selected.
+                if (!supportsPkce(newGrantTypes)) {
+                  nextValues.code_challenge_method = "";
+                }
+
+                // offline_access is only applicable when Authorization Code
+                // or Device Authorization is selected.
+                if (!supportsOfflineAccess(newGrantTypes)) {
+                  nextValues.scope = (currentValues.scope || []).filter(
+                    (item) => item !== "offline_access",
+                  );
+                }
+
+                const currentUserFacing = isUserFacingService(
+                  currentValues.protocol,
+                  currentValues.grant_types,
+                );
+
+                const nextUserFacing = isUserFacingService(
+                  currentValues.protocol,
+                  newGrantTypes,
+                );
+
+                // If the user actively changes from a user-facing configuration
+                // to a non-user-facing configuration, clear user-facing policy fields.
+                if (currentUserFacing && !nextUserFacing) {
+                  nextValues.policy_uri = "";
+
+                  Object.entries(tenant.form_config.extra_fields).forEach(
+                    ([name, field_data]) => {
+                      if (field_data.user_facing) {
+                        nextValues[name] =
+                          getDefaultUserFacingPolicyFieldValue(field_data);
+                      }
+                    },
+                  );
+                }
+
+                return nextValues;
+              }, true);
             };
 
             return (
@@ -2379,7 +2513,7 @@ const ServiceForm = (props) => {
                                 ? !!errors.protocol
                                 : !!errors.protocol && touched.protocol
                             }
-                            onChange={handleChange}
+                            onChange={onProtocolChange}
                             disabled={disabled || props.initialValues.protocol}
                             changed={
                               props.changes ? props.changes.protocol : null
@@ -2494,7 +2628,11 @@ const ServiceForm = (props) => {
                               }
                               title="Token Endpoint Authorization Method"
                               required={true}
-                              error={errors.token_endpoint_auth_method}
+                              error={
+                                !errors.grant_types
+                                  ? errors.token_endpoint_auth_method
+                                  : null
+                              }
                               touched={touched.token_endpoint_auth_method}
                             >
                               <AuthMethRadioList
@@ -2685,7 +2823,13 @@ const ServiceForm = (props) => {
                                 name="scope"
                                 values={values.scope}
                                 placeholder={t("form_type_prompt")}
-                                defaultValues={tenant.form_config.scope}
+                                defaultValues={
+                                  scopeApplicable
+                                    ? tenant.form_config.scope
+                                    : tenant.form_config.scope.filter(
+                                        (item) => item !== "offline_access",
+                                      )
+                                }
                                 error={errors.scope}
                                 touched={touched.scope}
                                 disabled={disabled}
@@ -2708,6 +2852,7 @@ const ServiceForm = (props) => {
                                   )
                                 }
                                 error={
+                                  !errors.grant_types &&
                                   typeof errors.redirect_uris === "string"
                                     ? errors.redirect_uris
                                     : null
@@ -2753,8 +2898,9 @@ const ServiceForm = (props) => {
                                 }
                                 title={t("form_redirect_uris")}
                                 error={
+                                  !errors.grant_types &&
                                   typeof errors.post_logout_redirect_uris ===
-                                  "string"
+                                    "string"
                                     ? errors.post_logout_redirect_uris
                                     : null
                                 }
@@ -2788,64 +2934,75 @@ const ServiceForm = (props) => {
                                 />
                               </InputRow>
                             ) : null}
-                            <InputRow
-                              moreInfo={
-                                tenant.form_config.more_info
-                                  .code_challenge_method
-                              }
-                              required={true}
-                              title={t("form_code_challenge_method")}
-                              extraClass="select-col"
-                              error={errors.code_challenge_method}
-                              touched={touched.code_challenge_method}
-                            >
-                              <Select
-                                onBlur={handleBlur}
-                                optionsTitle={[
-                                  "PKCE will not be used for this service " +
-                                    (values.grant_types &&
-                                    values.grant_types.includes(
-                                      "authorization_code",
-                                    )
-                                      ? "(disabled)"
-                                      : ""),
-                                  "Plain code challenge (deprecated)",
-                                  "SHA-256 hash algorithm (recommended)",
-                                ]}
-                                options={["", "plain", "S256"]}
-                                name="code_challenge_method"
-                                values={values}
-                                isInvalid={
-                                  hasSubmitted
-                                    ? !!errors.code_challenge_method
-                                    : !!errors.code_challenge_method &&
-                                      touched.code_challenge_method
+                            {pkceApplicable || hasLegacyPkce ? (
+                              <InputRow
+                                moreInfo={
+                                  tenant.form_config.more_info
+                                    .code_challenge_method
                                 }
-                                onChange={handleChange}
-                                setFieldValue={(value) => {
-                                  setFieldValue("code_challenge_method", value);
-                                }}
-                                recommended={"S256"}
-                                disabled={disabled}
-                                default={
-                                  values.code_challenge_method
-                                    ? values.code_challenge_method
-                                    : ""
-                                }
-                                changed={
-                                  props.changes
-                                    ? props.changes.code_challenge_method
+                                required={true}
+                                title={t("form_code_challenge_method")}
+                                extraClass="select-col"
+                                error={
+                                  !errors.grant_types
+                                    ? errors.code_challenge_method
                                     : null
                                 }
-                              />
-                              <div className="pkce-tooltip">
-                                <FontAwesomeIcon icon={faExclamationTriangle} />
-                                Enabling PKCE is highly recommended to avoid
-                                code injection and code replay attacks. If
-                                enabled, you need to make sure that your client
-                                uses PKCE to prevent errors
-                              </div>
-                            </InputRow>
+                                touched={touched.code_challenge_method}
+                              >
+                                <Select
+                                  onBlur={handleBlur}
+                                  optionsTitle={[
+                                    "PKCE will not be used for this service " +
+                                      (values.grant_types &&
+                                      values.grant_types.includes(
+                                        "authorization_code",
+                                      )
+                                        ? "(disabled)"
+                                        : ""),
+                                    "Plain code challenge (deprecated)",
+                                    "SHA-256 hash algorithm (recommended)",
+                                  ]}
+                                  options={["", "plain", "S256"]}
+                                  name="code_challenge_method"
+                                  values={values}
+                                  isInvalid={
+                                    hasSubmitted
+                                      ? !!errors.code_challenge_method
+                                      : !!errors.code_challenge_method &&
+                                        touched.code_challenge_method
+                                  }
+                                  onChange={handleChange}
+                                  setFieldValue={(value) => {
+                                    setFieldValue(
+                                      "code_challenge_method",
+                                      value,
+                                    );
+                                  }}
+                                  recommended={"S256"}
+                                  disabled={disabled}
+                                  default={
+                                    values.code_challenge_method
+                                      ? values.code_challenge_method
+                                      : ""
+                                  }
+                                  changed={
+                                    props.changes
+                                      ? props.changes.code_challenge_method
+                                      : null
+                                  }
+                                />
+                                <div className="pkce-tooltip">
+                                  <FontAwesomeIcon
+                                    icon={faExclamationTriangle}
+                                  />
+                                  Enabling PKCE is highly recommended to avoid
+                                  code injection and code replay attacks. If
+                                  enabled, you need to make sure that your
+                                  client uses PKCE to prevent errors
+                                </div>
+                              </InputRow>
+                            ) : null}
                             <InputRow
                               moreInfo={
                                 tenant.form_config.more_info
@@ -3264,47 +3421,59 @@ const ServiceForm = (props) => {
                         ) : null}
                       </Tab>
                       <Tab eventKey="policy" title={t("form_tab_policy")}>
-                        <InputRow
-                          moreInfo={tenant.form_config.more_info.policy_uri}
-                          title={t("form_policy_uri")}
-                          required={
-                            tenant.form_config.more_info.policy_uri?.required?.includes(
-                              values.integration_environment,
-                            ) &&
-                            isUserFacingService(
-                              values.protocol,
-                              values.grant_types,
-                            )
-                          }
-                          description={t("form_policy_uri_desc")}
-                          error={errors.policy_uri}
-                          touched={touched.policy_uri}
-                        >
-                          <SimpleInput
-                            name="policy_uri"
-                            placeholder={t("form_url_placeholder")}
-                            onChange={handleChange}
-                            value={values.policy_uri}
-                            isInvalid={
-                              hasSubmitted
-                                ? !!errors.policy_uri
-                                : !!errors.policy_uri && touched.policy_uri
+                        {isUserFacing || values.policy_uri ? (
+                          <InputRow
+                            moreInfo={tenant.form_config.more_info.policy_uri}
+                            title={t("form_policy_uri")}
+                            required={
+                              tenant.form_config.more_info.policy_uri?.required?.includes(
+                                values.integration_environment,
+                              ) &&
+                              isUserFacingService(
+                                values.protocol,
+                                values.grant_types,
+                              )
                             }
-                            onBlur={handleBlur}
-                            disabled={disabled}
-                            changed={
-                              props.changes ? props.changes.policy_uri : null
-                            }
-                          />
-                          <UrlWarning
-                            url={values.policy_uri}
-                            touched={hasSubmitted || touched.policy_uri}
-                          />
-                        </InputRow>
+                            description={t("form_policy_uri_desc")}
+                            error={errors.policy_uri}
+                            touched={touched.policy_uri}
+                          >
+                            <SimpleInput
+                              name="policy_uri"
+                              placeholder={t("form_url_placeholder")}
+                              onChange={handleChange}
+                              value={values.policy_uri}
+                              isInvalid={
+                                hasSubmitted
+                                  ? !!errors.policy_uri
+                                  : !!errors.policy_uri && touched.policy_uri
+                              }
+                              onBlur={handleBlur}
+                              disabled={disabled}
+                              changed={
+                                props.changes ? props.changes.policy_uri : null
+                              }
+                            />
+                            <UrlWarning
+                              url={values.policy_uri}
+                              touched={hasSubmitted || touched.policy_uri}
+                            />
+                          </InputRow>
+                        ) : null}
 
                         {Object.entries(tenant.form_config.extra_fields).map(
                           ([name, field_data]) => {
                             field_data.name = name;
+                            if (
+                              field_data.tab === "policy" &&
+                              field_data.user_facing &&
+                              !shouldShowUserFacingPolicyField(
+                                field_data,
+                                field_data.name,
+                              )
+                            ) {
+                              return null;
+                            }
                             return field_data.tab === "policy" ? (
                               <React.Fragment key={name}>
                                 {generateInput({
