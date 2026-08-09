@@ -599,6 +599,19 @@ const serviceValidationRules = (options, req) => {
     throw new Error(message);
   };
 
+  const isUserFacingService = (service) => {
+    const grantTypes = Array.isArray(service.grant_types)
+      ? service.grant_types
+      : [];
+
+    return (
+      service.protocol === "saml" ||
+      grantTypes.includes("authorization_code") ||
+      grantTypes.includes("implicit") ||
+      grantTypes.includes("urn:ietf:params:oauth:grant-type:device_code")
+    );
+  };
+
   const requiredSaml = (value, req, pos, field) => {
     if (options.optional || req.body[pos].protocol !== "saml") {
       if (isEmpty(value) && req.body[pos].protocol === "saml") {
@@ -757,10 +770,17 @@ const serviceValidationRules = (options, req) => {
         let tenant = options.tenant_param
           ? req.params.tenant
           : req.body[pos].tenant;
+
+        const service = req.body[pos];
+
+        if (!isUserFacingService(service)) {
+          return true;
+        }
+
         return requiredIntegrationEnvironment(
           tenant,
           value,
-          req.body[pos].integration_environment,
+          service.integration_environment,
           req,
           pos,
           "policy_uri",
@@ -2080,13 +2100,19 @@ const serviceValidationRules = (options, req) => {
             } else {
               throw new Error("aup_uri must be a secure url");
             }
-          } else if (
-            aup_uri_config.required.includes(integration_environment)
-          ) {
-            optionalError(value, req, pos, "aup_uri", "aup_uri is missing");
-            return true;
-            //throw new Error();
           } else {
+            const requiredForEnvironment = aup_uri_config.required.includes(
+              integration_environment,
+            );
+
+            const applicable =
+              !aup_uri_config.user_facing || isUserFacingService(req.body[pos]);
+
+            if (requiredForEnvironment && applicable) {
+              optionalError(value, req, pos, "aup_uri", "aup_uri is missing");
+              return true;
+            }
+
             return true;
           }
         } else {
@@ -2108,23 +2134,24 @@ const serviceValidationRules = (options, req) => {
       let pos = path.match(/\[(.*?)\]/)[1];
       let tenant = options.tenant_param
         ? req.params.tenant
-        : req.body[path.match(/\[(.*?)\]/)[1]].tenant;
-      let integration_environment =
-        req.body[path.match(/\[(.*?)\]/)[1]].integration_environment;
+        : req.body[pos].tenant;
+      let integration_environment = req.body[pos].integration_environment;
       let extra_fields = tenant_config[tenant].form.extra_fields;
       // Iterate through extra fields for code of conduct fields
-      let error = false;
       for (const extra_field in extra_fields) {
-        // If coc field is required
-        if (
-          (extra_fields[extra_field].tag === "coc" ||
-            extra_fields[extra_field].tag === "once") &&
-          extra_fields[extra_field].required.includes(integration_environment)
-        ) {
-          if (
+        const fieldConfig = extra_fields[extra_field];
+        const isPolicyField =
+          fieldConfig.tag === "coc" || fieldConfig.tag === "once";
+        const requiredForEnvironment = fieldConfig.required.includes(
+          integration_environment,
+        );
+        const applicable =
+          !fieldConfig.user_facing || isUserFacingService(req.body[pos]);
+        if (isPolicyField && requiredForEnvironment && applicable) {
+          const fieldEnabled =
             value &&
-            !(value[extra_field] === "true" || value[extra_field] === true)
-          ) {
+            (value[extra_field] === "true" || value[extra_field] === true);
+          if (!fieldEnabled) {
             optionalError(
               value,
               req,
@@ -2135,7 +2162,7 @@ const serviceValidationRules = (options, req) => {
           }
         }
       }
-      delete req.body[path.match(/\[(.*?)\]/)[1]].service_boolean;
+      delete req.body[pos].service_boolean;
       return true;
     }),
     body("*.organization_id")

@@ -1045,6 +1045,7 @@ export function CheckboxList(props) {
                     name={props.name}
                     disabled={props.disabled}
                     value={item}
+                    onChange={props.onChange}
                   />
                   {item.length > 33 &&
                   (item.substr(0, 33) === "urn:ietf:params:oauth:grant-type:" ||
@@ -2181,16 +2182,17 @@ export function Checkbox(props) {
           {...props}
           checked={field.value?.includes(props.value)}
           onChange={() => {
+            let nextValue;
             if (field.value?.includes(props.value)) {
-              const nextValue = field.value.filter(
-                (value) => value !== props.value
+              nextValue = field.value.filter(
+                (value) => value !== props.value,
               );
-              form.setFieldValue(props.name, nextValue);
             } else {
-              const nextValue = field?.value?.concat(props.value) || [
-                props.value,
-              ];
-              form.setFieldValue(props.name, nextValue);
+              nextValue = field?.value?.concat(props.value) || [props.value];
+            }
+            form.setFieldValue(props.name, nextValue);
+            if (typeof props.onChange === "function") {
+              props.onChange(nextValue);
             }
           }}
         />
