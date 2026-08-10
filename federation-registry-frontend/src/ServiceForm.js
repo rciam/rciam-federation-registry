@@ -10,6 +10,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import Tabs from "react-bootstrap/Tabs";
 import Tab from "react-bootstrap/Tab";
+import Badge from "react-bootstrap/Badge";
 import OverlayTrigger from "react-bootstrap/OverlayTrigger";
 import Tooltip from "react-bootstrap/Tooltip";
 import CopyDialog from "./Components/CopyDialog.js";
@@ -1946,6 +1947,151 @@ const ServiceForm = (props) => {
               values.grant_types,
             );
 
+            const fieldTabs = {
+              service_name: "general",
+              integration_environment: "general",
+              logo_uri: "general",
+              website_url: "general",
+              service_description: "general",
+              country: "general",
+              contacts: "general",
+              organization_name: "general",
+              organization_url: "general",
+
+              protocol: "technical",
+              client_id: "technical",
+              application_type: "technical",
+              grant_types: "technical",
+              token_endpoint_auth_method: "technical",
+              client_secret: "technical",
+              token_endpoint_auth_signing_alg: "technical",
+              jwks_uri: "technical",
+              jwks: "technical",
+              allow_introspection: "technical",
+              generate_client_secret: "technical",
+              reuse_refresh_token: "technical",
+              clear_access_tokens_on_refresh: "technical",
+              access_token_validation_model: "technical",
+              access_token_validity_seconds: "technical",
+              refresh_token_validity_seconds: "technical",
+              device_code_validity_seconds: "technical",
+              id_token_timeout_seconds: "technical",
+              redirect_uris: "technical",
+              post_logout_redirect_uris: "technical",
+              code_challenge_method: "technical",
+              scope: "technical",
+              entity_id: "technical",
+              metadata_url: "technical",
+              requested_attributes: "technical",
+
+              policy_uri: "policy",
+            };
+            Object.entries(tenant.form_config.extra_fields).forEach(
+              ([name, config]) => {
+                if (config.tab) {
+                  fieldTabs[name] = config.tab;
+                  if (name === "organization") {
+                    fieldTabs.organization_name = config.tab;
+                    fieldTabs.organization_url = config.tab;
+                  }
+                }
+              },
+            );
+
+            const getErrorRootFields = (errorObject) => {
+              const roots = new Set();
+              const traverse = (node, path = "") => {
+                if (node === null || node === undefined) {
+                  return;
+                }
+                // A primitive value represents an actual validation error.
+                if (
+                  typeof node === "string" ||
+                  typeof node === "number" ||
+                  typeof node === "boolean"
+                ) {
+                  const root = path.split(/[.[\]]/).filter(Boolean)[0];
+
+                  if (root) {
+                    roots.add(root);
+                  }
+
+                  return;
+                }
+                if (Array.isArray(node)) {
+                  node.forEach((item, index) => {
+                    traverse(item, `${path}[${index}]`);
+                  });
+                  return;
+                }
+                if (typeof node === "object") {
+                  Object.entries(node).forEach(([key, value]) => {
+                    traverse(value, path ? `${path}.${key}` : key);
+                  });
+                }
+              };
+              traverse(errorObject);
+              return [...roots];
+            };
+
+            const grantTypesDependentFields = [
+              "token_endpoint_auth_method",
+              "redirect_uris",
+              "post_logout_redirect_uris",
+              "code_challenge_method",
+              "scope",
+            ];
+
+            const normalizedErrorFields = getErrorRootFields(errors);
+            const visibleErrorFields = normalizedErrorFields.filter((field) => {
+              return !(
+                normalizedErrorFields.includes("grant_types") &&
+                grantTypesDependentFields.includes(field)
+              );
+            });
+
+            const tabErrorCounts = { general: 0, technical: 0, policy: 0 };
+            if (submitCount > 0) {
+              visibleErrorFields.forEach((field) => {
+                const tab = fieldTabs[field];
+                if (tab) {
+                  tabErrorCounts[tab] += 1;
+                }
+              });
+            }
+
+            const renderTabTitle = (title, count) => {
+              const tabTitle = (
+                <span>
+                  {title}
+                  {count > 0 && (
+                    <Badge pill variant="danger" className="ml-2">
+                      {count}
+                    </Badge>
+                  )}
+                </span>
+              );
+
+              if (count === 0) {
+                return tabTitle;
+              }
+
+              return (
+                <OverlayTrigger
+                  placement="top"
+                  overlay={
+                    <Tooltip id={`tooltip-${title}`}>
+                      {count === 1
+                        ? "This tab contains 1 validation error"
+                        : `This tab contains ${count} validation errors`}
+                    </Tooltip>
+                  }
+                >
+                  {tabTitle}
+                </OverlayTrigger>
+              );
+            };
+
             const isMeaningfulUserFacingPolicyValue = (field_data, value) => {
               if (field_data?.type === "boolean") {
                 return value === true;
@@ -2191,7 +2337,13 @@ const ServiceForm = (props) => {
                       defaultActiveKey="general"
                       id="uncontrolled-tab-example"
                     >
-                      <Tab eventKey="general" title={t("form_tab_general")}>
+                      <Tab
+                        eventKey="general"
+                        title={renderTabTitle(
+                          t("form_tab_general"),
+                          tabErrorCounts.general,
+                        )}
+                      >
                         <InputRow
                           moreInfo={tenant.form_config.more_info.service_name}
                           title={t("form_service_name")}
@@ -2491,7 +2643,13 @@ const ServiceForm = (props) => {
                           />
                         </InputRow>
                       </Tab>
-                      <Tab eventKey="technical" title={t("form_tab_technical")}>
+                      <Tab
+                        eventKey="technical"
+                        title={renderTabTitle(
+                          t("form_tab_technical"),
+                          tabErrorCounts.technical,
+                        )}
+                      >
                         <InputRow
                           title={t("form_protocol")}
                           required={true}
@@ -3420,7 +3578,13 @@ const ServiceForm = (props) => {
                           </React.Fragment>
                         ) : null}
                       </Tab>
-                      <Tab eventKey="policy" title={t("form_tab_policy")}>
+                      <Tab
+                        eventKey="policy"
+                        title={renderTabTitle(
+                          t("form_tab_policy"),
+                          tabErrorCounts.policy,
+                        )}
+                      >
                         {isUserFacing || values.policy_uri ? (
                           <InputRow
                             moreInfo={tenant.form_config.more_info.policy_uri}

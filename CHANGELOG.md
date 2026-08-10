@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Added
 - Policy Tab to service form 
+- Hide fields when not applicable 
+- Tab error indicators
+
+## Changed 
+- Updated Validation Rules
 
 # [2.2.0] 10/07/2026
 
