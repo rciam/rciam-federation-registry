@@ -1997,6 +1997,79 @@
         ]
       }
     },
+    "/tenants/{name}/groups/{group_id}/members/{sub}": {
+      "put": {
+        "tags": ["Groups and Invitations"],
+        "summary": "Add a member to a group",
+        "description": "A group manager can request to add a member to his group.",
+        "operationId": "addMember",
+        "parameters": [
+          {
+            "in": "path",
+            "type": "string",
+            "name": "name",
+            "description": "Tenant that the request is targeting",
+            "required": true
+          },
+          {
+            "in": "path",
+            "type": "integer",
+            "name": "group_id",
+            "description": "Id of target owners group",
+            "required": true
+          },
+          {
+            "in": "path",
+            "type": "string",
+            "name": "sub",
+            "required": true,
+            "description": "User unique identification"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Whether to add the member as a group manager and whether to send an invitation",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": [
+                "group_manager",
+                "send_invitation"
+              ],
+              "properties": {
+                "group_manager": {
+                  "type": "boolean",
+                  "description": "Whether the member should be a group manager"
+                },
+                "send_invitation": {
+                  "type": "boolean",
+                  "description": "Whether an invitation should be sent to the member"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "204": {
+            "description": "Could not find user"
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        },
+        "security": [
+          {
+            "access_tokenAuth": []
+          }
+        ]
+      }
+    },
     "/tenants/{name}/groups/{group_id}/invitations": {
       "get": {
         "tags": ["Groups and Invitations"],
