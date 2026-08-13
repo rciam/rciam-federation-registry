@@ -5,20 +5,12 @@
 // you could handle event 'error' within initialization options yourself,
 // which may be a little better performing, but lacks all the nice formatting
 // provided by pg-monitor.
-const path = require('path')
-const os = require('os');
-const fs = require('fs');
 const monitor = require('pg-monitor');
-const filePath = path.resolve(__dirname+'/errors.log');
+const log = require('../loggers.js');
 monitor.setTheme('matrix'); // changing the default theme;
 
 // Flag to indicate whether we are in a DEV environment:
 const $DEV = process.env.NODE_ENV === 'development';
-
-
-
-// Log file for database-related errors:
-const logFile = './db/errors.log';
 
 // Below we are logging errors exactly the way they are reported by pg-monitor,
 // which you can tweak any way you like, as parameter 'info' provides all the
@@ -26,6 +18,9 @@ const logFile = './db/errors.log';
 //
 // see: https://github.com/vitaly-t/pg-monitor#log
 monitor.setLog((msg, info) => {
+    // pg-monitor writes to the console itself, which would bypass the
+    // configured log destinations, so winston takes over instead.
+    info.display = false;
 
     // In a PROD environment we will only receive event 'error',
     // because this is how we set it up below.
@@ -34,30 +29,10 @@ monitor.setLog((msg, info) => {
     // errors only, or else the file will grow out of proportion in no time.
 
     if (info.event === 'error') {
-        let logText = os.EOL + msg; // line break + next error message;
-        if (info.time) {
-            // If it is a new error being reported,
-            // and not an additional error line;
-            logText = os.EOL + logText; // add another line break in front;
-        }
-        try{
-            fs.appendFileSync(logFile, logText) 
-        }
-        catch(e){
-            fs.appendFileSync(filePath, logText)
-        }; // add error handling as required;
+        log.error(msg, { type: 'db' });
+    } else {
+        log.info(msg, { type: 'db' });
     }
-
-    // We absolutely must not let the monitor write anything into the console
-    // while in a PROD environment, and not just because nobody will be able
-    // to see it there, but mainly because the console is incredibly slow and
-    // hugely resource-consuming, suitable only for debugging.
-
-    if (!$DEV) {
-        // If it is not a DEV environment:
-        info.display = false; // display nothing;
-    }
-
 });
 
 class Diagnostics {
@@ -65,7 +40,7 @@ class Diagnostics {
     static init(options) {
         if ($DEV) {
             // In a DEV environment, we attach to all supported events:
-            monitor.attach(options);
+            monitor.attach(options, ['query', 'error', 'receive', 'task', 'transact']);
         } else {
             // In a PROD environment we should only attach to the type of events
             // that we intend to log. And we are only logging event 'error' here:
