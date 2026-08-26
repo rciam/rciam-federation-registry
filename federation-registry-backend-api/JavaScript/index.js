@@ -7,6 +7,7 @@ const cors = require('cors');
 var CryptoJS = require("crypto-js");
 var winston = require('winston');
 var expressWinston = require('express-winston');
+var {oneLineJson} = require('./logFormat');
 const {Issuer,custom} = require('openid-client');
 const routes= require('./routes/index');
 var cookieParser = require('cookie-parser');
@@ -106,7 +107,7 @@ app.use(expressWinston.logger({
     ],
     format: winston.format.combine(
       winston.format.timestamp(),
-      winston.format.json()
+      oneLineJson
     ),
     level: function (req,res) {
       return 'info';
@@ -160,7 +161,7 @@ app.use(expressWinston.errorLogger({
       ],
       format: winston.format.combine(
         winston.format.timestamp(),
-        winston.format.json()
+        oneLineJson
       ),
       meta:true,
       metaField:null,

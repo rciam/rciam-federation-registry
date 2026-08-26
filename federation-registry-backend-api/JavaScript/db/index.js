@@ -14,7 +14,7 @@ const initOptions = {
     error: function (error, e) {
        if (e.cn) {
            // A connection-related error;
-           console.log("CN:", e.cn);
+           console.log("CN:", JSON.stringify(e.cn));
            console.log("EVENT:", error.message);
        }
      },

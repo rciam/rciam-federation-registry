@@ -2079,7 +2079,9 @@ const decodeAms = (req, res, next) => {
         JSON.parse(Buffer.from(item.message.data, "base64").toString()),
       );
     });
-    console.log(req.body.decoded_messages);
+    customLogger(req, res, "info", "AMS messages decoded", {
+      decoded_messages: req.body.decoded_messages,
+    });
     next();
   } catch (err) {
     customLogger(req, res, "warn", "Failed decoding messages");
