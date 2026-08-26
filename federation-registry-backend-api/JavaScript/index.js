@@ -159,6 +159,7 @@ app.use(expressWinston.errorLogger({
         new winston.transports.Console()
       ],
       format: winston.format.combine(
+        winston.format.timestamp(),
         winston.format.json()
       ),
       meta:true,
