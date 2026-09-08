@@ -5,9 +5,10 @@ var xml2js = require('xml2js');
 var parser = new xml2js.Parser();
 var convert = require('xml-js');
 var default_supported_attributes = require('../tenant_config/requested_attributes.json')
+const log = require('../loggers.js');
 
 
-parser.on('error', function(err) { console.log('Parser error', err); });
+parser.on('error', function(err) { log.error('Parser error: ' + (err.stack || err), { type: 'metadata_parser' }); });
 router.get('/metadata_info',async (req,res,next)=>{
     try{
       let url = decodeURIComponent(req.query.metadata_url);
@@ -38,11 +39,11 @@ router.get('/metadata_info',async (req,res,next)=>{
               res.statusMessage = "XML contained in the metadata is not Valid."
               res.status(404).send();
             }
-            try{               
-              entity_id=result[ns+'EntityDescriptor']['_attributes'].entityID;  
+            try{
+              entity_id=result[ns+'EntityDescriptor']['_attributes'].entityID;
             }
             catch(err){
-              console.log(err);
+              log.warn('Could not extract entityID from metadata: ' + (err.stack || err), { type: 'metadata_info' }, { req, res });
             };
             try{
               requested_attributes = result[ns+'EntityDescriptor'][ns+'SPSSODescriptor'][ns+'AttributeConsumingService'][ns+'RequestedAttribute'];                 
@@ -64,7 +65,7 @@ router.get('/metadata_info',async (req,res,next)=>{
           }  
         }
         catch(err){
-          console.log(err);
+          log.warn('Could not load Service properties from Metadata Url: ' + (err.stack || err), { type: 'metadata_info' }, { req, res });
           res.statusMessage = "Could not load Service properties from Metadata Url."
           res.status(404).send();
         }

@@ -8,6 +8,7 @@ var CryptoJS = require("crypto-js");
 var winston = require('winston');
 var expressWinston = require('express-winston');
 var {oneLineJson} = require('./logFormat');
+const log = require('./loggers.js');
 const {Issuer,custom} = require('openid-client');
 const routes= require('./routes/index');
 var cookieParser = require('cookie-parser');
@@ -65,7 +66,7 @@ db.tenants.getInit().then(async tenants => {
 
     fs.readFile(filePath, 'utf8', (err, data) => {
       if (err) {
-        console.error('Error reading file:', err);
+        log.error('Error reading tenant configuration file: ' + (err.stack || err), { type: 'tenant_init', file: filePath });
         return;
       }
       try {
@@ -73,7 +74,7 @@ db.tenants.getInit().then(async tenants => {
         tenant_config[tenant.name] = {...tenant_config[tenant.name],...JSON.parse(data)};
         
       } catch (error) {
-        console.error('Error parsing tenant configuration:', error);
+        log.error('Error parsing tenant configuration: ' + (error.stack || error), { type: 'tenant_init' });
       }
     });
     await Issuer.discover(tenant.issuer_url).then((issuer)=>{
@@ -89,13 +90,13 @@ db.tenants.getInit().then(async tenants => {
       clients[tenant.name].client_scopes = tenant_config[tenant.name].client_scopes;
      }).catch(error=>{
       if(process.env.NODE_ENV!=='test-docker'&&process.env.NODE_ENV!=='test'){     
-        console.log("Unable to Discover Tenant "+ tenant);
+        log.warn('Unable to Discover Tenant', { type: 'tenant_init', tenant: tenant.name });
       }
     })
   }
   app.set('clients',clients);
   global.tenant_config = tenant_config;
-}).catch(err => {console.log('Tenant initialization failed due to following error'); console.log(err);});
+}).catch(err => {log.error('Tenant initialization failed due to following error: ' + (err.stack || err), { type: 'tenant_init' });});
 
 
 
@@ -128,7 +129,7 @@ app.use(expressWinston.logger({
       meta.method= req.method;
       meta.status= res.statusCode;
       meta.url= req.url;
-      meta.type='access_log';
+      meta.type='access';
       meta.responseTime= res.responseTime;
       return meta;
     },
@@ -167,7 +168,7 @@ app.use(expressWinston.errorLogger({
       metaField:null,
       dynamicMeta: function(req, res) {
         const meta={};
-        meta.type='error_log';
+        meta.type='exception';
         return meta;
       },
       requestWhitelist: ['url','method'],
@@ -200,7 +201,7 @@ const port = 5000;
 
 
 var server = app.listen(port, () => {
-    console.log('\nReady for GET requests on http://localhost:' + port);
+    log.info('Ready for GET requests on http://localhost:' + port);
   });
   function stop() {
     server.close();
@@ -208,9 +209,9 @@ var server = app.listen(port, () => {
 server.keepAliveTimeout = 3700000;
 
 function gracefulShutdown(signal) {
-  console.log(`Received ${signal}. Shutting down gracefully...`);
+  log.info(`Received ${signal}. Shutting down gracefully...`);
   server.close(() => {
-    console.log('Server closed.');
+    log.info('Server closed.');
     process.exit(0);
   });
 }

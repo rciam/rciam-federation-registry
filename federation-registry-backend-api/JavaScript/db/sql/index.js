@@ -1,5 +1,6 @@
 const {QueryFile} = require('pg-promise');
 const path = require('path');
+const log = require('../../loggers.js');
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 // Criteria for deciding whether to place a particular query into an external SQL file or to
@@ -117,7 +118,7 @@ function sql(file) {
         // Something is wrong with our query file :(
         // Testing all files through queries can be cumbersome,
         // so we also report it here, while loading the module:
-        console.error(qf.error);
+        log.error('Error loading query file: ' + (qf.error.stack || qf.error), { type: 'db', file: fullPath });
     }
 
     return qf;

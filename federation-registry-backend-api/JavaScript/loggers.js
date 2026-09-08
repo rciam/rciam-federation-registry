@@ -3,37 +3,6 @@ var {oneLineJson} = require('./logFormat');
 var logPath = __dirname + "/logs/logs.log";
 
 
-
-const customLogger = (req,res,level,message,data)=>{
-    var log ={};
-    log.level =level;
-    if(req){
-      if(req.user&&req.user.sub&&req.user.role){
-        log.user = {};
-        log.user.sub = req.user.sub;
-        log.user.role = req.user.role;
-        log.method= req.method;
-        log.url= req.url;
-      }
-    }
-    if(res){
-      log.status=res.statusCode;
-      log.responseTime= res.responseTime;
-    }
-    if(Array.isArray(message)){
-      Object.assign(log, ...message);
-    }
-    if(data){
-      log.data = data;
-    }
-    else{
-      log.message=message;
-    }
-    winstonLogger.log(log);
-
-}
-
-
 const winstonLogger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   format: winston.format.combine(
@@ -79,6 +48,4 @@ log.warn = (message, meta, ctx) => log('warn', message, meta, ctx);
 log.error = (message, meta, ctx) => log('error', message, meta, ctx);
 
 
-module.exports = customLogger;
-// transitional export; customLogger removed in follow-up commit
-module.exports.log = log;
+module.exports = log;

@@ -31,7 +31,7 @@ const { db } = require("../db");
 var router = require("express").Router({ caseSensitive: true, strict: true });
 var config = require("../config");
 var requested_attributes = require("../tenant_config/requested_attributes.json");
-const customLogger = require("../loggers.js");
+const log = require("../loggers.js");
 const {
   rejectPetition,
   approvePetition,
@@ -376,16 +376,18 @@ router.post(
                   }
                 })
                 .catch((err) => {
-                  console.log(err);
+                  log.error(
+                    "Error while importing services: " + (err.stack || err),
+                    { type: "service_import" },
+                    { req, res },
+                  );
                 });
             }
           })
           .catch((err) => {
-            console.log(err);
             throw err;
           });
       }).catch((err) => {
-        console.log(err);
         throw err;
       });
     } catch (err) {
@@ -492,7 +494,11 @@ router.get("/callback/:tenant", async (req, res, next) => {
       const usrInfo = await client.userinfo(response.access_token);
       await saveUser(usrInfo, req.params.tenant);
     } catch (err) {
-      console.log(err);
+      log.error(
+        "Error while saving user after callback: " + (err.stack || err),
+        { type: "authentication" },
+        { req, res },
+      );
     }
 
     res.redirect(
@@ -539,7 +545,11 @@ router.get("/tokens/:code", (req, res, next) => {
                       secure: true,
                     });
                   } catch (err) {
-                    console.log(err);
+                    log.error(
+                      "Error while setting auth cookies: " + (err.stack || err),
+                      { type: "authentication" },
+                      { req, res },
+                    );
                   }
                   res.status(200).json({
                     token: response.token,
@@ -548,25 +558,22 @@ router.get("/tokens/:code", (req, res, next) => {
                 }
               })
               .catch((err) => {
-                console.log(err);
                 next(err);
               });
           }
         })
         .catch((err) => {
-          console.log(err);
           next(err);
         });
     });
   } catch (err) {
-    console.log(err);
     next(err);
   }
 });
 
 // Route used for verifing push subscription
 router.get("/ams/ams_verification_hash", (req, res) => {
-  console.log("ams verification");
+  log.info("ams verification", {}, { req, res });
   res.setHeader("Content-type", "plain/text");
   res.status(200).send(process.env.AMS_VER_HASH);
 });
@@ -686,11 +693,10 @@ router.post(
   (req, res, next) => {
     try {
       return db.task("deploymentTasks", async (t) => {
-        customLogger(null, null, "info", [
-          { type: "ams_ingest_log" },
-          { message: "AMS ingest received" },
-          { decoded_messages: req.body.decoded_messages },
-        ]);
+        log.info("AMS ingest received", {
+          type: "ams_ingest",
+          decoded_messages: req.body.decoded_messages,
+        });
 
         await t.service_state
           .deploymentUpdate(req.body.decoded_messages)
@@ -698,13 +704,12 @@ router.post(
             let ids = response.deployed_ids;
             let errors = response.errors || [];
 
-            customLogger(null, null, "info", [
-              { type: "ams_ingest_log" },
-              { message: "deploymentUpdate completed" },
-              { response },
-              { ids },
-              { errors },
-            ]);
+            log.info("deploymentUpdate completed", {
+              type: "ams_ingest",
+              response,
+              ids,
+              errors,
+            });
 
             if (ids) {
               res.status(200).end();
@@ -713,31 +718,28 @@ router.post(
                 await t.user
                   .getServiceOwners(ids)
                   .then(async (data) => {
-                    customLogger(null, null, "info", [
-                      { type: "ams_ingest_log" },
-                      { message: "Loaded service owners" },
-                      { ids },
-                      { owners: data },
-                    ]);
+                    log.info("Loaded service owners", {
+                      type: "ams_ingest",
+                      ids,
+                      owners: data,
+                    });
 
                     if (data) {
                       await t.service_petition_details
                         .getTicketInfo(ids)
                         .then(async (ticket_data) => {
-                          customLogger(null, null, "info", [
-                            { type: "ams_ingest_log" },
-                            { message: "Loaded ticket data" },
-                            { ids },
-                            { ticket_data },
-                          ]);
+                          log.info("Loaded ticket data", {
+                            type: "ams_ingest",
+                            ids,
+                            ticket_data,
+                          });
 
                           if (ticket_data) {
-                            customLogger(null, null, "info", [
-                              { type: "ams_ingest_log" },
-                              { message: "Sending ticket deployment mail" },
-                              { ids },
-                              { ticket_data },
-                            ]);
+                            log.info("Sending ticket deployment mail", {
+                              type: "ams_ingest",
+                              ids,
+                              ticket_data,
+                            });
 
                             sendDeploymentMail(ticket_data);
                           }
@@ -755,14 +757,13 @@ router.post(
                                 error_services.forEach(async (error_data) => {
                                   await delay(400);
 
-                                  customLogger(null, null, "info", [
-                                    { type: "ams_ingest_log" },
+                                  log.info(
+                                    "Sending deployment error notification",
                                     {
-                                      message:
-                                        "Sending deployment error notification",
+                                      type: "ams_ingest",
+                                      error_data,
                                     },
-                                    { error_data },
-                                  ]);
+                                  );
 
                                   sendMail(
                                     {
@@ -778,14 +779,12 @@ router.post(
                                 });
                               })
                               .catch((error) => {
-                                customLogger(null, null, "error", [
-                                  { type: "ams_ingest_log" },
+                                log.error(
+                                  "Could not send email to reviewers: " + (error.stack || error),
                                   {
-                                    message:
-                                      "Could not send email to reviewers",
+                                    type: "ams_ingest",
                                   },
-                                  { error },
-                                ]);
+                                );
 
                                 next(
                                   "Could not sent email to reviewers:" + error,
@@ -795,17 +794,14 @@ router.post(
 
                           if (ids.length > 0) {
                             data.forEach((email_data) => {
-                              customLogger(null, null, "info", [
-                                { type: "ams_ingest_log" },
+                              log.info(
+                                "Sending deployment notification email",
                                 {
-                                  message:
-                                    "Sending deployment notification email",
-                                },
-                                {
+                                  type: "ams_ingest",
                                   template: "deployment-notification.hbs",
+                                  email_data,
                                 },
-                                { email_data },
-                              ]);
+                              );
 
                               sendMail(
                                 {
@@ -829,35 +825,28 @@ router.post(
                     }
                   })
                   .catch((err) => {
-                    customLogger(null, null, "error", [
-                      { type: "ams_ingest_log" },
-                      { message: "Could not send deployment email" },
-                      { ids },
-                      { error: err },
-                    ]);
+                    log.error("Could not send deployment email: " + (err.stack || err), {
+                      type: "ams_ingest",
+                      ids,
+                    });
 
                     next("Could not sent deployment email." + err);
                   });
               }
             } else {
-              customLogger(null, null, "error", [
-                { type: "ams_ingest_log" },
-                { message: "Deployment Failed: no ids returned" },
-                { response },
-              ]);
+              log.error("Deployment Failed: no ids returned", {
+                type: "ams_ingest",
+                response,
+              });
 
               next("Deployment Failed");
             }
           })
           .catch((err) => {
-            console.log(err);
-
-            customLogger(null, null, "error", [
-              { type: "ams_ingest_log" },
-              { message: "deploymentUpdate failed / invalid AMS message" },
-              { error: err },
-              { decoded_messages: req.body.decoded_messages },
-            ]);
+            log.error("deploymentUpdate failed / invalid AMS message: " + (err.stack || err), {
+              type: "ams_ingest",
+              decoded_messages: req.body.decoded_messages,
+            });
 
             res.status(200).send("Invalid Message");
           });
@@ -927,7 +916,11 @@ router.put("/agent/set_services_state", amsAgentAuth, (req, res, next) => {
           }
         })
         .catch((err) => {
-          console.log(err);
+          log.error(
+            "Error while setting services state: " + (err.stack || err),
+            { type: "agent" },
+            { req, res },
+          );
         });
     });
   } catch (err) {
@@ -960,7 +953,11 @@ router.get(
             return res.status(200).send(response[0]);
           })
           .catch((err) => {
-            console.log(err);
+            log.error(
+              "Error while fetching service list: " + (err.stack || err),
+              { type: "service_list" },
+              { req, res },
+            );
             return res.status(416).send("Out of range");
           });
       } else if (
@@ -980,7 +977,11 @@ router.get(
             return res.status(200).send(response[0]);
           })
           .catch((err) => {
-            console.log(err);
+            log.error(
+              "Error while fetching own service list: " + (err.stack || err),
+              { type: "service_list" },
+              { req, res },
+            );
             return res.status(416).send("Out of range");
           });
       } else {
@@ -1980,7 +1981,7 @@ function amsAgentAuth(req, res, next) {
     next();
   } else {
     res.status(401);
-    customLogger(req, res, "warn", "Unauthenticated request");
+    log.warn("Unauthenticated request", {}, { req, res });
     res.json({ success: false, error: "Authentication failure" });
   }
 }
@@ -2104,14 +2105,16 @@ const saveUser = (userinfo, tenant) => {
               if (queries.length > 0) {
                 await t.batch(queries).then((done) => {
                   if (done) {
-                    customLogger(null, null, "info", "Updated User");
+                    log.info("Updated User");
                   }
                 });
               }
             }
           })
           .catch((err) => {
-            console.log(err);
+            log.error("Error while updating user: " + (err.stack || err), {
+              type: "user",
+            });
           });
       } else {
         await t.user_role
@@ -2246,7 +2249,7 @@ function asyncPetitionValidation(req, res, next) {
                 next();
               } else {
                 res.status(422);
-                customLogger(req, res, "warn", "Protocol id is not available");
+                log.warn("Protocol id is not available", {}, { req, res });
                 return res.end();
               }
             });
@@ -2298,11 +2301,10 @@ function asyncPetitionValidation(req, res, next) {
                               res.status(422).send({
                                 error: "Protocol id is not available",
                               });
-                              customLogger(
-                                req,
-                                res,
-                                "warn",
+                              log.warn(
                                 "Protocol id is not available",
+                                {},
+                                { req, res },
                               );
                               return res.end();
                             }
@@ -2311,12 +2313,7 @@ function asyncPetitionValidation(req, res, next) {
                         res
                           .status(403)
                           .send({ error: "Tried to edit protocol" });
-                        customLogger(
-                          req,
-                          res,
-                          "warn",
-                          "Tried to edit protocol.",
-                        );
+                        log.warn("Tried to edit protocol.", {}, { req, res });
                         return res.end();
                       }
                     } else {
@@ -2325,11 +2322,11 @@ function asyncPetitionValidation(req, res, next) {
                           "Could not find petition with id: " +
                           req.body.service_id,
                       });
-                      customLogger(
-                        req,
-                        res,
-                        "warn",
-                        "Could not find service with id:" + req.body.service_id,
+                      log.warn(
+                        "Could not find service with id:" +
+                          req.body.service_id,
+                        {},
+                        { req, res },
                       );
                       return res.end();
                     }
@@ -2339,11 +2336,10 @@ function asyncPetitionValidation(req, res, next) {
                   error:
                     "Cannot create new petition because there is an open petition existing for target service",
                 });
-                customLogger(
-                  req,
-                  res,
-                  "warn",
+                log.warn(
                   "Cannot create new petition because there is an open petition existing for target service",
+                  {},
+                  { req, res },
                 );
                 return res.end();
               }
@@ -2362,17 +2358,16 @@ function asyncPetitionValidation(req, res, next) {
                 next();
               } else {
                 if (petition.protocol !== req.body.protocol) {
-                  customLogger(req, res, "warn", "Tried to edit protocol.");
+                  log.warn("Tried to edit protocol.", {}, { req, res });
                   return res
                     .status(403)
                     .send({ error: "Tried to edit protocol" });
                 }
                 if (petition.type === "create" && req.body.type !== "create") {
-                  customLogger(
-                    req,
-                    res,
-                    "warn",
+                  log.warn(
                     "Tried to edit registration type",
+                    {},
+                    { req, res },
                   );
                   return res
                     .status(403)
@@ -2408,11 +2403,10 @@ function asyncPetitionValidation(req, res, next) {
                     if (available) {
                       next();
                     } else {
-                      customLogger(
-                        req,
-                        res,
-                        "warn",
+                      log.warn(
                         "Protocol id is not available",
+                        {},
+                        { req, res },
                       );
                       res
                         .status(422)
@@ -2424,11 +2418,10 @@ function asyncPetitionValidation(req, res, next) {
               res.status(403).send({
                 error: "Could not edit petition with id: " + req.params.id,
               });
-              customLogger(
-                req,
-                res,
-                "warn",
+              log.warn(
                 "Could not edit petition with id: " + req.params.id,
+                {},
+                { req, res },
               );
               return res.end();
             }
