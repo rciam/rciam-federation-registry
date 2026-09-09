@@ -59,7 +59,14 @@ import config from './config.json';
           const faviconUpdate = async () => {
             //grab favicon element by ID
             const favicon = document.getElementById("favicon");
-            favicon.href = tenant?.base_url.slice(0,tenant.base_url.length - tenant.name.length)+'/'+tenant.config.icon+"?v=2";
+
+            let prefix = tenant?.base_url.slice(0, tenant.base_url.length - tenant.name.length) ?? '';
+            let icon = tenant?.config?.icon ?? '';
+
+            if (prefix.endsWith('/')) prefix = prefix.slice(0, -1);
+            if (icon.startsWith('/')) icon = icon.slice(1);
+
+            favicon.href = `${prefix}/${icon}`;
           }
           //run our function here
           faviconUpdate();
