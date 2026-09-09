@@ -76,6 +76,7 @@ AMS_VER_HASH = verification_hash_used_to_activate_push_subscription
 ADMIN_AUTH_KEY = authorization_key_for_administrative_routes
 CORS = external_urls_allowed
 TOKEN_KEY = token_used_for_encription
+LOG_IGNORE_PATTERNS = comma-separated URL patterns to exclude from request logging (e.g., monitoring endpoints)
 ```
 
 **Configure Database File**
