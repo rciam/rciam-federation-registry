@@ -3,5 +3,7 @@
     "tenant_1":"http://localhost:5000/",
     "tenant_2":"http://localhost:5000/"
   },
-  "basename": "/"
+  "basename": "/",
+  "allowedLocales": ["en", "gr"],
+  "defaultLocale": "en"
 }

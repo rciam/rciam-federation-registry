@@ -20,6 +20,12 @@ import { useCookies } from "react-cookie";
 import parse from "html-react-parser";
 import { faTimes } from "@fortawesome/free-solid-svg-icons";
 
+const localeDisplayNames = {
+    en: "English",
+    gr: "Greek",
+    cz: "Czech"
+};
+
 export const Header = (props) => {
   const [tenant] = useContext(tenantContext);
   const [bannerAlertInfo, setBannerAlertInfo] = useState([]);
@@ -167,7 +173,9 @@ export const Footer = (props) => {
             <div className="dropup ssp-footer__item__lang">
               <DropdownButton
                 onSelect={(e) => {
-                  props.changeLanguage(e);
+                  if (config.allowedLocales.includes(e)) {
+                    props.changeLanguage(e);
+                  }
                 }}
                 className="ssp-btn btn ssp-btn__footer dropdown-toggle"
                 id="dropdown-button-drop-up"
@@ -175,14 +183,18 @@ export const Footer = (props) => {
                 title={
                   <React.Fragment>
                     <span className="caret"></span>{" "}
-                    {props.lang === "en" ? "English" : "Greek"}
+                    {localeDisplayNames[props.lang] || config.defaultLocale}
                   </React.Fragment>
                 }
                 drop="up"
                 variant="link"
               >
-                <Dropdown.Item eventKey="en">English</Dropdown.Item>
-                <Dropdown.Item eventKey="gr">Greek</Dropdown.Item>
+                {/* Render only allowed locales dynamically */}
+                {config.allowedLocales.map((locale) => (
+                  <Dropdown.Item key={locale} eventKey={locale}>
+                    {localeDisplayNames[locale] || locale}
+                  </Dropdown.Item>
+                ))}
               </DropdownButton>
             </div>
           </Col>
