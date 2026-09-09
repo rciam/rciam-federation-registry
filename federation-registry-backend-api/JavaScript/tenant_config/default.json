@@ -223,7 +223,8 @@
         "type": "string",
         "tag": "url",
         "default": "",
-        "tab": "general",
+        "tab": "policy",
+        "user_facing": true,
         "placeholder": "https://",
         "required": ["production"]
       },
@@ -239,7 +240,7 @@
         "type": "boolean",
         "required": ["production"],
         "tag": "once",
-        "tab": "general",
+        "tab": "policy",
         "default": false,
         "error": "You must read the guidlines for security reasons"
       },
@@ -249,7 +250,7 @@
         "required": ["production"],
         "type": "boolean",
         "tag": "coc",
-        "tab": "general",
+        "tab": "policy",
         "default": false,
         "error": "The service must comply with this policy"
       },
@@ -258,7 +259,8 @@
         "desc": "The service complies with the <a href='https://Data+Protection+Code+of+Conduct+Home' target='_blank' rel='noopener noreferrer'>Data Protection Code of Conduct version</a> or any other code of conduct compatible with legislation and guidelines on data protection and privacy including GDPR",
         "required": [],
         "default": false,
-        "tab": "general",
+        "user_facing": true,
+        "tab": "policy",
         "type": "boolean",
         "tag": "coc",
         "error": "The service must comply with this policy"
