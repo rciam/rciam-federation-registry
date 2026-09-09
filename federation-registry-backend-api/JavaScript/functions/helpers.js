@@ -6,7 +6,7 @@ var hbs = require('handlebars');
 nodeMailer = require('nodemailer');
 var config = require('../config');
 var email_transport_conf = require('../email_transport_conf.json')
-const customLogger = require('../loggers.js');
+const log = require('../loggers.js');
 
 hbs.registerHelper('loud', function (aString) {
     return aString.toUpperCase()
@@ -33,10 +33,10 @@ const sendMultipleInvitations = function (data,t) {
         await delay(400);
         sendInvitationMail(invitation_data);
       }
-      }).catch(err=>{customLogger(null,null,'warn','Error when creating and sending invitations: '+err)})
+      }).catch(err=>{log.warn('Error when creating and sending invitations: '+err)})
   }
   catch(err){
-    customLogger(null,null,'warn','Error when creating and sending invitations: '+err);
+    log.warn('Error when creating and sending invitations: '+err);
   }
 
 }
@@ -173,9 +173,9 @@ const calcDiff = (oldState,newState,tenant) => {
 
     }
     catch(err){
-      console.log(err);
+      log.error('Error while calculating service diff: ' + (err.stack || err), { type: 'helpers' });
     }
-    
+
 }
 
 
@@ -198,9 +198,10 @@ const sendNotif= (data,template_uri,user)=>{
     };
     transporter.sendMail(mailOptions, function (error, response) {
       if (error) {
-        customLogger(null,null,'error',[{type:'email_log'},{message:'Email not sent'},{error:error},{user:user},{data:data}]);
+        log.error('Email not sent: ' + (error.stack || error), { type: 'email', user: user, data: data });
       }
-      else {user(null,null,'info',[{type:'email_log'},{message:'Email sent'},{user:user},{data:data}]);
+      else {
+        log.info('Email sent', { type: 'email', user: user, data: data });
       }
     });
     
@@ -239,11 +240,11 @@ const sendInvitationMail = async (data) => {
         return transporter.sendMail(mailOptions, function (error, response) {
           if (error) {
             resolve(false);
-            customLogger(null,null,'error',[{type:'email_log'},{message:'Email not sent'},{template:'invitation'},{error:error},{user:null},{data:data.email}]);
+            log.error('Email not sent: ' + (error.stack || error), { type: 'email', template: 'invitation', user: null, data: data.email });
           }
           else {
             resolve(true);
-            customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{template:'invitation'},{user:null},{data:data.email}]);
+            log.info('Email sent', { type: 'email', template: 'invitation', user: null, data: data.email });
           }
         });
       });
@@ -284,10 +285,10 @@ const newMemberNotificationMail = (data,managers) => {
         };
         transporter.sendMail(mailOptions, function (error, response) {
           if (error) {
-            customLogger(null,null,'error',[{type:'email_log'},{message:'Email not sent'},{error:error},{template:'new-member-notification'} ,{user:manager},{data:data}]);
+            log.error('Email not sent: ' + (error.stack || error), { type: 'email', template: 'new-member-notification', user: manager, data: data });
           }
           else {
-            customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{user:manager},{template:'new-member-notification'},{data:data}]);
+            log.info('Email sent', { type: 'email', user: manager, template: 'new-member-notification', data: data });
           }
         });
       })
@@ -323,10 +324,10 @@ const sendNotifications = (data,template_uri,users) => {
         await delay(400);
         transporter.sendMail(mailOptions, function (error, response) {
           if (error) {
-            customLogger(null,null,'error',[{type:'email_log'},{message:'Email not sent'},{template:template_uri},{error:error},{user:user},{data:data}]);
+            log.error('Email not sent: ' + (error.stack || error), { type: 'email', template: template_uri, user: user, data: data });
           }
           else {
-            customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{template:template_uri},{user:user},{data:data}]);
+            log.info('Email sent', { type: 'email', template: template_uri, user: user, data: data });
           }
         });
       });
@@ -382,10 +383,10 @@ const sendMail= (data,template_uri,users)=>{
           await delay(400);
           transporter.sendMail(mailOptions, function (error, response) {
             if (error) {
-              customLogger(null,null,'error',[{type:'email_log'},{message:'Email not sent'},{template:template_uri},{error:error},{user:user},{data:data},{ from: mailOptions.from }]);
+              log.error('Email not sent: ' + (error.stack || error), { type: 'email', template: template_uri, user: user, data: data, from: mailOptions.from });
             }
             else {
-              customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{template:template_uri},{user:user},{data:data},{ from: mailOptions.from }]);
+              log.info('Email sent', { type: 'email', template: template_uri, user: user, data: data, from: mailOptions.from });
             }
           });
       });
@@ -435,11 +436,11 @@ const sendDeploymentMail =  function(data){
                     };
                     transporter.sendMail(mailOptions, function (error, response) {
                       if (error) {
-                        customLogger(null,null,'error',[{type:'email_log'},{message:'Email not sent'},{error:error},{recipient:'Ggus'},{ticket_data:ticket_data}]);
+                        log.error('Email not sent: ' + (error.stack || error), { type: 'email', recipient: 'Ggus', ticket_data: ticket_data });
                         return true;
                       }
                       else {
-                        customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{recipient:'Ggus'},{ticket_data:ticket_data}]);
+                        log.info('Email sent', { type: 'email', recipient: 'Ggus', ticket_data: ticket_data });
                         return true;
                       }
                     });
@@ -450,7 +451,7 @@ const sendDeploymentMail =  function(data){
             }
 
         }catch(err){
-          console.log(err);
+          log.error('Error while sending deployment mail: ' + (err.stack || err), { type: 'email' });
         }
 
     }

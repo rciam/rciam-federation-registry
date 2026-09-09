@@ -1,7 +1,7 @@
 const countryData = require("country-region-data");
 const { body, query, validationResult, param } = require("express-validator");
 const { reg } = require("./regex.js");
-const customLogger = require("./loggers.js");
+const log = require("./loggers.js");
 var config = require("./config");
 var defaultAttributes = require("./tenant_config/requested_attributes.json");
 const { db } = require("./db");
@@ -552,7 +552,10 @@ const serviceValidationRules = (options, req) => {
         }
         return true;
       } catch (err) {
-        console.log(err);
+        log.error("Error while checking required attribute: " + (err.stack || err), {
+          type: "validation",
+          field: field,
+        });
       }
     } else {
       return isNotEmpty(value);
@@ -2281,10 +2284,18 @@ const decodeAms = (req, res, next) => {
         JSON.parse(Buffer.from(item.message.data, "base64").toString()),
       );
     });
-    console.log(req.body.decoded_messages);
+    log.info(
+      "AMS messages decoded",
+      {
+        data: {
+          decoded_messages: req.body.decoded_messages,
+        },
+      },
+      { req, res },
+    );
     next();
   } catch (err) {
-    customLogger(req, res, "warn", "Failed decoding messages");
+    log.warn("Failed decoding messages", {}, { req, res });
     res.status(422).send(err);
   }
 };
@@ -2307,7 +2318,7 @@ const changeContacts = (req, res, next) => {
       });
       next();
     } else {
-      console.log("Invalid data format");
+      log.warn("Invalid data format", { type: "validation" }, { req, res });
       next("Invalid body format");
     }
   } catch (err) {
@@ -2380,7 +2391,11 @@ const formatServiceBooleanForValidation = (req, res, next) => {
     }
     return next();
   } catch (err) {
-    console.log(err);
+    log.warn(
+      "Invalid format while formatting service booleans: " + (err.stack || err),
+      { type: "validation" },
+      { req, res },
+    );
     return res.status(422).send("Invalid Format");
   }
 };
@@ -2397,12 +2412,15 @@ const validate = (req, res, next) => {
     }
     const extractedErrors = [];
     errors.array().map((err) => extractedErrors.push({ [err.param]: err.msg }));
-    var log = {};
-    customLogger(req, res, "warn", "Failed schema validation", extractedErrors);
+    log.warn("Failed schema validation", { data: extractedErrors }, { req, res });
     res.status(422).send(extractedErrors);
     return res.end();
   } catch (err) {
-    console.log(err);
+    log.warn(
+      "Invalid format during schema validation: " + (err.stack || err),
+      { type: "validation" },
+      { req, res },
+    );
     return res.status(422).send("Invalid Format");
   }
 };

@@ -1,5 +1,6 @@
 var config = require('../config');
 var diff = require('deep-diff').diff;
+const log = require('../loggers.js');
 
 function requiredDeployment(old_values,new_values){
   let deploy = false;
@@ -42,7 +43,7 @@ function requiredDeployment(old_values,new_values){
     return deploy;
   }
   catch(err){
-    console.log(err);
+    log.error('Error while checking whether deployment is required: ' + (err.stack || err), { type: 'deployment' });
     return false;
   }
   

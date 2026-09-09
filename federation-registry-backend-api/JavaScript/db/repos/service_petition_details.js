@@ -1,5 +1,6 @@
 const sql = require('../sql').service_petition_details;
 var config = require('../../config');
+const log = require('../../loggers.js');
 const cs = {}; // Reusable ColumnSet objects.
 
 /*
@@ -159,7 +160,7 @@ class ServicePetitionDetailsRepository {
          return this.db.any(query);
       }
       catch(err){
-        console.log(err);
+        log.error('Error while fetching ticket info: ' + (err.stack || err), { type: 'db' });
       }
      }
 

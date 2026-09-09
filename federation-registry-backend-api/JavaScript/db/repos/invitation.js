@@ -1,6 +1,7 @@
 const cs = {};
 const sql = require('../sql').invitations;
 var config = require('../../config');
+const log = require('../../loggers.js');
 const {v1:uuidv1} = require('uuid');
 class InvitationRepository {
   constructor(db,pgp){
@@ -33,7 +34,7 @@ class InvitationRepository {
         return false;
       }
     }).catch(err=>{
-      console.log(err);
+      log.error('Error while adding invitation: ' + (err.stack || err), { type: 'db' });
       throw err;
     });
   }

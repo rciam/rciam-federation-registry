@@ -1,4 +1,4 @@
-const customLogger = require('../loggers.js');
+const log = require('../loggers.js');
 const {db} = require('../db');
 const base64url = require('base64url');
 var CryptoJS = require("crypto-js");
@@ -88,7 +88,7 @@ function authenticate(req,res,next){
               }
             }).catch((err)=> {
               res = clearCookies(res,req.headers.host);
-              customLogger(req,res,'warn','Unauthenticated request'+err);
+              log.warn('Unauthenticated request'+err, {}, { req, res });
               res.status(401).end();
             });
           }
@@ -108,7 +108,7 @@ function authenticate(req,res,next){
   }
   catch(err){
     res = clearCookies(res,req.headers.host);
-    customLogger(req,res,'warn','Unauthenticated request'+err);
+    log.warn('Unauthenticated request'+err, {}, { req, res });
     next(err);
   }
 

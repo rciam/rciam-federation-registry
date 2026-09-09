@@ -5,6 +5,7 @@ const {Diagnostics} = require('./diagnostics'); // optional diagnostics
 const {ServiceContacts,ServiceDetailsProtocol,ServiceErrors,Invitation,Tenants,DeploymentTasks,ServiceState,Group,ServiceDetails,DeployerAgents,Tokens,User,UserInfo,UserRole,UserEduPersonEntitlement,ServiceMultiValued,ServicePetitionDetails,Service,Petition,ServiceList,Organizations, BannerAlerts, ServiceTags} = require('./repos');
 const testdbConfig = require('../../db-config/test-db-config.json');
 const dockerTestdbConfig = require('../../db-config/docker-test-db-config.json');
+const log = require('../loggers.js');
 let config;
 // pg-promise initialization options:
 const initOptions = {
@@ -14,8 +15,7 @@ const initOptions = {
     error: function (error, e) {
        if (e.cn) {
            // A connection-related error;
-           console.log("CN:", e.cn);
-           console.log("EVENT:", error.message);
+           log.error('DB connection error: ' + (error.message), { type: 'db', host: e.cn.host, port: e.cn.port, database: e.cn.database });
        }
      },
     // Extending the database protocol with our custom repositories;
@@ -77,7 +77,7 @@ db.connect()
         obj.done(); // success, release connection;
     })
     .catch(function (error) {
-        console.log("ERROR:", error.message);
+        log.error('DB connection error: ' + (error.message), { type: 'db' });
     });
 
 // Alternatively, you can get access to pgp via db.$config.pgp
