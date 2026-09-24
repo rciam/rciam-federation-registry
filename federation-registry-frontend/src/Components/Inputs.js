@@ -1279,7 +1279,7 @@ export function DeviceCode(props) {
       </Form.Text>
       {props.values?.grant_types?.includes(
         "urn:ietf:params:oauth:grant-type:device_code"
-      ) ? (
+      ) || props.showLegacyValidity ? (
         <React.Fragment>
           <TimeInput
             name="device_code_validity_seconds"
@@ -1292,6 +1292,23 @@ export function DeviceCode(props) {
               props.changed ? props.changed.device_code_validity_seconds : null
             }
           />
+          {props.showLegacyValidity && !props.disabled ? (
+            <Col sm="4">
+              <Button
+                variant="outline-danger"
+                size="sm"
+                onClick={() =>
+                  props.setFieldValue(
+                    "device_code_validity_seconds",
+                    null,
+                    true
+                  )
+                }
+              >
+                {t("input_remove_button")}
+              </Button>
+            </Col>
+          ) : null}
           <Form.Text
             className="text-muted text-left label-checkbox"
             id="uri-small-desc"

@@ -101,6 +101,9 @@ const ServiceForm = (props) => {
   const [tenant, setTenant] = useContext(tenantContext);
   const [logout, setLogout] = useState(false);
   const [submitDisabled, setSubmitDisabled] = useState(false);
+  const submitInProgress = useRef(false);
+  const reviewInProgress = useRef(false);
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
   const [availabilityCheck, setAvailabilityCheck] = useState(true);
   const formRef = useRef();
   const [disabled, setDisabled] = useState(false);
@@ -171,6 +174,28 @@ const ServiceForm = (props) => {
         props.initialValues[name] = extra_fields[name].default;
       }
     });
+
+    const serviceTypeSettings = tenant?.config?.service_type_settings;
+    const defaultServiceType = serviceTypeSettings?.default;
+    const isNewRegistration = !service_id && !petition_id && !props.review;
+
+    if (
+      isNewRegistration &&
+      !props.initialValues.service_type &&
+      tenant?.config?.service_types?.[defaultServiceType]
+    ) {
+      props.initialValues.service_type = defaultServiceType;
+      Object.entries(tenant.config.service_types[defaultServiceType]).forEach(
+        ([fieldName, fieldConfig]) => {
+          if (
+            fieldConfig &&
+            Object.prototype.hasOwnProperty.call(fieldConfig, "value")
+          ) {
+            props.initialValues[fieldName] = fieldConfig.value;
+          }
+        },
+      );
+    }
 
     // Check restrictions for review
     if (props.review) {
@@ -1775,6 +1800,11 @@ const ServiceForm = (props) => {
   };
 
   const reviewPetition = (comment, type) => {
+    if (reviewInProgress.current) {
+      return;
+    }
+    reviewInProgress.current = true;
+    setReviewSubmitting(true);
     setAsyncResponse(true);
     fetch(
       config.host[tenant_name] +
@@ -1791,30 +1821,35 @@ const ServiceForm = (props) => {
         },
         body: JSON.stringify({ comment: comment, type: type }),
       },
-    ).then((response) => {
-      setAsyncResponse(false);
-      if (response.status === 200) {
-        setModalData({
-          title: t("review_" + props.type + "_title"),
-          tenant: tenant_name,
-          message: t("review_success"),
-          reviewEnabled: false,
-        });
-      } else if (response.status === 401) {
-        setLogout(true);
-        return false;
-      } else if (response.status === 404) {
-        setNotFound(true);
-        return false;
-      } else {
-        setModalData({
-          title: t("review_" + props.type + "_title"),
-          message: t("review_error") + response.status,
-          tenant: tenant_name,
-          reviewEnabled: false,
-        });
-      }
-    });
+    )
+      .then((response) => {
+        if (response.status === 200) {
+          setModalData({
+            title: t("review_" + props.type + "_title"),
+            tenant: tenant_name,
+            message: t("review_success"),
+            reviewEnabled: false,
+          });
+        } else if (response.status === 401) {
+          setLogout(true);
+          return false;
+        } else if (response.status === 404) {
+          setNotFound(true);
+          return false;
+        } else {
+          setModalData({
+            title: t("review_" + props.type + "_title"),
+            message: t("review_error") + response.status,
+            tenant: tenant_name,
+            reviewEnabled: false,
+          });
+        }
+      })
+      .finally(() => {
+        reviewInProgress.current = false;
+        setReviewSubmitting(false);
+        setAsyncResponse(false);
+      });
   };
 
   const postApi = async (data) => {
@@ -1894,6 +1929,10 @@ const ServiceForm = (props) => {
           innerRef={formRef}
           validate={dynamicValidation}
           onSubmit={(values, { setSubmitting }) => {
+            if (submitInProgress.current) {
+              return;
+            }
+            submitInProgress.current = true;
             setSubmitting(true);
             setHasSubmitted(true);
             setSubmitDisabled(true);
@@ -2440,7 +2479,7 @@ const ServiceForm = (props) => {
                         <ReviewComponent
                           errors={errors}
                           asyncErrors={metadataAsyncError}
-                          disabled={metadataLoading}
+                          disabled={metadataLoading || reviewSubmitting}
                           values={values}
                           changes={props.changes}
                           reviewPetition={reviewPetition}
@@ -2799,6 +2838,9 @@ const ServiceForm = (props) => {
                         <ServiceTypeSelector
                           value={values.service_type}
                           editable={isRegistrationRequest}
+                          order={
+                            tenant?.config?.service_type_settings?.order || []
+                          }
                           onChange={onServiceTypeChange}
                         />
 
@@ -3477,6 +3519,10 @@ const ServiceForm = (props) => {
                                     <DeviceCode
                                       onBlur={handleBlur}
                                       values={values}
+                                      showLegacyValidity={
+                                        hasLegacyDeviceCodeValidity
+                                      }
+                                      setFieldValue={setFieldValue}
                                       onGrantTypesChange={onGrantTypesChange}
                                       isInvalid={
                                         hasSubmitted
@@ -3626,6 +3672,27 @@ const ServiceForm = (props) => {
                                           : null
                                       }
                                     />
+                                    {hasLegacyIdTokenTimeout &&
+                                    !disabled &&
+                                    !isServiceTypeFieldDisabled(
+                                      "id_token_timeout_seconds",
+                                    ) ? (
+                                      <Col sm="4">
+                                        <Button
+                                          variant="outline-danger"
+                                          size="sm"
+                                          onClick={() =>
+                                            setFieldValue(
+                                              "id_token_timeout_seconds",
+                                              null,
+                                              true,
+                                            )
+                                          }
+                                        >
+                                          {t("input_remove_button")}
+                                        </Button>
+                                      </Col>
+                                    ) : null}
                                   </InputRow>
                                 )}
                               </React.Fragment>
@@ -3974,7 +4041,7 @@ const ServiceForm = (props) => {
                       {props.review ? (
                         <ReviewComponent
                           errors={errors}
-                          disabled={metadataLoading}
+                          disabled={metadataLoading || reviewSubmitting}
                           asyncErrors={metadataAsyncError}
                           values={values}
                           changes={props.changes}

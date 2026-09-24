@@ -39,8 +39,28 @@ const serviceTypes = [
   },
 ];
 
-const ServiceTypeSelector = ({ value, onChange, editable = false }) => {
+const ServiceTypeSelector = ({
+  value,
+  onChange,
+  editable = false,
+  order = [],
+}) => {
   const { t } = useTranslation();
+  const configuredOrder = Array.isArray(order) ? order : [];
+
+  const orderedServiceTypes = [
+    ...configuredOrder
+      .map((serviceType) =>
+        serviceTypes.find((candidate) => candidate.value === serviceType),
+      )
+      .filter(
+        (serviceType, index, ordered) =>
+          serviceType && ordered.indexOf(serviceType) === index,
+    ),
+    ...serviceTypes.filter(
+      (serviceType) => !configuredOrder.includes(serviceType.value),
+    ),
+  ];
 
   const selectedType = serviceTypes.find(
     (serviceType) => serviceType.value === value,
@@ -97,7 +117,7 @@ const ServiceTypeSelector = ({ value, onChange, editable = false }) => {
       </div>
 
       <Row className="service-type-row">
-        {serviceTypes.map((serviceType) => {
+        {orderedServiceTypes.map((serviceType) => {
           const selected = value === serviceType.value;
 
           return (
