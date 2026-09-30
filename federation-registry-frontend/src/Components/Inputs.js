@@ -1475,6 +1475,9 @@ export function ListInputArray(props) {
                       onClick={() => {
                         if (!props.values.includes(newVal)) {
                           arrayHelpers.push(newVal);
+                          if (typeof props.onChange === "function") {
+                            props.onChange([...(props.values || []), newVal]);
+                          }
                           setNewVal("");
                         } else {
                           setInvalid(true);
@@ -1502,6 +1505,7 @@ export function ListInputArray(props) {
             values={props.values}
             disabled={props.disabled}
             changed={props.changed}
+            onChange={props.onChange}
           />
         ))}
         <FieldArray
@@ -1521,6 +1525,8 @@ export function ListInputArray(props) {
                       arrayHelpers={arrayHelpers}
                       disabled={props.disabled}
                       changed={props.changed}
+                      values={props.values}
+                      onChange={props.onChange}
                     />
                     {Array.isArray(props.error) ? (
                       <tr>
@@ -1595,6 +1601,7 @@ function ListInputArrayInput1(props) {
                 disabled={props.disabled}
                 name={props.name}
                 value={props.item}
+                onChange={props.onChange}
               />
             </td>
           </React.Fragment>
@@ -1665,6 +1672,11 @@ function ListInputArrayInput2(props) {
           variant="danger"
           onClick={() => {
             props.arrayHelpers.remove(props.index);
+            if (typeof props.onChange === "function") {
+              props.onChange(
+                (props.values || []).filter((item) => item !== props.item),
+              );
+            }
           }}
           className="removeButton"
           disabled={props.disabled}

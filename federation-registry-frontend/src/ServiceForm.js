@@ -215,12 +215,10 @@ const ServiceForm = (props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [props.initialValues]);
 
-  const supportsIdToken = (protocol, grantTypes = []) =>
+  const supportsIdToken = (protocol, scopes = []) =>
     protocol === "oidc" &&
-    Array.isArray(grantTypes) &&
-    (grantTypes.includes("authorization_code") ||
-      grantTypes.includes("implicit") ||
-      grantTypes.includes("urn:ietf:params:oauth:grant-type:device_code"));
+    Array.isArray(scopes) &&
+    scopes.includes("openid");
 
   // Returns true
   yup.addMethod(yup.array, "unique", function (message, mapper = (a) => a) {
@@ -1025,8 +1023,8 @@ const ServiceForm = (props) => {
     id_token_timeout_seconds: yup
       .number()
       .nullable()
-      .when(["protocol", "grant_types"], {
-        is: (protocol, grantTypes) => supportsIdToken(protocol, grantTypes),
+      .when(["protocol", "scope"], {
+        is: (protocol, scope) => supportsIdToken(protocol, scope),
         then: yup
           .number()
           .nullable()
@@ -1043,7 +1041,7 @@ const ServiceForm = (props) => {
           .nullable()
           .test(
             "testIdTokenApplicability",
-            "ID Token Lifetime is not applicable for the selected grant types",
+            t("id_token_timeout_scope_error"),
             (value) => value === null || value === undefined || value === "",
           ),
       }),
@@ -2012,7 +2010,7 @@ const ServiceForm = (props) => {
 
             const idTokenApplicable = supportsIdToken(
               values.protocol,
-              values.grant_types,
+              values.scope,
             );
             const hasLegacyIdTokenTimeout =
               !idTokenApplicable &&
@@ -2338,6 +2336,27 @@ const ServiceForm = (props) => {
               }, true);
             };
 
+            const getDefaultIdTokenTimeout = () =>
+              tenant.form_config.more_info?.id_token_timeout_seconds
+                ?.default ??
+              tenant.form_config.defaultValues?.id_token_timeout_seconds ??
+              defaultValues.id_token_timeout_seconds;
+
+            const onScopeChange = (newScopes) => {
+              const hadOpenIdScope = values.scope?.includes("openid");
+              const hasOpenIdScope = newScopes?.includes("openid");
+
+              if (!hadOpenIdScope && hasOpenIdScope) {
+                setFieldValue(
+                  "id_token_timeout_seconds",
+                  getDefaultIdTokenTimeout(),
+                  true,
+                );
+              } else if (hadOpenIdScope && !hasOpenIdScope) {
+                setFieldValue("id_token_timeout_seconds", null, true);
+              }
+            };
+
             const getServiceTypeConfig = (serviceType = values.service_type) =>
               tenant?.config?.service_types?.[serviceType] || {};
 
@@ -2389,6 +2408,16 @@ const ServiceForm = (props) => {
                     }
                   },
                 );
+
+                const hadOpenIdScope = currentValues.scope?.includes("openid");
+                const hasOpenIdScope = nextValues.scope?.includes("openid");
+
+                if (!hadOpenIdScope && hasOpenIdScope) {
+                  nextValues.id_token_timeout_seconds =
+                    getDefaultIdTokenTimeout();
+                } else if (hadOpenIdScope && !hasOpenIdScope) {
+                  nextValues.id_token_timeout_seconds = null;
+                }
 
                 return nextValues;
               }, true);
@@ -3262,6 +3291,7 @@ const ServiceForm = (props) => {
                                       touched={touched.scope}
                                       disabled={disabled}
                                       onBlur={handleBlur}
+                                      onChange={onScopeChange}
                                       changed={
                                         props.changes
                                           ? props.changes.scope
@@ -3638,7 +3668,7 @@ const ServiceForm = (props) => {
                                     }
                                     required={supportsIdToken(
                                       values.protocol,
-                                      values.grant_types,
+                                      values.scope,
                                     )}
                                     title={t("form_id_token_timeout_seconds")}
                                     extraClass="time-input"
