@@ -2148,7 +2148,7 @@ const ServiceForm = (props) => {
 
             const normalizedErrorFields = getErrorRootFields(errors);
             const visibleErrorFields = normalizedErrorFields.filter((field) => {
-              if (!touched[field]) {
+              if (!touched[field] && !showInitErrors) {
                 return false;
               }
               // Match the profile/protocol gates used to render technical fields.
@@ -2167,7 +2167,7 @@ const ServiceForm = (props) => {
             });
 
             const tabErrorCounts = { general: 0, technical: 0, policy: 0 };
-            if (submitCount > 0) {
+            if (submitCount > 0 || showInitErrors) {
               visibleErrorFields.forEach((field) => {
                 const tab = fieldTabs[field];
                 if (tab) {
@@ -3673,7 +3673,10 @@ const ServiceForm = (props) => {
                                     title={t("form_id_token_timeout_seconds")}
                                     extraClass="time-input"
                                     error={errors.id_token_timeout_seconds}
-                                    touched={touched.id_token_timeout_seconds}
+                                    touched={
+                                      showInitErrors ||
+                                      touched.id_token_timeout_seconds
+                                    }
                                     description={t(
                                       "form_id_token_timeout_seconds_desc",
                                     )}
@@ -3682,7 +3685,7 @@ const ServiceForm = (props) => {
                                       name="id_token_timeout_seconds"
                                       value={values.id_token_timeout_seconds}
                                       isInvalid={
-                                        hasSubmitted
+                                        hasSubmitted || showInitErrors
                                           ? !!errors.id_token_timeout_seconds
                                           : !!errors.id_token_timeout_seconds &&
                                             touched.id_token_timeout_seconds
