@@ -267,6 +267,7 @@
     "post_logout_redirect_uri_grant_type_error": "Post Logout Redirect URIs are only supported when Authorization Code or Implicit is selected. Remove the configured Post Logout Redirect URIs or select a compatible grant type.",
     "pkce_grant_type_error": "PKCE is only supported when Authorization Code is selected. Remove the configured PKCE method or select Authorization Code.",
     "offline_access_grant_type_error": "Offline Access is only supported when Authorization Code or Device Authorization is selected. Remove Offline Access or select a compatible grant type.",
+    "id_token_timeout_scope_error": "ID Token Timeout is only applicable when the 'openid' scope is selected. Remove ID Token Timeout or select 'openid'.",
     "service_type": "Configuration Profile",
     "service_type_description": "Choose the profile that best matches your service’s use case. Only the relevant configuration options will be shown.",
     "service_type_select_title": "Select a configuration profile to continue",

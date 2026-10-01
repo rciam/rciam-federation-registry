@@ -320,15 +320,9 @@ const supportsIdToken = (service) => {
     return false;
   }
 
-  const grantTypes = Array.isArray(service.grant_types)
-    ? service.grant_types
-    : [];
+  const scopes = Array.isArray(service.scope) ? service.scope : [];
 
-  return (
-    grantTypes.includes("authorization_code") ||
-    grantTypes.includes("implicit") ||
-    grantTypes.includes("urn:ietf:params:oauth:grant-type:device_code")
-  );
+  return scopes.includes("openid");
 };
 
 const postBannerAlertValidation = () => {
@@ -1637,6 +1631,20 @@ const serviceValidationRules = (options, req) => {
         return requiredOidc(value, req, pos, "id_token_timeout_seconds");
       })
       .withMessage("id_token_timeout_seconds missing")
+      .custom((value, { req, path }) => {
+        const pos = path.match(/\[(.*?)\]/)[1];
+        const service = req.body[pos];
+        if (isEmpty(value) || supportsIdToken(service)) {
+          return true;
+        }
+        return compatibilityError(
+          value,
+          req,
+          pos,
+          "id_token_timeout_seconds",
+          "ID Token Timeout is only applicable when the 'openid' scope is selected. Remove ID Token Timeout or select 'openid'.",
+        );
+      })
       .if((value, { req, path }) => {
         const pos = path.match(/\[(.*?)\]/)[1];
         return isNotEmpty(value) && supportsIdToken(req.body[pos]);

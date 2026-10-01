@@ -127,6 +127,7 @@
     "form_access_token_validity_seconds_desc": "Zadejte čas v sekundách, minutách nebo hodinách.",
     "form_id_token_timeout_seconds": "Časový limit ID Tokenu",
     "form_id_token_timeout_seconds_desc": "Zadejte čas v sekundách, minutách nebo hodinách (Max hodnota je 86400 sekund (1 den)).",
+    "id_token_timeout_scope_error": "Časový limit ID tokenu lze použít pouze tehdy, když je vybrán scope 'openid'. Odeberte časový limit ID tokenu nebo vyberte 'openid'.",
     "form_refresh_token_validity_seconds_desc": "Zadejte čas v sekundách, minutách nebo hodinách.",
     "form_reuse_refresh_token_scope": "Refresh tokeny jsou vydávány pro tohoto klienta",
     "form_offline_access_desc": "Toto přidá offline_access scope do scopes klienta.",
