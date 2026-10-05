@@ -151,7 +151,9 @@ app.use(express.json({ limit: '50mb' }));
 app.use('/tenants/:tenant/banner_alert', bannerAlertRoutes);
 app.use('/tenants/:tenant/tags', serviceTagRoutes);
 app.use('/tenants/:tenant/notifications',notificationRoutes);
-app.use('/util',utilRoutes);
+// Reading SAML metadata used to live on the unauthenticated /util prefix. It fetches whichever url
+// it is handed, so it has to be reachable only by a signed in user of a known tenant.
+app.use('/tenants/:tenant/util',utilRoutes);
 
 app.use('/', routes.router);
 
