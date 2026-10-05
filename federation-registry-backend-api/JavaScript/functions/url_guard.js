@@ -9,10 +9,8 @@
 const dns = require('dns').promises;
 const net = require('net');
 
-// Survives axios rebuilding the error a lookup hands it - see addressRefusal.
 const refusedAddressCode = 'ERR_UNSAFE_ADDRESS';
 
-// Carries the status the route should answer with.
 class UnsafeUrlError extends Error {
   constructor(message, status) {
     super(message);

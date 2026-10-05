@@ -4,9 +4,6 @@ var expect = chai.expect;
 const { parseMetadataDocument, MetadataInfoError, refuseMetadataRequest } = require('../functions/saml_metadata.js');
 const { UnsafeUrlError } = require('../functions/url_guard.js');
 
-// What the registry understands about a metadata document, without a web server, a session or a
-// database. The documents carry a namespace prefix, as real ones do.
-
 const MAIL = 'urn:oid:0.9.2342.19200300.100.1.3';
 const SN = 'urn:oid:2.5.4.4';
 const UNKNOWN = 'urn:example:attribute-def:nope';

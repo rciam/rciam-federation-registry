@@ -82,8 +82,6 @@ async function getMetadataDocument(url) {
   }
 }
 
-// The same narrowing GET /tenants/:tenant applies to form_config.requested_attributes - the two
-// must agree or an accepted attribute has no table row and is silently never submitted.
 function tenantOfferedAttributes(tenant) {
   const form = ((global.tenant_config || {})[tenant] || {}).form || {};
   const supported = Array.isArray(form.supported_attributes) ? form.supported_attributes : null;
@@ -93,8 +91,6 @@ function tenantOfferedAttributes(tenant) {
   return default_supported_attributes.filter((x) => supported.includes(x.friendly_name));
 }
 
-// Under /tenants/:tenant because authenticate resolves the session per tenant; anonymous callers
-// have no use for this.
 router.get('/metadata_info', authenticate, async (req, res, next) => {
   let requested = req.query.metadata_url;
   if (typeof requested !== 'string' || requested === '') {
@@ -104,8 +100,6 @@ router.get('/metadata_info', authenticate, async (req, res, next) => {
   let document;
   let parsed;
   try {
-    // Express decoded the query once already; decoding twice would let a doubly encoded address
-    // past the checks below.
     document = await getMetadataDocument(requested);
     parsed = parseMetadataDocument(document, tenantOfferedAttributes(req.params.tenant));
   }
@@ -114,7 +108,6 @@ router.get('/metadata_info', authenticate, async (req, res, next) => {
     if (refusal) {
       return fail(res, refusal.status, refusal.message);
     }
-    // The document may hold user data, so the details are logged and not sent.
     log.warn('Could not read metadata: ' + (err.stack || err), { type: 'metadata_info' }, { req, res });
     return fail(res, 404, 'Could not get response from Metadata Url');
   }

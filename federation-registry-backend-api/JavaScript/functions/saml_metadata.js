@@ -2,13 +2,6 @@
 var convert = require('xml-js');
 var { addressRefusal } = require('./url_guard.js');
 
-// Everything the registry understands about a SAML metadata document, apart from the route so it
-// can be tested without a database, a session or a web server.
-
-// Raised for a metadata url the registry will not use.
-//
-// The message travels in the response body, never res.statusMessage: http/2 has no reason phrase,
-// so a browser sees an empty statusText and the user would see nothing at all.
 class MetadataInfoError extends Error {
   constructor(message, status) {
     super(message);
@@ -17,10 +10,6 @@ class MetadataInfoError extends Error {
   }
 }
 
-// The answer for a failed metadata request, or null for the route's last resort. The distinction
-// that matters is refused (400, the address is inside our network) versus unreachable (404);
-// answering "no response" to a refusal sends the user hunting a fault in a url that is fine.
-// Statuses follow swagger.json.
 function refuseMetadataRequest(err) {
   const refused = addressRefusal(err);
   if (refused) {
@@ -39,11 +28,6 @@ function refuseMetadataRequest(err) {
   }
   return null;
 }
-
-// ---------------------------------------------------------------- xml-js in compact mode
-//
-// Names keep whatever namespace prefix the document used, so elements are matched on the part
-// after the colon.
 
 function localPart(tag) {
   return String(tag).slice(String(tag).lastIndexOf(':') + 1);
@@ -69,8 +53,6 @@ function languageOf(element) {
   return attributes['xml:lang'] || attributes.lang || '';
 }
 
-// Walks the whole subtree - a mdui display name sits several levels below the descriptor. Depth is
-// capped so a document cannot hang the server; _* and ?* are xml-js bookkeeping, not elements.
 function childElements(node, name, depth) {
   const found = [];
   if (!node || typeof node !== 'object' || depth > 8) {
@@ -91,8 +73,6 @@ function childElements(node, name, depth) {
   return found;
 }
 
-// These repeat once per language and the registry stores one value: unlabelled, then English,
-// then the first.
 function selectByLanguage(elements) {
   const usable = elements.filter((element) => textOf(element));
   if (usable.length === 0) {
@@ -109,9 +89,6 @@ function textDeep(descriptor, name) {
   return selectByLanguage(childElements(descriptor, name, 0));
 }
 
-// The document's own prefix for the metadata namespace. The walk stops at the descriptor: a
-// trailing top-level comment (metadatatool and aggregators emit one) read as the prefix would make
-// a prefixed document look unprefixed and the descriptor would go unfound.
 function extractNamespace(xml) {
   for (const attribute of Object.keys(xml || {})) {
     const match = /^(.*):EntityDescriptor/.exec(attribute);
@@ -122,9 +99,6 @@ function extractNamespace(xml) {
   return "";
 }
 
-// The one AttributeConsumingService to read, with the attributes it asks for. Services publish one
-// per language with the same list in each, so only the first asking-for-anything is read and
-// duplicates are dropped - the form's table is keyed by friendly name and cannot show a row twice.
 function chosenService(descriptor) {
   const consuming = childElements(descriptor, 'AttributeConsumingService', 0);
   for (let i = 0; i < consuming.length; i++) {
@@ -144,7 +118,6 @@ function chosenService(descriptor) {
       collected.push({
         friendly_name: values.FriendlyName,
         name: values.Name,
-        // Serialised as the string "true"/"false" - a truthy check was true for both.
         required: values.isRequired === 'true' || values.isRequired === '1',
         name_format: values.NameFormat
       });
@@ -155,9 +128,6 @@ function chosenService(descriptor) {
   return { element: consuming[0], requested_attributes: [] };
 }
 
-// The name and description the metadata gives this service: the AttributeConsumingService's own
-// first, then an mdui DisplayName/Description (what the consent page shows, the same text the form
-// field wants), then anywhere else in the document.
 function descriptiveFields(descriptor, service) {
   const take = (name, uiName) => selectByLanguage(childElements(service, name, 0))
     || textDeep(descriptor, uiName)
@@ -168,15 +138,6 @@ function descriptiveFields(descriptor, service) {
   };
 }
 
-// ---------------------------------------------------------------- what the registry takes from it
-
-// The requested attributes, split by whether this tenant offers them (matched on Name, the
-// attribute's identity). A nameless attribute cannot be stored (NOT NULL, 512 cap) so it goes to the
-// unsupported list, where the user hears about it, rather than failing on submit.
-//
-// Supported ones are handed over under the TENANT's friendly_name, not the document's: the table is
-// keyed by it and the schema accepts nothing outside the tenant's list, so a document label would
-// fail validation with no row to unset. The rename never duplicates or drops a row.
 function partitionAttributes(requested, offered) {
   const supported = [];
   const taken = {};
@@ -201,8 +162,6 @@ function partitionAttributes(requested, offered) {
   return { supported_attributes: supported, unsupported_attributes: unmatched };
 }
 
-// Warnings about a document that was read: reported, not thrown. The code lets the form drop the
-// attribute ones when the tenant has no attribute table.
 function collectWarnings(parsed) {
   const warnings = [];
   if (parsed.supported_attributes.length === 0 && !parsed.entity_id) {
@@ -225,9 +184,6 @@ function collectWarnings(parsed) {
   return warnings;
 }
 
-// Reads a metadata document and answers only the fields the registry has somewhere to put: ACS url,
-// name id format, key descriptors and contacts have no column and no form field, and the
-// organisation is left to the user because filling it creates an ROR organisation record.
 function parseMetadataDocument(document, offered_attributes) {
   let result;
   try {

@@ -32,7 +32,14 @@ import {
 } from "./Components/Modals.js";
 import Form from "react-bootstrap/Form";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { formatDuration, urlReachabilityEnabled } from "./helpers.js";
+import {
+  formatDuration,
+  urlReachabilityEnabled,
+  metadataProposal,
+  metadataWarnings,
+  applyProposal,
+  createReadings,
+} from "./helpers.js";
 import { Formik } from "formik";
 import config from "./config.json";
 import defaultValues from "./initialValues.json";
@@ -111,13 +118,18 @@ const ServiceForm = (props) => {
     [],
   );
   const [hasSubmitted, setHasSubmitted] = useState(false);
-  const [metadataWarning, setMetadataWarning] = useState();
+  const [metadataMessages, setMetadataMessages] = useState([]);
   const [metadataLoaded, setMetadataLoaded] = useState({
     supported_attributes: [],
     unsupported_attributes: [],
     entity_id: null,
+    service_name: null,
+    service_description: null,
     metadata_url: null,
   });
+  const [metadataDismissed, setMetadataDismissed] = useState(null);
+  const [metadataRequested, setMetadataRequested] = useState(null);
+  const readings = useRef(createReadings());
   const [metadataAsyncError, setMetadataAyncError] = useState("");
   const [metadataChecked, setMetadataChecked] = useState();
   const [metadataLoading, setMetadataLoading] = useState(false);
@@ -262,21 +274,70 @@ const ServiceForm = (props) => {
     return error;
   };
 
-  const getMetadata = async (value, resolve, setRequestedAttributes) => {
+  const attributesEnabled = () => !!(tenant.form_config.more_info.requested_attributes
+    && !tenant.form_config.more_info.requested_attributes.disabled);
+
+  const reportMetadataError = (message) => {
+    setMetadataAyncError(message);
+    if (formRef.current) {
+      formRef.current.setFieldTouched('metadata_url', true);
+    }
+  }
+
+  const applyMetadata = async (response, outcome, offer, adopt) => {
+    let body = null;
+    try {
+      body = JSON.parse(outcome);
+    }
+    catch (err) { }
+    if (response.status === 401) {
+      setLogout(true);
+      reportMetadataError('Your session has expired, please log in again to read the metadata.');
+      return;
+    }
+    if (!response.ok) {
+      reportMetadataError((body && body.error) || ('The metadata could not be read (http ' + response.status + ').'));
+      return;
+    }
+    const metadata = body || {};
+    metadata.supported_attributes = metadata.supported_attributes || [];
+    metadata.unsupported_attributes = metadata.unsupported_attributes || [];
+    metadata.warnings = metadata.warnings || [];
+    setMetadataMessages(metadataWarnings(metadata.warnings, attributesEnabled()));
+    if (offer) {
+      setMetadataLoaded(metadata);
+    }
+    if (adopt) {
+      setMetadataRequested(adopt);
+    }
+  }
+
+  const getMetadata = async (value, requestedByLoadButton) => {
+    const reading = readings.current.start();
     setMetadataLoading(true);
-    setMetadataAyncError();
+    setMetadataAyncError('');
+    setMetadataMessages([]);
     setMetadataChecked(value);
     let loadMetadata =
       !(
         metadataChecked !== value &&
         value !== metadataLoaded.metadata_url &&
-        value !== props.initialValues.metadataUrl
-      ) || setRequestedAttributes;
+        value !== props.initialValues.metadata_url
+      ) || requestedByLoadButton;
+    if (requestedByLoadButton) {
+      setMetadataDismissed(null);
+    }
+    const adopt =
+      loadMetadata && (requestedByLoadButton || metadataDismissed !== value)
+        ? value
+        : null;
     clearTimeout(timeouts[timeoutId]);
     timeouts[timeoutId] = setTimeout(() => {
       fetch(
         config.host[tenant_name] +
-          "util/metadata_info?metadata_url=" +
+          "tenants/" +
+          tenant_name +
+          "/util/metadata_info?metadata_url=" +
           encodeURIComponent(value),
         {
           method: "GET",
@@ -287,65 +348,21 @@ const ServiceForm = (props) => {
         },
       )
         .then(async (response) => {
-          if (response.status === 200 || response.status === 304) {
-            let metadata = await response.json();
-            if (
-              tenant.form_config.more_info.requested_attributes &&
-              !tenant.form_config.more_info.requested_attributes.disabled
-            ) {
-              loadMetadata && setMetadataLoaded(metadata);
-              if (
-                metadata.supported_attributes.length === 0 &&
-                !metadata.entity_id
-              ) {
-                if (!resolve) {
-                  setRequestedAttributes(
-                    tenant.form_config.requested_attributes,
-                  );
-                }
-                setMetadataWarning(
-                  "Could not find an Entity Id or any Requested Attributes from this Metadata Url.",
-                );
-              } else if (metadata.supported_attributes.length === 0) {
-                if (!resolve) {
-                  setRequestedAttributes(
-                    tenant.form_config.defaultValues.requested_attributes,
-                  );
-                }
-                setMetadataWarning(
-                  "Could not find any Requested Attributes from this Metadata Url.",
-                );
-              } else if (!metadata.entity_id) {
-                setMetadataWarning(
-                  "Could not find an Entity Id from this Metadata Url.",
-                );
-              }
-            } else {
-              if (!resolve) {
-                setRequestedAttributes(
-                  tenant.form_config.defaultValues.requested_attributes,
-                );
-              }
-              metadata.supported_attributes = [];
-
-              loadMetadata && setMetadataLoaded(metadata);
-            }
-          } else {
-            if (!resolve) {
-              setRequestedAttributes(
-                tenant.form_config.defaultValues.requested_attributes,
-              );
-            }
-            setMetadataAyncError(response.statusText);
+          const outcome = await response.text();
+          if (!readings.current.isCurrent(reading)) {
+            return;
           }
+          await applyMetadata(response, outcome, loadMetadata, adopt);
           setMetadataLoading(false);
         })
         .catch(() => {
-          setMetadataLoading(false);
-          setMetadataAyncError("Could not get response from Metadata Url");
-          if (resolve) {
-            resolve(true);
+          // Here the request never answered at all; a refusal from the backend arrives above,
+          // with a reason in the body.
+          if (!readings.current.isCurrent(reading)) {
+            return;
           }
+          setMetadataLoading(false);
+          reportMetadataError("Could not get response from Metadata Url");
         });
     }, 2000);
   };
@@ -1260,19 +1277,6 @@ const ServiceForm = (props) => {
           .required(t("yup_required"))
           .matches(reg.regSimpleUrl, "Enter a valid Url")
           .test("testXml", "Invalid Metadata", function (value) {
-            // Metadata Url is Already Loaded?
-
-            // if(!value||metadataChecked!==value){
-            //   setMetadataLoading(false);
-            //   //setMetadataWarning();
-            //   clearTimeout(metadataUrlLoadTimeout);
-            // }
-            // if(value&&value.match(reg.regSimpleUrl)&&metadataChecked!==value&&value!==metadataLoaded.metadata_url){
-            //   new Promise((resolve,reject)=>{
-            //     getMetadata(value,resolve);
-            //   })
-            // }
-
             if (
               value &&
               value.match(reg.regSimpleUrl) &&
@@ -1280,9 +1284,7 @@ const ServiceForm = (props) => {
               value !== metadataLoaded.metadata_url
             ) {
               clearTimeout(timeouts[timeoutId]);
-              new Promise((resolve, reject) => {
-                getMetadata(value, resolve);
-              });
+              getMetadata(value);
             } else {
               setMetadataLoading(false);
             }
@@ -3732,94 +3734,15 @@ const ServiceForm = (props) => {
                             ) : null}
                             {values.protocol === "saml" ? (
                               <React.Fragment>
-                                <ConfirmationModal
-                                  active={
-                                    metadataLoaded.supported_attributes.length >
-                                      0 ||
-                                    (metadataLoaded.entity_id &&
-                                      (!values.entity_id ||
-                                        values.entity_id !==
-                                          metadataLoaded.entity_id))
-                                      ? true
-                                      : false
-                                  }
-                                  close={() => {
-                                    if (
-                                      metadataLoaded.supported_attributes
-                                        .length > 0
-                                    ) {
-                                      setMetadataLoaded({
-                                        ...metadataLoaded,
-                                        supported_attributes: [],
-                                      });
-                                    } else if (metadataLoaded.entity_id) {
-                                      setMetadataLoaded({
-                                        ...metadataLoaded,
-                                        entity_id: "",
-                                      });
-                                    }
-                                  }}
-                                  action={() => {
-                                    if (
-                                      metadataLoaded.supported_attributes
-                                        .length > 0
-                                    ) {
-                                      setFieldValue(
-                                        "requested_attributes",
-                                        metadataLoaded.supported_attributes,
-                                      );
-                                      setMetadataLoaded({
-                                        ...metadataLoaded,
-                                        supported_attributes: [],
-                                      });
-                                    } else {
-                                      setFieldValue(
-                                        "entity_id",
-                                        metadataLoaded.entity_id,
-                                      );
-                                      setMetadataLoaded({
-                                        ...metadataLoaded,
-                                        entity_id: "",
-                                      });
-                                    }
-                                  }}
-                                  title={
-                                    metadataLoaded.supported_attributes.length >
-                                    0
-                                      ? "Do you wish to load the requested attributes contained in the Metadata Url?"
-                                      : metadataLoaded.entity_id &&
-                                          !values.entity_id
-                                        ? "Do you wish to use the Entity Id contained in the Metadata Url?"
-                                        : metadataLoaded.entity_id &&
-                                            metadataLoaded.entity_id !==
-                                              values.entity_id
-                                          ? "The Metadata Url contains a different Entity Id from the provided, do you wish to replace it?"
-                                          : ""
-                                  }
-                                  message={
-                                    metadataLoaded.supported_attributes.length >
-                                    0
-                                      ? metadataLoaded.supported_attributes
-                                          .length +
-                                        (metadataLoaded.unsupported_attributes
-                                          .length > 0
-                                          ? " out of " +
-                                            (metadataLoaded.supported_attributes
-                                              .length +
-                                              metadataLoaded
-                                                .unsupported_attributes.length)
-                                          : "") +
-                                        " attributes found are supported and can be added in the service configuration."
-                                      : metadataLoaded.entity_id &&
-                                          (!values.entity_id ||
-                                            metadataLoaded.entity_id !==
-                                              values.entity_id)
-                                        ? "Entity Id: " +
-                                          metadataLoaded.entity_id
-                                        : null
-                                  }
-                                  accept={"Yes"}
-                                  decline={"No"}
+                                <MetadataProposalModal
+                                  metadata={metadataLoaded}
+                                  values={values}
+                                  disabled={disabled}
+                                  attributesEnabled={attributesEnabled()}
+                                  url={metadataRequested}
+                                  dismissed={metadataDismissed}
+                                  setValues={setValues}
+                                  onDismiss={setMetadataDismissed}
                                 />
                                 <InputRow
                                   moreInfo={
@@ -3887,7 +3810,7 @@ const ServiceForm = (props) => {
                                     placeholder="Type something"
                                     onChange={(e) => {
                                       setMetadataAyncError("");
-                                      setMetadataWarning();
+                                      setMetadataMessages([]);
                                       handleChange(e);
                                     }}
                                     copybutton={props.copybutton}
@@ -3903,17 +3826,7 @@ const ServiceForm = (props) => {
                                     onBlur={handleBlur}
                                     disabled={disabled}
                                     getmetadata={(metadata_url) => {
-                                      getMetadata(
-                                        metadata_url,
-                                        null,
-                                        (attributes) => {
-                                          setFieldValue(
-                                            "requested_attributes",
-                                            attributes,
-                                            false,
-                                          );
-                                        },
-                                      );
+                                      getMetadata(metadata_url, true);
                                     }}
                                     changed={
                                       props.changes
@@ -3926,12 +3839,7 @@ const ServiceForm = (props) => {
                                         : 0
                                     }
                                   />
-                                  <UrlWarning
-                                    url={values.metadata_url}
-                                    overwriteWarning={metadataWarning}
-                                    disableCheck={1}
-                                    touched={!!values.metadata_url}
-                                  />
+                                  <MetadataMessages messages={metadataMessages} />
                                 </InputRow>
                                 {!tenant.form_config.more_info
                                   .requested_attributes.disabled ? (
@@ -3970,7 +3878,6 @@ const ServiceForm = (props) => {
                                       }
                                       errors={errors.requested_attributes}
                                       touched={touched.requested_attributes}
-                                      setMetadataLoaded={setMetadataLoaded}
                                       disabled={disabled}
                                       setFieldValue={setFieldValue}
                                       onBlur={handleBlur}
@@ -4356,6 +4263,98 @@ const ReviewComponent = (props) => {
   );
 };
 
+// What the backend found worth mentioning about the document read. Not field errors: the url was
+// accepted, the document simply says less than the form can hold.
+const MetadataMessages = (props) => {
+  if (!props.messages || props.messages.length === 0) {
+    return null;
+  }
+  return (
+    <div className='pkce-tooltip'>
+      {props.messages.map((message, index) => (
+        <div key={index}>
+          <FontAwesomeIcon icon={faExclamationTriangle} /> {message.text}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+const previewValue = (value) => {
+  if (Array.isArray(value)) {
+    return value.length + (value.length === 1 ? ' attribute' : ' attributes')
+      + ': ' + value.map(a => a.friendly_name || a.name).join(', ');
+  }
+  return value.length > 120 ? value.slice(0, 120) + '…' : value;
+}
+
+const MetadataProposalModal = (props) => {
+  const proposal = metadataProposal(props.metadata, props.values, { attributesEnabled: props.attributesEnabled });
+  const apply = (fields) => {
+    props.setValues(applyProposal(props.values, fields));
+  }
+
+  if (!props.url || props.disabled || props.dismissed === props.url || props.url !== props.values.metadata_url) {
+    return null;
+  }
+
+  if (proposal.fill.length > 0) {
+    return (
+      <ConfirmationModal
+        active={true}
+        title={'The metadata contain ' + pluralValues(proposal.fill.length) + ' the form does not hold yet.'
+          + ' Do you wish to use ' + (proposal.fill.length === 1 ? 'it?' : 'them?')}
+        message={<MetadataProposalList entries={proposal.fill} />}
+        accept={'Yes'}
+        decline={'No'}
+        // not dismissed on yes: the fields just written leave the fill list by themselves
+        action={() => { apply(proposal.fill); }}
+        close={() => { props.onDismiss(props.url); }} />
+    );
+  }
+
+  if (proposal.replace.length > 0) {
+    return (
+      <ConfirmationModal
+        active={true}
+        title={'The metadata state ' + pluralValues(proposal.replace.length) + ' different from '
+          + (proposal.replace.length === 1 ? 'the one the form holds' : 'the ones the form holds')
+          + '. Do you wish to replace ' + (proposal.replace.length === 1 ? 'it?' : 'them?')}
+        message={<MetadataProposalList entries={proposal.replace} />}
+        accept={'Yes'}
+        decline={'Keep mine'}
+        action={() => {
+          apply(proposal.replace);
+          props.onDismiss(props.url);
+        }}
+        close={() => { props.onDismiss(props.url); }} />
+    );
+  }
+
+  return null;
+}
+
+const pluralValues = (count) => count === 1 ? 'a value' : count + ' values';
+
+const MetadataProposalList = (props) => (
+  <div>
+    {props.entries.map((entry) => (
+      <div key={entry.field} className="metadata-proposal-entry">
+        <strong>{entry.label}</strong>
+        {entry.held === undefined
+          ? <div>in the metadata: {previewValue(entry.value)}</div>
+          : <React.Fragment>
+            <div className="text-muted">in the form: {previewValue(entry.held)}</div>
+            <div>in the metadata: {previewValue(entry.value)}</div>
+          </React.Fragment>}
+      </div>
+    ))}
+    {props.entries.every((entry) => entry.held === undefined)
+      ? <div className="text-muted">Fields you have already filled in are left as they are.</div>
+      : null}
+  </div>
+)
+
 const UrlWarning = (props) => {
   const [active, setActive] = useState(!!props.overwriteWarning);
 
@@ -4363,9 +4362,8 @@ const UrlWarning = (props) => {
     if (!props.overwriteWarning) {
       setActive(false);
       clearTimeout(urlCheckTimeout);
-      // With the check disabled the syntax test in this condition is all this component does, and
-      // the Yup schema applies the same pattern anyway. The rendered warning stays available for
-      // overwriteWarning, i.e. the messages the backend derives from the metadata url.
+      // With the check off, the syntax test is all this does, and the Yup schema applies the same
+      // pattern anyway. An overwriteWarning replaces the reachability warning.
       if (props.touched && props.url && urlReachabilityEnabled(config) && reg.regSimpleUrl.test(props.url)) {
         const exists = async (url) => {
           const result = await fetch(url, {
@@ -4530,3 +4528,6 @@ function capitalWords(array) {
 }
 
 export default ServiceForm;
+
+// Exported for its tests only.
+export { MetadataProposalModal };
