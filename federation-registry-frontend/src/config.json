@@ -5,5 +5,6 @@
   },
   "basename": "/",
   "allowedLocales": ["en", "gr"],
-  "defaultLocale": "en"
+  "defaultLocale": "en",
+  "check_url_reachability": false
 }

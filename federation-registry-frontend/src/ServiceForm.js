@@ -32,7 +32,7 @@ import {
 } from "./Components/Modals.js";
 import Form from "react-bootstrap/Form";
 import "bootstrap/dist/css/bootstrap.min.css";
-import { formatDuration } from "./helpers.js";
+import { formatDuration, urlReachabilityEnabled } from "./helpers.js";
 import { Formik } from "formik";
 import config from "./config.json";
 import defaultValues from "./initialValues.json";
@@ -231,7 +231,7 @@ const ServiceForm = (props) => {
     });
   });
   function imageExists(url) {
-    if (url) {
+    if (url && urlReachabilityEnabled(config)) {
       var img = new Image();
       img.onload = function () {
         setLogoWarning(false);
@@ -4363,7 +4363,10 @@ const UrlWarning = (props) => {
     if (!props.overwriteWarning) {
       setActive(false);
       clearTimeout(urlCheckTimeout);
-      if (props.touched && props.url && reg.regSimpleUrl.test(props.url)) {
+      // With the check disabled the syntax test in this condition is all this component does, and
+      // the Yup schema applies the same pattern anyway. The rendered warning stays available for
+      // overwriteWarning, i.e. the messages the backend derives from the metadata url.
+      if (props.touched && props.url && urlReachabilityEnabled(config) && reg.regSimpleUrl.test(props.url)) {
         const exists = async (url) => {
           const result = await fetch(url, {
             method: "HEAD",

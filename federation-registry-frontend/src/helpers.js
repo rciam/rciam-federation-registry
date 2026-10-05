@@ -125,8 +125,18 @@ function removeA(arr) {
     return arr;
 }
 
+// Whether the browser is allowed to fetch a url the user just typed, in order to warn that it
+// could not be reached. Enabled unless the deployment explicitly sets
+// "check_url_reachability": false in src/config.json, so existing configurations keep working.
+// Urls are still validated against the syntax patterns in regex.js either way - this only turns
+// off asking the user's browser to reach the host, which leaks internal topology to whoever
+// fills in the form and is blocked outright by a restrictive Content-Security-Policy.
+function urlReachabilityEnabled(config) {
+    return config.check_url_reachability !== false;
+}
+
 
 
 module.exports = {
-    capitalWords,removeA,calcDiff,formatDuration
+    capitalWords,removeA,calcDiff,formatDuration,urlReachabilityEnabled
 }
