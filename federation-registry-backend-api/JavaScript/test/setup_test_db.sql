@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS user_edu_person_entitlement,tokens,user_info, service_petition_contacts, service_petition_oidc_grant_types,service_boolean,service_petition_boolean,service_saml_attributes,service_petition_saml_attributes, service_petition_oidc_redirect_uris,service_petition_oidc_post_logout_redirect_uris, service_petition_oidc_scopes,
+DROP TABLE IF EXISTS service_coc,service_petition_coc,user_edu_person_entitlement,tokens,user_info, service_petition_contacts, service_petition_oidc_grant_types,service_boolean,service_petition_boolean,service_saml_attributes,service_petition_saml_attributes, service_petition_oidc_redirect_uris,service_petition_oidc_post_logout_redirect_uris, service_petition_oidc_scopes,
 service_petition_details_oidc,service_petition_details_saml, service_petition_details, service_oidc_scopes,service_contacts,service_oidc_grant_types,service_oidc_redirect_uris,service_oidc_post_logout_redirect_uris,service_details_oidc,
 service_details_saml,service_details,service_state,user_roles,role_actions,role_entitlements,groups,invitations,group_subs,tenant_deployer_agents,banner_alerts,deployment_tasks,service_errors,organizations,service_tags,tenants;
 
@@ -110,6 +110,7 @@ create table service_details (
   service_name  VARCHAR(256),
   group_id INTEGER,
   service_description VARCHAR(1024),
+  service_type VARCHAR(256),
   logo_uri VARCHAR(2048),
   policy_uri VARCHAR(2048),
   integration_environment VARCHAR(256),
@@ -163,6 +164,8 @@ create table service_errors (
   error_code bigint,
   error_description VARCHAR(2048),
   archived BOOLEAN DEFAULT FALSE,
+  proxy_deploy_success BOOLEAN DEFAULT FALSE,
+  solved BOOLEAN DEFAULT FALSE,
   PRIMARY KEY (service_id,date),
   FOREIGN KEY (service_id) REFERENCES service_details(id) ON DELETE CASCADE
 );
@@ -232,6 +235,7 @@ create table service_petition_details (
   tenant VARCHAR(256),
   website_url VARCHAR(256) DEFAULT NULL,
   service_description VARCHAR(1024),
+  service_type VARCHAR(256),
   service_name  VARCHAR(256),
   logo_uri VARCHAR(2048),
   policy_uri VARCHAR(2048),

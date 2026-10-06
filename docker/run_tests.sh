@@ -1,5 +1,5 @@
 #!/bin/bash
-
+set -euo pipefail
 cd /home/federation-registry-backend-api
-npm install
-npm run test-docker
+npm ci
+exec npm run test-docker

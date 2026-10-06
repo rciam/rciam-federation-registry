@@ -11,19 +11,16 @@ pipeline {
         stage('Test Backend') {
             steps {
                 echo 'Build...'
-                withCredentials([file(credentialsId: 'setup_db', variable: 'SETUP_DB_FILE')]) {
-                    sh """
-                        cd ${WORKSPACE}/${PROJECT_DIR}/docker
-                        cp $SETUP_DB_FILE ./setup_db.sql
-                        docker-compose run node
-                    """
-                }
+                sh """
+                    cd "${WORKSPACE}/${PROJECT_DIR}/docker"
+                    docker-compose -p fr-test-${env.BUILD_TAG.toLowerCase().replaceAll('[^a-z0-9_-]', '-')} run --rm node
+                """
             }
             post{
                 always {
                     sh """
-                        cd ${WORKSPACE}/${PROJECT_DIR}/docker
-                        docker-compose down
+                        cd "${WORKSPACE}/${PROJECT_DIR}/docker"
+                        docker-compose -p fr-test-${env.BUILD_TAG.toLowerCase().replaceAll('[^a-z0-9_-]', '-')} down --volumes --remove-orphans
                     """
                     cleanWs()
                 }

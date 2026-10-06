@@ -483,9 +483,9 @@ export function SimpleRadio(props) {
                 {({ field, form }) => (
                   <React.Fragment>
                     <span
-                      onClick={() => {
-                        setFieldValue(props.name, item);
-                      }}
+                      onClick={() =>
+                        !props.disabled && setFieldValue(props.name, item)
+                      }
                       className={
                         "form_radio_item " +
                         (props.changed && props.values[props.name] === item
@@ -893,7 +893,7 @@ export function SelectEnvironment(props) {
             <Button
               className="copy_button"
               variant="success"
-              onClick={() => props.toggleCopyDialog()}
+              onClick={() => props.toggleCopyMoveDialog()}
             >
               +
             </Button>
@@ -1045,6 +1045,7 @@ export function CheckboxList(props) {
                     name={props.name}
                     disabled={props.disabled}
                     value={item}
+                    onChange={props.onChange}
                   />
                   {item.length > 33 &&
                   (item.substr(0, 33) === "urn:ietf:params:oauth:grant-type:" ||
@@ -1174,7 +1175,7 @@ export function RefreshToken(props) {
           >
             {!tenant.form_config.disabled_fields.includes(
               "clear_access_tokens_on_refresh"
-            ) ? (
+            ) && (
               <SimpleCheckbox
                 name="clear_access_tokens_on_refresh"
                 label={t("form_clear_access_tokens_on_refresh")}
@@ -1187,7 +1188,7 @@ export function RefreshToken(props) {
                 onChange={props.onChange}
                 disabled={props.disabled}
               />
-            ) : null}
+            )}
           </div>
           <TimeInput
             name="refresh_token_validity_seconds"
@@ -1251,24 +1252,7 @@ export function DeviceCode(props) {
           name="grant_types"
           disabled={props.disabled}
           value="urn:ietf:params:oauth:grant-type:device_code"
-          onClick={() => {
-            if (
-              !props.values?.grant_types?.includes(
-                "urn:ietf:params:oauth:grant-type:device_code"
-              ) &&
-              props.values.device_code_validity_seconds === null
-            ) {
-              props
-                .setFieldValue(
-                  "device_code_validity_seconds",
-                  initialValues.device_code_validity_seconds,
-                  true
-                )
-                .then(() => {
-                  props.validateField("device_code_validity_seconds");
-                });
-            }
-          }}
+          onChange={props.onGrantTypesChange}
         />
         {t("form_device_code_desc")}
         <MyOverLay
@@ -1295,7 +1279,7 @@ export function DeviceCode(props) {
       </Form.Text>
       {props.values?.grant_types?.includes(
         "urn:ietf:params:oauth:grant-type:device_code"
-      ) ? (
+      ) || props.showLegacyValidity ? (
         <React.Fragment>
           <TimeInput
             name="device_code_validity_seconds"
@@ -1308,6 +1292,23 @@ export function DeviceCode(props) {
               props.changed ? props.changed.device_code_validity_seconds : null
             }
           />
+          {props.showLegacyValidity && !props.disabled ? (
+            <Col sm="4">
+              <Button
+                variant="outline-danger"
+                size="sm"
+                onClick={() =>
+                  props.setFieldValue(
+                    "device_code_validity_seconds",
+                    null,
+                    true
+                  )
+                }
+              >
+                {t("input_remove_button")}
+              </Button>
+            </Col>
+          ) : null}
           <Form.Text
             className="text-muted text-left label-checkbox"
             id="uri-small-desc"
@@ -1474,6 +1475,9 @@ export function ListInputArray(props) {
                       onClick={() => {
                         if (!props.values.includes(newVal)) {
                           arrayHelpers.push(newVal);
+                          if (typeof props.onChange === "function") {
+                            props.onChange([...(props.values || []), newVal]);
+                          }
                           setNewVal("");
                         } else {
                           setInvalid(true);
@@ -1501,6 +1505,7 @@ export function ListInputArray(props) {
             values={props.values}
             disabled={props.disabled}
             changed={props.changed}
+            onChange={props.onChange}
           />
         ))}
         <FieldArray
@@ -1520,6 +1525,8 @@ export function ListInputArray(props) {
                       arrayHelpers={arrayHelpers}
                       disabled={props.disabled}
                       changed={props.changed}
+                      values={props.values}
+                      onChange={props.onChange}
                     />
                     {Array.isArray(props.error) ? (
                       <tr>
@@ -1594,6 +1601,7 @@ function ListInputArrayInput1(props) {
                 disabled={props.disabled}
                 name={props.name}
                 value={props.item}
+                onChange={props.onChange}
               />
             </td>
           </React.Fragment>
@@ -1664,6 +1672,11 @@ function ListInputArrayInput2(props) {
           variant="danger"
           onClick={() => {
             props.arrayHelpers.remove(props.index);
+            if (typeof props.onChange === "function") {
+              props.onChange(
+                (props.values || []).filter((item) => item !== props.item),
+              );
+            }
           }}
           className="removeButton"
           disabled={props.disabled}
@@ -2181,16 +2194,17 @@ export function Checkbox(props) {
           {...props}
           checked={field.value?.includes(props.value)}
           onChange={() => {
+            let nextValue;
             if (field.value?.includes(props.value)) {
-              const nextValue = field.value.filter(
-                (value) => value !== props.value
+              nextValue = field.value.filter(
+                (value) => value !== props.value,
               );
-              form.setFieldValue(props.name, nextValue);
             } else {
-              const nextValue = field?.value?.concat(props.value) || [
-                props.value,
-              ];
-              form.setFieldValue(props.name, nextValue);
+              nextValue = field?.value?.concat(props.value) || [props.value];
+            }
+            form.setFieldValue(props.name, nextValue);
+            if (typeof props.onChange === "function") {
+              props.onChange(nextValue);
             }
           }}
         />

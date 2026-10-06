@@ -1,3 +1,6 @@
 #!/bin/bash
-psql -U username -d test_db -a -f './JavaScript/test/setup_test_db.sql'
-NODE_ENV=test mocha './JavaScript/test/test.js' --timeout 10000 --bail --exit
+set -euo pipefail
+cd "$(dirname "$0")"
+export NODE_ENV="${1:-test}"
+node JavaScript/test/reset-db.js
+exec ./node_modules/.bin/mocha './JavaScript/test/reset-db.test.js' './JavaScript/test/test.js' --timeout 10000 --bail --exit

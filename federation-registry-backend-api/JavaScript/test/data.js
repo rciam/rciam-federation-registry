@@ -1,5 +1,6 @@
 const create = {
   oidc:{
+   service_type:"advanced",
      service_name:"Test Oidc Service",
      service_description:"This is a test service",
      redirect_uris: ["https://redirecturi1.com"],
@@ -54,13 +55,14 @@ const create = {
        "eduperson_unique_id"
      ],
      grant_types: [
-       "client_credentials"
+       "authorization_code", "urn:ietf:params:oauth:grant-type:device_code"
      ],
      generate_client_secret:false,
      tenant_1_policy:true,
      dpcoco:false
    },
    saml:{
+   service_type:"advanced",
      service_name:"Test Saml Service",
      service_description:"This is a test service",
      redirect_uris: null,
@@ -108,6 +110,7 @@ const create = {
 
 const edit = {
  oidc:{
+   service_type:"advanced",
    "service_name":"Test Oidc Service",
    "service_description":"This is a test service edit",
    "redirect_uris":[
@@ -166,13 +169,14 @@ const edit = {
       "microscope"
    ],
    "grant_types":[
-      "client_credentials"
+      "authorization_code", "urn:ietf:params:oauth:grant-type:device_code"
    ],
    "generate_client_secret":false,
    "tenant_1_policy":true,
    "dpcoco":false
 },
  saml:{
+   service_type:"advanced",
 
    service_name:"Test Saml Service edit",
    service_description:"This is a test service edit",

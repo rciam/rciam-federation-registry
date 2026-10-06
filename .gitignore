@@ -1,0 +1,13 @@
+# Runtime logs
+federation-registry-backend-api/JavaScript/db/errors.log
+federation-registry-backend-api/JavaScript/logs/logs.log
+
+# Tenant-specific configuration (may contain secrets)
+federation-registry-backend-api/JavaScript/tenant_config/*.json
+!federation-registry-backend-api/JavaScript/tenant_config/default.json
+
+# Installed dependencies
+**/node_modules/
+
+# Generated frontend output
+federation-registry-frontend/build/

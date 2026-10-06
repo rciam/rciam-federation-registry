@@ -1,6 +1,6 @@
 const { create } = require('domain');
 const {sendMail} = require('../functions/helpers.js');
-const customLogger = require('../loggers.js');
+const log = require('../loggers.js');
 
 
 const findConnections = (req, res, db) => {
@@ -92,7 +92,7 @@ const requestReviewPetition = (req,res,next,db) => {
     await t.service_petition_details.requestReview(req.params.id,req.body.comment).then(async result=>{
       res.status(200).end();
       await t.user.getUsersByAction('review_restricted',req.params.tenant).then(async users=>{
-        console.log('Sending mail to managers');
+        log.info('Sending review-request mail to managers', { type: 'petition', petition_id: req.params.id, recipient_count: users.length }, { req, res });
         await t.service_petition_details.getServiceId(req.params.id,req.params.tenant).then(async service_id => {
           if(service_id){
             await t.service.get(service_id,req.params.tenant).then(res => {
@@ -186,7 +186,7 @@ const getOpenPetition = (req,res,next,db) =>{
          }
          else {
            res.status(404);
-           customLogger(req,res,'warn','Petition not found');
+           log.warn('Petition not found', {}, { req, res });
            res.end();
          }
        }).catch(err=>{next(err);});
@@ -199,7 +199,7 @@ const getOpenPetition = (req,res,next,db) =>{
        }
        else {
          res.status(404);
-         customLogger(req,res,'warn','Petition not found');
+         log.warn('Petition not found', {}, { req, res });
          res.end();
        }
      }).catch(err=>{next(err);});
@@ -218,12 +218,12 @@ const getPetition = (req,res,next,db) => {
         if(petition){
           await t.service_petition_details.belongsToRequester(req.params.id,req.user.sub).then(owned=>{
             res.status(200).json({petition:petition.service_data,metadata:{...petition.meta_data,owned:  owned}});
-          }).catch(err=>{console.log(err); next(err)})
+          }).catch(err=>{log.error('Error while checking petition ownership: ' + (err.stack || err), { type: 'petition' }, { req, res }); next(err)})
         }
         else{
           return res.status(404).end();
         }
-      }).catch(err=>{console.log(err); next(err)});
+      }).catch(err=>{log.error('Error while fetching petition: ' + (err.stack || err), { type: 'petition' }, { req, res }); next(err)});
     })
     
   }

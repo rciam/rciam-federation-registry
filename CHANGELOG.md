@@ -5,6 +5,53 @@ All notable changes in Federation Registry will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+# [2.3.0] 06/10/2026
+
+## Added
+
+- Configurable OIDC service-type profiles, including default profiles for advanced clients, machine-to-machine clients, and resource servers.
+- A dedicated Policy tab in the service form.
+- Tab-level error indicators in the service form.
+- Configurable frontend language selection and Czech translations.
+- Locally hosted frontend fonts.
+- Graceful backend shutdown on `SIGTERM` and `SIGINT`.
+
+## Changed
+
+- Service-form fields are now shown or hidden according to the selected protocol, grant types, scopes, and authentication capabilities.
+- Frontend and backend validation now account for field applicability, including grant types, redirect URIs, post-logout redirect URIs, token endpoint authentication, PKCE, and offline access.
+- Backend logging now uses a unified structured logging API with timestamps and single-line JSON output.
+- Backend test setup now supports resetting an isolated test database.
+
+## Fixed
+
+- Corrected the bundled Latin font subsets.
+- Improved service-type selection and form state handling.
+- Based ID token timeout applicability on the presence of the `openid` scope.
+- Display validation errors for invalid values loaded from existing services.
+- Updated `pg-monitor` to prevent spurious connection errors.
+
+## Tenant Configuration Changes
+
+- Added `service_type_settings` for configuring the default service type and the order in which service types are displayed.
+- Added `service_types` for defining each tenant's available service-type profiles, field defaults, allowed values, visibility, and editability.
+- Moved token-lifetime defaults into each field's `form.more_info.<field>.default` configuration, alongside its validation limits. This applies to access-token, refresh-token, device-code, and ID-token lifetimes where configured.
+- Moved policy-related fields to the new `policy` tab and added `user_facing` metadata where applicable.
+- Existing tenant configuration files must be extended with the appropriate settings for that tenant; do not replace them wholesale with `tenant_config/default.json`.
+
+## Database Changes
+
+- Added `service_type` columns to approved service and service petition details.
+
+```sql
+ALTER TABLE service_details
+ADD COLUMN service_type VARCHAR(256);
+
+ALTER TABLE service_petition_details
+ADD COLUMN service_type VARCHAR(256);
+```
+
 # [2.2.0] 10/07/2026
 
 ## Added

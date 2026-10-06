@@ -935,7 +935,9 @@ textarea {
 
 
 
-
+.tab-error-badge {
+  margin-left:0.2rem;
+}
 
 
 
@@ -2124,4 +2126,23 @@ footer .row {
 
 .access-token-validation-warning p {
   margin: 6px 0 0;
+}
+
+.service-type-card {
+  cursor: pointer;
+}
+
+.service-type-card:hover {
+  border-color: #007bff;
+}
+
+.service-type-description {
+  line-height: 1.3;
+}
+
+.service-type-select-alert {
+  margin-bottom: 1rem!important;
+}
+.service-type-row {
+  margin-top: 1rem;
 }

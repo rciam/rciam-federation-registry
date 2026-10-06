@@ -1,5 +1,6 @@
 
 
+const log = require('../../loggers.js');
 let cs= {};
 /*
  This repository mixes hard-coded and dynamic SQL, primarily to show a diverse example of using both.
@@ -25,7 +26,7 @@ class UserEduPersonEntitlementRepository {
     async dlt_values(values,id){
       id = parseInt(id);
       const query = this.pgp.as.format('DELETE FROM user_edu_person_entitlement WHERE user_id=$1 AND edu_person_entitlement IN ($2:csv)',[+id,values]);
-      return this.db.any(query).catch(err=>{console.log(err)})
+      return this.db.any(query).catch(err=>{log.error('Error while deleting user edu_person_entitlement values: ' + (err.stack || err), { type: 'db' })})
     }
     
     async add(data,id){

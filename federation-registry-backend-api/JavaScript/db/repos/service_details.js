@@ -20,6 +20,7 @@ class ServiceDetailsRepository {
     async add(data,sub){
       return this.db.one(sql.add,{
         service_description: data.service_description,
+        service_type: data.service_type,
         service_name: data.service_name,
         logo_uri: data.logo_uri,
         policy_uri: data.policy_uri,
@@ -53,6 +54,7 @@ class ServiceDetailsRepository {
     async update(data,id,sub){
         return this.db.oneOrNone(sql.update,{
           service_description: data.service_description,
+          service_type: data.service_type,
           service_name: data.service_name,
           logo_uri: data.logo_uri,
           policy_uri: data.policy_uri,
@@ -133,9 +135,9 @@ function createColumnsets(pgp) {
         const table = new pgp.helpers.TableName({table: 'service_details', schema: 'public'});
 
         cs.insert = new pgp.helpers.ColumnSet(['service_description','service_name',
-          'logo_uri','policy_uri','integration_environment','country','requester','protocol','website_url','aup_uri','organization_id'],
+          'logo_uri','policy_uri','integration_environment','country','requester','protocol','website_url','aup_uri','organization_id','service_type'],
           {table});
-        cs.insert_multi = new pgp.helpers.ColumnSet(['external_id','tenant','service_name','group_id','service_description','logo_uri','policy_uri','country','integration_environment','protocol','website_url','aup_uri','organization_id'])
+        cs.insert_multi = new pgp.helpers.ColumnSet(['external_id','tenant','service_name','group_id','service_description','logo_uri','policy_uri','country','integration_environment','protocol','website_url','aup_uri','organization_id','service_type'],{table});
         cs.update = cs.insert.extend(['?id','deleted']);
         cs.external_id = new pgp.helpers.ColumnSet(['?id','external_id'],{table:'service_details'});
     }

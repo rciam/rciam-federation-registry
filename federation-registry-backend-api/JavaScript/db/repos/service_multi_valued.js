@@ -1,4 +1,5 @@
 var config = require('../../config');
+const log = require('../../loggers.js');
 let cs= {};
 
 
@@ -144,7 +145,7 @@ async updateSamlAttributes(type,data,service_id){
 
       }
       catch(err){
-        console.log(err);
+        log.error('Error while deleting saml attributes: ' + (err.stack || err), { type: 'db' });
       }
     }
 

@@ -1,5 +1,6 @@
 var router = require('express').Router({ mergeParams: true });
 const {db} = require('../db');
+const log = require('../loggers.js');
 const {authenticate} = require('./authentication.js'); 
 const {validate} = require('../validator.js');
 const {delay,sendNotifications} = require('../functions/helpers.js');
@@ -62,7 +63,7 @@ router.put('/owners',authenticate,ownersNotificationValidation(),validate,(req,r
               sendOutdatedNotification(user);
             }       
           }
-        }).catch(err=>{customLogger(null,null,'warn','Error when creating and sending invitations: '+err)})
+        }).catch(err=>{log.warn('Error when creating and sending invitations: '+err)})
       }
       else{
         res.status(403).end();

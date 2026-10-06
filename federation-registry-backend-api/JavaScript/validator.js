@@ -1,7 +1,7 @@
 const countryData = require("country-region-data");
 const { body, query, validationResult, param } = require("express-validator");
 const { reg } = require("./regex.js");
-const customLogger = require("./loggers.js");
+const log = require("./loggers.js");
 var config = require("./config");
 var defaultAttributes = require("./tenant_config/requested_attributes.json");
 const { db } = require("./db");
@@ -315,6 +315,16 @@ const postAgentValidation = () => {
   ];
 };
 
+const supportsIdToken = (service) => {
+  if (service.protocol !== "oidc") {
+    return false;
+  }
+
+  const scopes = Array.isArray(service.scope) ? service.scope : [];
+
+  return scopes.includes("openid");
+};
+
 const postBannerAlertValidation = () => {
   return [
     param("tenant")
@@ -552,7 +562,10 @@ const serviceValidationRules = (options, req) => {
         }
         return true;
       } catch (err) {
-        console.log(err);
+        log.error("Error while checking required attribute: " + (err.stack || err), {
+          type: "validation",
+          field: field,
+        });
       }
     } else {
       return isNotEmpty(value);
@@ -589,6 +602,27 @@ const serviceValidationRules = (options, req) => {
     } else {
       throw new Error(error);
     }
+  };
+
+  const compatibilityError = (value, req, pos, field, message) => {
+    if (options.optional) {
+      optionalError(value, req, pos, field, message);
+      return true;
+    }
+    throw new Error(message);
+  };
+
+  const isUserFacingService = (service) => {
+    const grantTypes = Array.isArray(service.grant_types)
+      ? service.grant_types
+      : [];
+
+    return (
+      service.protocol === "saml" ||
+      grantTypes.includes("authorization_code") ||
+      grantTypes.includes("implicit") ||
+      grantTypes.includes("urn:ietf:params:oauth:grant-type:device_code")
+    );
   };
 
   const requiredSaml = (value, req, pos, field) => {
@@ -749,10 +783,17 @@ const serviceValidationRules = (options, req) => {
         let tenant = options.tenant_param
           ? req.params.tenant
           : req.body[pos].tenant;
+
+        const service = req.body[pos];
+
+        if (!isUserFacingService(service)) {
+          return true;
+        }
+
         return requiredIntegrationEnvironment(
           tenant,
           value,
-          req.body[pos].integration_environment,
+          service.integration_environment,
           req,
           pos,
           "policy_uri",
@@ -875,6 +916,21 @@ const serviceValidationRules = (options, req) => {
           return true;
         }
       }),
+    body("*.service_type")
+      .custom((value, { req, path }) => {
+        return required(value, req, path.match(/\[(.*?)\]/)[1], "service_type");
+      })
+      .withMessage("Service type missing")
+      .if((value) => isNotEmpty(value))
+      .isString()
+      .withMessage("Service type must be a string")
+      .bail()
+      .custom((value) => {
+        return ["machine_to_machine", "resource_server", "advanced"].includes(
+          value,
+        );
+      })
+      .withMessage("Invalid service_type value"),
     body("*.protocol")
       .exists({ checkFalsy: true })
       .withMessage("Protocol missing")
@@ -934,20 +990,16 @@ const serviceValidationRules = (options, req) => {
           : req.body[path.match(/\[(.*?)\]/)[1]].tenant;
         // Upadted by Jan Pavlíček (xpavli95@stud.fit.vutbr.cz) to check availability of entity id when merging of integration
         // environments is enabled.
-        const merge_environments_on_deploy = tenant_config[tenant].merge_environments_on_deploy ?? false;
+        const merge_environments_on_deploy =
+          tenant_config[tenant].merge_environments_on_deploy ?? false;
         if (merge_environments_on_deploy) {
           return db.service_details_protocol
-            .checkClientIdAllEnvironments(
-              value,
-              0,
-              0,
-              tenant,
-            )
+            .checkClientIdAllEnvironments(value, 0, 0, tenant)
             .then((available) => {
               if (!available) {
-                  return Promise.reject("Not available (" + value + ")");
+                return Promise.reject("Not available (" + value + ")");
               } else {
-                  return Promise.resolve();
+                return Promise.resolve();
               }
             });
         }
@@ -996,6 +1048,27 @@ const serviceValidationRules = (options, req) => {
         }
       })
       .withMessage("Service redirect_uri missing")
+      .custom((value, { req, path }) => {
+        const pos = path.match(/\[(.*?)\]/)[1];
+        const service = req.body[pos];
+        if (service.protocol !== "oidc" || isEmpty(value)) {
+          return true;
+        }
+        const grantTypes = Array.isArray(service.grant_types)
+          ? service.grant_types
+          : [];
+        const supportsRedirectUris =
+          grantTypes.includes("authorization_code") ||
+          grantTypes.includes("implicit");
+
+        if (supportsRedirectUris) {
+          return true;
+        }
+        const error =
+          "Redirect URIs are only supported when Authorization Code or Implicit is selected. Remove the configured Redirect URIs or select a compatible grant type.";
+
+        return compatibilityError(value, req, pos, "redirect_uris", error);
+      })
       .if((value, { req, location, path }) => {
         let pos = path.match(/\[(.*?)\]/)[1];
         return isNotEmpty(value) && req.body[pos].protocol === "oidc";
@@ -1086,6 +1159,31 @@ const serviceValidationRules = (options, req) => {
         return value;
       }),
     body("*.post_logout_redirect_uris")
+      .custom((value, { req, path }) => {
+        const pos = path.match(/\[(.*?)\]/)[1];
+        const service = req.body[pos];
+        if (service.protocol !== "oidc" || isEmpty(value)) {
+          return true;
+        }
+        const grantTypes = Array.isArray(service.grant_types)
+          ? service.grant_types
+          : [];
+        const supportsPostLogoutRedirectUris =
+          grantTypes.includes("authorization_code") ||
+          grantTypes.includes("implicit");
+        if (supportsPostLogoutRedirectUris) {
+          return true;
+        }
+        const error =
+          "Post Logout Redirect URIs are only supported when Authorization Code or Implicit is selected. Remove the configured Post Logout Redirect URIs or select a compatible grant type.";
+        return compatibilityError(
+          value,
+          req,
+          pos,
+          "post_logout_redirect_uris",
+          error,
+        );
+      })
       .if((value, { req, location, path }) => {
         let pos = path.match(/\[(.*?)\]/)[1];
         return isNotEmpty(value) && req.body[pos].protocol === "oidc";
@@ -1178,42 +1276,78 @@ const serviceValidationRules = (options, req) => {
         return value;
       }),
     body("*.scope")
-      .custom((value, { req, location, path }) => {
-        grant_types = req.body[path.match(/\[(.*?)\]/)[1]].grant_types;
-        return (
-          requiredOidc(value, req, path.match(/\[(.*?)\]/)[1], "scope") ||
-          !grant_types?.length > 0
-        );
+      .custom((value, { req, path }) => {
+        const pos = path.match(/\[(.*?)\]/)[1];
+        const service = req.body[pos];
+
+        const grantTypes = Array.isArray(service.grant_types)
+          ? service.grant_types
+          : [];
+
+        if (service.protocol !== "oidc") {
+          return true;
+        }
+
+        const clientCredentialsOnly =
+          grantTypes.length === 1 && grantTypes[0] === "client_credentials";
+        // Scope is not required when no grant type is configured
+        // or when Client Credentials is the selected grant type.
+        if (grantTypes.length === 0 || clientCredentialsOnly) {
+          return true;
+        }
+
+        return requiredOidc(value, req, pos, "scope");
       })
       .withMessage("Service scope missing")
-      .if((value, { req, location, path }) => {
+
+      // Validate scope contents only when scopes have actually been provided.
+      .if((value, { req, path }) => {
+        const pos = path.match(/\[(.*?)\]/)[1];
+        const service = req.body[pos];
+
         return (
-          value &&
-          value.length > 0 &&
-          req.body[path.match(/\[(.*?)\]/)[1]].protocol === "oidc"
+          service.protocol === "oidc" &&
+          Array.isArray(value) &&
+          value.length > 0
         );
       })
+
       .isArray({ min: 1 })
       .withMessage("Must be an array")
-      .custom((value, success = true) => {
-        try {
-          value.map((item, index) => {
-            if (!item.match(reg.regScope)) {
-              reuse_refresh_token("Invalid Scope Value");
-              reuse_refresh_token(item);
-              success = false;
-            }
-          });
-        } catch (err) {
-          if (Array.isArray(value)) {
-            success = false;
-          } else {
-            success = true;
-          }
-        }
-        return success;
+
+      .custom((value) => {
+        return value.every(
+          (item) => typeof item === "string" && reg.regScope.test(item),
+        );
       })
-      .withMessage("Invalid Scope value"),
+      .withMessage("Invalid Scope value")
+      .custom((value, { req, path }) => {
+        const pos = path.match(/\[(.*?)\]/)[1];
+        const service = req.body[pos];
+        if (
+          service.protocol !== "oidc" ||
+          !Array.isArray(value) ||
+          !value.includes("offline_access")
+        ) {
+          return true;
+        }
+        const grantTypes = Array.isArray(service.grant_types)
+          ? service.grant_types
+          : [];
+        const supportsOfflineAccess =
+          grantTypes.includes("authorization_code") ||
+          grantTypes.includes("urn:ietf:params:oauth:grant-type:device_code");
+        if (supportsOfflineAccess) {
+          return true;
+        }
+        const error =
+          "Offline Access is only supported when Authorization Code or Device Authorization is selected. Remove Offline Access or select a compatible grant type.";
+        if (options.optional) {
+          optionalError(value, req, pos, "scope", error);
+          return true;
+        }
+        throw new Error(error);
+      }),
     body("*.grant_types")
       .if((value, { req, location, path }) => {
         return (
@@ -1243,7 +1377,32 @@ const serviceValidationRules = (options, req) => {
         }
         return success;
       })
-      .withMessage("Invalid grant_type value"),
+      .withMessage("Invalid grant_type value")
+      .custom((grantTypes, { req, path }) => {
+        const pos = path.match(/\[(.*?)\]/)[1];
+        if (!Array.isArray(grantTypes) || grantTypes.length === 0) {
+          return true;
+        }
+        const hasClientCredentials = grantTypes.includes("client_credentials");
+        const hasImplicit = grantTypes.includes("implicit");
+        const hasTokenExchange = grantTypes.includes(
+          "urn:ietf:params:oauth:grant-type:token-exchange",
+        );
+        if (hasClientCredentials && grantTypes.length > 1) {
+          const error =
+            "Client Credentials cannot be combined with other grant types. Remove the other grant types or remove Client Credentials.";
+          return compatibilityError(grantTypes, req, pos, "grant_types", error);
+        }
+
+        if (hasImplicit && hasTokenExchange) {
+          const error =
+            "Implicit cannot be combined with Token Exchange. Remove either Implicit or Token Exchange.";
+
+          return compatibilityError(grantTypes, req, pos, "grant_types", error);
+        }
+
+        return true;
+      }),
     body("*.jwks_uri")
       .customSanitizer((value, { req, location, path }) => {
         if (
@@ -1371,7 +1530,56 @@ const serviceValidationRules = (options, req) => {
           return false;
         }
       })
-      .withMessage("Invalid token_endpoint_auth_method Method"),
+      .withMessage("Invalid token_endpoint_auth_method Method")
+      .custom((value, { req, path }) => {
+        const pos = path.match(/\[(.*?)\]/)[1];
+        const service = req.body[pos];
+        if (service.protocol !== "oidc") {
+          return true;
+        }
+        const grantTypes = Array.isArray(service.grant_types)
+          ? service.grant_types.filter(Boolean)
+          : [];
+
+        const hasClientCredentials = grantTypes.includes("client_credentials");
+        const hasImplicit = grantTypes.includes("implicit");
+        const hasTokenExchange = grantTypes.includes(
+          "urn:ietf:params:oauth:grant-type:token-exchange",
+        );
+        if (
+          (hasClientCredentials || hasTokenExchange) &&
+          value === "none"
+        ) {
+          let message;
+          if (hasClientCredentials) {
+            message =
+              "Client Credentials requires client authentication. Select a token endpoint authentication method other than No authentication.";
+          } else {
+            message =
+              "Token Exchange requires client authentication. Select a token endpoint authentication method other than No authentication.";
+          }
+          return compatibilityError(
+            value,
+            req,
+            pos,
+            "token_endpoint_auth_method",
+            message,
+          );
+        }
+        if (hasImplicit && value !== "none") {
+          const message =
+            "Implicit requires a public client. Select No authentication as the token endpoint authentication method.";
+
+          return compatibilityError(
+            value,
+            req,
+            pos,
+            "token_endpoint_auth_method",
+            message,
+          );
+        }
+        return true;
+      }),
     body("*.token_endpoint_auth_signing_alg")
       .customSanitizer((value, { req, location, path }) => {
         if (
@@ -1414,35 +1622,50 @@ const serviceValidationRules = (options, req) => {
       .customSanitizer((value) => {
         return sanitizeInteger(value);
       })
-      .custom((value, { req, location, path }) => {
-        return requiredOidc(
-          value,
-          req,
-          path.match(/\[(.*?)\]/)[1],
-          "id_token_timeout_seconds",
-        );
+      .custom((value, { req, path }) => {
+        const pos = path.match(/\[(.*?)\]/)[1];
+        const service = req.body[pos];
+        if (!supportsIdToken(service)) {
+          return true;
+        }
+        return requiredOidc(value, req, pos, "id_token_timeout_seconds");
       })
       .withMessage("id_token_timeout_seconds missing")
-      .if((value, { req, location, path }) => {
-        return (
-          isNotEmpty(value) &&
-          req.body[path.match(/\[(.*?)\]/)[1]].protocol === "oidc"
+      .custom((value, { req, path }) => {
+        const pos = path.match(/\[(.*?)\]/)[1];
+        const service = req.body[pos];
+        if (isEmpty(value) || supportsIdToken(service)) {
+          return true;
+        }
+        return compatibilityError(
+          value,
+          req,
+          pos,
+          "id_token_timeout_seconds",
+          "ID Token Timeout is only applicable when the 'openid' scope is selected. Remove ID Token Timeout or select 'openid'.",
         );
       })
-      .custom((value, { req, location, path }) => {
-        let tenant = options.tenant_param
+      .if((value, { req, path }) => {
+        const pos = path.match(/\[(.*?)\]/)[1];
+        return isNotEmpty(value) && supportsIdToken(req.body[pos]);
+      })
+      .custom((value, { req, path }) => {
+        const pos = path.match(/\[(.*?)\]/)[1];
+        const tenant = options.tenant_param
           ? req.params.tenant
-          : req.body[path.match(/\[(.*?)\]/)[1]].tenant;
-        let max = tenant_config[tenant].form.id_token_timeout_seconds;
+          : req.body[pos].tenant;
+        const max =
+          tenant_config[tenant].form.more_info?.id_token_timeout_seconds?.max ??
+          tenant_config[tenant].form.id_token_timeout_seconds ??
+          86400;
         if (isEmpty(value) || (value <= max && value >= 1)) {
           return true;
-        } else {
-          throw new Error(
-            "id_token_timeout_seconds must be an integer in specified range [1-" +
-              max +
-              "]",
-          );
         }
+        throw new Error(
+          "id_token_timeout_seconds must be an integer in specified range [1-" +
+            max +
+            "]",
+        );
       }),
     body("*.access_token_validation_model").custom(
       (value, { req, location, path }) => {
@@ -1473,46 +1696,54 @@ const serviceValidationRules = (options, req) => {
       .customSanitizer((value) => {
         return sanitizeInteger(value);
       })
-      .custom((value, { req, location, path }) => {
-        return requiredOidc(
-          value,
-          req,
-          path.match(/\[(.*?)\]/)[1],
-          "access_token_validity_seconds",
-        );
+      .custom((value, { req, path }) => {
+        const pos = path.match(/\[(.*?)\]/)[1];
+        const service = req.body[pos];
+        const grantTypes = service.grant_types ?? [];
+
+        // Access Token Lifetime is not applicable to an OIDC Resource Server
+        // with no grant types.
+        if (
+          service.protocol === "oidc" &&
+          Array.isArray(grantTypes) &&
+          grantTypes.length === 0
+        ) {
+          return true;
+        }
+
+        return requiredOidc(value, req, pos, "access_token_validity_seconds");
       })
       .withMessage("access_token_validity_seconds missing")
-      .if((value, { req, location, path }) => {
+      .if((value, { req, path }) => {
+        const pos = path.match(/\[(.*?)\]/)[1];
+        const service = req.body[pos];
+        const grantTypes = service.grant_types ?? [];
+
         return (
           isNotEmpty(value) &&
-          req.body[path.match(/\[(.*?)\]/)[1]].protocol === "oidc"
+          service.protocol === "oidc" &&
+          Array.isArray(grantTypes) &&
+          grantTypes.length > 0
         );
       })
-      .custom((value, { req, location, path }) => {
+      .custom((value, { req, path }) => {
         const pos = path.match(/\[(.*?)\]/)[1];
-
         const tenant = options.tenant_param
           ? req.params.tenant
           : req.body[pos].tenant;
-
         const validationModel =
           req.body[pos].access_token_validation_model || "OFFLINE_VERIFIABLE";
-
         const config =
           tenant_config[tenant].form.more_info?.access_token_validity_seconds;
-
         const min = config?.min ?? 1;
-
         const max =
           config?.max?.[validationModel] ??
           config?.max?.OFFLINE_VERIFIABLE ??
           tenant_config[tenant].form.access_token_validity_seconds ??
           21600;
-
-        if (isNotEmpty(value) && value <= max && value >= min) {
+        if (value <= max && value >= min) {
           return true;
         }
-
         throw new Error(
           `access_token_validity_seconds must be an integer in specified range [${min}-${max}]`,
         );
@@ -1645,6 +1876,28 @@ const serviceValidationRules = (options, req) => {
       .optional()
       .if((value, { req, location, path }) => {
         return req.body[path.match(/\[(.*?)\]/)[1]].protocol === "oidc";
+      })
+      .custom((value, { req, path }) => {
+        const pos = path.match(/\[(.*?)\]/)[1];
+        const service = req.body[pos];
+        if (service.protocol !== "oidc" || isEmpty(value)) {
+          return true;
+        }
+        const grantTypes = Array.isArray(service.grant_types)
+          ? service.grant_types
+          : [];
+        if (grantTypes.includes("authorization_code")) {
+          return true;
+        }
+        const error =
+          "PKCE is only supported when Authorization Code is selected. Remove the configured PKCE method or select Authorization Code.";
+        return compatibilityError(
+          value,
+          req,
+          pos,
+          "code_challenge_method",
+          error,
+        );
       })
       .custom((value, { req, location, path }) => {
         try {
@@ -1836,15 +2089,12 @@ const serviceValidationRules = (options, req) => {
         return options.check_available;
       })
       .custom((value, { req, location, path }) => {
-        const merge_environments_on_deploy = tenant_config[req.params.tenant].merge_environments_on_deploy ?? false;
+        const merge_environments_on_deploy =
+          tenant_config[req.params.tenant].merge_environments_on_deploy ??
+          false;
         if (merge_environments_on_deploy) {
           return db.service_details_protocol
-            .checkEntityIdAllEnvironments(
-              value,
-              0,
-              0,
-              req.params.tenant,
-            )
+            .checkEntityIdAllEnvironments(value, 0, 0, req.params.tenant)
             .then((available) => {
               if (!available) {
                 return Promise.reject("Metadata url is not available");
@@ -1905,13 +2155,19 @@ const serviceValidationRules = (options, req) => {
             } else {
               throw new Error("aup_uri must be a secure url");
             }
-          } else if (
-            aup_uri_config.required.includes(integration_environment)
-          ) {
-            optionalError(value, req, pos, "aup_uri", "aup_uri is missing");
-            return true;
-            //throw new Error();
           } else {
+            const requiredForEnvironment = aup_uri_config.required.includes(
+              integration_environment,
+            );
+
+            const applicable =
+              !aup_uri_config.user_facing || isUserFacingService(req.body[pos]);
+
+            if (requiredForEnvironment && applicable) {
+              optionalError(value, req, pos, "aup_uri", "aup_uri is missing");
+              return true;
+            }
+
             return true;
           }
         } else {
@@ -1933,23 +2189,24 @@ const serviceValidationRules = (options, req) => {
       let pos = path.match(/\[(.*?)\]/)[1];
       let tenant = options.tenant_param
         ? req.params.tenant
-        : req.body[path.match(/\[(.*?)\]/)[1]].tenant;
-      let integration_environment =
-        req.body[path.match(/\[(.*?)\]/)[1]].integration_environment;
+        : req.body[pos].tenant;
+      let integration_environment = req.body[pos].integration_environment;
       let extra_fields = tenant_config[tenant].form.extra_fields;
       // Iterate through extra fields for code of conduct fields
-      let error = false;
       for (const extra_field in extra_fields) {
-        // If coc field is required
-        if (
-          (extra_fields[extra_field].tag === "coc" ||
-            extra_fields[extra_field].tag === "once") &&
-          extra_fields[extra_field].required.includes(integration_environment)
-        ) {
-          if (
+        const fieldConfig = extra_fields[extra_field];
+        const isPolicyField =
+          fieldConfig.tag === "coc" || fieldConfig.tag === "once";
+        const requiredForEnvironment = fieldConfig.required.includes(
+          integration_environment,
+        );
+        const applicable =
+          !fieldConfig.user_facing || isUserFacingService(req.body[pos]);
+        if (isPolicyField && requiredForEnvironment && applicable) {
+          const fieldEnabled =
             value &&
-            !(value[extra_field] === "true" || value[extra_field] === true)
-          ) {
+            (value[extra_field] === "true" || value[extra_field] === true);
+          if (!fieldEnabled) {
             optionalError(
               value,
               req,
@@ -1960,7 +2217,7 @@ const serviceValidationRules = (options, req) => {
           }
         }
       }
-      delete req.body[path.match(/\[(.*?)\]/)[1]].service_boolean;
+      delete req.body[pos].service_boolean;
       return true;
     }),
     body("*.organization_id")
@@ -2079,10 +2336,18 @@ const decodeAms = (req, res, next) => {
         JSON.parse(Buffer.from(item.message.data, "base64").toString()),
       );
     });
-    console.log(req.body.decoded_messages);
+    log.info(
+      "AMS messages decoded",
+      {
+        data: {
+          decoded_messages: req.body.decoded_messages,
+        },
+      },
+      { req, res },
+    );
     next();
   } catch (err) {
-    customLogger(req, res, "warn", "Failed decoding messages");
+    log.warn("Failed decoding messages", {}, { req, res });
     res.status(422).send(err);
   }
 };
@@ -2105,7 +2370,7 @@ const changeContacts = (req, res, next) => {
       });
       next();
     } else {
-      console.log("Invalid data format");
+      log.warn("Invalid data format", { type: "validation" }, { req, res });
       next("Invalid body format");
     }
   } catch (err) {
@@ -2178,7 +2443,11 @@ const formatServiceBooleanForValidation = (req, res, next) => {
     }
     return next();
   } catch (err) {
-    console.log(err);
+    log.warn(
+      "Invalid format while formatting service booleans: " + (err.stack || err),
+      { type: "validation" },
+      { req, res },
+    );
     return res.status(422).send("Invalid Format");
   }
 };
@@ -2195,12 +2464,15 @@ const validate = (req, res, next) => {
     }
     const extractedErrors = [];
     errors.array().map((err) => extractedErrors.push({ [err.param]: err.msg }));
-    var log = {};
-    customLogger(req, res, "warn", "Failed schema validation", extractedErrors);
+    log.warn("Failed schema validation", { data: extractedErrors }, { req, res });
     res.status(422).send(extractedErrors);
     return res.end();
   } catch (err) {
-    console.log(err);
+    log.warn(
+      "Invalid format during schema validation: " + (err.stack || err),
+      { type: "validation" },
+      { req, res },
+    );
     return res.status(422).send("Invalid Format");
   }
 };

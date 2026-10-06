@@ -7,7 +7,7 @@ var fs2 = require('fs');
 var config = require('../config');
 var hbs = require('handlebars');
 nodeMailer = require('nodemailer');
-const customLogger = require('../loggers.js');
+const log = require('../loggers.js');
 const {delay,readHTMLFile,createTransport} = require('./helpers');
 
 const outdatedNotificationsWorker =  async(interval_seconds,tenant) =>{
@@ -15,7 +15,7 @@ const outdatedNotificationsWorker =  async(interval_seconds,tenant) =>{
     
     db.service_state.getOutdatedOwners(tenant,null).then(async users=>{
       if(users){
-        console.log('Sending notication to the users');
+        log.info('Sending notification to the users', { type: 'outdated_notifications' });
         // Save last succesfull notification
         saveLastNotif();
         for(const user of users){
@@ -24,19 +24,19 @@ const outdatedNotificationsWorker =  async(interval_seconds,tenant) =>{
         }
 
       }
-    }).catch(err=>{customLogger(null,null,'warn','Error when creating and sending invitations: '+err)})
+    }).catch(err=>{log.warn('Error when creating and sending invitations: '+err)})
   };
 
   const saveLastNotif = async () => {
     fs.writeFile(filePath, Date.now(), 'UTF-8',function (err) {
-      if (err) return console.log(err);
+      if (err) return log.error('Error while saving last notification timestamp: ' + (err.stack || err), { type: 'outdated_notifications' });
     });
   }
 
   const readFromFile = async () => {
     return await fs.readFile(filePath,'UTF-8',function (err,last_notif) {
       if (err) {
-        return console.log(err);
+        return log.error('Error while reading last notification timestamp: ' + (err.stack || err), { type: 'outdated_notifications' });
       }
       return last_notif;
     });
@@ -59,7 +59,7 @@ const outdatedNotificationsWorker =  async(interval_seconds,tenant) =>{
         }
       }
       catch(error){
-        customLogger(null,null,'error',[{type:'outdated_notifications'},{message:'Error when sending notifications about outdated services'},{error:error.stack},{interval:interval_seconds}]);
+        log.error('Error when sending notifications about outdated services: ' + (error.stack), { type: 'outdated_notifications', interval: interval_seconds });
       }
 
       if(time_passed_sec>interval_seconds){
@@ -77,10 +77,10 @@ const outdatedNotificationsWorker =  async(interval_seconds,tenant) =>{
         },(interval_seconds-time_passed_sec)*1000);
       }
     }).catch(error=>{
-      customLogger(null,null,'error',[{type:'outdated_notifications'},{message:'Error when sending notifications about outdated services'},{error:error.stack},{interval:interval_seconds}]);
+      log.error('Error when sending notifications about outdated services: ' + (error.stack), { type: 'outdated_notifications', interval: interval_seconds });
     })
   }catch(error){
-    customLogger(null,null,'error',[{type:'outdated_notifications'},{message:'Error when sending notifications about outdated services'},{test:error.stack},{interval:interval_seconds}]);
+    log.error('Error when sending notifications about outdated services: ' + (error.stack || error), { type: 'outdated_notifications', interval: interval_seconds });
   }
   
 
@@ -116,11 +116,11 @@ const sendOutdatedNotification = async (data) => {
         return transporter.sendMail(mailOptions, function (error, response) {
           if (error) {
             resolve(false);
-            customLogger(null,null,'error',[{type:'email_log'},{message:'Email not sent'},{template:"outdated_notif"},{error:error},{...data}]);
+            log.error('Email not sent: ' + (error.stack || error), { type: 'email', template: "outdated_notif", ...data });
           }
           else {
             resolve(true);
-            customLogger(null,null,'info',[{type:'email_log'},{message:'Email sent'},{template:"outdated_notif"},{...data}]);
+            log.info('Email sent', { type: 'email', template: "outdated_notif", ...data });
           }
         });
       });

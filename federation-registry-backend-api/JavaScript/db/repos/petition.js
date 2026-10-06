@@ -2,6 +2,7 @@ const sql = require('../sql').petition;
 const {calcDiff,extractServiceBoolean} = require('../../functions/helpers.js');
 const cs = {}; // Reusable ColumnSet objects.
 const {sendMail} = require('../../functions/helpers.js');
+const log = require('../../loggers.js');
 /*
  This repository mixes hard-coded and dynamic SQL, primarily to show a diverse example of using both.
  */
@@ -88,7 +89,7 @@ class PetitionRepository {
       view_reviewer: user.role.actions.includes('view_reviewer')
     }).then(result => {
       if(result){
-        console.log(result);
+        log.debug('Own petition fetched', { type: 'petition', result: result });
         return fixPetition(result);
 
       }

@@ -1,4 +1,4 @@
-SELECT json_build_object('id',sd.id,'service_name', sd.service_name,'service_description',sd.service_description,
+SELECT json_build_object('id',sd.id,'service_name', sd.service_name,'service_description',sd.service_description,'service_type',sd.service_type,										
 						 'logo_uri',sd.logo_uri,'policy_uri',sd.policy_uri,'integration_environment',sd.integration_environment,'protocol',sd.protocol,
 						 'country',sd.country,'website_url',sd.website_url,'tenant',sd.tenant,'aup_uri',sd.aup_uri,'organization_name',sd.name,
 						 'organization_url',sd.url,'organization_id',sd.organization_id,${all_properties_filter:raw}

@@ -35,6 +35,210 @@
       "active": true,
       "text": "DEVEL"
     },
+    "service_types": {
+        "machine_to_machine": {
+            "protocol": {
+                "value": "oidc",
+                "disabled": true
+            },
+            "grant_types": {
+                "value": [
+                    "client_credentials"
+                ],
+                "disabled": true,
+                "allowed": [
+                    "client_credentials"
+                ]
+            },
+            "application_type": {
+                "hidden": true,
+                "value": "WEB",
+                "disabled": true
+            },
+            "token_endpoint_auth_method": {
+                "value": "client_secret_basic",
+                "allowed": [
+                    "client_secret_basic",
+                    "client_secret_post",
+                    "client_secret_jwt",
+                    "private_key_jwt"
+                ]
+            },
+            "redirect_uris": {
+                "value": []
+            },
+            "post_logout_redirect_uris": {
+                "value": []
+            },
+            "code_challenge_method": {
+                "value": ""
+            },
+            "scope": {
+                "value": []
+            },
+            "id_token_timeout_seconds": {
+                "value": null
+            },
+            "refresh_token_validity_seconds": {
+                "value": null
+            },
+            "reuse_refresh_token": {
+                "value": false
+            },
+            "clear_access_tokens_on_refresh": {
+                "value": false
+            },
+            "access_token_validity_seconds": {
+                "value": 3600
+            },
+            "access_token_validation_model": {
+                "value": "OFFLINE_VERIFIABLE"
+            },
+            "device_code_validity_seconds": {
+                "value": null
+            },
+            "generate_client_secret": {
+                "value": true
+            }
+        },
+        "resource_server": {
+            "protocol": {
+                "value": "oidc",
+                "disabled": true
+            },
+            "grant_types": {
+                "value": [],
+                "allowed": []
+            },
+            "application_type": {
+                "hidden": true,
+                "value": "WEB",
+                "disabled": true
+            },
+            "token_endpoint_auth_method": {
+                "value": "client_secret_basic",
+                "allowed": [
+                    "client_secret_basic",
+                    "client_secret_post",
+                    "client_secret_jwt",
+                    "private_key_jwt",
+                    "none"
+                ]
+            },
+            "generate_client_secret": {
+                "value": true
+            },
+            "client_secret": {
+                "value": ""
+            },
+            "token_endpoint_auth_signing_alg": {
+                "value": null
+            },
+            "jwks": {
+                "value": null
+            },
+            "jwks_uri": {
+                "value": null
+            },
+            "redirect_uris": {
+                "value": []
+            },
+            "post_logout_redirect_uris": {
+                "value": []
+            },
+            "code_challenge_method": {
+                "value": ""
+            },
+            "scope": {
+                "hidden": true,
+                "value": []
+            },
+            "id_token_timeout_seconds": {
+                "value": null
+            },
+            "refresh_token_validity_seconds": {
+                "value": null
+            },
+            "reuse_refresh_token": {
+                "value": false
+            },
+            "clear_access_tokens_on_refresh": {
+                "value": false
+            },
+            "device_code_validity_seconds": {
+                "value": null
+            },
+            "access_token_validation_model": {
+                "hidden": true,
+                "value": "ONLINE_VALIDATION_REQUIRED"
+            },
+            "access_token_validity_seconds": {
+                "hidden": true,
+                "value": null
+            },
+            "allow_introspection": {
+                "value": false
+            }
+        },
+        "advanced": {
+            "protocol": {
+                "value": ""
+            },
+            "grant_types": {
+                "value": [
+                    "authorization_code"
+                ]
+            },
+            "application_type": {
+                "value": "WEB"
+            },
+            "token_endpoint_auth_method": {
+                "value": "client_secret_basic"
+            },
+            "redirect_uris": {
+                "value": []
+            },
+            "post_logout_redirect_uris": {
+                "value": []
+            },
+            "code_challenge_method": {
+                "value": ""
+            },
+            "scope": {
+                "value": [
+                    "openid",
+                    "profile",
+                    "email",
+                    "voperson_id",
+                    "eduperson_entitlement"
+                ]
+            },
+            "id_token_timeout_seconds": {
+                "value": "900"
+            },
+            "refresh_token_validity_seconds": {
+                "value": "2592000"
+            },
+            "reuse_refresh_token": {
+                "value": false
+            },
+            "clear_access_tokens_on_refresh": {
+                "value": false
+            },
+            "access_token_validity_seconds": {
+                "value": 3600
+            },
+            "access_token_validation_model": {
+                "value": "OFFLINE_VERIFIABLE"
+            },
+            "device_code_validity_seconds": {
+                "value": null
+            },
+            "generate_client_secret": {
+                "value": true
+            }
+        }
+    },
     "form":{
       "supported_attributes": ["voPersonID","displayName","givenName","sn","mail","voPersonVerifiedEmail","uid","eduPersonEntitlement","voPersonExternalAffiliation","sshPublicKey","eduPersonOrcid","eduPersonAssurance"],
       "multivalue_fields": {
@@ -72,6 +276,42 @@
       "token_endpoint_auth_signing_alg":["HS256","HS384","HS512","RS256","RS384","RS512","PS256"],
       "token_endpoint_auth_signing_alg_title":["HMAC using SHA-256 hash algorithm","HMAC using SHA-384 hash algorithm","HMAC using SHA-512 hash algorithm","RSASSA using SHA-256 hash algorithm","RSASSA using SHA-384 hash algorithm","RSASSA using SHA-512 hash algorithm","RSASSA-PSS using SHA-256 and MGF1 with SHA-256"],
       "more_info":{
+          "redirect_uris": {
+              "description": "URIs that the client can be redirected to. Different URI validation rules apply depending on the application type."
+          },
+          "post_logout_redirect_uris": {
+              "label": "Post Logout Redirect URI(s)",
+              "description": "URLs to request that the End-User's browser be redirected after a logout has been performed using the post_logout_redirect_uri parameter."
+          },
+          "allow_introspection": {
+              "description": "Access to the Token Introspection endpoint is restricted to confidential clients.",
+              "tooltip": "This is a dynamic field based on Authorization Method selected for the token endpoint."
+          },
+          "access_token_validity_seconds": {
+              "tooltip": "Lifetime of access tokens issued for this client. The maximum depends on the selected Access Token Validation Model.",
+              "min": 900,
+              "default": 3600,
+              "max": {
+                  "OFFLINE_VERIFIABLE": 21600,
+                  "ONLINE_VALIDATION_REQUIRED": 90000
+              }
+          },
+          "device_code_validity_seconds": {
+              "default": 1800,
+              "max": 30000
+          },
+          "id_token_timeout_seconds": {
+              "max": 86400
+          },
+          "refresh_token_validity_seconds": {
+              "tooltip": "Lifetime of refresh tokens issued for this client. For confidential clients, the recommended default is 30 days, with a minimum of 24 hours and a maximum of 400 days. Refresh tokens for public clients are not recommended and will be subject to additional review.",
+              "min": 86400,
+              "max": 34560000,
+              "default": 2592000
+          },
+          "access_token_validation_model": {
+              "tooltip": "Select how Resource Servers will validate the access tokens issued for this client. This determines the maximum allowed access token lifetime."
+          },
         "country": {
             "required": []
         },
@@ -138,6 +378,7 @@
         }
       },
       "defaultValues":{
+          "access_token_validation_model": "OFFLINE_VERIFIABLE",
         "service_name":"",
         "service_description":"",
         "website_url": "",
