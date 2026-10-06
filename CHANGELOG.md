@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved service-type selection and form state handling.
 - Based ID token timeout applicability on the presence of the `openid` scope.
 - Display validation errors for invalid values loaded from existing services.
+- Wait for petition transactions to commit before returning success, preventing immediate availability checks from missing newly created OIDC and SAML petitions.
 - Updated `pg-monitor` to prevent spurious connection errors.
 
 ## Tenant Configuration Changes

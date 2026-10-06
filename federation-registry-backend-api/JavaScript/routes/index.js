@@ -1156,109 +1156,86 @@ router.post(
   validate,
   reFormatPetition,
   asyncPetitionValidation,
-  (req, res, next) => {
+  async (req, res, next) => {
     res.setHeader("Content-Type", "application/json");
-    if (req.user.role.actions.includes("add_own_petition")) {
-      try {
-        db.tx("add-service", async (t) => {
-          if (req.body.type === "delete") {
-            await t.service
-              .get(req.body.service_id, req.params.tenant)
-              .then(async (service) => {
-                if (service) {
-                  service = service.service_data;
-                  service.service_id = req.body.service_id;
-                  service.type = "delete";
-                  service.tenant = req.params.tenant;
-                  await t.petition
-                    .add(service, req.user.sub)
-                    .then(async (id) => {
-                      if (id) {
-                        res.status(200).json({ id: id });
-                        await t.user
-                          .getUsersByAction(
-                            "review_notification",
-                            req.params.tenant,
-                          )
-                          .then((users) => {
-                            sendMail(
-                              {
-                                subject: "New Petition to Review",
-                                service_name: service.service_name,
-                                tenant: req.params.tenant,
-                                url:
-                                  "/services/" +
-                                  req.body.service_id +
-                                  "/requests/" +
-                                  id +
-                                  "/review",
-                                integration_environment:
-                                  service.integration_environment,
-                              },
-                              "reviewer-notification.html",
-                              users,
-                            );
-                          })
-                          .catch((error) => {
-                            next("Could not sent email to reviewers:" + error);
-                          });
-                      } else {
-                        //  throw warning
-                      }
-                    })
-                    .catch((err) => {
-                      next(err);
-                    });
-                }
-              })
-              .catch((err) => {
-                next(err);
-              });
-          } else {
-            req.body.tenant = req.params.tenant;
-            await t.petition
-              .add(req.body, req.user.sub)
-              .then(async (id) => {
-                if (id) {
-                  res.status(200).json({ id: id });
-                  await t.user
-                    .getUsersByAction("review_notification", req.params.tenant)
-                    .then((users) => {
-                      sendMail(
-                        {
-                          subject: "New Petition to Review",
-                          service_name: req.body.service_name,
-                          tenant: req.params.tenant,
-                          url:
-                            (req.body.service_id
-                              ? "/services/" + req.body.service_id
-                              : "") +
-                            "/requests/" +
-                            id +
-                            "/review",
-                          integration_environment:
-                            req.body.integration_environment,
-                        },
-                        "reviewer-notification.html",
-                        users,
-                      );
-                    })
-                    .catch((error) => {
-                      next("Could not sent email to reviewers:" + error);
-                    });
-                }
-              })
-              .catch((err) => {
-                next(err);
-              });
+    if (!req.user.role.actions.includes("add_own_petition")) {
+      return res
+        .status(401)
+        .json({ err: "Requested action not authorised" });
+    }
+
+    try {
+      const result = await db.tx("add-service", async (t) => {
+        let petition = req.body;
+
+        if (req.body.type === "delete") {
+          const service = await t.service.get(
+            req.body.service_id,
+            req.params.tenant,
+          );
+
+          if (!service) {
+            const error = new Error(
+              "Could not find service with id: " + req.body.service_id,
+            );
+            error.status = 404;
+            throw error;
           }
+
+          petition = {
+            ...service.service_data,
+            service_id: req.body.service_id,
+            type: "delete",
+            tenant: req.params.tenant,
+          };
+        } else {
+          petition.tenant = req.params.tenant;
+        }
+
+        const id = await t.petition.add(petition, req.user.sub);
+
+        if (!id) {
+          throw new Error("Petition creation did not return an id");
+        }
+
+        return { id, petition };
+      });
+
+      // db.tx resolves only after the transaction has committed, so the new
+      // petition is visible to availability checks before success is returned.
+      res.status(200).json({ id: result.id });
+
+      db.user
+        .getUsersByAction("review_notification", req.params.tenant)
+        .then((users) => {
+          sendMail(
+            {
+              subject: "New Petition to Review",
+              service_name: result.petition.service_name,
+              tenant: req.params.tenant,
+              url:
+                (result.petition.service_id
+                  ? "/services/" + result.petition.service_id
+                  : "") +
+                "/requests/" +
+                result.id +
+                "/review",
+              integration_environment:
+                result.petition.integration_environment,
+            },
+            "reviewer-notification.html",
+            users,
+          );
+        })
+        .catch((error) => {
+          log.error(
+            "Could not send email to reviewers: " + (error.stack || error),
+            { type: "notification", petition_id: result.id },
+            { req, res },
+          );
         });
-      } catch (err) {
-        res.status(500).json({ error: "Error querying the database." });
-        next(err);
-      }
-    } else {
-      res.status(401).json({ err: "Requested action not authorised" });
+    } catch (err) {
+      next(err);
     }
   },
 );
