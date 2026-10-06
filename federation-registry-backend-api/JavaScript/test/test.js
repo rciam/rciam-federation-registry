@@ -154,24 +154,34 @@ describe('Service registry API Integration Tests', function() {
       it('should check availability of entity_id',function(done){
         checkAvailability(create.saml.entity_id,'saml','tenant_1',create.saml.integration_environment,true,done);
       })
-      it('should create a new petition and return the id',function(done){
-        var req = request(server).post('/tenants/tenant_1/petitions').set({Authorization: userToken}).send({
-          type:'create',
-          ...create.saml
-        });
-        req.set('Accept','application/json')
-        .expect('Content-Type',/json/)
-        .expect(200)
-          .end(function(err,res){
-            let body = JSON.parse(res.text);
-            expect(body.id).to.be.a('number');
-            expect(res.statusCode).to.equal(200);
-            petition = body.id;
-            done();
+      it('should create a new petition and make its entity_id unavailable immediately',async function(){
+        const creation = await request(server)
+          .post('/tenants/tenant_1/petitions')
+          .set({Authorization: userToken})
+          .send({
+            type:'create',
+            ...create.saml
           })
-      });
-      it('should check that entity_id is no longer available',function(done){
-        checkAvailability(create.saml.entity_id,'saml','tenant_1',create.saml.integration_environment,false,done);
+          .set('Accept','application/json')
+          .expect('Content-Type',/json/)
+          .expect(200);
+
+        expect(creation.body.id).to.be.a('number');
+        petition = creation.body.id;
+
+        const availability = await request(server)
+          .get('/tenants/tenant_1/check-availability')
+          .query({
+            value: create.saml.entity_id,
+            protocol: 'saml',
+            environment: create.saml.integration_environment
+          })
+          .set({Authorization: userToken})
+          .set('Accept','application/json')
+          .expect('Content-Type',/json/)
+          .expect(200);
+
+        expect(availability.body.available).to.equal(false);
       });
       it('should fetch created petition',function(done){
         var req = request(server).get('/tenants/tenant_1/petitions/'+petition+'?type=open').set({Authorization: userToken});
