@@ -44,6 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Database Changes
 
 - Added `service_type` columns to approved service and service petition details.
+- Existing approved services and service petitions must be assigned the `advanced` service type during the database upgrade.
 
 ```sql
 ALTER TABLE service_details
@@ -51,6 +52,43 @@ ADD COLUMN service_type VARCHAR(256);
 
 ALTER TABLE service_petition_details
 ADD COLUMN service_type VARCHAR(256);
+
+UPDATE service_details
+SET service_type = 'advanced'
+WHERE service_type IS NULL;
+
+UPDATE service_petition_details
+SET service_type = 'advanced'
+WHERE service_type IS NULL;
+```
+
+### Optional Database Cleanup
+
+Existing registered services may contain token-lifetime values that are no longer applicable under the updated form rules. Operators may optionally clear `device_code_validity_seconds` when the Device Authorization Grant is not enabled and `id_token_timeout_seconds` when the `openid` scope is not requested.
+
+This cleanup only updates the service configuration stored in Federation Registry. It does not immediately modify an already deployed service; the deployed configuration will be synchronized the next time that service is updated. The stale values have no functional effect while their corresponding grant type or scope is disabled, so this cleanup is recommended only to avoid confusion for service owners.
+
+```sql
+UPDATE service_details_oidc AS oidc
+SET device_code_validity_seconds = NULL
+WHERE oidc.device_code_validity_seconds IS NOT NULL
+  AND NOT EXISTS (
+    SELECT 1
+    FROM service_oidc_grant_types AS grant_type
+    WHERE grant_type.owner_id = oidc.id
+      AND grant_type.value =
+        'urn:ietf:params:oauth:grant-type:device_code'
+  );
+
+UPDATE service_details_oidc AS oidc
+SET id_token_timeout_seconds = NULL
+WHERE oidc.id_token_timeout_seconds IS NOT NULL
+  AND NOT EXISTS (
+    SELECT 1
+    FROM service_oidc_scopes AS scope
+    WHERE scope.owner_id = oidc.id
+      AND scope.value = 'openid'
+  );
 ```
 
 # [2.2.0] 10/07/2026
