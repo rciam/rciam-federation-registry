@@ -82,7 +82,100 @@ const postInvitationValidation = () => {
       .exists()
       .withMessage("Required Field")
       .bail()
-      .custom((value) => typeof value === "boolean")
+      .isBoolean({ strict: true })
+      .withMessage("Must be a boolean"),
+  ];
+};
+
+const postUserValidation = () => {
+  return [
+    body("sub")
+      .exists()
+      .withMessage("Required Field")
+      .bail()
+      .isString()
+      .withMessage("Must be a string")
+      .bail()
+      .isLength({ min: 1, max: 256 })
+      .withMessage("Must be at most 256 characters"),
+    body("preferred_username")
+      .exists()
+      .withMessage("Required Field")
+      .bail()
+      .isString()
+      .withMessage("Must be a string")
+      .bail()
+      .isLength({ min: 1, max: 256 })
+      .withMessage("Must be at most 256 characters"),
+    body("name")
+      .exists()
+      .withMessage("Required Field")
+      .bail()
+      .isString()
+      .withMessage("Must be a string")
+      .bail()
+      .isLength({ min: 1, max: 256 })
+      .withMessage("Must be at most 256 characters"),
+    body("given_name")
+      .exists()
+      .withMessage("Required Field")
+      .bail()
+      .isString()
+      .withMessage("Must be a string")
+      .bail()
+      .isLength({ min: 1, max: 256 })
+      .withMessage("Must be at most 256 characters"),
+    body("family_name")
+      .exists()
+      .withMessage("Required Field")
+      .bail()
+      .isString()
+      .withMessage("Must be a string")
+      .bail()
+      .isLength({ min: 1, max: 256 })
+      .withMessage("Must be at most 256 characters"),
+    body("email")
+      .exists()
+      .withMessage("Required Field")
+      .bail()
+      .isString()
+      .withMessage("Must be a string")
+      .bail()
+      .custom((value, success = true) => {
+        if (!value.toLowerCase().match(reg.regEmail)) {
+          success = false;
+        }
+        return success;
+      })
+      .withMessage("Must be an email")
+      .bail()
+      .isLength({ max: 256 })
+      .withMessage("Must be at most 256 characters"),
+    body("eduperson_entitlement")
+      .exists()
+      .withMessage("Required Field")
+      .bail()
+      .isArray({ min: 1 })
+      .withMessage("Must be a non-empty array of strings")
+      .bail()
+      .custom((value) => value.every((v) => typeof v === "string"))
+      .withMessage("Must be a non-empty array of strings"),
+  ];
+};
+
+const putMemberValidation = () => {
+  return [
+    body("group_manager")
+      .exists()
+      .withMessage("Required Field")
+      .bail()
+      .isBoolean({ strict: true })
+      .withMessage("Must be a boolean"),
+    body("send_invitation")
+      .exists()
+      .withMessage("Required Field")
+      .bail()
+      .isBoolean({ strict: true })
       .withMessage("Must be a boolean"),
   ];
 };
@@ -2485,6 +2578,8 @@ module.exports = {
   decodeAms,
   amsIngestValidation,
   postInvitationValidation,
+  postUserValidation,
+  putMemberValidation,
   putAgentValidation,
   postAgentValidation,
   getServiceListValidation,
