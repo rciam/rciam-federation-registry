@@ -1,6 +1,6 @@
 var envPath = __dirname + "/.env";
-var logPath = __dirname + "/logs/logs.log";
 require('dotenv').config({path:envPath});
+
 const express = require('express');
 const {db} = require('./db');
 const cors = require('cors');
@@ -102,10 +102,7 @@ db.tenants.getInit().then(async tenants => {
 
 
 app.use(expressWinston.logger({
-    transports: [
-      new(winston.transports.File)({filename:logPath}),
-      new (winston.transports.Console)({'timestamp':true}),
-    ],
+    transports: log.createTransports(),
     format: winston.format.combine(
       winston.format.timestamp(),
       oneLineJson
@@ -157,9 +154,7 @@ app.use('/', routes.router);
 
 
 app.use(expressWinston.errorLogger({
-      transports: [
-        new winston.transports.Console()
-      ],
+      transports: log.createTransports(),
       format: winston.format.combine(
         winston.format.timestamp(),
         oneLineJson
