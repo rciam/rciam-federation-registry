@@ -2132,6 +2132,7 @@ function ContactInput(props) {
                   <Form.Control
                     {...field}
                     as="select"
+                    value={props.item.type}
                     ref={target}
                     onMouseOver={() => setShow(true)}
                     onMouseOut={() => setShow(false)}
