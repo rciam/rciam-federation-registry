@@ -2866,7 +2866,7 @@ const ServiceForm = (props) => {
                       >
                         <ServiceTypeSelector
                           value={values.service_type}
-                          editable={isRegistrationRequest}
+                          editable={isRegistrationRequest && !props.copy}
                           order={
                             tenant?.config?.service_type_settings?.order || []
                           }
