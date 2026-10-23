@@ -2,6 +2,33 @@ var winston = require('winston');
 var {oneLineJson} = require('./logFormat');
 var logPath = __dirname + "/logs/logs.log";
 
+// Get log destinations from environment variable (default: 'both')
+// Valid values: 'file', 'console', 'both'
+const logDestinations = (process.env.LOG_DESTINATIONS || 'both').toLowerCase();
+
+// Builds a fresh set of transports, so that the logger below and the
+// express-winston middlewares in index.js can all honour LOG_DESTINATIONS.
+// A factory is required because winston binds every transport to the logger
+// that uses it, so the same instances cannot be shared between loggers.
+const createTransports = () => {
+  const transports = [];
+
+  switch (logDestinations) {
+    case 'file':
+      transports.push(new winston.transports.File({ filename: logPath }));
+      break;
+    case 'console':
+      transports.push(new winston.transports.Console({ timestamp: true }));
+      break;
+    case 'both':
+    default:
+      transports.push(new winston.transports.Console({ timestamp: true }));
+      transports.push(new winston.transports.File({ filename: logPath }));
+      break;
+  }
+
+  return transports;
+};
 
 const winstonLogger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
@@ -9,10 +36,7 @@ const winstonLogger = winston.createLogger({
     winston.format.timestamp(),
     oneLineJson
   ),
-  transports: [
-    new winston.transports.Console({'timestamp':true}),
-    new(winston.transports.File)({filename:logPath})]
-
+  transports: createTransports()
 });
 
 
@@ -47,5 +71,10 @@ log.info = (message, meta, ctx) => log('info', message, meta, ctx);
 log.warn = (message, meta, ctx) => log('warn', message, meta, ctx);
 log.error = (message, meta, ctx) => log('error', message, meta, ctx);
 
+
+// `log` is the module namespace: it is the callable facade itself, with the
+// helpers hanging off it. `createTransports` is exported for the request/error
+// loggers in index.js, which need their own transports.
+log.createTransports = createTransports;
 
 module.exports = log;
