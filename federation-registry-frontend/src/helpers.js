@@ -125,8 +125,106 @@ function removeA(arr) {
     return arr;
 }
 
+function urlReachabilityEnabled(config) {
+    return config.check_url_reachability === true;
+}
+
+function createReadings() {
+    let latest = 0;
+    return {
+        // Call before a request starts; what it answers is that request's token.
+        start: function () {
+            latest += 1;
+            return latest;
+        },
+        isCurrent: function (token) {
+            return token === latest;
+        }
+    };
+}
+
+const metadataFormFields = {
+    entity_id: 'Entity id',
+    requested_attributes: 'Requested attributes',
+    service_name: 'Service name',
+    service_description: 'Service description'
+};
+
+const attributeWarningCodes = ['no_attributes', 'unsupported_attributes'];
+
+function isEmptyValue(value) {
+    if (value === null || value === undefined) {
+        return true;
+    }
+    if (typeof value === 'string') {
+        return value.trim() === '';
+    }
+    if (Array.isArray(value)) {
+        return value.length === 0;
+    }
+    return false;
+}
+
+function metadataProposal(metadata, values, options) {
+    const opts = options || {};
+    const current = values || {};
+    const fill = [];
+    const replace = [];
+    Object.keys(metadataFormFields).forEach((field) => {
+        const found = field === 'requested_attributes' ? metadata.supported_attributes : metadata[field];
+        if (isEmptyValue(found)) {
+            return;
+        }
+        // no field to write the list to when the tenant hides the table
+        if (field === 'requested_attributes' && !opts.attributesEnabled) {
+            return;
+        }
+        const held = current[field];
+        if (isEmptyValue(held)) {
+            fill.push({ field: field, label: metadataFormFields[field], value: found });
+        }
+        else if (!sameContents(found, held)) {
+            replace.push({ field: field, label: metadataFormFields[field], value: found, held: held });
+        }
+    });
+    return { fill: fill, replace: replace };
+}
+
+function applyProposal(values, entries) {
+    const merged = Object.assign({}, values || {});
+    (entries || []).forEach((entry) => {
+        merged[entry.field] = copyValue(entry.value);
+    });
+    return merged;
+}
+
+function copyValue(value) {
+    if (Array.isArray(value)) {
+        return value.map((entry) => (entry && typeof entry === 'object' ? Object.assign({}, entry) : entry));
+    }
+    return value;
+}
+
+function sameContents(one, other) {
+    if (!Array.isArray(one) || !Array.isArray(other)) {
+        return !Array.isArray(one) && !Array.isArray(other) && one === other;
+    }
+    if (one.length !== other.length) {
+        return false;
+    }
+    const key = (entry) => JSON.stringify([entry.friendly_name, entry.name, entry.required, entry.name_format]);
+    const left = one.map(key).sort();
+    const right = other.map(key).sort();
+    return left.every((entry, index) => entry === right[index]);
+}
+
+function metadataWarnings(warnings, attributesEnabled) {
+    return (warnings || []).filter((warning) => attributesEnabled || !attributeWarningCodes.includes(warning.code));
+}
+
 
 
 module.exports = {
-    capitalWords,removeA,calcDiff,formatDuration
+    capitalWords,removeA,calcDiff,formatDuration,urlReachabilityEnabled,createReadings,
+    metadataProposal,metadataWarnings,metadataFormFields,applyProposal
 }

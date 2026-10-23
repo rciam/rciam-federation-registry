@@ -151,7 +151,7 @@ app.use(express.json({ limit: '50mb' }));
 app.use('/tenants/:tenant/banner_alert', bannerAlertRoutes);
 app.use('/tenants/:tenant/tags', serviceTagRoutes);
 app.use('/tenants/:tenant/notifications',notificationRoutes);
-app.use('/util',utilRoutes);
+app.use('/tenants/:tenant/util',utilRoutes);
 
 app.use('/', routes.router);
 
