@@ -99,7 +99,21 @@ db.tenants.getInit().then(async tenants => {
 }).catch(err => {log.error('Tenant initialization failed due to following error: ' + (err.stack || err), { type: 'tenant_init' });});
 
 
+function parseTrustProxy(val) {
+  if (val === undefined || val === null || val === '' || val === 'false' || val === '0') {
+    return false;
+  }
+  if (val === 'true') {
+    return true;
+  }
+  const num = Number(val);
+  if (!Number.isNaN(num)) {
+    return num;
+  }
+  return val; // e.g. "loopback", "10.0.0.0/8", or comma-separated IPs
+}
 
+app.set('trust proxy', parseTrustProxy(process.env.EXPRESS_TRUST_PROXY));
 
 app.use(expressWinston.logger({
     transports: [
@@ -120,6 +134,7 @@ app.use(expressWinston.logger({
     responseWhitelist: [],
     dynamicMeta: function(req, res) {
       const meta={};
+      meta.clientip = req.ip || req.socket.remoteAddress;
       if(req.user&&req.user.sub&&req.user.role){
         meta.user = {};
         delete req.user.role.actions;
