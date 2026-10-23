@@ -1135,36 +1135,45 @@ export function RefreshToken(props) {
       </Form.Text>
       {props.values.scope?.includes("offline_access") ? (
         <React.Fragment>
-          <div
-            className={
-              "checkbox-item " +
-              (props.changed && props.changed.reuse_refresh_token
-                ? "spacing-bot"
-                : "")
-            }
-          >
-            <SimpleCheckbox
-              name="reuse_refresh_token"
-              label={t("form_reuse_refresh_token")}
-              changed={props.changed ? props.changed.reuse_refresh_token : null}
-              checked={props.values.reuse_refresh_token}
-              disabled={props.disabled}
-              onChange={props.onChange}
-            />
-          </div>
-          <div className="pkce-tooltip reuse-warning">
-            <FontAwesomeIcon icon={faExclamationTriangle} />
-            Enabling re-use of Refresh Tokens is not recommended. Public clients
-            in particular should have this option disabled and use refresh token
-            rotation as described in{" "}
-            <a
-              href="https://datatracker.ietf.org/doc/html/rfc6749#section-4.13"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Section 4.13 of RFC6749
-            </a>
-          </div>
+
+          {!tenant.form_config.disabled_fields.includes(
+            "reuse_refresh_token"
+          ) ? (
+            <React.Fragment>
+              <div
+                className={
+                  "checkbox-item " +
+                  (props.changed && props.changed.reuse_refresh_token
+                    ? "spacing-bot"
+                    : "")
+                }
+              >
+                <SimpleCheckbox
+                  name="reuse_refresh_token"
+                  label={t("form_reuse_refresh_token")}
+                  changed={props.changed ? props.changed.reuse_refresh_token : null}
+                  checked={props.values.reuse_refresh_token}
+                  disabled={props.disabled}
+                  onChange={props.onChange}
+                />
+              </div>
+
+              <div className="pkce-tooltip reuse-warning">
+                <FontAwesomeIcon icon={faExclamationTriangle} />
+                Enabling re-use of Refresh Tokens is not recommended. Public clients
+                in particular should have this option disabled and use refresh token
+                rotation as described in{" "}
+                <a
+                  href="https://datatracker.ietf.org/doc/html/rfc6749#section-4.13"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Section 4.13 of RFC6749
+                </a>
+              </div>
+            </React.Fragment>
+          ) : null}
+
           <div
             className={
               "checkbox-item " +
