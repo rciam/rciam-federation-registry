@@ -1,6 +1,7 @@
 const countryData = require("country-region-data");
 const { body, query, validationResult, param } = require("express-validator");
 const { reg } = require("./regex.js");
+const { validateRedirectUri } = require("./redirectUriValidation.js");
 const log = require("./loggers.js");
 var config = require("./config");
 var defaultAttributes = require("./tenant_config/requested_attributes.json");
@@ -1073,82 +1074,28 @@ const serviceValidationRules = (options, req) => {
         let pos = path.match(/\[(.*?)\]/)[1];
         return isNotEmpty(value) && req.body[pos].protocol === "oidc";
       })
-      .custom((value, { req, location, path }) => {
+      .custom(async (value, { req, location, path }) => {
         let pos = path.match(/\[(.*?)\]/)[1];
         let tenant = options.tenant_param
           ? req.params.tenant
           : req.body[path.match(/\[(.*?)\]/)[1]].tenant;
-        try {
-          if (Array.isArray(value) && value.length > 0) {
-            value.map((item, index) => {
-              let url;
-              let isLocalIp = false;
-              if (
-                tenant_config[tenant].test_env.includes(
-                  req.body[pos].integration_environment,
-                )
-              ) {
-                isLocalIp =
-                  item.match(reg.regIpv4Local) || item.match(reg.regIpv6Local);
-              }
-              if (!isLocalIp) {
-                try {
-                  url = new URL(item);
-                } catch (err) {
-                  throw new Error("Invalid uri");
-                }
-                if (item.includes("#")) {
-                  throw new Error("Uri can't contain fragments");
-                }
-                if (req.body[pos].application_type === "WEB") {
-                  if (
-                    !tenant_config[tenant].test_env.includes(
-                      req.body[pos].integration_environment,
-                    ) &&
-                    url
-                  ) {
-                    if (
-                      url.protocol !== "https:" &&
-                      !(
-                        url.protocol === "http:" && url.hostname === "localhost"
-                      )
-                    ) {
-                      throw new Error(
-                        "Uri must be a secure url starting with https://",
-                      );
-                    }
-                  } else {
-                    if (
-                      url &&
-                      !(url.protocol === "http:" || url.protocol === "https:")
-                    ) {
-                      throw new Error(
-                        "Uri must be a url starting with http(s):// ",
-                      );
-                    }
-                  }
-                } else {
-                  if (url.protocol === "javascript:") {
-                    throw new Error("Uri can't be of schema 'javascript:'");
-                  } else if (url.protocol === "data:") {
-                    throw new Error("Uri can't be of schema 'data:'");
-                  }
-                }
-                if (item.includes("*")) {
-                  return new Error("Uri can't contain wildcard character '*'");
-                }
-                if (item.includes(" ")) {
-                  return new Error("Uri can't contain spaces");
-                }
-              }
-            });
-          } else {
-            throw new Error("Service redirect_uri must be an array");
-          }
-          return true;
-        } catch (err) {
-          throw new Error(err);
+        if (!Array.isArray(value) || value.length === 0) {
+          throw new Error("Service redirect_uri must be an array");
         }
+
+        const isTestEnvironment = tenant_config[tenant].test_env.includes(
+          req.body[pos].integration_environment,
+        );
+        for (const item of value) {
+          const error = await validateRedirectUri(item, {
+            applicationType: req.body[pos].application_type,
+            isTestEnvironment,
+          });
+          if (error) {
+            throw new Error(error);
+          }
+        }
+        return true;
       })
       .customSanitizer((value) => {
         if (value && Array.isArray(value) && value.length > 0) {
@@ -1188,84 +1135,30 @@ const serviceValidationRules = (options, req) => {
         let pos = path.match(/\[(.*?)\]/)[1];
         return isNotEmpty(value) && req.body[pos].protocol === "oidc";
       })
-      .custom((value, { req, location, path }) => {
+      .custom(async (value, { req, location, path }) => {
         let pos = path.match(/\[(.*?)\]/)[1];
         let tenant = options.tenant_param
           ? req.params.tenant
           : req.body[path.match(/\[(.*?)\]/)[1]].tenant;
-        try {
-          if (Array.isArray(value) && value.length > 0) {
-            value.map((item, index) => {
-              let url;
-              let isLocalIp = false;
-              if (
-                tenant_config[tenant].test_env.includes(
-                  req.body[pos].integration_environment,
-                )
-              ) {
-                isLocalIp =
-                  item.match(reg.regIpv4Local) || item.match(reg.regIpv6Local);
-              }
-              if (!isLocalIp) {
-                try {
-                  url = new URL(item);
-                } catch (err) {
-                  throw new Error("Invalid uri");
-                }
-                if (item.includes("#")) {
-                  throw new Error("Uri can't contain fragments");
-                }
-                if (req.body[pos].application_type === "WEB") {
-                  if (
-                    !tenant_config[tenant].test_env.includes(
-                      req.body[pos].integration_environment,
-                    ) &&
-                    url
-                  ) {
-                    if (
-                      url.protocol !== "https:" &&
-                      !(
-                        url.protocol === "http:" && url.hostname === "localhost"
-                      )
-                    ) {
-                      throw new Error(
-                        "Uri must be a secure url starting with https://",
-                      );
-                    }
-                  } else {
-                    if (
-                      url &&
-                      !(url.protocol === "http:" || url.protocol === "https:")
-                    ) {
-                      throw new Error(
-                        "Uri must be a url starting with http(s):// ",
-                      );
-                    }
-                  }
-                } else {
-                  if (url.protocol === "javascript:") {
-                    throw new Error("Uri can't be of schema 'javascript:'");
-                  } else if (url.protocol === "data:") {
-                    throw new Error("Uri can't be of schema 'data:'");
-                  }
-                }
-                if (item.includes("*")) {
-                  return new Error("Uri can't contain wildcard character '*'");
-                }
-                if (item.includes(" ")) {
-                  return new Error("Uri can't contain spaces");
-                }
-              }
-            });
-          } else {
-            throw new Error(
-              "Service post_logout_redirect_uris must be an array",
-            );
-          }
-          return true;
-        } catch (err) {
-          throw new Error(err);
+        if (!Array.isArray(value) || value.length === 0) {
+          throw new Error(
+            "Service post_logout_redirect_uris must be an array",
+          );
         }
+
+        const isTestEnvironment = tenant_config[tenant].test_env.includes(
+          req.body[pos].integration_environment,
+        );
+        for (const item of value) {
+          const error = await validateRedirectUri(item, {
+            applicationType: req.body[pos].application_type,
+            isTestEnvironment,
+          });
+          if (error) {
+            throw new Error(error);
+          }
+        }
+        return true;
       })
       .customSanitizer((value) => {
         if (value && Array.isArray(value) && value.length > 0) {

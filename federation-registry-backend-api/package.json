@@ -22,9 +22,10 @@
     "email": "andreaskoza@admin.grnet.gr"
   },
   "engines": {
-    "node": ">=7.6"
+    "node": ">=18"
   },
   "dependencies": {
+    "@hyperjump/uri": "^1.3.9",
     "axios": "^1.6.8",
     "base64url": "^3.0.1",
     "bluebird": "3.7.1",
