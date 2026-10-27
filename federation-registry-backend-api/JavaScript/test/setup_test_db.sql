@@ -152,8 +152,8 @@ create table service_state (
   state VARCHAR(256),
   deployment_type VARCHAR(256) DEFAULT NULL,
   outdated BOOLEAN DEFAULT FALSE,
-  last_edited timestamp without time zone DEFAULT NULL,
-  created_at timestamp without time zone DEFAULT NULL,
+  last_edited timestamp with time zone DEFAULT NULL,
+  created_at timestamp with time zone DEFAULT NULL,
   FOREIGN KEY (id) REFERENCES service_details(id) ON DELETE CASCADE
 );
 
@@ -1237,4 +1237,3 @@ INSERT INTO service_tags (service_id,tenant,tag)
 VALUES (1,'tenant_1','tenant_1');
 INSERT INTO service_tags (service_id,tenant,tag)
 VALUES (1,'tenant_1','test');
-
