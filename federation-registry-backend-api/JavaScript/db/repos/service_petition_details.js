@@ -115,6 +115,10 @@ class ServicePetitionDetailsRepository {
       return this.db.oneOrNone(query);
     }
 
+    async getUnreviewedPetition(petition_id,tenant){
+      return this.db.oneOrNone("SELECT protocol,type,service_id,status FROM service_petition_details WHERE id=$1 AND reviewed_at IS NULL AND tenant=$2",[+petition_id,tenant]);
+    }
+
 
     async review(id,approved_by,status,comment,tenant){
        return this.db.any("UPDATE service_petition_details SET status=$1, reviewed_at=current_timestamp, reviewer=$2, comment=$4 WHERE id=$3 AND tenant=$5 RETURNING *",[status,approved_by,+id,comment,tenant]);

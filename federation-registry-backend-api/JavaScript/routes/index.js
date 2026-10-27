@@ -1255,6 +1255,13 @@ router.delete(
               req.params.tenant,
             )
             .then(async (belongs) => {
+              if (!belongs && canManageServices(req)) {
+                belongs =
+                  await t.service_petition_details.getUnreviewedPetition(
+                    req.params.id,
+                    req.params.tenant,
+                  );
+              }
               if (belongs) {
                 const deleted = await t.service_petition_details.deletePetition(
                   req.params.id,
@@ -1963,6 +1970,14 @@ function amsAgentAuth(req, res, next) {
   }
 }
 
+function canManageServices(req) {
+  return (
+    req.user.role.actions.includes("manage_services") &&
+    tenant_config[req.params.tenant] &&
+    tenant_config[req.params.tenant].admin_service_management === true
+  );
+}
+
 // Checking Review Permitions
 function canReview(req, res, next) {
   db.service_petition_details
@@ -2244,6 +2259,12 @@ function asyncPetitionValidation(req, res, next) {
                     req.params.tenant,
                   )
                   .then(async (service) => {
+                    if (!service && canManageServices(req)) {
+                      service = await t.service_details.getProtocolUnrestricted(
+                        req.body.service_id,
+                        req.params.tenant,
+                      );
+                    }
                     if (service && service.protocol) {
                       if (req.body.type === "delete") {
                         next();
@@ -2330,6 +2351,12 @@ function asyncPetitionValidation(req, res, next) {
             req.params.tenant,
           )
           .then(async (petition) => {
+            if (!petition && canManageServices(req)) {
+              petition = await t.service_petition_details.getUnreviewedPetition(
+                req.params.id,
+                req.params.tenant,
+              );
+            }
             if (petition && petition.status !== "request_review") {
               if (req.body.type === "delete") {
                 next();

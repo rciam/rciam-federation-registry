@@ -869,6 +869,230 @@ describe('Service registry API Integration Tests', function() {
     });
 
   });
+  describe('# Manage Services Admin Action',function(){
+    let managed_service, managed_petition;
+    describe('# Create service to be managed',function(){
+      it('should create a new petition and return the id',function(done){
+        userToken = setUser(users.tenant_1.end_user);
+        var req = request(server).post('/tenants/tenant_1/petitions').set({Authorization: userToken}).send({
+          type:'create',
+          ...create.oidc,
+          client_id:'managed_service_client',
+          service_name:'Managed Service'
+        });
+        req.set('Accept','application/json')
+        .expect('Content-Type',/json/)
+        .expect(200)
+        .end(function(err,res){
+          let body = JSON.parse(res.text);
+          expect(body.id).to.be.a('number');
+          expect(res.statusCode).to.equal(200);
+          petition = body.id;
+          done();
+        })
+      });
+      it('should approve petition and create service',function(done){
+        userToken = setUser(users.tenant_1.operator_user);
+        var req = request(server).put('/tenants/tenant_1/petitions/'+petition+'/review').set({Authorization: userToken}).send({type:'approve'});
+        req.set('Accept','application/json')
+        .expect('Content-Type',/json/)
+        .expect(200)
+        .end(function(err,res){
+          let body = JSON.parse(res.text);
+          expect(body.service_id).to.be.a('number');
+          expect(res.statusCode).to.equal(200);
+          managed_service = body.service_id;
+          done();
+        })
+      });
+    });
+    describe('# Admin action disabled (default)',function(){
+      it('should fail to create edit petition for a service the admin does not own',function(done){
+        userToken = setUser(users.tenant_1.manager_user);
+        var req = request(server).post('/tenants/tenant_1/petitions').set({Authorization: userToken}).send({
+          type:'edit',
+          service_id:managed_service,
+          ...edit.oidc,
+          client_id:'managed_service_client'
+        });
+        req.set('Accept','application/json')
+        .expect('Content-Type',/json/)
+        .expect(403)
+        .end(function(err,res){
+          let body = JSON.parse(res.text);
+          expect(res.statusCode).to.equal(403);
+          expect(body.error).to.equal('Could not find petition with id: '+managed_service);
+          done();
+        })
+      });
+    });
+    describe('# Admin action enabled',function(){
+      before(function(){
+        global.tenant_config.tenant_1.admin_service_management = true;
+      });
+      after(function(){
+        global.tenant_config.tenant_1.admin_service_management = false;
+      });
+      it('should still fail for users without the manage_services action',function(done){
+        userToken = setUser(users.tenant_1.operator_user);
+        var req = request(server).post('/tenants/tenant_1/petitions').set({Authorization: userToken}).send({
+          type:'edit',
+          service_id:managed_service,
+          ...edit.oidc,
+          client_id:'managed_service_client'
+        });
+        req.set('Accept','application/json')
+        .expect('Content-Type',/json/)
+        .expect(403)
+        .end(function(err,res){
+          let body = JSON.parse(res.text);
+          expect(res.statusCode).to.equal(403);
+          expect(body.error).to.equal('Could not find petition with id: '+managed_service);
+          done();
+        })
+      });
+      it('should create an edit petition for a service the admin does not own',function(done){
+        userToken = setUser(users.tenant_1.manager_user);
+        var req = request(server).post('/tenants/tenant_1/petitions').set({Authorization: userToken}).send({
+          type:'edit',
+          service_id:managed_service,
+          ...edit.oidc,
+          client_id:'managed_service_client',
+          service_name:'Managed Service Edited'
+        });
+        req.set('Accept','application/json')
+        .expect('Content-Type',/json/)
+        .expect(200)
+        .end(function(err,res){
+          let body = JSON.parse(res.text);
+          expect(body.id).to.be.a('number');
+          expect(res.statusCode).to.equal(200);
+          managed_petition = body.id;
+          done();
+        })
+      });
+      it('should fail to create a second petition while one is open',function(done){
+        userToken = setUser(users.tenant_1.manager_user);
+        var req = request(server).post('/tenants/tenant_1/petitions').set({Authorization: userToken}).send({
+          type:'edit',
+          service_id:managed_service,
+          ...edit.oidc,
+          client_id:'managed_service_client'
+        });
+        req.set('Accept','application/json')
+        .expect('Content-Type',/json/)
+        .expect(403)
+        .end(function(err,res){
+          let body = JSON.parse(res.text);
+          expect(res.statusCode).to.equal(403);
+          expect(body.error).to.equal('Cannot create new petition because there is an open petition existing for target service');
+          done();
+        })
+      });
+      it('should update the petition as admin',function(done){
+        userToken = setUser(users.tenant_1.manager_user);
+        var req = request(server).put('/tenants/tenant_1/petitions/'+managed_petition).set({Authorization: userToken}).send({
+          type:'edit',
+          service_id:managed_service,
+          ...edit.oidc,
+          client_id:'managed_service_client',
+          service_name:'Managed Service Edited Twice'
+        });
+        req.set('Accept','application/json')
+        .expect('Content-Type',/json/)
+        .expect(200)
+        .end(function(err,res){
+          expect(res.statusCode).to.equal(200);
+          done();
+        })
+      });
+      it('should cancel the petition as admin',function(done){
+        userToken = setUser(users.tenant_1.manager_user);
+        var req = request(server).delete('/tenants/tenant_1/petitions/'+managed_petition).set({Authorization: userToken});
+        req.set('Accept','application/json')
+        .expect('Content-Type',/json/)
+        .expect(200)
+        .end(function(err,res){
+          expect(res.statusCode).to.equal(200);
+          done();
+        })
+      });
+      it('should create an edit petition as admin',function(done){
+        userToken = setUser(users.tenant_1.manager_user);
+        var req = request(server).post('/tenants/tenant_1/petitions').set({Authorization: userToken}).send({
+          type:'edit',
+          service_id:managed_service,
+          ...edit.oidc,
+          client_id:'managed_service_client',
+          service_name:'Managed Service Edited'
+        });
+        req.set('Accept','application/json')
+        .expect('Content-Type',/json/)
+        .expect(200)
+        .end(function(err,res){
+          let body = JSON.parse(res.text);
+          expect(body.id).to.be.a('number');
+          expect(res.statusCode).to.equal(200);
+          managed_petition = body.id;
+          done();
+        })
+      });
+      it('should approve the edit petition as admin',function(done){
+        userToken = setUser(users.tenant_1.manager_user);
+        var req = request(server).put('/tenants/tenant_1/petitions/'+managed_petition+'/review').set({Authorization: userToken}).send({type:'approve'});
+        req.set('Accept','application/json')
+        .expect('Content-Type',/json/)
+        .expect(200)
+        .end(function(err,res){
+          let body = JSON.parse(res.text);
+          expect(res.statusCode).to.equal(200);
+          expect(body.service_id).to.equal(managed_service);
+          done();
+        })
+      });
+      it('should get the edited service',function(done){
+        userToken = setUser(users.tenant_1.end_user);
+        var req = request(server).get('/tenants/tenant_1/services/'+managed_service).set({Authorization: userToken});
+        req.set('Accept','application/json')
+        .expect('Content-Type',/json/)
+        .expect(200)
+        .end(function(err,res){
+          let body = JSON.parse(res.text);
+          expect(res.statusCode).to.equal(200);
+          expect(body.service.service_name).to.equal('Managed Service Edited');
+          done();
+        })
+      });
+      it('should create a delete petition as admin',function(done){
+        userToken = setUser(users.tenant_1.manager_user);
+        var req = request(server).post('/tenants/tenant_1/petitions').set({Authorization: userToken}).send({
+          type:'delete',
+          service_id:managed_service
+        });
+        req.set('Accept','application/json')
+        .expect('Content-Type',/json/)
+        .expect(200)
+        .end(function(err,res){
+          let body = JSON.parse(res.text);
+          expect(body.id).to.be.a('number');
+          expect(res.statusCode).to.equal(200);
+          managed_petition = body.id;
+          done();
+        })
+      });
+      it('should approve the delete petition as admin',function(done){
+        userToken = setUser(users.tenant_1.manager_user);
+        var req = request(server).put('/tenants/tenant_1/petitions/'+managed_petition+'/review').set({Authorization: userToken}).send({type:'approve'});
+        req.set('Accept','application/json')
+        .expect('Content-Type',/json/)
+        .expect(200)
+        .end(function(err,res){
+          expect(res.statusCode).to.equal(200);
+          done();
+        })
+      });
+    });
+  });
   describe('# Deployer Agent',function(){
     it('should get configured deployer agents',function(done){
       var req = request(server).get('/tenants/tenant_1/agents').set('X-Api-Key',process.env.ADMIN_AUTH_KEY);
