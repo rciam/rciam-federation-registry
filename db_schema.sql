@@ -249,8 +249,8 @@ create table service_petition_details (
   reviewer VARCHAR(256) DEFAULT NULL,
   aup_uri VARCHAR(256) DEFAULT NULL,
   group_id INTEGER DEFAULT NULL,
-  last_edited timestamp without time zone DEFAULT NULL,
-  reviewed_at timestamp without time zone DEFAULT NULL,
+  last_edited timestamp with time zone DEFAULT NULL,
+  reviewed_at timestamp with time zone DEFAULT NULL,
   organization_id INTEGER,
   FOREIGN KEY (organization_id) REFERENCES organizations(organization_id),
   FOREIGN KEY (tenant) REFERENCES tenants(name),
@@ -398,6 +398,5 @@ create table service_tags (
   FOREIGN KEY (tenant) REFERENCES tenants(name) ON DELETE CASCADE,
   PRIMARY KEY (tag,service_id)
 );
-
 
 
