@@ -1,5 +1,6 @@
 import React from "react";
 import { Alert, Badge, Card, Col, Row } from "react-bootstrap";
+import { formatLocalDateTime } from "../dateTime.js";
 
 const requestTypeKey = {
   create: "registration",
@@ -10,7 +11,7 @@ const requestTypeKey = {
 const formatDate = (value) => {
   if (!value) return null;
 
-  return new Date(value).toLocaleString();
+  return formatLocalDateTime(value);
 };
 
 export default function PetitionHistoryInfo({ petition, t }) {
