@@ -15,6 +15,7 @@ import {calcDiff} from '../helpers.js'
 import {tenantContext} from '../context.js';
 import { diff } from 'deep-diff';
 import PetitionHistoryInfo from './PetitionHistoryInfo.js';
+import {formatLocalDate} from '../dateTime.js';
 
 
 export const HistoryRequest = () =>{
@@ -243,7 +244,7 @@ export const HistoryList = (props) => {
                   : 'success';
             return(
             <tr key={index}>
-              <td>{item.reviewed_at?item.reviewed_at.slice(0,10).split('-').join('/'):t('history_not_reviewed')}</td>
+              <td>{item.reviewed_at?formatLocalDate(item.reviewed_at):t('history_not_reviewed')}</td>
               <td><Badge className="status-badge" variant='info'>{requestStatusLabel}</Badge></td>
               <td><Badge className="status-badge" variant={statusBadgeVariant}>{statusBadgeText}</Badge></td>
               <td>    <Button variant="secondary" onClick={()=>{history.push("/"+tenant_name+"/services/"+service_id+"/requests/"+item.id+"/history")}}>

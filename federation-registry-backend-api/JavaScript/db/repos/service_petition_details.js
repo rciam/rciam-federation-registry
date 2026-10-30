@@ -82,8 +82,7 @@ class ServicePetitionDetailsRepository {
       return this.db.any('SELECT id,service_description,logo_uri,service_name,requester,type,service_id,comment,status,integration_environment FROM service_petition_details WHERE requester = $1 AND reviewed_at IS NULL', sub);
     }
     async approveCreation(id,approved_by,status,comment,service_id,tenant){
-       let date = new Date(Date.now());
-       return this.db.none("UPDATE service_petition_details SET status=$1, reviewed_at=$2, reviewer=$3,service_id=$6, comment=$5 WHERE id=$4 AND tenant=$7",[status,date,approved_by,+id,comment,+service_id,tenant]);
+       return this.db.none("UPDATE service_petition_details SET status=$1, reviewed_at=current_timestamp, reviewer=$2, service_id=$5, comment=$4 WHERE id=$3 AND tenant=$6",[status,approved_by,+id,comment,+service_id,tenant]);
     }
 
     async belongsToRequesterHistory(petition_id,sub){
@@ -118,8 +117,7 @@ class ServicePetitionDetailsRepository {
 
 
     async review(id,approved_by,status,comment,tenant){
-       let date = new Date(Date.now());
-       return this.db.any("UPDATE service_petition_details SET status=$1, reviewed_at=$2, reviewer=$3, comment=$5 WHERE id=$4 AND tenant=$6 RETURNING *",[status,date,approved_by,+id,comment,tenant]);
+       return this.db.any("UPDATE service_petition_details SET status=$1, reviewed_at=current_timestamp, reviewer=$2, comment=$4 WHERE id=$3 AND tenant=$5 RETURNING *",[status,approved_by,+id,comment,tenant]);
     }
 
     async requestReview(id,comment){

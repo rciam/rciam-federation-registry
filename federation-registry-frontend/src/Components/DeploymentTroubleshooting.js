@@ -14,6 +14,7 @@ import Button from 'react-bootstrap/Button';
 import {useParams } from "react-router-dom";
 import {tenantContext} from '../context.js';
 import {ConfirmationModal} from './Modals.js';
+import {formatLocalDateTime} from '../dateTime.js';
 
 
 const DeploymentTroubleshooting = (props) => {
@@ -88,7 +89,7 @@ const DeploymentTroubleshooting = (props) => {
               <React.Fragment>
                 <b>Error Description: </b>{props.deploymentError.error_description}
                 <br style={{marginBottom:'0.3rem'}}/>
-                <b>Date</b>: {props.deploymentError.error_date.slice(0,10)} {props.deploymentError.error_date.slice(11,20)}
+                <b>Date</b>: {formatLocalDateTime(props.deploymentError.error_date)}
               </React.Fragment>
               :
               <React.Fragment>

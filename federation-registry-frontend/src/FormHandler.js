@@ -21,6 +21,7 @@ import { diff } from "deep-diff";
 import { useTranslation } from "react-i18next";
 import { tenantContext, userContext } from "./context.js";
 import { calcDiff } from "./helpers.js";
+import { formatLocalDateTime } from "./dateTime.js";
 
 const EditService = (props) => {
   let history = useHistory();
@@ -547,13 +548,8 @@ const ViewRequest = (props) => {
           {petitionData.metadata.type === "edit" ? (
             <React.Fragment>
               <Alert variant="warning" className="form-alert">
-                {t("reconfiguration_info")} It was submitted on{" "}
-                {petitionData.metadata.submitted_at.slice(12, 19)}(GMT+3) at{" "}
-                {petitionData.metadata.submitted_at
-                  .slice(0, 10)
-                  .split("-")
-                  .join("/")}
-                .
+                {t("reconfiguration_info")} It was submitted at{" "}
+                {formatLocalDateTime(petitionData.metadata.submitted_at)}.
               </Alert>
               {editPetition && changes ? (
                 <React.Fragment>
@@ -583,13 +579,8 @@ const ViewRequest = (props) => {
           ) : petitionData.metadata.type === "create" ? (
             <React.Fragment>
               <Alert variant="warning" className="form-alert">
-                {t("edit_create_info")} It was submitted on{" "}
-                {petitionData.metadata.submitted_at.slice(12, 19)}(GMT+3) at{" "}
-                {petitionData.metadata.submitted_at
-                  .slice(0, 10)
-                  .split("-")
-                  .join("/")}
-                .
+                {t("edit_create_info")} It was submitted at{" "}
+                {formatLocalDateTime(petitionData.metadata.submitted_at)}.
               </Alert>
               {petitionData ? (
                 <React.Fragment>
@@ -617,13 +608,8 @@ const ViewRequest = (props) => {
           ) : (
             <React.Fragment>
               <Alert variant="warning" className="form-alert">
-                {t("edit_delete_info")} It was submitted on{" "}
-                {petitionData.metadata.submitted_at.slice(12, 19)}(GMT+3) at{" "}
-                {petitionData.metadata.submitted_at
-                  .slice(0, 10)
-                  .split("-")
-                  .join("/")}
-                .
+                {t("edit_delete_info")} It was submitted at{" "}
+                {formatLocalDateTime(petitionData.metadata.submitted_at)}.
               </Alert>
               {service ? (
                 <React.Fragment>
@@ -791,11 +777,7 @@ const ViewService = (props) => {
           {service.created_at ? (
             <Alert variant="primary" className="form-alert">
               Service was registered at:{" "}
-              <b>
-                {service.created_at.slice(0, 10).split("-").join("/") +
-                  " " +
-                  service.created_at.slice(11, 19).split("-").join("/")}
-              </b>
+              <b>{formatLocalDateTime(service.created_at)}</b>
             </Alert>
           ) : null}
           <ServiceForm
@@ -836,7 +818,7 @@ const ReviewInfoAlert = ({ title, comment, metadata }) => {
 
   const formatDate = (value) => {
     if (!value) return null;
-    return new Date(value).toLocaleString();
+    return formatLocalDateTime(value);
   };
 
   const reviewer = metadata?.reviewer;

@@ -70,6 +70,7 @@ import { SamlAttributesInput } from "./Components/SamlAttributes.js";
 import { ConfirmationModal } from "./Components/Modals";
 import MoveDialog from "./Components/MoveDialog";
 import ServiceTypeSelector from "./Components/ServiceTypeSelector";
+import { validateRedirectUri } from "./redirectUriValidation.js";
 
 const { reg } = require("./regex.js");
 var availabilityCheckTimeout;
@@ -565,85 +566,16 @@ const ServiceForm = (props) => {
                       if (!value) {
                         return true;
                       }
-                      let url;
-                      if (
-                        tenant?.config?.test_env.includes(
-                          integrationEnvironment,
-                        )
-                      ) {
-                        const isLocalIp =
-                          reg.regIpv4Local.test(value) ||
-                          reg.regIpv6Local.test(value);
-
-                        if (isLocalIp) {
-                          return true;
-                        }
-                      }
-                      try {
-                        url = new URL(value);
-                      } catch (err) {
-                        return this.createError({
-                          message: "Invalid uri",
-                        });
-                      }
-                      if (value.includes("#")) {
-                        return this.createError({
-                          message: "Uri can't contain fragments",
-                        });
-                      }
-                      if (application_type === "WEB") {
-                        if (
-                          !tenant?.config?.test_env.includes(
+                      const error = validateRedirectUri(value, {
+                        applicationType: application_type,
+                        isTestEnvironment:
+                          tenant?.config?.test_env.includes(
                             integrationEnvironment,
-                          ) &&
-                          url
-                        ) {
-                          if (
-                            url.protocol !== "https:" &&
-                            !(
-                              url.protocol === "http:" &&
-                              url.hostname === "localhost"
-                            )
-                          ) {
-                            return this.createError({
-                              message:
-                                "Uri must be a secure url starting with https://",
-                            });
-                          }
-                        } else if (
-                          url &&
-                          !(
-                            url.protocol === "http:" ||
-                            url.protocol === "https:"
-                          )
-                        ) {
-                          return this.createError({
-                            message:
-                              "Uri must be a url starting with http(s):// ",
-                          });
-                        }
-                      } else {
-                        const protocol = url.protocol.replace(/:$/, "");
-
-                        if (protocol === "javascript") {
-                          return this.createError({
-                            message: "Uri can't be of schema 'javascript:'",
-                          });
-                        }
-                        if (protocol === "data") {
-                          return this.createError({
-                            message: "Uri can't be of schema 'data:'",
-                          });
-                        }
-                      }
-                      if (value.includes("*")) {
+                          ) || false,
+                      });
+                      if (error) {
                         return this.createError({
-                          message: "Uri can't contain wildcard character '*'",
-                        });
-                      }
-                      if (value.includes(" ")) {
-                        return this.createError({
-                          message: "Uri can't contain spaces",
+                          message: error,
                         });
                       }
                       return true;
@@ -707,87 +639,18 @@ const ServiceForm = (props) => {
                       if (!value) {
                         return true;
                       }
-                      let url;
-                      if (
-                        tenant?.config?.test_env.includes(
-                          integrationEnvironment,
-                        )
-                      ) {
-                        const isLocalIp =
-                          reg.regIpv4Local.test(value) ||
-                          reg.regIpv6Local.test(value);
-
-                        if (isLocalIp) {
-                          return true;
-                        }
-                      }
-                      try {
-                        url = new URL(value);
-                      } catch (err) {
-                        return this.createError({
-                          message: "Invalid uri",
-                        });
-                      }
-                      if (value.includes("#")) {
-                        return this.createError({
-                          message: "Uri can't contain fragments",
-                        });
-                      }
-                      if (application_type === "WEB") {
-                        if (
-                          !tenant?.config?.test_env.includes(
+                      const error = validateRedirectUri(value, {
+                        applicationType: application_type,
+                        isTestEnvironment:
+                          tenant?.config?.test_env.includes(
                             integrationEnvironment,
-                          ) &&
-                          url
-                        ) {
-                          if (
-                            url.protocol !== "https:" &&
-                            !(
-                              url.protocol === "http:" &&
-                              url.hostname === "localhost"
-                            )
-                          ) {
-                            return this.createError({
-                              message:
-                                "Uri must be a secure url starting with https://",
-                            });
-                          }
-                        } else if (
-                          url &&
-                          !(
-                            url.protocol === "http:" ||
-                            url.protocol === "https:"
-                          )
-                        ) {
-                          return this.createError({
-                            message:
-                              "Uri must be a url starting with http(s):// ",
-                          });
-                        }
-                      } else {
-                        const protocol = url.protocol.replace(/:$/, "");
-                        if (protocol === "javascript") {
-                          return this.createError({
-                            message: "Uri can't be of schema 'javascript:'",
-                          });
-                        }
-                        if (protocol === "data") {
-                          return this.createError({
-                            message: "Uri can't be of schema 'data:'",
-                          });
-                        }
-                      }
-                      if (value.includes("*")) {
+                          ) || false,
+                      });
+                      if (error) {
                         return this.createError({
-                          message: "Uri can't contain wildcard character '*'",
+                          message: error,
                         });
                       }
-                      if (value.includes(" ")) {
-                        return this.createError({
-                          message: "Uri can't contain spaces",
-                        });
-                      }
-
                       return true;
                     },
                   ),
@@ -2866,7 +2729,7 @@ const ServiceForm = (props) => {
                       >
                         <ServiceTypeSelector
                           value={values.service_type}
-                          editable={isRegistrationRequest}
+                          editable={isRegistrationRequest && !props.copy}
                           order={
                             tenant?.config?.service_type_settings?.order || []
                           }
