@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Changed
 
-- Raised the backend's minimum supported Node.js version to 18.
+- Raised the backend's minimum supported Node.js version to 22.
 - Store service and petition lifecycle timestamps as timezone-aware UTC instants.
 - Display service and petition timestamps in the viewer's browser timezone throughout the user interface and CSV export.
 
