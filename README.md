@@ -25,12 +25,11 @@ The deployment process has been automated with the use of [Ansible](https://www.
 
 ### Dependencies
 
-Federation registry requires [Nodejs](https://nodejs.org/en/) and a [PostgreSQL](https://www.postgresql.org/) database
-to run.
-Versions used in project development:
+Federation Registry requires [Node.js](https://nodejs.org/en/) and a [PostgreSQL](https://www.postgresql.org/) database
+to run. Minimum supported versions:
 
-- node v14.19.3
-- PostgreSQL 12.4
+- Node.js 22
+- PostgreSQL 15
 
 ### Database
 
@@ -189,5 +188,3 @@ Each user role is associated with a set of actions. Here is a list of the suppor
 - **view_groups**: User can view any group. 
 - **view_errors**: User has access to the deployment errors.
 - **export_services**: User can export services.
-
-
