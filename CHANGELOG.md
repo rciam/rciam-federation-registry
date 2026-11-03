@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+# [2.3.2] 03/11/2026
+
+## Fixed
+
+- Corrected backend validation of the OIDC device-code lifetime to use the configured maximum from `form.more_info.device_code_validity_seconds`, with a default maximum of 1800 seconds.
+
 # [2.3.1] 30/10/2026
 
 ## Changed
