@@ -1743,7 +1743,11 @@ const serviceValidationRules = (options, req) => {
         let tenant = options.tenant_param
           ? req.params.tenant
           : req.body[path.match(/\[(.*?)\]/)[1]].tenant;
-        let max = tenant_config[tenant].form.device_code_validity_seconds;
+        const config =
+          tenant_config[tenant].form.more_info?.device_code_validity_seconds;
+        const max =
+          config?.max ??
+          1800;
 
         if (isEmpty(value)) {
           return true;
