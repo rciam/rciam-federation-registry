@@ -19,7 +19,7 @@ let consumeChannel;
 let queueNames = {};
 let setStateArray = [];
 let setStateTask;
-let ResultMessageBatch = new ResultMessageBatchClass();
+let resultMessageBatch = new ResultMessageBatchClass();
 let sendResultTask;
 let sendResultTaskRunning = false;
 let isReconnecting = false;
@@ -83,7 +83,7 @@ async function setupRabbitMQChannels() {
   const callback = async function callback(msg) {
     if (msg === null) return;
     try {
-      ResultMessageBatch.addMessage(msg.content.toString(), msg);
+      resultMessageBatch.addMessage(msg.content.toString(), msg);
       if (!sendResultTaskRunning) {
         sendResultTask = setInterval(() => {
           sendResult();
@@ -159,7 +159,7 @@ function scheduleRestart() {
     clearInterval(sendResultTask);
     sendResultTaskRunning = false;
   }
-  ResultMessageBatch.clear();
+  resultMessageBatch.clear();
 
 if (connection) {
   try {
@@ -233,16 +233,16 @@ async function sendResult() {
   axios
     .post(
       ingest_url,
-      ResultMessageBatch.toJSON(),
+      resultMessageBatch.toJSON(),
       publishResultsOptions,
     )
     .then((res) => {
       if (res.status != 200) {
         console.log("Could not send result to fedreg, trying again...");
       } else {
-        const messagesToAck = ResultMessageBatch.getAmqpMessages();
+        const messagesToAck = resultMessageBatch.getAmqpMessages();
         messagesToAck.forEach((msg) => consumeChannel.ack(msg));
-        ResultMessageBatch.clear();
+        resultMessageBatch.clear();
 
         clearInterval(sendResultTask);
         sendResultTaskRunning = false;
