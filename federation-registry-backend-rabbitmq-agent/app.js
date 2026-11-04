@@ -306,7 +306,7 @@ async function handleSuccess(response) {
       service.json.post_logout_redirect_uris.length > 0
     ) {
       service.json.redirect_uris = [
-        ...service.json.redirect_uris,
+        ...(service.json.redirect_uris || []),
         ...service.json.post_logout_redirect_uris,
       ];
     }
