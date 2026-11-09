@@ -3822,6 +3822,16 @@ const ServiceForm = (props) => {
                                   >
                                     <SamlAttributesInput
                                       name="requested_attributes"
+                                      editableName={
+                                        tenant.form_config.more_info
+                                          .requested_attributes.editable_name !==
+                                        false
+                                      }
+                                      editableRequired={
+                                        tenant.form_config.more_info
+                                          .requested_attributes
+                                          .editable_required !== false
+                                      }
                                       values={
                                         values.requested_attributes
                                           ? values.requested_attributes
