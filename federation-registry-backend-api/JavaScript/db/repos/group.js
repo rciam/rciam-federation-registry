@@ -15,6 +15,15 @@ class GroupRepository {
     });
   }
 
+    async getSubs(group_id) {
+      return this.db.any(
+        `SELECT sub, group_manager, group_id
+         FROM group_subs
+         WHERE group_id = $1`,
+        [+group_id]
+      );
+    }
+
   async newMemberNotification(invitation_data){
     this.db.any(sql.getGroupManagers,{group_id: +invitation_data.group_id,tenant:invitation_data.tenant}).then(managers => {
       invitation_data.url = (managers[0].service_id?"services/"+managers[0].service_id+"/groups/"+invitation_data.group_id:"requests/"+managers[0].petition_id+"/groups/"+invitation_data.group_id);
@@ -67,6 +76,27 @@ class GroupRepository {
   async addMember(data){
     return this.db.one('INSERT INTO group_subs (sub,group_manager,group_id) VALUES($1,$2,$3) RETURNING sub',[data.sub,data.group_manager,+data.group_id]);
   }
+
+  async upsertMember(data) {
+      return this.db.oneOrNone(
+        ` INSERT INTO group_subs (
+            sub,
+            group_manager,
+            group_id
+          )
+          VALUES ($1, $2, $3)
+          ON CONFLICT (sub, group_id)
+          DO UPDATE SET
+            group_manager = EXCLUDED.group_manager
+          RETURNING sub
+        `,
+        [
+          data.sub,
+          data.group_manager,
+          +data.group_id,
+        ],
+  );
+}
 
   async isGroupMember(sub,group_id){
     return this.db.oneOrNone('SELECT EXISTS(SELECT 1 FROM group_subs WHERE sub=$1 AND group_id=$2)',[sub,+group_id]);
