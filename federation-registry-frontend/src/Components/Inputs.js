@@ -25,7 +25,7 @@ import "react-bootstrap-typeahead/css/Typeahead.css";
 import config from "../config.json";
 import { useParams } from "react-router-dom";
 import parse from "html-react-parser";
-import { formatDuration } from "../helpers.js";
+import { formatDuration, urlReachabilityEnabled } from "../helpers.js";
 
 /*
 const [show, setShow] = useState(false);
@@ -1766,7 +1766,7 @@ export function LogoInput(props) {
               className="logo-input"
               referrerPolicy="no-referrer"
               src={
-                props.value
+                props.value && urlReachabilityEnabled(config)
                   ? props.value
                   : process.env.PUBLIC_URL + "/logo_placeholder.gif"
               }
