@@ -185,6 +185,7 @@ Each user role is associated with a set of actions. Here is a list of the suppor
 - **invite_to_group**: User can manage owners of any service.
 - **error_action**: User can troubleshoot deployment errors 
 - **manage_tags**: User can add tags to any service.
+- **manage_services**: User can create, update and cancel edit/deregistration requests for services they don't own. Requires the `admin_service_management` option to be enabled in the tenant configuration (disabled by default).
 - **view_groups**: User can view any group. 
 - **view_errors**: User has access to the deployment errors.
 - **export_services**: User can export services.
