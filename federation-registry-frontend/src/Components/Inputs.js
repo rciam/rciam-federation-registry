@@ -1135,10 +1135,7 @@ export function RefreshToken(props) {
       </Form.Text>
       {props.values.scope?.includes("offline_access") ? (
         <React.Fragment>
-
-          {!tenant.form_config.disabled_fields.includes(
-            "reuse_refresh_token"
-          ) ? (
+          {!props.reuseRefreshTokenHidden ? (
             <React.Fragment>
               <div
                 className={
@@ -1153,7 +1150,9 @@ export function RefreshToken(props) {
                   label={t("form_reuse_refresh_token")}
                   changed={props.changed ? props.changed.reuse_refresh_token : null}
                   checked={props.values.reuse_refresh_token}
-                  disabled={props.disabled}
+                  disabled={
+                    props.disabled || props.reuseRefreshTokenDisabled
+                  }
                   onChange={props.onChange}
                 />
               </div>

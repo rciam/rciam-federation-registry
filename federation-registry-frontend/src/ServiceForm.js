@@ -3362,6 +3362,16 @@ const ServiceForm = (props) => {
                                   >
                                     <RefreshToken
                                       values={values}
+                                      reuseRefreshTokenHidden={
+                                        isServiceTypeFieldHidden(
+                                          "reuse_refresh_token",
+                                        )
+                                      }
+                                      reuseRefreshTokenDisabled={
+                                        isServiceTypeFieldDisabled(
+                                          "reuse_refresh_token",
+                                        )
+                                      }
                                       onBlur={handleBlur}
                                       isInvalid={
                                         hasSubmitted
