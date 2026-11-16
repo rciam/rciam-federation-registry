@@ -147,7 +147,7 @@ async function setupQueues() {
   }
 }
 
-function scheduleRestart() {
+async function scheduleRestart() {
   if (restartTimeout) return;
 
   if (runIntervalTask) {
