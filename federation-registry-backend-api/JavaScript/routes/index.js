@@ -7,6 +7,8 @@ const {
   formatPetition,
   getServiceListValidation,
   postInvitationValidation,
+  postUserValidation,
+  putMemberValidation,
   serviceValidationRules,
   putAgentValidation,
   postAgentValidation,
@@ -660,6 +662,46 @@ router.get("/tenants/:tenant/user", authenticate, (req, res, next) => {
   }
 });
 
+// Add user endpoint
+router.post(
+  "/tenants/:tenant/user",
+  amsAgentBypass(adminAuth),
+  postUserValidation(),
+  validate,
+  async (req, res, next) => {
+    try {
+      await db.tx("user-check", async (t) => {
+        const existingUser = await t.user.getUser(
+          req.body.sub,
+          req.params.tenant,
+        );
+        if (existingUser) {
+          return res.status(200).send({ id: existingUser.id });
+        }
+        const role = await t.user_role.getRole(
+          req.body.eduperson_entitlement,
+          req.params.tenant,
+        );
+        if (!role) {
+          return res.status(422).send("No role found for the given entitlement");
+        }
+        req.body.role_id = role.id;
+        const result = await t.user_info.add(req.body, req.params.tenant);
+        if (result) {
+          await t.user_edu_person_entitlement.add(
+            req.body.eduperson_entitlement,
+            result.id,
+          );
+        }
+        return res.status(201).send({ id: result ? result.id : null });
+      });
+    } catch (e) {
+      console.log(e);
+      return res.status(500).send("Error adding user");
+    }
+  },
+);
+
 const format_error_email_data = (service_info, error_info, admins) => {
   email_data = [];
   error_info.forEach((error) => {
@@ -1022,14 +1064,9 @@ router.get("/agent/get_new_configurations", amsAgentAuth, (req, res, next) => {
 
 // It returns a service with form data
 // GET SERVICE Endpoint
-router.get("/tenants/:tenant/services/:id", authenticate, (req, res, next) => {
-  if (req.user.role.actions.includes("get_own_service")) {
+router.get("/tenants/:tenant/services/:id", amsAgentBypass(authenticate, canGetService, doesOwnService), (req, res, next) => {
     try {
       return db.task("find-service-data", async (t) => {
-        await t.service_details
-          .getProtocol(req.params.id, req.user.sub, req.params.tenant)
-          .then(async (exists) => {
-            if (exists || req.user.role.actions.includes("get_service")) {
               await t.service
                 .get(req.params.id, req.params.tenant)
                 .then(async (service) => {
@@ -1043,7 +1080,7 @@ router.get("/tenants/:tenant/services/:id", authenticate, (req, res, next) => {
                             delete service_state.id;
                             res.status(200).json({
                               service: service.service_data,
-                              owned: exists ? true : false,
+                              owned: req.own_service,
                               ...service_state,
                               error: service_error,
                             });
@@ -1055,11 +1092,7 @@ router.get("/tenants/:tenant/services/:id", authenticate, (req, res, next) => {
                 })
                 .catch((err) => {
                   next(err);
-                });
-            } else {
-              res.status(404).end();
-            }
-          })
+                })
           .catch((err) => {
             next(err);
           });
@@ -1067,9 +1100,6 @@ router.get("/tenants/:tenant/services/:id", authenticate, (req, res, next) => {
     } catch (err) {
       next(err);
     }
-  } else {
-    res.status(401).json({ err: "Requested action not authorised" });
-  }
 });
 
 // Get all petitions linked to a service
@@ -1434,11 +1464,34 @@ router.get(
   },
 );
 
+// Get group subs
+router.get(
+  "/tenants/:tenant/groups/:group_id/members/subs",
+  amsAgentBypass(
+  authenticate,
+  view_group),
+  (req, res, next) => {
+    try {
+      db.group
+        .getSubs(req.params.group_id)
+        .then((group_members) => {
+          if (group_members) {
+            res.status(200).json({ group_members });
+          } else {
+            res.status(404).end();
+          }
+        });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+
 // Remove member from group
 router.delete(
   "/tenants/:tenant/groups/:group_id/members/:sub",
-  authenticate,
-  is_group_manager,
+  amsAgentBypass(authenticate, is_group_manager),
   (req, res, next) => {
     try {
       db.group
@@ -1446,6 +1499,44 @@ router.delete(
         .then((response) => {
           if (response) {
             res.status(200).end();
+          } else {
+            res.status(204).end();
+          }
+        })
+        .catch((err) => {
+          next(err);
+        });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// Add member to group
+router.put(
+  "/tenants/:tenant/groups/:group_id/members/:sub",
+  amsAgentBypass(authenticate, is_group_manager),
+  putMemberValidation(),
+  validate,
+  (req, res, next) => {
+    try {
+      const { group_manager, send_invitation } = req.body;
+
+      db.group
+        .upsertMember({
+          sub: req.params.sub,
+          group_id: req.params.group_id,
+          group_manager,
+        })
+        .then((response) => {
+          if (response) {
+            if (send_invitation) {
+                db.group.newMemberNotification({
+                    group_id: req.params.group_id,
+                    tenant: req.params.tenant,
+                });
+            }
+            res.status(201).end();
           } else {
             res.status(204).end();
           }
@@ -1953,14 +2044,69 @@ function authenticate_allow_unauthorised(req, res, next) {
 }
 
 // Authenticating AmsAgent
+function isAmsAgent(req) {
+  return req.header("X-Api-Key") === process.env.AMS_AGENT_KEY;
+}
+
 function amsAgentAuth(req, res, next) {
-  if (req.header("X-Api-Key") === process.env.AMS_AGENT_KEY) {
+  if (isAmsAgent(req)) {
     next();
   } else {
     res.status(401);
     log.warn("Unauthenticated request", {}, { req, res });
     res.json({ success: false, error: "Authentication failure" });
   }
+}
+
+// checks whether call with agent api key, if not performs the passed middleware as usual
+function amsAgentBypass(...middlewares) {
+  return (req, res, next) => {
+    if (isAmsAgent(req)) {
+      next();
+    } else {
+        let index = 0;
+
+    const run = (err) => {
+      if (err) return next(err);
+      const middleware = middlewares[index++];
+      if (!middleware) return next();
+      middleware(req, res, run);
+    };
+
+    run();
+    }
+  };
+}
+
+function canGetService(req, res, next) {
+  if (
+    isAmsAgent(req) ||
+    req.user?.role?.actions?.includes("get_own_service")
+  ) {
+    return next();
+  }
+
+  return res
+    .status(401)
+    .json({ err: "Requested action not authorised" });
+}
+
+function doesOwnService(req, res, next) {
+  req.own_service = false;
+
+  if (!req.user?.sub) {
+    return next();
+  }
+
+  db.service_details
+    .getProtocol(req.params.id, req.user.sub, req.params.tenant)
+    .then((result) => {
+      req.own_service = !!result;
+      next();
+    })
+    .catch((err) => {
+      next(err);
+    });
 }
 
 // Checking Review Permitions
