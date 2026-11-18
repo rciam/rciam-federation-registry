@@ -74,6 +74,10 @@ class ServiceDetailsRepository {
       return this.db.oneOrNone("SELECT protocol FROM ((SELECT protocol,group_id,deleted,id FROM service_details WHERE id=$1 AND tenant=$3) as service_details LEFT JOIN service_state ON service_details.id=service_state.id AND (deleted=false OR (deleted=TRUE AND state!='deployed'))) as service LEFT JOIN (SELECT id AS group_id,sub FROM groups LEFT JOIN group_subs ON groups.id=group_subs.group_id WHERE sub=$2) AS foo USING (group_id) WHERE sub IS NOT NULL",[+service_id,sub,tenant]);
     }
 
+    async getProtocolUnrestricted(service_id,tenant){
+      return this.db.oneOrNone("SELECT protocol FROM ((SELECT protocol,group_id,deleted,id FROM service_details WHERE id=$1 AND tenant=$2) as service_details LEFT JOIN service_state ON service_details.id=service_state.id AND (deleted=false OR (deleted=TRUE AND state!='deployed'))) as service",[+service_id,tenant]);
+    }
+
 
     async belongsToRequester(service_id,sub){
       if(sub==='admin'){

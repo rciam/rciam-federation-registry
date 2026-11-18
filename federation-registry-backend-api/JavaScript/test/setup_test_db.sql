@@ -1041,6 +1041,8 @@ INSERT INTO role_actions(role_id,action)
 VALUES(3,'send_notifications');
 INSERT INTO role_actions(role_id,action)
 VALUES(3,'manage_tags');
+INSERT INTO role_actions(role_id,action)
+VALUES(3,'manage_services');
 
 
 INSERT INTO role_actions(role_id,action)
@@ -1145,6 +1147,8 @@ INSERT INTO role_actions(role_id,action)
 VALUES(6,'review_petition');
 INSERT INTO role_actions(role_id,action)
 VALUES(6,'manage_tags');
+INSERT INTO role_actions(role_id,action)
+VALUES(6,'manage_services');
 
 
 INSERT INTO tenant_deployer_agents (tenant,integration_environment,type,entity_type,hostname,entity_protocol,deployer_name)

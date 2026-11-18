@@ -34,13 +34,14 @@ VALUES(1 , 'get_user'),
     (2 , 'review_restricted'),
     (2 , 'get_petitions'),
     (2 , 'get_services'),
-    (2 ', view_groups'),
+    (2 , 'view_groups'),
     (2 , 'invite_to_group'),
     (2 , 'view_errors'),
     (2 , 'send_notifications'),
     (2 , 'error_action'),
     (2 , 'review_petition'),
     (2 , 'manage_tags'),
+    (2 , 'manage_services'),
     (2 , 'export_services');
 
 
