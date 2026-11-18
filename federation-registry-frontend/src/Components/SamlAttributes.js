@@ -12,8 +12,11 @@ import {faArrowRotateBack} from '@fortawesome/free-solid-svg-icons';
 import {MyOverLay } from './Inputs';
 
 
-export function SamlAttributesInput(props){  
-    
+export function SamlAttributesInput(props){
+    const editableName = props.editableName !== false;
+    const editableRequired = props.editableRequired !== false;
+    const hideBoth = !editableName && !editableRequired;
+
     return (
           <Table striped bordered hover size="sm" className={'saml-attributes-table input-list-table'+ (props.disabled?" input-list-table-disabled":"")}>
             <thead>
@@ -22,20 +25,24 @@ export function SamlAttributesInput(props){
                       <th>
                           Friendly Name
                       </th>
+                      {editableName?
                       <th>
                           Attribute Name
                       </th>
+                      :null}
+                      {editableRequired?
                       <th>
                         Required
                       </th>
-                      <th>                      
+                      :null}
+                      <th style={hideBoth?{whiteSpace:"nowrap",width:"1%"}:undefined}>
                       </th>
                   </tr>
                   </React.Fragment>
           </thead>
           <tbody>
             {props.defaultValues.map((item,index)=>(
-                <AttributesDefault key={index} setFieldValue={props.setFieldValue} index={index} errors={props.errors} defaultValues={props.defaultValues} item={item} name={props.name} values={props.values} valuesIndex={props.values&&Array.isArray(props.values)?props.values.findIndex(x => x.friendly_name ===item.friendly_name):-1} disabled={props.disabled} changed={props.changed}/>
+                <AttributesDefault key={index} setFieldValue={props.setFieldValue} index={index} errors={props.errors} defaultValues={props.defaultValues} item={item} name={props.name} values={props.values} valuesIndex={props.values&&Array.isArray(props.values)?props.values.findIndex(x => x.friendly_name ===item.friendly_name):-1} disabled={props.disabled} changed={props.changed} editableName={editableName} editableRequired={editableRequired} hideBoth={hideBoth}/>
             ))}
           </tbody>
         </Table>
@@ -95,8 +102,9 @@ export function SamlAttributesInput(props){
 
 
     useEffect(()=>{
+      if(!props.editableName){return;}
       if(props.valuesIndex>-1&&name!==props.values[props.valuesIndex].name){
-        props.values[props.valuesIndex].name = name.trim();          
+        props.values[props.valuesIndex].name = name.trim();
         props.setFieldValue(props.name,[...props.values]);
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -109,7 +117,7 @@ export function SamlAttributesInput(props){
           );
           props.setFieldValue(props.name, nextValue);
       } else {
-          const nextValue = props.values.concat({...props.item,required,name});
+          const nextValue = props.values.concat({...props.item,required:props.editableRequired?required:props.item.required,name:props.editableName?name:props.item.name});
           props.setFieldValue(props.name, nextValue);
       }
     }
@@ -117,13 +125,14 @@ export function SamlAttributesInput(props){
       <React.Fragment>
         <tr key={props.index} onMouseOver={()=>setShow(true)} onMouseOut={()=>setShow(false)} ref={target} className={type?("row-"+type):""}>
             <React.Fragment>
-                <td style={mystyle} className={'td-item'}>
+                <td style={props.hideBoth?{...mystyle,width:"100%"}:mystyle} className={'td-item'}>
                     {props.item.friendly_name}
                 </td>
+                {props.editableName?
                 <td style={mystyle} className={'td-item'}>
                   <InputGroup className="">
                     <Form.Control
-                        onMouseOver={()=>setShowError(true)} 
+                        onMouseOver={()=>setShowError(true)}
                         onMouseOut={()=>setShowError(false)}
                         onChange={(e)=>{setName(e.target.value)}}
                         value={name}
@@ -139,9 +148,11 @@ export function SamlAttributesInput(props){
                         <Button size="sm" variant="outline-primary" onClick={()=>{setName(props.defaultValues[props.index].name)}}><FontAwesomeIcon icon={faArrowRotateBack}/></Button>
                       </InputGroup.Append>
                       :null
-                    }  
+                    }
                   </InputGroup>
                 </td>
+                :null}
+                {props.editableRequired?
                 <td>
                   {props.valuesIndex>-1?
                     <ButtonGroup toggle className='toggle-button'>
@@ -172,7 +183,8 @@ export function SamlAttributesInput(props){
                     </ButtonGroup>:null
                   }
                 </td>
-                <td style={{whiteSpace: "nowrap"}} onClick={()=>{
+                :null}
+                <td style={props.hideBoth?{whiteSpace:"nowrap",width:"1%"}:{whiteSpace:"nowrap"}} onClick={()=>{
                   handleAttribute();
                 }}>
                 <Field name={props.name}>
