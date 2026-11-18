@@ -2862,14 +2862,26 @@
         ]
       }
     },
-    "/util/metadata_info": {
+    "/tenants/{name}/util/metadata_info": {
       "get": {
         "tags": ["Utilities"],
         "summary": "Read SAML metadata information",
-        "description": "Fetches a SAML metadata XML document from the provided metadata_url, parses it, and returns the entity_id together with supported and unsupported requested attributes.",
+        "description": "Fetches a SAML metadata XML document from the provided metadata_url, parses it, and returns the fields the registry can store from it: the entity_id, the service name and description, and the requested attributes split by whether this tenant's form offers them. Requires an authenticated user of the tenant. Only http and https urls pointing at publicly reachable hosts are fetched, and each redirect is checked the same way. A host name is resolved and every address it resolves to is checked, and the vetted address is the one connected to, so a name standing for an internal address is refused as well. A refusal states its reason in the body, since http/2 carries no reason phrase for the status line.",
         "operationId": "getMetadataInfo",
         "produces": ["application/json"],
+        "security": [
+          {
+            "access_tokenAuth": []
+          }
+        ],
         "parameters": [
+          {
+            "in": "path",
+            "name": "name",
+            "type": "string",
+            "required": true,
+            "description": "Tenant that the request is targeting"
+          },
           {
             "in": "query",
             "name": "metadata_url",
@@ -2890,7 +2902,7 @@
                 },
                 "supported_attributes": {
                   "type": "array",
-                  "description": "Requested attributes that are supported by the default registry attribute set",
+                  "description": "Requested attributes that this tenant's form offers, and that can therefore be given to the service",
                   "items": {
                     "type": "object",
                     "properties": {
@@ -2911,7 +2923,7 @@
                 },
                 "unsupported_attributes": {
                   "type": "array",
-                  "description": "Requested attributes found in the metadata but not supported by the default registry attribute set",
+                  "description": "Requested attributes found in the metadata that this tenant's form does not offer, so they were left out",
                   "items": {
                     "type": "object",
                     "properties": {
@@ -2930,15 +2942,46 @@
                     }
                   }
                 },
+                "service_name": {
+                  "type": "string",
+                  "description": "Name the metadata gives the service, taken from the AttributeConsumingService that was read, falling back to a mdui display name"
+                },
+                "service_description": {
+                  "type": "string",
+                  "description": "Description the metadata gives the service, chosen the same way as the name"
+                },
+                "warnings": {
+                  "type": "array",
+                  "description": "What a document that was read successfully still falls short of, for the form to show rather than reject",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "code": {
+                        "type": "string",
+                        "description": "nothing_found, no_attributes, no_entity_id or unsupported_attributes"
+                      },
+                      "text": {
+                        "type": "string",
+                        "description": "The sentence shown to whoever filled in the url"
+                      }
+                    }
+                  }
+                },
                 "metadata_url": {
                   "type": "string",
-                  "description": "Resolved metadata URL used for the request"
+                  "description": "Metadata URL the document was read from"
                 }
               }
             }
           },
+          "400": {
+            "description": "The metadata_url parameter was missing, malformed, used a scheme other than http or https, or pointed at a host that is not publicly reachable - either by address or by the address its name resolves to. The body holds the reason under the error key, in words."
+          },
+          "401": {
+            "description": "Unauthenticated request"
+          },
           "404": {
-            "description": "Could not fetch or parse the metadata document"
+            "description": "The document could not be reached, read, or was not the metadata of a service. The body holds the reason under the error key, in words: http/2 has no reason phrase, so a refusal can only ever travel in the body and never in the status line."
           },
           "500": {
             "description": "Internal Error"

@@ -103,8 +103,14 @@ For the frontend we need to configure where the backend api is located:
     "tenant2":"http://localhost:5000/"
   },
   "basename": "/",
+  "check_url_reachability": false
 }
 ```
+
+`check_url_reachability` lets the browser fetch the urls users type to warn that they are unreachable,
+and preview a logo from its own address. Off as shipped, which is what a deployment whose
+Content-Security-Policy restricts `connect-src` wants; urls are validated by syntax either way. The
+file is compiled into the bundle, so rebuild the image after a change.
 
 #### **AMS Agent**
 
