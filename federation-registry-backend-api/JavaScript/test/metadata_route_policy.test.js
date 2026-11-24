@@ -5,19 +5,32 @@ const axios = require('axios');
 // The policy helpers do not need a database. Stub the authentication module's database import so
 // this unit suite remains hermetic while loading the real route module.
 const dbPath = require.resolve('../db');
+const authenticationPath = require.resolve('../routes/authentication.js');
+const utilRoutesPath = require.resolve('../routes/util_routes.js');
 const priorDbModule = require.cache[dbPath];
-require.cache[dbPath] = {
-  id: dbPath,
-  filename: dbPath,
-  loaded: true,
-  exports: { db: {} }
-};
-const utilRoutes = require('../routes/util_routes.js');
-if (priorDbModule) {
-  require.cache[dbPath] = priorDbModule;
+const priorAuthenticationModule = require.cache[authenticationPath];
+const priorUtilRoutesModule = require.cache[utilRoutesPath];
+let utilRoutes;
+
+try {
+  require.cache[dbPath] = {
+    id: dbPath,
+    filename: dbPath,
+    loaded: true,
+    exports: { db: {} }
+  };
+  utilRoutes = require(utilRoutesPath);
 }
-else {
-  delete require.cache[dbPath];
+finally {
+  if (priorDbModule) require.cache[dbPath] = priorDbModule;
+  else delete require.cache[dbPath];
+
+  // util_routes loads authentication while the database is stubbed. Restore both modules so the
+  // integration suite, which Mocha loads afterwards, gets instances wired to the real database.
+  if (priorAuthenticationModule) require.cache[authenticationPath] = priorAuthenticationModule;
+  else delete require.cache[authenticationPath];
+  if (priorUtilRoutesModule) require.cache[utilRoutesPath] = priorUtilRoutesModule;
+  else delete require.cache[utilRoutesPath];
 }
 
 const { getMetadataDocument, requestHop, knownTenant } = utilRoutes._test;
