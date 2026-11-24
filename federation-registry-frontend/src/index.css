@@ -658,6 +658,13 @@ code {
   margin-right:0.3rem;
 }
 
+.metadata-proposal-entry {
+  margin-bottom:0.6rem;
+}
+.metadata-proposal-entry div {
+  margin-left:0.6rem;
+}
+
 .reuse-warning {
   margin-top:0rem;
   margin-bottom:0.5rem;

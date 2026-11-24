@@ -1,107 +1,173 @@
 var router = require('express').Router({ mergeParams: true });
 var axios = require('axios');
-var https = require('https');
-var xml2js = require('xml2js');
-var parser = new xml2js.Parser();
-var convert = require('xml-js');
+var { rateLimit } = require('express-rate-limit');
 var default_supported_attributes = require('../tenant_config/requested_attributes.json')
 const log = require('../loggers.js');
+var { authenticate } = require('./authentication.js');
+var { assertSafeFetchUrl, createSafeLookup, UnsafeUrlError } = require('../functions/url_guard.js');
+var { parseMetadataDocument, MetadataInfoError, refuseMetadataRequest } = require('../functions/saml_metadata.js');
 
+// Redirects are followed here rather than by axios, so every hop goes through the same check.
+const maxMetadataRedirects = 3;
 
-parser.on('error', function(err) { log.error('Parser error: ' + (err.stack || err), { type: 'metadata_parser' }); });
-router.get('/metadata_info',async (req,res,next)=>{
-    try{
-      let url = decodeURIComponent(req.query.metadata_url);
-      axios.get(url,{timeout:2000})
-      .then(response => {
-        let data = response.data;
-        if(data){
-          try{
-            result = convert.xml2js(data, {compact: true, spaces: 4});
-            // res.status(200).send(result);
-          }
-          catch(err){             
-            res.statusMessage = "Could not load XML from Metadata Url."
-            res.status(404).send();
-          }
-        }
-        else{
-          res.statusMessage = "Could not load XML from Metadata Url."
-          res.status(404).send();
-        }
-        try{
-          if(result){
-            let ns = extractNamespace(result);
-            let entity_id, requested_attributes; 
-            let supported_attributes=[];
-            let unsupported_attributes= [];
-            if(!(result.hasOwnProperty(ns+'EntityDescriptor')&&result[ns+'EntityDescriptor'].hasOwnProperty(ns+'SPSSODescriptor'))){
-              res.statusMessage = "XML contained in the metadata is not Valid."
-              res.status(404).send();
-            }
-            try{
-              entity_id=result[ns+'EntityDescriptor']['_attributes'].entityID;
-            }
-            catch(err){
-              log.warn('Could not extract entityID from metadata: ' + (err.stack || err), { type: 'metadata_info' }, { req, res });
-            };
-            try{
-              requested_attributes = result[ns+'EntityDescriptor'][ns+'SPSSODescriptor'][ns+'AttributeConsumingService'][ns+'RequestedAttribute'];                 
-              if(requested_attributes&&requested_attributes.length>0){
-                requested_attributes.forEach((attribute,index)=>{
-                  requested_attributes[index] = {
-                    friendly_name:requested_attributes[index]._attributes.FriendlyName,
-                    name:requested_attributes[index]._attributes.Name,
-                    required:!!requested_attributes[index]._attributes.isRequired,
-                    name_format:requested_attributes[index]._attributes.NameFormat
-                  }
-                });
-                supported_attributes = requested_attributes.filter(e=> default_supported_attributes.some(x=>x.name===e.name));
-                unsupported_attributes = requested_attributes.filter(e=> default_supported_attributes.every(x=>x.name!==e.name));
-              }
-            }
-            catch(err){}
-            res.status(200).send({entity_id, supported_attributes:supported_attributes, unsupported_attributes:unsupported_attributes,metadata_url:url});
-          }  
-        }
-        catch(err){
-          log.warn('Could not load Service properties from Metadata Url: ' + (err.stack || err), { type: 'metadata_info' }, { req, res });
-          res.statusMessage = "Could not load Service properties from Metadata Url."
-          res.status(404).send();
-        }
-      }).catch(err =>{
-        res.statusMessage = "Could not get response from Metadata Url"
-        res.status(404).end();
-      } 
-        
-        );
+// Each hop has its own ceiling, while the complete redirect chain has one deadline. This prevents
+// a chain of individually slow endpoints from multiplying the time an authenticated request holds
+// server resources.
+const metadataHopTimeoutMs = 2000;
+const metadataTotalTimeoutMs = 8000;
 
+// A metadata document is tens of kilobytes; the host is chosen by the caller, so memory is capped.
+const maxMetadataBytes = 2 * 1024 * 1024;
 
+// This is deliberately after authenticate below, so the key represents a tenant user rather than
+// a shared reverse-proxy address. Deployments with more than one API process should enforce the
+// same policy at the ingress as well, because this in-process limiter is not a distributed quota.
+const metadataRateLimit = rateLimit({
+  windowMs: 60 * 1000,
+  limit: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => req.params.tenant + ':' + ((req.user && req.user.sub) || 'unknown'),
+  handler: (req, res) => fail(res, 429, 'Too many metadata requests. Please try again shortly.')
+});
+
+// The reason travels in the body, never in res.statusMessage - see MetadataInfoError.
+function fail(res, status, message) {
+  if (res.headersSent) {
+    return false;
+  }
+  res.status(status).send({ error: message });
+  return true;
+}
+
+function isRedirect(response) {
+  return !!response && response.status >= 300 && response.status < 400;
+}
+
+// One instance: stateless, and pins every hop's address - see createSafeLookup in url_guard.js.
+const safeLookup = createSafeLookup();
+
+async function requestHop(url, timeout) {
+  return axios.get(url, {
+    timeout: timeout,
+    maxRedirects: 0,
+    maxContentLength: maxMetadataBytes,
+    // Axios honours HTTP_PROXY/HTTPS_PROXY by default. A proxy would resolve the destination itself,
+    // so our lookup would pin the proxy rather than the checked metadata host.
+    proxy: false,
+    // A host serving the xml as application/json would otherwise come back parsed, and the redirect
+    // is an answer to inspect below, not an error to throw.
+    responseType: 'text',
+    validateStatus: () => true,
+    lookup: safeLookup
+  });
+}
+
+// Fetches the document, refusing any url - including a redirect target - the server must not reach.
+async function getMetadataDocument(url) {
+  let current = assertSafeFetchUrl(url).toString();
+  const started = Date.now();
+  for (let hop = 0; ; hop++) {
+    const remaining = metadataTotalTimeoutMs - (Date.now() - started);
+    if (remaining <= 0) {
+      throw new MetadataInfoError('The metadata url took too long to answer.', 504);
     }
-    catch(err){
-      res.statusMessage = "Could not get response from Metadata Url"
-      res.status(404).send();
+    let response;
+    try {
+      response = await requestHop(current, Math.min(metadataHopTimeoutMs, remaining));
     }
-
-  })
-
-
-
-function extractNamespace(xml) {
-  let regex = /^(.*):EntityDescriptor/g; 
-  let match;
-
-  for (var attribute in xml) {
-    match = !match&&regex.exec(attribute)
+    catch (err) {
+      // An unfollowed redirect arrives as a response or a rejection depending on axios version.
+      response = err && err.response;
+      if (!isRedirect(response)) {
+        throw err;
+      }
+    }
+    if (!isRedirect(response)) {
+      if (!response || response.status < 200 || response.status >= 300) {
+        throw new MetadataInfoError('Could not get response from Metadata Url', 502);
+      }
+      return response.data;
+    }
+    const location = response.headers && response.headers.location;
+    if (!location) {
+      throw new MetadataInfoError('The metadata url redirected without a destination.', 502);
+    }
+    if (hop === maxMetadataRedirects) {
+      throw new MetadataInfoError('The metadata url redirected too many times.', 502);
+    }
+    // Relative Locations resolve against the url that produced them, not the caller's.
+    try {
+      const next = assertSafeFetchUrl(new URL(location, current).toString());
+      if (new URL(current).protocol === 'https:' && next.protocol !== 'https:') {
+        throw new MetadataInfoError('The metadata url must not redirect from https to http.', 400);
+      }
+      current = next.toString();
+    }
+    catch (err) {
+      if (err instanceof MetadataInfoError) {
+        throw err;
+      }
+      if (err instanceof UnsafeUrlError) {
+        throw new MetadataInfoError(err.message, err.status);
+      }
+      throw new MetadataInfoError('The metadata url redirected to an unusable destination.', 502);
+    }
   }
-  if(match&&match[1]){
-    return match[1]+":";
-  }
-  else{
-    return "";
-  }
-};
-  
+}
 
+function tenantOfferedAttributes(tenant) {
+  const form = ((global.tenant_config || {})[tenant] || {}).form || {};
+  const supported = Array.isArray(form.supported_attributes) ? form.supported_attributes : null;
+  if (!supported) {
+    return default_supported_attributes;
+  }
+  return default_supported_attributes.filter((x) => supported.includes(x.friendly_name));
+}
+
+function knownTenant(req, res, next) {
+  const tenants = global.tenant_config || {};
+  const clients = req.app.get('clients') || {};
+  if (!Object.prototype.hasOwnProperty.call(tenants, req.params.tenant)
+      || !Object.prototype.hasOwnProperty.call(clients, req.params.tenant)) {
+    return fail(res, 404, 'Tenant not found.');
+  }
+  next();
+}
+
+router.get('/metadata_info', knownTenant, authenticate, metadataRateLimit, async (req, res, next) => {
+  let requested = req.query.metadata_url;
+  if (typeof requested !== 'string' || requested === '') {
+    return fail(res, 400, 'The metadata_url parameter is required.');
+  }
+
+  let document;
+  let parsed;
+  try {
+    document = await getMetadataDocument(requested);
+    parsed = parseMetadataDocument(document, tenantOfferedAttributes(req.params.tenant));
+  }
+  catch (err) {
+    const refusal = refuseMetadataRequest(err);
+    if (refusal) {
+      return fail(res, refusal.status, refusal.message);
+    }
+    log.warn('Could not read metadata: ' + (err.stack || err), { type: 'metadata_info' }, { req, res });
+    return fail(res, 502, 'Could not get response from Metadata Url');
+  }
+
+  res.status(200).send({
+    entity_id: parsed.entity_id,
+    service_name: parsed.service_name,
+    service_description: parsed.service_description,
+    supported_attributes: parsed.supported_attributes,
+    unsupported_attributes: parsed.unsupported_attributes,
+    warnings: parsed.warnings,
+    metadata_url: requested
+  });
+});
 
 module.exports = router;
+// Kept off the public API surface; these exports let the HTTP-policy tests exercise the real
+// fetcher rather than reimplementing its redirect and Axios configuration in a fixture.
+module.exports._test = { getMetadataDocument, requestHop, knownTenant };

@@ -5,6 +5,24 @@ All notable changes in Federation Registry will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+# [Unreleased]
+
+## Security
+
+- Replaced the public `/util/metadata_info` fetcher with the authenticated tenant route
+  `/tenants/{tenant}/util/metadata_info`. The new fetcher refuses non-public destinations, validates
+  and pins DNS answers, rechecks redirects, disables environment proxies, limits response size and
+  duration, and rate-limits authenticated tenant users.
+- Browser-side URL probes and remote logo previews are disabled by default through
+  `check_url_reachability: false` for deployments with restrictive Content Security Policy.
+
+## Breaking changes
+
+- Metadata API consumers must include the tenant in the route, authenticate with the tenant session
+  or bearer token, and read errors from the JSON `error` field. The old route has no fetching
+  compatibility alias. Backend and frontend must be upgraded or rolled back together; operators
+  should inspect access logs and migrate external scripts, monitors, and generated clients first.
+
 
 # [2.3.2] 03/11/2026
 
