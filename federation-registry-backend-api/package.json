@@ -14,7 +14,7 @@
   ],
   "scripts": {
     "test": "./test.sh",
-    "test-unit": "mocha './JavaScript/test/url_guard.test.js' './JavaScript/test/saml_metadata.test.js' './JavaScript/test/metadata_route_policy.test.js'",
+    "test-unit": "mocha './JavaScript/test/url_guard.test.js' './JavaScript/test/saml_metadata.test.js' './JavaScript/test/metadata_route_policy.test.js' './JavaScript/test/redirect_uri_validation.test.js'",
     "test-docker": "./test.sh test-docker",
     "test:setup": "mocha './JavaScript/test/reset-db.test.js'"
   },

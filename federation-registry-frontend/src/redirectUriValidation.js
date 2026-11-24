@@ -14,6 +14,40 @@ const PRIVATE_IPV6 = /^(::1|fe80::(?:[0-9a-fA-F]{1,4})(?::[0-9a-fA-F]{1,4}){0,6}
 const UNSAFE_PATH =
   /(?:^|\/|%2f|%5c|\\)(?:%2e|%252e|\.){2}(?:\/|%2f|%5c|\\|;|%3b|%09|%0a|%0d|%00|$)/i;
 
+// Keep this list aligned with Keycloak's RedirectUtils.FORBIDDEN_OIDC_PARAMS.
+// Keycloak appends these response parameters after authentication or logout,
+// so accepting one in a registered URI could create duplicate parameters and
+// HTTP Parameter Pollution.
+const FORBIDDEN_OIDC_RESPONSE_PARAMETERS = new Set([
+  "code",
+  "id_token",
+  "access_token",
+  "token_type",
+  "expires_in",
+  "state",
+  "iss",
+  "error",
+  "error_description",
+  "session_state",
+  "response",
+  "kc_action",
+  "kc_action_status",
+]);
+
+const findForbiddenOidcResponseParameter = (query) => {
+  if (!query) {
+    return null;
+  }
+
+  for (const parameter of new URLSearchParams(query).keys()) {
+    if (FORBIDDEN_OIDC_RESPONSE_PARAMETERS.has(parameter.toLowerCase())) {
+      return parameter;
+    }
+  }
+
+  return null;
+};
+
 /**
  * Validate one OIDC redirect or post-logout redirect URI.
  *
@@ -69,6 +103,11 @@ export const validateRedirectUri = (
   // Do not compose these components back into a URI: doing so would normalize
   // the user's value and could make validation differ from stored deployment.
   const uri = parseAbsoluteUri(value);
+
+  const forbiddenParameter = findForbiddenOidcResponseParameter(uri.query);
+  if (forbiddenParameter) {
+    return `Uri can't contain reserved OIDC response parameter '${forbiddenParameter}'`;
+  }
 
   if (value.includes("*")) {
     return "Uri can't contain wildcard character '*'";
