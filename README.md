@@ -112,6 +112,19 @@ and preview a logo from its own address. Off as shipped, which is what a deploym
 Content-Security-Policy restricts `connect-src` wants; urls are validated by syntax either way. The
 file is compiled into the bundle, so rebuild the image after a change.
 
+#### Metadata endpoint migration
+
+The unauthenticated `GET /util/metadata_info` endpoint has been removed. Consumers must use
+`GET /tenants/{tenant}/util/metadata_info`, send the existing tenant session cookie or bearer token,
+and read error details from the JSON `error` field instead of the HTTP reason phrase. There is no
+fetching compatibility alias: retaining the old public endpoint would restore the SSRF exposure.
+
+Deploy the backend and frontend from the same release together. Before upgrading, inspect access
+logs for calls to `/util/metadata_info` and migrate scripts, monitors, generated clients, and external
+integrations. A rollback must roll back both components. After deployment, monitor 400, 401, 413,
+422, 429, 502, and 504 responses from the new endpoint. This endpoint authenticates the caller but
+does not verify XML signatures or establish trust in the metadata publisher.
+
 #### **AMS Agent**
 
 Ams Agent is responsible for
@@ -195,5 +208,4 @@ Each user role is associated with a set of actions. Here is a list of the suppor
 - **view_groups**: User can view any group. 
 - **view_errors**: User has access to the deployment errors.
 - **export_services**: User can export services.
-
 

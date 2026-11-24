@@ -296,8 +296,8 @@ describe('# Url guard', function () {
         refused = err;
       }
       expect(refused).to.be.instanceOf(UnsafeUrlError);
-      // not a refusal: an unreachable name is 404, like a host that does not answer.
-      expect(refused.status).to.equal(404);
+      // not a refusal: an unreachable name is an upstream failure, not a bad request.
+      expect(refused.status).to.equal(502);
     });
 
     it('does not ask a name server about a name it can already refuse', async function () {

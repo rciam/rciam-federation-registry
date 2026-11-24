@@ -241,11 +241,11 @@ async function publicAddress(hostname) {
     answers = await dns.lookup(host, { all: true, verbatim: true });
   }
   catch (err) {
-    // 404, not 400: an unresolvable name leads nowhere, it is not a refusal.
-    throw new UnsafeUrlError('The host of the metadata url could not be resolved.', 404);
+    // 502, not 400: an unresolvable name is an upstream failure, not a malformed request.
+    throw new UnsafeUrlError('The host of the metadata url could not be resolved.', 502);
   }
   if (!answers || answers.length === 0) {
-    throw new UnsafeUrlError('The host of the metadata url could not be resolved.', 404);
+    throw new UnsafeUrlError('The host of the metadata url could not be resolved.', 502);
   }
   const refused = answers.find((answer) => isPrivateHost(answer.address));
   if (refused) {
@@ -277,7 +277,7 @@ function createSafeLookup() {
         done(null, vetted.address, vetted.family);
       }
     }, (err) => {
-      done(err instanceof UnsafeUrlError ? err : new UnsafeUrlError('The host of the metadata url could not be resolved.', 404));
+      done(err instanceof UnsafeUrlError ? err : new UnsafeUrlError('The host of the metadata url could not be resolved.', 502));
     });
   };
 }

@@ -57,14 +57,14 @@ describe('# SAML metadata', function () {
       expect(() => parseMetadataDocument(idpDescriptor(), offered)).to.throw(/identity provider/);
     });
 
-    it('refuses with 404, so the form does not report a client error', function () {
+    it('refuses with 422, so the form can distinguish unusable XML from transport failure', function () {
       try {
         parseMetadataDocument('<nothing/>', offered);
         expect.fail('should have refused the document');
       }
       catch (err) {
         expect(err).to.be.an.instanceOf(MetadataInfoError);
-        expect(err.status).to.equal(404);
+        expect(err.status).to.equal(422);
       }
     });
 
@@ -490,7 +490,7 @@ describe('# SAML metadata', function () {
   // authenticate, which needs a database, so this is as far as it can be tested without one.
   describe('says why a request for a document was refused', function () {
 
-    // swagger promises 400 for a non-public address and 404 for an unreadable document
+    // swagger distinguishes unsafe input, upstream failures and unusable documents.
     it('answers 400, and the reason, for an address the guard refused', function () {
       const refusal = new UnsafeUrlError('The metadata url has to point at a publicly reachable host.', 400);
       const answered = refuseMetadataRequest(refusal);
@@ -515,21 +515,21 @@ describe('# SAML metadata', function () {
       const answered = refuseMetadataRequest(asAxiosRebuilt);
       expect(answered.status).to.equal(400);
       expect(answered.message).to.equal(refusal.message);
-      // without the check this falls to the catch-all and answers a plain 404
+      // A timeout is a gateway failure, not a missing API resource.
       expect(refuseMetadataRequest(Object.assign(new Error('timeout of 2000ms exceeded'), { code: 'ECONNABORTED' })))
-        .to.eql({ status: 404, message: 'The metadata url took too long to answer.' });
+        .to.eql({ status: 504, message: 'The metadata url took too long to answer.' });
     });
 
     it('says what the endpoint said about a document it could not use', function () {
-      const raised = new MetadataInfoError('The metadata describe an identity provider and not a service.', 404);
+      const raised = new MetadataInfoError('The metadata describe an identity provider and not a service.', 422);
       expect(refuseMetadataRequest(raised)).to.eql({
-        status: 404, message: 'The metadata describe an identity provider and not a service.'
+        status: 422, message: 'The metadata describe an identity provider and not a service.'
       });
     });
 
     it('says so when the document was bigger than a document should be', function () {
       const tooLarge = Object.assign(new Error('maxContentLength size of 2097152 exceeded'), { code: 'ERR_BAD_RESPONSE' });
-      expect(refuseMetadataRequest(tooLarge).status).to.equal(404);
+      expect(refuseMetadataRequest(tooLarge).status).to.equal(413);
       expect(refuseMetadataRequest(tooLarge).message).to.contain('more data than a metadata document should hold');
     });
 

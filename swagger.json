@@ -2866,7 +2866,7 @@
       "get": {
         "tags": ["Utilities"],
         "summary": "Read SAML metadata information",
-        "description": "Fetches a SAML metadata XML document from the provided metadata_url, parses it, and returns the fields the registry can store from it: the entity_id, the service name and description, and the requested attributes split by whether this tenant's form offers them. Requires an authenticated user of the tenant. Only http and https urls pointing at publicly reachable hosts are fetched, and each redirect is checked the same way. A host name is resolved and every address it resolves to is checked, and the vetted address is the one connected to, so a name standing for an internal address is refused as well. A refusal states its reason in the body, since http/2 carries no reason phrase for the status line.",
+        "description": "Fetches a SAML metadata XML document from the provided metadata_url, parses it, and returns the fields the registry can store from it: the entity_id, the service name and description, and the requested attributes split by whether this tenant's form offers them. Requires an authenticated user with a role in the tenant; no individual role action is required. Only http and https urls pointing at publicly reachable hosts are fetched, and each of at most three redirects is checked the same way. HTTPS may not downgrade to HTTP. A host name is resolved and every address it resolves to is checked, the vetted address is the one connected to, and environment proxies are disabled so they cannot resolve the destination in place of the guard. Each hop has a 2 second timeout, the whole chain an 8 second deadline, and the response is limited to 2 MiB. A tenant user may make 30 requests per minute per API process; multi-process deployments should enforce the same limit at ingress. A refusal states its reason under the error key in the response body.",
         "operationId": "getMetadataInfo",
         "produces": ["application/json"],
         "security": [
@@ -2981,7 +2981,22 @@
             "description": "Unauthenticated request"
           },
           "404": {
-            "description": "The document could not be reached, read, or was not the metadata of a service. The body holds the reason under the error key, in words: http/2 has no reason phrase, so a refusal can only ever travel in the body and never in the status line."
+            "description": "The tenant does not exist. The body holds the reason under the error key."
+          },
+          "413": {
+            "description": "The metadata response exceeded 2 MiB."
+          },
+          "422": {
+            "description": "The response was not usable SAML service-provider metadata."
+          },
+          "429": {
+            "description": "The tenant user exceeded 30 metadata requests in one minute on this API process."
+          },
+          "502": {
+            "description": "The metadata host could not be resolved, returned a non-success response, or supplied an unusable redirect."
+          },
+          "504": {
+            "description": "A metadata hop exceeded 2 seconds or the complete redirect chain exceeded 8 seconds."
           },
           "500": {
             "description": "Internal Error"

@@ -19,12 +19,12 @@ function refuseMetadataRequest(err) {
     return { status: err.status, message: err.message };
   }
   if (err && err.code === 'ECONNABORTED') {
-    return { status: 404, message: 'The metadata url took too long to answer.' };
+    return { status: 504, message: 'The metadata url took too long to answer.' };
   }
   // axios reports an over-long body under the same ERR_BAD_RESPONSE as a bad status, so only the
   // message tells them apart.
   if (err && String(err.message || '').indexOf('maxContentLength size of') === 0) {
-    return { status: 404, message: 'The metadata url answered with more data than a metadata document should hold.' };
+    return { status: 413, message: 'The metadata url answered with more data than a metadata document should hold.' };
   }
   return null;
 }
@@ -190,24 +190,24 @@ function parseMetadataDocument(document, offered_attributes) {
     result = convert.xml2js(document, { compact: true, spaces: 4 });
   }
   catch (err) {
-    throw new MetadataInfoError('Could not load XML from Metadata Url.', 404);
+    throw new MetadataInfoError('Could not load XML from Metadata Url.', 422);
   }
   if (!result || typeof result !== 'object') {
-    throw new MetadataInfoError('Could not load XML from Metadata Url.', 404);
+    throw new MetadataInfoError('Could not load XML from Metadata Url.', 422);
   }
 
   const ns = extractNamespace(result);
   if (!Object.prototype.hasOwnProperty.call(result, ns + 'EntityDescriptor')) {
-    throw new MetadataInfoError('XML contained in the metadata is not Valid.', 404);
+    throw new MetadataInfoError('XML contained in the metadata is not Valid.', 422);
   }
   const descriptor = result[ns + 'EntityDescriptor'];
 
   // Saying "no attributes found" for an IdP would send the user hunting a fault they do not have.
   if (childElements(descriptor, 'SPSSODescriptor', 0).length === 0) {
     if (childElements(descriptor, 'IDPSSODescriptor', 0).length > 0) {
-      throw new MetadataInfoError('The metadata describe an identity provider and not a service.', 404);
+      throw new MetadataInfoError('The metadata describe an identity provider and not a service.', 422);
     }
-    throw new MetadataInfoError('XML contained in the metadata is not Valid.', 404);
+    throw new MetadataInfoError('XML contained in the metadata is not Valid.', 422);
   }
 
   let entity_id;
