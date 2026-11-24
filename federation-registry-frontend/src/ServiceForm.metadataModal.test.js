@@ -1,5 +1,9 @@
 // The guard in MetadataProposalModal deciding which document a form keeps offering fields for. A
 // shown react-bootstrap Modal renders into a portal on document.body, hence the assertions there.
+// Redirect URI validation is unrelated to this modal, and its ESM-only parser is outside CRA's
+// Jest transform boundary. Keep this test focused on the exported metadata proposal component.
+jest.mock('./redirectUriValidation.js', () => ({ validateRedirectUri: () => null }));
+
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { act } from 'react-dom/test-utils';
