@@ -27,6 +27,7 @@ import {userContext,tenantContext} from './context.js';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import LogoContainer from './Components/LogoContainer.js';
 import MoveDialog from "./Components/MoveDialog";
+import {formatLocalDateTime} from './dateTime.js';
 const {capitalWords} = require('./helpers.js');
 var filterTimeout;
 
@@ -362,8 +363,8 @@ const ServiceList= (props)=> {
         csv += '"' + (service.service_name?service.service_name:' ') + '",';
         csv += '"' + (service.website_url?service.website_url:' ') + '",';
         csv += '"' + (Array.isArray(service.owners)?service.owners.join(" "):'Ownerless') + '",';
-        csv += '"' + (service.created_at?service.created_at:' ') + '",';
-        csv += '"' + (service.last_edited?service.last_edited:' ') + '",';
+        csv += '"' + (service.created_at?formatLocalDateTime(service.created_at):' ') + '",';
+        csv += '"' + (service.last_edited?formatLocalDateTime(service.last_edited):' ') + '",';
         csv += "\n";
       }
       catch(err){

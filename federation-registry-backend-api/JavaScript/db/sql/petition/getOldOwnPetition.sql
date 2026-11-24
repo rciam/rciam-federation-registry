@@ -22,9 +22,9 @@ SELECT json_build_object('service_name', sd.service_name,'service_description',s
 						 'reviewer',CASE
 							WHEN ${view_reviewer:raw} = TRUE AND sd.reviewer IS NOT NULL THEN
 								json_build_object(
-									'sub', ui.sub,
-									'name', ui.name,
-									'email', ui.email
+									'sub', reviewer_ui.sub,
+									'name', reviewer_ui.name,
+									'email', reviewer_ui.email
 								)
 							ELSE NULL
 							END,
@@ -68,6 +68,6 @@ SELECT json_build_object('service_name', sd.service_name,'service_description',s
 		ON ${view_reviewer:raw} = TRUE
 		AND reviewer_ui.sub = sd.reviewer
 		AND reviewer_ui.tenant = sd.tenant
-	LEFT JOIN user_info ui
+	LEFT JOIN user_info requester_ui
 		ON requester_ui.sub = sd.requester
 		AND requester_ui.tenant = sd.tenant

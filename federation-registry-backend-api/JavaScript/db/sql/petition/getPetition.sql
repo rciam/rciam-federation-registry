@@ -26,9 +26,9 @@ SELECT json_build_object('service_name', sd.service_name,'service_description',s
 						 'reviewer',CASE
 							WHEN ${view_reviewer:raw} = TRUE AND sd.reviewer IS NOT NULL THEN
 								json_build_object(
-									'sub', requester_ui.sub,
-									'name', requester_ui.name,
-									'email', requester_ui.email
+									'sub', reviewer_ui.sub,
+									'name', reviewer_ui.name,
+									'email', reviewer_ui.email
 								)
 							ELSE NULL
 							END,

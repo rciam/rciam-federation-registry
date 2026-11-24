@@ -24,6 +24,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   should inspect access logs and migrate external scripts, monitors, and generated clients first.
 
 
+# [2.3.2] 03/11/2026
+
+## Fixed
+
+- Corrected backend validation of the OIDC device-code lifetime to use the configured maximum from `form.more_info.device_code_validity_seconds`, with a default maximum of 1800 seconds.
+
+# [2.3.1] 30/10/2026
+
+## Changed
+
+- Raised the backend's minimum supported Node.js version to 22.
+- Store service and petition lifecycle timestamps as timezone-aware UTC instants.
+- Display service and petition timestamps in the viewer's browser timezone throughout the user interface and CSV export.
+
+## Fixed
+
+- Validate OIDC redirect and post-logout redirect URIs consistently in the frontend and backend using an RFC 3986 parser, rejecting malformed URIs and unsafe paths before deployment.
+- Return the reviewer's user information, rather than the requester's, in service petition responses.
+- Prevent changing the service type while copying an existing service.
+
+## Database Changes
+
+- Changed `service_state.last_edited`, `service_state.created_at`, `service_petition_details.last_edited`, and `service_petition_details.reviewed_at` from `timestamp without time zone` to `timestamp with time zone`.
+- Run [`migrate_timestamps_to_utc.sql`](migrate_timestamps_to_utc.sql) once before deploying this release. The migration preserves the legacy timezone conventions, validates the source column types, and deliberately rejects a second conversion.
+
 # [2.3.0] 06/10/2026
 
 ## Added
