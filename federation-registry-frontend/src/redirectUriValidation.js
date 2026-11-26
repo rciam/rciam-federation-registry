@@ -65,11 +65,13 @@ const findForbiddenOidcResponseParameter = (query) => {
  * @param {string} options.applicationType `WEB` or the existing native type.
  * @param {boolean} options.isTestEnvironment Whether the tenant marks the
  *   selected integration environment as a test environment.
+ * @param {boolean} options.validateOidcParameters Whether the tenant enables
+ *   rejection of reserved OIDC response parameters.
  * @returns {string|null} A user-facing validation reason, or null when valid.
  */
 export const validateRedirectUri = (
   value,
-  { applicationType, isTestEnvironment } = {},
+  { applicationType, isTestEnvironment, validateOidcParameters = false } = {},
 ) => {
   if (typeof value !== "string") {
     return "Uri must be a string";
@@ -104,9 +106,11 @@ export const validateRedirectUri = (
   // the user's value and could make validation differ from stored deployment.
   const uri = parseAbsoluteUri(value);
 
-  const forbiddenParameter = findForbiddenOidcResponseParameter(uri.query);
-  if (forbiddenParameter) {
-    return `Uri can't contain reserved OIDC response parameter '${forbiddenParameter}'`;
+  if (validateOidcParameters) {
+    const forbiddenParameter = findForbiddenOidcResponseParameter(uri.query);
+    if (forbiddenParameter) {
+      return `Uri can't contain reserved OIDC response parameter '${forbiddenParameter}'`;
+    }
   }
 
   if (value.includes("*")) {

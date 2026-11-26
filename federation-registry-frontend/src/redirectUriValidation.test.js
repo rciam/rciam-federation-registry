@@ -23,6 +23,11 @@ const WEB_OPTIONS = {
   isTestEnvironment: false,
 };
 
+const ENABLED_WEB_OPTIONS = {
+  ...WEB_OPTIONS,
+  validateOidcParameters: true,
+};
+
 describe("OIDC redirect URI validation", () => {
   const forbiddenParameters = [
     "code",
@@ -46,7 +51,7 @@ describe("OIDC redirect URI validation", () => {
       expect(
         validateRedirectUri(
           `https://client.example/callback?${parameter}=value`,
-          WEB_OPTIONS,
+          ENABLED_WEB_OPTIONS,
         ),
       ).toBe(
         `Uri can't contain reserved OIDC response parameter '${parameter}'`,
@@ -58,7 +63,7 @@ describe("OIDC redirect URI validation", () => {
     expect(
       validateRedirectUri(
         "https://client.example/callback?STATE=value",
-        WEB_OPTIONS,
+        ENABLED_WEB_OPTIONS,
       ),
     ).toBe("Uri can't contain reserved OIDC response parameter 'STATE'");
   });
@@ -67,7 +72,7 @@ describe("OIDC redirect URI validation", () => {
     expect(
       validateRedirectUri(
         "https://client.example/callback?st%61te=value",
-        WEB_OPTIONS,
+        ENABLED_WEB_OPTIONS,
       ),
     ).toBe("Uri can't contain reserved OIDC response parameter 'state'");
   });
@@ -76,6 +81,15 @@ describe("OIDC redirect URI validation", () => {
     expect(
       validateRedirectUri(
         "https://client.example/state?continue=code%3Dvalue",
+        WEB_OPTIONS,
+      ),
+    ).toBeNull();
+  });
+
+  test("allows reserved response parameters by default", () => {
+    expect(
+      validateRedirectUri(
+        "https://client.example/callback?state=value",
         WEB_OPTIONS,
       ),
     ).toBeNull();

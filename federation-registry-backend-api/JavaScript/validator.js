@@ -1090,6 +1090,9 @@ const serviceValidationRules = (options, req) => {
           const error = await validateRedirectUri(item, {
             applicationType: req.body[pos].application_type,
             isTestEnvironment,
+            validateOidcParameters:
+              tenant_config[tenant].validate_oidc_params_in_redirect_uris ===
+              true,
           });
           if (error) {
             throw new Error(error);
@@ -1153,6 +1156,9 @@ const serviceValidationRules = (options, req) => {
           const error = await validateRedirectUri(item, {
             applicationType: req.body[pos].application_type,
             isTestEnvironment,
+            validateOidcParameters:
+              tenant_config[tenant].validate_oidc_params_in_redirect_uris ===
+              true,
           });
           if (error) {
             throw new Error(error);

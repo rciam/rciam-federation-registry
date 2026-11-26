@@ -589,6 +589,9 @@ const ServiceForm = (props) => {
                           tenant?.config?.test_env.includes(
                             integrationEnvironment,
                           ) || false,
+                        validateOidcParameters:
+                          tenant?.config
+                            ?.validate_oidc_params_in_redirect_uris === true,
                       });
                       if (error) {
                         return this.createError({
@@ -662,6 +665,9 @@ const ServiceForm = (props) => {
                           tenant?.config?.test_env.includes(
                             integrationEnvironment,
                           ) || false,
+                        validateOidcParameters:
+                          tenant?.config
+                            ?.validate_oidc_params_in_redirect_uris === true,
                       });
                       if (error) {
                         return this.createError({

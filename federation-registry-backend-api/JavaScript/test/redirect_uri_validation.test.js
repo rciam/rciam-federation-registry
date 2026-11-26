@@ -10,6 +10,11 @@ const WEB_OPTIONS = {
   isTestEnvironment: false,
 };
 
+const ENABLED_WEB_OPTIONS = {
+  ...WEB_OPTIONS,
+  validateOidcParameters: true,
+};
+
 describe("OIDC redirect URI validation", function () {
   const forbiddenParameters = [
     "code",
@@ -31,7 +36,7 @@ describe("OIDC redirect URI validation", function () {
     it(`rejects the reserved ${parameter} response parameter`, async function () {
       const error = await validateRedirectUri(
         `https://client.example/callback?${parameter}=value`,
-        WEB_OPTIONS,
+        ENABLED_WEB_OPTIONS,
       );
 
       expect(error).to.equal(
@@ -43,7 +48,7 @@ describe("OIDC redirect URI validation", function () {
   it("matches reserved parameter names case-insensitively", async function () {
     const error = await validateRedirectUri(
       "https://client.example/callback?STATE=value",
-      WEB_OPTIONS,
+      ENABLED_WEB_OPTIONS,
     );
 
     expect(error).to.equal(
@@ -54,7 +59,7 @@ describe("OIDC redirect URI validation", function () {
   it("rejects percent-encoded reserved parameter names", async function () {
     const error = await validateRedirectUri(
       "https://client.example/callback?st%61te=value",
-      WEB_OPTIONS,
+      ENABLED_WEB_OPTIONS,
     );
 
     expect(error).to.equal(
@@ -65,6 +70,15 @@ describe("OIDC redirect URI validation", function () {
   it("allows reserved words outside parameter names", async function () {
     const error = await validateRedirectUri(
       "https://client.example/state?continue=code%3Dvalue",
+      WEB_OPTIONS,
+    );
+
+    expect(error).to.equal(null);
+  });
+
+  it("allows reserved response parameters by default", async function () {
+    const error = await validateRedirectUri(
+      "https://client.example/callback?state=value",
       WEB_OPTIONS,
     );
 
