@@ -5,7 +5,28 @@ All notable changes in Federation Registry will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-# [Unreleased]
+# [2.4.0] 27/11/2026
+
+## Added
+
+- Added configurable console/file log destinations and exact-URL access-log filtering.
+- Added the client IP address to access-log entries, with configurable Express proxy trust.
+- Added service-type control over whether refresh tokens are reused.
+
+## Changed
+
+- The service form now uses the configured device-code lifetime limits for validation and help text.
+- Reserved OIDC redirect URI parameters can be rejected consistently by the frontend and backend
+  when `validate_oidc_params_in_redirect_uris` is enabled for a tenant.
+- SAML metadata form handling now follows the authenticated backend metadata response instead of
+  relying on independent browser-side reachability checks.
+
+## Fixed
+
+- Prevented agent failures when post-logout redirect URIs are absent.
+- Corrected RabbitMQ agent instance usage and made restart scheduling asynchronous.
+- Display deleted email values with the correct type in petition review forms.
+- Apply refresh-token reuse visibility and editability from the selected service type.
 
 ## Security
 
@@ -22,6 +43,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   or bearer token, and read errors from the JSON `error` field. The old route has no fetching
   compatibility alias. Backend and frontend must be upgraded or rolled back together; operators
   should inspect access logs and migrate external scripts, monitors, and generated clients first.
+
+## Configuration Changes
+
+- Added backend environment variables `LOG_DESTINATIONS`, `LOG_IGNORE_PATTERNS`, and
+  `EXPRESS_TRUST_PROXY` for logging and reverse-proxy-aware client IP handling.
+- Added the frontend `check_url_reachability` setting, which defaults to `false`.
+- Added the tenant setting `validate_oidc_params_in_redirect_uris`, which defaults to `false`.
 
 
 # [2.3.2] 03/11/2026

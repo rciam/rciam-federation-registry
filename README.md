@@ -75,8 +75,16 @@ AMS_VER_HASH = verification_hash_used_to_activate_push_subscription
 ADMIN_AUTH_KEY = authorization_key_for_administrative_routes
 CORS = external_urls_allowed
 TOKEN_KEY = token_used_for_encription
-LOG_IGNORE_PATTERNS = comma-separated URL patterns to exclude from request logging (e.g., monitoring endpoints)
+LOG_DESTINATIONS = both
+LOG_IGNORE_PATTERNS =
+EXPRESS_TRUST_PROXY = false
 ```
+
+Logging variables:
+
+- `LOG_DESTINATIONS` selects where application, access, and error logs are written. Valid values are `console`, `file`, and `both`; the default and fallback for unsupported values is `both`. File logs are written to `federation-registry-backend-api/JavaScript/logs/logs.log`, so the backend process must be able to write to that directory.
+- `LOG_IGNORE_PATTERNS` is an optional comma-separated list of exact request URLs to exclude from access logging. These values are not regular expressions or glob patterns. `/agent/get_new_configurations` is always excluded. This setting does not suppress application or error logs.
+- `EXPRESS_TRUST_PROXY` configures Express `trust proxy` and therefore which address is recorded as the client IP in access logs. It accepts `false`, `true`, a proxy hop count, or an Express-compatible IP/subnet value such as `loopback` or `10.0.0.0/8`. Keep it `false` unless the deployment's trusted reverse-proxy topology is known; an overly broad value can allow spoofed forwarding headers to affect the logged address.
 
 **Configure Database File**
 `federation-registry-backend-api/db-config/db-config.json`

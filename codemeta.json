@@ -30,7 +30,7 @@
         "CSS",
         "Handlebars"
     ],
-    "version": "2.1.1",
+    "version": "2.4.0",
     "contIntegration": "https://github.com/rciam/rciam-federation-registry/issues",
     "codemeta:continuousIntegration": {
         "id": "https://github.com/rciam/rciam-federation-registry/issues"
