@@ -50,6 +50,7 @@ import * as yup from "yup";
 import { useTranslation } from "react-i18next";
 import parse from "html-react-parser";
 import countryData from "country-region-data";
+import { getDeviceCodeValidityLimits } from "./deviceCodeValidity.js";
 import {
   SimpleInput,
   AccessTokenValidationModel,
@@ -151,6 +152,9 @@ const ServiceForm = (props) => {
 
   const serviceMoveEnabled =
     tenant?.config?.merge_environments_on_deploy ?? false;
+  const deviceCodeValidityLimits = getDeviceCodeValidityLimits(
+    tenant.form_config,
+  );
 
   useEffect(() => {
     //Get tags
@@ -1014,10 +1018,9 @@ const ServiceForm = (props) => {
         then: yup
           .number()
           .nullable()
-          .min(0)
+          .min(deviceCodeValidityLimits.min)
           .max(
-            tenant.form_config.moreInfo?.device_code_validity_seconds?.max ||
-              30000,
+            deviceCodeValidityLimits.max,
             t("yup_exceeds_max"),
           )
           .required(
@@ -3444,6 +3447,11 @@ const ServiceForm = (props) => {
                                       onChange={handleChange}
                                       disabled={disabled}
                                       changed={props.changes}
+                                      description={`${t("form_device_code_validity_seconds_desc")} ${t("min_value_is")} ${formatDuration(
+                                        deviceCodeValidityLimits.min,
+                                      )}. ${t("max_value_is")} ${formatDuration(
+                                        deviceCodeValidityLimits.max,
+                                      )}.`}
                                     />
                                   </InputRow>
                                 )}

@@ -1321,7 +1321,7 @@ export function DeviceCode(props) {
             className="text-muted text-left label-checkbox"
             id="uri-small-desc"
           >
-            {t("form_device_code_validity_seconds_desc")}
+            {props.description}
           </Form.Text>
         </React.Fragment>
       ) : null}

@@ -142,7 +142,7 @@
     "form_entity_id": "Entity ID",
     "form_device_code_desc": "Device code is issued for this client",
     "form_device_code_info": "This will add the device grant type to your grant types.",
-    "form_device_code_validity_seconds_desc": "Enter this time in seconds, minutes, or hours (Max value is 34128000 seconds (13 months)).",
+    "form_device_code_validity_seconds_desc": "Enter this time in seconds, minutes, or hours.",
     "form_entity_id_desc": "Unique identifier for a SAML service.",
     "form_clear_access_tokens_on_refresh": "Active access tokens are automatically revoked when the refresh token is used",
     "form_metadata_url": "Metadata URI",

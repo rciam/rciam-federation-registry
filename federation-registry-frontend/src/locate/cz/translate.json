@@ -134,7 +134,7 @@
     "form_entity_id": "Entity ID",
     "form_device_code_desc": "Device code je vydán pro tohoto klienta",
     "form_device_code_info": "Toto přidá device grant type do vašich grant typů.",
-    "form_device_code_validity_seconds_desc": "Zadejte čas v sekundách, minutách nebo hodinách (Max hodnota je 34128000 sekund (13 měsíců)).",
+    "form_device_code_validity_seconds_desc": "Zadejte čas v sekundách, minutách nebo hodinách.",
     "form_entity_id_desc": "Unikátní identifikátor pro SAML službu.",
     "form_clear_access_tokens_on_refresh": "Aktivní access tokeny jsou automaticky zrušeny při použití refresh tokenu",
     "form_metadata_url": "Metadata URI",
