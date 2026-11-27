@@ -39,6 +39,9 @@ const EditService = (props) => {
   const [tenant] = useContext(tenantContext);
   const [user] = useContext(userContext);
   const [owned, setOwned] = useState(true);
+  const canManageServices =
+    user?.actions?.includes("manage_services") &&
+    tenant?.config?.admin_service_management === true;
   const [modalMessage, setModalMessage] = useState();
   const [petitionIdRedirect, setPetitionIdRedirect] = useState();
   const [redirectTitle, setRedirectTitle] = useState();
@@ -343,7 +346,7 @@ const EditService = (props) => {
             </React.Fragment>
           ) : (
             <React.Fragment>
-              <NotFound notAuthorised={!owned} />
+              <NotFound notAuthorised={!owned && !canManageServices} />
 
               {!petitionData ? (
                 <RequestedChangesAlert

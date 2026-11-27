@@ -913,6 +913,7 @@ function TableItem(props) {
   const { t, i18n } = useTranslation();
   // eslint-disable-next-line
   const [user,setUser] = useContext(userContext);
+  const canManageServices = user?.actions?.includes('manage_services') && tenant?.config?.admin_service_management === true;
   return (
     <tr>
       <td className="petition-details">
@@ -1019,7 +1020,7 @@ function TableItem(props) {
                 </OverlayTrigger>          
 
 
-              {props.service.owned?
+              {props.service.owned||canManageServices?
                 <React.Fragment>
                   {props.service.status==='changes'||(props.service.outdated&&!props.service.petition_id&&props.service.state==='deployed')?
                   <div className="notification">
@@ -1107,7 +1108,7 @@ function TableItem(props) {
                 </div>
               </Dropdown.Item>
               :null}
-              {props.service.owned && props.service.state==='deployed'&& props.service.status!=='request_review' && props.service.type!=='delete'?
+              {(props.service.owned||canManageServices) && props.service.state==='deployed'&& props.service.status!=='request_review' && props.service.type!=='delete'?
                 <Dropdown.Item>
                   <div
                   onClick={()=>{
@@ -1121,7 +1122,7 @@ function TableItem(props) {
                   </div>
                 </Dropdown.Item>
               :null}
-              {props.service.owned &&( props.service.state==='deployed'||props.service.type==='create')&&props.service.type?
+              {(props.service.owned||canManageServices) &&( props.service.state==='deployed'||props.service.type==='create')&&props.service.type?
                 <Dropdown.Item>
                   <div
                   onClick={()=>{
